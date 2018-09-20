@@ -1,6 +1,9 @@
-!> @author Elias Rabel, 2012
-
 module TimerMpi_mod
+!-------------------------------------------------------------------------------
+!> Summary: Internal wall-clock timer
+!> Author: Elias Rabel, Paul F Baumeister
+!> Category: KKRnano
+!-------------------------------------------------------------------------------
   implicit none
   private
   public :: TimerMpi, stopTimer, startTimer, getTime, createTimer, outTime, outTimeStats

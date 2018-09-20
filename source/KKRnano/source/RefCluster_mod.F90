@@ -1,13 +1,15 @@
-!> Definitions
-!> RefCluster: a cluster of atoms with a distance smaller than radius to a
+module RefCluster_mod
+!-------------------------------------------------------------------------------
+!> Summary: a cluster of atoms with a distance smaller than radius to a
 !>             central atom
 !>             periodic boundary conditions are taken into account:
 !>             mirror images of atoms can be included in the cluster
+!> Author: Alexander Thiess, Elias Rabel, Paul F Baumeister, Marcel Bornemann
+!> Category: KKRnano, geometry, reference-system, initialization, single-site
 !>
-!> Note: if periodic_image_index (=number of atoms) reference clusters are created, then this algorithm scales as O(periodic_image_index**2)
-! #define DEBUG
-
-module RefCluster_mod
+!> Note: if periodic_image_index (=number of atoms) reference clusters are 
+!>        created, then this algorithm scales as O(periodic_image_index**2)
+!-------------------------------------------------------------------------------
   implicit none
   private
   

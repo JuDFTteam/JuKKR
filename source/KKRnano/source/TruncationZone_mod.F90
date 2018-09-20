@@ -1,11 +1,14 @@
-#define CHECKALLOC(STAT) if((STAT) /= 0) then; write(*,*) "Allocation error. ", __FILE__, __LINE__; STOP; endif;
-#define ALLOCATECHECK(X) allocate(X, stat=memory_stat); CHECKALLOC(memory_stat)
-
-!------------------------------------------------------------------------------
-!> Set up modified index arrays for real space truncation.
+module TruncationZone_mod
+!-------------------------------------------------------------------------------
+!> Summary: Set up modified index arrays for real space truncation.
+!> Author: Elias Rabel, Alexander R Thiess, Paul F Baumeister
+!> Category: KKRnano, geometry
+!>
 !> This is a convenient workaround to make real space truncation possible.
 !> Note: O(N**2) scaling in storage and setup time
-module TruncationZone_mod
+!-------------------------------------------------------------------------------
+#define CHECKALLOC(STAT) if((STAT) /= 0) then; write(*,*) "Allocation error. ", __FILE__, __LINE__; STOP; endif;
+#define ALLOCATECHECK(X) allocate(X, stat=memory_stat); CHECKALLOC(memory_stat)
 #include "macros.h"
   implicit none
   private

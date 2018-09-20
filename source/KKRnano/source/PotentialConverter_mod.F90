@@ -1,7 +1,11 @@
-!> Converts unformatted potential file to the JM formatted potential file format
-!> NOTE: VBC entries are just dummy values!!! RMT, RMTNEW also?
-
 module PotentialConverter_mod
+!-------------------------------------------------------------------------------
+!> Summary: Converts unformatted potential file to the KKRhost formatted potential file format
+!> Author: Elias Rabel, Paul F Baumeister
+!> Category: KKRnano, input-output, potential
+!> 
+!> NOTE: VBC entries are just dummy values!!! RMT, RMTNEW also?
+!-------------------------------------------------------------------------------
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none

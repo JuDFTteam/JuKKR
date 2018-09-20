@@ -1,8 +1,12 @@
-#define iounit_t integer
-
 module Errors_mod
+!-------------------------------------------------------------------------------
+!> Summary: Unified treatment of deadly errors
+!> Author: Paul F Baumeister, Marcel Bornemann
+!> Category: KKRnano, input-output
+!-------------------------------------------------------------------------------
   use Warnings_mod, only: launch_warning
 implicit none
+#define iounit_t integer
   private ! default visibility
 
   public :: die

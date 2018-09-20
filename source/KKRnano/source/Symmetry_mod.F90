@@ -1,4 +1,9 @@
 module Symmetry_mod
+!-------------------------------------------------------------------------------
+!> Summary: Generation and selection of allowed symmetry operations
+!> Author: Rudolf Zeller, Elias Rabel, Alexander R Thiess, Paul F Baumeister
+!> Category: KKRnano, symmetry-operations
+!-------------------------------------------------------------------------------
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none

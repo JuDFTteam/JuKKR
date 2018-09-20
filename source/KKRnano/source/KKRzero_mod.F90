@@ -1,11 +1,16 @@
-
-! TODO: if energy_mesh.0 is not generated, check if settings in
-! input.conf match those in energy_mesh.0
-! PROBLEM: Fermi-Energy specified in 'potential' file - E-mesh depends on
-! E-Fermi -> k-mesh depends on E-mesh => k-mesh depends on EFERMI
-! NOTE: k-mesh ALWAYS DEPENDS ON THE FERMI ENRGY FROM 'potential' NOT ON THE ACTUAL ONE!!!!!! - BUG?
-!  program MAIN0
 module KKRzero_mod
+!-------------------------------------------------------------------------------
+!> Summary: Preparation of binary data files
+!> Author: Marcel Bornemann, Paul F Baumeister, Elias Rabel, Alexander Thiess, Rudolf Zeller
+!> Category: KKRnano, initialization, potential, input-output, k-points, geometry
+!>
+!> ToDo: if energy_mesh.0 is not generated, check if settings in
+!>       input.conf match those in energy_mesh.0
+!> PROBLEM: Fermi-Energy specified in 'potential' file - E-mesh depends on
+!>          E-Fermi -> k-mesh depends on E-mesh => k-mesh depends on EFERMI
+!> NOTE: k-mesh ALWAYS DEPENDS ON THE FERMI ENRGY FROM 'potential' NOT ON THE ACTUAL ONE!!!!!! - BUG?
+!> program MAIN0
+!-------------------------------------------------------------------------------
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
@@ -296,7 +301,7 @@ module KKRzero_mod
 ! assign nuclear charge and rbasis
     zat(1:naez)        = pos( 0 ,1:naez)
     rbasis(1:3,1:naez) = pos(1:3,1:naez)
-    !TODO: check whether read-in was successful    
+    !ToDo:: check whether read-in was successful    
 
     write(6, fmt="(3(7(1h-),1h+) ,55(1h-))")
     write(6, fmt="(10(3(1h-),1h+) ,39(1h-))")

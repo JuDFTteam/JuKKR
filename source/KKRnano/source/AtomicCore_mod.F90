@@ -1,4 +1,9 @@
-
+!-------------------------------------------------------------------------------
+!> Summary: Generates the density of the core electrons
+!> Author: Paul F Baumeister, Rudolf Zeller, et al.
+!> Category: KKRnano, core-electrons, single-site, special-functions,
+!>           physical-observables, potential
+!-------------------------------------------------------------------------------
 module AtomicCore_mod
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)

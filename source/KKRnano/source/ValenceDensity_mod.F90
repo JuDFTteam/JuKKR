@@ -1,4 +1,9 @@
 module ValenceDensity_mod
+!-------------------------------------------------------------------------------
+!> Summary: Construction of the valence density
+!> Author: Rudolf Zeller, Elias Rabel, Alexander R Thiess, Paul F Baumeister, Marcel Bornemann, Bernhard H Drittler
+!> Category: KKRnano, single-site, physical-observables, radial-grid
+!-------------------------------------------------------------------------------
   implicit none
   private
   public :: rhoval, rhoval0

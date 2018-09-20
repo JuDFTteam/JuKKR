@@ -1,12 +1,12 @@
-!----------------------------------------------------------------------------
-!> Implementation of a Dictionary
-!> given a name 'variable', look up the corresponding 'value'
-!> This is a slow implementation, using a dynamic array
-!> (a faster implementation should i.e. use a hash table)
-
-!> @author Elias Rabel, September 2011
-
 module ConfigReaderDictionary_mod
+!-------------------------------------------------------------------------------
+!> Summary: Implementation of a Dictionary
+!>          given a name 'variable', look up the corresponding 'value'
+!>          This is a slow implementation, using a dynamic array
+!>          (a faster implementation should i.e. use a hash table)
+!> Author: Elias Rabel, Paul F Baumeister
+!> Category: KKRnano, initialization
+!-------------------------------------------------------------------------------
   implicit none
   private
   public :: Dictionary, create, destroy

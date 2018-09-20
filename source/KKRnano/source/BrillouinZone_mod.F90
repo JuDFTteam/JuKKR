@@ -1,3 +1,10 @@
+!-------------------------------------------------------------------------------
+!> Summary: Integration mesh for the reciprocal space or Brillouin zone
+!> Author: Rudolf Zeller, Marcel Bornemann, 
+!>         Hubert Ebert, Voicu Popescu, 
+!>         Paul F Baumeister, et al.
+!> Category: KKRnano, k-points, input-output, symmetry-operations
+!-------------------------------------------------------------------------------
 module BrillouinZone_mod
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
@@ -100,8 +107,8 @@ module BrillouinZone_mod
     ! generate Brillouin zone k-meshes
     call bzkmesh(intervxyz, maxmesh, lirr, bravais, recbv, nsymat, rsymat, isymindex, ielast, iesemicore, ez, kmesh, iprint, iemxd, ekmd, nowrite, kpms)
 
-      call symtaumat(rotname, rsymat, dsymll, nsymat, isymindex, naez, lmmaxd_noco, naez, lmax+1, krel, iprint, nsymaxd)
-      ! now dsymll hold nsymat symmetrization matrice
+    call symtaumat(rotname, rsymat, dsymll, nsymat, isymindex, naez, lmmaxd_noco, naez, lmax+1, krel, iprint, nsymaxd)
+    ! now dsymll hold nsymat symmetrization matrice
   endsubroutine ! bzkint0
 
       

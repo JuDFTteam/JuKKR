@@ -1,4 +1,9 @@
 module VectorMath_mod
+!-------------------------------------------------------------------------------
+!> Summary: Spectial operations on 3D vectors and 3x3 matrices
+!> Author: Elias Rabel, Alexander R Thiess, Paul F Baumeister
+!> Category: KKRnano
+!-------------------------------------------------------------------------------
   implicit none
   private
   

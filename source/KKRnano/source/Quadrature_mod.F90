@@ -1,4 +1,9 @@
 module Quadrature_mod
+!-------------------------------------------------------------------------------
+!> Summary: Integration routines for the panel grid
+!> Author: Rudolf Zeller, Paul F Baumeister
+!> Category: KKRnano, radial-grid
+!-------------------------------------------------------------------------------
   implicit none
   private
     

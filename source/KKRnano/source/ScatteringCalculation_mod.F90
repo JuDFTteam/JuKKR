@@ -1,9 +1,13 @@
+module ScatteringCalculation_mod
+!-------------------------------------------------------------------------------
+!> Summary: Driver for the calculation of the multiple scattering path operator
+!> Author: Elias Rabel, Alexander R Thiess, Paul F Baumeister, Marcel Bornemann
+!> Category: KKRnano, structural-greenfunction, reference-system, communication,
+!>          single-site, symmetry-operations
+!-------------------------------------------------------------------------------
 #include "DebugHelpers/logging_macros.h"
 #include "DebugHelpers/test_array_log.h"
 #include "DebugHelpers/test_macros.h"
-
-!> @author Modularisation: Elias Rabel
-module ScatteringCalculation_mod
   use Logging_mod, only:    ! import no name, just mention it for the module dependency 
   use arraytest2_mod, only: ! import no name, just mention it for the module dependency 
 implicit none

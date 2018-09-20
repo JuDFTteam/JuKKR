@@ -1,7 +1,9 @@
-
-! #define DEBUG
-
 module Sorting_mod
+!-------------------------------------------------------------------------------
+!> Summary: Sorting
+!> Author: Paul F Baumeister, Peter Zahn
+!> Category: KKRnano
+!-------------------------------------------------------------------------------
 implicit none
   private ! default for this module namespace
 

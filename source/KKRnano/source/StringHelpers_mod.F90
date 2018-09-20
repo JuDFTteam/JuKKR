@@ -1,6 +1,10 @@
-#define status_t integer
-
 module StringHelpers_mod
+!-------------------------------------------------------------------------------
+!> Summary: Toolbox for strings in Fortran
+!> Author: Elias Rabel, Paul F Baumeister
+!> Category: KKRnano
+!-------------------------------------------------------------------------------
+#define status_t integer
 implicit none
   private ! default visibility
 

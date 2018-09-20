@@ -1,8 +1,13 @@
 module NonCollinearMagnetism_mod
-
-use RadialMeshData_mod
-use ChebMeshData_mod
-
+!-------------------------------------------------------------------------------
+!> Summary: Single site solver based on direct inversion supporting non-collinear magnetism
+!> Author: Marcel Bornemann, David S G Bauer
+!> Category: KKRnano, single-site, solver
+!>
+!> ToDo: adopt coding style to real F90
+!-------------------------------------------------------------------------------
+use RadialMeshData_mod!, only:
+use ChebMeshData_mod!, only:
 implicit none
 private
 
@@ -10,7 +15,7 @@ public :: tmat_newsolver
 public :: rhovalnew
 public :: rotatematrix
 
-contains
+  contains
 
 SUBROUTINE drvbastrans(rc,crel,rrel,srrel,nrrel,irrel,  &
     nlmax,nkmmax,nmuemax,nkmpmax,nkmax,linmax)

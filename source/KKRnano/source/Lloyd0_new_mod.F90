@@ -1,6 +1,10 @@
-#include "DebugHelpers/test_macros.h"
-
 module lloyd0_new_mod
+!-------------------------------------------------------------------------------
+!> Summary: Computes the renormalize weights from Lloyd's formula
+!> Author: Marcel Bornemann, Elias Rabel
+!> Category: KKRnano, communication
+!-------------------------------------------------------------------------------
+#include "DebugHelpers/test_macros.h"
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
 implicit none
@@ -154,20 +158,7 @@ subroutine lloyd0_new(ez,wez,cleb,drdi,r,irmin, &
 
   double complex, parameter :: czero=(0.d0, 0.d0)
   integer :: ie, ispin, l
-
-  !     dynamically allocated arrays
-  !double complex :: send(4*iemxd)
-  !double complex :: recv(4*iemxd)
-  !double complex :: dos(iemxd,2) ! local
-  !double complex :: dos0(iemxd)  ! loc
-  !double complex :: dos1(iemxd)  ! loc
-  !double complex :: den0(0:lmax+1,iemxd,nspin) ! loc
-  !double precision :: rho2n1(irmd,lmpotd,2)
-  !double precision :: rho2n1(irmd,(2*lmax+1)**2, 2)   ! loc
-  !double precision :: rho2n2(irmd,lmpotd,2)
-  !double precision :: rho2n2(irmd,(2*lmax+1)**2, 2)   ! loc
-  !double precision :: espv(0:lmax+1,nspin) ! loc
-
+  
   double complex, allocatable :: dos(:,:)
   double complex, allocatable :: dos0(:)
   double complex, allocatable :: dos1(:)

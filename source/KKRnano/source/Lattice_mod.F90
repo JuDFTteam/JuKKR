@@ -1,4 +1,9 @@
 module Lattice_mod
+!-------------------------------------------------------------------------------
+!> Summary: Computes the inverse of the Bravais matrix
+!> Author: Paul F Baumeister, Elias Rabel
+!> Category: KKRnano, geometry, initialization
+!-------------------------------------------------------------------------------
   implicit none
   private
   

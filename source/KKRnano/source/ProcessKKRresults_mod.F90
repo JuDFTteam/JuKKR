@@ -1,8 +1,13 @@
+module ProcessKKRresults_mod
+!-------------------------------------------------------------------------------
+!> Summary: Compute densities, potentials and total energy
+!> Author: Elias Rabel, Marcel Bornemann, Paul F Baumeister
+!> Category: KKRnano, input-output, potential, physical-observables, 
+!>           total-energy, communication, forces
+!-------------------------------------------------------------------------------
 #include "DebugHelpers/logging_macros.h"
 #include "DebugHelpers/test_array_log.h"
 #include "DebugHelpers/test_macros.h"
-
-module ProcessKKRresults_mod
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   use Logging_mod, only:    ! import no name, just mention it for the module dependency 

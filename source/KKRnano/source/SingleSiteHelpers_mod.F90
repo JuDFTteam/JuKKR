@@ -1,4 +1,9 @@
 module SingleSiteHelpers_mod
+!-------------------------------------------------------------------------------
+!> Summary: Inwards and outwards integration routines
+!> Author: Rudolf Zeller, Elias Rabel, Bernhard H Drittler, Paul F Baumeister, Marcel Bornemann, Ogura Masako
+!> Category: KKRnano, single-site, special-functions, solver
+!-------------------------------------------------------------------------------
   use Constants_mod, only: pi
 #include "macros.h"
   implicit none

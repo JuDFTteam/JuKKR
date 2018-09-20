@@ -1,5 +1,9 @@
-
 module JelliumPotentials_mod
+!-------------------------------------------------------------------------------
+!> Summary: Start potentials are interpolated from files
+!> Author: Phivos Mavropoulos, Bernhard H Drittler, Paul F Baumeister, Marcel Bornemann
+!> Category: KKRnano, initialization, potential, input-output, single-site, core-electrons
+!-------------------------------------------------------------------------------
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
   implicit none
@@ -16,7 +20,7 @@ module JelliumPotentials_mod
                          lpot, irmd, irnsd, nspind, &
                          atom_index, elementdatabasepath)
   
-  ! Code converted using TO_F90 by Alan Miller
+  
   ! Date: 2016-01-21  Time: 16:35:08
   
   ! ******************************************************
@@ -314,7 +318,7 @@ module JelliumPotentials_mod
                qbound, irc, kshape, efermi, vbc, ecore, lcore, ncore, elem_name, nspin, lpot, irmd, irnsd)
   ! compare routine rites in PotentialConverter_mod
   
-  ! Code converted using TO_F90 by Alan Miller
+  
   ! Date: 2016-01-21  Time: 16:59:42
   
   ! ************************************************************************
@@ -430,7 +434,7 @@ module JelliumPotentials_mod
 
   !***********************************************************************
   
-  ! Code converted using TO_F90 by Alan Miller
+  
   ! Date: 2016-01-12  Time: 14:48:44
 
   subroutine spline(nmax, x, y, n, yp1, ypn, y2)
@@ -497,7 +501,7 @@ module JelliumPotentials_mod
 
   !***********************************************************************
   
-  ! Code converted using TO_F90 by Alan Miller
+  
   ! Date: 2016-01-12  Time: 14:48:43
 
   double precision function splint(xa, ya, y2a, n, x, yderiv) result(y)

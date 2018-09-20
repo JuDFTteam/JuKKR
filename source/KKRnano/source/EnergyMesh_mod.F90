@@ -1,15 +1,17 @@
-! TODO: Initialisation
 
+module EnergyMesh_mod
+!-------------------------------------------------------------------------------
+!> Summary: Point mesh for the energy contour integration
+!> Author: Phivos Mavropoulos, Voicu Popescu, Elias Rabel, Marcel Bornemann, Paul F Baumeister
+!> Category: KKRnano, input-output, initialization, communcation
+!-------------------------------------------------------------------------------
+  implicit none
 ! Some macros for checked allocation/deallocation
-! they need an integer variable named memory_stat declared in each routine
-! they are used.
-
+! they need an integer variable named memory_stat declared in each routine they are used.
 #define CHECKALLOC(STAT) if ((STAT) /= 0) then; write(*,*) "Allocation error. ", __FILE__, __LINE__; STOP; endif;
 #define CHECKDEALLOC(STAT) if ((STAT) /= 0) then; write(*,*) "Deallocation error. ", __FILE__, __LINE__; STOP; endif;
 #define ALLOCATECHECK(X) allocate(X, stat=memory_stat); CHECKALLOC(memory_stat)
 
-module EnergyMesh_mod
-  implicit none
   private
   public :: EnergyMesh, create, destroy, load, store, update, broadcast, getEnergyMeshSize, init
   

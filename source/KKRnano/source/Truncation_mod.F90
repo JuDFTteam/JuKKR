@@ -1,7 +1,11 @@
-
-! JUST FOR TESTING purposes
-! replace by proper implementation
 module Truncation_mod
+!-------------------------------------------------------------------------------
+!> Summary: Statistics for the truncation zones around each atom
+!> Author: Elias Rabel, Paul F Baumeister
+!> Category: KKRnano, geometry
+!>
+!> JUST FOR TESTING purposes, replace by proper implementation
+!-------------------------------------------------------------------------------
 #include "macros.h"
   use Exceptions_mod, only: die, launch_warning, operator(-), operator(+)
 #include "DebugHelpers/logging_macros.h"
