@@ -1,17 +1,21 @@
 module mod_cinthff
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: cinthff
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculate radial hybperfine matrixelement
+  !> Author: 
+  !> Category: KKRhost, dirac, physical-observables
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Routine to calculate the radial hyperfine matrixelement
+  !> by extrapolating the lower integration boundary to r -> 0
+  !-------------------------------------------------------------------------------
   subroutine cinthff(ag, af, bg, bf, rmehf, nka, nkb, jtop, fx, r, drdi, nrmax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *  routine to calculate the radial hyperfine matrixelement         *
-    ! *  by extrapolating the lower integration boundary to r -> 0       *
-    ! *                                                                  *
-    ! ********************************************************************
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     use :: mod_cint4pts
     implicit none
 

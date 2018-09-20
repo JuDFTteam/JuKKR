@@ -1,39 +1,52 @@
 module mod_csinwd
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: csinwd
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Inward integration of multiple functions with ext. 3-point Simpson
+  !> Author: B. Drittler
+  !> Date: Mar. 1989
+  !> Category: KKRhost, radial-grid
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> This subroutine does an inwards integration of llmax
+  !> functions f with an extended 3-point-simpson :
+  !>
+  !> irmax
+  !> fint(ll,i) = { f(ll,i') di'
+  !> ir
+  !>
+  !> The starting value for this integration at ist - 1 is determined by
+  !> a 4 point lagrangian integration  , coefficients given by
+  !> m. abramowitz and i.a. stegun, handbook of mathematical functions,
+  !> nbs applied mathematics series 55 (1968)
+  !>
+  !> @warning In case of radial integration:
+  !> the weights drdi have to be multiplied before calling this
+  !> subroutine.
+  !> @endwarning
+  !>
+  !> B. Drittler Mar. 1989
+  !>
+  !> Modified for functions with kinks - at each kink the integration
+  !> is restarted
+  !>
+  !> @warning it is supposed that irmin + 3 is less than imt! @endwarning
+  !>
+  !> B. Drittler July 1989
+  !> Modified by M. Ogura, June 2015
+  !>
+  !> @note
+  !> This is very similar to `csout`, maybe they can be merged
+  !> @endnote
+  !-------------------------------------------------------------------------------
   subroutine csinwd(f, fint, lmmsqd, irmind, irmd, irmin, ipan, ircut)
-    ! -----------------------------------------------------------------------
-    ! this subroutine does an inwards integration of llmax
-    ! functions f with an extended 3-point-simpson :
 
-
-    ! irmax
-    ! fint(ll,i) = { f(ll,i') di'
-    ! ir
-
-    ! the starting value for this integration at ist - 1 is determined by
-    ! a 4 point lagrangian integration  , coefficients given by
-    ! m. abramowitz and i.a. stegun, handbook of mathematical functions,
-    ! nbs applied mathematics series 55 (1968)
-
-    ! attention in case of radial integration :
-    ! the weights drdi have to be multiplied before calling this
-    ! subroutine .
-
-    ! b. drittler mar. 1989
-
-    ! modified for functions with kinks - at each kink the integration
-    ! is restarted
-
-    ! attention : it is supposed that irmin + 3 is less than imt !
-
-
-    ! b. drittler july 1989
-    ! modified by m. ogura, june 2015
-    ! -----------------------------------------------------------------------
+    use :: mod_datatypes, only: dp
+    implicit none
     ! ..
     ! .. Parameters ..
     real (kind=dp) :: a1, a2, a3

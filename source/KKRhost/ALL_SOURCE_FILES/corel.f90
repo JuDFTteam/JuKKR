@@ -2,16 +2,22 @@ module mod_corel
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates core charge 
+  !> Author: 
+  !> Category: KKRhost, core-electrons
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Subroutine for core states
+  !>
+  !> lmxc = lmaxcore = (0,1,2,...), .e.g, argon core : lmxc = 1
+  !> krypton core : lmxc = 2
+  !> kfg = configuration of core, e.g., argon core: 3300=3s,3p,0d
+  !> krypton core: 4430=4s,4p,3d
+  !> xenon core: 5540=5s,5p,4d
+  !-------------------------------------------------------------------------------
   subroutine corel(nsra, ipr, ip, rhoc, v, ecore, lcore, ncore, drdi, zat, qc, a, b, is, nspin, nr, rmax, irmd)
-    ! -----------------------------------------------------------------------
-    ! subroutine for core states
-    ! -----------------------------------------------------------------------
-    ! lmxc = lmaxcore = (0,1,2,...), .e.g, argon core : lmxc = 1
-    ! krypton core : lmxc = 2
-    ! kfg = configuration of core, e.g., argon core: 3300=3s,3p,0d
-    ! krypton core: 4430=4s,4p,3d
-    ! xenon core: 5540=5s,5p,4d
-    ! -----------------------------------------------------------------------
+
     use :: mod_types, only: t_inc
     use :: mod_datatypes, only: dp
     use :: mod_intcor
@@ -83,8 +89,10 @@ contains
       l = lp1 - 1
       e1 = (-5.d0-((zat+1.d0)/dble(lp1))**2)*1.5d0 - 50.d0
       nmax = kfg(lp1)
+
       if (nmax/=0) then
         do in = lp1, nmax
+
           nn = in - lp1
           nc = nc + 1
           inuc = inuc + irnumx
@@ -98,15 +106,16 @@ contains
           if ((t_inc%i_write>0) .and. (ipr/=0)) write (1337, fmt=110) ei, ediff, e
 
           ! ---> sum up contributions to total core charge
-
           do ir = 2, nre
             rhoc(ir) = rhoc(ir) + rho(ir)*wgt
             rho(ir) = zero
           end do
+
         end do
       end if
 
     end do
+
     if (nc*irnumx>150 .or. irnumx>10) stop 'corel'
 
     ! ---> integrate core density to get core charge

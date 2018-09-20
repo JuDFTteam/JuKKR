@@ -1,3 +1,10 @@
+!-------------------------------------------------------------------------------
+!> Summary: 
+!> Author: 
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!> 
+!-------------------------------------------------------------------------------
 module mod_datatypes
   use, intrinsic :: iso_fortran_env
 

@@ -1,27 +1,33 @@
 module mod_cmatstr
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: cmatstr
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Write complex matrix to file
+  !> Author: 
+  !> Category: KKRhost, input-output
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Writes structure of COMPLEX   NxN   matrix   A             
+  !>                                                            
+  !> M           is the actual array - size used for   A        
+  !> MLIN/COL    MODE for line and column indexing              
+  !>             0: plain, 1: (l,ml), 2: (l,ml,ms), 3: (kap,mue)
+  !> TOL         tolerance for difference                       
+  !> IJQ         if IJQ > 1000    pick  IQ-JQ-block matrix      
+  !>             assuming  IJQ = IQ*1000 + JQ                   
+  !>             else: no IQ-JQ-indexing                        
+  !> K_FMT_FIL   output channel                                 
+  !>             a negative sign suppresses table at the end    
+  !>           
+  !> @note                                                 
+  !> any changes should be done in RMATSTR as well !!!!!!!!!!!!!
+  !> @endnote
+  !-------------------------------------------------------------------------------
   subroutine cmatstr(str, lstr, a, n, m, mlin, mcol, ijq, tolp, k_fmt_fil)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   writes structure of COMPLEX   NxN   matrix   A                 *
-    ! *                                                                  *
-    ! *   M           is the actual array - size used for   A            *
-    ! *   MLIN/COL    MODE for line and column indexing                  *
-    ! *               0: plain, 1: (l,ml), 2: (l,ml,ms), 3: (kap,mue)    *
-    ! *   TOL         tolerance for difference                           *
-    ! *   IJQ         if IJQ > 1000    pick  IQ-JQ-block matrix          *
-    ! *               assuming  IJQ = IQ*1000 + JQ                       *
-    ! *               else: no IQ-JQ-indexing                            *
-    ! *   K_FMT_FIL   output channel                                     *
-    ! *               a negative sign suppresses table at the end        *
-    ! *                                                                  *
-    ! *   any changes should be done in RMATSTR as well !!!!!!!!!!!!!!!  *
-    ! *                                                                  *
-    ! ********************************************************************
 
     implicit none
 

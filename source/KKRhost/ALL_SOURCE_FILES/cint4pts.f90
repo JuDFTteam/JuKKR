@@ -1,29 +1,34 @@
 module mod_cint4pts
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: cint4pts
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Complex 4-point integration
+  !> Author: 
+  !> Category: KKRhost, dirac
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Perform the integral  Z(i)   =  INT   Y(i') di'
+  !>                               R=0..R(i) 
+  !>
+  !>   via a 4-point integration formula 
+  !>
+  !>   JTOP:     Y is tabulated form 1 .. JTOP
+  !>   Y(i):     function to be integrated    
+  !>
+  !>                    COMPLEX - VERSION
+  !-------------------------------------------------------------------------------
   subroutine cint4pts(y, jtop, z)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *      perform the integral  Z(i)   =  INT   Y(i') di'             *
-    ! *                                    R=0..R(i)                     *
-    ! *                                                                  *
-    ! *      via a 4-point integration formula                           *
-    ! *                                                                  *
-    ! *      JTOP:     Y is tabulated form 1 .. JTOP                     *
-    ! *      Y(i):     function to be integrated                         *
-    ! *                                                                  *
-    ! *                       COMPLEX - VERSION                          *
-    ! *                                                                  *
-    ! ********************************************************************
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
 
     ! Dummy arguments
     integer :: jtop
-    complex (kind=dp) :: y(jtop), z(jtop)
+    complex (kind=dp), intent(in) :: y(jtop)
+    complex (kind=dp), intent(out) :: z(jtop)
 
     ! Local variables
     integer :: i, ig, j, k, m, n1, n2

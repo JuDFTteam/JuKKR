@@ -1,27 +1,32 @@
 module mod_changerep
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: changerep
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Change representation of matrix between (kappa,mue), real and complex spherical harmonics
+  !> Author: 
+  !> Category: KKRhost, special-functions
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Change the representation of matrix A and store in B          
+  !> according to MODE:                                            
+  !>                                                               
+  !> RLM>REL   non-relat. REAL spher. harm.  >   (kappa,mue)       
+  !> REL>RLM   (kappa,mue)  > non-relat. REAL spher. harm.         
+  !> CLM>REL   non-relat. CMPLX. spher. harm.  >   (kappa,mue)     
+  !> REL>CLM   (kappa,mue)  > non-relat. CMPLX. spher. harm.       
+  !> RLM>CLM   non-relat. REAL spher. harm.  >  CMPLX. spher. harm.
+  !> CLM>RLM   non-relat. CMPLX. spher. harm.  >  REAL spher. harm.
+  !>                                                               
+  !> the non-relat. representations include the  spin index        
+  !>                                                               
+  !> for LTEXT > 0 the new matrix  B  is printed 
+  !-------------------------------------------------------------------------------
   subroutine changerep(a, mode, b, n, m, rc, crel, rrel, text, ltext)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   change the representation of matrix A and store in B           *
-    ! *   according to MODE:                                             *
-    ! *                                                                  *
-    ! *   RLM>REL   non-relat. REAL spher. harm.  >   (kappa,mue)        *
-    ! *   REL>RLM   (kappa,mue)  > non-relat. REAL spher. harm.          *
-    ! *   CLM>REL   non-relat. CMPLX. spher. harm.  >   (kappa,mue)      *
-    ! *   REL>CLM   (kappa,mue)  > non-relat. CMPLX. spher. harm.        *
-    ! *   RLM>CLM   non-relat. REAL spher. harm.  >  CMPLX. spher. harm. *
-    ! *   CLM>RLM   non-relat. CMPLX. spher. harm.  >  REAL spher. harm. *
-    ! *                                                                  *
-    ! *   the non-relat. representations include the  spin index         *
-    ! *                                                                  *
-    ! *   for LTEXT > 0 the new matrix  B  is printed                    *
-    ! *                                                                  *
-    ! ********************************************************************
+    use :: mod_datatypes, only: dp
     use :: mod_cmatstr
     implicit none
 

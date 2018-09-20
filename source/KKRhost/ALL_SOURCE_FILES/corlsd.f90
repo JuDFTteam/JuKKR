@@ -1,21 +1,30 @@
 module mod_corlsd
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: corlsd
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Uniform gas contribution PW91
+  !> Author: 
+  !> Category: KKRhost, xc-potential
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Uniform-gas correlation of perdew and wang 1991
+  !> 
+  !> input: seitz radius (rs), relative spin polarization (zta)
+  !> output: correlation energy per electron (ec),
+  !> up- and down-spin potentials (vcup,vcdn),
+  !> derivatives of ec wrt rs (ecrs) &zta (eczta).
+  !> output: correlation contribution (alfc) to the spin stiffness 
+  !-------------------------------------------------------------------------------
   subroutine corlsd(rs, zta, ec, vcup, vcdn, ecrs, eczta, alfc)
-    ! .....-----------------------------------------------------------------
-    ! uniform-gas correlation of perdew and wang 1991
-    ! .....-----------------------------------------------------------------
-    ! input: seitz radius (rs), relative spin polarization (zta)
-    ! output: correlation energy per electron (ec),
-    ! up- and down-spin potentials (vcup,vcdn),
-    ! derivatives of ec wrt rs (ecrs) &zta (eczta).
-    ! output: correlation contribution (alfc) to the spin stiffness
-    ! .....-----------------------------------------------------------------
-    use :: mod_gcor91
+
+    use :: mod_datatypes, only: dp
+    use :: mod_gcor91, only: gcor91
     implicit none
+
     ! .. Scalar Arguments ..
     real (kind=dp) :: alfc, ec, ecrs, eczta, rs, vcdn, vcup, zta
     ! ..
@@ -35,6 +44,7 @@ contains
     call gcor91(0.0310907e0_dp, 0.21370e0_dp, 7.5957e0_dp, 3.5876e0_dp, 1.6382e0_dp, 0.49294e0_dp, 1.00e0_dp, rs, eu, eurs)
     call gcor91(0.01554535e0_dp, 0.20548e0_dp, 14.1189e0_dp, 6.1977e0_dp, 3.3662e0_dp, 0.62517e0_dp, 1.00e0_dp, rs, ep, eprs)
     call gcor91(0.0168869e0_dp, 0.11125e0_dp, 10.357e0_dp, 3.6231e0_dp, 0.88026e0_dp, 0.49671e0_dp, 1.00e0_dp, rs, alfm, alfrsm)
+
     ! alfm is minus the spin stiffness alfc
     alfc = -alfm
     z4 = zta**4

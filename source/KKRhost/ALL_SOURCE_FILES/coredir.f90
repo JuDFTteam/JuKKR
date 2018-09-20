@@ -2,20 +2,24 @@ module mod_coredir
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Solver for radial Dirac equation of core wavefunctions
+  !> Author: H. Ebert
+  !> Date: 1989
+  !> Category: KKRhost, core-electrons
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> ROUTINE TO SOLVE RADIAL SPIN-POLARISED DIRAC EQUATIONS
+  !> FOR THE CORE WAVE FUNCTIONS                           
+  !>                                                       
+  !> SIMILAR TO LOUCKS' METHOD TO SOLVE THE COUPLED SET OF 
+  !> DIFFERENTIAL EQUATIONS                                
+  !>                                  HE JAN. 1989         
+  !>                                                       
+  !> ADOPTED FOR FINITE NUCLEUS       MB MAR. 1995
+  !-------------------------------------------------------------------------------
   subroutine coredir(it, c, e, l, mj, way, vv, bb, rc, drdic, dovrc, nmatch, nzero, gc, fc, d_p, dq, wp, wq, pow, qow, piw, qiw, cgd, cgmd, cgo, nrc, z, nucleus)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   ROUTINE TO SOLVE RADIAL SPIN-POLARISED DIRAC EQUATIONS         *
-    ! *   FOR THE CORE WAVE FUNCTIONS                                    *
-    ! *                                                                  *
-    ! *   SIMILAR TO LOUCKS' METHOD TO SOLVE THE COUPLED SET OF          *
-    ! *   DIFFERENTIAL EQUATIONS                                         *
-    ! *                                    HE JAN. 1989                  *
-    ! *                                                                  *
-    ! *   ADOPTED FOR FINITE NUCLEUS       MB MAR. 1995                  *
-    ! *                                                                  *
-    ! *                                                                  *
-    ! ********************************************************************
+
     use :: mod_types, only: t_inc
     use :: mod_datatypes, only: dp
     implicit none
@@ -131,9 +135,6 @@ contains
 
       ! INWARD INTEGRATION
 
-
-
-
       dmue = sqrt(-e-e*e/csqr)
       bova = -dmue/(1.0d0+e/csqr)
 
@@ -210,8 +211,6 @@ contains
 
         ! SORRY NOT CONVERGED IN  ITMAX  ITERATIONS
 
-
-
 110     continue
         do j = 1, nsol
           do i = 1, nsol
@@ -251,9 +250,6 @@ contains
     ! #####################################################################
 
     ! OUTWARD INTEGRATION
-
-
-
 
 
     ! DETERMINE HIGHER EXPANSION COEFFICIENTS FOR THE WAVE FUNCTIONS
@@ -400,8 +396,6 @@ contains
       end do
     end do
 
-
-
     ! =============================================================== N ====
     ! CALCULATE ALL NEXT POINTS BY PRE/CORR(ADAMS-MOULTON-BASHFORTH)
 
@@ -456,7 +450,6 @@ contains
 
       ! SORRY NOT CONVERGED IN  ITMAX  ITERATIONS
 
-
 130   continue
       do j = 1, nsol
         do i = 1, nsol
@@ -471,7 +464,6 @@ contains
     ! =============================================================== N ====
 
     ! NOW TRANSFORM TO THE PROPER WAVEFUNCTIONS
-
 
     do n = 1, nmatch
       do j = 1, nsol
@@ -495,6 +487,7 @@ contains
 
 140 format (' P/C NOT CONV. IN <DIRAC> ', 2i4, 2x, f10.7, 2x, 2e12.4, 3i2, '/2 ', a3)
 150 continue
+
   end subroutine coredir
 
 end module mod_coredir

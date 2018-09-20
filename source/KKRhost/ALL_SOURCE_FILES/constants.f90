@@ -1,9 +1,12 @@
-! -------------------------------------------------------------------------------
-! MODULE: Constants
-!> @brief Physical and mathematical constants
-!> @author Jonathan Chico
-!> @date 09.01.2018
-! -------------------------------------------------------------------------------
+!-------------------------------------------------------------------------------
+!> Summary: Physical constants
+!> Author: Jonathan Chico
+!> Date: 09.01.2018
+!> Category: KKRhost, initialization
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!> Definition of physical and mathematical constants
+!-------------------------------------------------------------------------------
 module constants
   use :: mod_datatypes, only: dp
 

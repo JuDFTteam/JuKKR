@@ -1,13 +1,29 @@
+!-------------------------------------------------------------------------------
+!> Summary: Functions and subroutines for Chebychev radial mesh
+!> Author: 
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!> Module providing functionality needed to used Chebychev radial mesh, which 
+!> is used in the rllsll-solver (see PhD thesis of David Bauer for details)
+!-------------------------------------------------------------------------------
 module mod_cheb
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: getcmatrix, getcinvmatrix, getccmatrix, getlambda, getclambdacinv, getclambda2cinv, diffcheb
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculate C matrix of Chebychev mesh
+  !> Author: 
+  !> Category: KKRhost, radial-grid
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Calculates the C matrix according to:
+  !> Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
+  !-------------------------------------------------------------------------------
   subroutine getcmatrix(ncheb, cmatrix)
-    ! calculates the C matrix according to:
-    ! Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     integer, intent (in) :: ncheb
     real (kind=dp), intent (out) :: cmatrix(0:ncheb, 0:ncheb)
@@ -25,10 +41,17 @@ contains
   end subroutine getcmatrix
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculate inverse C matrix of Chebychev mesh
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Calculates the C**-1 matrix according to:
+  !> Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
+  !-------------------------------------------------------------------------------
   subroutine getcinvmatrix(ncheb, cinvmatrix)
-    ! calculates the C**-1 matrix according to:
-    ! Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     integer, intent (in) :: ncheb
     real (kind=dp), intent (out) :: cinvmatrix(0:ncheb, 0:ncheb)
@@ -48,10 +71,21 @@ contains
   end subroutine getcinvmatrix
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Get CC-matrix of Chebychev mesh
+  !> Author: 
+  !> Category: KKRhost, radial-grid
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Calculates the C matrix according to:
+  !> Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
+  !>
+  !> @note
+  !> Similar to getcmatrix but has form cos(x)*acos(r) instead of cos(x)
+  !> @endnote
+  !-------------------------------------------------------------------------------
   subroutine getccmatrix(ncheb, rmesh, nrmesh, cmatrix)
-    ! calculates the C matrix according to:
-    ! Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     integer, intent (in) :: ncheb, nrmesh
     real (kind=dp), intent (in) :: rmesh(nrmesh)
@@ -66,10 +100,17 @@ contains
   end subroutine getccmatrix
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Get Lambda-matrix
+  !> Author: 
+  !> Category: KKRhost, radial-grid
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Set up the Lambda matrix which differentiates the coefficients of an
+  ! Chebyshev expansion
+  !-------------------------------------------------------------------------------
   subroutine getlambda(ncheb, lambda)
-    ! set up the Lambda matrix which differentiates the coefficients of an
-    ! Chebyshev expansion
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     integer, intent (in) :: ncheb
     real (kind=dp), intent (out) :: lambda(0:ncheb, 0:ncheb)
@@ -87,11 +128,17 @@ contains
   end subroutine getlambda
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Computes C.Lambda.C^-1 matrix for chebycheb differentiation
+  !> Author: 
+  !> Category: KKRhost, radial-grid
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Set up the product of C-matrix, Lambda-matrix and C^-1-matrix
+  !-------------------------------------------------------------------------------
   subroutine getclambdacinv(ncheb, clambdacinv)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
-    ! set up the Lambda matrix which differentiates the coefficients of an
-    ! Chebyshev expansion
     integer :: ncheb
     real (kind=dp) :: clambdacinv(0:ncheb, 0:ncheb)
     ! local
@@ -116,11 +163,20 @@ contains
   end subroutine getclambdacinv
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Computes C.Lambda^2.C^-1 matrix for chebycheb differentiation
+  !> Author: 
+  !> Category: KKRhost, radial-grid
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Set up the product of C-matrix, Lambda-matrix^2 and C^-1-matrix
+  !> @note
+  !> Similar to getclambdacinv but for squared Lambda-matrix
+  !> @endnote
+  !-------------------------------------------------------------------------------
   subroutine getclambda2cinv(ncheb, clambda2cinv)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
-    ! set up the Lambda matrix which differentiates the coefficients of an
-    ! Chebyshev expansion
     integer :: ncheb
     real (kind=dp) :: clambda2cinv(0:ncheb, 0:ncheb)
     ! local
@@ -146,24 +202,41 @@ contains
   end subroutine getclambda2cinv
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Chebychev differentiation
+  !> Author: 
+  !> Category: KKRhost, radial-grid
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Computed differenction in Chebychev mesh by computing Lambda matrix 
+  !> and multiply this to input matrix
+  !-------------------------------------------------------------------------------
   subroutine diffcheb(fn, ncheb, dfndr)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     integer :: ncheb
     real (kind=dp) :: fn(0:ncheb)
     real (kind=dp) :: dfndr(0:ncheb)
     real (kind=dp) :: clambdacinv(0:ncheb, 0:ncheb)
 
-    ! needs to be checked!!!!!!1
+    !> needs to be checked
     call getclambdacinv(ncheb, clambdacinv(0:ncheb,0:ncheb))
     call matvec_dmdm(ncheb, clambdacinv(0:ncheb,0:ncheb), fn(0:ncheb), dfndr(0:ncheb))
   end subroutine diffcheb
 
 
-  ! helper functions
+  ! helper functions:
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Wrapper for double-precision matrix-vector multiplication 
+  !> Author: 
+  !> Category: KKRhost, sanity-check, radial-grid
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Helper function that wraps dgemv after sanity check of input
+  !-------------------------------------------------------------------------------
   subroutine matvec_dmdm(ncheb, mat1, vec1, outvec)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     integer, intent (in) :: ncheb
     real (kind=dp), intent (in) :: mat1(0:ncheb, 0:ncheb), vec1(0:ncheb)
@@ -176,8 +249,16 @@ contains
     call dgemv('N', m, n, 1.0e0_dp, mat1, m, vec1, 1, 0.0e0_dp, outvec, 1)
   end subroutine matvec_dmdm
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Wrapper for double-precision matrix-matrix multiplication
+  !> Author: 
+  !> Category: KKRhost, radial-grid
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Helper function wrapping dgemm
+  !-------------------------------------------------------------------------------
   subroutine matmat_dmdm(mat1, mat2, ncheb, outmat)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     integer, intent (in) :: ncheb
     real (kind=dp), intent (in) :: mat1(0:ncheb, 0:ncheb), mat2(0:ncheb, 0:ncheb)

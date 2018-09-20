@@ -1,19 +1,32 @@
 module mod_cross
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: cross
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Computes cross product of two vectors
+  !> Author: 
+  !> Category: KKRhost, undefined
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Cross product cr12 = X1 cross X2
+  !> 
+  !> Inputs:
+  !>   x1    :first vector to multiply
+  !>   x2    :second vector to multiply
+  !>
+  !> Outputs:
+  !>   cr12  :cross product
+  !>
+  !> @note
+  !> the `crospr` subroutine is a dublication of this and should be removed
+  !> @endnote
+  !-------------------------------------------------------------------------------
   subroutine cross(x1, x2, cr12)
-    ! - Cross product cr12 = X1 cross X2
-    ! ----------------------------------------------------------------------
-    ! i Inputs:
-    ! i   x1    :first vector to multiply
-    ! i   x2    :second vector to multiply
-    ! o Outputs:
-    ! o   cr12  :cross product
-    ! ----------------------------------------------------------------------
 
+    use :: mod_datatypes, only: dp
     implicit none
     ! Passed parameters:
     real (kind=dp) :: x1(3)

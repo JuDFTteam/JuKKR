@@ -1,26 +1,36 @@
 module mod_csimpk
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: csimpk
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Integration of complex function with extended 3-point Simpson
+  !> Author: 
+  !> Category: KKRhost, radial-grid, numerical-tools
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> This subroutine does an integration up to rcut of an
+  !> complex function cf with an extended 3-point-simpson:
+  !>
+  !> rcut
+  !> cfint = { cf(r') dr'
+  !> 0
+  !>
+  !> Modified for functions with kinks - at each kink the
+  !> integration is restarted.
+  !>
+  !> @warning
+  !> Input `cf` is destroyed!
+  !> @endwarning
+  !-------------------------------------------------------------------------------
   subroutine csimpk(cf, cfint, ipan, ircut, drdi)
-    ! -----------------------------------------------------------------------
-    ! this subroutine does an integration up to rcut of an
-    ! complex function cf with an extended 3-point-simpson :
 
-    ! rcut
-    ! cfint = { cf(r') dr'
-    ! 0
-
-    ! modified for functions with kinks - at each kink the
-    ! integration is restarted .
-
-    ! attention : input cf is destroyed !
-
-    ! -----------------------------------------------------------------------
+    use :: mod_datatypes, only: dp
     use :: mod_csum
     implicit none
+
     ! .. Scalar Arguments ..
     complex (kind=dp) :: cfint
     integer :: ipan
@@ -53,7 +63,6 @@ contains
         cfint = cfint + (cf(ist)-cf(ien))/3.0e0_dp
         ist = ist + 1
         n = (ien-ist+1)/2
-
       else
         ! ---> four point lagrange integration for the first step
         cfint = cfint + (9.0e0_dp*cf(ist)+19.0e0_dp*cf(ist+1)-5.0e0_dp*cf(ist+2)+cf(ist+3))/24.0e0_dp + (cf(ist+1)-cf(ien))/3.0e0_dp

@@ -2,31 +2,39 @@ module mod_cradwf
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculate radial wavefunction of spherical potentials
+  !> Author: B. Drittler
+  !> Date: Nov. 1987
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Subroutine for radial wave functions of spherical potentials
+  !>
+  !> the generalized phase shifts are calculated by
+  !> a wronski relation :
+  !>
+  !> alpha(z,l) =-sqrt(z)*wronski{hl(r;z),rl(r;z)}; r->0
+  !>
+  !> where hl is the free hankel function and rl the regular
+  !> solution . Using the analytical behaviour of rl at the
+  !> origin (rl = alphal * r**(l+1)  ; r->0),
+  !> the generalized phase shifts can be calculated
+  !> directly with the renormalization alphal.
+  !> B. Drittler Nov.1987
+  !>
+  !> LDA+U added, March 2003 - Dec 2004, Munich/Juelich
+  !-------------------------------------------------------------------------------
   subroutine cradwf(eryd, ek, nsra, alpha, ipan, ircut, cvlight, rs, sl, pz, fz, qz, sz, tmat, vm2z, drdi, rmesh, zat, lirrsol, idoldau, lopt, wldauav, cutoff)
-    ! -----------------------------------------------------------------------
-    ! subroutine for radial wave functions of spherical potentials
 
-    ! the generalized phase shifts are calculated by
-    ! a wronski relation :
-
-    ! alpha(z,l) =-sqrt(z)*wronski{hl(r;z),rl(r;z)}; r->0
-
-    ! where hl is the free hankel function and rl the regular
-    ! solution . Using the analytical behaviour of rl at the
-    ! origin (rl = alphal * r**(l+1)  ; r->0),
-    ! the generalized phase shifts can be calculated
-    ! directly with the renormalization alphal .
-    ! b.drittler nov.1987
-
-    ! LDA+U added, March 2003 - Dec 2004, Munich/Juelich
-    ! -----------------------------------------------------------------------
     use :: global_variables
     use :: mod_datatypes, only: dp
-    use :: mod_beshan
-    use :: mod_regsol
-    use :: mod_irwsol
+    use :: mod_beshan, only: beshan
+    use :: mod_regsol, only: regsol
+    use :: mod_irwsol, only: irwsol
+    use :: mod_constants, only: ci, czero
     implicit none
-    complex (kind=dp), parameter :: ci = (0.e0_dp, 1.e0_dp), czero = (0.0e0_dp, 0.0e0_dp)
+
     ! ..
     ! .. Local Scalars ..
     complex (kind=dp) :: eryd, ek

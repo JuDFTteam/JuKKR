@@ -4,24 +4,30 @@ module mod_cpw91
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Correlation of PW91
+  !> Author: 
+  !> Category: KKRhost, xc-potential
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> gga91 correlation
+  !> 
+  !> Input
+  !>   rs: seitz radius
+  !>   zta: relative spin polarization
+  !>   t: abs(grad d)/(d*2.*ks*gz)
+  !>   uu: (grad d)*grad(abs(grad d))/(d**2 * (2*ks*gz)**3)
+  !>   vv: (laplacian d)/(d * (2*ks*gz)**2)
+  !>   ww: (grad d)*(gradzta)/(d * (2*ks*gz)**2
+  !> Output
+  !>   h: nonlocal part of correlation energy per electron
+  !>   dvcup,-dn: nonlocal parts of correlation potentials.
+  !>
+  !> with ks=sqrt(4*kf/pai), gz=[(1+zta)**(2/3)+(1-zta)**(2/3)]/2, &
+  !> kf=cbrt(3*pai**2*d).
+  !-------------------------------------------------------------------------------
   subroutine cpw91(fk, sk, gz, ec, ecrs, eczta, rs, zta, t, uu, vv, ww, h, dvcup, dvcdn)
-    ! -----------------------------------------------------------------
-    ! gga91 correlation
-    ! -----------------------------------------------------------------
-    ! input
-    ! rs: seitz radius
-    ! zta: relative spin polarization
-    ! t: abs(grad d)/(d*2.*ks*gz)
-    ! uu: (grad d)*grad(abs(grad d))/(d**2 * (2*ks*gz)**3)
-    ! vv: (laplacian d)/(d * (2*ks*gz)**2)
-    ! ww: (grad d)*(gradzta)/(d * (2*ks*gz)**2
-    ! output
-    ! h: nonlocal part of correlation energy per electron
-    ! dvcup,-dn: nonlocal parts of correlation potentials.
 
-    ! with ks=sqrt(4*kf/pai), gz=[(1+zta)**(2/3)+(1-zta)**(2/3)]/2, &
-    ! kf=cbrt(3*pai**2*d).
-    ! -----------------------------------------------------------------
     implicit none
     ! .. Scalar Arguments ..
     real (kind=dp) :: dvcdn, dvcup, ec, ecrs, eczta, fk, gz, h, rs, sk, t, uu, vv, ww, zta

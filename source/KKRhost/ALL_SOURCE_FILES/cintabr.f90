@@ -1,22 +1,26 @@
 module mod_cintabr
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: cintabr
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Complex Simpson integration
+  !> Author: 
+  !> Category: KKRhost, dirac
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> SIMPSON - INTERGRATION FOR COMPLEX INTEGRAND  FX FROM 1 TO JTOP
+  !> AND EQUIDISTANT MESH    I
+  !>  INT = [ F1 + 4*F2 + 2*F3 + .... + 4F(N-1) + FN ]/3     N:ODD  
+  !>
+  !>           FX = AG*AG*RPW   and   FX = AF*AF*RPW
+  !-------------------------------------------------------------------------------
   subroutine cintabr(ag, bg, agbg, af, bf, afbf, rpw, nka, nkb, jtop, nrmax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *  SIMPSON - INTERGRATION FOR COMPLEX INTEGRAND  FX FROM 1 TO JTOP *
-    ! *  AND EQUIDISTANT MESH    I                                       *
-    ! *   INT = [ F1 + 4*F2 + 2*F3 + .... + 4F(N-1) + FN ]/3     N:ODD   *
-    ! *                                                                  *
-    ! *            FX = AG*AG*RPW   and   FX = AF*AF*RPW                 *
-    ! *                                                                  *
-    ! ********************************************************************
 
+    use :: mod_datatypes, only: dp
     implicit none
-
 
     ! Dummy arguments
     integer :: jtop, nka, nkb, nrmax

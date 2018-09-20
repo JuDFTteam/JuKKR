@@ -4,15 +4,23 @@ module mod_calrmt
 
 contains
 
-  ! ************************************************************************
+
+  !-------------------------------------------------------------------------------
+  !> Summary:Calculates the muffin-tin radius
+  !> Author: 
+  !> Category: KKRhost, radial-grid
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> This subroutine calculates imt and rmt(cal-rmt)
+  !> and prints some informations about the used meshes
+  !> imtl = maximum number of meshpoints generating a radius
+  !> less or equal than rmt
+  !> imt  = number of meshpoint generating a new mt-radius closer to
+  !> mt-radius than every other meshpoint
+  !-------------------------------------------------------------------------------  
   subroutine calrmt(ipf, ipfe, ipe, imt, z, rmt, rws, rmtnew, alat, drdi, a, b, irws, r, ifile, kshape)
     ! ***********************************************************************
-    ! this subroutine calculates imt and rmt(cal-rmt)
-    ! and prints some informations about the used meshes
-    ! imtl = maximumnumber of meshpoints generating a radius
-    ! less or equal than rmt
-    ! imt  = number of meshpoint generating a new mt-radius closer th
-    ! mt-radius than every ather meshpoint
+    ! 
     ! ***********************************************************************
     use :: mod_rcstop
     implicit none

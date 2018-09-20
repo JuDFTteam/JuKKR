@@ -2,23 +2,27 @@ module mod_cpamillsx
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Perform CPA iteration with Mills algorithm
+  !> Author: 
+  !> Date: 15/12/03
+  !> Category: KKRhost, coherent-potential-approx
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Perform  CPA-iteration according    MILLS's  algorithm
+  !>                                                                 
+  !> the CPA - iteration step for site IQ is omitted if            
+  !> ICPA(IQ) = 0 ( set in <INITALL> )                             
+  !>                                                               
+  !> only the projection matrix  DTILT(G) is needed                
+  !> this is set up with respect to the global frame               
+  !> for this reason MSST has to be rotated prior calling <GETDMAT>
+  !>                                                               
+  !> allows an atom type IT to have different orientation of       
+  !> its moment on different but equivalent sites  IQ
+  !-------------------------------------------------------------------------------
   subroutine cpamillsx(itcpa, cpaerr, cpacorr, cpachng, iprint, icpa, nq, nkmq, noq, itoq, conc, mssq, msst, tauq, dmssq, kmrot, drotq, ntmax, nqmax, nkmmax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   perform  CPA-iteration according    MILLS's  algorithm         *
-    ! *                                                                  *
-    ! *   the CPA - iteration step for site IQ is omitted if             *
-    ! *   ICPA(IQ) = 0 ( set in <INITALL> )                              *
-    ! *                                                                  *
-    ! *   only the projection matrix  DTILT(G) is needed                 *
-    ! *   this is set up with respect to the global frame                *
-    ! *   for this reason MSST has to be rotated prior calling <GETDMAT> *
-    ! *                                                                  *
-    ! *   allows an atom type IT to have different orientation of        *
-    ! *   its moment on different but equivalent sites  IQ               *
-    ! *                                                                  *
-    ! * 15/12/03                                                         *
-    ! ********************************************************************
+
     use :: mod_types, only: t_inc
     use :: mod_datatypes, only: dp
     use :: mod_getdmat

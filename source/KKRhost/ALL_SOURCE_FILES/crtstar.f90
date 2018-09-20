@@ -1,16 +1,25 @@
 module mod_crtstar
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: crtstar
 
 contains
 
-  ! 20.07.96 ***************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Apply space-group symmetries to real-space vector
+  !> Author: 
+  !> Date: 20.07.96
+  !> Category: KKRhost, k-points
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> THE SYMMETRY OPERATIONS OF THE SYMMETRY GROUP ARE APPLIED TO THE
+  !> INPUT VECTOR RATOM
+  !-------------------------------------------------------------------------------
   subroutine crtstar(ratom, nshell, nd, irot, isymindex, rrot)
-    ! ************************************************************************
-    ! THE SYMMETRY OPERATIONS OF THE SYMMETRY GROUP ARE APPLIED TO THE
-    ! INPUT VECTOR RATOM
-    ! ------------------------------------------------------------------------
+
+    use :: mod_datatypes, only: dp
     implicit none
+
     integer :: irot, nshell
     real (kind=dp) :: nd(64, 3, *), ratom(3, *), rrot(48, 3, *)
     integer :: isymindex(*)
@@ -18,7 +27,7 @@ contains
     integer :: i, id, ns, k, j, isym
     logical :: test
     external :: test
-    ! ------------------------------------------------------------------------
+
 
     do ns = 1, nshell
       do id = 1, irot
