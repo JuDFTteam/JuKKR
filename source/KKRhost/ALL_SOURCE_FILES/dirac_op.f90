@@ -2,35 +2,39 @@ module mod_dirac_op
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Solve radial equation for Dirac with orbital polarization 
+  !> Author: H. Ebert
+  !> Date: 26/07/95
+  !> Category: KKRhost, single-site, dirac
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> ROUTINE TO SOLVE THE SPIN-POLARISED RADIAL DIRAC EQUATIONS
+  !>
+  !>           in case of    ORBITAL POLARISATION
+  !>
+  !>  the outward integration is started by a power expansion
+  !>  and continued by ADAMS-BASHFORTH-MOULTON - pred./corr.-method
+  !>  NABM = 4(5) selects the 4(5)-point formula
+  !>
+  !>  the inward integration is started analytically
+  !>
+  !>  returns the wave functions up to the mesh point NMESH
+  !>  PR,QR and PI,QI  with   P=r*g and Q=r*c*f
+  !>  and    R/I standing for regular/irregular solution
+  !>
+  !> 26/07/95  HE
+  !-------------------------------------------------------------------------------
   subroutine dirabmop(getirrsol, c, it, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, cg8, ameopo, v, b, at, z, nucleus, r, drdi, dovr, nmesh, pr, qr, pi, qi, d_p, dq, ap, aq, &
     lop, ntmax, nlamax, nkmmax, nrmax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   ROUTINE TO SOLVE THE SPIN-POLARISED RADIAL DIRAC EQUATIONS     *
-    ! *                                                                  *
-    ! *            in case of    ORBITAL POLARISATION                    *
-    ! *                                                                  *
-    ! *   the outward integration is started by a power expansion        *
-    ! *   and continued by ADAMS-BASHFORTH-MOULTON - pred./corr.-method  *
-    ! *   NABM = 4(5) selects the 4(5)-point formula                     *
-    ! *                                                                  *
-    ! *   the inward integration is started analytically                 *
-    ! *                                                                  *
-    ! *   returns the wave functions up to the mesh point NMESH          *
-    ! *   PR,QR and PI,QI  with   P=r*g and Q=r*c*f                      *
-    ! *   and    R/I standing for regular/irregular solution             *
-    ! *                                                                  *
-    ! *  26/07/95  HE                                                    *
-    ! ********************************************************************
 
+    use :: mod_datatypes, only: dp
     use :: mod_types, only: t_inc
-    use :: mod_datatypes
-    use :: mod_ylag
-    use :: mod_rinvgj
-    use :: mod_ikapmue
-    use :: mod_rinit
-    use :: mod_intcheb_cell
-    use :: mod_cjlz
+    use :: mod_ylag, only: ylag
+    use :: mod_rinvgj, only: rinvgj
+    use :: mod_ikapmue, only: ikapmue
+    use :: mod_rinit, only: rinit
+    use :: mod_cjlz, only: cjlz
     implicit none
 
     ! PARAMETER definitions

@@ -1,17 +1,24 @@
 module mod_drvrho
 
+  private
+  public :: drvrho_qdos
+  
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Driver for relativistic density calculation
+  !> Author: V. Popescu
+  !> Category: KKRhost, dirac, physical-observables
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Driving routine to call relativistic routines
+  !>          < SSITE >, < SCFCHRDNS >, < CALCMVEC >
+  !> to calculate the charge and spin density in the REL mode
+  !> V. Popescu, Munich, May 2004
+  !-------------------------------------------------------------------------------
   subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, eryd, we, ielast, gmatll, vt, bt, r, drdi, r2drdi, zat_in, jws_in, ishift, solver, soctl, ctl, &
     qmtet, qmphi, itermvdir, mvevil, mvevilef, lmmaxd, lmaxd, irmd, lmpotd, iemxd, nmvecmax, i1, nqdos) ! qdos ruess
-    ! ********************************************************************
-    ! *                                                                  *
-    ! * driving routine to call relativistic routines                    *
-    ! *          < SSITE >, < SCFCHRDNS >, < CALCMVEC >                  *
-    ! * to calculate the charge and spin density in the REL mode         *
-    ! * v.popescu, munich, may 2004                                      *
-    ! *                                                                  *
-    ! ********************************************************************
+
     use :: mod_types, only: t_tgmat
     use :: mod_datatypes, only: dp
     use :: mod_amemagvec

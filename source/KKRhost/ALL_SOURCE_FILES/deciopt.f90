@@ -1,39 +1,45 @@
 module mod_deciopt
 
+  private
+  public :: deciopt
+  
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Read-in driver for decifiles
+  !> Author: 
+  !> Category: KKRhost, input-output
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> This routine treats the DECIMATION case setting up the single-site
+  !> (Delta t)^(-1) matrices and the charge moments of the host(s).    
+  !>                                                                   
+  !> This is realised in two ways:                                     
+  !>      - either reading in the matrices (and moments - if SCFSTEPS  
+  !>        is greater than 1) as written out in a previous (bulk) run 
+  !>        -- DECIFILES token points to the files containing the nece-
+  !>        ssary information                                          
+  !>      - or reading in the self-consistent potential for each host  
+  !>        and effectively calculating the matrices; the potential    
+  !>        must have the specific format set in < OUTPOTHOST > routine
+  !>        and the DECIPOTS token should point to the corresponding   
+  !>        potential file(s)                                          
+  !>
+  !> Notes:                                                            
+  !>        - DECIFILES token is considered by default and sought first
+  !>                          is requiring the same energy mesh for the
+  !>                          system as for the host                   
+  !>        - DECIPOTS token is not restrictive in this sense          
+  !>                         however, it does not calculate charge mo- 
+  !>                         ments -- does not work in SCF mode        
+  !>                         is not dealing with CPA host so far       
+  !>                         is not dealing with NON-SPHERICAL poten-  
+  !>                         tials so far                              
+  !>
+  !>                                     V. Popescu - Munich, Dec 04
+  !-------------------------------------------------------------------------------
   subroutine deciopt(alat, ins, krel, kvrel, kmrot, nspin, naez, lmmax, bravais, tk, npol, npnt1, npnt2, npnt3, ez, ielast, kaoez, lefttinvll, righttinvll, vacflag, nlbasis, &
     nrbasis, cmomhost, vref, rmtref, nref, refpot, lmaxd, lmgf0d, lmmaxd, lm2d, nembd1, iemxd, nspind, lmpotd, natypd, irmd, ipand)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * This routine treats the DECIMATION case setting up the single-site *
-    ! * (Delta t)^(-1) matrices and the charge moments of the host(s).     *
-    ! *                                                                    *
-    ! * This is realised in two ways:                                      *
-    ! *      - either reading in the matrices (and moments - if SCFSTEPS   *
-    ! *        is greater than 1) as written out in a previous (bulk) run  *
-    ! *        -- DECIFILES token points to the files containing the nece- *
-    ! *        ssary information                                           *
-    ! *      - or reading in the self-consistent potential for each host   *
-    ! *        and effectively calculating the matrices; the potential     *
-    ! *        must have the specific format set in < OUTPOTHOST > routine *
-    ! *        and the DECIPOTS token should point to the corresponding    *
-    ! *        potential file(s)                                           *
-    ! *                                                                    *
-    ! * Notes:                                                             *
-    ! *        - DECIFILES token is considered by default and sought first *
-    ! *                          is requiring the same energy mesh for the *
-    ! *                          system as for the host                    *
-    ! *        - DECIPOTS token is not restrictive in this sense           *
-    ! *                         however, it does not calculate charge mo-  *
-    ! *                         ments -- does not work in SCF mode         *
-    ! *                         is not dealing with CPA host so far        *
-    ! *                         is not dealing with NON-SPHERICAL poten-   *
-    ! *                         tials so far                               *
-    ! *                                                                    *
-    ! *                                     v.popescu - munich, Dec 04     *
-    ! *                                                                    *
-    ! **********************************************************************
 
     use :: mod_datatypes, only: dp
     use :: mod_decitset
@@ -58,15 +64,14 @@ contains
     logical :: vacflag(2)
     ! ..
     ! .. Local scalars
-    integer :: ierror, il, ie, ispin, nspinso ! ruess: for tmat new solver
+    integer :: ierror, il, ie, ispin, nspinso ! ruess: for tmat newsolver
     complex (kind=dp) :: cfctor
     character (len=40) :: fileleft, fileright
     character (len=256) :: uio                             ! NCOLIO=256
 
     ! ..                                  ! ruess: for NEWSOSOL running option
     ! .. External Functions ..
-    logical :: opt
-    external :: opt
+    logical, external :: opt
 
     ! ======================================================================
     write (1337, '(79("="))')

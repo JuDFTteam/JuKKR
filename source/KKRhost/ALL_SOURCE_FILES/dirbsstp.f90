@@ -2,33 +2,35 @@ module mod_dirbsstp
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Burlisch-Stoer step for Dirac solver
+  !> Author: 
+  !> Category: KKRhost, dirac, numerical-tools
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Burlisch-Stoer step with monitoring of local truncation error
+  !> on entry: X,Y,DXDY  for last mesh-point
+  !> on exit:  X,Y,DXDY  updated for X = X(last) + HTRY
+  !>
+  !> see: numerical recipes chapter 15.4
+  !>
+  !> note: don't set NUSE    > NUSEMAX in <DIRBSRZE>
+  !>       don't set ISEQMAX > ISEQMAX in <DIRBSRZE>
+  !>       no step size adjusted in case of no convergency > STOP
+  !-------------------------------------------------------------------------------
   subroutine dirbsstp(y, dydx, nv, x, htry, eps, yscal, b, v, r, drdi, nmesh)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   Burlisch-Stoer step with monitoring of local truncation error  *
-    ! *   on entry: X,Y,DXDY  for last mesh-point                        *
-    ! *   on exit:  X,Y,DXDY  updated for X = X(last) + HTRY             *
-    ! *                                                                  *
-    ! *   see: numerical recipes chapter 15.4                            *
-    ! *                                                                  *
-    ! *   note: don't set NUSE    > NUSEMAX in <DIRBSRZE>                *
-    ! *         don't set ISEQMAX > ISEQMAX in <DIRBSRZE>                *
-    ! *         no step size adjusted in case of no convergency > STOP   *
-    ! *                                                                  *
-    ! ********************************************************************
 
     use :: mod_datatypes, only: dp
     use :: mod_types, only: t_inc
-    use :: mod_dirbsrad
-    use :: mod_dirbsrze
-    use :: mod_dirbsmid
+    use :: mod_dirbsrad, only: dirbsrad
+    use :: mod_dirbsrze, only: dirbsrze
+    use :: mod_dirbsmid, only: dirbsmid
     implicit none
 
     include 'sprkkr_rmesh.dim'
 
     ! PARAMETER definitions
-    integer :: iseqmax, nuse
-    parameter (iseqmax=30, nuse=7)
+    integer, parameter :: iseqmax=30, nuse=7
     complex (kind=dp) :: tiny
     ! Bereshad:
     ! parameter (  tiny  = (1.0d-20,1.0d-20)  )

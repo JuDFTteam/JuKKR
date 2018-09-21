@@ -2,38 +2,41 @@ module mod_decitset
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Copmute decimation t-matrix from potential
+  !> Author: 
+  !> Category: KKRhost, input-output, single-site, potential
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> This subroutine is thought as an alternative to the < decimaread >
+  !> which requires an a priori calculated set of single-site matrices 
+  !> over a fixed energy mesh. It is using the potential as written out
+  !> in < outpothost > routine and determines the matrix               
+  !>                                                                   
+  !>            /         \-1   /             \-1                      
+  !>            | Delta t |   = |  t    - t   |                        
+  !>            \         /     \  sys    ref /                        
+  !>                                                                   
+  !> for the left and the right host, using the energy mesh as read in 
+  !> from the input-file                                               
+  !>                                                                   
+  !>                                        v.popescu - munich, Dec 04 
+  !>                                                                   
+  !> Notes: - no charge moments are calculated -- thus this option CAN 
+  !>          NOT be used in SCF calculations                          
+  !>        - non-spherical case not implemented, neither LDA+U (al-   
+  !>          though the interface to regsol in decitmat is supplied)  
+  !>        - CPA case not implemented - requires BZ integration
+  !-------------------------------------------------------------------------------
   subroutine decitset(alat, bravsys, ez, ielast, nlbasis, nrbasis, fileleft, fileright, ins, kvrel, krel, nspin, kmrot, vref, rmtref, nref, refpot, lefttinv, righttinv, vacflag, &
     nembd1, iemxd, irmd, ipand, lmaxd, lmgf0d, lmmaxd, lm2d, nspind)
     use :: mod_datatypes, only: dp
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * This subroutine is thought as an alternative to the < decimaread > *
-    ! * which requires an a priori calculated set of single-site matrices  *
-    ! * over a fixed energy mesh. It is using the potential as written out *
-    ! * in < outpothost > routine and determines the matrix                *
-    ! *                                                                    *
-    ! *            /         \-1   /             \-1                       *
-    ! *            | Delta t |   = |  t    - t   |                         *
-    ! *            \         /     \  sys    ref /                         *
-    ! *                                                                    *
-    ! * for the left and the right host, using the energy mesh as read in  *
-    ! * from the input-file                                                *
-    ! *                                                                    *
-    ! *                                        v.popescu - munich, Dec 04  *
-    ! *                                                                    *
-    ! * Notes: - no charge moments are calculated -- thus this option CAN  *
-    ! *          NOT be used in SCF calculations                           *
-    ! *        - non-spherical case not implemented, neither LDA+U (al-    *
-    ! *          though the interface to regsol in decitmat is supplied)   *
-    ! *        - CPA case not implemented - requires BZ integration        *
-    ! *                                                                    *
-    ! **********************************************************************
-    use :: mod_calctref13
-    use :: mod_decipotbas
-    use :: mod_cmatstr
-    use :: mod_decipothead
-    use :: mod_decitmat
-    use :: mod_lngstring
+    use :: mod_cmatstr, only: cmatstr
+    use :: mod_lngstring, only: lngstring
+    use :: mod_calctref13, only: calctref13
+    use :: mod_decipotbas, only: decipotbas
+    use :: mod_decipothead, only: decipothead
+    use :: mod_decitmat, only: decitmat
     implicit none
     ! ..
     ! .. Scalars arguments ..

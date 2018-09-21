@@ -2,25 +2,30 @@ module mod_dirac_bs
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Solve radial Dirac equation
+  !> Author: H. Ebert
+  !> Category: KKRhost, dirac, single-site
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> ROUTINE TO SOLVE THE SPIN-POLARISED RADIAL DIRAC EQUATIONS
+  !>
+  !>  The outward integration is started by a power expansion    
+  !>  and the inward integration is started analytically
+  !>  the integration itself is done by the BURLISCH-STOER method
+  !>  see: numerical recipes chapter 15.4
+  !>
+  !>  Returns the wave functions up to the mesh point NMESH
+  !>  PR,QR and PI,QI  with   P=r*g and Q=r*c*f
+  !>  and    R/I standing for regular/irregular solution
+  !>
+  !>  bug fixed 93/11/24
+  !> 31/10/94  HE  arg. list changed - return P,Q instead of g,f
+  !> 06/12/94  HE  CM real
+  !> 29/04/95  MB  Adopted for finite nucleus
+  !-------------------------------------------------------------------------------
   subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, cg8, v, b, z, nucleus, r, drdi, dovr, nmesh, pr, qr, pi, qi, d_p, dq)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   ROUTINE TO SOLVE THE SPIN-POLARISED RADIAL DIRAC EQUATIONS     *
-    ! *                                                                  *
-    ! *   the outward integration is started by a power expansion        *
-    ! *   and the inward integration is started analytically             *
-    ! *   the integration itself is done by the BURLISCH-STOER method    *
-    ! *   see: numerical recipes chapter 15.4                            *
-    ! *                                                                  *
-    ! *   returns the wave functions up to the mesh point NMESH          *
-    ! *   PR,QR and PI,QI  with   P=r*g and Q=r*c*f                      *
-    ! *   and    R/I standing for regular/irregular solution             *
-    ! *                                                                  *
-    ! *   bug fixed 93/11/24                                             *
-    ! *  31/10/94  HE  arg. list changed - return P,Q instead of g,f     *
-    ! *  06/12/94  HE  CM real                                           *
-    ! *  29/04/95  MB  Adopted for finite nucleus                        *
-    ! ********************************************************************
+
     use :: mod_datatypes, only: dp
     use :: mod_dirbsstp
     use :: mod_cjlz
@@ -100,8 +105,6 @@ contains
         bc(iv-1) = bc(iv-1) + cmi(iv, n)*b(n)
       end do
     end do
-
-
 
     ! calculate g-coefficients of b-field
 
@@ -273,8 +276,6 @@ contains
         end do
       end if
       ! MBE
-
-
 
       ! PERFORM SUMMATION OVER WAVE FUNCTION - EXPANSION COEFFICIENTS
       ! FOR THE FIRST   NABM   R - MESH - POINTS

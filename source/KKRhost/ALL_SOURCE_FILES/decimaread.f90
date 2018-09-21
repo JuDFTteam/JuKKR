@@ -1,36 +1,41 @@
 module mod_decimaread
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: decimaread
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Read in left and right t-matrices for decimation
+  !> Author: 
+  !> Category: KKRhost, single-site, input-output
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> This subroutine reads in the t-matrices of the left              
+  !> and right host for the decimation method.                        
+  !>                                                                  
+  !> The t-matrices are writen out in kloopz1  (option 'deci-out')    
+  !>                                                                  
+  !> The host files contain the CMOMHOST data neeed to create the     
+  !> interatomic potential in subroutine < vinterface >               
+  !> This is going to be read in < cmomsread >, the decimation files  
+  !> are for this reason not rewinded.                                
+  !>                                                                  
+  !> In case of 'vacuum' setting on one of the sides, no energy points
+  !> are read in and the VACLAG is set to TRUE.                       
+  !>                                                                  
+  !> A call of this routine with IENERGY = 0 means that we are not in 
+  !> the energy loop - only the header of each decimation file read in
+  !>                                                                  
+  !> IENERGY <> 0 reads in the matrices/energy at IENERGY -> returned
+  !-------------------------------------------------------------------------------
   subroutine decimaread(ez, tk, nptp1, nptp2, nptp3, npol, ispin, lefttinvll, righttinvll, vacflag, ienergy, nlbasis, nrbasis, naez, kaoez, kmrot, ins, nspin, lmmax, ielast, &
-    fileleft, fileright, krel, natypd, lmmaxd, nembd1)
-    ! ,KORBIT)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * This subroutine reads in the t-matrices of the left                *
-    ! * and right host for the decimation method.                          *
-    ! *                                                                    *
-    ! * The t-matrices are writen out in kloopz1  (option 'deci-out')      *
-    ! *                                                                    *
-    ! * The host files contain the CMOMHOST data neeed to create the       *
-    ! * interatomic potential in subroutine < vinterface >                 *
-    ! * This is going to be read in < cmomsread >, the decimation files    *
-    ! * are for this reason not rewinded.                                  *
-    ! *                                                                    *
-    ! * In case of 'vacuum' setting on one of the sides, no energy points  *
-    ! * are read in and the VACLAG is set to TRUE.                         *
-    ! *                                                                    *
-    ! * A call of this routine with IENERGY = 0 means that we are not in   *
-    ! * the energy loop - only the header of each decimation file read in  *
-    ! *                                                                    *
-    ! * IENERGY <> 0 reads in the matrices/energy at IENERGY -> returned   *
-    ! *                                                                    *
-    ! **********************************************************************
-    use :: mod_version_info
-    use :: mod_lngstring
-    use :: mod_cinit
+    fileleft, fileright, krel, natypd, lmmaxd, nembd1) ! ,KORBIT)
+
+    use :: mod_datatypes, only: dp
+    use :: mod_version_info, only: version_check_header
+    use :: mod_lngstring, only: lngstring
+    use :: mod_cinit, only: cinit
     implicit none
     ! ..
     integer :: krel, natypd, nembd1, lmmaxd ! ,KORBIT

@@ -2,44 +2,33 @@ module mod_decimate
 
 contains
 
-  ! -------------------------------------------------------------------------------
-  ! SUBROUTINE: DECIMATE
-  !> @brief Decimation method
+  !-------------------------------------------------------------------------------
+  !> Summary: Decimation method
+  !> Author: 
+  !> Category: KKRhost, structural-greensfunction, k-points
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Performs decimation step using t-matrices of left and right hosts to create structural GF
+  !>
   !> - Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to
   ! Fortran90
-  ! -------------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine decimate(gllke, naez, tinvbup, tinvbdown, vacflag, factl, nlbasis, nrbasis)
 
-    use :: global_variables
+    use :: global_variables, only: lmmaxd, alm, ndim_slabinv, nprincd 
     use :: mod_datatypes, only: dp
-    use :: mod_bofm
-    use :: mod_surfgf
+    use :: mod_bofm, only: bofm
+    use :: mod_surfgf, only: surfgf
 
     implicit none
 
-    ! .. Parameters ..
-
-    ! *********************************************************************
-    ! * For KREL = 1 (relativistic mode)                                  *
-    ! *                                                                   *
-    ! *  NPOTD = 2 * NATYPD                                               *
-    ! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
-    ! *  NSPIND = 1                                                       *
-    ! *  LMGF0D = (LMAXD+1)^2 dimension of the reference system Green     *
-    ! *          function, set up in the spin-independent non-relativstic *
-    ! *          (l,m_l)-representation                                   *
-    ! *                                                                   *
-    ! *********************************************************************
-
     integer, intent (in) :: naez   !! Number of atoms in unit cell
-    integer, intent (in) :: nlbasis !! Number of basis layers of left host
-    ! (repeated units)
-    integer, intent (in) :: nrbasis !! Number of basis layers of right host
-    ! (repeated units)
-    logical, dimension (2), intent (in) :: vacflag
+    integer, intent (in) :: nlbasis !! Number of basis layers of left host (repeated units)
+    integer, intent (in) :: nrbasis !! Number of basis layers of right host (repeated units)
+    logical, dimension (2), intent (in) :: vacflag !! flag indicating if outside is vacuum or not
     complex (kind=dp), dimension (lmmaxd, lmmaxd), intent (in) :: factl
-    complex (kind=dp), dimension (lmmaxd, lmmaxd, *), intent (in) :: tinvbup
-    complex (kind=dp), dimension (lmmaxd, lmmaxd, *), intent (in) :: tinvbdown
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, *), intent (in) :: tinvbup !! left host t-matrix
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, *), intent (in) :: tinvbdown !! right host t-matrix
     complex (kind=dp), dimension (alm, alm), intent (inout) :: gllke
     ! .. Local Scalars
     integer :: ldi1, ldi1t, ldi2, ldi2t, lm1, lm2, nlayer, icall

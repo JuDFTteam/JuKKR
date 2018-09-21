@@ -2,19 +2,22 @@ module mod_drvreltmat
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Driver of relativistic t-matrix calculation
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Driving routine to call relativistic < SSITE > routine           *
+  !> only to calculate the single-site t matrix                       *
+  !> V. Popescu, Munich, May 2004
+  !-------------------------------------------------------------------------------
   subroutine drvreltmat(eryd, tmatll, vt, bt, r, drdi, r2drdi, zat_in, jws_in, solver, soctl, ctl, lmmaxd, lmaxd, irmd)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! * driving routine to call relativistic < SSITE > routine           *
-    ! * only to calculate the single-site t matrix                       *
-    ! * v.popescu, munich, may 2004                                      *
-    ! *                                                                  *
-    ! ********************************************************************
 
     use :: mod_datatypes, only: dp
-    use :: mod_ikmlin
-    use :: mod_calccgc
-    use :: mod_ssite
+    use :: mod_ikmlin, only: ikmlin
+    use :: mod_calccgc, only: calccgc
+    use :: mod_ssite, only: ssite
     implicit none
 
     ! PARAMETER definitions

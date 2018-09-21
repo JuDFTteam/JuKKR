@@ -2,13 +2,16 @@ module mod_dirbsrad
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Derivative of coupled radial Dirac equations 
+  !> Author: 
+  !> Category: KKRhost, dirac, singel-site
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Supply the derivatives for the coupled set of
+  !> radial dirac equation in case of a spin-dependent potential
+  !-------------------------------------------------------------------------------
   subroutine dirbsrad(xbs, y, dydx, drdi, b, v, r, nmesh)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   supply the derivatives for the coupled set of                  *
-    ! *   radial dirac equation in case of a spin-dependent potential    *
-    ! *                                                                  *
-    ! ********************************************************************
 
     use :: mod_datatypes, only: dp
     use :: mod_dirbslag

@@ -2,16 +2,23 @@ module mod_drvbastrans
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Basis transformation between rel./non-rel. representations 
+  !> Author: 
+  !> Category: KKRhost, special-functions
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Basis transformation between relativistic and non-relativistic representations
+  !> in the case of NEWSOSOL this is used for the transformation matrices via the
+  !> changerep routine
+  !-------------------------------------------------------------------------------
   subroutine drvbastrans(rc, crel, rrel, srrel, nrrel, irrel, nlmax, nkmmax, nmuemax, nkmpmax, nkmax, linmax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *                                                                  *
-    ! ********************************************************************
+
     use :: mod_datatypes, only: dp
-    use :: mod_bastrmat
-    use :: mod_ikmlin
-    use :: mod_strsmat
-    use :: mod_calccgc
+    use :: mod_bastrmat, only: bastrmat
+    use :: mod_ikmlin, only: ikmlin
+    use :: mod_strsmat, only: strsmat
+    use :: mod_calccgc, only: calccgc
     implicit none
 
     ! Dummy arguments

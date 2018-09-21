@@ -1,46 +1,56 @@
+!-------------------------------------------------------------------------------
+!> Summary: Module for radial Dirac solver with manipulated SOC operator
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 module mod_dirac_soc2
+
+  private
+  public :: dirabmsoc2
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Solve radial Dirac equation with manipulated SOC operator
+  !> Author: H. Ebert
+  !> Category: KKRhost, single-site, dirac
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> ROUTINE TO SOLVE THE SPIN-POLARISED RADIAL DIRAC EQUATIONS     *
+  !>                                                                 *
+  !>  with the SOC-operator manipulated                              *
+  !>                                                                 *
+  !>          H_soc = xi [ (sig_x*l_x+sig*l_y) + sig_z*l_z ]         *
+  !>                                                                 *
+  !>  SOCSCL = -1  ==  IXY = 0 : neglect 1st term of SOC-operator    *
+  !>  SOCSCL = -2: ==  IXY = 1 : neglect 2nd term of SOC-operator    *
+  !>                                                                 *
+  !>  the outward integration is started by a power expansion        *
+  !>  and continued by ADAMS-BASHFORTH-MOULTON - pred./corr.-method  *
+  !>  NABM = 4(5) selects the 4(5)-point formula                     *
+  !>                                                                 *
+  !>  the inward integration is started analytically                 *
+  !>                                                                 *
+  !>  returns the wave functions up to the mesh point NMESH          *
+  !>  PR,QR and PI,QI  with   P=r*g and Q=r*c*f                      *
+  !>  and    R/I standing for regular/irregular solution             *
+  !>                                                                 *
+  !> 12/12/97  HE                                                    *
+  !> 21/01/98  HE  finite nucelus
+  !-------------------------------------------------------------------------------
   subroutine dirabmsoc2(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, cg8, v, b, z, nucleus, r, drdi, dovr, nmesh, dxp, pr, qr, pi, qi, d_p, dq, nrmax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   ROUTINE TO SOLVE THE SPIN-POLARISED RADIAL DIRAC EQUATIONS     *
-    ! *                                                                  *
-    ! *   with the SOC-operator manipulated                              *
-    ! *                                                                  *
-    ! *           H_soc = xi [ (sig_x*l_x+sig*l_y) + sig_z*l_z ]         *
-    ! *                                                                  *
-    ! *   SOCSCL = -1  ==  IXY = 0 : neglect 1st term of SOC-operator    *
-    ! *   SOCSCL = -2: ==  IXY = 1 : neglect 2nd term of SOC-operator    *
-    ! *                                                                  *
-    ! *   the outward integration is started by a power expansion        *
-    ! *   and continued by ADAMS-BASHFORTH-MOULTON - pred./corr.-method  *
-    ! *   NABM = 4(5) selects the 4(5)-point formula                     *
-    ! *                                                                  *
-    ! *   the inward integration is started analytically                 *
-    ! *                                                                  *
-    ! *   returns the wave functions up to the mesh point NMESH          *
-    ! *   PR,QR and PI,QI  with   P=r*g and Q=r*c*f                      *
-    ! *   and    R/I standing for regular/irregular solution             *
-    ! *                                                                  *
-    ! *  12/12/97  HE                                                    *
-    ! *  21/01/98  HE  finite nucelus                                    *
-    ! ********************************************************************
 
-    use :: mod_types, only: t_inc
     use :: mod_datatypes, only: dp
-    use :: mod_ylag
-    use :: mod_rinvgj
-    use :: mod_cjlz
-    use :: mod_cinit
+    use :: mod_types, only: t_inc
+    use :: mod_ylag, only: ylag
+    use :: mod_rinvgj, only: rinvgj
+    use :: mod_cjlz, only: cjlz
+    use :: mod_cinit, only: cinit
     implicit none
 
     ! PARAMETER definitions
 
     integer :: mpsmax, npemax, nabm
-    parameter (mpsmax=40, npemax=4)
-    parameter (nabm=4)
+    parameter (mpsmax=40, npemax=4, nabm=4)
     ! PARAMETER ( NABM   =      5 )
     complex (kind=dp) :: cz
     parameter (cz=(0.0d0,0.0d0))
@@ -693,16 +703,22 @@ contains
 
   end subroutine dirabmsoc2
 
+
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculate radial derivative of potential
+  !> Author: H. Ebert
+  !> Category: KKRhost, single-site, dirac, potential
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> CALCULATE DERIVATIVE OF THE POTENTIAL
+  !>   DV/DR= ( D(R**2*V)/DR-2.R*V ) / R**2  
+  !>
+  !>   calling J.REDINGER's routine <DERSPL> 
+  !>
+  !> 27/10/94  HE  adopted for SPRKKR-package
+  !-------------------------------------------------------------------------------
   subroutine dvdrspline(v, r, dvdr, n)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   CALCULATE DERIVATIVE OF THE POTENTIAL                          *
-    ! *   DV/DR= ( D(R**2*V)/DR-2.R*V ) / R**2                           *
-    ! *                                                                  *
-    ! *   calling J.REDINGER's routine <DERSPL>                          *
-    ! *                                                                  *
-    ! * 27/10/94  HE  adopted for SPRKKR-package                         *
-    ! ********************************************************************
+
     use :: mod_datatypes, only: dp
     implicit none
 
@@ -725,16 +741,21 @@ contains
     end do
   end subroutine dvdrspline
 
+
+  !-------------------------------------------------------------------------------
+  !> Summary: Find functiona values and spline derivatives
+  !> Author: S. Redinger
+  !> Category: KKRhost, single-site, dirac, potential
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> F(I) ARE THE FUNCTION VALUES AT THE POINTS X(I) FOR I=1,N
+  !> AND THE SPLINE DERIVATIVES D(I) ARE FOUND.
+  !> THE DIMENSION OF A MUST NOT BE LESS THAN 3*N.
+  !>
+  !> Sepp Redinger 1985
+  !-------------------------------------------------------------------------------
   subroutine derspl(n, x, f, d)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   F(I) ARE THE FUNCTION VALUES AT THE POINTS X(I) FOR I=1,N      *
-    ! *   AND THE SPLINE DERIVATIVES D(I) ARE FOUND.                     *
-    ! *   THE DIMENSION OF A MUST NOT BE LESS THAN 3*N.                  *
-    ! *                                                                  *
-    ! *   sepp redinger 1985                                             *
-    ! *                                                                  *
-    ! ********************************************************************
+
     use :: mod_types, only: t_inc
     use :: mod_datatypes, only: dp
     implicit none

@@ -1,6 +1,19 @@
+!-------------------------------------------------------------------------------
+!> Summary: EMPTY
+!> Deprecated: True ! This needs to be set to True for deprecated subroutines
+!>
+!> @warning everythong os commented out! @ endwarning
+!-------------------------------------------------------------------------------
 module mod_dirac_bi
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: EMPTY
+  !> Author: 
+  !> Category: KKRhost, dirac
+  !> Deprecated: True ! This needs to be set to True for deprecated subroutines
+  !>
+  !-------------------------------------------------------------------------------
   ! SUBROUTINE DIRABMBI(GETIRRSOL,C,IT,E,L,MJ,KAP1,KAP2,PIS,CG1,CG2,
   ! &                    CG4,CG5,CG8,AMEBI1,AMEBI2,V,B,AT,Z,NUCLEUS,R,
   ! &                    DRDI,DOVR,NMESH,PR,QR,PI,QI,DP,DQ,AP,AQ,NTMAX,

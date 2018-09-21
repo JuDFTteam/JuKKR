@@ -2,16 +2,20 @@ module mod_decitmat
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Compute t-matrix from decipot file
+  !> Author: 
+  !> Category: KKRhost, single-site
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> A modified form of the CALCTMAT routine to deal with the host
+  !> t-matrices in case of decimation
+  !>
+  !> Non-spherical potential not implemented yet, neither LDA+U
+  !-------------------------------------------------------------------------------
   subroutine decitmat(eryd, zat, ipan, rr, dror, visp, ircut, rirc, krel, nsra, ins, tmatll, loflm, idoldau, lopt, wldauav, solver, soctl, ctl, zrel, vtrel, btrel, drdi, r2drdi, &
     ipand, irmd, lmaxd, lmaxdp1, lm2d, lmmaxd)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * A modified form of the CALCTMAT routine to deal with the host      *
-    ! * t-matrices in case of decimation                                   *
-    ! *                                                                    *
-    ! * Non-spherical potential not implemented yet, neither LDA+U         *
-    ! *                                                                    *
-    ! **********************************************************************
+
     use :: mod_beshan
     use :: mod_datatypes, only: dp
     use :: mod_drvreltmat

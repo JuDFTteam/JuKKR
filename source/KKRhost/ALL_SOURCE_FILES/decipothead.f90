@@ -1,18 +1,24 @@
 module mod_decipothead
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: decipothead
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Read header of decimate potential file
+  !> Author: 
+  !> Category: KKRhost, input-output
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Reads in the header of the host potential-file 'decimate.pot'
+  !> checking for consistencies with the actual 2D system
+  !>                                         V. Popescu - Munich, Dec 04
+  !-------------------------------------------------------------------------------
   subroutine decipothead(ihost, filehost, ilhost, nathost, vacflag, alat, bravsys, nq, nt, bravais, efermi, insh, krelh, nspinh, ins, krel, nspin, kmrot)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * reads in the header of the host potential-file 'decimate.pot'      *
-    ! * checking for consistencies with the actual 2D system               *
-    ! *                                        v.popescu - munich, Dec 04  *
-    ! *                                                                    *
-    ! **********************************************************************
+
     use :: mod_version_info
+    use :: mod_datatypes, only: dp
     implicit none
     ! ..
     ! .. Arguments

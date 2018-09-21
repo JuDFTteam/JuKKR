@@ -2,15 +2,18 @@ module mod_dirbsmid
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Burlisch-Stoer method
+  !> Author: 
+  !> Category: KKRhost, dirac, numerical-tools
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Modified midpoint step to support the Burlisch-Stoer method
+  !> on exit:  the incremented variable is in   YOUT
+  !>
+  !> see: numerical recipes chapter 15.3
+  !-------------------------------------------------------------------------------
   subroutine dirbsmid(y, dydx, nv, xs, htot, nstep, yout, b, v, r, drdi, nmesh)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   modified midpoint step to support the  Burlisch-Stoer method   *
-    ! *   on exit:  the incremented variable is in   YOUT                *
-    ! *                                                                  *
-    ! *   see: numerical recipes chapter 15.3                            *
-    ! *                                                                  *
-    ! ********************************************************************
 
     use :: mod_datatypes, only: dp
     use :: mod_dirbsrad

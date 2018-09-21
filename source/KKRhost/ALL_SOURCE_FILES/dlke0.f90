@@ -2,17 +2,21 @@ module mod_dlke0
 
 contains
 
-  ! 04.10.95 *************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Driver for lattice fourier transform
+  !> Author: 
+  !> Category: KKRhost, k-points, structural-greensfunction
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Function, set up in the spin-independent non-relativstic
+  !> (l,m_l)-representation
+  !-------------------------------------------------------------------------------
   subroutine dlke0(gllke, alat, naez, cls, nacls, naclsmax, rr, ezoa, atom, bzkp, rcls, ginp)
-    ! **********************************************************************
-    ! *          function, set up in the spin-independent non-relativstic *
-    ! *          (l,m_l)-representation                                   *
-    ! *                                                                   *
-    ! *********************************************************************
-    use :: global_variables
+
+    use :: global_variables, only: lmgf0d, almgf0, naclsd, nrd
     use :: mod_datatypes, only: dp
-    use :: mod_dlke1
-    use :: mod_cinit
+    use :: mod_dlke1, only: dlke1
+    use :: mod_cinit, only: cinit
     implicit none
 
     real (kind=dp) :: alat
@@ -28,11 +32,10 @@ contains
     complex (kind=dp) :: gllke1(almgf0, lmgf0d)
     real (kind=dp) :: kp(6)
 
-    logical :: opt
-    external :: opt
+    logical, external :: opt
+
     ! write(6,*) '>>> DLKE0 : Fourier-transforms the ',
     ! +           'GF of reference system'
-    ! ----------------------------------------------------------------------
 
     call cinit(almgf0*almgf0, gllke(1,1))
 
@@ -59,13 +62,12 @@ contains
       end do
       ! ----------------------------------------------------------------------
 
-      ! -->   symmetrization
     end do
 
 
     if (opt('symG(k) ')) then
 
-
+      ! -->   symmetrization
 
       do i = 1, naez
 
@@ -92,12 +94,11 @@ contains
         end do
 
       end do
-      ! 04.10.95 *************************************************************
+
     end if
-    ! **********************************************************************
-    ! .. Parameters ..
+
     return
-    ! set to 1 if NEWSOSOL under RUNOPT, otherwise 0
+
   end subroutine dlke0
 
 end module mod_dlke0
