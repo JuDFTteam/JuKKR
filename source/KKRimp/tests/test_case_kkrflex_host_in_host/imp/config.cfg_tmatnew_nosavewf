@@ -1,0 +1,118 @@
+#########################################
+#       KKRFLEX config file             #
+#########################################
+
+#########################################
+# setting test or run flags
+#
+# use: RUNFLAG= key1 key2 key3
+#########################################
+# useful RUNFLAGS:
+# lmdos - write out_lmdos.atom...  and out_ldos.interpol.atom... etc. files
+# GBULKtomemory - store the reference greensfunction of
+#                 the bulk system in the memory instead
+#                 of reading it from the disc in each step
+# LDA+U - does LDA+U calculation, needs ldaupot file
+#
+# useful TESTFLAGS:
+# tmatnew - needed for SOC solver
+# noscatteringmoment - takes full moment for mixing 
+#                      into account for non-collinear setup.
+#                      This should help stabilizing the moment.
+#                      Remove this option once only the (small) change 
+#                      in the direction of the moments 
+#                      needs to be converged.
+#########################################
+
+RUNFLAG= 
+force_angles
+TESTFLAG= tmatnew
+
+
+#########################################
+# Basic settings
+#########################################
+
+# non-spherical potential:
+#   INS= 1 use non=spherical parts
+#   INS= 0 just use spherical part
+INS= 1
+
+# scalar relativistic calculation: KVREL= 1 
+KVREL= 1
+
+# NSPIN= 1 non magnetic
+# NSPIN= 2 spin-polarized calculation
+NSPIN= 2
+
+
+#########################################
+# selfconsistency setting
+#########################################
+
+# number of scf steps
+SCFSTEPS= 1
+
+# mixing type:
+# IMIX= 0  straight
+# IMIX= 3  broyden's 1st method
+# IMIX= 4  broyden's 2nd method
+# IMIX= 5  generalized anderson method
+IMIX= 5
+
+# number of potentials to 'remember' for broyden's mixing
+ITDBRY= 20
+
+# mixing factor for straight mixing
+# Potmix = (1-MIXFAC) * Potold + MIXFAC * Potnew
+MIXFAC= 0.0000001
+
+# convergence bound, 
+# if RMS(potnew-potold)<QBOUND then stop the scf cycle
+QBOUND= 1E-8
+
+
+#########################################
+# other settings (solver etc.)
+#########################################
+
+#exchange-correlation functional:
+# LDA-VWN or LDA (default)
+# LDA-MJW
+# LDA-vBH
+# GGA
+
+XC = LDA-VWN
+
+# For iterative (noSOC) solver:
+#    Number of Born iterations for the non-sperical calculation
+ICST= 2
+
+# For direct (SOC) solver (needs tmatnew test option)
+SPINORBIT= 1 # 0: use old (noSOC) solver; 1: use new (SOC) solver
+NCOLL= 1     # must be 1 if SPINORBIT= 1
+# Some parameter for direct solver (same as in host code)
+NPAN_LOGPANELFAC= 2
+RADIUS_LOGPANELS= 0.6 # where to set change of logarithmic to linear radial mesh
+RADIUS_MIN= -1 
+NPAN_LOG= 12 # number of panels in log mesh
+NPAN_EQ= 5   # number of panels in linear mesh
+NCHEB= 10    # number of chebychev polynomials in each panel (total number of points in radial mesh NCHEB*(NPAN_LOG+NPAN_EQ))
+
+# Initialization with external magnetic field:
+#   first number is the artificial exchange splitting (in Ry) 
+#   and second number for how many iterations this artificial splitting should be mixed in
+#   e.g. HFIELD= 0.01 10 initialized the moments with an exchange splitting of 10mRy in the first 10 iterations.
+HFIELD= 0.00 0
+
+# Calculate and write out orbital moments: 0/1
+CALCORBITALMOMENT= 0
+
+# Calculate and write out forces: 0/1
+CALCFORCE= 0
+
+# Save wavefunctions in memory to avoid recalculation:
+# takes integer value (number of wavefunctions that are stored). Typically <100MB are needed per pair (atom, energy) to save the wavefunction 
+WAVEFUNC_RECALC_THRESHHOLD= 0
+
+CALCJIJMAT= 0

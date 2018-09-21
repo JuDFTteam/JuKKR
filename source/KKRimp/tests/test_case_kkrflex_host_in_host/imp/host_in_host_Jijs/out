@@ -1,0 +1,290 @@
+ check all matrix inversions. There might be an error due: Hermitian
+ check all matrix inversions. There might be an error due: Hermitian
+ check all matrix inversions. There might be an error due: Hermitian
+  **************************************************************************
+  **************************************************************************
+                                KKR FLEX IMPURITY CODE
+                          Version: kkrimp_v1.2-34-g7a14a3c_mpi_20180921094428
+  **************************************************************************
+  **************************************************************************
+  ###############################################
+  ##########   MPI Initialization    ############
+  ###############################################
+  ###    using            4  processors
+  ###############################################
+ check all matrix inversions. There might be an error due: Hermitian
+  ###############################################
+  ###    Starting pre dyson energy loop
+  ###############################################
+  ###############################################
+ Proc =            0 ie=            1  ..            4
+ Proc =            2 ie=            9  ..           12
+ Proc =            1 ie=            5  ..            8
+ Proc =            3 ie=           13  ..           15
+ ****************************************************************
+ using LDA (Vosko-Wilk-Nusair)
+ ****************************************************************
+  Iteration Number            1
+ ##############################################################
+ # Force angles in each iteration to satisfy angles listed in #
+ # file kkrflex_angles                                        #
+ ##############################################################
+   ###############################################
+ Using magnetic configuration mode                 
+ different magnetic directions are read in in
+ in each iteration
+   Number of configutations is           3
+   ###############################################
+   ###############################################
+ Initial angles for non-collinear calculation
+   ###############################################
+         iatom      theta               phi                  moment fixed
+           1  0.000000000000000E+000  0.000000000000000E+000           1
+           2  0.000000000000000E+000  0.000000000000000E+000           1
+           3  0.000000000000000E+000  0.000000000000000E+000           1
+           4  0.000000000000000E+000  0.000000000000000E+000           1
+           5  0.000000000000000E+000  0.000000000000000E+000           1
+  ###############################################
+  ###    Starting energy loop
+  ###############################################
+[energyloop] proc=   0 Energy ie=   1 to   4 ( 4 energies)
+[energyloop] proc=   1 Energy ie=   5 to   8 ( 4 energies)
+[energyloop] proc=   2 Energy ie=   9 to  12 ( 4 energies)
+[energyloop] proc=   3 Energy ie=  13 to  15 ( 3 energies)
+ [read_spinorbit] no kkrflex_spinorbitperatom exists
+ spinorbit index
+ Atom           1           1
+ Atom           2           1
+ Atom           3           1
+ Atom           4           1
+ Atom           5           1
+0%***************100%
+  ||||||||||||||| Rotation of the charge density
+ The integrated charge density is:
+ magnetic moment is  -5.102731084735893E-018  4.537705597348874E-018
+   3.18128812066120     
+ magnetic moment2 is  -5.102731084735893E-018  4.537705597348874E-018
+  0.629967472650777     
+ no rotation magnetic moment is fixed by config
+ Rotation of the charge density
+ The integrated charge density is:
+ magnetic moment is  -4.373871204209256E-015 -2.678625359446227E-010
+   3.18128817044063     
+ magnetic moment2 is  -4.373871204209256E-015 -2.678625359446227E-010
+  0.629967522430203     
+ no rotation magnetic moment is fixed by config
+ Rotation of the charge density
+ The integrated charge density is:
+ magnetic moment is  -2.678625337318812E-010  4.360433905102586E-015
+   3.18128817044063     
+ magnetic moment2 is  -2.678625337318812E-010  4.360433905102586E-015
+  0.629967522430203     
+ no rotation magnetic moment is fixed by config
+ Rotation of the charge density
+ The integrated charge density is:
+ magnetic moment is   2.678625254033790E-010 -4.352965365688240E-015
+   3.18128817044063     
+ magnetic moment2 is   2.678625254033790E-010 -4.352965365688240E-015
+  0.629967522430203     
+ no rotation magnetic moment is fixed by config
+ Rotation of the charge density
+ The integrated charge density is:
+ magnetic moment is   4.364778841850173E-015  2.678625449889334E-010
+   3.18128817044063     
+ magnetic moment2 is   4.364778841850173E-015  2.678625449889334E-010
+  0.629967522430204     
+ no rotation magnetic moment is fixed by config
+==================================================================== 
+Atom     1:          charge in WS-cell =    25.494781    spin moment =    3.181288
+Atom     2:          charge in WS-cell =    25.494781    spin moment =    3.181288
+Atom     3:          charge in WS-cell =    25.494781    spin moment =    3.181288
+Atom     4:          charge in WS-cell =    25.494781    spin moment =    3.181288
+Atom     5:          charge in WS-cell =    25.494781    spin moment =    3.181288
+                    TOTAL mag. moment in unit cell =    15.906441
+ TOTAL RMS-ERROR for LDA+U:  0.000000000000000E+000
+      rms-error for atom  1 :v+ + v- =  1.2552D-03  ,  v+ - v- =  1.8924D-05
+      rms-error non spherical contribution for atom   1 :v+ + v- =  2.4898D-04  ,  v+ - v- =  2.1460D-05
+      rms-error for atom  2 :v+ + v- =  1.0669D-03  ,  v+ - v- =  1.8923D-05
+      rms-error non spherical contribution for atom   2 :v+ + v- =  2.2138D-04  ,  v+ - v- =  2.1460D-05
+      rms-error for atom  3 :v+ + v- =  1.0669D-03  ,  v+ - v- =  1.8923D-05
+      rms-error non spherical contribution for atom   3 :v+ + v- =  2.2138D-04  ,  v+ - v- =  2.1460D-05
+      rms-error for atom  4 :v+ + v- =  1.0669D-03  ,  v+ - v- =  1.8923D-05
+      rms-error non spherical contribution for atom   4 :v+ + v- =  2.2138D-04  ,  v+ - v- =  2.1460D-05
+      rms-error for atom  5 :v+ + v- =  1.0669D-03  ,  v+ - v- =  1.8923D-05
+      rms-error non spherical contribution for atom   5 :v+ + v- =  2.2138D-04  ,  v+ - v- =  2.1460D-05
+-------------------------------------------------------------------------------
+
+      ITERATION   1 average rms-error : v+ + v- =  1.1302D-03
+                                        v+ - v- =  2.8612D-05
+
+   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+               TOTAL ENERGY in ryd. :   -12729.32115292
+                                eV  :  -173192.59774240
+   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  Iteration Number            2
+   ###############################################
+ Initial angles for non-collinear calculation
+   ###############################################
+         iatom      theta               phi                  moment fixed
+           1   90.0000000000000       0.000000000000000E+000           1
+           2   90.0000000000000       0.000000000000000E+000           1
+           3   90.0000000000000       0.000000000000000E+000           1
+           4   90.0000000000000       0.000000000000000E+000           1
+           5   90.0000000000000       0.000000000000000E+000           1
+  ###############################################
+  ###    Starting energy loop
+  ###############################################
+ spinorbit index
+ Atom           1           1
+ Atom           2           1
+ Atom           3           1
+ Atom           4           1
+ Atom           5           1
+0%***************100%
+  ||||||||||||||| Rotation of the charge density
+ The integrated charge density is:
+ magnetic moment is    4.11921436509919      -1.822986206434507E-013
+  -1.35802992399585     
+ magnetic moment2 is    1.56786150756440      -1.823541317946820E-013
+  -1.35802992399585     
+ no rotation magnetic moment is fixed by config
+ Rotation of the charge density
+ The integrated charge density is:
+ magnetic moment is    4.23066296628086      -1.014937093220425E-003
+  -1.77699767633112     
+ magnetic moment2 is    1.67931010813440      -1.014937093220092E-003
+  -1.77699767633112     
+ no rotation magnetic moment is fixed by config
+ Rotation of the charge density
+ The integrated charge density is:
+ magnetic moment is    4.23197672675540       6.767919558114954E-013
+  -1.77706052121624     
+ magnetic moment2 is    1.68062386860894       6.766809335090329E-013
+  -1.77706052121624     
+ no rotation magnetic moment is fixed by config
+ Rotation of the charge density
+ The integrated charge density is:
+ magnetic moment is    4.23001963714936      -6.574740751830177E-013
+  -1.77688555241745     
+ magnetic moment2 is    1.67866677900290      -6.576961197879427E-013
+  -1.77688555241745     
+ no rotation magnetic moment is fixed by config
+ Rotation of the charge density
+ The integrated charge density is:
+ magnetic moment is    4.23066296628537       1.014937093232637E-003
+  -1.77699767632810     
+ magnetic moment2 is    1.67931010813892       1.014937093232748E-003
+  -1.77699767632810     
+ no rotation magnetic moment is fixed by config
+==================================================================== 
+Atom     1:          charge in WS-cell =    23.185675    spin moment =    4.119215
+Atom     2:          charge in WS-cell =    22.566745    spin moment =    4.230664
+Atom     3:          charge in WS-cell =    22.565396    spin moment =    4.231978
+Atom     4:          charge in WS-cell =    22.567360    spin moment =    4.230021
+Atom     5:          charge in WS-cell =    22.566745    spin moment =    4.230664
+                    TOTAL mag. moment in unit cell =    21.042542
+ TOTAL RMS-ERROR for LDA+U:  0.000000000000000E+000
+      rms-error for atom  1 :v+ + v- =  5.5403D+00  ,  v+ - v- =  4.8791D-02
+      rms-error non spherical contribution for atom   1 :v+ + v- =  1.0601D+00  ,  v+ - v- =  1.6953D-02
+      rms-error for atom  2 :v+ + v- =  4.9723D+00  ,  v+ - v- =  5.2184D-02
+      rms-error non spherical contribution for atom   2 :v+ + v- =  9.4229D-01  ,  v+ - v- =  1.5927D-02
+      rms-error for atom  3 :v+ + v- =  4.9732D+00  ,  v+ - v- =  5.2211D-02
+      rms-error non spherical contribution for atom   3 :v+ + v- =  9.4239D-01  ,  v+ - v- =  1.5931D-02
+      rms-error for atom  4 :v+ + v- =  4.9719D+00  ,  v+ - v- =  5.2171D-02
+      rms-error non spherical contribution for atom   4 :v+ + v- =  9.4226D-01  ,  v+ - v- =  1.5924D-02
+      rms-error for atom  5 :v+ + v- =  4.9723D+00  ,  v+ - v- =  5.2184D-02
+      rms-error non spherical contribution for atom   5 :v+ + v- =  9.4229D-01  ,  v+ - v- =  1.5927D-02
+-------------------------------------------------------------------------------
+
+      ITERATION   2 average rms-error : v+ + v- =  5.1821D+00
+                                        v+ - v- =  5.3994D-02
+
+   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+               TOTAL ENERGY in ryd. :   -12650.63946044
+                                eV  :  -172122.07037083
+   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  Iteration Number            3
+   ###############################################
+ Initial angles for non-collinear calculation
+   ###############################################
+         iatom      theta               phi                  moment fixed
+           1   90.0000000000000        90.0000000000000                1
+           2   90.0000000000000        90.0000000000000                1
+           3   90.0000000000000        90.0000000000000                1
+           4   90.0000000000000        90.0000000000000                1
+           5   90.0000000000000        90.0000000000000                1
+  ###############################################
+  ###    Starting energy loop
+  ###############################################
+ spinorbit index
+ Atom           1           1
+ Atom           2           1
+ Atom           3           1
+ Atom           4           1
+ Atom           5           1
+0%***************100%
+  ||||||||||||||| Rotation of the charge density
+ The integrated charge density is:
+ magnetic moment is   1.827427098533008E-013   4.11921436609174     
+  -1.35802992390182     
+ magnetic moment2 is   1.817435091311381E-013   1.56786150380199     
+  -1.35802992390182     
+ no rotation magnetic moment is fixed by config
+ Rotation of the charge density
+ The integrated charge density is:
+ magnetic moment is  -6.770140004164205E-013   4.23197672702373     
+  -1.77706052151511     
+ magnetic moment2 is  -6.772360450213455E-013   1.68062386434232     
+  -1.77706052151511     
+ no rotation magnetic moment is fixed by config
+ Rotation of the charge density
+ The integrated charge density is:
+ magnetic moment is  -1.014937077167932E-003   4.23066296656106     
+  -1.77699767662754     
+ magnetic moment2 is  -1.014937077168598E-003   1.67931010387872     
+  -1.77699767662754     
+ no rotation magnetic moment is fixed by config
+ Rotation of the charge density
+ The integrated charge density is:
+ magnetic moment is   1.014937077158384E-003   4.23066296655640     
+  -1.77699767663040     
+ magnetic moment2 is   1.014937077158606E-003   1.67931010387542     
+  -1.77699767663040     
+ no rotation magnetic moment is fixed by config
+ Rotation of the charge density
+ The integrated charge density is:
+ magnetic moment is   6.579181643928678E-013   4.23001963742997     
+  -1.77688555271856     
+ magnetic moment2 is   6.574740751830177E-013   1.67866677474856     
+  -1.77688555271857     
+ no rotation magnetic moment is fixed by config
+==================================================================== 
+Atom     1:          charge in WS-cell =    23.185675    spin moment =    4.119215
+Atom     2:          charge in WS-cell =    22.565396    spin moment =    4.231978
+Atom     3:          charge in WS-cell =    22.566745    spin moment =    4.230664
+Atom     4:          charge in WS-cell =    22.566745    spin moment =    4.230664
+Atom     5:          charge in WS-cell =    22.567360    spin moment =    4.230021
+                    TOTAL mag. moment in unit cell =    21.042542
+ TOTAL RMS-ERROR for LDA+U:  0.000000000000000E+000
+      rms-error for atom  1 :v+ + v- =  5.5403D+00  ,  v+ - v- =  4.8791D-02
+      rms-error non spherical contribution for atom   1 :v+ + v- =  1.0601D+00  ,  v+ - v- =  1.6953D-02
+      rms-error for atom  2 :v+ + v- =  4.9732D+00  ,  v+ - v- =  5.2211D-02
+      rms-error non spherical contribution for atom   2 :v+ + v- =  9.4239D-01  ,  v+ - v- =  1.5931D-02
+      rms-error for atom  3 :v+ + v- =  4.9723D+00  ,  v+ - v- =  5.2184D-02
+      rms-error non spherical contribution for atom   3 :v+ + v- =  9.4229D-01  ,  v+ - v- =  1.5927D-02
+      rms-error for atom  4 :v+ + v- =  4.9723D+00  ,  v+ - v- =  5.2184D-02
+      rms-error non spherical contribution for atom   4 :v+ + v- =  9.4229D-01  ,  v+ - v- =  1.5927D-02
+      rms-error for atom  5 :v+ + v- =  4.9719D+00  ,  v+ - v- =  5.2171D-02
+      rms-error non spherical contribution for atom   5 :v+ + v- =  9.4226D-01  ,  v+ - v- =  1.5924D-02
+-------------------------------------------------------------------------------
+
+      ITERATION   3 average rms-error : v+ + v- =  5.1821D+00
+                                        v+ - v- =  5.3994D-02
+
+   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+               TOTAL ENERGY in ryd. :   -12650.63946033
+                                eV  :  -172122.07036934
+   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ All magnetic configurations have been have been calculated
+ Selfconsistency will be stopped now!
+ Deleting file kkrflex_greennew, processor           0

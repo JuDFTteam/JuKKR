@@ -550,7 +550,8 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
 
            if ( .not. config_testflag('calctmatfirstIter') .or.  itscf==1 ) then
               !determine if left solution is calculated or not:
-              if (iatom > config%wavefunc_recalc_threshhold) then
+              !Attention: left solution is needed for Jij calculation!
+              if (iatom > config%wavefunc_recalc_threshhold .and. config%calcJijmat/=1 ) then
                  calcleft=.false. ! calculate left solution if WF is stored
               else
                  calcleft=.true.  ! calculate only right solution of WF is not stored

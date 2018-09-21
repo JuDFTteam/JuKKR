@@ -13,9 +13,11 @@ before_script:
 
 stages:
   - build
-  - run
+  - run_parallel
+  - run_features
   - verify
 
+# first build executables
 
 build:intel:hybrid:
   stage: build
@@ -39,9 +41,10 @@ build:intel:mpi:
       - SOURCE/kkrflex.exe_mpi
     expire_in: 1 day
 
+# then run checks with old solver to check parallelism
 
-run:intel:mpi_1:
-  stage: run
+run_parallel:intel:mpi_1:
+  stage: run_parallel
   script:
     - cd tests/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template/ test_run_mpi_1
@@ -53,8 +56,8 @@ run:intel:mpi_1:
       - tests/test_case_kkrflex_host_in_host/imp/test_run_mpi_1
     expire_in: 2 days
 
-run:intel:mpi_8:
-  stage: run
+run_parallel:intel:mpi_8:
+  stage: run_parallel
   script:
     - cd tests/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template/ test_run_mpi_8
@@ -66,8 +69,8 @@ run:intel:mpi_8:
       - tests/test_case_kkrflex_host_in_host/imp/test_run_mpi_8
     expire_in: 2 days
 
-run:intel:hybrid_1_1:
-  stage: run
+run_parallel:intel:hybrid_1_1:
+  stage: run_parallel
   script:
     - cd tests/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template/ test_run_hybrid_1_1
@@ -79,8 +82,8 @@ run:intel:hybrid_1_1:
       - tests/test_case_kkrflex_host_in_host/imp/test_run_hybrid_1_1
     expire_in: 2 days
 
-run:intel:hybrid_1_8:
-  stage: run
+run_parallel:intel:hybrid_1_8:
+  stage: run_parallel
   script:
     - cd tests/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template/ test_run_hybrid_1_8
@@ -92,8 +95,8 @@ run:intel:hybrid_1_8:
       - tests/test_case_kkrflex_host_in_host/imp/test_run_hybrid_1_8
     expire_in: 2 days
 
-run:intel:hybrid_8_1:
-  stage: run
+run_parallel:intel:hybrid_8_1:
+  stage: run_parallel
   script:
     - cd tests/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template/ test_run_hybrid_8_1
@@ -105,8 +108,8 @@ run:intel:hybrid_8_1:
       - tests/test_case_kkrflex_host_in_host/imp/test_run_hybrid_8_1
     expire_in: 2 days
 
-run:intel:hybrid_2_4:
-  stage: run
+run_parallel:intel:hybrid_2_4:
+  stage: run_parallel
   script:
     - cd tests/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template/ test_run_hybrid_2_4
@@ -118,8 +121,8 @@ run:intel:hybrid_2_4:
       - tests/test_case_kkrflex_host_in_host/imp/test_run_hybrid_2_4
     expire_in: 2 days
 
-run:intel:hybrid_4_2:
-  stage: run
+run_parallel:intel:hybrid_4_2:
+  stage: run_parallel
   script:
     - cd tests/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template/ test_run_hybrid_4_2
@@ -131,6 +134,91 @@ run:intel:hybrid_4_2:
       - tests/test_case_kkrflex_host_in_host/imp/test_run_hybrid_4_2
     expire_in: 2 days
 
+# now run tests for features of the code (SOC+mpi, SOC+hybrid, Jijs, wf-saving, sratrick)
+
+run_features:intel:tmatnew-hybrid:
+  stage: run_features
+  script:
+    - cd tests/test_case_kkrflex_host_in_host/imp/
+    - cp -r test_run_template_tmatnew/ test_run_tmatnew_hybrid_2_4
+    - cd test_run_tmatnew_hybrid_2_4/
+    - ln -s ../../../../SOURCE/kkrflex.exe_hybrid kkrflex.exe
+    - export OMP_NUM_THREADS=2; mpirun -np 4 ./kkrflex.exe | tee out
+  artifacts:
+    paths:
+      - tests/test_case_kkrflex_host_in_host/imp/test_run_tmatnew_hybrid_2_4
+    expire_in: 2 days
+
+run_features:intel:tmatnew-mpi:
+  stage: run_features
+  script:
+    - cd tests/test_case_kkrflex_host_in_host/imp/
+    - cp -r test_run_template_tmatnew/ test_run_tmatnew_mpi_8
+    - cd test_run_tmatnew_mpi_8/
+    - ln -s ../../../../SOURCE/kkrflex.exe_hybrid kkrflex.exe
+    - export OMP_NUM_THREADS=1; mpirun -np 8 ./kkrflex.exe | tee out
+  artifacts:
+    paths:
+      - tests/test_case_kkrflex_host_in_host/imp/test_run_tmatnew_mpi_8
+    expire_in: 2 days
+
+run_features:intel:tmatnew-nosavewf:
+  stage: run_features
+  script:
+    - cd tests/test_case_kkrflex_host_in_host/imp/test_run_nosavewf/
+    - ln -s ../../../../SOURCE/kkrflex.exe_hybrid kkrflex.exe
+    - export OMP_NUM_THREADS=1; mpirun -np 8 ./kkrflex.exe | tee out
+  artifacts:
+    paths:
+      - tests/test_case_kkrflex_host_in_host/imp/test_run_nosavewf/
+    expire_in: 2 days
+
+run_features:intel:tmatnew-nosratrick:
+  stage: run_features
+  script:
+    - cd tests/test_case_kkrflex_host_in_host/imp/test_run_nosratrick/
+    - ln -s ../../../../SOURCE/kkrflex.exe_hybrid kkrflex.exe
+    - export OMP_NUM_THREADS=1; mpirun -np 8 ./kkrflex.exe | tee out
+  artifacts:
+    paths:
+      - tests/test_case_kkrflex_host_in_host/imp/test_run_nosratrick/
+    expire_in: 2 days
+
+run_features:intel:tmatnew-Jij:
+  stage: run_features
+  script:
+    - cd tests/test_case_kkrflex_host_in_host/imp/test_run_Jij/
+    - ln -s ../../../../SOURCE/kkrflex.exe_hybrid kkrflex.exe
+    - export OMP_NUM_THREADS=1; mpirun -np 8 ./kkrflex.exe | tee out
+  artifacts:
+    paths:
+      - tests/test_case_kkrflex_host_in_host/imp/test_run_Jij/
+    expire_in: 2 days
+
+run_features:intel:tmatnew-Jij_nosavewf:
+  stage: run_features
+  script:
+    - cd tests/test_case_kkrflex_host_in_host/imp/test_run_Jij_savewf/
+    - ln -s ../../../../SOURCE/kkrflex.exe_hybrid kkrflex.exe
+    - export OMP_NUM_THREADS=1; mpirun -np 8 ./kkrflex.exe | tee out
+  artifacts:
+    paths:
+      - tests/test_case_kkrflex_host_in_host/imp/test_run_Jij_savewf/
+    expire_in: 2 days
+
+run_features:intel:tmatnew-Jij_nosratrick:
+  stage: run_features
+  script:
+    - cd tests/test_case_kkrflex_host_in_host/imp/test_run_Jij_nosratrick/
+    - ln -s ../../../../SOURCE/kkrflex.exe_hybrid kkrflex.exe
+    - export OMP_NUM_THREADS=1; mpirun -np 8 ./kkrflex.exe | tee out
+  artifacts:
+    paths:
+      - tests/test_case_kkrflex_host_in_host/imp/test_run_Jij_nosratrick/
+    expire_in: 2 days
+
+
+# finally check outcome of calculations
 
 verify:intel:
   stage: verify
