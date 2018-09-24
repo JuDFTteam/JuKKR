@@ -763,30 +763,38 @@ contains
 
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Find symmetry operations that leave crystal lattice invariant
+  !> Author: 
+  !> Category: PKKprime, geometry
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> @note copied from host code @endnote
+  !>
+  !> This subroutine finds the rotation matrices that leave the
+  !> real lattice unchanged. 
+  !> input:  bravais(i,j)    true bravais lattice vectors
+  !>                         i = x,y,z ; j = A, B, C (a.u.)
+  !>         recbv(i,j)      reciprocal basis vectors
+  !>         rbasis          coordinates of basis atoms
+  !>         nbasis          number of basis atoms
+  !>         rfctor          alat/4/pi
+  !> output: rotmat          all 64 rotation matrices.
+  !>         rotname         names for the rotation matrices
+  !>         nsymat          number of rotations that restore the lattice.
+  !>         isymindex       index for the symmeties found
+  !>
+  !> This sub makes all 64 rotations in the basis vectors and bravais
+  !> vectors and checks if the new rotated vectror belongs in the 
+  !> lattice. The proper rotation must bring all vectors to a lattice
+  !> vector. Information about the rotations found is printed in the end.
+  !> The array isymindex holds the numbers of the symmetry operations
+  !> that are stored in array RSYMAT
+  !-------------------------------------------------------------------------------
   subroutine findgroup( nbasis,naezd,nembd,bravais,rbasis,  &
                       & rfctor,recbv,nbzdim,                &
                       & rotmat,rotname,nsymat,isymindex_out )
-! **********************************************************
-! This subroutine finds the rotation matrices that leave the
-! real lattice unchanged. 
-! input:  bravais(i,j)    true bravais lattice vectors
-!                         i = x,y,z ; j = A, B, C (a.u.)
-!         recbv(i,j)      reciprocal basis vectors
-!         rbasis          coordinates of basis atoms
-!         nbasis          number of basis atoms
-!         rfctor          alat/4/pi
-! output: rotmat          all 64 rotation matrices.
-!         rotname         names for the rotation matrices
-!         nsymat          number of rotations that restore the lattice.
-!         isymindex       index for the symmeties found
-!
-! This sub makes all 64 rotations in the basis vectors and bravais
-! vectors and checks if the new rotated vectror belongs in the 
-! lattice. The proper rotation must bring all vectors to a lattice
-! vector. Information about the rotations found is printed in the end.
-! The array isymindex holds the numbers of the symmetry operations
-! that are stored in array RSYMAT
-! **********************************************************
+
       implicit none
 
       integer,          intent(in) :: nbasis, naezd, nembd, nbzdim
@@ -901,14 +909,20 @@ contains
 
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Rotation matrices of 32 point groups
+  !> Author: 
+  !> Category: PKKprime, geometry
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> @note copied from host code @endnote
+  !> This subroutine defines the rotation matrices for
+  !> all the 32 point groups and names them after 
+  !> J.F. Cornwell (Group Theory??) second edition 
+  !> Appendix D, p 324-325
+  !-------------------------------------------------------------------------------
   subroutine pointgrp(rotmat,rotname)
-! **********************************************
-! This subroutine defines the rotation matrices for
-! all the 32 point groups and names them after 
-! J.F. Cornwell (Group Theory??) second edition 
-! Appendix D, p 324-325
-! 
-! *********************************************    
+
       implicit none
 
       double precision,  intent(out) :: ROTMAT(64,3,3)
@@ -1145,17 +1159,22 @@ contains
 
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Checks if a set of vectors are lattice vectors
+  !> Author: 
+  !> Category: PKKprime, geometry
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> @note copied from host code @endnote
+  !> Inputs:                                                              
+  !>   n     :number of vectors                                           
+  !>   qlat  :primitive translation vectors in reciprocal space           
+  !>   vec   :double-precision vector                                     
+  !> Outputs:                                                             
+  !>   latvec:.true. if all vectors are lattice vectors
+  !-------------------------------------------------------------------------------
   logical function latvec(n,qlat,vec) 
-! Checks if a set of vectors are lattice vectors                       
-! ----------------------------------------------------------------------
-!  Inputs:                                                              
-!    n     :number of vectors                                           
-!    qlat  :primitive translation vectors in reciprocal space           
-!    vec   :double-precision vector                                     
-!  Outputs:                                                             
-!    latvec:.true. if all vectors are lattice vectors                   
-!  Remarks:                                                             
-! ----------------------------------------------------------------------
+  
       implicit none 
       ! Passed parameters:                                                    
       integer,          intent(in) :: n 

@@ -173,7 +173,7 @@ contains
                           & cluster_type, cluster_init,&
                           & tgmatrx_type, tgmatrx_init
     use mod_mympi,    only: myrank, nranks, master
-    use mod_kkrmat,   only: InvertT, CalcTmat
+    use mod_kkrmat,   only: InvertT, RearrangeTMAT
     use mod_ioformat, only: fmt_fn_ext, ext_formatted, filename_tbkkrcontainer,&
                           & filename_tbkkrrhod,filename_tbkkrtorq, filename_tbkkrspinflux,&
                           & filename_tbkkralpha
@@ -354,7 +354,7 @@ contains
         !perform handy modifications on t-matrix-arrays for later use in the code
         do ie=1,inc%ielast
           call InvertT(inc, lattice%alat, tgmatrx%tmatll(:,:,:,ie), tgmatrx%tinvll(:,:,:,ie))
-          call CalcTmat(inc, lattice%alat, tgmatrx%tmatll(:,:,:,ie), tgmatrx%tmat(:,:,ie))
+          call RearrangeTMAT(inc, lattice%alat, tgmatrx%tmatll(:,:,:,ie), tgmatrx%tmat(:,:,ie))
         end do!ie
 
         !read in rhod

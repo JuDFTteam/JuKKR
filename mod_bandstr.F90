@@ -249,7 +249,7 @@ contains
     use type_data,    only: lattice_type, lattice_init,&
                           & cluster_type, cluster_init
     use mod_mympi,    only: myrank, nranks, master
-    use mod_kkrmat,   only: InvertT, CalcTmat
+    use mod_kkrmat,   only: InvertT
     use mod_ioformat, only: fmt_fn_ext, ext_formatted, filename_tbkkrcontainer
 #ifdef CPP_MPI
     use type_data,    only: create_mpimask_lattice, create_mpimask_cluster

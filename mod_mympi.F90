@@ -5,6 +5,12 @@
 !-----------------------------------------------------------------------------------------!
 
 
+!-------------------------------------------------------------------------------
+!> Summary: Module containing parallelization infos
+!> Author: B. Zimmermann
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!-------------------------------------------------------------------------------
 module mod_mympi
 
 implicit none
@@ -18,6 +24,14 @@ implicit none
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Initialize MPI and set myrank, nranks
+  !> Author: B. Zimmermann
+  !> Category: PKKprime, communication
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Initializes myrank and nranks even if MPI is not used
+  !-------------------------------------------------------------------------------
   subroutine mympi_init()
 
 #ifdef CPP_MPI

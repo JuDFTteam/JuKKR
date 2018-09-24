@@ -5,6 +5,12 @@
 !-----------------------------------------------------------------------------------------!
 
 
+!-------------------------------------------------------------------------------
+!> Summary: Utilities for parallel execution
+!> Author: 
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!-------------------------------------------------------------------------------
 module mod_parutils
 
   implicit none
@@ -15,8 +21,15 @@ module mod_parutils
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Distributes work on MPI ranks
+  !> Author: B. Zimmermann
+  !> Category: PKKprime, communication
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> distributes 'ntot' points on 'nranks' tasks and returns the number of points per task, ntot_pT, and the offsets of the tasks, ioff_pT.
+  !-------------------------------------------------------------------------------
   subroutine distribute_linear_on_tasks(nranks, myrank, master, ntot, ntot_pT, ioff_pT, output)
-    !distributes 'ntot' points on 'nranks' tasks and returns the number of points per task, ntot_pT, and the offsets of the tasks, ioff_pT.
 
     implicit none
 
@@ -54,6 +67,14 @@ contains
   end subroutine distribute_linear_on_tasks
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Sorts an array in ascending order in parallel
+  !> Author: 
+  !> Category: PKKprime, numerical-tools
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Does bubblesort in parallel with nranks MPI ranks. Each rank works on it's own subpart 
+  !-------------------------------------------------------------------------------
   subroutine parallel_quicksort(nranks, myrank, master, ntot, values, sortindex)
     use mod_mathtools, only: bubblesort
     use mpi
@@ -134,6 +155,14 @@ contains
 
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Sorts an array in ascending order in parallel for an integer array
+  !> Author: 
+  !> Category: PKKprime, numerical-tools
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Does bubblesort in parallel with nranks MPI ranks. Each rank works on it's own subpart 
+  !-------------------------------------------------------------------------------
   subroutine parallel_quicksort_int(nranks, myrank, master, ntot, values, sortindex)
     use mod_mathtools, only: bubblesort_int
     use mpi
