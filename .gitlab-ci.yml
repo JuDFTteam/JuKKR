@@ -17,7 +17,6 @@ before_script:
 
 stages:
   - build
-  - deploy:doc
 
 ###############################################################################
 # compile code
@@ -31,7 +30,7 @@ build:compile:
 # for Gitlab pages (online code documentation build with ford)
 
 pages:
-  stage: deploy:doc
+  stage: build
   image: ubuntu:latest
   allow_failure: true
   script:
@@ -42,7 +41,7 @@ pages:
   artifacts:
     paths:
       - public
-  only:
-    - schedules
-    - triggers
-    - web
+#  only:
+#    - schedules
+#    - triggers
+#    - web
