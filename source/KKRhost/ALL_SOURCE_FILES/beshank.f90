@@ -25,7 +25,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine beshank(hl, jl, z, lmax)
     use :: mod_datatypes, only: dp
-    use :: mod_constants, only: cone, ci
+    use :: mod_constants, only: ci
     implicit none
 
     ! inputs
@@ -62,7 +62,7 @@ contains
         end do
         jl(l) = jl(l)*zj
         nl(l) = -nl(l)*zn/z
-        hl(l) = jl(l) + nl(l)*cone
+        hl(l) = jl(l) + nl(l)*ci
 
         zj = zj*z/(rl+3.e0_dp)
         zn = zn/z*(rl+1.e0_dp)
