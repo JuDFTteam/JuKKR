@@ -5,6 +5,12 @@
 !-----------------------------------------------------------------------------------------!
 
 
+!-------------------------------------------------------------------------------
+!> Summary: Module for timing measuremnts
+!> Author: 
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!-------------------------------------------------------------------------------
 module mod_timing
   integer,parameter      :: nkeys=20
   integer,parameter      :: nkeylen=40
@@ -16,6 +22,14 @@ module mod_timing
   integer                :: init=0
 contains 
 
+!-------------------------------------------------------------------------------
+!> Summary: Initialize timing files
+!> Author: 
+!> Category: PKKprime, profiling
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!> Opens `timing.000.txt` and `timing.000.txt.test` files where `000` will be number of ranks that writes timing file
+!-------------------------------------------------------------------------------
 subroutine timing_init(my_rank)
   implicit none
   integer  :: my_rank
@@ -28,6 +42,14 @@ subroutine timing_init(my_rank)
 end subroutine timing_init
 
 
+!-------------------------------------------------------------------------------
+!> Summary: Start timing measurment
+!> Author: 
+!> Category: PKKprime, profiling
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!> 
+!-------------------------------------------------------------------------------
 subroutine timing_start(mykey2)
   implicit none
   integer time_array_1(8)
@@ -70,6 +92,14 @@ if (init/=1) stop '[timing_start] please run init first'
 ! #endif
 end subroutine timing_start
 
+!-------------------------------------------------------------------------------
+!> Summary: Pause timing measurement
+!> Author: 
+!> Category: PKKprime, profiling
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!>
+!-------------------------------------------------------------------------------
 subroutine timing_pause(mykey2)
   implicit none
   integer time_array_1(8)
@@ -109,6 +139,14 @@ subroutine timing_pause(mykey2)
 
 end subroutine timing_pause
 
+!-------------------------------------------------------------------------------
+!> Summary: Stop timing measurement
+!> Author: 
+!> Category: PKKprime, profiling
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!> @warning if cmode is given but not `test`, then no timing will be written. @endwarning
+!-------------------------------------------------------------------------------
 subroutine timing_stop(mykey2,cmode)
   implicit none
   integer time_array_1(8)
@@ -164,6 +202,15 @@ subroutine timing_stop(mykey2,cmode)
 
 end subroutine timing_stop
 
+!-------------------------------------------------------------------------------
+!> Summary: Returns key index corresponding to key string
+!> Author: 
+!> Category: PKKprime, profiling
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!> @warning returns -1 if optional argument `char2` is given and `char1` is not 
+!> found in `timingkeys` @endwarning
+!-------------------------------------------------------------------------------
 integer function timing_findkey(char1,char2)
   implicit none
   character(len=nkeylen) :: char1
@@ -184,6 +231,14 @@ integer function timing_findkey(char1,char2)
   end if
 end function timing_findkey
 
+!-------------------------------------------------------------------------------
+!> Summary: Sets new timingkey
+!> Author: 
+!> Category: PKKprime, profiling
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!>
+!-------------------------------------------------------------------------------
 integer function timing_setkey(char1)
   implicit none
   character(len=nkeylen) :: char1
@@ -204,6 +259,14 @@ integer function timing_setkey(char1)
   if (ifound==0) stop '[timing_setkey] not enough free spots to set timing values'
 end function timing_setkey
 
+!-------------------------------------------------------------------------------
+!> Summary: Remove timingkey
+!> Author: 
+!> Category: PKKprime, profiling
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!>
+!-------------------------------------------------------------------------------
 subroutine timing_delkey(char1)
   implicit none
   character(len=nkeylen) :: char1

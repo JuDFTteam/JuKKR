@@ -13,7 +13,7 @@ MODULE mod_kkrmat
 IMPLICIT NONE
 
   PRIVATE
-  PUBLIC :: CalcKKRmat, CalcKKRmat2, InvertT, CalcTMAT, &
+  PUBLIC :: CalcKKRmat, CalcKKRmat2, InvertT, RearrangeTMAT, &
           & compute_kkr_eigenvectors, compute_kkr_eigenvectors2, &
           & compute_kkr_eigenvectors2_dk, compute_kkr_eigenvectors_memopt
 
@@ -60,11 +60,17 @@ CONTAINS
   END SUBROUTINE CalcKKRmat2
 
 
-  SUBROUTINE CalcTMAT(inc, alat, TMATLL, TMAT)
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ! Constructs T-Matrix T(E)_LL'                                !
-  !                             b.zimmermann, mar.2011          !
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !-------------------------------------------------------------------------------
+  !> Summary: Creates big block-diagonal T-Matrix
+  !> Author: B. Zimmermann
+  !> Date: mar.2011
+  !> Category: PKKprime, single-site
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Constructs T-Matrix T(E)_LL'
+  !-------------------------------------------------------------------------------
+  SUBROUTINE RearrangeTMAT(inc, alat, TMATLL, TMAT)
+
     use type_inc, only: inc_type
     IMPLICIT NONE
 
@@ -95,7 +101,7 @@ CONTAINS
       ENDDO
     ENDDO
 
-  END SUBROUTINE CalcTMAT
+  END SUBROUTINE RearrangeTMAT
 
   SUBROUTINE CalcKKRmat(inc, GLLKE, TINVLL, MMAT)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

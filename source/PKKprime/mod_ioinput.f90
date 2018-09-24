@@ -11,41 +11,46 @@ module mod_ioinput
 
 contains
 
+      !-------------------------------------------------------------------------------
+      !> Summary: This subroutine is responsible for the I/O with the input file.
+      !> Author: 
+      !> Category: PKKprime, input-output
+      !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+      !>
+      !>  GIVEN a KEYWORD: CHARKEY it positions the
+      !>  reading just after the CHARKEY if this
+      !>  includes a '=', or ILINE lines after the
+      !>  occurence of THE CHARKEY.
+      !>  USAGE :
+      !>  To read lmax include in the input card (ifile)
+      !>
+      !>      LMAX= 3      CORRECT!
+      !>
+      !>      or
+      !>
+      !>      LMAX         CORRECT!     (iline=1)
+      !>       3
+      !>    (without  the '=' )
+      !>      LMAX
+      !>   ---------                    (iline=2),etc
+      !>       3
+      !>  be carefull in this case to put the value after the
+      !>  keyword example:
+      !>
+      !>     LMAX
+      !>   3               WRONG!
+      !>
+      !> will NOT work
+      !> Comments etc in the program are ignored.
+      !>                                               1.6.99
+      !>
+      !> @warning 
+      !> - The error handler is not working yet in all cases ...
+      !> - In this version only files 500 lines long can be read in
+      !> @endwarning
+      !-------------------------------------------------------------------------------
       SUBROUTINE IOinput(CHARKEY,CHAR,ILINE,IFILE,IERROR)
-! *********************************************************
-! *  This subroutine is responsible for the I/O
-! *  with the input file.
-! *
-! *  GIVEN a KEYWORD: CHARKEY it positions the
-! *  reading just after the CHARKEY if this
-! *  includes a '=', or ILINE lines after the
-! *  occurence of THE CHARKEY.
-! *  USAGE :
-! *  To read lmax include in the input card (ifile)
-! *
-! *      LMAX= 3      CORRECT!
-! *
-! *      or
-! *
-! *      LMAX         CORRECT!     (iline=1)
-! *       3
-! *    (without  the '=' )
-! *      LMAX
-! *   ---------                    (iline=2),etc
-! *       3
-! *  be carefull in this case to put the value after the
-! *  keyword example:
-! *
-! *     LMAX
-! *   3               WRONG!
-! *
-! * will NOT work
-! * Comments etc in the program are ignored.
-! *                                               1.6.99
-! *
-! * The error handler is not working yet in all cases ....
-! * In this version only files 500 lines long can be read in
-! *******************************************************
+
       implicit none
       CHARACTER CHARKEY*10
       CHARACTER CHAR*80
@@ -142,12 +147,18 @@ contains
  1005 FORMAT(4I4)
       END SUBROUTINE IOinput
 
+      !-------------------------------------------------------------------------------
+      !> Summary: Find position of first space and letter
+      !> Author: 
+      !> Category: PKKprime, input-output
+      !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+      !>
+      !> This subroutine returns the position of the first space character
+      !> in ipos2, and the position of the first letter in the string STR1
+      !-------------------------------------------------------------------------------
       SUBROUTINE VERIFY77(STR1,ipos1,ipos2)
       implicit none
-! This sub returns the position of the first space character
-! in ipos2, and the position of the first letter in the string
-! STR1
-!
+
         CHARACTER STR1*10
         CHARACTER ABC*37
         CHARACTER CHAR*1

@@ -14,17 +14,24 @@ module mod_dlke
 
   contains
 
-! 04.10.95 ***************************************************************
+      !-------------------------------------------------------------------------------
+      !> Summary: Driver for Fourier transform of structure constants
+      !> Author: B. Zimmermann
+      !> Date: 01.08.2010
+      !> Category: PKKprime, k-points, reference-system, structural-greensfunction
+      !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+      !>
+      !> @note Simplified copy of dlke0 from host code @endnote
+      !>
+      !> modified by Bernd Zimmermann on 01.08.2010:
+      !>   - deleted sparse matrix option
+      !>   - deleted complex k-point option -> length from array reduced from 6 to 3
+      !>   - symmetrization commented
+      !>   - transformed to fortran90 standard
+      !> modified by Bernd Zimmermann on 13.10.2014:
+      !>   - deleted EQINV and KAOEZ-arrays
+      !-------------------------------------------------------------------------------
       SUBROUTINE DLKE0(GLLKE, inc, alat, cls, nacls, rr, ezoa, atom, bzkp, rcls, ginp)
-!
-!     modified by Bernd Zimmermann on 01.08.2010:
-!       - deleted sparse matrix option
-!       - deleted complex k-point option -> length from array reduced from 6 to 3
-!       - symmetrization commented
-!       - transformed to fortran90 standard
-!     modified by Bernd Zimmermann on 13.10.2014:
-!       - deleted EQINV and KAOEZ-arrays
-! ************************************************************************
 
       use type_inc
 
@@ -78,17 +85,23 @@ module mod_dlke
       RETURN
 
       END SUBROUTINE DLKE0
-! 01.06.99 ***************************************************************
+
+      !-------------------------------------------------------------------------------
+      !> Summary: Calculates Fourier transform of structure constants
+      !> Author: B. Zimmermann
+      !> Category: PKKprime, k-points, reference-system, structural-greensfunction
+      !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+      !>
+      !> @note Simplified copy of dlke1 from host code @endnote
+      !>
+      !> Fourier transformation of the cluster Greens function GINP
+      !-------------------------------------------------------------------------------
       SUBROUTINE DLKE1(GLLKE,inc,alat,nacls,rr,ezoa,atom,bzkp,ginp,rcls)
 
       use type_inc
       use mod_mathtools, only: tpi
       implicit none
-! ************************************************************************
-!
-!     Fourier transformation of the cluster Greens function GINP
-!
-! ------------------------------------------------------------------------
+
 !     .. Parameters ..
       DOUBLE COMPLEX CZERO,CI
       PARAMETER (CZERO= (0.0D0,0.0D0),CI= (0.0D0,1.0D0))
@@ -167,10 +180,18 @@ module mod_dlke
 
 
 
-! 25.11.14 ***************************************************************
+
+      !-------------------------------------------------------------------------------
+      !> Summary: Driver for k-derivative of structure constants
+      !> Author: B. Zimmermann
+      !> Date: 25.11.2014
+      !> Category: PKKprime, k-points, reference-system, structural-greensfunction
+      !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+      !>
+      !> Calculate the ananlytical derivative of the Fourier transformed structure constants with respect to k
+      !> @warning Might be buggy. Needs testing! @endwarning
+      !-------------------------------------------------------------------------------
       SUBROUTINE DLKE0DK(GLLKE, inc, alat, cls, nacls, rr, ezoa, atom, bzkp, rcls, ginp,ixyz)
-!     added by Bernd Zimmermann on 25.11.2014: calculate derivative with respect to k
-! ************************************************************************
 
       use type_inc
 
@@ -229,17 +250,31 @@ module mod_dlke
 
 
 
+      !-------------------------------------------------------------------------------
+      !> Summary: Calculates the k-derivative of structure constants
+      !> Author: B. Zimmermann
+      !> Date: 25.11.2014
+      !> Category: PKKprime, k-points, reference-system, structural-greensfunction
+      !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+      !>
+      !> Calculate the ananlytical derivative of the Fourier transformed structure constants with respect to k
+      !> @warning Might be buggy. Needs testing! @endwarning
+      !>
+      !>     Here we do   --                  nn'
+      !>                  \                   ii'          ii'
+      !>                  /  exp(+ik(x  -x ))G   (E)  =   G   (k,E)
+      !>                  --          n'  n   LL'          LL'
+      !>                  n'
+      !>  Be carefull a minus sign must be included here. RR is not
+      !>  symmetric around each atom. The minus comes from the fact that
+      !>  the repulsive potential GF is calculated for 0n and not n0!          
+      !>  and that is why we nead a minus sign extra!
+      !-------------------------------------------------------------------------------
       SUBROUTINE DLKE1DK(GLLKE,inc,alat,nacls,rr,ezoa,atom,bzkp,ginp,rcls,ixyz)
 
       use type_inc
       use mod_mathtools, only: tpi
       implicit none
-! ************************************************************************
-!
-!     Derivative (with respect to k) of the Fourier transformation of the
-!     cluster Greens function GINP
-!
-! ------------------------------------------------------------------------
 !     .. Parameters ..
       DOUBLE COMPLEX CZERO,CI
       PARAMETER (CZERO= (0.0D0,0.0D0),CI= (0.0D0,1.0D0))

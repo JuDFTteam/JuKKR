@@ -45,6 +45,14 @@ contains
 
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Sorts an array in ascending order
+  !> Author: 
+  !> Category: PKKprime, numerical-tools
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine bubblesort(n, Xin, Iout)
 
     implicit none
