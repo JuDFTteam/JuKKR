@@ -1,38 +1,46 @@
 module mod_findgroup
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: findgroup
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Find rotation matrices checking all 48 point group symmetries
+  !> Author: 
+  !> Category: KKRhost, geometry
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> This subroutine finds the rotation matrices that leave the
+  !> real lattice unchanged.
+  !> input:  bravais(i,j)    true bravais lattice vectors
+  !> i = x,y,z ; j = A, B, C (a.u.)
+  !> recbv(i,j)      reciprocal basis vectors
+  !> rbasis          coordinates of basis atoms
+  !> nbasis          number of basis atoms
+  !> rsymat          all 64 rotation matrices.
+  !> rotname         names for the rotation matrices
+  !> output: nsymat          number of rotations that restore the lattice.
+  !> ISYMINDEX       index for the symmeties found
+  !>
+  !> This sub makes all 64 rotations in the basis vectors and bravais
+  !> vectors and checks if the new rotated vectror belongs in the
+  !> lattice. The proper rotation must bring all vectors to a lattice
+  !> vector. Information about the rotations found is printed in the end.
+  !> The array ISYMINDEX holds the numbers of the symmetry operations
+  !> that are stored in array RSYMAT
+  !> 
+  !> in case of relativistic calculation: take account of
+  !> direction of the magnetic moment specified by (QMTET,QMPHI)
+  !> if the PARA(magnetic) flag is set to .FALSE.
+  !-------------------------------------------------------------------------------
   subroutine findgroup(bravais, recbv, rbasis, nbasis, rsymat, rotname, isymindex, nsymat, para, qmtet, qmphi, symunitary, krel, naezd, nembd, nsymaxd)
-    ! **********************************************************
-    ! This subroutine finds the rotation matrices that leave the
-    ! real lattice unchanged.
-    ! input:  bravais(i,j)    true bravais lattice vectors
-    ! i = x,y,z ; j = A, B, C (a.u.)
-    ! recbv(i,j)      reciprocal basis vectors
-    ! rbasis          coordinates of basis atoms
-    ! nbasis          number of basis atoms
-    ! rsymat          all 64 rotation matrices.
-    ! rotname         names for the rotation matrices
-    ! output: nsymat          number of rotations that restore the lattice.
-    ! ISYMINDEX       index for the symmeties found
 
-    ! This sub makes all 64 rotations in the basis vectors and bravais
-    ! vectors and checks if the new rotated vectror belongs in the
-    ! lattice. The proper rotation must bring all vectors to a lattice
-    ! vector. Information about the rotations found is printed in the end.
-    ! The array ISYMINDEX holds the numbers of the symmetry operations
-    ! that are stored in array RSYMAT
-    ! ----------------------------------------------------------------
-    ! in case of relativistic calculation: take account of
-    ! direction of the magnetic moment specified by (QMTET,QMPHI)
-    ! if the PARA(magnetic) flag is set to .FALSE.
-
-    ! **********************************************************
-    use :: mod_ddet33
-    use :: mod_latvec
+    use :: mod_datatypes, only: dp
+    use :: mod_ddet33, only: ddet33
+    use :: mod_latvec, only: latvec
     implicit none
+
     real (kind=dp), parameter :: eps = 1.0e-12_dp
     integer :: krel
     integer :: naezd, nembd, nsymaxd
@@ -56,7 +64,7 @@ contains
     logical :: llatbas, lbulk
     ! external functions
     real (kind=dp), external :: ddot
-    ! ..................................................................
+
 
     ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
     write (1337, 100)
@@ -190,12 +198,14 @@ contains
       write (1337, 140)(char(j), j=i0+1, i0+isym)
     end do
     write (1337, 150)
+
 100 format (5x, '< FINDGROUP > : Finding symmetry operations', /)
 110 format (8x, '3D symmetries:')
 120 format (8x, 'surface symmetries:')
 130 format (' found for this lattice: ', i2, /, 8x, 60('-'))
 140 format (8x, 5(a10,2x))
 150 format (8x, 60('-'), /)
+
   end subroutine findgroup
 
 end module mod_findgroup

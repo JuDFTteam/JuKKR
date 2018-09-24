@@ -1,40 +1,44 @@
 module mod_gaunt2
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: gaunt2
 
 contains
 
-  ! ***********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Create input for gaunt
+  !> Author: M. Weinert, B. Drittler
+  !> Category: KKRhost, special-functions
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> sets up values needed for gaunt
+  !> M. Weinert  January 1982
+  !>
+  !> changed for calculating with real spherical harmonics
+  !> B. Drittler  July 1987
+  !>
+  !> W(N)        integration weights on 4*LMAXD points in the intervall
+  !> (-1,0) (from routine GRULE)
+  !>
+  !> YR(N,L,M)   spherical harmonics on 4*LMAXD points to angular
+  !> momentum indices (l,m) scaled with a factor
+  !> of RF=(4*pi)**(1/3)
+  !-------------------------------------------------------------------------------
   subroutine gaunt2(w, yr, n)
-    use :: mod_grule
-    ! ************************************************************************
-    ! sets up values needed for gaunt
-    ! m. weinert  january 1982
 
-    ! changed for calculating with real spherical harmonics
-    ! b.drittler  july 1987
-
-    ! W(N)        integration weights on 4*LMAXD points in the intervall
-    ! (-1,0) (from routine GRULE)
-
-    ! YR(N,L,M)   spherical harmonics on 4*LMAXD points to angular
-    ! momentum indices (l,m) scaled with a factor
-    ! of RF=(4*pi)**(1/3)
-
-    ! -----------------------------------------------------------------------
+    use :: mod_datatypes, only: dp
+    use :: mod_grule, only: grule
+    use :: mod_constants, only: pi
     implicit none
-    ! .. Arguments
+
+    real (kind=dp), parameter :: fpi = 4e0_dp*pi
     integer :: n
     real (kind=dp) :: w(*), yr(n, 0:n, 0:n)
-    ! ..
-    ! .. Local Scalars ..
-    real (kind=dp) :: a, cd, cth, fac, fpi, rf, sth, t
+    real (kind=dp) :: a, cd, cth, fac, rf, sth, t
     integer :: k, l, lomax, m
-    ! ..
-    ! .. Local Arrays ..
     real (kind=dp) :: p(0:n+1, 0:n), x(n)
-    ! ..
-    fpi = 16e0_dp*atan(1e0_dp)
+
+
     rf = fpi**(1e0_dp/3e0_dp)
     lomax = n
 

@@ -1,20 +1,28 @@
 module mod_exch91
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: exch91
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Exchange part of PW91 GGA
+  !> Author: 
+  !> Category: KKRhost, xc-potential
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> gga91 exchange for a spin-unpolarized electronic system
+  !> 
+  !> input d: density
+  !> s:  abs(grad d)/(2*kf*d)
+  !> u:  (grad d)*grad(abs(grad d))/(d**2 * (2*kf)**3)
+  !> v: (laplacian d)/(d*(2*kf)**2)
+  !> output:  exchange energy (ex) and potential (vx) in ry.
+  !> kf=cbrt(3*pai**2*d).
+  !-------------------------------------------------------------------------------
   subroutine exch91(d, s, u, v, exl, exg, vxl, vxg)
-    ! -----------------------------------------------------------------
-    ! gga91 exchange for a spin-unpolarized electronic system
-    ! -----------------------------------------------------------------
-    ! input d: density
-    ! s:  abs(grad d)/(2*kf*d)
-    ! u:  (grad d)*grad(abs(grad d))/(d**2 * (2*kf)**3)
-    ! v: (laplacian d)/(d*(2*kf)**2)
-    ! output:  exchange energy (ex) and potential (vx) in ry.
-    ! kf=cbrt(3*pai**2*d).
-    ! -----------------------------------------------------------------
+
+    use :: mod_datatypes, only: dp
     implicit none
     ! .. Scalar Arguments ..
     real (kind=dp) :: d, exg, exl, s, u, v, vxg, vxl

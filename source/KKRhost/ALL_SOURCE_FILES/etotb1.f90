@@ -2,23 +2,28 @@ module mod_etotb1
 
 contains
 
-  ! 17.10.95 ***************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Collects total energy of cluster
+  !> Author: B. Drittler, P. Zahn, V. Popescu
+  !> Category: KKRhost, total-energy
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Calculate the total energy of the cluster.
+  !> gather all energy-parts which are calculated in different
+  !> subroutines .
+  !> since the program uses group theory only shell-indices
+  !> are used instead of atom-indices .
+  !>
+  !> B. Drittler   May 1987
+  !>
+  !> modified for supercells with nshell(i) atoms of type i in the
+  !> unit cell
+  !> P. Zahn       Oct. 95
+  !>
+  !> adopted for more atoms per site (CPA) V. Popescu Feb. 02
+  !-------------------------------------------------------------------------------
   subroutine etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, nspin, natyp, nshell, conc, idoldau, lopt, eu, edcldau)
-    ! ************************************************************************
-    ! calculate the total energy of the cluster .
-    ! gather all energy-parts which are calculated in different
-    ! subroutines .
-    ! since the program uses group theory only shell-indices
-    ! are used instead of atom-indices .
 
-    ! b.drittler   may 1987
-
-    ! modified for supercells with nshell(i) atoms of type i in the
-    ! unit cell
-    ! p.zahn       oct. 95
-
-    ! adopted for more atoms per site (CPA) v.popescu feb. 02
-    ! -----------------------------------------------------------------------
     use :: mod_types, only: t_inc
     use :: mod_datatypes, only: dp
     use :: global_variables

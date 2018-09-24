@@ -1,35 +1,40 @@
 module mod_gauleg
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: gauleg
 
 contains
 
-  ! ********************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, undefined
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine gauleg(xi, wi, n)
-    ! ********************************************************
-    ! .. Scalar Arguments ..
+
+    use :: mod_datatypes, only: dp
+    implicit none
+
     integer :: n
-    ! ..
-    ! .. Array Arguments ..
     real (kind=dp) :: wi(*), xi(*)
-    ! ..
-    ! .. Local Scalars ..
     integer :: i
-    ! ..
+
+
     if (n>32) n = ((n-1)/4+1)*4
     if (n>64) n = ((n-1)/8+1)*8
     if (n==1) then
       xi(1) = 0.e0_dp
       wi(1) = 2.e0_dp
       go to 100
-
     end if
 
     if (n==2) then
       xi(1) = -57735026918962576451.e-20_dp
       wi(1) = 10000000000000000000.e-19_dp
       go to 100
-
     end if
 
     if (n==3) then
@@ -38,7 +43,6 @@ contains
       wi(1) = 55555555555555555556.e-20_dp
       wi(2) = 88888888888888888889.e-20_dp
       go to 100
-
     end if
 
     if (n==4) then
@@ -47,7 +51,6 @@ contains
       wi(1) = 34785484513745385737.e-20_dp
       wi(2) = 65214515486254614263.e-20_dp
       go to 100
-
     end if
 
     if (n==5) then
@@ -58,7 +61,6 @@ contains
       wi(2) = 47862867049936646804.e-20_dp
       wi(3) = 56888888888888888889.e-20_dp
       go to 100
-
     end if
 
     if (n==6) then
@@ -69,7 +71,6 @@ contains
       wi(2) = 36076157304813860757.e-20_dp
       wi(3) = 46791393457269104739.e-20_dp
       go to 100
-
     end if
 
     if (n==7) then
@@ -82,7 +83,6 @@ contains
       wi(3) = 38183005050511894495.e-20_dp
       wi(4) = 41795918367346938776.e-20_dp
       go to 100
-
     end if
 
     if (n==8) then
@@ -110,7 +110,6 @@ contains
       wi(4) = 31234707704000284007.e-20_dp
       wi(5) = 33023935500125976316.e-20_dp
       go to 100
-
     end if
 
     if (n==10) then
@@ -125,7 +124,6 @@ contains
       wi(4) = 26926671930999635509.e-20_dp
       wi(5) = 29552422471475287017.e-20_dp
       go to 100
-
     end if
 
     if (n==11) then
@@ -142,7 +140,6 @@ contains
       wi(5) = 26280454451024666218.e-20_dp
       wi(6) = 27292508677790063071.e-20_dp
       go to 100
-
     end if
 
     if (n==12) then
@@ -159,7 +156,6 @@ contains
       wi(5) = 23349253653835480876.e-20_dp
       wi(6) = 24914704581340278500.e-20_dp
       go to 100
-
     end if
 
     if (n==13) then
@@ -178,7 +174,6 @@ contains
       wi(6) = 22628318026289723841.e-20_dp
       wi(7) = 23255155323087391019.e-20_dp
       go to 100
-
     end if
 
     if (n==14) then
@@ -197,7 +192,6 @@ contains
       wi(6) = 20519846372129560397.e-20_dp
       wi(7) = 21526385346315779020.e-20_dp
       go to 100
-
     end if
 
     if (n==15) then
@@ -218,7 +212,6 @@ contains
       wi(7) = 19843148532711157646.e-20_dp
       wi(8) = 20257824192556127288.e-20_dp
       go to 100
-
     end if
 
     if (n==16) then
@@ -239,7 +232,6 @@ contains
       wi(7) = 18260341504492358887.e-20_dp
       wi(8) = 18945061045506849629.e-20_dp
       go to 100
-
     end if
 
     if (n==17) then
@@ -262,7 +254,6 @@ contains
       wi(8) = 17656270536699264633.e-20_dp
       wi(9) = 17944647035620652546.e-20_dp
       go to 100
-
     end if
 
     if (n==18) then
@@ -285,7 +276,6 @@ contains
       wi(8) = 16427648374583272299.e-20_dp
       wi(9) = 16914238296314359184.e-20_dp
       go to 100
-
     end if
 
     if (n==19) then
@@ -310,7 +300,6 @@ contains
       wi(9) = 15896884339395434765.e-20_dp
       wi(10) = 16105444984878369598.e-20_dp
       go to 100
-
     end if
 
     if (n==20) then
@@ -335,7 +324,6 @@ contains
       wi(9) = 14917298647260374679.e-20_dp
       wi(10) = 15275338713072585070.e-20_dp
       go to 100
-
     end if
 
     if (n==21) then
@@ -362,7 +350,6 @@ contains
       wi(10) = 14452440398997005906.e-20_dp
       wi(11) = 14608113364969042719.e-20_dp
       go to 100
-
     end if
 
     if (n==22) then
@@ -389,7 +376,6 @@ contains
       wi(10) = 13654149834601517135.e-20_dp
       wi(11) = 13925187285563199338.e-20_dp
       go to 100
-
     end if
 
     if (n==23) then
@@ -418,7 +404,6 @@ contains
       wi(11) = 13246203940469661737.e-20_dp
       wi(12) = 13365457218610617535.e-20_dp
       go to 100
-
     end if
 
     if (n==24) then
@@ -447,7 +432,6 @@ contains
       wi(11) = 12583745634682829612.e-20_dp
       wi(12) = 12793819534675215697.e-20_dp
       go to 100
-
     end if
 
     if (n==25) then
@@ -478,7 +462,6 @@ contains
       wi(12) = 12224244299031004169.e-20_dp
       wi(13) = 12317605372671545120.e-20_dp
       go to 100
-
     end if
 
     if (n==26) then
@@ -509,7 +492,6 @@ contains
       wi(12) = 11666044348529658204.e-20_dp
       wi(13) = 11832141527926227652.e-20_dp
       go to 100
-
     end if
 
     if (n==27) then
@@ -542,7 +524,6 @@ contains
       wi(13) = 11347634610896514862.e-20_dp
       wi(14) = 11422086737895698905.e-20_dp
       go to 100
-
     end if
 
     if (n==28) then
@@ -575,7 +556,6 @@ contains
       wi(13) = 10871119225829413525.e-20_dp
       wi(14) = 11004701301647519628.e-20_dp
       go to 100
-
     end if
 
     if (n==29) then
@@ -610,7 +590,6 @@ contains
       wi(14) = 10587615509732094141.e-20_dp
       wi(15) = 10647938171831424425.e-20_dp
       go to 100
-
     end if
 
     if (n==30) then
@@ -645,7 +624,6 @@ contains
       wi(14) = 10176238974840550460.e-20_dp
       wi(15) = 10285265289355884034.e-20_dp
       go to 100
-
     end if
 
     if (n==31) then
@@ -682,7 +660,6 @@ contains
       wi(15) = 99225011226672307875.e-21_dp
       wi(16) = 99720544793426451428.e-21_dp
       go to 100
-
     end if
 
     if (n==32) then
@@ -719,7 +696,6 @@ contains
       wi(15) = 95638720079274859419.e-21_dp
       wi(16) = 96540088514727800567.e-21_dp
       go to 100
-
     end if
 
     if (n==36) then
@@ -760,7 +736,6 @@ contains
       wi(17) = 85346685739338627492.e-21_dp
       wi(18) = 85983275670394747490.e-21_dp
       go to 100
-
     end if
 
     if (n==40) then
@@ -805,7 +780,6 @@ contains
       wi(19) = 77039818164247965588.e-21_dp
       wi(20) = 77505947978424811264.e-21_dp
       go to 100
-
     end if
 
     if (n==44) then
@@ -854,7 +828,6 @@ contains
       wi(21) = 70197685473558212587.e-21_dp
       wi(22) = 70549157789354068811.e-21_dp
       go to 100
-
     end if
 
     if (n==48) then
@@ -907,7 +880,6 @@ contains
       wi(23) = 64466164435950082207.e-21_dp
       wi(24) = 64737696812683922503.e-21_dp
       go to 100
-
     end if
 
     if (n==52) then
@@ -964,7 +936,6 @@ contains
       wi(25) = 59596260171248158258.e-21_dp
       wi(26) = 59810365745291860248.e-21_dp
       go to 100
-
     end if
 
     if (n==56) then
@@ -1025,7 +996,6 @@ contains
       wi(27) = 55407952503245123218.e-21_dp
       wi(28) = 55579746306514395846.e-21_dp
       go to 100
-
     end if
 
     if (n==60) then
@@ -1090,7 +1060,6 @@ contains
       wi(29) = 51767943174910187544.e-21_dp
       wi(30) = 51907877631220639733.e-21_dp
       go to 100
-
     end if
 
     if (n==64) then
@@ -1159,7 +1128,6 @@ contains
       wi(31) = 48575467441503426935.e-21_dp
       wi(32) = 48690957009139720383.e-21_dp
       go to 100
-
     end if
 
     if (n==72) then
@@ -1236,7 +1204,6 @@ contains
       wi(35) = 43239781305222617485.e-21_dp
       wi(36) = 43321112165486537076.e-21_dp
       go to 100
-
     end if
 
     if (n==80) then
@@ -1321,7 +1288,6 @@ contains
       wi(39) = 38958395962769531199.e-21_dp
       wi(40) = 39017813656306654811.e-21_dp
       go to 100
-
     end if
 
     if (n==88) then
@@ -1414,7 +1380,6 @@ contains
       wi(43) = 35447344604470769706.e-21_dp
       wi(44) = 35492064301714545296.e-21_dp
       go to 100
-
     end if
 
     if (n==96) then
@@ -1515,7 +1480,6 @@ contains
       wi(47) = 32516118713868835987.e-21_dp
       wi(48) = 32550614492363166242.e-21_dp
       go to 100
-
     end if
 
     if (n==104) then
@@ -1624,7 +1588,6 @@ contains
       wi(51) = 30032181992593600121.e-21_dp
       wi(52) = 30059347260914619701.e-21_dp
       go to 100
-
     end if
 
     if (n==112) then
@@ -1741,7 +1704,6 @@ contains
       wi(55) = 27900497279155473642.e-21_dp
       wi(56) = 27922270225496082396.e-21_dp
       go to 100
-
     end if
 
     write (6, fmt=*) 'CASE N=', n, ' IS NOT PROVIDED IN GAULEG'
@@ -1754,6 +1716,6 @@ contains
     end do
     return
 
-  end subroutine gauleg            ! SUBROUTINE GAULEG(XI,WI,N)
+  end subroutine gauleg
 
 end module mod_gauleg

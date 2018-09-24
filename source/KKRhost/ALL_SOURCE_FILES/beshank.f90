@@ -8,7 +8,7 @@
 module mod_beshank
 
   private
-  public :: beshank
+  public :: beshank, beshank_smallcomp
 
 contains
 
@@ -25,6 +25,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine beshank(hl, jl, z, lmax)
     use :: mod_datatypes, only: dp
+    use :: mod_constants, only: cone, ci
     implicit none
 
     ! inputs
@@ -35,8 +36,7 @@ contains
     complex (kind=dp), intent (out) :: hl(0:lmax), jl(0:lmax) !! spherical Hankel and Bessel up to lmax
 
     ! locals
-    complex (kind=dp) :: nl(0:lmax) !! Neumann function
-    complex (kind=dp), parameter :: ci = (0.0e0_dp, 1.0e0_dp) !! complex imaginary unit
+    complex (kind=dp) :: nl(0:lmax) !! Neumannc function
     complex (kind=dp) :: termj, termn, z2, zj, zn
     real (kind=dp) :: rl, rn, rnm
     integer :: l, m, n
@@ -62,7 +62,7 @@ contains
         end do
         jl(l) = jl(l)*zj
         nl(l) = -nl(l)*zn/z
-        hl(l) = jl(l) + nl(l)*ci
+        hl(l) = jl(l) + nl(l)*cone
 
         zj = zj*z/(rl+3.e0_dp)
         zn = zn/z*(rl+1.e0_dp)

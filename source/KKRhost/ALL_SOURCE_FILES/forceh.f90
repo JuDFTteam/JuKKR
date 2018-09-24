@@ -2,55 +2,46 @@ module mod_forceh
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates fore on nucleaus with Hellmann-Feynmann theorem
+  !> Author: 
+  !> Category: KKRhost, physical-observables
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Calculates the force on nucleus m with Hellmann - Feynman theorem
+  !> from a given non spherical charge density at the nucleus site r
+  !-------------------------------------------------------------------------------
   subroutine forceh(cmom, flmh, lmax, nspin, nstart, nend, r2rho, v, r, drdi, irws, z)
+
     use :: mod_datatypes, only: dp
-    ! -----------------------------------------------------------------------
-    ! calculates the force on nucleus m with hellmann - feynman theorem
-    ! from a given non spherical charge density at the nucleus site r
-
-
-    ! -----------------------------------------------------------------------
-    use :: global_variables
-    use :: mod_simp3
+    use :: global_variables, only: lmpotd, irmd, natypd
+    use :: mod_simp3, only: simp3
+    use :: mod_constants, only: pi
     implicit none
-    ! ..
-    ! .. Local Scalars ..
+
     integer :: lmax, nend, nspin, nstart
-    ! ..
-    ! .. Local Arrays ..
     real (kind=dp) :: cmom(lmpotd, *), drdi(irmd, *), flmh(-1:1, *), r(irmd, *), r2rho(irmd, lmpotd, natypd, *), v(irmd, lmpotd, *), z(*)
     integer :: irws(*)
-    ! ..
-    ! .. External Subroutines ..
-    real (kind=dp) :: pi, rws, vint1
+    real (kind=dp) :: rws, vint1
     integer :: i, iatyp, ipot, irws1, lm, m
-    ! ..
-    ! .. Save statement ..
     real (kind=dp) :: flm(-1:1, 2), v1(irmd)
-    ! ..
-
-    save :: pi
 
 
-    ! ---> loop over the rep. atoms
-    pi = 4.e0_dp*atan(1.e0_dp)
     if (lmax<1) then
       write (6, fmt=100)
       stop
-
     end if
-    ! ---> reading the right Wigner-S. radius
 
-
+    ! ---> loop over the rep. atoms
     do iatyp = nstart, nend
-      ! ---> determine the right potential numbers
 
+      ! ---> reading the right Wigner-S. radius
 
       irws1 = irws(iatyp)
       rws = r(irws1, iatyp)
 
+      ! ---> determine the right potential numbers
 
-      ! ---> integrate with simpson subroutine
       ipot = nspin*(iatyp-1) + 1
 
       do m = -1, 1
@@ -61,23 +52,23 @@ contains
           v1(i) = r2rho(i, lm, iatyp, 1)*(r(i,iatyp)**(-2.0e0_dp))
         end do
 
-        ! ---> use coulomb potential to determine extra atomic contribution
+        ! ---> integrate with simpson subroutine
 
         call simp3(v1, vint1, 1, irws1, drdi(1,iatyp))
 
         flm(m, 1) = 2.0e0_dp*vint1
-        ! ---> total Hellman-Feynman force
 
+        ! ---> use coulomb potential to determine extra atomic contribution
 
         flm(m, 2) = v(irws1, lm, ipot)*(3.0e0_dp/(4.0e0_dp*pi*rws)) - 2.0e0_dp*cmom(lm, iatyp)/(rws**3)
 
+        ! ---> total Hellman-Feynman force
 
-        ! -----------------------------------------------------------------------
         flmh(m, iatyp) = (flm(m,1)+flm(m,2))*z(iatyp)
+
       end do
     end do
-    ! calculates the force on nucleus m with hellmann - feynman theorem
-    ! from a given non spherical charge density at the nucleus site r
+
 100 format (13x, 'error stop in subroutine force :', ' the charge density has to contain non spherical', ' contributions up to l=1 at least ')
 
   end subroutine forceh
