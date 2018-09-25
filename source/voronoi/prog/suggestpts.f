@@ -2,6 +2,7 @@
      >     NPAN,CRIT,DENPT,ALAT,NMIN,
      <     NMESH)
       implicit none
+c#@# KKRtags: VORONOI radial-grid geometry
       INCLUDE 'inc.geometry'
 c Suggests number of radial points between MT radius and outer
 c radius based on the number of panels

@@ -12,6 +12,7 @@ c (The case D1=0. or D2=0. should not occur, since WS-cell faces never
 c contain the origin. This should be checked before calling this 
 c function, so that the check is done only once for each WS-cell).
       implicit none
+c#@# KKRtags: VORONOI geometry
 c Input:
       INTEGER NFACE1,NFACE2
       REAL*8           A1(*),B1(*),C1(*),D1(*),A2(*),B2(*),C2(*),D2(*)

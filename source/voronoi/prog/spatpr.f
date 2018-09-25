@@ -1,5 +1,6 @@
 C ************************************************************************
       SUBROUTINE SPATPR(A,B,C,V)
+c#@# KKRtags: VORONOI
 C ************************************************************************
 C SPATPR COMPUTES THE SPATIAL PRODUCT OF THREE VECTORS A,B AND C
 C RETURNING IT INTO V: V=AXB.C.

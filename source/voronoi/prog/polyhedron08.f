@@ -12,6 +12,7 @@ c faces are returned in the same arrays A3,B3,C3, and D3.
 c
 c Uses subroutine VERTEX3D. 
       implicit none
+c#@# KKRtags: VORONOI geometry
 c Input:
       INTEGER NPLANE                ! Initial number of planes.
       INTEGER NVERTMAX              ! Max. number of vertices per plane.

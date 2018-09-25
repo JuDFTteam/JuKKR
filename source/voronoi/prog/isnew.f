@@ -1,5 +1,6 @@
       LOGICAL FUNCTION ISNEW(x,y,z,rp,np,isame)
       implicit none
+c#@# KKRtags: VORONOI
       real*8 x,y,z,rp(3,*),diff
       integer np,i,isame
       the_same=.false.

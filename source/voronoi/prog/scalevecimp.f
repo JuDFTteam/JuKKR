@@ -2,6 +2,7 @@
      >        NUMIMP,NKILLATOM,BRAVAIS,LINTERFACE,LCARTESIMP,
      X        RIMPURITY,RKILL,DXIMP,DYIMP,DZIMP)
       implicit none
+c#@# KKRtags: VORONOI KKRimp geometry
 C     Changes the impurity-atom coordinates from "internal"
 C     (Bravais-basis) to cartesian.
 

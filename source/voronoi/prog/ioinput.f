@@ -34,6 +34,8 @@ c * The error handler is not working yet in all cases ....
 c * In this version only files 5000 lines long can be read in
 c *******************************************************
       implicit none
+c#@# KKRtags: VORONOI input-output
+c#@# KKRmerge: potential optimization by keeping STRING in a save variable
       INTEGER NCHAR,NABC,NCOLIO,NLINIO
       PARAMETER(NCHAR=16,NABC=40,NCOLIO=256,NLINIO=5000)
       CHARACTER CHARKEY*NCHAR
@@ -134,7 +136,8 @@ Cccc       end if
       END
 
         SUBROUTINE VERIFY77(NABC,ABC,NCHAR,STR1,ipos1,ipos2)
-        implicit none  
+        implicit none
+c#@# KKRtags: VORONOI
 c This sub returns the position of the first space character
 c in ipos2, and the position of the first letter in the string
 c STR1

@@ -1,6 +1,7 @@
       SUBROUTINE mtmesh(NRAD,npan,meshn,nm,xrn,drn,
      &                  nfu,thetas,lmifun,mtradius)
       Implicit None
+c#@# KKRtags: VORONOI radial-grid
       include 'inc.geometry'
 C
 C

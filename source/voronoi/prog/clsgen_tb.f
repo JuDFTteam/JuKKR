@@ -6,8 +6,9 @@ c ************************************************************************
      &                   TLEFT,TRIGHT,LMTREF,RMTREF,IREFPOT,
      &                   RCLS,RCUT,RCUTXY,L2DIM,
      &                   ALAT)
-      use mod_version_info
+      use mod_version_info, only: version_print_header
       implicit none
+c#@# KKRtags: VORONOI geometry
 c ************************************************************************
 c This subroutine is used to create the clusters around each atom 
 c where in order to prepare the shape functions and produce povray 

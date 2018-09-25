@@ -1,6 +1,8 @@
       PROGRAM KKRGEOMETRY
-      use mod_version
-      use mod_version_info
+      use mod_version, only: version
+      use mod_version_info, only: serialnr
+      use mod_version_info, only: construct_serialnr
+      use mod_version_info, only: version_print_header
       implicit none
       include 'inc.geometry' 
       INTEGER IBMAXD
@@ -12,6 +14,8 @@
      +           CONEM = (-1.0D0,0.0D0),
      +           CZERO = ( 0.0D0,0.0D0),
      +           CI    = ( 0.0D0,1.0D0))
+c#@# KKRcodes: VORONOI KKRhost KKRimp
+c#@# KKRtags: geometry initialization input-output potential
 c *****************************************************************
 c * Program description and small help.
 c * This is a utility of the tb-kkr and impurity programs. The 

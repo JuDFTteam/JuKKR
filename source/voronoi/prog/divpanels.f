@@ -4,6 +4,7 @@
 c Divide the already existing panels of shape functions into smaller subpanels.
 c Keep radial points, weights and calculated shape functions unchanged.
 c Original arrays THETAS,XRN,DRN,NPAN,MESHN,NM contain new values on output.
+c#@# KKRtags: VORONOI geometry shape-functions single-site radial-grid
       IMPLICIT NONE
       include 'inc.geometry'
       INTEGER IBMAXD

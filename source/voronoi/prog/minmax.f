@@ -2,6 +2,8 @@
 c Given an array A(N), this subroutine returns the minimum and maximum
 c value of A.
       implicit none
+c#@# KKRtags: VORONOI deprecated
+c#@# KKRmerge: can be replaced by Fortran intrinsics
 c Input:
       INTEGER N
       double precision A(*)

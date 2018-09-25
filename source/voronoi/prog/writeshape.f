@@ -1,7 +1,8 @@
       SUBROUTINE WRITESHAPE(NPAN,MESHN,NM,XRN,DRN,NFU,LMIFUN,THETAS,
      &                      ISHAPE)
-      use mod_version_info
+      use mod_version_info, only: serialnr
       IMPLICIT NONE
+c#@# KKRtags: VORONOI input-output shape-functions
 c Write out shape function into unit 15.
       include 'inc.geometry'
       INTEGER IBMAXD

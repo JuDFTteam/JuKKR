@@ -27,6 +27,7 @@ c   goto next plane..
 c
 c Uses logical function HALFSPACE
       implicit none
+c#@# KKRtags: VORONOI geometry
       integer npoimax,nneimax,nplanemax
       parameter (npoimax=300,nneimax=100,nplanemax=100)
 c -------------------------------------------------------

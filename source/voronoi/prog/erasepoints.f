@@ -1,6 +1,7 @@
       SUBROUTINE ERASEPOINTS(npolypoi,keepit,poi2plane,poi2poi,
      &     polypoints)
       implicit none
+c#@# KKRtags: VORONOI    
       integer npoimax,nneimax,nplanemax
       parameter (npoimax=300,nneimax=100,nplanemax=100)
       integer npolypoi

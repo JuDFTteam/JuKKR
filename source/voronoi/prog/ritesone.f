@@ -18,6 +18,7 @@ c
 c                            modified by b. drittler  aug. 1988
 c-----------------------------------------------------------------------
 C     .. Parameters ..
+c#@# KKRtags: VORONOI potential initialization input-output
       include 'inc.geometry'
       INTEGER LMPOTD
       PARAMETER (LMPOTD= (LPOTD+1)**2)

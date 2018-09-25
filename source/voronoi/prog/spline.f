@@ -1,6 +1,7 @@
 c***********************************************************************
       SUBROUTINE spline(NMAX,x,y,n,yp1,ypn,y2) 
       implicit none
+c#@# KKRtags: VORONOI special-functions
       INTEGER n,NMAX 
       REAL*8          yp1,ypn,x(NMAX),y(NMAX),y2(NMAX) 
 c Given arrays x(1:n) and  y(1:n) containing a tabulated function, 

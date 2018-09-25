@@ -9,6 +9,7 @@ c * This subroutine reads a jellium potential from the database
 c * file. and interpolates to the new mesh 
 c ******************************************************
       implicit none
+c#@# KKRtags: VORONOI initialization potential core-electrons
       include 'inc.geometry'
       INTEGER NPOTD
       PARAMETER (NPOTD=NSPIND*NATYPD)

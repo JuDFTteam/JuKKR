@@ -1,5 +1,6 @@
 C ************************************************************************
       SUBROUTINE CROSPR(X,Y,Z)
+c#@# KKRtags: VORONOI
 C ************************************************************************
 C     CROSP COMPUTES THE CROSS PRODUCT OF X AND Y RETURNING
 C     IT INTO Z.

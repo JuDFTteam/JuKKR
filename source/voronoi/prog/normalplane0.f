@@ -8,6 +8,7 @@ c equation A*x+B*y+C*z=D, which is normal to the vector r1 and passes
 c through the point TAU*r1 (TAU thus being a parameter
 c defining how close the plane is to the point).
       implicit none
+c#@# KKRtags: VORONOI geometry
 c Input:
       REAL*8           X1,Y1,Z1,TAU
 c Output:

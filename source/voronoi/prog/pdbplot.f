@@ -1,5 +1,6 @@
       subroutine pdbplot(rbasis,natyp,rr,nr,bbox,zatom,alat)
       implicit none
+c#@# KKRtags: VORONOI visualization
       integer nbig
       parameter (nbig=10000)
       include 'inc.geometry'

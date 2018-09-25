@@ -3,6 +3,8 @@
 c      subroutine elementdatabase(elem_z,elem_name,elem_struct,
 c     &     elem_alat,elem_CORE,ELEM_NOTES,pov_color,pov_radious)
       implicit none
+c#@# KKRtags: VORONOI visualization core-electrons
+c#@# KKRmerge: can be simplified strongly
 c -----------------------------------------------------------
 c  This is an element batabase
 c  It takes as input the atomic number ELEM_Z

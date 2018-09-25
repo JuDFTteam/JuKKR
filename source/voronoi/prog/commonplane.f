@@ -3,6 +3,7 @@
        implicit none
        integer npoimax,nneimax,nplanemax
        parameter (npoimax=300,nneimax=100,nplanemax=100)
+c#@# KKRtags: VORONOI geometry
 c
 c This looks at the line connecting 2 points and returns the index 
 c of common planes

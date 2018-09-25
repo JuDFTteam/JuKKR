@@ -5,6 +5,7 @@ c ************************************************************************
      >        BRAVAIS,RECBV,NAEZ,RBASIS,RCUTZ,RCUTXY,
      <        CLSIMP,NCLSIMP,NACLSIMP,ATOMIMP,RCLSIMP,RMTHLFIMP)
       implicit none
+c#@# KKRtags: VORONOI KKRimp geometry
 c ************************************************************************
 c This subroutine is used to create the clusters around each atom 
 c where in order to prepare the shape functions and produce povray 

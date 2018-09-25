@@ -2,6 +2,7 @@
      &     keepit,polyplaneA3,polyplaneB3,polyplaneC3,polyplaneD3,
      &     nedge,poiofplane)
       implicit none  
+c#@# KKRtags: VORONOI geometry
       integer npoimax,nneimax,nplanemax
       parameter (npoimax=300,nneimax=100,nplanemax=100)    
 c ***** 

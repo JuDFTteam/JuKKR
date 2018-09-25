@@ -1,6 +1,7 @@
 c***********************************************************************
       SUBROUTINE splint(xa,ya,y2a,n,x,y,yderiv)
       implicit none
+c#@# KKRtags: VORONOI special-functions
       INTEGER n
       REAL*8         x,y,yderiv,xa(*),ya(*),y2a(*)
 c Given the arrays xa(1:n) and ya(1:n) of length n, which tabulate a
