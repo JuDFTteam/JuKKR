@@ -49,7 +49,7 @@ C     .. Local Scalars ..
 C     ..
 C     .. Local Arrays ..
       REAL*8           U(IRMD),DRDI(IRMD),ECORE(20),
-     &           R(IRMD),RWS,VINS(IRMIND:IRMD,LMPOTD),
+     &           RMESH(IRMD),RWS,VINS(IRMIND:IRMD,LMPOTD),
      &                 VM2Z(IRMD),VINSOUT(IRMIND:IRMD,LMPOTD),
      &                 VM2ZOUT(IRMD),VM2ZB(IRMD),ROUT(IRMD),
      &             VINSB(IRMD,LMPOTD),DRDIOUT(IRMD),            
@@ -180,11 +180,11 @@ c
 c     
 c---  > generate radial mesh - potential only is stored in potential card
 c     
-            R(1) = 0.0D0
+            RMESH(1) = 0.0D0
             DRDI(1) = A1*B1
             DO 70 IR = 2,IRWS1
                EA = EXP(A1*REAL(IR-1))
-               R(IR) = B1* (EA-1.0D0)
+               RMESH(IR) = B1* (EA-1.0D0)
                DRDI(IR) = A1*B1*EA
  70         CONTINUE          
             IF (IRNS1.NE.0) THEN
@@ -193,7 +193,7 @@ c
                DR = DIST/MESHN0
                DO 80 IRI = 1,MESHN0
                   IR = IRI + IMT1
-                  R(IR) = RMTNW1 + DR*FLOAT(IRI)
+                  RMESH(IR) = RMTNW1 + DR*FLOAT(IRI)
                   DRDI(IR) = DR
  80            CONTINUE
             END IF
@@ -244,7 +244,7 @@ c  Ok now interpolate
 c
                    
             MAXA = 1.D35
-            CALL SPLINE(IRMD,R,VM2Z,NR,MAXA,MAXA,VM2ZB)  
+            CALL SPLINE(IRMD,RMESH,VM2Z,NR,MAXA,MAXA,VM2ZB)  
             IF (INS.GT.0) THEN
                DO LM1=1,LMPOTD
                   IF (POTLM(LM1)) THEN
@@ -252,7 +252,7 @@ c
 c     map it
                      DO I=1,IRNS1
                         WORK(I,LM1) = VINS(NR - IRNS1 + I - 1,LM1)
-                        RA(I) = R(NR - IRNS1 + I - 1)
+                        RA(I) = RMESH(NR - IRNS1 + I - 1)
                      END DO
                      CALL SPLINE(IRMD,RA,WORK(1,LM1),IRNSTOT,MAXA,MAXA,
      &                    VINSB(1,LM1))
@@ -265,7 +265,7 @@ c
             VM2ZOUT(1) = VM2Z(1)
             DO IR = 2,IRWSOUT
                R0 = ROUT(IR)
-               CALL SPLINT(R,VM2Z,VM2ZB,NR,R0,PARSUM,PARSUMDERIV)
+               CALL SPLINT(RMESH,VM2Z,VM2ZB,NR,R0,PARSUM,PARSUMDERIV)
                VM2ZOUT(IR) = PARSUM
             END DO
 c
