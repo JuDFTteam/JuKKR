@@ -1,0 +1,11 @@
+NSPIN= 1
+LMAX= 3
+ALATBASIS= 6.67
+BRAVAIS                   (units of lattice constant)
+    0.0            0.5            0.5
+    0.5            0.0            0.5
+    0.5            0.5            0.0
+NAEZ= 1
+<RBASIS>                                   <ZATOM>
+ 0.00000        0.00000        0.00000     29.0
+RCLUSTZ=  1.60d0

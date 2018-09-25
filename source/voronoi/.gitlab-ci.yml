@@ -1,3 +1,7 @@
+############################################################
+####       gitlab-ci settings for voronoi code          ####
+############################################################
+#
 # docker image containing Developlement Tools and the current Intel compilers based on CentOS 7
 image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers
 
@@ -13,7 +17,11 @@ before_script:
 
 stages:
   - build
+  - run
+#  needs to be implemented:
+#  - verify
 
+############################################################
 
 build:intel:
   stage: build
@@ -23,3 +31,36 @@ build:intel:
     paths:
       - voronoi.exe
     expire_in: 1 day
+
+############################################################
+
+run:intel:oldstyle:
+  stage: build
+  script:
+    - cd tests/
+    - cp -r test_inputs/test01_oldstyle test_run01
+    - cd test_run01 && ln -s ../../ElementDataBase . && ../../voronoi.exe | tee out_voronoi
+  artifacts:
+    paths:
+      - tests/test_run01
+    expire_in: 1 day
+
+run:intel:newstyle:
+  stage: build
+  script:
+    - cd tests/
+    - cp -r test_inputs/test02_newstyle test_run02
+    - cd test_run02 && ln -s ../../ElementDataBase . && ../../voronoi.exe | tee out_voronoi
+  artifacts:
+    paths:
+      - tests/test_run02
+    expire_in: 1 day
+
+############################################################
+ 
+#verify:intel:
+#  stage: build
+#  script:
+#    - cd tests/
+#    - pytest -v
+
