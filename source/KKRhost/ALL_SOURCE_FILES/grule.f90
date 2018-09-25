@@ -1,31 +1,28 @@
 module mod_grule
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: grule
 
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: 
+  !> Summary: Determines points with weights for Gauss-Legendre integration rule
   !> Author: 
-  !> Category: KKRhost, 
+  !> Category: KKRhost, numerical-tools
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
-  !> 
+  !> Determines the (n+1)/2 nonnegative points x(i) and
+  !> the corresponding weights w(i) of the n-point
+  !> gauss-legendre integration rule, normalized to the
+  !> interval [-1,1]. The x(i) appear in descending order.
+  !>
+  !> This routine is from 'methods of numerical integration',
+  !> P.J. Davis and P. Rabinowitz, page 369.
   !-------------------------------------------------------------------------------
-  ! **********************************************************************
   subroutine grule(n, x, w)
 
-    ! ***********************************************************************
-
-    ! determines the (n+1)/2 nonnegative points x(i) and
-    ! the corresponding weights w(i) of the n-point
-    ! gauss-legendre integration rule, normalized to the
-    ! interval [-1,1]. the x(i) appear in descending order.
-
-    ! this routine is from 'methods of numerical integration',
-    ! p.j. davis and p. rabinowitz, page 369.
-
-    ! ***********************************************************************
+    use :: mod_datatypes, only: dp
+    use :: mod_constants, only: pi
     implicit none
 
     ! .. Scalar Arguments ..
@@ -35,13 +32,12 @@ contains
     real (kind=dp) :: w(*), x(*)
     ! ..
     ! .. Local Scalars ..
-    real (kind=dp) :: d1, d2pn, d3pn, d4pn, den, d_p, d_pn, e1, fx, h, p, pi, pk, pkm1, pkp1, t, t1, u, v, x0
+    real (kind=dp) :: d1, d2pn, d3pn, d4pn, den, d_p, d_pn, e1, fx, h, p, pk, pkm1, pkp1, t, t1, u, v, x0
     integer :: i, it, k, m
     ! ..
     ! .. Intrinsic Functions ..
     intrinsic :: cos, atan
 
-    pi = 4.e0_dp*atan(1.e0_dp)
     m = (n+1)/2
     e1 = n*(n+1)
     do i = 1, m

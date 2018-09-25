@@ -1,27 +1,25 @@
 module mod_grefsy13
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: grefsy13
 
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: 
+  !> Summary: Solves Dyson equation for reference Greens function
   !> Author: 
-  !> Category: KKRhost, 
+  !> Category: KKRhost, reference-system, structural-greensfunction
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
-  !> 
+  !> Solve the Dyson equation to get reference Green function
+  !> Calculate also (1-gt)^-1 * d(1-gt)/dE and the trace LLY_G0TR for
+  !> Lloyds formula (ported from KKRnano by Phivos Mavropoulos 11.10.2013)
   !-------------------------------------------------------------------------------
   subroutine grefsy13(gtmat, gmat, dgtde, lly_g0tr, ipvt, ndim, lly, lmgf0d, ngd)
-    ! **********************************************************************
-    ! Solve the Dyson equation to get reference Green function
-    ! Calculate also (1-gt)^-1 * d(1-gt)/dE and the trace LLY_G0TR for
-    ! Lloyds formula (ported from KKRnano by Phivos Mavropoulos 11.10.2013)
-    ! **********************************************************************
+
+    use :: mod_datatypes, only: dp
+    use :: mod_constants, only: czero, cone
     implicit none
-    ! .. PARAMETERS ..
-    complex (kind=dp) :: czero, cone
-    parameter (czero=(0.e0_dp,0.e0_dp), cone=(1.e0_dp,0.e0_dp))
     ! ..
     ! .. SCALAR ARGUMENTS ..
     integer :: ndim, ngd, lmgf0d
@@ -43,12 +41,11 @@ contains
     ! ..
     ! .. LOCAL ARRAYS ..
     integer :: ipvt(ngd)
-    ! ..
+
 
     ! GTMAT =  -g*t
     ! GMAT = g
     ! DGTDE = -dg/dE * t - g * dt/dE (on input)
-
 
     do ii = 1, ndim
       gtmat(ii, ii) = cone + gtmat(ii, ii) ! GTMAT= 1 - g * t
@@ -74,16 +71,19 @@ contains
 
     ! LLY_G0TR contains  -Trace[ (1-gt)^-1 * d(1-gt)/dE ]
 
-
   end subroutine grefsy13
-  ! **********************************************************************
 
-  ! Obsolete, replaced by grefsy13 returning also the derivative on demand.
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Solve the Dyson equation to get reference Green function 
+  !> Author: 
+  !> Category: KKRhost, reference-system, structural-greensfunction
+  !> Deprecated: True ! This needs to be set to True for deprecated subroutines
+  !>
+  !> @note Obsolete, replaced by grefsy13 returning also the derivative on demand. @endnote
+  !-------------------------------------------------------------------------------
   subroutine grefsy(gtmat, gmat, ndim, lmgf0d, ngd)
-    ! **********************************************************************
-    ! * Solve the Dyson equation to get reference Green function           *
-    ! **********************************************************************
+    use :: mod_datatypes, only: dp
     implicit none
     ! .. PARAMETERS ..
     complex (kind=dp) :: cone

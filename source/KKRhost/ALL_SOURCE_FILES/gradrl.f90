@@ -3,29 +3,26 @@ module mod_gradrl
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: 
+  !> Summary: Gradient of charge density moments for GGA
   !> Author: 
-  !> Category: KKRhost, 
+  !> Category: KKRhost, xc-potential
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
-  !> 
+  !> Gradient of rl with rl defined by charge density=sum(rl*ylm).
+  !> mesh,l1max: max of mesh and l+1.
+  !> IRMD,LMPOTD: maxima of corresponding dimension parameters.
+  !> drrl=d(rl)/dr, ddrrl=d(drrl)/dr, drrul=d(rl-up)/dr,
+  !> ztal: zeta for each l-component necessary to get down-components.
   !-------------------------------------------------------------------------------
   subroutine gradrl(nspin, mesh, l1max, dx, rhol, rv, drdi, ipan, ipand, ircut, drrl, ddrrl, drrul, ddrrul, irmd, lmpotd)
-    ! ------------------------------------------------------------------
-    ! gradient of rl with rl defined by charge density=sum(rl*ylm).
-    ! mesh,l1max: max of mesh and l+1.
-    ! IRMD,LMPOTD: maxima of corresponding dimension parameters.
-    ! drrl=d(rl)/dr, ddrrl=d(drrl)/dr, drrul=d(rl-up)/dr,
-    ! ztal: zeta for each l-component necessary to get down-components.
-    ! ------------------------------------------------------------------
-    ! ------------------------------------------------------------------
+
     use :: mod_types, only: t_inc
     use :: mod_datatypes, only: dp
-    use :: mod_gradr
+    use :: mod_gradr, only: gradr
+    use :: mod_constants, only: pi
     implicit none
     ! .. Parameters ..
-    real (kind=dp) :: zero, zero1
-    parameter (zero=0.d0, zero1=1.d-12)
+    real (kind=dp), parameter :: zero=0.d0, zero1=1.d-12, s4 = sqrt(4.0_dp*pi)
     ! ..
     ! .. Scalar Arguments ..
     real (kind=dp) :: dx
@@ -36,15 +33,14 @@ contains
     integer :: ircut(0:ipand)
     ! ..
     ! .. Local Scalars ..
-    real (kind=dp) :: chgden, pi, r2, s4, spiden
+    real (kind=dp) :: chgden, r2, spiden
     integer :: i1, ien, ip, ir, ist, llmax
     ! ..
     ! .. Local Arrays ..
     real (kind=dp) :: drdi2(irmd), rl1(irmd), rl1udm(irmd), ztal(irmd)
     ! ..
     ! ------------------------------------------------------------------
-    pi = cos(-1.0_dp)
-    s4 = sqrt(4.0_dp*pi)
+    
     llmax = l1max*l1max
 
     do ip = 1, ipan
