@@ -4,6 +4,14 @@ module mod_gxcpt
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine gxcpt(idspr, ro, zta, agr, agru, agrd, g2r, g2ru, g2rd, gggr, gggru, gggrd, grgru, grgrd, gzgr, xcptu, xcptd, xced, vxlu, vxld, vclu, vcld, xedl, cedl, vxgu, vxgd, &
     vcgu, vcgd, xedg, cedg)
     ! .....-----------------------------------------------------------------

@@ -1,59 +1,61 @@
 module mod_gfshells
 
+  private
+  public :: gfshells
+
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Construct index arrays NSHELL NSH1, NSH2 for the Greens function
+  !> Author: 
+  !> Category: KKRhost, input-output, structural-greensfunction
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> This subroutine constructs mainly the index arrays
+  !> NSHELL, NSH1, NSH2 -- NSHELL(0) number of different GF blocks that
+  !> have to be calculated, NSH1(I),NSH2(I) the sites connected for
+  !> the block I, I = 1,NSHELL(0)
+  !-------------------------------------------------------------------------------
   subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, iofgij, jofgij, nofgij, ish, jsh, nshell, naez, natyp, noq, rbasis, bravais, ifilimp, ratom, rclsimp, &
     nsymat, isymindex, rsymat, kaoez, atomimp, rotname, hostimp, lmaxd, lmmaxd, naezd, natypd, natomimpd, nembd, nsheld)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * This subroutine constructs mainly the index arrays                 *
-    ! * NSHELL, NSH1, NSH2 -- NSHELL(0) number of different GF blocks that *
-    ! * have to be calculated, NSH1(I),NSH2(I) the sites connected for     *
-    ! * the block I, I = 1,NSHELL(0)                                       *
-    ! *                                                                    *
-    ! **********************************************************************
+
     use :: mod_types, only: t_imp
     use :: mod_datatypes, only: dp
-    use :: mod_impcheck
-    use :: mod_impcoefs
-    use :: mod_shellgen2k
+    use :: mod_impcheck, only: impcheck
+    use :: mod_impcoefs, only: impcoefs
+    use :: mod_shellgen2k, only: shellgen2k
     implicit none
     real (kind=dp), parameter :: eps = 1e-14_dp
     integer :: lmaxd, lmmaxd, naezd, natypd, natomimpd, nembd, nsheld
-    ! ..
-    ! .. Scalar arguments
+
     integer :: icc, naez, natomimp, natyp, nsymat, nofgij
     character (len=40) :: ifilimp
-    ! ..
-    ! .. Array arguments
+
     character (len=10) :: rotname(64)
-    ! ..
+
     integer :: atomimp(natomimpd), hostimp(0:natypd)
     integer :: isymindex(*), kaoez(natypd, naezd+nembd)
     integer :: noq(naezd), nsh1(*), nsh2(*), nshell(0:nsheld)
     integer :: ish(nsheld, *), jsh(nsheld, *)
     integer :: ijtabsym(*), ijtabsh(*), ijtabcalc(*), iofgij(*), jofgij(*)
-    ! ..
+
     real (kind=dp) :: bravais(3, 3), ratom(3, nsheld)
     real (kind=dp) :: rbasis(3, *), rclsimp(3, natomimpd)
     real (kind=dp) :: rsymat(64, 3, 3)
-    ! ..
-    ! .. Local scalars
+
     integer :: nb, i, j, pos, ii, io, ns, in, ndim, nsize, ihost, ierr
     character (len=9) :: str9
     logical :: lsurf
     integer :: nofgij_with_diag
-    ! ..
-    ! .. External subroutines
-    logical :: opt
-    external :: opt
+
+    logical, external :: opt
+
 
     write (1337, 100)
 
     nsize = natomimpd*lmmaxd
 
     ! **********************************************************************
-
     ! --> construction of ratom, nsh1 and nsh2 for a self-consistent
     ! calculation
 
@@ -61,7 +63,7 @@ contains
       nshell(0) = natyp
     else
       nshell(0) = naez
-    end if                         ! ( .not. OPT('VIRATOMS') ) THEN
+    end if
 
     if (nshell(0)>nsheld) then
       write (6, 110) 'NSHELD', nshell(0)
@@ -107,7 +109,7 @@ contains
     ! end of simple SCF-calculation part.
     ! **********************************************************************
 
-    ! heck if we are in surface mode
+    ! Check if we are in surface mode
 
     lsurf = .false.
     if (abs(bravais(1,3))<eps .and. abs(bravais(2,3))<eps .and. abs(bravais(3,3))<eps) lsurf = .true.
@@ -275,14 +277,21 @@ inner:    do j = 1, natomimp
 220 format (6x, 72(':'), /, 22x, '(impurity) cluster related data/indexing', /, 6x, 72(':'))
 
   end subroutine gfshells
-  ! **********************************************************************
 
+
+  !-------------------------------------------------------------------------------
+  !> Summary: Prepare string to write out pair (i,j)
+  !> Author: 
+  !> Category: KKRhost, input-output, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !-------------------------------------------------------------------------------
   subroutine setpairstr(i, j, str9)
     implicit none
     character (len=9) :: str9, strd
     integer :: i, j, l, lstr
     character (len=20) :: fmt1
-    ! ..
+
     fmt1 = '("(",I'
     fmt1 = fmt1(1:6) // '1'
     lstr = 4
@@ -312,6 +321,6 @@ inner:    do j = 1, natomimp
     end do
     str9 = str9(1:9-lstr) // strd(1:lstr)
   end subroutine setpairstr
-  ! **********************************************************************
+
 
 end module mod_gfshells

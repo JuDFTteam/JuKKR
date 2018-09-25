@@ -2,6 +2,14 @@ module mod_gradrl
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine gradrl(nspin, mesh, l1max, dx, rhol, rv, drdi, ipan, ipand, ircut, drrl, ddrrl, drrul, ddrrul, irmd, lmpotd)
     ! ------------------------------------------------------------------
     ! gradient of rl with rl defined by charge density=sum(rl*ylm).

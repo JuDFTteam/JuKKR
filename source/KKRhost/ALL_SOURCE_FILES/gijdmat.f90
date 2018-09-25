@@ -1,55 +1,58 @@
 module mod_gijdmat
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: gijdmat
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Subroutine to get the projection matrices to get G_ab from G_CPA
+  !> Author: V. Popescu
+  !> Date: Oct. 2004
+  !> Category: KKRhost, structural-greensfunction, coherent-potential-approximation
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Subroutine to get the projection matrices
+  !>
+  !>               ii     i       i    (-1)
+  !>   D  = [ 1 + G   * (t    -  t  ) ]
+  !>    a          CPA    CPA     a
+  !>
+  !>   _            i       i      ii   (-1)
+  !>   D  = [ 1 + (t    -  t  ) * G    ]
+  !>    a           CPA     a      CPA
+  !>
+  !> Used is made of the same routine GETDMAT as in the case of TAU    
+  !> projection. Note, however, that there the matrices are defined for
+  !> example as
+  !>
+  !>               ij     i       i      (-1)
+  !>   D  = [ 1 + tau * (m    -  m    ) ]
+  !>    a          CPA    a       CPA
+  !>
+  !> with m = (t)**(-1)
+  !-------------------------------------------------------------------------------
   subroutine gijdmat(tauq, tsst, mssq, dmat, dtil, cfctorinv, iprint, ie, it, krel, lmmaxd)
-    ! **********************************************************************
-    ! * Subroutine to get the projection matrices                          *
-    ! *                                                                    *
-    ! *                ii     i       i    (-1)                            *
-    ! *    D  = [ 1 + G   * (t    -  t  ) ]                                *
-    ! *     a          CPA    CPA     a                                    *
-    ! *                                                                    *
-    ! *    _            i       i      ii   (-1)                           *
-    ! *    D  = [ 1 + (t    -  t  ) * G    ]                               *
-    ! *     a           CPA     a      CPA                                 *
-    ! *                                                                    *
-    ! * Used is made of the same routine GETDMAT as in the case of TAU     *
-    ! * projection. Note, however, that there the matrices are defined for *
-    ! * example as                                                         *
-    ! *                                                                    *
-    ! *                ij     i       i      (-1)                          *
-    ! *    D  = [ 1 + tau * (m    -  m    ) ]                              *
-    ! *     a          CPA    a       CPA                                  *
-    ! *                                                                    *
-    ! * with m = (t)**(-1)                                                 *
-    ! *                                                                    *
-    ! *                                      v.popescu Oct. 2004           *
-    ! **********************************************************************
-
+    use :: mod_datatypes, only: dp
     use :: mod_getdmat
     use :: mod_cmatstr
     implicit none
-    ! ..
-    ! .. Arguments ..
+
     integer :: iprint, lmmaxd
     integer :: ie, it, krel
     complex (kind=dp) :: cfctorinv
     complex (kind=dp) :: tauq(lmmaxd, lmmaxd), tsst(lmmaxd, lmmaxd), mssq(lmmaxd, lmmaxd)
     complex (kind=dp) :: dmat(lmmaxd, lmmaxd), dtil(lmmaxd, lmmaxd)
-    ! ..
-    ! .. Locals ..
+
     integer :: ik, info, i1, i2
     integer :: ipvt(lmmaxd)
     complex (kind=dp) :: cone, czero
     complex (kind=dp) :: gll(lmmaxd, lmmaxd), tssq(lmmaxd, lmmaxd), tpg(lmmaxd, lmmaxd), xc(lmmaxd, lmmaxd)
     character (len=18) :: banner
-    ! ..
-    ! .. Data
+
     data cone/(1e0_dp, 0e0_dp)/
     data czero/(0e0_dp, 0e0_dp)/
+
     ! --> get G(CPA) using the same procedure as for GMATLL in < KLOOPZ >
     ! G(CPA) = -MSSQ - MSSQ * TAUQ * MSSQ
 

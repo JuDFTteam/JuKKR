@@ -2,6 +2,14 @@ module mod_greenimp
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine greenimp(natomimp, dtmtrx, e)
     use :: mod_version_info
     use :: global_variables

@@ -2,41 +2,40 @@ module mod_gfmask
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Prepare mask for GF elements that are needed to be computed
+  !> Author: 
+  !> Date: 29.02.2000
+  !> Category: KKRhost, structural-greensfunction, reference-system
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> This subroutine prepares the ICHECK matrix that is used for
+  !> calculating the proper off-diagonal GF matrix elements ( e.g.
+  !> impurity) in case of no full inversion algorithm
+  !>
+  !> ICHECK(I,J) points to the block (I,J) of the GF matrix having the
+  !> size NPRINCD
+  !-------------------------------------------------------------------------------
   subroutine gfmask(linterface, icheck, icc, invmod, nsh1, nsh2, naez, nshell, naezd, nprincd)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * This subroutine prepares the ICHECK matrix that is used for        *
-    ! * calculating the proper off-diagonal GF matrix elements ( e.g.      *
-    ! * impurity) in case of no full inversion algorithm                   *
-    ! *                                                                    *
-    ! * ICHECK(I,J) points to the block (I,J) of the GF matrix having the  *
-    ! * size NPRINCD                                                       *
-    ! *                                                                    *
-    ! *                                            29.02.2000              *
-    ! *                                                                    *
-    ! **********************************************************************
+
     implicit none
-    ! ..
-    ! .. Scalar arguments
+
     integer :: naezd, nprincd
     integer :: icc, invmod, nlayer, naez, nshell
     logical :: linterface
-    ! ..
-    ! .. Array arguments
+
     integer :: icheck(naezd/nprincd, naezd/nprincd)
     integer :: nsh1(*), nsh2(*)
-    ! .. Local variables
+
     integer :: icouple(naezd, naezd)
     integer :: i, j, k, ii, istep1, ilt1, istep2, ilt2, il2, il1, lfchk
     character (len=80) :: fmtchk
     character (len=35) :: invalg(0:3)
-    ! ..
-    ! .. External functions
-    logical :: opt, test
-    external :: opt, test
-    ! ..
-    ! .. Data statements
+
+    logical, external :: opt, test
+
     data invalg/'FULL MATRIX                        ', 'BANDED MATRIX (slab)               ', 'BANDED + CORNERS MATRIX (supercell)', 'godfrin module                     '/
+
 
     write (1337, 100)
 

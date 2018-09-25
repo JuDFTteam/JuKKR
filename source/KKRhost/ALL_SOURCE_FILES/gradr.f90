@@ -4,6 +4,14 @@ module mod_gradr
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, ddrru, rou, irmd)
     ! -----------------------------------------------------------------
     ! evaluates d(ro)/dr,d{d(ro)/dr}/dr.
