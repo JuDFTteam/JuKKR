@@ -24,14 +24,10 @@ contains
   !-------------------------------------------------------------------------------
   subroutine calcrotmat(nk, irel, alfdeg, betdeg, gamdeg, rot, fact, nkmmax)
 
-    use :: mod_errortrap
+    use :: mod_errortrap, only: errortrap
     use :: mod_datatypes, only: dp
+    use :: mod_constants, only: ci, czero, pi
     implicit none
-
-    complex (kind=dp) :: ci, c0
-    parameter (ci=(0.0e0_dp,1.0e0_dp), c0=(0.0e0_dp,0.0e0_dp))
-    real (kind=dp) :: pi
-    parameter (pi=3.141592653589793238462643e0_dp)
 
     real (kind=dp) :: num, msb05, msb05sq, msb05pw, j, m1, m2, rfac, dom, x, cb05, cb05sq, alfdeg, betdeg, gamdeg, sum, cb05pw
     real (kind=dp) :: fact(0:100)
@@ -47,7 +43,7 @@ contains
 
     do i2 = 1, nkmmax
       do i1 = 1, nkmmax
-        rot(i1, i2) = c0
+        rot(i1, i2) = czero
       end do
     end do
 

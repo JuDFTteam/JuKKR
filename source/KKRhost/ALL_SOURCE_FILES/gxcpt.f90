@@ -579,7 +579,7 @@ contains
   end subroutine gxcpt
 
   function fncf(x)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     real (kind=dp) :: fncf
     real (kind=dp), intent (in) :: x
@@ -588,7 +588,7 @@ contains
   end function fncf
 
   function fncecl(r, g, b1, b2)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     real (kind=dp) :: fncecl
     real (kind=dp), intent (in) :: r, g, b1, b2
@@ -597,7 +597,7 @@ contains
   end function fncecl
 
   function fncvcl(ce, r, b1, b2)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     real (kind=dp) :: fncvcl
     real (kind=dp), intent (in) :: ce, r, b1, b2
@@ -606,7 +606,7 @@ contains
   end function fncvcl
 
   function fncecs(r, a, b, c, d)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     real (kind=dp) :: fncecs
     real (kind=dp), intent (in) :: r, a, b, c, d
@@ -615,7 +615,7 @@ contains
   end function fncecs
 
   function fncvcs(r, a, b, c, d)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     real (kind=dp) :: fncvcs
     real (kind=dp), intent (in) :: r, a, b, c, d
@@ -624,7 +624,7 @@ contains
   end function fncvcs
 
   function ffz(zta)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     real (kind=dp) :: ffz
     real (kind=dp), intent (in) :: zta
@@ -633,7 +633,7 @@ contains
   end function ffz
 
   function fdfdz(zta)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     real (kind=dp) :: fdfdz
     real (kind=dp), intent (in) :: zta
@@ -642,7 +642,7 @@ contains
   end function fdfdz
 
   function fvq(b, c)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     real (kind=dp) :: fvq
     real (kind=dp), intent (in) :: b, c
@@ -660,7 +660,7 @@ contains
   end function fvnec
 
   function fbet(fdd0, ecf, ecp, alc)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     real (kind=dp) :: fbet
     real (kind=dp), intent (in) :: fdd0, ecf, ecp, alc
@@ -669,7 +669,7 @@ contains
   end function fbet
 
   function fdedr(ro, x, a, x0, xl, xl0, xld, b, q)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     real (kind=dp) :: fdedr
     real (kind=dp), intent (in) :: ro, x, a, x0, xl, xl0, xld, b, q

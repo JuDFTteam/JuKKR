@@ -4,6 +4,14 @@ module mod_irwsol
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine irwsol(ek, fz, hamf, mass, pz, qz, sz, dror, s, ipan, ircut, irmd, ipand, lmaxd)
     ! -----------------------------------------------------------------------
     ! calculates the irregular solution of the schroedinger equation or

@@ -7,7 +7,7 @@
 !> Taken from example in Fortran Modernization workshop of held by Wadud Miah (NAG)
 !-------------------------------------------------------------------------------
 module mod_datatypes
-  use, intrinsic :: iso_fortran_env
+  use, intrinsic :: iso_fortran_env, only: real32, real64, int32, int64
 
   implicit none
   ! everything is private unless otherwise stated

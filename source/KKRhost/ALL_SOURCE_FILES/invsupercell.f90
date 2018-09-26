@@ -2,6 +2,14 @@ module mod_invsupercell
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! ************************************************************************
   subroutine invsupercell(m2, m1, m3, gin, icheck)
     ! ************************************************************************
@@ -16,11 +24,11 @@ contains
 
     ! ------------------------------------------------------------------------
 
-    use :: global_variables
+    use :: global_variables, only: ndim_slabinv, nlayerd, alm
     use :: mod_datatypes, only: dp
-    use :: mod_bofm
-    use :: mod_btom
-    use :: mod_cinit
+    use :: mod_bofm, only: bofm
+    use :: mod_btom, only: btom
+    use :: mod_cinit, only: cinit
     implicit none
 
     complex (kind=dp), parameter :: czero = (0.e0_dp, 0.e0_dp)

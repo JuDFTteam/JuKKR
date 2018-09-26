@@ -18,9 +18,9 @@ contains
   !-------------------------------------------------------------------------------
   subroutine calc_torq_ll_ss(lmmax, rll, ircut, ipan, icell, cleb, icleb, iend, ifunm, lmsp, irws, drdi, dens, visp, nspin, iatom, vins, irmin)
 
-    use :: global_variables
+    use :: global_variables, only: irmd, lmpotd, irmind, ipand, natypd, ncleb
     use :: mod_datatypes, only: dp
-    use :: mod_csimpk
+    use :: mod_csimpk, only: csimpk
 
     implicit none
 

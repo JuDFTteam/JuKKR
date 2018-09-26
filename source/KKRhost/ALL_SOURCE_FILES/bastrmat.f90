@@ -19,7 +19,7 @@ contains
   !> full BASis TRansformation MATrices  RC, CREL and RREL    
   !-------------------------------------------------------------------------------
   subroutine bastrmat(lmax, cgc, rc, crel, rrel, nkmmax, nkmpmax)
-    use :: mod_cinit
+    use :: mod_cinit, only: cinit
     use :: mod_datatypes, only: dp
     implicit none
 

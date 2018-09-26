@@ -2,6 +2,14 @@ module mod_invslab
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! ************************************************************************
   subroutine invslab(gdi, gup, gdow, gin, icheck)
     ! ************************************************************************
@@ -16,11 +24,11 @@ contains
     ! see notes R. Zeller
 
     ! ------------------------------------------------------------------------
-    use :: global_variables
+    use :: global_variables, only: ndim_slabinv, nlayerd, alm
     use :: mod_datatypes, only: dp
-    use :: mod_bofm
-    use :: mod_btom
-    use :: mod_cinit
+    use :: mod_bofm, only: bofm
+    use :: mod_btom, only: btom
+    use :: mod_cinit, only: cinit
     implicit none
 
     complex (kind=dp), parameter :: czero = (0.e0_dp, 0.e0_dp)

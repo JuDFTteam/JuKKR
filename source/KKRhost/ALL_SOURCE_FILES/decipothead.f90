@@ -17,7 +17,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine decipothead(ihost, filehost, ilhost, nathost, vacflag, alat, bravsys, nq, nt, bravais, efermi, insh, krelh, nspinh, ins, krel, nspin, kmrot)
 
-    use :: mod_version_info
+    use :: mod_version_info, only: version_check_header
     use :: mod_datatypes, only: dp
     implicit none
     ! ..

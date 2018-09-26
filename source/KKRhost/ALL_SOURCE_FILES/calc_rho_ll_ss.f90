@@ -16,8 +16,8 @@ contains
   subroutine calc_rho_ll_ss(lmmax, rll, ircut, ipan, icell, thetas, cleb, icleb, iend, ifunm, lmsp, irws, drdi, dens)
 
     use :: mod_datatypes, only: dp
-    use :: global_variables
-    use :: mod_csimpk
+    use :: global_variables, only: irmd, irid, nfund, ncleb, natypd, lmpotd, ipand
+    use :: mod_csimpk, only: csimpk
     implicit none
 
     ! .. Array Arguments ..

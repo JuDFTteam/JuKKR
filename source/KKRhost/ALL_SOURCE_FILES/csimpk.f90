@@ -28,7 +28,7 @@ contains
   subroutine csimpk(cf, cfint, ipan, ircut, drdi)
 
     use :: mod_datatypes, only: dp
-    use :: mod_csum
+    use :: mod_csum, only: csum
     implicit none
 
     ! .. Scalar Arguments ..

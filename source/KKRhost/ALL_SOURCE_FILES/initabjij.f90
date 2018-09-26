@@ -2,6 +2,14 @@ module mod_initabjij
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine initabjij(iprint, naez, natyp, natomimp, nofgij, nqcalc, nsmax, nshell, iqcalc, atomimp, ish, jsh, ijtabcalc, ijtabsh, ijtabsym, nijcalc, kijsh, nijmax, nshell0, &
     nsheld)
     ! ********************************************************************

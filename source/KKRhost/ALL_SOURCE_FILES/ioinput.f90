@@ -2,6 +2,14 @@ module mod_ioinput
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine ioinput(charkey, char, iline, ifile, ierror)
     ! *********************************************************
     ! *  This subroutine is responsible for the I/O

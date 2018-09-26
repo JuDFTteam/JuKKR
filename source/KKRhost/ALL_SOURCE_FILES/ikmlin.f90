@@ -2,6 +2,14 @@ module mod_ikmlin
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine ikmlin(iprint, nsollm, ikm1lin, ikm2lin, nlmax, nmuemax, linmax, nl)
     ! ********************************************************************
     ! *                                                                  *
@@ -15,7 +23,7 @@ contains
     ! *                                                                  *
     ! ********************************************************************
     use :: mod_types, only: t_inc
-    use :: mod_ikapmue
+    use :: mod_ikapmue, only: ikapmue
     implicit none
 
     ! Dummy arguments

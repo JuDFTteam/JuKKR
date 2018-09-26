@@ -27,18 +27,17 @@ contains
   subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, cg8, v, b, z, nucleus, r, drdi, dovr, nmesh, pr, qr, pi, qi, d_p, dq)
 
     use :: mod_datatypes, only: dp
-    use :: mod_dirbsstp
-    use :: mod_cjlz
-    use :: mod_dirbsrad
-    use :: mod_rinvgj
+    use :: mod_dirbsstp, only: dirbsstp
+    use :: mod_cjlz, only: cjlz
+    use :: mod_dirbsrad, only: dirbsrad
+    use :: mod_rinvgj, only: rinvgj
+    use :: mod_constants, only: czero
     implicit none
     include 'sprkkr_rmesh.dim'
 
     ! PARAMETER definitions
     integer :: mpsmax, npemax, nabm
     parameter (mpsmax=40, npemax=4, nabm=5)
-    complex (kind=dp) :: c0
-    parameter (c0=(0.0e0_dp,0.0e0_dp))
     real (kind=dp) :: epsbs
     parameter (epsbs=2.0e-7_dp)
 
@@ -167,8 +166,8 @@ contains
     do i = 1, 2
       do j = 1, 2
         do ip = -npemax, mpsmax
-          pc(i, j, ip) = c0
-          qc(i, j, ip) = c0
+          pc(i, j, ip) = czero
+          qc(i, j, ip) = czero
         end do
       end do
     end do
@@ -180,8 +179,8 @@ contains
         i = 3 - j
         pc(j, j, 0) = sqrt(abs(kap(j))-gam(j))
         qc(j, j, 0) = (kap(j)+gam(j))*(csqr/tz)*pc(j, j, 0)
-        pc(i, j, 0) = c0
-        qc(i, j, 0) = c0
+        pc(i, j, 0) = czero
+        qc(i, j, 0) = czero
       end do
 
       ! determine higher expansion coefficients for the wave functions
@@ -325,10 +324,10 @@ contains
           m = lb(j)
           dq(j, j, n) = efac*sk(j)*(real(m+1,kind=dp)*cjlz(m,zz)-zz*cjlz(m+1,zz))*drdi(n)*c
 
-          pr(i, j, n) = c0
-          qr(i, j, n) = c0
-          d_p(i, j, n) = c0
-          dq(i, j, n) = c0
+          pr(i, j, n) = czero
+          qr(i, j, n) = czero
+          d_p(i, j, n) = czero
+          dq(i, j, n) = czero
         end do
       end do
 
@@ -394,10 +393,10 @@ contains
       dq(j, j, n) = cfac*sk(j)*(real(m+1,kind=dp)*cjlz(m,zz)-zz*cjlz(m+1,zz))*drdi(n)*c
 
       i = 3 - j
-      pi(i, j, n) = c0
-      qi(i, j, n) = c0
-      d_p(i, j, n) = c0
-      dq(i, j, n) = c0
+      pi(i, j, n) = czero
+      qi(i, j, n) = czero
+      d_p(i, j, n) = czero
+      dq(i, j, n) = czero
     end do
 
     ! =============================================================== n ====

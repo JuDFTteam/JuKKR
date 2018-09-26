@@ -34,8 +34,8 @@ contains
   !-------------------------------------------------------------------------------
   subroutine gijdmat(tauq, tsst, mssq, dmat, dtil, cfctorinv, iprint, ie, it, krel, lmmaxd)
     use :: mod_datatypes, only: dp
-    use :: mod_getdmat
-    use :: mod_cmatstr
+    use :: mod_getdmat, only: getdmat
+    use :: mod_cmatstr, only: cmatstr
     implicit none
 
     integer :: iprint, lmmaxd

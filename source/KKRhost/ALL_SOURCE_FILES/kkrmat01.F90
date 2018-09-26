@@ -2,6 +2,14 @@ module mod_kkrmat01
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! -------------------------------------------------------------------------------
   !> @brief Performs k-space integration, determines scattering path operator
   !> \f$\tau = \left(g\left(\mathbf{k},e\right)-t^{-1}\right)^{-1}\f$
@@ -33,21 +41,21 @@ contains
 #endif
     use :: mod_types, only: t_inc
 #ifdef CPP_TIMING
-    use :: mod_timing
+    use :: mod_timing, only: timing_start, timing_pause, timing_stop
 #endif
 #ifdef CPP_HYBRID
     use :: omp_lib
 #endif
     use :: mod_rhoqtools, only: rhoq_find_kmask, rhoq_saveg, rhoq_write_tau0, rhoq_read_mu0_scoef
 
-    use :: global_variables
-    use :: mod_constants
-    use :: mod_profiling
+    use :: global_variables, only: nembd1, nembd2, nsheld, nclsd, naclsd, lmmaxd, nprincd, nrd, nrefd, lmgf0d, krel, ndim_slabinv, alm, almgf0 
+    use :: mod_constants, only: czero, cone, nsymaxd
+    use :: mod_profiling, only: memocc
     use :: mod_datatypes, only: dp
-    use :: mod_decimate
-    use :: mod_dlke0
-    use :: mod_inversion
-    use :: mod_cinit
+    use :: mod_decimate, only: decimate
+    use :: mod_dlke0, only: dlke0
+    use :: mod_inversion, only: inversion
+    use :: mod_cinit, only: cinit
 
     implicit none
     ! .. Input variables

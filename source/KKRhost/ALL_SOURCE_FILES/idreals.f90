@@ -4,6 +4,14 @@ module mod_idreals
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   !> check if entries of darry are fractions or roots of common numbers and
   !> replace accordingly for higher accuracy
   subroutine idreals(darry, narry, iprint)

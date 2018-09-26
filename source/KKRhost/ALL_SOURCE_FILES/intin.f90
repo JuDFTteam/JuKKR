@@ -4,6 +4,14 @@ module mod_intin
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine intin(g, f, v, e, l, nne, valu, slop, k1, k2, kc, dg, a, b, z, nsra)
     ! .. Scalar Arguments ..
     real (kind=dp) :: a, b, dg, e, slop, valu, z

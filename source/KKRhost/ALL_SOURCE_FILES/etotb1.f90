@@ -26,7 +26,7 @@ contains
 
     use :: mod_types, only: t_inc
     use :: mod_datatypes, only: dp
-    use :: global_variables
+    use :: global_variables, only: natypd, npotd, lmaxd
     implicit none
 
     integer :: kpre, lmax, lpot, natyp, nspin, idoldau

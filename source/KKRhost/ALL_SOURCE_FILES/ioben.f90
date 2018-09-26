@@ -4,6 +4,14 @@ module mod_ioben
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   integer function ioben(r)
     ! -----------------------------------------------------------------------
 

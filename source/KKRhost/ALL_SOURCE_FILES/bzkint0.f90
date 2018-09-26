@@ -17,12 +17,12 @@ contains
     ijtabsh, ijtabcalc, iofgij, jofgij, nofgij, ish, jsh, rrot, dsymll, para, qmtet, qmphi, symunitary, hostimp, intervx, intervy, intervz, ielast, ez, kmesh, maxmesh, maxmshd, &
     nsymaxd, krel, lmaxd, lmmaxd, kpoibz, naezd, natypd, natomimpd, nsheld, nembd)
     use :: mod_datatypes, only: dp
-    use :: mod_gfshells
-    use :: mod_crtstar
-    use :: mod_pointgrp
-    use :: mod_findgroup
-    use :: mod_bzkmesh
-    use :: mod_symtaumat
+    use :: mod_gfshells, only: gfshells
+    use :: mod_crtstar, only: crtstar
+    use :: mod_pointgrp, only: pointgrp
+    use :: mod_findgroup, only: findgroup
+    use :: mod_bzkmesh, only: bzkmesh
+    use :: mod_symtaumat, only: symtaumat
     implicit none
     ! .. Parameters ..
     integer :: nsymaxd, krel, lmaxd, lmmaxd

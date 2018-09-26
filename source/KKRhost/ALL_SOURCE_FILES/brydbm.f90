@@ -45,11 +45,11 @@ contains
 
     use :: mod_types, only: t_inc
     use :: mod_datatypes, only: dp
-    use :: global_variables
-    use :: mod_brysh1
-    use :: mod_brysh2
-    use :: mod_brysh3
-    use :: mod_rcstop
+    use :: global_variables, only: irmd, lmpotd, irmind, ntperd, nspindd, natypd, irnsd
+    use :: mod_brysh1, only: brysh1
+    use :: mod_brysh2, only: brysh2
+    use :: mod_brysh3, only: brysh3
+    use :: mod_rcstop, only: rcstop
 
     implicit none
 

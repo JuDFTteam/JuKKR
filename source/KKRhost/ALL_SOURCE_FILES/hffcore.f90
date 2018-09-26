@@ -4,6 +4,14 @@ module mod_hffcore
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine hffcore(rnuc, jtop, kap1, kap2, nsol, mj, gc, fc, nrc, shf, s, nmemax, nkmmax, r, drdi, sdia, smdia, soff, smoff, qdia, qoff, qmdia, qmoff, nucleus, jlim)
     ! ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
     ! Calculates matrix elements of several hyperfine interaction
@@ -19,8 +27,8 @@ contains
     ! 5      Total Hyperfine Field (see Rose (1961))
     ! called by core
     ! ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-    use :: mod_ikapmue
-    use :: mod_rinit
+    use :: mod_ikapmue, only: ikapmue
+    use :: mod_rinit, only: rinit
     implicit none
 
 

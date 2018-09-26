@@ -43,7 +43,7 @@ contains
   subroutine gaunt(lmax, lpot, w, yr, cleb, loflm, icleb, iend, jend, ncleb, lmaxd, lmgf0d, lmpotd)
 
     use :: mod_datatypes, only: dp
-    use :: mod_rcstop
+    use :: mod_rcstop, only: rcstop
     implicit none
 
     real (kind=dp), parameter :: eps = 1.0e-12_dp

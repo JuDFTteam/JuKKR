@@ -17,7 +17,7 @@ contains
     use :: mod_wunfiles, only: t_params
     use :: mod_rhoqtools, only: rhoq_write_kmesh
     use :: mod_datatypes, only: dp
-    use :: mod_bzirr3d
+    use :: mod_bzirr3d, only: bzirr3d
     implicit none
     real (kind=dp), parameter :: eps = 1.0d-12
     ! ..

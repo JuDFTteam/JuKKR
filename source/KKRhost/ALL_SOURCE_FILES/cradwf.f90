@@ -27,7 +27,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine cradwf(eryd, ek, nsra, alpha, ipan, ircut, cvlight, rs, sl, pz, fz, qz, sz, tmat, vm2z, drdi, rmesh, zat, lirrsol, idoldau, lopt, wldauav, cutoff)
 
-    use :: global_variables
+    use :: global_variables, only: lmaxd, irmd, ipand
     use :: mod_datatypes, only: dp
     use :: mod_beshan, only: beshan
     use :: mod_regsol, only: regsol

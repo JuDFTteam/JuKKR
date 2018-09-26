@@ -21,15 +21,16 @@ contains
 
     use :: mod_types, only: t_tgmat
     use :: mod_datatypes, only: dp
-    use :: mod_amemagvec
-    use :: mod_calccgc
-    use :: mod_calcgf
-    use :: mod_calcmvec
-    use :: mod_ssite
-    use :: mod_scfchrdns
-    use :: mod_ikmlin
-    use :: mod_rinit
-    use :: mod_cinit
+    use :: mod_amemagvec, only: amemagvec
+    use :: mod_calccgc, only: calccgc
+    use :: mod_calcgf, only: calcgf
+    use :: mod_calcmvec, only: calcmvec
+    use :: mod_ssite, only: ssite
+    use :: mod_scfchrdns, only: scfchrdns
+    use :: mod_ikmlin, only: ikmlin
+    use :: mod_rinit, only: rinit
+    use :: mod_cinit, only: cinit
+    use :: mod_constants, only: czero, cone
     implicit none
 
     ! PARAMETER definitions
@@ -42,8 +43,6 @@ contains
     parameter (nkmmax=2*nlmax**2, nkmax=2*nlmax-1)
     parameter (nkmpmax=nkmmax+2*nlmax, nmuemax=2*nlmax)
     parameter (linmax=2*nlmax*(2*nlmax-1))
-    complex (kind=dp) :: cone, czero
-    parameter (cone=(1.0d0,0.0d0), czero=(0.0d0,0.0d0))
     real (kind=dp) :: dzero
     parameter (dzero=0.0d0)
 

@@ -20,8 +20,8 @@ contains
 
     use :: mod_types, only: t_inc
     use :: mod_datatypes, only: dp
-    use :: mod_intcor
-    use :: mod_simp3
+    use :: mod_intcor, only: intcor
+    use :: mod_simp3, only: simp3
     implicit none
     ! .. Parameters ..
     integer :: nitmax, irnumx

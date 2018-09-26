@@ -4,9 +4,17 @@ module mod_interpolspline
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine interpolspline(rmesh, rmeshnew, vpot, vpotnew, nrmax, nrmaxnew)
-    use :: mod_spline_real
-    use :: mod_splint_real
+    use :: mod_spline_real, only: spline_real
+    use :: mod_splint_real, only: splint_real
     implicit none
     ! interface
     integer :: nrmax

@@ -14,7 +14,7 @@ contains
   subroutine dirbsrad(xbs, y, dydx, drdi, b, v, r, nmesh)
 
     use :: mod_datatypes, only: dp
-    use :: mod_dirbslag
+    use :: mod_dirbslag, only: dirbslag
     implicit none
 
     include 'sprkkr_rmesh.dim'

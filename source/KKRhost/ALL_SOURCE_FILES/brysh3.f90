@@ -17,7 +17,7 @@ contains
   subroutine brysh3(y, x, z, xsme, ins, irmin, irc, natps, natyp, nspin, imap, lmpot, lsmear)
 
     use :: mod_datatypes, only: dp
-    use :: global_variables
+    use :: global_variables, only: irmd, irmind, lmpotd
     implicit none
     ! ..
     ! .. Local Scalars ..

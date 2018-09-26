@@ -22,7 +22,7 @@ contains
     ! ***********************************************************************
     ! 
     ! ***********************************************************************
-    use :: mod_rcstop
+    use :: mod_rcstop, only: rcstop
     implicit none
     ! .. Scalar Arguments ..
     real (kind=dp) :: a, alat, b, rmt, rmtnew, rws, z

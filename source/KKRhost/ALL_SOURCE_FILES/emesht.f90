@@ -56,11 +56,11 @@ contains
   !-------------------------------------------------------------------------------
   subroutine emesht(ez, df, npnt, ebot, emu, efermi, tk, npol, npnt1, npnt2, npnt3, iemxd)
 
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     use :: mod_types, only: t_inc
-    use :: mod_constants
-    use :: mod_gaufd
-    use :: mod_gauleg
+    use :: mod_constants, only: pi, kb, ryd
+    use :: mod_gaufd, only: gaufd
+    use :: mod_gauleg, only: gauleg
 
     implicit none
     ! ..

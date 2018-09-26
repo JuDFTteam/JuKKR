@@ -16,7 +16,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine cinthff(ag, af, bg, bf, rmehf, nka, nkb, jtop, fx, r, drdi, nrmax)
     use :: mod_datatypes, only: dp
-    use :: mod_cint4pts
+    use :: mod_cint4pts, only: cint4pts
     implicit none
 
     real (kind=dp), parameter :: eps = 1.0e-12_dp

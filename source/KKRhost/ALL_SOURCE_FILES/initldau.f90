@@ -2,6 +2,14 @@ module mod_initldau
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, nspin, r, drdi, z, ipan, ircut, phi, uldau)
 
     ! *******************************************************************
@@ -15,13 +23,13 @@ contains
     ! *                                                                 *
     ! *******************************************************************
 
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     use :: mod_types, only: t_inc
-    use :: global_variables
-    use :: mod_phicalc
-    use :: mod_rinit
-    use :: mod_simpk
-    use :: mod_soutk
+    use :: global_variables, only: irmd, natypd, mmaxd, ipand, lmaxd, npotd
+    use :: mod_phicalc, only: phicalc
+    use :: mod_rinit, only: rinit
+    use :: mod_simpk, only: simpk
+    use :: mod_soutk, only: soutk
     implicit none
 
     ! Local variables

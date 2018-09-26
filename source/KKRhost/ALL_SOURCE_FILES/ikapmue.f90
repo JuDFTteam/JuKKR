@@ -2,6 +2,14 @@ module mod_ikapmue
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   function ikapmue(kappa, muem05)
     ! ********************************************************************
     ! *                                                                  *

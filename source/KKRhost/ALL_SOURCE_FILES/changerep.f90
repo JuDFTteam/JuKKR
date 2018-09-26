@@ -27,7 +27,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine changerep(a, mode, b, n, m, rc, crel, rrel, text, ltext)
     use :: mod_datatypes, only: dp
-    use :: mod_cmatstr
+    use :: mod_cmatstr, only: cmatstr
     implicit none
 
     ! PARAMETER definitions

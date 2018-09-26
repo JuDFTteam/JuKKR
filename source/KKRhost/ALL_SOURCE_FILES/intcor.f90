@@ -2,12 +2,20 @@ module mod_intcor
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine intcor(f1, f2, rho, g, f, v, value, slope, l, nn, e, sum, nre, vlnc, a, b, z, rn, nr, tol, irm, ipr, nitmax, nsra)
     use :: mod_types, only: t_inc
-    use :: mod_datatypes
-    use :: mod_intin
-    use :: mod_intout
-    use :: mod_hankel
+    use :: mod_datatypes, only: dp
+    use :: mod_intin, only: intin
+    use :: mod_intout, only: intout
+    use :: mod_hankel, only: hankel
     implicit none
     ! .. Scalar Arguments ..
     real (kind=dp) :: a, b, e, f1, f2, rn, slope, sum, tol, value, z

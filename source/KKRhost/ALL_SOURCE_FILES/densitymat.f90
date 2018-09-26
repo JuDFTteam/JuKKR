@@ -35,16 +35,14 @@ contains
   !-------------------------------------------------------------------------------
   subroutine densitymat(df, pz, qz, pns, qns, ar, cr, dr, gmatll, ipan, ircut, drdi, ek, irmin, lopt, mmax, lmstart, lmend, phi, denmatc, den, ie)
 
-    use :: mod_datatypes
-    use :: global_variables
-    use :: mod_overlap
-    use :: mod_cinit
+    use :: mod_datatypes, only: dp
+    use :: global_variables, only: lmmaxd, mmaxd, irmd, irmind, lmaxd, ipand, krel, iemxd, lmpotd
+    use :: mod_overlap, only: overlap
+    use :: mod_cinit, only: cinit
+    use :: mod_constants, only: czero, cone
     implicit none
 
-    complex (kind=dp) :: czero, cone
-    parameter (czero=(0.0e0_dp,0.0e0_dp), cone=(1.e0_dp,0.e0_dp))
     ! Local variables
-
     complex (kind=dp) :: df, ek
     integer :: irmin, lopt
     integer :: lmstart, lmend, mmax
@@ -58,6 +56,7 @@ contains
 
     integer :: ie
     complex (kind=dp) :: den(0:(lmaxd+1), iemxd*(1+krel))
+
 
     call cinit(mmaxd*mmaxd, denmatc2(1,1))
 

@@ -61,14 +61,14 @@ contains
 
     use :: mod_types, only: t_inc
     use :: mod_datatypes, only: dp
-    use :: mod_coredir
-    use :: mod_coreerr
-    use :: mod_corehff
-    use :: mod_hffcore
-    use :: mod_ikapmue
-    use :: mod_rintsimp
-    use :: mod_rnuctab
-    use :: mod_rinit
+    use :: mod_coredir, only: coredir
+    use :: mod_coreerr, only: coreerr
+    use :: mod_corehff, only: corehff
+    use :: mod_hffcore, only: hffcore
+    use :: mod_ikapmue, only: ikapmue
+    use :: mod_rintsimp, only: rintsimp
+    use :: mod_rnuctab, only: rnuctab
+    use :: mod_rinit, only: rinit
     implicit none
 
     ! PARAMETER definitions

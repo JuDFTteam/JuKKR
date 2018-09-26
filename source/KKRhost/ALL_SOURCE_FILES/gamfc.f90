@@ -26,7 +26,7 @@ contains
   subroutine gamfc(alpha, glh, lmax, r)
 
     use :: mod_datatypes, only: dp
-    use :: mod_erfcex
+    use :: mod_erfcex, only: erfcex
     implicit none
 
     real (kind=dp) :: alpha, r

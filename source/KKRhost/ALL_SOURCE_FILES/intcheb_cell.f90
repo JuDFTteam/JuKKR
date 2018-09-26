@@ -4,6 +4,14 @@ module mod_intcheb_cell
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine intcheb_cell(cden, den, rpan_intervall, ipan_intervall, npan_tot, ncheb, irmdnew)
     ! ***********************************************************************
     ! integrate the complex density of states for LM=1

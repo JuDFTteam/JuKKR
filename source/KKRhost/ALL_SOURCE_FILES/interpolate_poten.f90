@@ -4,6 +4,14 @@ module mod_interpolate_poten
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: INTERPOLATE_POTEN
   !> @brief Routine for the interpolation of the potential in the integration
@@ -14,7 +22,7 @@ contains
   ! -------------------------------------------------------------------------------
   subroutine interpolate_poten(lpot, irm, irnsd, natyp, ipand, lmpot, nspotd, ntotd, irmdnew, nspin, r, irmin, irws, ircut, vins, visp, npan_log, npan_eq, npan_tot, rnew, &
     ipan_intervall, vinsnew)
-    use :: mod_interpolspline
+    use :: mod_interpolspline, only: interpolspline
 
     implicit none
 

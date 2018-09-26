@@ -22,8 +22,8 @@ contains
   !-------------------------------------------------------------------------------
   subroutine amemagvec(irel, iprint, nkm, amemvec, ikmllim1, ikmllim2, imkmtab, cgc, nlmax, nkmmax, nkmpmax, nmvecmax)
 
-    use :: mod_rmatstr
-    use :: mod_rinit
+    use :: mod_rmatstr, only: rmatstr
+    use :: mod_rinit, only: rinit
     use :: mod_datatypes, only: dp
 
     implicit none

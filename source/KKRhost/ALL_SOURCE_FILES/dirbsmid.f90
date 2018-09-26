@@ -16,7 +16,7 @@ contains
   subroutine dirbsmid(y, dydx, nv, xs, htot, nstep, yout, b, v, r, drdi, nmesh)
 
     use :: mod_datatypes, only: dp
-    use :: mod_dirbsrad
+    use :: mod_dirbsrad, only: dirbsrad
     implicit none
 
     include 'sprkkr_rmesh.dim'

@@ -42,10 +42,10 @@ contains
     nrbasis, cmomhost, vref, rmtref, nref, refpot, lmaxd, lmgf0d, lmmaxd, lm2d, nembd1, iemxd, nspind, lmpotd, natypd, irmd, ipand)
 
     use :: mod_datatypes, only: dp
-    use :: mod_decitset
-    use :: mod_decimaread
-    use :: mod_cmomsread
-    use :: mod_ioinput
+    use :: mod_decitset, only: decitset
+    use :: mod_decimaread, only: decimaread
+    use :: mod_cmomsread, only: cmomsread
+    use :: mod_ioinput, only: ioinput
     implicit none
     ! ..
     ! .. Scalar arguments

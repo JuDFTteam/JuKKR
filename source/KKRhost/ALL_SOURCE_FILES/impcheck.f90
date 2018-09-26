@@ -4,6 +4,14 @@ module mod_impcheck
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine impcheck(atomimp, natomimp, naez, rclsimp, rbasis, bravais, ndim)
     ! **********************************************************************
     ! * Checking the coordinates and site-index assignments of an impurity *
@@ -17,7 +25,7 @@ contains
     ! * execution continues.                                               *
     ! **********************************************************************
 
-    use :: mod_getclusnxyz
+    use :: mod_getclusnxyz, only: getclusnxyz
     implicit none
     ! ..
     ! .. Scalar arguments

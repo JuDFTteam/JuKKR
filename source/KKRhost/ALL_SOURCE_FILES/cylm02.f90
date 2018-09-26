@@ -24,9 +24,9 @@ contains
   subroutine cylm02(lmax, cosx, fai, lpot2p, lmmaxd, thet, ylm, dylmt1, dylmt2, dylmf1, dylmf2, dylmtf)
   
     use :: mod_datatypes, only: dp
-    use :: mod_spher
+    use :: mod_spher, only: spher
     use :: mod_shape_corr, only: triangle
-    use :: mod_trarea
+    use :: mod_trarea, only: trarea
     implicit none
 
     ! .. Parameters ..

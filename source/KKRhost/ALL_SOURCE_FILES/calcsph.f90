@@ -17,11 +17,10 @@ contains
   subroutine calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, zat, eryd, lmpotd, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, &
     tmat, alpha, use_sratrick)
 
-    use :: mod_constants
-    use :: mod_profiling
+    use :: mod_constants, only: czero
     use :: mod_datatypes, only: dp
-    use :: mod_rllsll
-    use :: mod_vllmatsra
+    use :: mod_rllsll, only: rllsll
+    use :: mod_vllmatsra, only: vllmatsra
 
     implicit none
     ! construct wavefunctions for spherical potentials

@@ -4,6 +4,14 @@ module mod_impcoefs
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine impcoefs(natomimp, naez, atomimp, rclsimp, nshell, nsh1, nsh2, ratom, nsymat, isymindex, rotname, hostimp, natypd, lmaxd, nsheld, nsize)
     ! **********************************************************************
     ! *                                                                    *

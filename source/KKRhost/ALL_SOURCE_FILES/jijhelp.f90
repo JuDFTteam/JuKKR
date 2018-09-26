@@ -1,6 +1,6 @@
 module mod_jijhelp
 
-  use :: mod_datatypes
+  use :: mod_datatypes, only: dp
   implicit none
   private
 
@@ -8,6 +8,14 @@ module mod_jijhelp
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine set_jijcalc_flags(t_dtmatjij, natypd, natomimpd, natomimp, atomimp, iqat)
 
     use :: mod_types, only: t_inc, type_dtmatjijdij
@@ -48,8 +56,8 @@ contains
     ! subroutine
     ! calc_dtmatJij(NTOTD,NRMAXD,NSRA,IRMDNEW,NSPIN,VINS,RLLLEFT,RLL,RPAN_INTERVALL,IPAN_INTERVALL,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,NCLEB,RNEW,dtmat)
 
-    use :: mod_vllmat
-    use :: mod_intcheb_cell
+    use :: mod_vllmat, only: vllmat
+    use :: mod_intcheb_cell, only: intcheb_cell
     implicit none
     complex (kind=dp) :: czero, cone
     parameter (czero=(0d0,0d0), cone=(1d0,0d0))

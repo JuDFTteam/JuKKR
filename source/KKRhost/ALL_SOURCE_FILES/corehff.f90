@@ -18,8 +18,8 @@ contains
   !-------------------------------------------------------------------------------
   subroutine corehff(kap1, kap2, mj, s, nsol, bhf, gck, fck, rc, drdic, rnuc, nzero, nrc)
 
-    use :: mod_ylag
-    use :: mod_rint4pts
+    use :: mod_ylag, only: ylag
+    use :: mod_rint4pts, only: rint4pts
     use :: mod_datatypes, only: dp
     implicit none
 

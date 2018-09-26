@@ -16,19 +16,14 @@ contains
   subroutine decitmat(eryd, zat, ipan, rr, dror, visp, ircut, rirc, krel, nsra, ins, tmatll, loflm, idoldau, lopt, wldauav, solver, soctl, ctl, zrel, vtrel, btrel, drdi, r2drdi, &
     ipand, irmd, lmaxd, lmaxdp1, lm2d, lmmaxd)
 
-    use :: mod_beshan
+    use :: mod_beshan, only: beshan
     use :: mod_datatypes, only: dp
-    use :: mod_drvreltmat
-    use :: mod_regsol
-    use :: mod_wfmesh
-    use :: mod_cinit
+    use :: mod_drvreltmat, only: drvreltmat
+    use :: mod_regsol, only: regsol
+    use :: mod_wfmesh, only: wfmesh
+    use :: mod_cinit, only: cinit
+    use :: mod_constants, only: ci, cvlight
     implicit none
-
-    ! Parameters ..
-    real (kind=dp) :: cvlight
-    parameter (cvlight=274.0720442e0_dp)
-    complex (kind=dp) :: ci
-    parameter (ci=(0e0_dp,1e0_dp))
 
     ! Scalar arguments ..
     integer :: idoldau, ipan, krel, lopt, nsra, ins, zrel

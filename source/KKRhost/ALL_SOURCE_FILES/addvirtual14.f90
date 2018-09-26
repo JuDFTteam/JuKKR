@@ -308,7 +308,7 @@ contains
   !> Checks if the vector vec is in the vector list veclist in the range of (1,bound)
   !-------------------------------------------------------------------------------
   logical function vec_in_list(vec, veclist, bound)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     integer :: bound
     real (kind=dp) :: vec(3)
     real (kind=dp) :: veclist(3, bound)

@@ -26,7 +26,7 @@ contains
   subroutine espcb(espc, nspin, natyp, ecore, lcore, lcoremax, ncore)
 
     use :: mod_datatypes, only: dp
-    use :: global_variables
+    use :: global_variables, only: npotd
     implicit none
 
     ! .. Local Scalars ..

@@ -26,7 +26,7 @@ contains
     use :: omp_lib
 #endif
     use :: mod_types, only: t_inc
-    use :: global_variables, only:  lmgf0d, nrefd, ncleb, naclsd, naezd, nembd, lm2d
+    use :: global_variables, only: lmgf0d, nrefd, ncleb, naclsd, naezd, nembd, lm2d
     use :: mod_datatypes, only: dp
     use :: mod_gfree13, only: gfree13
     use :: mod_grefsy13, only: grefsy13

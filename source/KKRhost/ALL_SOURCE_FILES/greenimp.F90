@@ -11,15 +11,13 @@ contains
   !>
   !-------------------------------------------------------------------------------
   subroutine greenimp(natomimp, dtmtrx, e)
-    use :: mod_version_info
-    use :: global_variables
+    use :: global_variables, only: lmmaxso
     use :: mod_datatypes, only: dp
+    use :: mod_constants, only: czero, cone
 
     implicit none
 
     complex (kind=dp) :: e, e1
-    complex (kind=dp) :: cone, czero
-    parameter (cone=(1d0,0d0), czero=(0d0,0d0))
     integer :: natomimp, ndim, info
     integer :: i, j, lm1, lm2, ilm, jlm, ilm1, jlm1
     integer :: ipvt1(natomimp*lmmaxso)

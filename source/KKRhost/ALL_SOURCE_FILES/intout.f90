@@ -4,6 +4,14 @@ module mod_intout
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine intout(g, f, v, e, l, nne, k2, dg, a, b, z, nsra)
     implicit none
     ! .. Scalar Arguments ..

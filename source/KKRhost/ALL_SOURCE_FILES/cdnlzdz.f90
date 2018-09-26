@@ -17,7 +17,7 @@ contains
   !-------------------------------------------------------------------------------
   function cdnlzdz(l, z, mode)
     use :: mod_datatypes, only: dp
-    use :: mod_cnlz
+    use :: mod_cnlz, only: cnlz
     implicit none
 
     ! Dummy arguments

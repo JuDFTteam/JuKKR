@@ -4,6 +4,14 @@ module mod_irwns
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine irwns(cr, dr, efac, qns, vnspll, icst, ipan, ircut, nsra, pzlm, qzlm, pzekdr, qzekdr, cder, cmat, dder, dmat, irmind, irmd, irmin, irmax, ipand, lmmaxd) ! Added IRMIN,IRMAX 1.7.2014
     ! -----------------------------------------------------------------------
     ! determines the irregular non spherical wavefunctions in the n-th.
@@ -46,8 +54,8 @@ contains
     ! -----------------------------------------------------------------------
     ! modified by R. Zeller      Aug. 1994
     ! -----------------------------------------------------------------------
-    use :: mod_wfint
-    use :: mod_csinwd
+    use :: mod_wfint, only: wfint, wfint0
+    use :: mod_csinwd, only: csinwd
     implicit none
     ! .. Parameters ..
     complex (kind=dp) :: cone

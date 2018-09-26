@@ -2,6 +2,14 @@ module mod_inversion
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! ************************************************************************
   subroutine inversion(gllke, invmod, icheck)
     ! ************************************************************************
@@ -15,10 +23,10 @@ contains
 
     ! ------------------------------------------------------------------------
     use :: mod_datatypes, only: dp
-    use :: global_variables
-    use :: godfrin
-    use :: mod_invslab
-    use :: mod_invsupercell
+    use :: global_variables, only: alm, ndim_slabinv, nlayerd, naezd, nprincd, lmmaxd
+    use :: godfrin, only: sparse_inverse, t_godfrin
+    use :: mod_invslab, only: invslab
+    use :: mod_invsupercell, only: invsupercell
     implicit none
 
     complex (kind=dp) :: czero, cone

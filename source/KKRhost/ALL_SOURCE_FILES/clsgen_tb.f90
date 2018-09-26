@@ -37,8 +37,8 @@ contains
     ! ************************************************************************
     ! 
     use :: mod_datatypes, only: dp
-    use :: mod_version_info
-    use :: mod_dsort
+    use :: mod_version_info, only: version_print_header
+    use :: mod_dsort, only: dsort
     implicit none
     ! .. arguments
     integer :: naez                !! number of atoms in EZ

@@ -2,6 +2,14 @@ module mod_kloopz1
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: KLOOPZ1_QDOS
   !> @note
@@ -13,22 +21,22 @@ contains
     tqdos, iqdosrun, &             ! qdos ruess
     dtrefll, dtmatll, dginp, lly_grtr, tracet, lly) ! LLY Lloyd
 
-    use :: mod_types, only: t_inc
-    use :: mod_mympi, only: myrank, master
-    use :: global_variables
-    use :: mod_constants
-    use :: mod_profiling
     use :: mod_datatypes, only: dp
-    use :: mod_rotgll
-    use :: mod_mssinit
-    use :: mod_kkrmat01
-    use :: mod_gijdmat
-    use :: mod_cpamillsx
-    use :: mod_cmatstr
-    use :: mod_symetrmat
-    use :: mod_rotate
-    use :: mod_projtau
-    use :: mod_cinit
+    use :: mod_constants, only: czero, cone, nsymaxd
+    use :: global_variables, only: krel, kpoibz, nembd2, nsheld, nclsd, nofgij, naclsd, nprincd, lmmaxd, nrd, lmgf0d, nrefd, nembd1
+    use :: mod_types, only: t_inc
+    use :: mod_cinit, only: cinit
+    use :: mod_mympi, only: myrank, master
+    use :: mod_profiling, only: memocc
+    use :: mod_rotgll, only: rotgll
+    use :: mod_mssinit, only: mssinit
+    use :: mod_kkrmat01, only: kkrmat01
+    use :: mod_gijdmat, only: gijdmat
+    use :: mod_cpamillsx, only: cpamillsx
+    use :: mod_cmatstr, only: cmatstr
+    use :: mod_symetrmat, only: symetrmat
+    use :: mod_rotate, only: rotate
+    use :: mod_projtau, only: projtau
 
     implicit none
 

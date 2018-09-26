@@ -38,18 +38,18 @@ contains
 #ifdef CPP_MPI
     use :: mpi
     use :: mod_mympi, only: mpiadapt
-    use :: mod_timing
+    use :: mod_timing, only: timing_start, timing_stop
 #endif
     use :: mod_mympi, only: myrank, nranks, master, distribute_work_energies
     use :: mod_types, only: t_tgmat, t_inc, t_mpi_c_grid, init_tgmat, t_lloyd, init_tlloyd
-    use :: mod_datatypes
-    use :: global_variables
-    use :: mod_pnstmat
-    use :: mod_cradwf
-    use :: mod_wfmesh
+    use :: mod_datatypes, only: dp
+    use :: global_variables, only: iemxd, lmmaxd, irmind, irmd, lmpotd, ncleb, krel, lm2d, lmaxd, ipand, mmaxd, nspind
+    use :: mod_pnstmat, only: pnstmat
+    use :: mod_cradwf, only: cradwf
+    use :: mod_wfmesh, only: wfmesh
     use :: mod_regns, only: zgeinv1
-    use :: mod_cmatstr
-    use :: mod_drvreltmat
+    use :: mod_cmatstr, only: cmatstr
+    use :: mod_drvreltmat, only: drvreltmat
     use :: mod_constants, only: cvlight, czero, cone
 
     implicit none
