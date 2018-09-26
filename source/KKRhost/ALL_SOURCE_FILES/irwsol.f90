@@ -1,34 +1,32 @@
 module mod_irwsol
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: irwsol
 
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: 
-  !> Author: 
-  !> Category: KKRhost, 
+  !> Summary: Calculates the irregular solution of the Schroedinger (or SRA) equation
+  !> Author: B. Drittler
+  !> Date: Nov. 1989
+  !> Category: KKRhost, single-site, solver
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
-  !> 
+  !> Calculates the irregular solution of the Schroedinger equation or
+  !> in semi relativistic approximation for a spherically averaged
+  !> potential and given energy. To achieve greater precision the
+  !> leading power r**-s ( in Schroedinger case s = l , in case of SRA
+  !> s = sqrt( (l*l+l-1) - 4*z*z/c/c ) ) is analytically separated
+  !> from the wavefunction.
+  !>
+  !> The differential equation is solved with a 5 point Adams-Bashforth
+  !> and Adams-Moulton predictor corrector method integrating
+  !> inwards and extended for potentials with kinks.
   !-------------------------------------------------------------------------------
   subroutine irwsol(ek, fz, hamf, mass, pz, qz, sz, dror, s, ipan, ircut, irmd, ipand, lmaxd)
-    ! -----------------------------------------------------------------------
-    ! calculates the irregular solution of the schroedinger equation or
-    ! in semi relativistic approximation for a spherically averaged
-    ! potential and given energy . to achieve greater precision the
-    ! leading power r**-s ( in schroedinger case s = l , in case of sra
-    ! s = sqrt( (l*l+l-1) - 4*z*z/c/c ) ) is analytically separated
-    ! from the wavefunction .
 
-
-    ! the differential equation is solved with a 5 point adams - bashforth
-    ! and adams - moulton predictor corrector method integrating
-    ! inwards and extended for potentials with kinks
-
-
-    ! b.drittler   nov.1989
-    ! -----------------------------------------------------------------------
+    use :: mod_datatypes, only: dp
+    implicit none
     ! ..
     ! .. Scalar Arguments ..
     complex (kind=dp) :: ek
@@ -49,7 +47,8 @@ contains
     ! ..
     ! .. Intrinsic Functions ..
     intrinsic :: max
-    ! ..
+
+
     ! TIMO      IRWSK = IRCUT(1)/30
     irwsk = 41
     irwsk = ircut(1)/9

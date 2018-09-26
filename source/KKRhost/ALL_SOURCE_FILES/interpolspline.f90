@@ -1,21 +1,24 @@
 module mod_interpolspline
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: interpolspline
 
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: 
+  !> Summary: Spline interpolation of potentail to new radial mesh
   !> Author: 
-  !> Category: KKRhost, 
+  !> Category: KKRhost, potential, radial-grid
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
-  !> 
   !-------------------------------------------------------------------------------
   subroutine interpolspline(rmesh, rmeshnew, vpot, vpotnew, nrmax, nrmaxnew)
+
+    use :: mod_datatypes, only: dp
     use :: mod_spline_real, only: spline_real
     use :: mod_splint_real, only: splint_real
     implicit none
+
     ! interface
     integer :: nrmax
     integer :: nrmaxnew

@@ -1,36 +1,35 @@
 module mod_ioben
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: ioben
 
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: 
-  !> Author: 
-  !> Category: KKRhost, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !> Summary: Return next upper or equal integer
+  !> Author: Rudolf Berrendorf
+  !> Date: July 1992
+  !> Category: KKRhost, numerical-tools
+  !> Deprecated: True ! This needs to be set to True for deprecated subroutines
   !>
+  !>                         --   --
+  !> Calculates the function |  r  |  (next upper or equal integer)
+  !>                         |     |
+  !>
+  !> Descrition of input parameters:
+  !>
+  !> r : real number to look for
+  !>
+  !> last update: February 1994
   !> 
+  !> @note seems to be unused @endnote
   !-------------------------------------------------------------------------------
   integer function ioben(r)
-    ! -----------------------------------------------------------------------
 
-    ! --   --
-    ! Calculates the function |  r  |  (next upper or equal integer)
-    ! |     |
-
-    ! Descrition of input parameters:
-
-    ! r : real number to look for
-
-    ! Rudolf Berrendorf, July 1992
-    ! last update: February 1994
-    ! -----------------------------------------------------------------------
-
+    use :: mod_datatypes, only: dp
     implicit none
 
     ! .. Scalar Arguments ..
-
     real (kind=dp) :: r
     ! ..
     ! .. Intrinsic Functions ..
@@ -38,8 +37,7 @@ contains
     ! ..
 
     ! .. Parameters ..
-    real (kind=dp) :: eps
-    parameter (eps=1e-6_dp)
+    real (kind=dp), parameter :: eps=1e-6_dp
     ! ..
 
     if ((nint(r)-r)<eps) then

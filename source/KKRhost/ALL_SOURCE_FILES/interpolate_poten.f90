@@ -1,54 +1,51 @@
 module mod_interpolate_poten
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: interpolate_poten
 
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: 
+  !> Summary: Routine for the interpolation of the potential in the Chebychev grid
   !> Author: 
-  !> Category: KKRhost, 
+  !> Category: KKRhost, potential, radial-grid
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
-  !> 
+  !> @note
+  !> Jonathan Chico: Include array dimensions in interface explicitly to
+  !> get rid of inc.p import and to be able to use routine for different number of atoms
+  !> @endnote
   !-------------------------------------------------------------------------------
-  ! -------------------------------------------------------------------------------
-  ! SUBROUTINE: INTERPOLATE_POTEN
-  !> @brief Routine for the interpolation of the potential in the integration
-  ! grid.
-  !> @note Jonathan Chico: Include array dimensions in interface explicitly to
-  ! get rid of
-  !> inc.p import and to be able to use routine for different number of atoms
-  ! -------------------------------------------------------------------------------
   subroutine interpolate_poten(lpot, irm, irnsd, natyp, ipand, lmpot, nspotd, ntotd, irmdnew, nspin, r, irmin, irws, ircut, vins, visp, npan_log, npan_eq, npan_tot, rnew, &
     ipan_intervall, vinsnew)
-    use :: mod_interpolspline, only: interpolspline
 
+    use :: mod_datatypes, only: dp
+    use :: mod_interpolspline, only: interpolspline
     implicit none
 
     integer, intent (in) :: irm    !! Maximum number of radial points
     integer, intent (in) :: lpot   !! Maximum l component in potential expansion
-    integer, intent (in) :: irnsd
-    integer, intent (in) :: ntotd
+    integer, intent (in) :: irnsd  !! 
+    integer, intent (in) :: ntotd  !! 
     integer, intent (in) :: natyp  !! Number of kinds of atoms in unit cell
     integer, intent (in) :: ipand  !! Number of panels in non-spherical part
     integer, intent (in) :: lmpot  !! (LPOT+1)**2
     integer, intent (in) :: nspin  !! Counter for spin directions
-    integer, intent (in) :: nspotd
-    integer, intent (in) :: irmdnew
+    integer, intent (in) :: nspotd !! 
+    integer, intent (in) :: irmdnew !! 
     integer, dimension (natyp), intent (in) :: irws !! R point at WS radius
     integer, dimension (natyp), intent (in) :: irmin !! Max R for spherical treatment
     integer, dimension (natyp), intent (in) :: npan_eq !! Variables for the pannels for the new solver
     integer, dimension (natyp), intent (in) :: npan_log !! Variables for the pannels for the new solver
-    integer, dimension (natyp), intent (in) :: npan_tot
+    integer, dimension (natyp), intent (in) :: npan_tot !! 
     integer, dimension (0:ipand, natyp), intent (in) :: ircut !! R points of panel borders
-    integer, dimension (0:ntotd, natyp), intent (in) :: ipan_intervall
-    real (kind=dp), dimension (irm, natyp), intent (in) :: r
-    real (kind=dp), dimension (irm, nspotd), intent (in) :: visp
-    real (kind=dp), dimension ((irm-irnsd):irm, (lpot+1)**2, nspotd), intent (in) :: vins
+    integer, dimension (0:ntotd, natyp), intent (in) :: ipan_intervall !! 
+    real (kind=dp), dimension (irm, natyp), intent (in) :: r !! 
+    real (kind=dp), dimension (irm, nspotd), intent (in) :: visp !! 
+    real (kind=dp), dimension ((irm-irnsd):irm, (lpot+1)**2, nspotd), intent (in) :: vins !! 
 
     ! .. Output variables
-    real (kind=dp), dimension (irmdnew, (lpot+1)**2, nspotd), intent (out) :: vinsnew
+    real (kind=dp), dimension (irmdnew, (lpot+1)**2, nspotd), intent (out) :: vinsnew !! 
 
     ! .. Local variables
     integer :: i1, ipot, ipotm, imin, imax, ip, ir, lm1, ispin, iminnew, imaxnew, ir2
@@ -85,7 +82,6 @@ contains
       do ispin = 1, nspin
         ipotm = ipotm + 1
         do lm1 = 1, lmpot
-
           imin = 1
           imax = irmin(i1)
           do ip = 1, npan_log(i1)
@@ -113,7 +109,9 @@ contains
           end do
         end do                     ! lm1
       end do                       ! ispin
+
     end do                         ! i1
+
   end subroutine interpolate_poten
 
 end module mod_interpolate_poten

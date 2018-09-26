@@ -1,18 +1,22 @@
 module mod_intin
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: intin
 
 contains
 
   !-------------------------------------------------------------------------------
   !> Summary: 
   !> Author: 
-  !> Category: KKRhost, 
+  !> Category: KKRhost, core-electrons
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
-  !> 
+  !> @warning uses own (hardcoded) value of `cvlight` which is changed for `nsra==1` @endwarning
   !-------------------------------------------------------------------------------
   subroutine intin(g, f, v, e, l, nne, valu, slop, k1, k2, kc, dg, a, b, z, nsra)
+    use :: mod_datatypes, only: dp
+    implicit none
+
     ! .. Scalar Arguments ..
     real (kind=dp) :: a, b, dg, e, slop, valu, z
     integer :: k1, k2, kc, l, nne, nsra
@@ -30,7 +34,8 @@ contains
     ! ..
     ! .. Intrinsic Functions ..
     intrinsic :: sign, exp, sqrt
-    ! ..
+
+
     zz = z + z
     cvlight = 274.0720442e0_dp
     if (nsra==1) cvlight = 1.0e0_dp

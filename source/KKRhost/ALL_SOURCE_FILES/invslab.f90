@@ -1,29 +1,24 @@
 module mod_invslab
 
+  private
+  public :: invslab
+
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: 
+  !> Summary: Matrix inversion for slab geometry
   !> Author: 
-  !> Category: KKRhost, 
+  !> Category: KKRhost, structural-greensfunction
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
-  !> 
+  !> ---> ALGORITM FOR SLAB GEOMETRY
+  !>
+  !> ---> factorization D ^-1 = (prod L) * M * (prod U)
+  !>
+  !> see notes R. Zeller
   !-------------------------------------------------------------------------------
-  ! ************************************************************************
   subroutine invslab(gdi, gup, gdow, gin, icheck)
-    ! ************************************************************************
-    ! ************************************************************************
 
-    ! ---> ALGORITM FOR SLAB GEOMETRY
-
-    ! ------------------------------------------------------------------------
-
-    ! ---> factorization D ^-1 = (prod L) * M * (prod U)
-
-    ! see notes R. Zeller
-
-    ! ------------------------------------------------------------------------
     use :: global_variables, only: ndim_slabinv, nlayerd, alm
     use :: mod_datatypes, only: dp
     use :: mod_bofm, only: bofm
@@ -39,8 +34,9 @@ contains
       g(ndim_slabinv, ndim_slabinv), cunit(ndim_slabinv, ndim_slabinv), gin(alm, alm), gdiold(ndim_slabinv, ndim_slabinv, nlayerd)
 
     integer :: n, lm, info, i, j, irow
-    ! ---> to be changed: set up the triangular matrix.
     integer :: icheck(nlayerd, nlayerd)
+
+    ! ---> to be changed: set up the triangular matrix.
     ! first version:
 
     call cinit(ndim_slabinv*ndim_slabinv, e)
@@ -48,7 +44,7 @@ contains
     call cinit(ndim_slabinv*ndim_slabinv, g)
     call cinit(ndim_slabinv*ndim_slabinv, cunit)
     call cinit(ndim_slabinv*ndim_slabinv*nlayerd, dmat)
-    ! ---> calculate D_1 = (M_11)**(-1)
+
     do n = 1, ndim_slabinv
       cunit(n, n) = cone
     end do
@@ -57,26 +53,30 @@ contains
       call zcopy(ndim_slabinv*ndim_slabinv, gdi(1,1,n), 1, gdiold(1,1,n), 1)
     end do
 
-    ! ---> claculate D_N (2 <= N <= NLAYERD)
+    ! ---> calculate D_1 = (M_11)**(-1)
+
     call zcopy(ndim_slabinv*ndim_slabinv, gdi(1,1,1), 1, e(1,1), 1)
     call zcopy(ndim_slabinv*ndim_slabinv, cunit, 1, dmat(1,1,1), 1)
 
     call zgetrf(ndim_slabinv, ndim_slabinv, e(1,1), ndim_slabinv, ipvt, info)
     call zgetrs('N', ndim_slabinv, ndim_slabinv, e(1,1), ndim_slabinv, ipvt, dmat(1,1,1), ndim_slabinv, info)
 
-    ! ---> F = D(N-1) * M1(N-1)
+    ! ---> claculate D_N (2 <= N <= NLAYERD)
     do n = 2, nlayerd
-      ! ---> D(N) = [MDI(N) - MUP(N-1)*DMAT(N-1)*DOWM(N-1) ]^(-1)
+      ! ---> F = D(N-1) * M1(N-1)
       call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, cone, dmat(1,1,n-1), ndim_slabinv, gup(1,1,n-1), ndim_slabinv, czero, f(1,1), ndim_slabinv)
+      
+      ! ---> D(N) = [MDI(N) - MUP(N-1)*DMAT(N-1)*DOWM(N-1) ]^(-1)
       call zcopy(ndim_slabinv*ndim_slabinv, gdi(1,1,n), 1, e(1,1), 1)
       call zcopy(ndim_slabinv*ndim_slabinv, cunit(1,1), 1, dmat(1,1,n), 1)
       call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, -cone, gdow(1,1,n-1), ndim_slabinv, f(1,1), ndim_slabinv, cone, e(1,1), ndim_slabinv)
-      ! At this point the matrix DMAT(ndim_slabinv,ndim_slabinv,nlayerd) contains the
       call zcopy(ndim_slabinv*ndim_slabinv, e(1,1), 1, dinver(1,1,n), 1)
-      ! matrices [of dimension (ndim_slabinv,ndim_slabinv)]  D^n, n=1,..,nlayerd
       call zgetrf(ndim_slabinv, ndim_slabinv, e(1,1), ndim_slabinv, ipvt, info)
       call zgetrs('N', ndim_slabinv, ndim_slabinv, e(1,1), ndim_slabinv, ipvt, dmat(1,1,n), ndim_slabinv, info)
     end do
+
+    ! At this point the matrix DMAT(ndim_slabinv,ndim_slabinv,nlayerd) contains the
+    ! matrices [of dimension (ndim_slabinv,ndim_slabinv)]  D^n, n=1,..,nlayerd
 
     ! ---> calculate Z_n for 1 =< n <= n-1
     do n = nlayerd, 1, (-1)
@@ -93,17 +93,21 @@ contains
           f(lm, lm) = cone + f(lm, lm)
         end do
         call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, cone, dmat(1,1,n), ndim_slabinv, f(1,1), ndim_slabinv, czero, e(1,1), ndim_slabinv)
-        ! here start the two loops on the row index,
         call btom(n, n, e, ndim_slabinv, gin, alm, .false.)
-        ! in order to span all the matrix
         call zcopy(ndim_slabinv*ndim_slabinv, e(1,1), 1, gdi(1,1,n), 1)
-        ! and to calculate just the blocks that are needed
       end if
 
+      ! here start the two loops on the row index,
+      ! in order to span all the matrix
+      ! and to calculate just the blocks that are needed
       ! for the construction of the cluster of green's function
-      ! this is the loop for element G_ij with i<j
+
       if (icheck(n,n)==0) go to 110
+
       if (n==1) go to 100
+
+      ! this is the loop for element G_ij with i<j
+
       do irow = (n-1), 1, (-1)
         if (icheck(irow,n)==1) then
           call bofm(irow+1, n, e, ndim_slabinv, gin, alm)
@@ -111,12 +115,13 @@ contains
           call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, -cone, dmat(1,1,irow), ndim_slabinv, f(1,1), ndim_slabinv, czero, e(1,1), ndim_slabinv)
           call btom(irow, n, e, ndim_slabinv, gin, alm, .false.)
         end if
-        ! this is the loop for element G_ij with i>j
       end do
 
 100   continue
 
       if (n==nlayerd) go to 110
+
+      ! this is the loop for element G_ij with i>j
 
       do irow = n + 1, nlayerd, 1
         if (icheck(irow,n)==1) then
@@ -133,10 +138,12 @@ contains
           call zgetrf(ndim_slabinv, ndim_slabinv, f(1,1), ndim_slabinv, ipvt, info)
           call zgetrs('N', ndim_slabinv, ndim_slabinv, f(1,1), ndim_slabinv, ipvt, e(1,1), ndim_slabinv, info)
           call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, -cone, e(1,1), ndim_slabinv, gdow(1,1,irow-1), ndim_slabinv, czero, f(1,1), ndim_slabinv)
-          ! corrected 15.3.2000
           call bofm(irow-1, n, e, ndim_slabinv, gin, alm)
           call zgemm('N', 'N', ndim_slabinv, ndim_slabinv, ndim_slabinv, cone, f(1,1), ndim_slabinv, e(1,1), ndim_slabinv, czero, g(1,1), ndim_slabinv)
+ 
+          ! corrected 15.3.2000
           call btom(irow, n, g, ndim_slabinv, gin, alm, .false.)
+ 
         end if
       end do
 
