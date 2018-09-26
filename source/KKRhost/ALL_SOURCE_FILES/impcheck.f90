@@ -1,30 +1,29 @@
 module mod_impcheck
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: impcheck
 
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: 
+  !> Summary: Check if input from scoef file is consistent with lattice
   !> Author: 
-  !> Category: KKRhost, 
+  !> Category: KKRhost, sanity-check
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
-  !> 
+  !> Checking the coordinates and site-index assignments of an impurity
+  !> cluster read in from a file
+  !> The size of the Bravais lattice to be generated is determined
+  !> dynamically using the radius of the input cluster as reference
+  !>
+  !> For an input site not belonging to the Bravais lattice the program
+  !> stops.
+  !> A wrong site-index (unit cell) assignment is corrected and the
+  !> execution continues.
   !-------------------------------------------------------------------------------
   subroutine impcheck(atomimp, natomimp, naez, rclsimp, rbasis, bravais, ndim)
-    ! **********************************************************************
-    ! * Checking the coordinates and site-index assignments of an impurity *
-    ! * cluster read in from a file                                        *
-    ! * The size of the Bravais lattice to be generated is determined      *
-    ! * dynamically using the radius of the input cluster as reference     *
-    ! *                                                                    *
-    ! * For an input site not belonging to the Bravais lattice the program *
-    ! * stops.                                                             *
-    ! * A wrong site-index (unit cell) assignment is corrected and the     *
-    ! * execution continues.                                               *
-    ! **********************************************************************
 
+    use :: mod_datatypes, only: dp
     use :: mod_getclusnxyz, only: getclusnxyz
     implicit none
     ! ..

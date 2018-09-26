@@ -1,26 +1,28 @@
 module mod_impcoefs
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: impcoefs
 
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: 
+  !> Summary: Construct `hostimp` mapping and write `impurity.coefs` file
   !> Author: 
-  !> Category: KKRhost, 
+  !> Category: KKRhost, input-output, geometry
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
-  !> 
+  !> Writes out the auxiliary file impurity.coefs which is needed for
+  !> impurity calculations                                           
+  !> Sets up the array HOSTIMP -- also needed for impurity case      
+  !>                                adopted from N. Papanikolaou
+  !>
+  !> @note
+  !> - Writeout not neede anymore?
+  !> - Check if array `hostimp` is only set here?
+  !> @endnote
   !-------------------------------------------------------------------------------
   subroutine impcoefs(natomimp, naez, atomimp, rclsimp, nshell, nsh1, nsh2, ratom, nsymat, isymindex, rotname, hostimp, natypd, lmaxd, nsheld, nsize)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * Writes out the auxiliary file impurity.coefs which is needed for   *
-    ! * impurity calculations                                              *
-    ! * Sets up the array HOSTIMP -- also needed for impurity case         *
-    ! *                                adopted from N. Papanikolaou        *
-    ! **********************************************************************
-
+    use :: mod_datatypes, only: dp
     implicit none
     ! ..
     ! .. Scalar arguments

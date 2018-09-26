@@ -1,27 +1,23 @@
 module mod_initldau
 
+  private
+  public :: initldau
+
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: 
-  !> Author: 
-  !> Category: KKRhost, 
+  !> Summary: Calculates ULDAU
+  !> Author: H. Ebert, V. Popescu and Ph. Mavropoulos
+  !> Date: March 2003
+  !> Category: KKRhost, initialization
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
-  !> 
+  !> fivos will add some comments later
+  !>
+  !> It is already later, but no comments have been added yet.
+  !> But wait up, they're coming...    Munich, Feb.2004, Phivos
   !-------------------------------------------------------------------------------
   subroutine initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, nspin, r, drdi, z, ipan, ircut, phi, uldau)
-
-    ! *******************************************************************
-    ! *  Calculates ULDAU                                               *
-    ! *  fivos will add some comments later                             *
-    ! *                                                                 *
-    ! *  Munich, March 2003, h.ebert, v.popescu and ph.mavropoulos      *
-    ! *                                                                 *
-    ! *  It is already later, but no comments have been added yet.      *
-    ! *  But wait up, they're coming...    Munich, Feb.2004, Phivos     *
-    ! *                                                                 *
-    ! *******************************************************************
 
     use :: mod_datatypes, only: dp
     use :: mod_types, only: t_inc
@@ -30,6 +26,7 @@ contains
     use :: mod_rinit, only: rinit
     use :: mod_simpk, only: simpk
     use :: mod_soutk, only: soutk
+    use :: mod_constants, only: pi
     implicit none
 
     ! Local variables
@@ -41,27 +38,24 @@ contains
     integer :: itldau(natypd), lopt(natypd)
     integer :: ipan(natypd), ircut(0:ipand, natypd)
 
-    real (kind=dp) :: aa(mmaxd, mmaxd, mmaxd, mmaxd, 0:2*lmaxd), erefldau(natypd), fact(0:100), fclmb(0:2*lmaxd+1), g12, g34, jeff(natypd), pi, rlop, rpw(irmd, 2*lmaxd+1), scl, &
+    real (kind=dp) :: aa(mmaxd, mmaxd, mmaxd, mmaxd, 0:2*lmaxd), erefldau(natypd), fact(0:100), fclmb(0:2*lmaxd+1), g12, g34, jeff(natypd), rlop, rpw(irmd, 2*lmaxd+1), scl, &
       sg(irmd), sl(irmd), sum, sumfclmb, tg(irmd), tl(irmd), ueff(natypd), wgtfclmb(0:2*lmaxd+1), wig3j, wint(irmd), w2(irmd)
     integer :: i1, im1, im2, im3, im4, ipan1, ir, irc1, it, kk, l1, lf, lfmax, ll, m1, m2, m3, m4
     integer :: nint
-    ! factorial
+    
+
+    fact(0) = 1.0_dp
+    do i1 = 1, 100
+      fact(i1) = fact(i1-1)*real(i1, kind=dp) ! factorial
+    end do
+    if (t_inc%i_write>0) write (1337, '(/,79("="),/,22X,A,/,79("="))') 'LDA+U:  INITIALISE Coulomb matrix U'
 
     ! -> Calculate test functions Phi. Phi is already normalised to
     ! int phi**2 dr =1, thus it also contains factor r.
-    pi = 4.d0*atan(1.0_dp)
-    fact(0) = 1.0_dp
-    do i1 = 1, 100
-      fact(i1) = fact(i1-1)*real(i1, kind=dp)
-    end do
-    if (t_inc%i_write>0) write (1337, '(/,79("="),/,22X,A,/,79("="))') 'LDA+U:  INITIALISE Coulomb matrix U'
-    ! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-    ! Loop over atoms
-    ! which need LDA+U ( LOPT >= 0 )
-    ! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-    ! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 
-    ! -> define r**l in array rpw:
+    ! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    ! Loop over atoms which need LDA+U ( LOPT >= 0 )
+
     do it = 1, ntldau
       i1 = itldau(it)
       if (lopt(i1)+1==0) stop ' this atom should be LDA+U'
@@ -74,9 +68,7 @@ contains
       i1 = itldau(it)
       ipan1 = ipan(i1)
       irc1 = ircut(ipan1, i1)
-      ! SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
 
-      ! 1.  Calculate slater integrals FCLMB
       lfmax = 2*lopt(i1)
       do ir = 2, irmd
         rpw(ir, 1) = r(ir, i1)
@@ -84,29 +76,29 @@ contains
           rpw(ir, l1) = r(ir, i1)*rpw(ir, l1-1)
         end do
       end do
-      ! (here using only the large component of sra wavefunction.
-      ! Whoever wants can also do the small component.)
 
+      ! SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+      ! 
+      ! 1.  Calculate slater integrals FCLMB
+      !     (here using only the large component of sra wavefunction.
+      !     Whoever wants can also do the small component.)
+      !
       ! 1a. Calculate slater integrals
 
-      ! ----------------------------------------------------------------------
-
-      ! Note on integrand:
-      ! Integrals are up to IRC1 because we integrate in sphere,
       rlop = real(lopt(i1), kind=dp)
       sumfclmb = 0.d0
-      ! without thetas.
+      ! ----------------------------------------------------------------------
       do lf = 2, lfmax, 2
         tl(1) = 0.0_dp
         tg(1) = 0.0_dp
+
+        ! Note on integrand:
+        ! Integrals are up to IRC1 because we integrate in sphere, 
+        ! without thetas.
         ! In case of cell integration, from IRCUT(1)+1 to IRC1 a convolution
-        ! with thetas and gaunts is needed:
+        ! with thetas and gaunts is needed: 
         ! Int dr R_l(r)**2 Sum_L' Gaunt_{lm,lm,l'm'}*thetas_{l'm'}(r).
         ! But then the result is m-dependent. Here, the easy way is used!
-
-
-
-
 
         do ir = 2, irc1
           wint(ir) = real(conjg(phi(ir,i1))*phi(ir,i1), kind=dp)
@@ -114,7 +106,7 @@ contains
           tl(ir) = w2(ir)*rpw(ir, lf)
           tg(ir) = w2(ir)/rpw(ir, lf+1)
         end do
-        ! See Note on integrand above.
+
         call soutk(tl, sl, ipan(i1), ircut(0,i1))
         call soutk(tg, sg, ipan(i1), ircut(0,i1))
 
@@ -125,35 +117,35 @@ contains
 
         sg(1) = 0.0_dp
 
+        ! See Note on integrand above.
 
-        ! ----------------------------------------------------------------------
         do ir = 2, irc1
           sg(ir) = wint(ir)*sl(ir)
         end do
 
         call simpk(sg, fclmb(lf), ipan1, ircut(0,i1), drdi(1,i1))
-        ! 1b.   Normalise slater integrals FCLMB
+
         wig3j = (-1)**nint(rlop)*(1.0_dp/sqrt(2.0_dp*rlop+1.0_dp))*cgcrac(fact, rlop, real(lf,kind=dp), rlop, 0.0_dp, 0.0_dp, 0.0_dp)
 
         wgtfclmb(lf) = ((2*rlop+1)/(2*rlop))*wig3j**2
         sumfclmb = sumfclmb + wgtfclmb(lf)*fclmb(lf)
       end do
 
-
-      ! SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+      ! ----------------------------------------------------------------------
+      !
+      ! 1b.   Normalise slater integrals FCLMB
 
       scl = jeff(i1)/sumfclmb
       fclmb(0) = ueff(i1)
-      ! ======================================================================
+
       do lf = 2, lfmax, 2
         fclmb(lf) = scl*fclmb(lf)
       end do
 
-      ! 2.   Calculate coefficient matrix AA = a(m1,m2,m3,m4)
-
-
+      ! SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
 
       ! ======================================================================
+      ! 2.   Calculate coefficient matrix AA = a(m1,m2,m3,m4)
 
       call rinit(mmaxd*mmaxd*mmaxd*mmaxd*(2*lmaxd+1), aa)
       ll = lopt(i1)
@@ -168,13 +160,13 @@ contains
               if (-ll<=m4 .and. m4<=ll) then
                 im4 = ll + m4 + 1
                 sum = 0.d0
-                ! UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+
                 do kk = -lf, lf
                   g12 = gauntc(fact, ll, m1, lf, kk, ll, m2)
                   g34 = gauntc(fact, ll, m3, lf, -kk, ll, m4)
                   sum = sum + g12*g34*(-1)**abs(kk)
                 end do
-                ! 3.  Calculate ULDAU
+
                 aa(im1, im2, im3, im4, lf) = sum*4.d0*pi/(2.d0*real(lf,kind=dp)+1.d0)
               end if
             end do
@@ -182,12 +174,13 @@ contains
         end do
       end do
 
-
-
+      ! ======================================================================
+      
       ! UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+      ! 3.  Calculate ULDAU
 
       call rinit(mmaxd*mmaxd*mmaxd*mmaxd, uldau(1,1,1,1,i1))
-      ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+
       do lf = 0, lfmax, 2
         do im4 = 1, 2*ll + 1
           do im3 = 1, 2*ll + 1
@@ -199,10 +192,10 @@ contains
           end do
         end do
       end do
+
+      ! UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
+
       ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
-
-      ! AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-
       if (t_inc%i_write>0) then
         write (1337, '(/,8X,A,I3,/)') 'ATOM: ', i1
         write (1337, '(12X,A,F8.4,A)') 'LDA+U reference energy :', erefldau(i1), ' Ry'
@@ -214,10 +207,10 @@ contains
         end do
         if (it<ntldau) write (1337, '(8X,58("~"))')
       end if
-
       ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+
     end do
-    ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+    !AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 
     if (t_inc%i_write>0) then
       write (1337, '(/,6X,60("-"),/,6X,A,/,6X,60("-"))') 'Coulomb matrix U(m1,m1,m3,m3)'
@@ -227,49 +220,46 @@ contains
         ll = min(3, ll)
         write (1337, '(/,8X,"ATOM :",I3,/)') i1
 
-        ! *******************************************************************
+        ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
         do im1 = 1, 2*ll + 1
           write (1337, 100)(uldau(im1,im1,im3,im3,i1), im3=1, 2*ll+1)
         end do
         if (it<ntldau) write (1337, '(8X,58("~"))')
-        ! *  Calculates ULDAU                                               *
-        ! *  fivos will add some comments later                             *
+        ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+
       end do
       write (1337, '(/,6X,60("-"),/)')
     end if
 100 format (6x, 7f10.6)
   end subroutine initldau
-  ! ********************************************************************
-  ! *                                                                  *
-  ! *     CLEBSCH GORDAN COEFFICIENTS FOR ARBITRARY                    *
-  ! *     QUANTUM NUMBERS  J1,J2 ...                                   *
-  ! *     ACCORDING TO THE FORMULA OF   RACAH                          *
-  ! *     SEE: M.E.ROSE ELEMENTARY THEORY OF ANGULAR MOMENTUM          *
-  ! *          EQUATION (3.19)                                         *
-  ! *          EDMONDS EQ. (3.6.11) PAGE 45                            *
-  ! *                                                                  *
-  ! ********************************************************************
+
+
+  !-------------------------------------------------------------------------------
+  !> Summary: CLEBSCH GORDAN COEFFICIENTS FOR ARBITRARY QUANTUM NUMBERS
+  !> Author: 
+  !> Category: KKRhost, special-functions
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> CLEBSCH GORDAN COEFFICIENTS FOR ARBITRARY QUANTUM NUMBERS  J1,J2 ...
+  !> ACCORDING TO THE FORMULA OF   RACAH
+  !> SEE: M.E.ROSE ELEMENTARY THEORY OF ANGULAR MOMENTUM
+  !>      EQUATION (3.19)
+  !>      EDMONDS EQ. (3.6.11) PAGE 45
+  !-------------------------------------------------------------------------------
   function cgcrac(fact, j1, j2, j3, m1, m2, m3)
 
-    ! Dummy arguments
-
-    ! Local variables
     use :: mod_datatypes, only: dp
     implicit none
 
-    ! INLINE FUNCTION    FACTORIAL FOR REAL ARGUMENT
     real (kind=dp) :: j1, j2, j3, m1, m2, m3
     real (kind=dp) :: cgcrac
     real (kind=dp) :: fact(0:100)
-
-
     integer :: j, n, n1, n2, n3, n4, n5, nbot, ntop
     real (kind=dp) :: rfact
     real (kind=dp) :: s, sum, vf, x, y
 
-
+    ! INLINE FUNCTION FACTORIAL FOR REAL ARGUMENT
     rfact(x) = fact(nint(x))
-
 
     cgcrac = 0.0_dp
     if (abs(m3-(m1+m2))>1.0d-6) return
@@ -284,8 +274,8 @@ contains
     end do
     return
 
-
 100 continue
+
     x = (2.0_dp*j3+1.0_dp)*rfact(j1+j2-j3)*rfact(j1-j2+j3)*rfact(-j1+j2+j3)*rfact(j1+m1)*rfact(j1-m1)*rfact(j2+m2)*rfact(j2-m2)*rfact(j3+m3)*rfact(j3-m3)
 
     y = rfact(j1+j2+j3+1)
@@ -307,43 +297,41 @@ contains
       s = -1.0_dp
     end if
     sum = 0.0_dp
-    ! ********************************************************************
+
     do n = nbot, ntop
       s = -s
       y = fact(n)*fact(n1-n)*fact(n2-n)*fact(n3-n)*fact(n4+n)*fact(n5+n)
       sum = sum + (s/y)
     end do
     cgcrac = vf*sum
+
   end function cgcrac
 
-  ! ********************************************************************
-  ! *     GAUNT COEFFICIENTS for complex spherical harmonics  Y[l,m]   *
-  ! *                                                                  *
-  ! *            G = INT dr^  Y[l1,m1]* Y[l2,m2] Y[l3,m3]              *
-  ! *                                                                  *
-  ! * see: M.E.ROSE ELEMENTARY THEORY OF ANGULAR MOMENTUM  Eq. (4.34)  *
-  ! *                                                                  *
-  ! * 26/01/95  HE                                                     *
-  ! ********************************************************************
+
+  !-------------------------------------------------------------------------------
+  !> Summary: GAUNT COEFFICIENTS for complex spherical harmonics
+  !> Author: H. Ebert,
+  !> Date: 26/01/95 
+  !> Category: KKRhost, special-functions
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> GAUNT COEFFICIENTS for complex spherical harmonics  Y[l,m]
+  !>
+  !>        G = INT dr^  Y[l1,m1]* Y[l2,m2] Y[l3,m3]
+  !>
+  !> see: M.E.ROSE ELEMENTARY THEORY OF ANGULAR MOMENTUM  Eq. (4.34)
+  !-------------------------------------------------------------------------------
   function gauntc(fact, l1, m1, l2, m2, l3, m3)
 
-    ! PARAMETER definitions
-
-    ! Dummy arguments
     use :: mod_datatypes, only: dp
+    use :: mod_constants, only: pi
     implicit none
-
-    ! Local variables
-    real (kind=dp) :: pi
-    parameter (pi=3.141592653589793238462643_dp)
 
     integer :: l1, l2, l3, m1, m2, m3
     real (kind=dp) :: fact(0:100)
     real (kind=dp) :: gauntc
-
-    ! ********************************************************************
     real (kind=dp) :: g
-    ! *                                                                  *
+
     if ((l1<0) .or. (l2<0) .or. (l3<0)) then
       g = 0.0_dp
     else
@@ -351,6 +339,7 @@ contains
         real(m2,kind=dp), real(m1,kind=dp))*cgcrac(fact, real(l3,kind=dp), real(l2,kind=dp), real(l1,kind=dp), 0.0_dp, 0.0_dp, 0.0_dp)
     end if
     gauntc = g
+
   end function gauntc
 
 end module mod_initldau

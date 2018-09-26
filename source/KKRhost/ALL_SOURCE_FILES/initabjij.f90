@@ -3,19 +3,16 @@ module mod_initabjij
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: 
+  !> Summary: Sets up auxiliary indexing arrays for Jijs
   !> Author: 
-  !> Category: KKRhost, 
+  !> Category: KKRhost, initialization
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
-  !> 
+  !> Subroutine called by < TBXCCPLJIJ > to set up some auxiliary
+  !> arrays allowing the indexing of shells, sites, atomic types
   !-------------------------------------------------------------------------------
   subroutine initabjij(iprint, naez, natyp, natomimp, nofgij, nqcalc, nsmax, nshell, iqcalc, atomimp, ish, jsh, ijtabcalc, ijtabsh, ijtabsym, nijcalc, kijsh, nijmax, nshell0, &
     nsheld)
-    ! ********************************************************************
-    ! *  subroutine called by < TBXCCPLJIJ > to set up some auxiliary    *
-    ! *  arrays allowing the indexing of shells, sites, atomic types     *
-    ! ********************************************************************
 
     implicit none
 
