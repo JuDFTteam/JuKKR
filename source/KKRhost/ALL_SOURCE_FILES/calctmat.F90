@@ -38,7 +38,7 @@ contains
 #ifdef CPP_MPI
     use :: mpi
     use :: mod_mympi, only: mpiadapt
-    use :: mod_timing, only: timing_start, timing_stop
+    use :: mod_timing, only: timing_start, timing_stop, timings_1a
 #endif
     use :: mod_mympi, only: myrank, nranks, master, distribute_work_energies
     use :: mod_types, only: t_tgmat, t_inc, t_mpi_c_grid, init_tgmat, t_lloyd, init_tlloyd
