@@ -1,23 +1,20 @@
 module mod_jijhelp
 
-  use :: mod_datatypes, only: dp
-  implicit none
   private
-
   public :: set_jijcalc_flags, calc_dtmatjij
 
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: 
+  !> Summary: Set flags determining if wavefunctions and t-matrix elements for Jijs are computed
   !> Author: 
-  !> Category: KKRhost, 
+  !> Category: KKRhost, physical-obervables
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
-  !> 
   !-------------------------------------------------------------------------------
   subroutine set_jijcalc_flags(t_dtmatjij, natypd, natomimpd, natomimp, atomimp, iqat)
 
+    use :: mod_datatypes, only: dp
     use :: mod_types, only: t_inc, type_dtmatjijdij
     use :: mod_save_wavefun, only: t_wavefunctions
 
@@ -51,21 +48,26 @@ contains
 
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Compute \[\Delta t]\-matrix for Jijs
+  !> Author: 
+  !> Category: KKRhost, physical-obervables, single-site
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !-------------------------------------------------------------------------------
   subroutine calc_dtmatjij(lmmaxd, lmmaxso, lmpotd, ntotd, nrmaxd, nsra, irmdnew, nspin, vins, rllleft, rll, rpan_intervall, ipan_intervall, npan_tot, ncheb, cleb, icleb, iend, &
     ncleb, rnew, dtmat)
     ! subroutine
     ! calc_dtmatJij(NTOTD,NRMAXD,NSRA,IRMDNEW,NSPIN,VINS,RLLLEFT,RLL,RPAN_INTERVALL,IPAN_INTERVALL,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,NCLEB,RNEW,dtmat)
-
+    
+    use :: mod_datatypes, only: dp
     use :: mod_vllmat, only: vllmat
     use :: mod_intcheb_cell, only: intcheb_cell
+    use :: mod_constants, only: czero, cone
     implicit none
-    complex (kind=dp) :: czero, cone
-    parameter (czero=(0d0,0d0), cone=(1d0,0d0))
 
-    integer, intent (in) :: lmmaxd, lmmaxso, lmpotd, nsra, irmdnew, nrmaxd, nspin, iend, ncleb, ntotd ! integer arguments that only define array
-    ! sizes
-    ! integer, intent(in) :: NSRA,IRMDNEW,NRMAXD,NSPIN,IEND,NCLEB,NTOTD
-    ! !integer arguments that only define array sizes
+    integer, intent (in) :: lmmaxd, lmmaxso, lmpotd, nsra, irmdnew, nrmaxd, nspin, iend, ncleb, ntotd ! integer arguments that only define array sizes
+    ! integer, intent(in) :: NSRA,IRMDNEW,NRMAXD,NSPIN,IEND,NCLEB,NTOTD  !integer arguments that only define array sizes
     integer, intent (in) :: npan_tot, ncheb, ipan_intervall(0:ntotd), icleb(ncleb, 4) ! integer arguments
     real (kind=dp), intent (in) :: rpan_intervall(0:ntotd), vins(irmdnew, lmpotd, nspin), cleb(ncleb), rnew(nrmaxd)
     complex (kind=dp), intent (in) :: rll(nsra*lmmaxso, lmmaxso, irmdnew), rllleft(nsra*lmmaxso, lmmaxso, irmdnew)
@@ -80,8 +82,7 @@ contains
 
     if (nspin/=2) stop 'calc_dtmatJij: NSPIN must be 2'
 
-    ! BINS(:,:,1) = (VINS(:,:,2)-VINS(:,:,1))/2 !Bxc-field  !CLEANUP: how to
-    ! choose the sign here????
+    ! BINS(:,:,1) = (VINS(:,:,2)-VINS(:,:,1))/2 !Bxc-field  !CLEANUP: how to choose the sign here????
     bins(:, :, 1) = (vins(:,:,1)-vins(:,:,2))/2 ! Bxc-field
 
 
@@ -90,8 +91,7 @@ contains
     call vllmat(1, nrmaxd, irmdnew, lmmaxd, lmmaxd, bnspll0, bins, lmpotd, cleb, icleb, iend, 1, 0.0_dp, rnew, 0, ncleb)
 
     ! get the pauli spin matrices
-    call calc_sigma(sigma)         ! use this to perform automatically
-    ! infinitesimal rotations
+    call calc_sigma(sigma)         ! use this to perform automatically infinitesimal rotations
 
 
     ! loop over sigma_{x,y,z}
@@ -121,9 +121,7 @@ contains
           pnsir(:, :) = rll(lmmaxso+1:2*lmmaxso, :, ir)
           pnsil(:, :) = -rllleft(lmmaxso+1:2*lmmaxso, :, ir)
 
-          ! calculate [Rleft_small * VNSPLL0 *Rright_small](r) and add to
-          ! large
-          ! component
+          ! calculate [Rleft_small * VNSPLL0 *Rright_small](r) and add to large component
           call zgemm('N', 'N', lmmaxso, lmmaxso, lmmaxso, cone, vnspll0, lmmaxso, pnsir, lmmaxso, czero, cmattmp, lmmaxso)
 
           call zgemm('T', 'N', lmmaxso, lmmaxso, lmmaxso, cone, pnsil, lmmaxso, cmattmp, lmmaxso, cone, wr(:,:,ir), lmmaxso)
@@ -131,8 +129,7 @@ contains
 
       end do                       ! ir
 
-      ! perform radial integration for each matrix element dtmat(LM2,LM1) =
-      ! \int dr {Rleft * VNSPLL0 *Rright}(r)
+      ! perform radial integration for each matrix element dtmat(LM2,LM1) = \int dr {Rleft * VNSPLL0 *Rright}(r)
       do lm1 = 1, lmmaxso
         do lm2 = 1, lmmaxso
           ctmp = wr(lm2, lm1, :)
@@ -162,7 +159,15 @@ contains
   ! end subroutine calclambda
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculate Pauli matrices
+  !> Author: 
+  !> Category: KKRhost, numerical-tools
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !-------------------------------------------------------------------------------
   subroutine calc_sigma(sigma)
+    use :: mod_datatypes, only: dp
     implicit none
     complex (kind=dp) :: sigma(2, 2, 3)
     integer :: verbose

@@ -1,36 +1,35 @@
 module mod_hffcore
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: hffcore
 
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: 
+  !> Summary: Calculates matrix elements of hyperfine interaction quantities of the core
   !> Author: 
-  !> Category: KKRhost, 
+  !> Category: KKRhost, core-electrons
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
-  !> 
+  !> Calculates matrix elements of several hyperfine interaction
+  !> connected quantities in the core.
+  !> All the related arrays have a counting index as
+  !> the last index of the array indicates the corresponding physical
+  !> property.
+  !> Index-list
+  !> 1      electron-Spin-electron-Spin Hyperfine field
+  !> 2      nuclear-spin-electron-orbit hyperfine field
+  !> 3      electron-spin-nulceus-spin-contact hyperfine field
+  !> 4      expectation value of (1/r)^3
+  !> 5      Total Hyperfine Field (see Rose (1961))
+  !> called by core
   !-------------------------------------------------------------------------------
   subroutine hffcore(rnuc, jtop, kap1, kap2, nsol, mj, gc, fc, nrc, shf, s, nmemax, nkmmax, r, drdi, sdia, smdia, soff, smoff, qdia, qoff, qmdia, qmoff, nucleus, jlim)
-    ! ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-    ! Calculates matrix elements of several hyperfine interaction
-    ! connected quantities in the core.
-    ! All the related arrays have a counting index as
-    ! the last index of the array indicates the corresponding physical
-    ! property.
-    ! Index-list
-    ! 1      electron-Spin-electron-Spin Hyperfine field
-    ! 2      nuclear-spin-electron-orbit hyperfine field
-    ! 3      electron-spin-nulceus-spin-contact hyperfine field
-    ! 4      expectation value of (1/r)^3
-    ! 5      Total Hyperfine Field (see Rose (1961))
-    ! called by core
-    ! ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+    use :: mod_datatypes, only: dp
     use :: mod_ikapmue, only: ikapmue
     use :: mod_rinit, only: rinit
     implicit none
-
 
     ! PARAMETER definitions
     real (kind=dp) :: mb, a0, f1, f2
@@ -208,7 +207,17 @@ contains
 
   end subroutine hffcore
 
+
+  !-------------------------------------------------------------------------------
+  !> Summary: Summation helper reoutine for hffcore
+  !> Author: 
+  !> Category: KKRhost, core-electrons
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !-------------------------------------------------------------------------------
   subroutine rsumupint(sum, vg, g, wg, vf, f, wf, n)
+    
+    use :: mod_datatypes, only: dp
     implicit none
 
     ! Dummy arguments
@@ -226,9 +235,19 @@ contains
     end do
   end subroutine rsumupint
 
+
+  !-------------------------------------------------------------------------------
+  !> Summary: Compute hyperfine integrals for hffcore
+  !> Author: 
+  !> Category: KKRhost, core-electrons
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Calculates Hyperfine integrals, extrapolates to zero and
+  !> intrapolates to exact nuclear radius RNUC
+  !-------------------------------------------------------------------------------
   subroutine hffint(gg, ga, gb, dr, r, rnuc, nsol, jtop, nrc)
-    ! Calculates Hyperfine integrals, extrapolates to zero and
-    ! intrapolates to exact nuclear radius RNUC
+
+    use :: mod_datatypes, only: dp
     use :: mod_ylag
     use :: mod_rint4pts
     implicit none
