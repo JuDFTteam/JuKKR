@@ -2,7 +2,7 @@ module mod_types
 
   use :: mod_datatypes
 
-  use :: constants, only: czero
+  use :: mod_constants, only: czero
 
   implicit none
 

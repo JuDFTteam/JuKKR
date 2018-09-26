@@ -1,12 +1,21 @@
 module mod_idreals
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: idreals
 
 contains
 
-  !! check iif entries of darry are fractions or roots of common numbers and
-  ! replace accordingly for hogher accuracy
+  !-------------------------------------------------------------------------------
+  !> Summary: Identify and convert common square roots and fractional numbers from input
+  !> Author: 
+  !> Category: KKRhost, input-output
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Check if entries of darry are fractions or roots of common numbers and
+  !> replace accordingly for higher accuracy
+  !------------------------------------------------------------------------------
   subroutine idreals(darry, narry, iprint)
+    use :: mod_datatypes, only: dp
     implicit none
 
     ! PARAMETER definitions

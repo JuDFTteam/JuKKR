@@ -2,19 +2,22 @@ module mod_greenimp
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculate impurity GF by solving dyson equation
+  !> Author: N. H. Long
+  !> Date: 05.2013
+  !> Category: KKRhost, input-output
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !-------------------------------------------------------------------------------
   subroutine greenimp(natomimp, dtmtrx, e)
-    use :: mod_version_info
-    use :: global_variables
+    use :: global_variables, only: lmmaxso
     use :: mod_datatypes, only: dp
+    use :: mod_constants, only: czero, cone
 
     implicit none
-    ! -----------------------------------------------------------------
-    ! calculate impurity GF by solving dyson equation
-    ! N. H. Long, Juelich, 05.2013
-    ! -----------------------------------------------------------------
+
     complex (kind=dp) :: e, e1
-    complex (kind=dp) :: cone, czero
-    parameter (cone=(1d0,0d0), czero=(0d0,0d0))
     integer :: natomimp, ndim, info
     integer :: i, j, lm1, lm2, ilm, jlm, ilm1, jlm1
     integer :: ipvt1(natomimp*lmmaxso)

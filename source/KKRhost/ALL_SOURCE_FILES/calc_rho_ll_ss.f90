@@ -1,12 +1,23 @@
 module mod_calc_rho_ll_ss
 
+  private
+  public :: calc_rho_ll_ss
+
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Rho matrix for PKKprime code
+  !> Author: 
+  !> Category: KKRhost, physical-observables
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !> 
+  !> Computes rho matrix (see eq. 2.111 ff. in PhD thesis of Bernd Zimmermann)
+  !-------------------------------------------------------------------------------
   subroutine calc_rho_ll_ss(lmmax, rll, ircut, ipan, icell, thetas, cleb, icleb, iend, ifunm, lmsp, irws, drdi, dens)
 
     use :: mod_datatypes, only: dp
-    use :: global_variables
-    use :: mod_csimpk
+    use :: global_variables, only: irmd, irid, nfund, ncleb, natypd, lmpotd, ipand
+    use :: mod_csimpk, only: csimpk
     implicit none
 
     ! .. Array Arguments ..
@@ -32,13 +43,10 @@ contains
 
     ! ---> remember that the gaunt coeffients for that case are 1/sqrt(4 pi)
 
-
     ! WRITE(6,*) "In rho ll"
-
 
     allocate (rges(irmd))
     allocate (rsp(irmd))
-
 
     ! WRITE(56,"((I5),(2e17.9))") IR,THETAS(IR-IRCUT(1),1,ICELL)
     c0ll = 1.0e0_dp/sqrt(16.0e0_dp*atan(1.0e0_dp))
@@ -64,7 +72,6 @@ contains
     ! WRITE(6,*) "IRCUT(IPAN)-IRMIND",IRCUT(IPAN)-IRMIND
     ! WRITE(6,*) "IRMIND",IRMIND
 
-
     ! ---> calculate the non spherically symmetric contribution
 
     ! WRITE(156,*) "IFUN",IFUN
@@ -73,8 +80,6 @@ contains
       lm2p = icleb(j, 2)
       lm3p = icleb(j, 3)
       clt = cleb(j)
-
-
 
       if (ipan>1 .and. lmsp(icell,lm3p)>0) then
         ifun = ifunm(icell, lm3p)
@@ -88,6 +93,7 @@ contains
             rges(ir) = rges(ir) + cleb(j)*thetas(ir-ircut(1), ifun, icell)*(rll(ir,lm2p,lm1p)+rll(ir,lm1p,lm2p))
           end do
         end if
+
       end if
 
     end do

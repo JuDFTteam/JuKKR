@@ -1,16 +1,23 @@
 module mod_cdjlzdz
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: cdjlzdz
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates derivative of Bessel function
+  !> Author: 
+  !> Category: KKRhost, special-functions, dirac
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Calculates derivative
+  !> d j(L,Z) / dz
+  !> analytically
+  !-------------------------------------------------------------------------------
   function cdjlzdz(l, z, mode)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *     d j(L,Z) / dz    analytically                                *
-    ! *                                                                  *
-    ! ********************************************************************
-    use :: mod_cjlz
+    use :: mod_datatypes, only: dp
+    use :: mod_cjlz, only: cjlz
     implicit none
 
     ! Dummy arguments

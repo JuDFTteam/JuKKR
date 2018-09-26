@@ -14,7 +14,7 @@
 ! -------------------------------------------------------------------------------
 program kkrcode
 
-  use :: constants
+  use :: mod_constants
   use :: mod_profiling
   use :: mod_main0
   use :: mod_main1a
@@ -57,7 +57,7 @@ program kkrcode
 
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! initialize MPI >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-  !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  ! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #ifdef CPP_MPI
   ! initialize MPI
   call mpi_init(ierr)
@@ -68,13 +68,13 @@ program kkrcode
   write (ctemp, '(I03.3)') myrank
   ! find serial number that is printed to files
   call construct_serialnr()
-  !!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-  !!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< initialize MPI !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< initialize MPI !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! start KKR with main0 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-  !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  ! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   ! do all this only on master (read in parameters etc. in main0)
   if (myrank==master) then
 
@@ -90,7 +90,8 @@ program kkrcode
     write (*, *) '!!! please check these files as well               !!!'
     write (*, *) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
     open (1337, file='output.'//trim(ctemp)//'.txt')
-    call version_print_header(1337)
+    ! here version_print_header needs the print_always flag because test options are not read in yet
+    call version_print_header(1337, print_always=.true.)
 
     ! default value on master (needed for writeout in main0)
     t_inc%i_write = 1
@@ -103,8 +104,8 @@ program kkrcode
     call timing_stop('main0')
 
   end if                           ! myrank ==master
-  !!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-  !!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< start KKR with main0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< start KKR with main0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   ! full Dirac works only in serial at the moment
@@ -130,7 +131,7 @@ program kkrcode
 
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! distribute stuff from main0 >>>>>>>>>>>>>>>>>>>>>>>>>>>
-  !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  ! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #ifdef CPP_MPI
   ! now communicate type t_inc and t_tgmat switches (this has an implicit barrier, so that all other processes wait for master to finish with main0)
   if (myrank==master) call timing_start('MPI 1')
@@ -238,8 +239,8 @@ program kkrcode
   ! communicate parameters of godfrin inversion scheme ! GODFRIN Flaviano
   call bcast_params_godfrin(t_godfrin) ! GODFRIN Flaviano
 #endif
-  !!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-  !!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< distribute stuff from main0 !!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< distribute stuff from main0 !!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   ! initialize timing and output files
@@ -247,8 +248,11 @@ program kkrcode
   ! for i_write (or i_time) =2 do not reset files > here for output.*.txt, after main2, copy writeout after main0 to different file
   if (myrank/=master) call timing_init(myrank)
   if (t_inc%i_write<2) then
+#ifdef CPP_OLDCOMP
+    if (myrank==master) call system('cp output.000.txt output.0.txt')
+#else
     if (myrank==master) call execute_command_line('cp output.000.txt output.0.txt')
-    ! if(myrank==master) call SYSTEM('cp output.000.txt output.0.txt')
+#endif
     if (myrank==master) close (1337, status='delete')
     if (t_inc%i_write>0) then
       open (1337, file='output.'//trim(ctemp)//'.txt')
@@ -262,7 +266,7 @@ program kkrcode
 
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! SCF-ITERATION >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-  !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  ! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
   ! Now start scf iterations and do all steps of the KKR formalism until convergence
   if (myrank==master) then
     write (*, *) '++++++++++++++++++++++++++++++++++++++++++++++++++++++'
@@ -275,18 +279,22 @@ program kkrcode
     ! reset files for t_inc%i_write<2
     ! first copy lat output to output.2.txt so that all information of the precious iteration can be accessed while the next iteration runs
     if (t_inc%i_write<2 .and. t_inc%i_write>0 .and. myrank==master .and. t_inc%i_iteration>1) then
-      ! call SYSTEM('cp output.000.txt output.2.txt')
+    ! the old intel compiler does not know 'execute_command_line' and has to use the 'system' call
+#ifdef CPP_OLDCOMP
+      call system('cp output.000.txt output.2.txt')
+#else
       call execute_command_line('cp output.000.txt output.2.txt')
+#endif
     end if
     ! rewind output.xxx.txt
     if (t_inc%i_write<2 .and. t_inc%i_write>0) then
       rewind (1337)
-      read (1337, *)               ! skip first line to keep serial number
+      if (.not. test('noserial')) read (1337, *)    ! skip first line to keep serial number
     end if
     ! rewind timing files if t_inc%i_time<2 (see mod_timing)
     if (t_inc%i_time<2 .and. t_inc%i_time>0) then
       rewind (43234059)
-      read (43234059, *)           ! skip first line to keep serial number
+      if (.not. test('noserial')) read (43234059, *) ! skip first line to keep serial number
     end if
 
     call timing_start('Time in Iteration')
@@ -383,13 +391,13 @@ program kkrcode
     if (myrank==master) call print_time_and_date('Iteration finished')
 
   end do                           ! scf-iteration
-  !!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-  !!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< SCF-ITERATION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< SCF-ITERATION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! close allocated arrays and finalize MPI >>>>>>>>>>>>>>>
-  !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+  ! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
   i_all = -product(shape(t_inc%kmesh))*kind(t_inc%kmesh)
   deallocate (t_inc%kmesh, stat=i_stat)
@@ -898,8 +906,8 @@ program kkrcode
   ! finalize MPI
   call mpi_finalize(ierr)
 #endif
-  !!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-  !!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< close allocated arrays and finalize MPI !!!!!!!!!!!!!!!
+  ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< close allocated arrays and finalize MPI !!!!!!!!!!!!!!!
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 end program kkrcode

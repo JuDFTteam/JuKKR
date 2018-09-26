@@ -27,7 +27,7 @@ contains
     use :: mod_create_newmesh
     use :: mod_version_info
     use :: mod_wunfiles, only: t_params
-    use :: constants
+    use :: mod_constants
     use :: mod_profiling
     use :: mod_datatypes, only: dp
 

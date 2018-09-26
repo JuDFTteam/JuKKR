@@ -1,23 +1,29 @@
 module mod_dirbslag
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: dirbslag
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Lagrangian interpolation
+  !> Author: 
+  !> Category: KKRhost, dirac, numerical-tools
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Lagrangian interpolation of Y(X) at position XI
+  !>
+  !> XI      entry into x-array
+  !>         for regular solution:   X(IND1-1) < XI <=X(IND1)  
+  !>         for irregular solution: X(IND1)   < XI <=X(IND1+1)
+  !> X/Y     X/Y-arrays
+  !> N       order of lagrangian interpolation
+  !> IND     min-I for which  X(I) > XI
+  !> IMAX    max index of X/Y-arrays
+  !-------------------------------------------------------------------------------
   subroutine dirbslag(xi, y1i, y2i, y3i, y4i, y1, y2, y3, y4, ind1, n, imax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *      lagrangian interpolation of Y(X) at position XI             *
-    ! *                                                                  *
-    ! *      XI      entry into x-array                                  *
-    ! *              for regular solution:   X(IND1-1) < XI <=X(IND1)    *
-    ! *              for irregular solution: X(IND1)   < XI <=X(IND1+1)  *
-    ! *      X/Y     X/Y-arrays                                          *
-    ! *      N       order of lagrangian interpolation                   *
-    ! *      IND     min-I for which  X(I) > XI                          *
-    ! *      IMAX    max index of X/Y-arrays                             *
-    ! *                                                                  *
-    ! ********************************************************************
+
+    use :: mod_datatypes, only: dp
     implicit none
 
     ! Dummy arguments

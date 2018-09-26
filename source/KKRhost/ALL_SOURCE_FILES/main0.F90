@@ -28,7 +28,7 @@ module mod_main0
 #ifdef CPP_TIMING
   use :: mod_timing
 #endif
-  use :: constants
+  use :: mod_constants
   use :: memoryhandling
   use :: global_variables
   use :: mod_create_newmesh
@@ -905,7 +905,7 @@ contains
     ! calculate Madelung constants (needed only for SCF calculations)
     ! -------------------------------------------------------------------------
     ! fivos      IF ( SCFSTEPS.GT.1 .OR. ICC.GT.0 ) THEN
-    if (npol/=0) then              ! No madelung calculation in case of DOS.
+    if (npol/=0 .or. opt('DECIMATE')) then ! No madelung calculation in case of DOS., needed for demination nevertheless
       ! OPEN(99,FILE='madelinfo.txt')
 
       !> @note Use option 'ewald2d' if the madelung summation is to be carried out in

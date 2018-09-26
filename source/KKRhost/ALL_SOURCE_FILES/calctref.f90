@@ -1,75 +1,75 @@
 module mod_calctref13
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: calctref13
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates singel-site t-matrix for reference system
+  !> Author: 
+  !> Category: KKRhost, single-site, reference-system
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Calculates analytically the single-site scattering matrix for a
+  !>    constant potential Vo at energy E                           
+  !>                                                                
+  !>    input: potential radius RMTREF (R)                          
+  !>           energy ERYD (E)                                      
+  !>           potential constant value VREF (Vo)                   
+  !>   output: single-site matrix TREFLL                            
+  !>           energy derivative DRTREFLL                           
+  !>                                                                
+  !>                 aj(l+1,aR)j(l,bR) - bj(l,aR)j(l+1,bR)          
+  !>     tmat(l) = - ------------------------------------           
+  !>                 j(l,bR)h(l+1,aR)a - bh(l,aR)j(l+1,bR)          
+  !>                                                                
+  !>     a = sqrt(E),  b = sqrt(E-Vo)                               
+  !>                                                                
+  !> Derivative of t: the analytical formula for the derivative of
+  !> spherical Bessel functions is used:
+  !> (imported from KKRnano by Phivos Mavropoulos 10.10.2013)
+  !>
+  !> d                     l+1
+  !> --  j (x) = j   (x) - --- j (x)
+  !> dx   l       l-1       x   l
+  !>
+  !> d
+  !> --  j (x) = - j (x)
+  !> dx   0         1
+  !>
+  !> which for x = sqrt(E0)*r leads to
+  !>
+  !> d           r*r             (l+1)
+  !> --- j (x) = --- ( j   (x) - ----- j (x) )
+  !> dE0  l      2 x    l-1        x    l
+  !>
+  !> d             r*r
+  !> --- j (x) = - --- j (x)
+  !> dE0  0        2 x  1
+  !>
+  !-------------------------------------------------------------------------------
   subroutine calctref13(eryd, vref, rmtref, lmax, lmtmat, trefll, dtrefll, alpharef, dalpharef, lmaxdp1, lmmaxd)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *  calculates analytically the single-site scattering matrix for a *
-    ! *  constant potential Vo at energy E                               *
-    ! *                                                                  *
-    ! *  input: potential radius RMTREF (R)                              *
-    ! *         energy ERYD (E)                                          *
-    ! *         potential constant value VREF (Vo)                       *
-    ! * output: single-site matrix TREFLL                                *
-    ! *         energy derivative DRTREFLL                               *
-    ! *                                                                  *
-    ! *               aj(l+1,aR)j(l,bR) - bj(l,aR)j(l+1,bR)              *
-    ! *   tmat(l) = - ------------------------------------               *
-    ! *               j(l,bR)h(l+1,aR)a - bh(l,aR)j(l+1,bR)              *
-    ! *                                                                  *
-    ! *   a = sqrt(E),  b = sqrt(E-Vo)                                   *
-    ! *                                                                  *
-    ! Derivative of t: the analytical formula for the derivative of
-    ! spherical Bessel functions is used:
-    ! (imported from KKRnano by Phivos Mavropoulos 10.10.2013)
 
-    ! d                     l+1
-    ! --  j (x) = j   (x) - --- j (x)
-    ! dx   l       l-1       x   l
-
-    ! d
-    ! --  j (x) = - j (x)
-    ! dx   0         1
-
-    ! which for x = sqrt(E0)*r leads to
-
-    ! d          r*r             (l+1)
-    ! --- j (x) = --- ( j   (x) - ----- j (x) )
-    ! dE0  l      2 x    l-1        x    l
-
-    ! d            r*r
-    ! --- j (x) = - --- j (x)
-    ! dE0  0        2 x  1
-
-    ! ********************************************************************
-
-    use :: mod_beshan
-    use :: mod_cinit
+    use :: mod_datatypes, only: dp
+    use :: mod_beshan, only: beshan
+    use :: mod_cinit, only: cinit
     implicit none
     ! ..
     ! .. Scalar arguments
     ! Input:
-    complex (kind=dp) :: eryd      ! energy
+    complex (kind=dp) :: eryd      !! energy
     integer :: lmax, lmaxdp1, lmmaxd
-    real (kind=dp) :: vref, rmtref ! repulsive potential and its radius
+    real (kind=dp) :: vref, rmtref !! repulsive potential and its radius
 
     ! Output:
     integer :: lmtmat
     ! ..
     ! .. Array arguments ..
     ! Output:
-    complex (kind=dp) :: trefll(lmmaxd, lmmaxd) ! t-matrix
-    complex (kind=dp) :: dtrefll(lmmaxd, lmmaxd) ! energy derivative of t-matrix
-    ! ! LLY Lloyd
-    complex (kind=dp) :: alpharef(0:lmaxdp1-1), dalpharef(0:lmaxdp1-1) ! alpha
-    ! matrix
-    ! and
-    ! derivative
-    ! ! LLY
-    ! Lloyd
+    complex (kind=dp) :: trefll(lmmaxd, lmmaxd) !! t-matrix
+    complex (kind=dp) :: dtrefll(lmmaxd, lmmaxd) !! energy derivative of t-matrix
+    complex (kind=dp) :: alpharef(0:lmaxdp1-1), dalpharef(0:lmaxdp1-1) !! alpha matrix and derivative
     ! ..
     ! .. Local scalars
     integer :: j1, l1, lm1
@@ -78,10 +78,8 @@ contains
     complex (kind=dp) :: ci, ciove
     ! ..
     ! .. Local arrays
-    ! Bessel & Hankel
-    ! Derivatives
     complex (kind=dp) :: bessjw1(0:lmaxdp1), bessjw2(0:lmaxdp1), bessyw1(0:lmaxdp1), bessyw2(0:lmaxdp1), hankws1(0:lmaxdp1), hankws2(0:lmaxdp1), dbessjw1(0:lmaxdp1), &
-      dbessjw2(0:lmaxdp1), dhankws1(0:lmaxdp1)
+      dbessjw2(0:lmaxdp1), dhankws1(0:lmaxdp1) !! Bessel & Hankel Derivatives
     ! ..
     ! .. Data statement
     data ci/(0e0_dp, 1e0_dp)/
@@ -116,8 +114,6 @@ contains
       dbessjw2(l1) = 0.5e0_dp*dbessjw2(l1)*rmtref**2
       dhankws1(l1) = 0.5e0_dp*dhankws1(l1)*rmtref**2
     end do
-
-
 
     do l1 = 0, lmax
       a1 = roote1*bessjw1(l1+1)*bessjw2(l1) - roote2*bessjw1(l1)*bessjw2(l1+1)

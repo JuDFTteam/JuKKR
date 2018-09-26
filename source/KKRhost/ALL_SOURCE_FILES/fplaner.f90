@@ -1,36 +1,42 @@
 module mod_fplaner
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: fplaner
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Derivative of real-space contribution to Ewald sum
+  !> Author: 
+  !> Category: KKRhost, geometry
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> This sub calculates the derivatives of the real
+  !> space contribution to the ewald sum .
+  !>
+  !>              l
+  !>             d     erfc(lamda*sqrt(d*d+z*z))
+  !>      lim    --   ------------------------
+  !>      z->0     l        sqrt(d*d+z*z)
+  !>             dz
+  !>
+  !> Up to l = 4 (l=1,3,5,7 etc vanish)
+  !-------------------------------------------------------------------------------
   subroutine fplaner(alpha, g, r)
-    ! ************************************************
-    ! This sub calculates the derivatives of the real
-    ! space contribution to the ewald sum .
 
-    ! l
-    ! d     erfc(lamda*sqrt(d*d+z*z))
-    ! lim    --   ------------------------
-    ! z->0     l        sqrt(d*d+z*z)
-    ! dz
-
-    ! Up to l = 4 (l=1,3,5,7 etc vanish)
-
-
-
-    ! ************************************************
-
+    use :: mod_datatypes, only: dp
+    use :: mod_constants, only: pi
     implicit none
+
+    real (kind=dp), parameter :: sqpi = sqrt(pi)
     real (kind=dp) :: alpha, g(0:4), r
     integer :: l
-    real (kind=dp) :: lamda, er, ex, pi, pref, sqpi
+    real (kind=dp) :: lamda, er, ex, pref
 
     do l = 0, 4
       g(l) = 0.e0_dp
     end do
-    pi = 4.e0_dp*atan(1.e0_dp)
-    sqpi = sqrt(pi)
+
     er = erfc(alpha)
     ex = exp(-alpha*alpha)
     lamda = alpha/r

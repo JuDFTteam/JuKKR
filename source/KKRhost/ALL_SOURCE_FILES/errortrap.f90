@@ -2,6 +2,14 @@ module mod_errortrap
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Traps known errors
+  !> Author: 
+  !> Category: KKRhost, sanity-check
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine errortrap(routine, k, istop)
 
     implicit none

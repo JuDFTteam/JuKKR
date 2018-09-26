@@ -4,41 +4,45 @@ module mod_generalpot
 
 contains
 
-  ! **********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Writes potential out interpolated to a generalized radial mesh
+  !> Author: 
+  !> Category: KKRhost, potential, radial-grid
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> The subroutine writes out the potential cards
+  !> in a standard r-mesh that can be read in and
+  !> interpolated to a different r-mesh from subroutine
+  !> start No shape function information is needed
+  !> and all nessecery data are stored in the potential
+  !> card.
+  !>                                      ver. 18.5.2000
+  !>
+  !> @warning Using the general potential and consecutive read-in does not result in a converged
+  !> potential since the convolution with the shape functions is then done twice 
+  !> (which does only not make a difference in the limit l_max-> infinity).
+  !> @endwarning
+  !-------------------------------------------------------------------------------
   subroutine generalpot(ifile, natps, natyp, nspin, z, alat, rmt, rmtnew, rws, r, drdi, vm2z, irws, a, b, ins, irns, lpot, vins, qbound, irc, kshape, efermi, vbc, ecore, lcore, &
     ncore, lmpotd, irmd, irmind)
-    ! **************************************************
-    ! * The subroutine writes out the potential cards
-    ! * in a standard r-mesh that can be read in and
-    ! * interpolated to a different r-mesh from subroutine
-    ! * start No shape function information is needed
-    ! * and all nessecery data are stored in the potential
-    ! * card.
-    ! *                                      ver. 18.5.2000
-    ! ***************************************************
-    ! ..
+
     implicit none
-    ! ..
-    ! .. Scalar Arguments ..
+
     integer :: lmpotd, irmd, irmind
     real (kind=dp) :: alat, qbound
     integer :: ifile, ins, kshape, lpot, natps, natyp, nspin
-    ! ..
-    ! .. Array Arguments ..
+
     real (kind=dp) :: a(*), b(*), drdi(irmd, *), ecore(20, *), efermi, r(irmd, *), rmt(*), rmtnew(*), rws(*), vbc(2), vins(irmind:irmd, lmpotd, *), vm2z(irmd, *), z(*)
     integer :: irc(*), irns(*), irws(*), lcore(20, *), ncore(*)
-    ! ..
-    ! .. Local Scalars ..
+
     real (kind=dp) :: a1, b1, rmax, rmt1, rmtnw1, rv, sum, z1, parsum, parsumderiv, r0, rinter, dr, maxa
     integer :: i, icore, ih, ip, ir, irmin, irns1, is, isave, j, lm, lmnr, lmpot, ncore1, nr, nz1, nr_u, irmin_u, irns_u, imt1, lm1, irnstot
-    ! ..
-    ! .. Local Arrays ..
+
     real (kind=dp) :: dradi(irmd), ecore1(20), ra(irmd), vm2za(irmd), rr_u(irmd)
     real (kind=dp) :: vm2zb(irmd), vm2z_u(irmd), vins_u(irmind:irmd, lmpotd), vinsa(irmind:irmd, lmpotd), vinsb(irmind:irmd, lmpotd)
     integer :: lcore1(20)
     character (len=4) :: elemname(0:113)
-    ! ..
-    ! .. Intrinsic Functions ..
+
     intrinsic :: sqrt
     ! 1      2      3      4      5      6      7      8      9
     data elemname/'VAC', 'H   ', 'He  ', 'Li  ', 'Be  ', 'B   ', 'C   ', 'N   ', 'O   ', 'F   ', 'Ne  ', 'Na  ', 'Mg  ', 'Al  ', 'Si  ', 'P   ', 'S   ', 'Cl  ', 'Ar  ', 'K   ', &
@@ -47,6 +51,7 @@ contains
       'Sm  ', 'Eu  ', 'Gd  ', 'Tb  ', 'Dy  ', 'Ho  ', 'Er  ', 'Tm  ', 'Yb  ', 'Lu  ', 'Hf  ', 'Ta  ', 'W   ', 'Re  ', 'Os  ', 'Ir  ', 'Pt  ', 'Au  ', 'Hg  ', 'Tl  ', 'Pb  ', &
       'Bi  ', 'Po  ', 'At  ', 'Rn  ', 'Fr  ', 'Ra  ', 'Ac  ', 'Th  ', 'Pa  ', 'U   ', 'Np  ', 'Pu  ', 'Am  ', 'Cm  ', 'Bk  ', 'Cf  ', 'Es  ', 'Fm  ', 'Md  ', 'No  ', 'Lr  ', &
       'Rf  ', 'Db  ', 'Sg  ', 'Bh  ', 'Hs  ', 'Mt  ', 'Uun ', 'Uuu ', 'Uub ', 'NoE '/
+
 
     isave = 1
     lmpot = (lpot+1)*(lpot+1)
@@ -247,22 +252,30 @@ contains
 270 format (10i5)
 280 format (1p, 4d20.13)
   end subroutine generalpot
-  ! **********************************************************************
 
-  ! ***********************************************************************
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Second derivative of interpolating function for spline interpolation
+  !> Author: 
+  !> Category: KKRhost, numerical-tools
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> @note Doubling of interpolspline? @endnote
+  !>
+  !> Given arrays x(1:n) and  y(1:n) containing a tabulated function,
+  !> i.e., y i = f(xi), with x1<x2<...<xN , and given values yp1 and ypn
+  !> for the rst derivative of the interpolating function at points
+  !> 1 and n, respectively, this routine returns an array y2(1:n) of
+  !> length n which contains the second derivatives of the interpolating
+  !> function at the tabulated points xi.
+  !> If yp1 and/or ypn are equal to 1.e30 or larger, the routine is
+  !> signaled to set the corresponding boundary condition for a natural
+  !> spline, with zero second derivative on that boundary.
+  !> Parameter: NMAX is the largest anticipated value of n.
+  !> Taken from "Numerical Recipes in Fortran 77", W.H.Press et al.
+  !-------------------------------------------------------------------------------
   subroutine spline(nmax, x, y, n, yp1, ypn, y2)
-    ! Given arrays x(1:n) and  y(1:n) containing a tabulated function,
-    ! i.e., y i = f(xi), with x1<x2<...<xN , and given values yp1 and ypn
-    ! for the rst derivative of the interpolating function at points
-    ! 1 and n, respectively, this routine returns an array y2(1:n) of
-    ! length n which contains the second derivatives of the interpolating
-    ! function at the tabulated points xi.
-    ! If yp1 and/or ypn are equal to 1.e30 or larger, the routine is
-    ! signaled to set the corresponding boundary condition for a natural
-    ! spline, with zero second derivative on that boundary.
-    ! Parameter: NMAX is the largest anticipated value of n.
-    ! Taken from "Numerical Recipes in Fortran 77", W.H.Press et al.
+
     implicit none
     integer :: n, nmax
     real (kind=dp) :: yp1, ypn, x(nmax), y(nmax), y2(nmax)
@@ -306,27 +319,38 @@ contains
 
     return
   end subroutine spline
-  ! **********************************************************************
 
-  ! **********************************************************************
+
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates cubic spline interpolated value and derivative
+  !> Author: 
+  !> Category: KKRhost, numerical-tools
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> @note Doubling of `splint_real`? @endnote
+  !>
+  !> Given the arrays xa(1:n) and ya(1:n) of length n, which tabulate a
+  !> function (with the xai's in order), and given the array y2a(1:n), which
+  !> is the output from spline above, and given a value of x, this routine
+  !> returns a cubic-spline interpolated value y and the derivative yderiv.
+  !> Taken from "Numerical Recipes in Fortran 77", W.H.Press et al.
+  !-------------------------------------------------------------------------------
   subroutine splint(xa, ya, y2a, n, x, y, yderiv)
-    ! Given the arrays xa(1:n) and ya(1:n) of length n, which tabulate a
-    ! function (with the xai's in order), and given the array y2a(1:n), which
-    ! is the output from spline above, and given a value of x, this routine
-    ! returns a cubic-spline interpolated value y and the derivative yderiv.
-    ! Taken from "Numerical Recipes in Fortran 77", W.H.Press et al.
+
     implicit none
     real (kind=dp), parameter :: eps = 1.0e-12_dp
     integer :: n
     real (kind=dp) :: x, y, yderiv, xa(*), ya(*), y2a(*)
     integer :: k, khi, klo
     real (kind=dp) :: a, b, h
-    ! We will find the right place in the table by means of bisection.
-    ! This is optimal if sequential calls to this routine are at random
-    ! values of x. If sequential calls are in order, and closely
-    ! spaced, one would do better to store previous values of
-    ! klo and khi and test if they remain appropriate on the
-    ! next call.
+
+    !! We will find the right place in the table by means of bisection.
+    !! This is optimal if sequential calls to this routine are at random
+    !! values of x. If sequential calls are in order, and closely
+    !! spaced, one would do better to store previous values of
+    !! klo and khi and test if they remain appropriate on the
+    !! next call.
+
     klo = 1
     khi = n
 100 if (khi-klo>1) then
@@ -350,16 +374,20 @@ contains
 
     return
   end subroutine splint
-  ! **********************************************************************
 
-  ! **********************************************************************
-  ! ************************************************************************
-
+  !-------------------------------------------------------------------------------
+  !> Summary: Remove doubles points in radial mesh
+  !> Author: 
+  !> Category: KKRhost, radial-grid
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Gets rid of the double-points in the radial mesh, i.e. the points
+  !> where RR(I) = RR(I-1). Returns the "new" mesh in the same array,
+  !> and rearranges accordingly the WAVEF defined at the same mesh.
+  !> IRMAX is also altered to the new value.
+  !-------------------------------------------------------------------------------
   subroutine doubleraus1(irmax, irmin, lmpot, rr, drdi, vpot, vins, irmd, irmind, lmpotd)
-    ! Gets rid of the double-points in the radial mesh, i.e. the points
-    ! where RR(I) = RR(I-1). Returns the "new" mesh in the same array,
-    ! and rearranges accordingly the WAVEF defined at the same mesh.
-    ! IRMAX is also altered to the new value.
+
     implicit none
     integer :: irmd, lmpotd, irmind
     integer :: ncountmax

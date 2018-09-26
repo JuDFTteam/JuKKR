@@ -21,9 +21,11 @@ extra_filetypes: 1 #
 source: true
 graph: false 
 coloured_edges: true
-search: false
-warn: true
-parallel: 4
+search: true 
+warn: true 
+license: by-nc
+version: 1.1.1
+project_website: https://iffgit.fz-juelich.de/kkr/kkrjm
 dbg: true
 
 This is the introductory text ...

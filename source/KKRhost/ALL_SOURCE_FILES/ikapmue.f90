@@ -2,19 +2,22 @@ module mod_ikapmue
 
 contains
 
-  function ikapmue(kappa, muem05)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *  INDEXING OF MATRIX-ELEMENTS:                                    *
-    ! *                                                                  *
-    ! *  I = 2*L*(J+1/2) + J + MUE + 1                                   *
-    ! *                                                                  *
-    ! ********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Get combined (kappa,mue) index from kappa and mue
+  !> Author: 
+  !> Category: KKRhost, dirac, special-functions
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> INDEXING OF MATRIX-ELEMENTS:                                    *
+  !>                                                                 *
+  !> I = 2*L*(J+1/2) + J + MUE + 1
+  !-------------------------------------------------------------------------------
+  integer function ikapmue(kappa, muem05)
+
     implicit none
 
     ! Dummy arguments
     integer :: kappa, muem05
-    integer :: ikapmue
 
     ! Local variables
     integer :: iabs

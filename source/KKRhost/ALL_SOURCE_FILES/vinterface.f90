@@ -34,68 +34,40 @@ contains
   subroutine vinterface(cmom, cminst, lpot, nspin, nlayers, natyp, v, zat, r, irws, ircut, ipan, kshape, noq, kaoez, iqat, conc, catom, icc, hostimp, nlbasis, nleft, nrbasis, &
     nright, cmomhost, chrgnt, vinters, naez, lmpot)
 
-    use :: constants
+    use :: mod_constants
     use :: global_variables
     use :: mod_datatypes, only: dp
 
     implicit none
 
     ! .. Input variables ..
-    integer, intent (in) :: icc    !! Enables the calculation of off-diagonal
-    ! elements of the GF.(0=SCF/DOS; 1=cluster;
-    ! -1=custom)
-    integer, intent (in) :: lpot   !! Maximum l component in potential
-    ! expansion
+    integer, intent (in) :: icc    !! Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
+    integer, intent (in) :: lpot   !! Maximum l component in potential expansion
     integer, intent (in) :: naez   !! Number of atoms in unit cell
     integer, intent (in) :: lmpot  !! (LPOT+1)**2
     integer, intent (in) :: nspin  !! Counter for spin directions
     integer, intent (in) :: natyp  !! Number of kinds of atoms in unit cell
-    integer, intent (in) :: nleft  !! Number of repeated basis for left host
-    ! to get converged electrostatic potentials
-    integer, intent (in) :: nright !! Number of repeated basis for right host
-    ! to get converged electrostatic potentials
+    integer, intent (in) :: nleft  !! Number of repeated basis for left host to get converged electrostatic potentials
+    integer, intent (in) :: nright !! Number of repeated basis for right host to get converged electrostatic potentials
     integer, intent (in) :: kshape !! Exact treatment of WS cell
     integer, intent (in) :: nlayers
-    integer, intent (in) :: nlbasis !! Number of basis layers of left host
-    ! (repeated units)
-    integer, intent (in) :: nrbasis !! Number of basis layers of right host
-    ! (repeated units)
+    integer, intent (in) :: nlbasis !! Number of basis layers of left host (repeated units)
+    integer, intent (in) :: nrbasis !! Number of basis layers of right host (repeated units)
     real (kind=dp), intent (in) :: chrgnt
-    integer, dimension (naez), intent (in) :: noq !! Number of diff. atom types
-    ! located
+    integer, dimension (naez), intent (in) :: noq !! Number of diff. atom types located
     integer, dimension (natyp), intent (in) :: irws !! R point at WS radius
-    integer, dimension (natyp), intent (in) :: ipan !! Number of panels in
-    ! non-MT-region
-    integer, dimension (natyp), intent (in) :: iqat !! The site on which an
-    ! atom is located on a given
-    ! site
+    integer, dimension (natyp), intent (in) :: ipan !! Number of panels in non-MT-region
+    integer, dimension (natyp), intent (in) :: iqat !! The site on which an atom is located on a given site
     integer, dimension (0:natyp), intent (in) :: hostimp
-    integer, dimension (0:ipand, natyp), intent (in) :: ircut !! R points of
-    ! panel borders
-    integer, dimension (natyp, naez+nembd1-1), intent (in) :: kaoez !! Kind of
-    ! atom at
-    ! site in
-    ! elem. cell
+    integer, dimension (0:ipand, natyp), intent (in) :: ircut !! R points of panel borders
+    integer, dimension (natyp, naez+nembd1-1), intent (in) :: kaoez !! Kind of atom at site in elem. cell
     real (kind=dp), dimension (natyp), intent (in) :: zat !! Nuclear charge
-    real (kind=dp), dimension (natyp), intent (in) :: conc !! Concentration of
-    ! a given atom
+    real (kind=dp), dimension (natyp), intent (in) :: conc !! Concentration of a given atom
     real (kind=dp), dimension (natyp), intent (in) :: catom
-    real (kind=dp), dimension (irmd, natyp), intent (in) :: r !! Radial mesh (
-    ! in units a Bohr)
-    real (kind=dp), dimension (lmpot, natyp), intent (in) :: cmom !! LM moment
-    ! of total
-    ! charge
-    real (kind=dp), dimension (lmpot, natyp), intent (in) :: cminst !! charge
-    ! moment of
-    ! interstitial
-    real (kind=dp), dimension (lmpot, nembd1), intent (in) :: cmomhost !!
-    ! Charge
-    ! moments
-    ! of each
-    ! atom of
-    ! the
-    ! (left/right)
-    ! host
+    real (kind=dp), dimension (irmd, natyp), intent (in) :: r !! Radial mesh (in units a Bohr)
+    real (kind=dp), dimension (lmpot, natyp), intent (in) :: cmom !! LM moment of total charge
+    real (kind=dp), dimension (lmpot, natyp), intent (in) :: cminst !! charge moment of interstitial
+    real (kind=dp), dimension (lmpot, nembd1), intent (in) :: cmomhost !! Charge moments of each atom of the (left/right) host
     ! .. In/out variables
     real (kind=dp), dimension (irmd, lmpot, npotd), intent (inout) :: v
 

@@ -1,22 +1,26 @@
 module mod_cjlz
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: cjlz
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Computes spherial Bessel function
+  !> Author: 
+  !> Category: KKRhost, dirac, special-functions
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> SPHERICAL BESSEL-FUNCTION  J(L,Z)  FOR COMPLEX ARGUMENT  Z
+  !> see:  e.g. MERZBACHER EQ. (10.22)
+  !-------------------------------------------------------------------------------
   function cjlz(l, z)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   SPHERICAL BESSEL-FUNCTION  J(L,Z)  FOR COMPLEX ARGUMENT  Z     *
-    ! *                  see:  e.g. MERZBACHER EQ. (10.22)               *
-    ! *                                                                  *
-    ! ********************************************************************
 
+    use :: mod_datatypes, only: dp
+    use :: mod_constants, only: cone
     implicit none
 
     ! PARAMETER definitions
-    complex (kind=dp) :: c1
-    parameter (c1=(1.0e0_dp,0.0e0_dp))
     integer :: lp2max
     parameter (lp2max=25)
 
@@ -41,8 +45,8 @@ contains
         dfac = dfac*real(k, kind=dp)
       end do
 
-      dt = c1
-      t = c1
+      dt = cone
+      t = cone
       do i = 2, 400, 2
         dt = -dt*zsq/real(i*(i+llp1), kind=dp)
         t = t + dt

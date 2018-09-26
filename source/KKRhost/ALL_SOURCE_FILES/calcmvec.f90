@@ -1,30 +1,33 @@
 module mod_calcmvec
 
+  private
+  public :: calcmvec
+
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Magnetization vector in Dirac theory 
+  !> Author: 
+  !> Category: KKRhost, dirac, physical-observables
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Computes the magnetization in Dirac theory
+  !-------------------------------------------------------------------------------
   subroutine calcmvec(nfilcbwf, splitss, iepath, nepath, irel, iprint, nt, nl, mezz, mezj, taut, tsst, iqat, nkmq, nkm, iecurr, netab, igrid, we, mvevdl0, mvevil, bmvevdl0, &
     bmvevil, r2drdi, jrws, imt, amemvec, ikmllim1, ikmllim2, imkmtab, ntmax, nlmax, nmuemax, nqmax, nkmmax, nmmax, nmvecmax, nrmax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *                                                                  *
-    ! ********************************************************************
+
     use :: mod_types, only: t_inc
     use :: mod_datatypes, only: dp
-    use :: mod_cintabr
-    use :: mod_cinit
-    implicit complex (kind=dp)(a-h, o-z)
+    use :: mod_cintabr, only: cintabr
+    use :: mod_cinit, only: cinit
+    use :: mod_constants, only: czero, cone, pi
+    implicit none
 
     ! PARAMETER definitions
-
-    complex (kind=dp) :: c0, c1
-    parameter (c0=(0.0d0,0.0d0), c1=(1.0d0,0.0d0))
-    real (kind=dp) :: pi
-    parameter (pi=3.141592653589793238462643d0)
     complex (kind=dp) :: cpre
-    parameter (cpre=-c1/pi)
+    parameter (cpre=-cone/pi)
 
     ! Dummy arguments
-
     complex (kind=dp) :: we
     integer :: iecurr, iepath, igrid, iprint, irel, nepath, netab, nfilcbwf, nkm, nkmmax, nl, nlmax, nmmax, nmuemax, nmvecmax, nqmax, nrmax, nt, ntmax
     logical :: splitss
@@ -34,14 +37,7 @@ contains
     integer :: ikmllim1(nkmmax), ikmllim2(nkmmax), imkmtab(nkmmax), imt(ntmax), iqat(nqmax, ntmax), jrws(nmmax), nkmq(nqmax)
 
     ! Local variables
-
-    ! F77--------------------------------------------------------------------
-    ! ccc      COMPLEX*16 JF(NRMAX,2,NKMMAX),JG(NRMAX,2,NKMMAX),
-    ! ccc     &           ZF(NRMAX,2,NKMMAX),ZG(NRMAX,2,NKMMAX),
-    ! F77--------------------------------------------------------------------
-    ! F90--------------------------------------------------------------------
     complex (kind=dp), allocatable :: jf(:, :, :), jg(:, :, :), zf(:, :, :), zg(:, :, :)
-    ! F90--------------------------------------------------------------------
     complex (kind=dp) :: bmvevd(ntmax, 3, nmvecmax), bmvevdl(nlmax, 3, nmvecmax), bmvevdm(nlmax, nmuemax, 3, nmvecmax), bmvevi(ntmax, 3, nmvecmax), cwgt, &
       meirr(nkmmax, nkmmax, 3, nmvecmax), mereg(nkmmax, nkmmax, 3, nmvecmax), mvevd(ntmax, 3, nmvecmax), mvevdl(nlmax, 3, nmvecmax), mvevdm(nlmax, nmuemax, 3, nmvecmax), &
       mvevi(ntmax, 3, nmvecmax), w1(nkmmax, nkmmax), w2(nkmmax, nkmmax), w3(nkmmax, nkmmax), zfjf(2, 2), zfzf(2, 2), zgjg(2, 2), zgzg(2, 2)
@@ -52,7 +48,6 @@ contains
     character (len=3) :: str3
 
     ! index 3:  ipol= 1,2,3  ==  (+),(-),(z)
-
 
     check = .true.
     check = .false.
@@ -65,10 +60,10 @@ contains
         do ipol = 1, npol
           do it = 1, nt
             do il = 1, nl
-              mvevdl0(il, it, ipol, imv) = c0
-              mvevil(il, it, ipol, imv) = c0
-              bmvevdl0(il, it, ipol, imv) = c0
-              bmvevil(il, it, ipol, imv) = c0
+              mvevdl0(il, it, ipol, imv) = czero
+              mvevil(il, it, ipol, imv) = czero
+              bmvevdl0(il, it, ipol, imv) = czero
+              bmvevil(il, it, ipol, imv) = czero
             end do
           end do
         end do
@@ -79,12 +74,10 @@ contains
     noswf = nt*nkm
     nmvec = 3
 
-    ! F90--------------------------------------------------------------------
     allocate (jf(nrmax,2,nkmmax), jg(nrmax,2,nkmmax), stat=it)
     if (it/=0) stop '      < CALCMVEC > : allocate JF/JG '
     allocate (zf(nrmax,2,nkmmax), zg(nrmax,2,nkmmax), stat=it)
     if (it/=0) stop '      < CALCMVEC > : allocate ZF/ZG '
-    ! F90--------------------------------------------------------------------
     ! TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
     do it = 1, nt
 
@@ -102,7 +95,6 @@ contains
       ! =======================================================================
       ! calculate matrix elements
       ! =======================================================================
-
       do ikm = 1, n
         read (nfilcbwf, rec=ikm+(it-1)*nkm) iti, li, mj, nsol, str3, (kapcb, ikmcb(k,ikm), (zg(i,k,ikm),zf(i,k,ikm),i=1,jtop), k=1, nsol)
         if (it/=iti) stop ' IT(INI) <> IT  in <MENABIRR>'
@@ -131,22 +123,18 @@ contains
               end do
             end do
           end do
-          ! -------------------------------------- all angular matrix elements =
-          ! 0
+          ! -------------------------------------- all angular matrix elements = 0
           go to 110
-          ! ---------------------------------- non-0 angular matrix elements
-          ! found
-          ! ------------------------------------- calculate radial matrix
-          ! elements
+          ! ---------------------------------- non-0 angular matrix elements found
+          ! ------------------------------------- calculate radial matrix elements
 
 100       continue
+
           call cintabr(zg(1,1,ikmt1), zg(1,1,ikmt2), zgzg, zf(1,1,ikmt1), zf(1,1,ikmt2), zfzf, r2drdi(1,im), nsolcb(ikmt1), nsolcb(ikmt2), jtop, nrmax)
 
           call cintabr(zg(1,1,ikmt1), jg(1,1,ikmt2), zgjg, zf(1,1,ikmt1), jf(1,1,ikmt2), zfjf, r2drdi(1,im), nsolcb(ikmt1), nsolcb(ikmt2), jtop, nrmax)
 
-          ! -------------------------------------- calculate total matrix
-          ! elements
-
+          ! -------------------------------------- calculate total matrix elements
           do k2 = 1, nsolcb(ikmt2)
             ikm2 = ikmcb(k2, ikmt2)
             imkm2 = imkmtab(ikm2)
@@ -229,14 +217,14 @@ contains
             bmvevi(it, ipol, imv) = 0.0d0
           end if
 
-          call zgemm('N', 'N', n, n, n, cpre, mereg(1,1,ipol,imv), m, taut(1,1,it), m, c0, w1, m)
+          call zgemm('N', 'N', n, n, n, cpre, mereg(1,1,ipol,imv), m, taut(1,1,it), m, czero, w1, m)
           cwgt = -1d0
           do j = 1, n
             call zaxpy(n, -cpre, meirr(1,j,ipol,imv), 1, w1(1,j), 1)
             call zcopy(n, taut(1,j,it), 1, w2(1,j), 1)
             call zaxpy(n, cwgt, tsst(1,j,it), 1, w2(1,j), 1)
           end do
-          call zgemm('N', 'N', n, n, n, cpre, mereg(1,1,ipol,imv), m, w2, m, c0, w3, m)
+          call zgemm('N', 'N', n, n, n, cpre, mereg(1,1,ipol,imv), m, w2, m, czero, w3, m)
 
           ! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
           do l = 0, lmax
@@ -307,10 +295,8 @@ contains
     end do
     ! TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 
-    ! F90--------------------------------------------------------------------
     deallocate (jf, jg, zf, zg, stat=it)
     if (it/=0) stop '      < CALCMVEC > : deallocate JF/JG/ZF/ZG'
-    ! F90--------------------------------------------------------------------
     if (splitss .and. ((iepath==1) .and. (iecurr==netab))) then
       do imv = 1, nmvec
         do ipol = 1, npol
@@ -327,8 +313,7 @@ contains
     if ((igrid>=6) .or. (iecurr/=netab) .or. (iepath/=nepath)) return
 
     ! this part of the original Munich subroutine has been moved to
-    !! mvecglobal >
-    ! main2 --> tbkkr2 --> mvecglobal -- see makefile2
+    ! mvecglobal > main2 --> tbkkr2 --> mvecglobal -- see makefile2
 
   end subroutine calcmvec
 

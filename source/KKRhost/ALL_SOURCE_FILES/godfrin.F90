@@ -1,24 +1,19 @@
+!-------------------------------------------------------------------------------
+!> Summary: Godfrin module for sparse matrix inversion
+!> Author: Flaviano Dos Santos
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!> Implementation of Godfrin's algorithm:
+!> EM Godfrin, J Phys Condens Matter 3 (1991) 7843-7848
+!> Extended to handle periodic boundary conditions
+!> Option to use standard sparse solver added
+!-------------------------------------------------------------------------------
 module godfrin
+
   use :: mod_datatypes, only: dp
-  ! Implementation of Godfrin's algorithm:
-  ! EM Godfrin, J Phys Condens Matter 3 (1991) 7843-7848
-  ! Extended to handle periodic boundary conditions
-  ! Option to use standard sparse solver added
+  use :: mod_constants, only: cone, czero
 
   implicit none
-
-  type :: type_godfrin             ! GODFRIN Flaviano
-    ! For the input parameters of the godfrin inversion scheme
-    ! na: number of atoms, nb: number of blocks
-    integer :: na, nb
-    ! ldiag: diagonal part of inverse only, lper: periodic system, lpardiso:
-    ! use PARDISO solver instead
-    logical :: ldiag, lper, lpardiso
-    ! bdims: block dimensions (how many atoms in each block)
-    integer, allocatable :: bdims(:)
-  end type type_godfrin
-
-  type (type_godfrin), save :: t_godfrin ! GODFRIN Flaviano
 
   ! Only the driver is made public
   private
@@ -27,17 +22,34 @@ module godfrin
   public :: bcast_params_godfrin
 #endif
 
+  !-------------------------------------------------------------------------------
+  !> Summary: For the input parameters of the godfrin inversion scheme
+  !> Author: Flaviano Dos Santos
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !-------------------------------------------------------------------------------
+  type :: type_godfrin             ! GODFRIN Flaviano
+    !> na: number of atoms, nb: number of blocks
+    integer :: na, nb
+    !> ldiag: diagonal part of inverse only, lper: periodic system, lpardiso:
+    !> use PARDISO solver instead
+    logical :: ldiag, lper, lpardiso
+    !> bdims: block dimensions (how many atoms in each block)
+    integer, allocatable :: bdims(:)
+  end type type_godfrin
+
+  type (type_godfrin), save :: t_godfrin ! GODFRIN Flaviano
+
   ! -----------------------------------------------------------------------
   ! Variables set by sparse_inverse
-  ! Number of blocks of matrix A, maximum size of each block
+  !> Number of blocks of matrix A, maximum size of each block
   integer :: nb, mb
-  ! Dimension of each block of matrix A
+  !> Dimension of each block of matrix A
   integer, allocatable :: bdims(:)
-  ! Storage for the non-zero elements of matrix A
+  !> Storage for the non-zero elements of matrix A
   complex (kind=dp), allocatable :: aii(:, :, :), aij(:, :, :), aji(:, :, :)
-  ! Storage for coefficients of recursion
+  !> Storage for coefficients of recursion
   complex (kind=dp), allocatable :: x(:, :, :), y(:, :, :), tmp(:, :), c(:, :), d(:, :)
-  ! Extra storage for periodic case
+  !> Extra storage for periodic case
   complex (kind=dp), allocatable :: borders(:, :, :, :), delta(:, :)
   ! ----------------------------------------------------------------------
   ! Variables needed to call LAPACK routines
@@ -46,54 +58,56 @@ module godfrin
   complex (kind=dp), allocatable :: work(:)
   ! ----------------------------------------------------------------------
   ! Some parameters
-  complex (kind=dp), parameter :: czero = (0.e0_dp, 0.e0_dp), cone = (1.e0_dp, 0.e0_dp)
-  complex (kind=dp), parameter :: cminus = (-1.e0_dp, 0.e0_dp)
+  complex (kind=dp), parameter :: cminus = -cone
   ! ----------------------------------------------------------------------
-  ! Switch to print or not the running time
+  !> Switch to print or not the running time
   logical, parameter :: ltiming = .false.
 
 
 contains
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Main driver for sparse matrix inversion
+  !> Author: Flaviano Dos Santos
+  !> Category: KKRhost, structural-greensfunction, numerical-tool
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Typical dimensions:
+  !> --> na = nlayers*nlms, nlayers number of layers, nlms is
+  !> nspin*(lmax+1)^2
+  !> If screened structure constants truncated after nscreen layers:
+  !> --> na = (nlayers/nscreen)*(nscreen*nlms) = nblocks*blockdim
+  !> assuming nlayers is divisible by nscreen
+  !> In general na >= sum(blockdims(1:nblocks))
+  !>
+  !> @warning: if the matrix a is not diagonally dominant this routine might
+  !> be inaccurate
+  !> @endwarning
+  !-------------------------------------------------------------------------------
   subroutine sparse_inverse(a, na, nblocks, blockdims, diagonal, periodic, use_pardiso)
-    ! Main driver for sparse matrix inversion
-    ! Typical dimensions:
-    ! --> na = nlayers*nlms, nlayers number of layers, nlms is
-    ! nspin*(lmax+1)^2
-    ! If screened structure constants truncated after nscreen layers:
-    ! --> na = (nlayers/nscreen)*(nscreen*nlms) = nblocks*blockdim
-    ! assuming nlayers is divisible by nscreen
-    ! In general na >= sum(blockdims(1:nblocks))
-
-    ! ************************************************************************************
-    ! WARNING: if the matrix a is not diagonally dominant this routine might
-    ! be inaccurate
-    ! ************************************************************************************
 
     implicit none
 
-
-    ! Size of square matrix a in memory
+    !> Size of square matrix a in memory
     integer, intent (in) :: na
-    ! Block tridiagonal matrix a to be inverted
+    !> Block tridiagonal matrix a to be inverted
     complex (kind=dp), intent (inout) :: a(na, na)
-    ! Number of blocks of square matrix a
+    !> Number of blocks of square matrix a
     integer, intent (in) :: nblocks
-    ! Dimensions of each block
+    !> Dimensions of each block
     integer, intent (in) :: blockdims(nblocks)
-    ! Only diagonal blocks of inverse?
+    !> Only diagonal blocks of inverse?
     logical, intent (in) :: diagonal
-    ! Periodic boundary conditions?
+    !> Periodic boundary conditions?
     logical, intent (in) :: periodic
-    ! Use MKL sparse solver instead?
+    !> Use MKL sparse solver instead?
     logical, intent (in) :: use_pardiso
     ! ----------------------------------------------------------------------
-    ! Reallocate memory?
+    !> Reallocate memory?
     logical :: reallocate
     ! Variables needed to run the PARDISO solver
-    integer *8 :: pt(64)           ! this is 4 bytes for 32-bit OS and 8 bytes
-    ! for 64-bit OS
+    integer *8 :: pt(64)           !! this is 4 bytes for 32-bit OS and 8 bytes for 64-bit OS
     integer :: iparm(64), maxfct, mnum, phase, msglvl, mtype, n, ntot
     integer, allocatable :: ia(:), ja(:), perm(:)
     complex (kind=dp), allocatable :: asparse(:), b(:, :)
@@ -213,34 +227,39 @@ contains
     ! -----------------------------------------------------------------------
 
 
-    ! -----------------------------------------------------------------------
+    !-------------------------------------------------------------------------------
+    !> Summary: Copies the matrix A to storage in compressed sparse row format
+    !> Author: Flaviano Dos Santos
+    !> Category: KKRhost, structural-greensfunction, numerical-tool
+    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+    !>
+    !> Fills in matrix B with unit matrix
+    !-------------------------------------------------------------------------------
     subroutine sparse_fill(k, a, na, asparse, b, nb, bdims, ntot, ia, ja, periodic)
-      ! Copies the matrix A to storage in compressed sparse row format
-      ! Fills in matrix B with unit matrix
 
       implicit none
 
-      ! Number of rows/columns of A, number of non-zero blocks
+      !> Number of rows/columns of A, number of non-zero blocks
       integer, intent (in) :: k
-      ! The size of the matrix A in storage
+      !> The size of the matrix A in storage
       integer, intent (in) :: na
-      ! The target matrix
+      !> The target matrix
       complex (kind=dp), intent (inout) :: a(na, na)
-      ! Total number of non-zero elements
+      !> Total number of non-zero elements
       integer, intent (in) :: ntot
-      ! The non-zero blocks stored in compressed sparse row format
+      !> The non-zero blocks stored in compressed sparse row format
       complex (kind=dp), intent (out) :: asparse(ntot)
-      ! Unit matrix
+      !> Unit matrix
       complex (kind=dp), intent (out) :: b(k, k)
-      ! Number of blocks per row/column
+      !> Number of blocks per row/column
       integer, intent (in) :: nb
-      ! Size of each block
+      !> Size of each block
       integer, intent (in) :: bdims(nb)
-      ! Non-zero rows
+      !> Non-zero rows
       integer, intent (out) :: ia(k+1)
-      ! Non-zero columns in each row
+      !> Non-zero columns in each row
       integer, intent (out) :: ja(ntot)
-      ! Periodic blocks
+      !> Periodic blocks
       logical, intent (in) :: periodic
       ! ----------------------------------------------------------------------
       integer :: i, ib, i0, j, jb, j0, m, n, itot
@@ -314,17 +333,22 @@ contains
     ! -----------------------------------------------------------------------
 
 
-    ! -----------------------------------------------------------------------
+    !-------------------------------------------------------------------------------
+    !> Summary: Copy tridiagonals of matrix A
+    !> Author: Flaviano Dos Santos
+    !> Category: KKRhost, structural-greensfunction, numerical-tool
+    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+    !>
+    !-------------------------------------------------------------------------------
     subroutine tridiag_save(a, na, periodic)
-      ! Copy tridiagonals of matrix A
 
       implicit none
 
-      ! Size of square matrix a in memory
+      !> Size of square matrix a in memory
       integer, intent (in) :: na
-      ! Block tridiagonal matrix a to be inverted
+      !> Block tridiagonal matrix a to be inverted
       complex (kind=dp), intent (inout) :: a(na, na)
-      ! Corner blocks?
+      !> Corner blocks?
       logical, intent (in) :: periodic
       ! -------------------------------
       integer :: i, i0, j0, m, n
@@ -373,18 +397,23 @@ contains
     ! -----------------------------------------------------------------------
 
 
-    ! -----------------------------------------------------------------------
+    !-------------------------------------------------------------------------------
+    !> Summary: Fills in the diagonal of the matrix inverse
+    !> Author: Flaviano Dos Santos
+    !> Category: KKRhost, structural-greensfunction, numerical-tool
+    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+    !>
+    !> Also computes the first/last row/column for periodic blocks
+    !-------------------------------------------------------------------------------
     subroutine get_diagonal(a, na, periodic)
-      ! Fills in the diagonal of the matrix inverse
-      ! Also computes the first/last row/column for periodic blocks
 
       implicit none
 
-      ! Size of square matrix a in memory
+      !> Size of square matrix a in memory
       integer, intent (in) :: na
-      ! Block tridiagonal matrix a to be inverted
+      !> Block tridiagonal matrix a to be inverted
       complex (kind=dp), intent (inout) :: a(na, na)
-      ! Corner blocks?
+      !> Corner blocks?
       logical, intent (in) :: periodic
       ! -------------------------------
       integer :: i, i0, n, m
@@ -456,18 +485,23 @@ contains
     ! -----------------------------------------------------------------------
 
 
-    ! -----------------------------------------------------------------------
+    !-------------------------------------------------------------------------------
+    !> Summary: Fills in the off-diagonal elements of the matrix inverse
+    !> Author: Flaviano Dos Santos
+    !> Category: KKRhost, structural-greensfunction, numerical-tool
+    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+    !>
+    !> It includes the correction for periodic blocks
+    !-------------------------------------------------------------------------------
     subroutine get_offdiagonal(a, na, periodic)
-      ! Fills in the off-diagonal elements of the matrix inverse
-      ! It includes the correction for periodic blocks
 
       implicit none
 
-      ! Size of square matrix a in memory
+      !> Size of square matrix a in memory
       integer, intent (in) :: na
-      ! Block tridiagonal matrix a to be inverted
+      !> Block tridiagonal matrix a to be inverted
       complex (kind=dp), intent (inout) :: a(na, na)
-      ! Corner blocks?
+      !> Corner blocks?
       logical, intent (in) :: periodic
       ! -------------------------------
       logical, parameter :: columns = .true.
@@ -497,15 +531,20 @@ contains
     ! -----------------------------------------------------------------------
 
 
-    ! -----------------------------------------------------------------------
+    !-------------------------------------------------------------------------------
+    !> Summary: Corrects the diagonal blocks for the periodic case
+    !> Author: Flaviano Dos Santos
+    !> Category: KKRhost, structural-greensfunction, numerical-tool
+    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+    !>
+    !-------------------------------------------------------------------------------
     subroutine diagonal_correction(a, na)
-      ! Corrects the diagonal blocks for the periodic case
 
       implicit none
 
-      ! Size of square matrix a in memory
+      !> Size of square matrix a in memory
       integer, intent (in) :: na
-      ! Block tridiagonal matrix a to be inverted
+      !> Block tridiagonal matrix a to be inverted
       complex (kind=dp), intent (inout) :: a(na, na)
       ! -------------------------------
       integer :: i, i0, n, k
@@ -539,15 +578,20 @@ contains
     ! -----------------------------------------------------------------------
 
 
-    ! -----------------------------------------------------------------------
+    !-------------------------------------------------------------------------------
+    !> Summary: Corrects the off-diagonal blocks for the periodic case
+    !> Author: Flaviano Dos Santos
+    !> Category: KKRhost, structural-greensfunction, numerical-tool
+    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+    !>
+    !-------------------------------------------------------------------------------
     subroutine offdiagonal_correction(a, na)
-      ! Corrects the off-diagonal blocks for the periodic case
 
       implicit none
 
-      ! Size of square matrix a in memory
+      !> Size of square matrix a in memory
       integer, intent (in) :: na
-      ! Block tridiagonal matrix a to be inverted
+      !> Block tridiagonal matrix a to be inverted
       complex (kind=dp), intent (inout) :: a(na, na)
       ! -------------------------------
       integer :: i, i0, n, j, j0, m, k
@@ -582,19 +626,24 @@ contains
     ! -----------------------------------------------------------------------
 
 
-    ! -----------------------------------------------------------------------
+    !-------------------------------------------------------------------------------
+    !> Summary: Saves the borders of the inverse matrix without corner blocks
+    !> Author: Flaviano Dos Santos
+    !> Category: KKRhost, structural-greensfunction, numerical-tool
+    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+    !>
+    !> These are multiplied by appropriate blocks for later use
+    !> The column blocks have dimensions bdims(i) * bdims(1)
+    !> The row blocks have dimensions bdims(1) * bdims(j)
+    !-------------------------------------------------------------------------------
     subroutine save_borders(a, na)
-      ! Saves the borders of the inverse matrix without corner blocks
-      ! These are multiplied by appropriate blocks for later use
-      ! The column blocks have dimensions bdims(i) * bdims(1)
-      ! The row blocks have dimensions bdims(1) * bdims(j)
 
       implicit none
 
-      ! Size of square matrix a in memory
+      !> Size of square matrix a in memory
       integer, intent (in) :: na
-      ! Block tridiagonal matrix a to be inverted
-      ! Should have the diagonals of the inverse already stored
+      !> Block tridiagonal matrix a to be inverted
+      !> Should have the diagonals of the inverse already stored
       complex (kind=dp), intent (inout) :: a(na, na)
       ! -------------------------------
       integer :: i, j, i0, j0, m, n, k
@@ -686,17 +735,22 @@ contains
     ! -----------------------------------------------------------------------
 
 
-    ! -----------------------------------------------------------------------
+    !-------------------------------------------------------------------------------
+    !> Summary: Builds the j-th column of the inverse starting from the diagonal
+    !> Author: Flaviano Dos Santos
+    !> Category: KKRhost, structural-greensfunction, numerical-tool
+    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+    !>
+    !-------------------------------------------------------------------------------
     subroutine build_col(a, na, j, jstop)
-      ! Builds the j-th column of the inverse starting from the diagonal
 
       implicit none
 
-      ! Size of square matrix a in memory
+      !> Size of square matrix a in memory
       integer, intent (in) :: na
-      ! Block tridiagonal matrix a to be inverted
+      !> Block tridiagonal matrix a to be inverted
       complex (kind=dp), intent (inout) :: a(na, na)
-      ! Desired column, where to stop
+      !> Desired column, where to stop
       integer, intent (in) :: j, jstop
       ! -------------------------------
       integer :: i, i0, n, j0, m, k
@@ -761,17 +815,22 @@ contains
     ! -----------------------------------------------------------------------
 
 
-    ! -----------------------------------------------------------------------
+    !-------------------------------------------------------------------------------
+    !> Summary: Builds the i-th row of the inverse starting from the diagonal
+    !> Author: Flaviano Dos Santos
+    !> Category: KKRhost, structural-greensfunction, numerical-tool
+    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+    !>
+    !-------------------------------------------------------------------------------
     subroutine build_row(a, na, i, istop)
-      ! Builds the i-th row of the inverse starting from the diagonal
 
       implicit none
 
-      ! Size of square matrix a in memory
+      !> Size of square matrix a in memory
       integer, intent (in) :: na
-      ! Block tridiagonal matrix a to be inverted
+      !> Block tridiagonal matrix a to be inverted
       complex (kind=dp), intent (inout) :: a(na, na)
-      ! Desired column, where to stop
+      !> Desired column, where to stop
       integer, intent (in) :: i, istop
       ! -------------------------------
       integer :: i0, n, j, j0, m, k
@@ -836,16 +895,22 @@ contains
     ! -----------------------------------------------------------------------
 
 
-    ! -----------------------------------------------------------------------
+    !-------------------------------------------------------------------------------
+    !> Summary: Print matrix
+    !> Author: Flaviano Dos Santos
+    !> Category: KKRhost, structural-greensfunction, numerical-tool, input-output
+    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+    !>
+    !-------------------------------------------------------------------------------
     subroutine out_mat(a, n, m, ib, jb, label)
 
       implicit none
 
-      ! Number of rows and columns
+      !> Number of rows and columns
       integer, intent (in) :: n, m
-      ! Matrix to output
+      !> Matrix to output
       complex (kind=dp), intent (in) :: a(n, m)
-      ! Info: which block, text label
+      !> Info: which block, text label
       integer, intent (in) :: ib, jb
       character (len=6), intent (in) :: label
       ! ------------------------------------
@@ -860,8 +925,15 @@ contains
     ! -----------------------------------------------------------------------
 
 #ifdef CPP_MPI
+    !-------------------------------------------------------------------------------
+    !> Summary: MPI broadcast parameters for godfrin matrix inversion scheme
+    !> Author: Flaviano Dos Santos
+    !> Category: KKRhost, communication
+    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+    !>
+    !-------------------------------------------------------------------------------
     subroutine bcast_params_godfrin(t_godfrin) ! GODFRIN Flaviano
-      ! broadcast parameters for godfrin matrix inversion scheme
+
       use :: mpi
       implicit none
 

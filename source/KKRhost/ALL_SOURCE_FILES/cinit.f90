@@ -1,13 +1,26 @@
 module mod_cinit
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: cinit
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Initialize array elements to complex zero
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Setting the first N values of a complex (kind=dp) array A to zero
+  !> @note
+  !> This can easily be removed and replace by a single line
+  !>  `a(:n) = czero`
+  !> @endnote
+  !-------------------------------------------------------------------------------
   subroutine cinit(n, a)
-    ! **********************************************************************
-    ! * Setting the first N values of a complex (kind=dp) array A to zero     *
-    ! **********************************************************************
+    use :: mod_datatypes, only: dp
+    use :: mod_constants, only: czero
+    implicit none
     ! ..
     ! .. Arguments ..
     integer :: n
@@ -15,9 +28,6 @@ contains
     ! ..
     ! .. Locals
     integer :: i, m, mp1
-    complex (kind=dp) :: czero
-    ! ..
-    data czero/(0.0e0_dp, 0.0e0_dp)/
     ! ..
     m = mod(n, 5)
     if (m/=0) then

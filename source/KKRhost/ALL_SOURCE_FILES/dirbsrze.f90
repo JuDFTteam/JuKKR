@@ -1,19 +1,24 @@
 module mod_dirbsrze
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: dirbsrze
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Radial function support for Burlisch-Stoer method
+  !> Author: 
+  !> Category: KKRhost, dirac, numerical-tools
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Diagonal rational function extrapolation to support the
+  !> Burlisch-Stoer method
+  !>
+  !> See: numerical recipes chapter 15.4
+  !-------------------------------------------------------------------------------
   subroutine dirbsrze(iest, xest, yest, yz, dy, nv, nuse)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   diagonal rational function extrapolation to support the        *
-    ! *   Burlisch-Stoer method                                          *
-    ! *                                                                  *
-    ! *   see: numerical recipes chapter 15.4                            *
-    ! *                                                                  *
-    ! ********************************************************************
 
+    use :: mod_datatypes, only: dp
     implicit none
 
     ! PARAMETER definitions

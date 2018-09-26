@@ -33,7 +33,7 @@ contains
     use :: mod_mympi, only: myrank, master
     use :: mod_version_info
     use :: mod_md5sums
-    use :: constants
+    use :: mod_constants
     use :: mod_profiling
     use :: mod_cmatmul
     use :: mod_rotatespinframe, only: rotatematrix

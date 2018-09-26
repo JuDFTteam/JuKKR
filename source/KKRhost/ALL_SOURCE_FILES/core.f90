@@ -1,68 +1,75 @@
 module mod_core
 
+  private
+  public :: core
+
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates relativistic core wave functions
+  !> Author: 
+  !> Category: KKRhost, core-electrons
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> SUBROUTINE TO CALCULATE THE RELATIVISTIC CORE WAVE          
+  !> FUNCTIONS FOR A SPIN-DEPENDENT POTENTIAL                    
+  !>                                                             
+  !> FOR A GIVEN POTENTIAL THE NUMBER OF CORE AND VALENCE        
+  !> ELECTRONS IS DETERMINED AND ALL CORE STATES THEN CALCULATED 
+  !> > THE ROUTINE IS ORGANIZED AS DESCLAUX'S ROUTINE <RESLD>     
+  !>   BUT FINDS THE CORRECTION TO THE E-EIGENVALUE AND THE       
+  !>   MATCHING PARAMETERS BY A NEWTON RAPHSON ALGORITHM          
+  !>   THIS IS IN VARIANCE TO THE METHOD SUGGESTED BY CORTONA     
+  !> > SET THE SWITCH 'CHECK'  TO COPARE E-EIGENVALUES WITH       
+  !>   RESULTS OBTAINED WITH THE CONVENTIONAL E-CORRECTION        
+  !>   ALGORITHM, WHICH WORKS ONLY IF NO COUPLING IS PRESENT !    
+  !> > THE FUNCTIONS  {GC,FC}(I,J) J=1,NSOL ARE THE LINEAR        
+  !>   INDEPENDENT SOLUTIONS TO THE DIFFERENTIAL EQUATIONS WITH   
+  !>   KAPPA-CHARACTER I=1,NSOL;   FOR OUTWARD AND INWARD         
+  !>   INTEGRATION THE SAME ARRAYS ARE USED !                     
+  !> > THE PROPER SOLUTIONS SATISFYING THE BOUNDARY CONDITIONS    
+  !>   AT R=0 AND(!) R=INFINITY ARE STORED IN {GCK,FCK}(K,S)      
+  !>   S,K=1,NSOL   SOLUTION S=1 FOR  KAPPA = - L - 1             
+  !>                         S=2 FOR  KAPPA = + L (IF EXISTENT)   
+  !> > THE SWITCH NUCLEUS SELECTS WHETHER A FINITE NUCLEUS        
+  !>   SHOULD BE USED                                             
+  !>                                                              
+  !> ADAPTED FOR FINITE NUCLEUS       MB MAR. 1995                
+  !> HYPERFINE FIELD SPLITTING introduced if icore=1 MB JUN. 1995 
+  !>                                                              
+  !> SCALEB:                                                      
+  !> if the B-field is quite high it might happen that the routine
+  !> fails to find both 'spin-orbit-split' solutions.             
+  !> in that case the whole l-shell is rerun with the B-field     
+  !> gradually switched on, i.e. scaled with a parameter that     
+  !> increases from 0 to 1 during the iteration loop  HE Nov. 95  
+  !>                                                              
+  !> ITXRAY =  0  run over all core states to get charge density  
+  !> ITXRAY >  0  deal exclusively with state  NCXRAY,LCXRAY      
+  !> ITXRAY <  0  state  NCXRAY,LCXRAY  is checked to be a        
+  !>              bound state or not. on return:                  
+  !>              ITXRAY = |ITXRAY| indicates bound state         
+  !>              ITXRAY = -1       indicates NO bound state found
+  !>                                                              
+  !>                                                              
+  !> few changes in the TB-KKR implementation as compared to SPR  
+  !>      IPRINT values between 0 and 2                           
+  !>      ITPRT  correct value of the atom-type index
+  !-------------------------------------------------------------------------------
   subroutine core(iprint, itprt, nt, ncort, ctl, vt, bt, zat, nucleus, r, r2drdi, drdi, jws, imt, rhochr, rhospn, ecortab, gcor, fcor, ecor, szcor, kapcor, mm05cor, nkpcor, ikmcor, &
     izero, ncxray, lcxray, itxray, bcor, bcors, sdia, smdia, soff, smoff, qdia, qoff, qmdia, qmoff, nkmmax, nmemax, ismqhfi, ntmax, nrmax, nmmax, ncstmax, nlmax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   SUBROUTINE TO CALCULATE THE RELATIVISTIC CORE WAVE             *
-    ! *   FUNCTIONS FOR A SPIN-DEPENDENT POTENTIAL                       *
-    ! *                                                                  *
-    ! *   FOR A GIVEN POTENTIAL THE NUMBER OF CORE AND VALENCE           *
-    ! *   ELECTRONS IS DETERMINED AND ALL CORE STATES THEN CALCULATED    *
-    ! *   > THE ROUTINE IS ORGANIZED AS DESCLAUX'S ROUTINE <RESLD>       *
-    ! *     BUT FINDS THE CORRECTION TO THE E-EIGENVALUE AND THE         *
-    ! *     MATCHING PARAMETERS BY A NEWTON RAPHSON ALGORITHM            *
-    ! *     THIS IS IN VARIANCE TO THE METHOD SUGGESTED BY CORTONA       *
-    ! *   > SET THE SWITCH 'CHECK'  TO COPARE E-EIGENVALUES WITH         *
-    ! *     RESULTS OBTAINED WITH THE CONVENTIONAL E-CORRECTION          *
-    ! *     ALGORITHM, WHICH WORKS ONLY IF NO COUPLING IS PRESENT !      *
-    ! *   > THE FUNCTIONS  {GC,FC}(I,J) J=1,NSOL ARE THE LINEAR          *
-    ! *     INDEPENDENT SOLUTIONS TO THE DIFFERENTIAL EQUATIONS WITH     *
-    ! *     KAPPA-CHARACTER I=1,NSOL;   FOR OUTWARD AND INWARD           *
-    ! *     INTEGRATION THE SAME ARRAYS ARE USED !                       *
-    ! *   > THE PROPER SOLUTIONS SATISFYING THE BOUNDARY CONDITIONS      *
-    ! *     AT R=0 AND(!) R=INFINITY ARE STORED IN {GCK,FCK}(K,S)        *
-    ! *     S,K=1,NSOL   SOLUTION S=1 FOR  KAPPA = - L - 1               *
-    ! *                           S=2 FOR  KAPPA = + L (IF EXISTENT)     *
-    ! *   > THE SWITCH NUCLEUS SELECTS WHETHER A FINITE NUCLEUS          *
-    ! *     SHOULD BE USED                                               *
-    ! *                                                                  *
-    ! *   ADAPTED FOR FINITE NUCLEUS       MB MAR. 1995                  *
-    ! *   HYPERFINE FIELD SPLITTING introduced if icore=1 MB JUN. 1995   *
-    ! *                                                                  *
-    ! *   SCALEB:                                                        *
-    ! *   if the B-field is quite high it might happen that the routine  *
-    ! *   fails to find both 'spin-orbit-split' solutions.               *
-    ! *   in that case the whole l-shell is rerun with the B-field       *
-    ! *   gradually switched on, i.e. scaled with a parameter that       *
-    ! *   increases from 0 to 1 during the iteration loop  HE Nov. 95    *
-    ! *                                                                  *
-    ! *   ITXRAY =  0  run over all core states to get charge density    *
-    ! *   ITXRAY >  0  deal exclusively with state  NCXRAY,LCXRAY        *
-    ! *   ITXRAY <  0  state  NCXRAY,LCXRAY  is checked to be a          *
-    ! *                bound state or not. on return:                    *
-    ! *                ITXRAY = |ITXRAY| indicates bound state           *
-    ! *                ITXRAY = -1       indicates NO bound state found  *
-    ! *                                                                  *
-    ! *                                                                  *
-    ! *   few changes in the TB-KKR implementation as compared to SPR    *
-    ! *        IPRINT values between 0 and 2                             *
-    ! *        ITPRT  correct value of the atom-type index               *
-    ! ********************************************************************
+
     use :: mod_types, only: t_inc
     use :: mod_datatypes, only: dp
-    use :: mod_coredir
-    use :: mod_coreerr
-    use :: mod_corehff
-    use :: mod_hffcore
-    use :: mod_ikapmue
-    use :: mod_rintsimp
-    use :: mod_rnuctab
-    use :: mod_rinit
+    use :: mod_coredir, only: coredir
+    use :: mod_coreerr, only: coreerr
+    use :: mod_corehff, only: corehff
+    use :: mod_hffcore, only: hffcore
+    use :: mod_ikapmue, only: ikapmue
+    use :: mod_rintsimp, only: rintsimp
+    use :: mod_rnuctab, only: rnuctab
+    use :: mod_rinit, only: rinit
     implicit none
-
 
     ! PARAMETER definitions
     real (kind=dp) :: unend, tolvar, trymix, dvstep
@@ -98,6 +105,7 @@ contains
     data nqntab/1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 4, 5, 6, 6/
     data lqntab/0, 0, 1, 0, 1, 2, 0, 1, 2, 0, 1, 3, 2, 0, 1/
     data check/.false./
+
 
     nrc = 2*nrmax
 
@@ -973,6 +981,7 @@ contains
 320 format (/, ' IT=', i2, '  NQN=', i2, '  L=', i2, '  KAP=', i2, '  MJ=', i2, '/2    IC=', i3, '  ISH=', i2, /, ' E(', i2, ')   =', f15.5, /, ' NMATCH  =', i5, '    R=', f10.5, &
       /, ' NZERO   =', i5, '    R=', f10.5, /, ' NODES   =', i5, '  RAT=', e11.4)
 330 format (' integrated core ', a, ' density for atom type ', i4, ':', f12.8)
+
   end subroutine core
 
 end module mod_core

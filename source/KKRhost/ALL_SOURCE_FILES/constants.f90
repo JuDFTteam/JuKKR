@@ -1,10 +1,13 @@
-! -------------------------------------------------------------------------------
-! MODULE: Constants
-!> @brief Physical and mathematical constants
-!> @author Jonathan Chico
-!> @date 09.01.2018
-! -------------------------------------------------------------------------------
-module constants
+!-------------------------------------------------------------------------------
+!> Summary: Physical constants
+!> Author: Jonathan Chico
+!> Date: 09.01.2018
+!> Category: KKRhost, initialization
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!> Definition of physical and mathematical constants
+!-------------------------------------------------------------------------------
+module mod_constants
   use :: mod_datatypes, only: dp
 
   implicit none
@@ -32,4 +35,4 @@ module constants
   !> maximal number of lattice symmetries
   integer, parameter :: nsymaxd = 48
 
-end module constants
+end module mod_constants

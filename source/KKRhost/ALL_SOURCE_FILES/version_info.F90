@@ -35,7 +35,7 @@ module mod_version_info
 contains
 
   subroutine construct_serialnr
-    ! take information from version file and create serial number with time stamp
+    !! take information from version file and create serial number with time stamp
     use :: mod_version
     implicit none
     integer, dimension (8) :: values
@@ -57,19 +57,33 @@ contains
   end subroutine construct_serialnr
 
 
-  subroutine version_print_header(unit, addition)
-    ! this is called after an open statement of a file that is written
-    ! prints header line
+  subroutine version_print_header(unit, addition, print_always)
+    !! this is called after an open statement of a file that is written
+    !! prints header line
     implicit none
     integer, intent (in) :: unit
+    logical, optional, intent (in) :: print_always
     character (len=*), optional, intent (in) :: addition
+    logical, external :: test
+    logical :: print_version
 
-    if (.not. present(addition)) then
-      ! write header:             code     version     compver   timestamp
-      ! "# serial: kkrjm_v2.0-38-g6593f48_debug_20160907113604"
-      write (unit, '(2A)') '# serial: ', serialnr
-    else
-      write (unit, '(2A)') '# serial: ', serialnr // addition
+    print_version = .true.
+
+    if (.not. present(print_always)) then
+      if (test('noserial')) then
+        ! omit printing of serial number to file if test option 'noserial' is given
+        print_version = .false.
+      end if
+    end if
+
+    if (print_version) then
+      if (.not. present(addition)) then
+        ! write header:             code     version     compver   timestamp
+        ! "# serial: kkrjm_v2.0-38-g6593f48_debug_20160907113604"
+        write (unit, '(2A)') '# serial: ', serialnr
+      else
+        write (unit, '(2A)') '# serial: ', serialnr // addition
+      end if
     end if
 
   end subroutine version_print_header

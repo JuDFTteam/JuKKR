@@ -1,53 +1,57 @@
 module mod_gijxcpl
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: gijxcpl
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Determines the pairs of the GF that are needed for the calculation of the exchange constants
+  !> Author: 
+  !> Category: KKRhost, structural-greensfuntion
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> In case of tasks requiring Gij blocks calculation, set variables: 
+  !>
+  !> NATOMIMP, RCLSIMP(3,1..NATOMIMP), ATOMIMP(1..NATOMIMP)
+  !> IJTABCALC flag to which pair is needed: I,J --> (I-1)*NATOMIMP + J
+  !>           indexing refers to the generated cluster
+  !> IJTABCALC_I same as IJTABCALC, but only flag to pair <IJ> is  set 
+  !>             (in contrast to the pairs <IJ> and <JI> for NEWSOSOL) 
+  !>           indexing refers to the generated cluster
+  !> NIQCALC   number of sites in the first unit cell contained in the 
+  !>           cluster
+  !> IQCALC()  correspondence index to the 1..NAEZ sites
+  !> IDO takes on the value 1 or 0 if setting up process was OK or not 
+  !>
+  !> EXCHANGE COUPLING CONSTANTS calculation case
+  !>
+  !> uniquely identify a vector R_j - r_i = (r_j + T_n) - r_i by a
+  !> quintuple integer in IVECI2J(5,*):
+  !> index  meaning
+  !> 1    unit-cell site of atom i (always i - first unit cell)
+  !> 2    unit-cell site of atom j
+  !> 3..5 the three coeficients of the translation vector
+  !> T_n = n1*a1 + n2*a2 + n3*a3
+  !> NVECI2J(I) gives the number of identical vectors Rj (initially 1)
+  !> in the array IVECI2J(2/3/4/5,I)
+  !> IREF(1..NVECI2J(I),I) points to the NVECI2J(I) identical vectors
+  !> in the array IVECI2J (one site is kept only once)
+  !-------------------------------------------------------------------------------
   subroutine gijxcpl(ido, naez, rbasis, bravais, linterface, niqcalc, iqcalc, natomimp, rclsimp, atomimp, ijtabcalc, ijtabcalc_i, natomimpd)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * In case of tasks requiring Gij blocks calculation, set variables:  *
-    ! *                                                                    *
-    ! * NATOMIMP, RCLSIMP(3,1..NATOMIMP), ATOMIMP(1..NATOMIMP)             *
-    ! * IJTABCALC flag to which pair is needed: I,J --> (I-1)*NATOMIMP + J *
-    ! *           indexing refers to the generated cluster                 *
-    ! * IJTABCALC_I same as IJTABCALC, but only flag to pair <IJ> is  set  *
-    ! *             (in contrast to the pairs <IJ> and <JI> for NEWSOSOL)  *
-    ! *           indexing refers to the generated cluster                 *
-    ! * NIQCALC   number of sites in the first unit cell contained in the  *
-    ! *           cluster                                                  *
-    ! * IQCALC()  correspondence index to the 1..NAEZ sites                *
-    ! * IDO takes on the value 1 or 0 if setting up process was OK or not  *
-    ! *                                                                    *
-    ! * EXCHANGE COUPLING CONSTANTS calculation case                       *
-    ! *                                                                    *
-    ! **********************************************************************
-    use :: mod_getclusnxyz
-    use :: mod_ioinput
+
+    use :: mod_datatypes, only: dp
+    use :: mod_getclusnxyz, only: getclusnxyz
+    use :: mod_ioinput, only: ioinput
     implicit none
 
-    ! Arguments
     integer :: ido, naez, natomimp, niqcalc, natomimpd
     integer :: atomimp(*), ijtabcalc(*), ijtabcalc_i(*), iqcalc(*)
     real (kind=dp) :: bravais(3, 3), rbasis(3, *), rclsimp(3, *)
     logical :: linterface
 
-    ! Locals
     integer :: i, i1, i2, i3, ibr(3), ieqvec, iq, iqs, j, jq, nbr(3), ndim, nn, nout, jqs
-    ! .......................................................................
-    ! uniquely identify a vector R_j - r_i = (r_j + T_n) - r_i by a
-    ! quintuple integer in IVECI2J(5,*):
-    ! index  meaning
-    ! 1    unit-cell site of atom i (always i - first unit cell)
-    ! 2    unit-cell site of atom j
-    ! 3..5 the three coeficients of the translation vector
-    ! T_n = n1*a1 + n2*a2 + n3*a3
-    ! NVECI2J(I) gives the number of identical vectors Rj (initially 1)
-    ! in the array IVECI2J(2/3/4/5,I)
-    ! IREF(1..NVECI2J(I),I) points to the NVECI2J(I) identical vectors
-    ! in the array IVECI2J (one site is kept only once)
-    ! .......................................................................
+
     integer :: nb3max
     integer :: njqcalc
     integer, allocatable :: iveci2j(:, :), nveci2j(:), iref(:, :), jqcalc(:)
@@ -56,10 +60,7 @@ contains
     logical :: lspher
     character (len=256) :: uio                             ! NCOLIO=256
 
-    ! ..
-    ! .. Externals
-    logical :: opt
-    external :: opt
+    logical, external :: opt
     ! ..
     ido = 0
 

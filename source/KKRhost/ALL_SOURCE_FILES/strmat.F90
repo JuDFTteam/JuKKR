@@ -41,7 +41,7 @@ contains
     use :: omp_lib
 #endif
 
-    use :: constants
+    use :: mod_constants
     use :: mod_datatypes, only: dp
     use :: mod_ymy
     use :: mod_gamfc

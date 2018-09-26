@@ -1,18 +1,28 @@
 module mod_gxcpt
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: gxcpt
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Exchange-correlation potential and total energy for PW91 (GGA)
+  !> Author: 
+  !> Category: KKRhost, xc-potential
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Energies in Ry
+  !-------------------------------------------------------------------------------
   subroutine gxcpt(idspr, ro, zta, agr, agru, agrd, g2r, g2ru, g2rd, gggr, gggru, gggrd, grgru, grgrd, gzgr, xcptu, xcptd, xced, vxlu, vxld, vclu, vcld, xedl, cedl, vxgu, vxgd, &
     vcgu, vcgd, xedg, cedg)
-    ! .....-----------------------------------------------------------------
-    ! .....gxcp: exchange-correlation potential in ry. also total-energy.
-    ! .....-----------------------------------------------------------------
-    use :: mod_corlsd
-    use :: mod_cpw91
-    use :: mod_exch91
+
+    use :: mod_datatypes, only: dp
+    use :: mod_corlsd, only: corlsd
+    use :: mod_cpw91, only: cpw91
+    use :: mod_exch91, only: exch91
+    use :: mod_constants, only: pi
     implicit none
+    real (kind=dp), parameter :: sml = 1.e-12_dp
     ! .. Scalar Arguments ..
     real (kind=dp) :: agr, agrd, agru, cedg, cedl, g2r, g2rd, g2ru, gggr, gggrd, gggru, grgrd, grgru, gzgr, ro, vcgd, vcgu, vcld, vclu, vxgd, vxgu, vxld, vxlu, xced, xcptd, xcptu, &
       xedg, xedl, zta
@@ -22,8 +32,8 @@ contains
     real (kind=dp) :: a1, a2, a3, af, alc, alf, alfc, ap, b1, b1f, b1p, b2, b2f, b2p, b3, bcr, beta, bf, bp, brs, bx, bxd, bxu, bz41, c1, c113, c115, c13, c1415, c2, c23, c2915, &
       c2q23, c3, c32, c43, c53, c56, c76, c83, ca, ccf, ccp, ce, cef, cep, cf, cgz, cp, crdc, crf, cro, crp, crr1, crr2, dacdr, dbdr, dbrod, dbrou, dcdr, dd, decdrf, decdrp, df, &
       dfdz, dlta, d_p, dsdfd, dsdfu, dspr, dsprs, dvdr1, dvdr2, dvdrd, dvdru, ec, ecf, ecp, ecrs, eczta, ef3vi, expfai, f1d, f1u, f2d, f2u, f3d, f3u, fai, fai2, fd, fdd0, fk, fu, &
-      fz, gf, gp, gr2, gr2d, gr2u, gz, gz2, gz3, hugef, huges, pi, q1, q2, q3, rnc, ro113, ro13, ro2, ro43, ro76, ro83, rod, rod13, rod23, rod3, rod43, rod53, rou, rou13, rou23, &
-      rou3, rou43, rou53, rs, rs2, rs3, sd, sd2, sd3, sd4, sd6, sidfd, sidfu, sk, sml, ssfc, su, su2, su3, su4, su6, tc, td, tksg, tu, uc, ud, uu, vc, vc13, vc45d, vc45u, vc6, &
+      fz, gf, gp, gr2, gr2d, gr2u, gz, gz2, gz3, hugef, huges, q1, q2, q3, rnc, ro113, ro13, ro2, ro43, ro76, ro83, rod, rod13, rod23, rod3, rod43, rod53, rou, rou13, rou23, &
+      rou3, rou43, rou53, rs, rs2, rs3, sd, sd2, sd3, sd4, sd6, sidfd, sidfu, sk, ssfc, su, su2, su3, su4, su6, tc, td, tksg, tu, uc, ud, uu, vc, vc13, vc45d, vc45u, vc6, &
       vccf, vcf, vcl1, vcl2, vcp, vxp, vz, wc, x01, x02, x03, xedgd, xedgu, xedld, xedlu, xf, xl01, xl02, xl03, xl1, xl2, xl3, xld1, xld2, xld3, xlf, xp, xs, zt13m, zt13p, zta3, &
       zta4
     integer :: ibh, ica, icg, iex, igd, igh, igl, imj, ip9, ipg, ivg, ivn, ixlf
@@ -50,16 +60,11 @@ contains
     ! -----------------------------------------------------------------
 
     ! PW91   ip9=1  igd=1
-
     ! PW86      imj=1  igd=1
-
 
     ip9 = 1
     igd = 1
 
-
-    pi = acos(-1.e0_dp)
-    sml = 1.e-12_dp
     if (zta>1.e0_dp-sml) zta = 1.e0_dp - sml
     ! .....
     ! vxlu,vxld,vxgu,vxgd: exchange potential in ry.(local,grad),(up,dw)
@@ -574,7 +579,7 @@ contains
   end subroutine gxcpt
 
   function fncf(x)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     real (kind=dp) :: fncf
     real (kind=dp), intent (in) :: x
@@ -583,7 +588,7 @@ contains
   end function fncf
 
   function fncecl(r, g, b1, b2)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     real (kind=dp) :: fncecl
     real (kind=dp), intent (in) :: r, g, b1, b2
@@ -592,7 +597,7 @@ contains
   end function fncecl
 
   function fncvcl(ce, r, b1, b2)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     real (kind=dp) :: fncvcl
     real (kind=dp), intent (in) :: ce, r, b1, b2
@@ -601,7 +606,7 @@ contains
   end function fncvcl
 
   function fncecs(r, a, b, c, d)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     real (kind=dp) :: fncecs
     real (kind=dp), intent (in) :: r, a, b, c, d
@@ -610,7 +615,7 @@ contains
   end function fncecs
 
   function fncvcs(r, a, b, c, d)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     real (kind=dp) :: fncvcs
     real (kind=dp), intent (in) :: r, a, b, c, d
@@ -619,7 +624,7 @@ contains
   end function fncvcs
 
   function ffz(zta)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     real (kind=dp) :: ffz
     real (kind=dp), intent (in) :: zta
@@ -628,7 +633,7 @@ contains
   end function ffz
 
   function fdfdz(zta)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     real (kind=dp) :: fdfdz
     real (kind=dp), intent (in) :: zta
@@ -637,7 +642,7 @@ contains
   end function fdfdz
 
   function fvq(b, c)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     real (kind=dp) :: fvq
     real (kind=dp), intent (in) :: b, c
@@ -655,7 +660,7 @@ contains
   end function fvnec
 
   function fbet(fdd0, ecf, ecp, alc)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     real (kind=dp) :: fbet
     real (kind=dp), intent (in) :: fdd0, ecf, ecp, alc
@@ -664,7 +669,7 @@ contains
   end function fbet
 
   function fdedr(ro, x, a, x0, xl, xl0, xld, b, q)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     real (kind=dp) :: fdedr
     real (kind=dp), intent (in) :: ro, x, a, x0, xl, xl0, xld, b, q

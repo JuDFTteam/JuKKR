@@ -1,7 +1,7 @@
 ! > this is dummy version of main1a
 subroutine main1a_dummy
   use :: mod_profiling
-  use :: constants
+  use :: mod_constants
   use :: global_variables
   use :: mod_datatypes, only: dp
 

@@ -13,7 +13,7 @@ contains
   ! -------------------------------------------------------------------------------
   subroutine rllsllsourceterms(nsra, nvec, eryd, rmesh, nrmax, nrmaxd, lmax, lmsize, use_fullgmat, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor)
 
-    use :: constants
+    use :: mod_constants
     use :: mod_beshank
 
     implicit none

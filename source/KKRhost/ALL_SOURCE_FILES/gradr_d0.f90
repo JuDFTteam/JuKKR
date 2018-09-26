@@ -1,26 +1,32 @@
 module mod_gradr_d0
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: gradr
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Gradient for GGA functional
+  !> Author: T.Asada
+  !> Date: Feb. 1994
+  !> Category: KKRhost, xc-potential
+  !> Deprecated: True ! This needs to be set to True for deprecated subroutines
+  !>
+  !> @note Doubling of gradr from mod_gradr?! @endnote
+  !>
+  !> Evaluates d(ro)/dr,d{d(ro)/dr}/dr.
+  !> drr=d(ro)/dr, ddrr=d(drr)/dr.
+  !-------------------------------------------------------------------------------
   subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, ddrru, rou, irmd)
-    ! -----------------------------------------------------------------
-    ! evaluates d(ro)/dr,d{d(ro)/dr}/dr.
-    ! drr=d(ro)/dr, ddrr=d(drr)/dr.
-    ! coded by T.Asada. Feb.1994.
-    ! -----------------------------------------------------------------
-    ! -----------------------------------------------------------------
-    ! ------------------------------------------------------------------
+
+    use :: mod_datatypes, only: dp
     implicit none
-    ! .. Scalar Arguments ..
+
     real (kind=dp) :: dx
     integer :: irmd, ist1, mesh, nspin
-    ! ..
-    ! .. Array Arguments ..
+
     real (kind=dp) :: ddrr(irmd), ddrru(irmd), drdi(irmd), drdi2(irmd), drr(irmd), drru(irmd), ro(irmd), rou(irmd), zta(irmd)
-    ! ..
-    ! .. Local Scalars ..
+
     real (kind=dp) :: d, drx, drx0, drx1, drx2, drx3, drxu, drxu0, drxu1, drxu2, drxu3, drxx, drxx0, drxx1, drxx2, drxx3, drxxu, drxxu0, drxxu1, drxxu2, drxxu3, f0, f1, f2, f3, f4, &
       f5, g1, g2, g3, g4, g5
     integer :: i, i1, i2, i3, i4, i5, i6, igd, ist, iwr, j, ndvpt, nred
@@ -28,11 +34,9 @@ contains
     ! .. Statement Functions ..
     real (kind=dp) :: f131, f132, f133, f141, f142, f143, f144, f151, f152, f153, f154, f155, f161, f162, f163, f164, f165, f166, f231, f232, f233, f241, f242, f243, f244, f251, &
       f252, f253, f254, f255, f261, f262, f263, f264, f265, f266
-    ! ..
-    ! .. Intrinsic Functions ..
+
     intrinsic :: real
-    ! ..
-    ! .. Save statement ..
+
     save :: ndvpt, igd, iwr
     ! ..
     ! .. Data statements ..
@@ -460,7 +464,6 @@ contains
     ddrr(mesh) = (drxx0-drx0*drdi2(mesh))/drdi(mesh)**2
 
 110 continue
-
 
 
     ! write(6,8000) nspin,ist1,mesh,dx

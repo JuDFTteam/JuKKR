@@ -1,21 +1,27 @@
 module mod_gijcond
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: gijcond
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Construct structure of G_ij structure needed for conductivity calculation
+  !> Author: 
+  !> Category: KKRhost, structural-greensfunction
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> In case of tasks requiring Gij blocks calculation, set variables: 
+  !>
+  !> NATOMIMP, RCLSIMP(3,1..NATOMIMP), ATOMIMP(1..NATOMIMP)
+  !> IJTABCALC flag to which pair is needed: I,J --> (I-1)*NATOMIMP + J
+  !> IDO takes on the value 1 or 0 if setting up process was OK or not 
+  !>
+  !> CONDUCTANCE calculation case
+  !>             still to be implemente the correct read in
+  !-------------------------------------------------------------------------------
   subroutine gijcond(ido, naez, rbasis, iqat, natomimp, rclsimp, atomimp, ijtabcalc, natomimpd)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * In case of tasks requiring Gij blocks calculation, set variables:  *
-    ! *                                                                    *
-    ! * NATOMIMP, RCLSIMP(3,1..NATOMIMP), ATOMIMP(1..NATOMIMP)             *
-    ! * IJTABCALC flag to which pair is needed: I,J --> (I-1)*NATOMIMP + J *
-    ! * IDO takes on the value 1 or 0 if setting up process was OK or not  *
-    ! *                                                                    *
-    ! * CONDUCTANCE calculation case                                       *
-    ! *             still to be implemente the correct read in             *
-    ! **********************************************************************
+    use :: mod_datatypes, only: dp
     implicit none
 
     ! Parameters

@@ -1,13 +1,19 @@
 module mod_btom
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: btom
 
 contains
 
-  ! **********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Copy or substract block from matrix
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> This subroutine copies or subtracts a block to a matrix
+  !-------------------------------------------------------------------------------
   subroutine btom(pl1, pl2, block, nsize, gin, almd, lsub)
-    ! This subroutine copies or subtracts a block to a matrix
-    ! **********************************************************************
     use :: mod_datatypes, only: dp
     implicit none
     ! .. Scalar Arguments ..

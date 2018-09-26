@@ -1,13 +1,25 @@
 module mod_intcor
 
+  private
+  public :: intcor
+
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Integrate core density
+  !> Author: 
+  !> Category: KKRhost, core-electrons
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !-------------------------------------------------------------------------------
   subroutine intcor(f1, f2, rho, g, f, v, value, slope, l, nn, e, sum, nre, vlnc, a, b, z, rn, nr, tol, irm, ipr, nitmax, nsra)
+    
+    use :: mod_datatypes, only: dp
+    use :: mod_constants, only: pi, cvlight
     use :: mod_types, only: t_inc
-    use :: mod_datatypes
-    use :: mod_intin
-    use :: mod_intout
-    use :: mod_hankel
+    use :: mod_intin, only: intin
+    use :: mod_intout, only: intout
+    use :: mod_hankel, only: hankel
     implicit none
     ! .. Scalar Arguments ..
     real (kind=dp) :: a, b, e, f1, f2, rn, slope, sum, tol, value, z
@@ -19,32 +31,36 @@ contains
     ! ..
     ! .. Local Scalars ..
     complex (kind=dp) :: arg, cappai, dofe
-    real (kind=dp) :: cvlight, de, dg1, dg2, dpsi1, dpsi2, drdikc, e1, e2, ea, gkc2, pi, pkc1, pkc2, psi1, psi2, q, qkc1, qkc2, ratio, ratio1, re, rkc, rpb, slop, tsrme, valu, vme, &
+    real (kind=dp) :: de, dg1, dg2, dpsi1, dpsi2, drdikc, e1, e2, ea, gkc2, pkc1, pkc2, psi1, psi2, q, qkc1, qkc2, ratio, ratio1, re, rkc, rpb, slop, tsrme, valu, vme, &
       xxx, zz
     integer :: ir, k, k2, kc, niter, nne, nrem1, nrem2
     ! ..
     ! .. Local Arrays ..
     complex (kind=dp) :: hl(6)
-    ! ..
-    pi = 4.d0*atan(1.d0)
+
+
     zz = z + z
-    cvlight = 274.0720442d0
-    if (nsra==1) cvlight = 1.0d0
     ea = exp(a)
     niter = 0
     e1 = f1
     e2 = f2
     if (ipr==2 .and. (t_inc%i_write>0)) write (1337, fmt=120) l, nn, nr, f1, e, f2, tol, value, slope
+
 100 continue
+    
     niter = niter + 1
     do ir = 1, irm
       g(ir) = 0.0d0
       f(ir) = 0.0d0
     end do
-    if (niter>nitmax) then
-      go to 110
 
-    else
+    if (niter>nitmax) then
+
+      write (6, fmt=170) nitmax
+      stop 'INTCOR'
+
+    else !niter>nitmax
+
       if (e<=e1 .or. e>=e2) e = .5d0*(e1+e2)
       nre = nr
       if (e<=-1.d-8) then
@@ -99,7 +115,9 @@ contains
       qkc1 = psi1*psi1 + dpsi1*dpsi1*rkc*rkc
       pkc1 = .5d0 - atan(rkc*dpsi1/psi1)/pi
       if (nne==9) nne = 0
+
       if (nne==nn) then
+
         ratio1 = gkc2/g(kc)
         ratio = sqrt(qkc2/qkc1)
         if (ratio1<0.d0) ratio = -ratio
@@ -136,16 +154,17 @@ contains
         e = e + de
         if (abs(de)>tol .and. niter<nitmax) go to 100
 
-      else
+      else ! nne==nn
+
         if (niter>=nitmax-10 .or. ipr==2 .and. (t_inc%i_write>0)) write (1337, fmt=140) niter, nne, nre, kc, e1, e, e2
         if (nne>nn) e2 = e
         if (nne<nn) e1 = e
         e = .5d0*(e1+e2)
         go to 100
 
-      end if
+      end if ! nne==nn
 
-    end if
+    end if ! niter>nitmax
 
     e = e - de
     do k = 1, nre
@@ -155,16 +174,13 @@ contains
     if (niter>=nitmax-10 .or. ipr>=1 .or. xxx<=0.d0 .and. (t_inc%i_write>0)) write (1337, fmt=160) l, nn, niter, kc, nre, valu, slop, e, de, sum
     return
 
-110 write (6, fmt=170) nitmax
-    stop 'INTCOR'
-
-
 120 format (' l=', i3, '  nn=', i2, '  nr=', i4, '  f1/e/f2=', 3f10.3, /, ' tol=', 1p, d12.3, '  value/slope=', 2d12.3)
 130 format (13x, '  no boundary condition had to be used')
 140 format (2i3, 2i4, 1p, 3d16.8, 1x, 2d9.2)
 150 format (/, ' **** int: 0-pressure bcs not real')
 160 format (' state', i2, ',', i1, ':', i4, 'x,', i5, '/', i3, ',  bc=', 1p, 2d12.3, /, 14x, 'e=', d14.6, '   de=', d11.2, '   sum=', d12.4)
 170 format (' *** int: stop after', i4, ' iterations')
+
   end subroutine intcor
 
 end module mod_intcor

@@ -1,15 +1,26 @@
 module mod_calcsph
 
+  private
+  public :: calcsph
+
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculate spherical part of SRATRICK
+  !> Author: 
+  !> Category: KKRhost, single-site
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Constructs potential matrices and calls rllsll routine to find spherical wavefunctions
+  !> starting from spherical Bessel and Hankel functions (see PhD D. Bauer)
+  !-------------------------------------------------------------------------------
   subroutine calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, zat, eryd, lmpotd, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, &
     tmat, alpha, use_sratrick)
 
-    use :: constants
-    use :: mod_profiling
+    use :: mod_constants, only: czero
     use :: mod_datatypes, only: dp
-    use :: mod_rllsll
-    use :: mod_vllmatsra
+    use :: mod_rllsll, only: rllsll
+    use :: mod_vllmatsra, only: vllmatsra
 
     implicit none
     ! construct wavefunctions for spherical potentials
@@ -49,6 +60,7 @@ contains
       lmsize2 = 1
       nvec = 1
     end if
+
     allocate (rlltemp(lmsize2,lmsize,irmdnew))
     allocate (slltemp(lmsize2,lmsize,irmdnew))
     allocate (hlktemp(nvec,irmdnew))
@@ -163,6 +175,7 @@ contains
         end do
       end do
     end if
+
     deallocate (rlltemp)
     deallocate (slltemp)
     deallocate (hlktemp)

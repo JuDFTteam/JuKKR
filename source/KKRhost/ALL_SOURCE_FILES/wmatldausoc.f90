@@ -34,7 +34,7 @@ contains
     ! *                                                                    *
     ! *                  n.long,  April 2016, Juelich                      *
     ! **********************************************************************
-    use :: constants
+    use :: mod_constants
     use :: mod_datatypes
     use :: mod_rclm
     use :: mod_wmatldau, only: rwrite

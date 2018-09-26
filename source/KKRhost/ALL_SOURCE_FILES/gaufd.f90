@@ -1,18 +1,27 @@
 module mod_gaufd
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: gaufd
 
 contains
 
-  ! ************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, undefined
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine gaufd(xi, wi, n)
-    ! ************************************************
-    ! .. Scalar Arguments ..
+
+    use :: mod_datatypes, only: dp
+    implicit none
+
     integer :: n
-    ! ..
-    ! .. Array Arguments ..
     real (kind=dp) :: wi(*), xi(*)
-    ! ..
+
+
     if (n==1) then
       xi(1) = -49817229548128141768.e-20_dp
       wi(1) = 10000000000000031192.e-19_dp
@@ -368,6 +377,6 @@ contains
 100 continue
     return
 
-  end subroutine gaufd             ! SUBROUTINE GAUFD(XI,WI,N)
+  end subroutine gaufd
 
 end module mod_gaufd

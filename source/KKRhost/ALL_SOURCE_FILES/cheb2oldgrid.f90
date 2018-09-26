@@ -1,17 +1,25 @@
 module mod_cheb2oldgrid
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: cheb2oldgrid
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Interpolate from Chebychev to old radial mesh
+  !> Author: David Bauer
+  !> Date: 2011
+  !> Category: KKRhost, radial-grid
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !> 
+  !> Interpolate from Chebyshev mesh to the old radial mesh
+  !> Programmed by David Bauer, 2011-2013
+  !-------------------------------------------------------------------------------
   subroutine cheb2oldgrid(nrmax, nrmaxnew, lmmaxpot, rmesh, ncheb, npan_tot, rpan_intervall, ipan_intervall, arrayin, arrayout, irmd)
-    use :: mod_cheb
-
-    ! use mod_cheb, only: getCCmatrix, getCinvmatrix
+    use :: mod_datatypes, only: dp
+    use :: mod_cheb, only: getCCmatrix, getCinvmatrix
     implicit none
 
-    ! Interpolate from Chebyshev mesh to the old radial mesh
-    ! Programmed by David Bauer, 2011-2013
     integer :: ncheb, npan_tot, nrmax, nrmaxnew, lmmaxpot, irmd
     real (kind=dp) :: rmesh(irmd)
     real (kind=dp) :: rpan_intervall(0:npan_tot)
@@ -67,6 +75,7 @@ contains
 
     in = 0
     do while (in<=npan_tot)
+
       in = in + 1
       if (intsub(2,in)<intsub(1,in)) cycle
       alphaparams = 0.0e0_dp
@@ -106,6 +115,7 @@ contains
           end do
         end do
       end do                       ! ilm=1,lmmaxpot
+      
       deallocate (ccmatrix)        ! (CCmatrix(intsub(2,in)-intsub(1,in)+1,0:ncheb))
 
     end do                         ! while loop

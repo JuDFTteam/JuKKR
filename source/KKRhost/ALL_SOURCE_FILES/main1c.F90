@@ -12,7 +12,7 @@
 module mod_main1c
 
   use :: mod_profiling
-  use :: constants
+  use :: mod_constants
   use :: global_variables
   use :: mod_datatypes
 

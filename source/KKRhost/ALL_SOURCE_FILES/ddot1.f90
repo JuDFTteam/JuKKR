@@ -1,25 +1,37 @@
 module mod_ddot1
+  
+
   use :: mod_datatypes, only: dp
   private :: dp
+  public :: ddot1
 
 contains
 
-  function ddot1(n, dx, incx, dy, incy)
-    ! - Forms the dot product of two vectors.
-    ! ----------------------------------------------------------------------
-    ! i Inputs:
-    ! i   n     :lenght of dx and dy
-    ! i   dx    :first vector to mutiply
-    ! i   incx  :incrementation for x
-    ! i   dy    :second vector to mutiply
-    ! i   incy  :incrementation for y
-    ! o Outputs:
-    ! o   ddot  :dot product of two vectors
-    ! r Remarks:
-    ! r    Adapted from: jack dongarra, linpack, 3/11/78.
-    ! ----------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates dot product of two vectors
+  !> Author: 
+  !> Category: KKRhost, numerical-tools
+  !> Deprecated: True ! This needs to be set to True for deprecated subroutines
+  !>
+  !>  Forms the dot product of two vectors.
+  !> 
+  !> Inputs:
+  !>   n     :lenght of dx and dy
+  !>   dx    :first vector to mutiply
+  !>   incx  :incrementation for x
+  !>   dy    :second vector to mutiply
+  !>   incy  :incrementation for y
+  !> Outputs:
+  !>   ddot  :dot product of two vectors
+  !> Remarks:
+  !>    Adapted from: jack dongarra, linpack, 3/11/78.
+  !>
+  !> @note can probably be replace with fortran intrinsic or LAPACK call @endnote
+  !-------------------------------------------------------------------------------
+  real (kind=dp) function ddot1(n, dx, incx, dy, incy)
+
     implicit none
-    real (kind=dp) :: ddot1
+
     ! Passed parameters:
     integer :: incx, incy, n
     real (kind=dp) :: dx(*), dy(*)

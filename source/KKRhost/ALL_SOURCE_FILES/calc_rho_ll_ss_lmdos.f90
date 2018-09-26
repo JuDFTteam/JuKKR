@@ -2,22 +2,28 @@ module mod_calc_rho_ll_ss_lmdos
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Rho matrix for PKKprime code
+  !> Author: 
+  !> Category: KKRhost, physical-observables
+  !> Deprecated: True ! This needs to be set to True for deprecated subroutines
+  !> 
+  !> This is unused (calc_rho_ll_ss is used instead)
+  !-------------------------------------------------------------------------------
   subroutine calc_rho_ll_ss_lmdos(rll, ircut, ipan, icell, thetas, cleb, icleb, iend, ifunm, lmsp, irws, drdi, dens, lmdos)
     use :: mod_datatypes, only: dp
-    use :: global_variables
-    use :: mod_csimpk
+    use :: global_variables, only: irid, irmd, lmmaxd, nfund, ipand, natypd, lmpotd, ncleb
+    use :: mod_csimpk, only: csimpk
     implicit none
 
     ! non-sph. eigen states of single pot
     ! derivative dr/di
     integer :: iend, irws, lmdos
 
-
     ! local variables
     complex (kind=dp) :: rll(irmd, lmmaxd, lmmaxd), dens
     real (kind=dp) :: cleb(*), thetas(irid, nfund, *), drdi(irmd)
     integer :: icleb(ncleb, 4), ifunm(natypd, lmpotd), lmsp(natypd, *), ircut(0:ipand), ipan, icell, ifun
-
     ! ..
     ! ---> first calculate only the spherically symmetric contribution
     ! (for all points r; if r>r_MT (or IR> IRMIN),the density has to
@@ -30,14 +36,10 @@ contains
 
     ! ---> remember that the gaunt coeffients for that case are 1/sqrt(4 pi)
 
-
     ! WRITE(6,*) "In rho ll"
-
 
     allocate (rges(irmd))
     allocate (rsp(irmd))
-
-
 
     c0ll = 1.0e0_dp/sqrt(16.0e0_dp*atan(1.0e0_dp))
     rsp = 0e0_dp
@@ -59,7 +61,6 @@ contains
     ! WRITE(6,*) "IRCUT(IPAN)-IRMIND",IRCUT(IPAN)-IRMIND
     ! WRITE(6,*) "IRMIND",IRMIND
 
-
     ! ---> calculate the non spherically symmetric contribution
 
     ! WRITE(156,*) "IFUN",IFUN
@@ -79,11 +80,7 @@ contains
             rges(ir) = rges(ir) + rll(ir, lm2p, lm1p)*cleb(j)*thetas(ir-ircut(1), ifun, icell)
           end do
           ! +          (RLL(IR,LM2P,LM1P)+RLL(IR,LM1P,LM2P))
-          ! END DO
-
-
-
-
+          ! END DD
         end if
       end if
 

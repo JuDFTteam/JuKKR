@@ -32,7 +32,7 @@ contains
     use :: omp_lib               ! omp functions
 #endif
 
-    use :: constants
+    use :: mod_constants
     use :: mod_datatypes, only: dp
     use :: mod_chebint
     use :: mod_sll_local_solutions

@@ -2,38 +2,42 @@ module mod_dirac_bs
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Solve radial Dirac equation
+  !> Author: H. Ebert
+  !> Category: KKRhost, dirac, single-site
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> ROUTINE TO SOLVE THE SPIN-POLARISED RADIAL DIRAC EQUATIONS
+  !>
+  !>  The outward integration is started by a power expansion    
+  !>  and the inward integration is started analytically
+  !>  the integration itself is done by the BURLISCH-STOER method
+  !>  see: numerical recipes chapter 15.4
+  !>
+  !>  Returns the wave functions up to the mesh point NMESH
+  !>  PR,QR and PI,QI  with   P=r*g and Q=r*c*f
+  !>  and    R/I standing for regular/irregular solution
+  !>
+  !>  bug fixed 93/11/24
+  !> 31/10/94  HE  arg. list changed - return P,Q instead of g,f
+  !> 06/12/94  HE  CM real
+  !> 29/04/95  MB  Adopted for finite nucleus
+  !-------------------------------------------------------------------------------
   subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, cg8, v, b, z, nucleus, r, drdi, dovr, nmesh, pr, qr, pi, qi, d_p, dq)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   ROUTINE TO SOLVE THE SPIN-POLARISED RADIAL DIRAC EQUATIONS     *
-    ! *                                                                  *
-    ! *   the outward integration is started by a power expansion        *
-    ! *   and the inward integration is started analytically             *
-    ! *   the integration itself is done by the BURLISCH-STOER method    *
-    ! *   see: numerical recipes chapter 15.4                            *
-    ! *                                                                  *
-    ! *   returns the wave functions up to the mesh point NMESH          *
-    ! *   PR,QR and PI,QI  with   P=r*g and Q=r*c*f                      *
-    ! *   and    R/I standing for regular/irregular solution             *
-    ! *                                                                  *
-    ! *   bug fixed 93/11/24                                             *
-    ! *  31/10/94  HE  arg. list changed - return P,Q instead of g,f     *
-    ! *  06/12/94  HE  CM real                                           *
-    ! *  29/04/95  MB  Adopted for finite nucleus                        *
-    ! ********************************************************************
+
     use :: mod_datatypes, only: dp
-    use :: mod_dirbsstp
-    use :: mod_cjlz
-    use :: mod_dirbsrad
-    use :: mod_rinvgj
+    use :: mod_dirbsstp, only: dirbsstp
+    use :: mod_cjlz, only: cjlz
+    use :: mod_dirbsrad, only: dirbsrad
+    use :: mod_rinvgj, only: rinvgj
+    use :: mod_constants, only: czero
     implicit none
     include 'sprkkr_rmesh.dim'
 
     ! PARAMETER definitions
     integer :: mpsmax, npemax, nabm
     parameter (mpsmax=40, npemax=4, nabm=5)
-    complex (kind=dp) :: c0
-    parameter (c0=(0.0e0_dp,0.0e0_dp))
     real (kind=dp) :: epsbs
     parameter (epsbs=2.0e-7_dp)
 
@@ -101,8 +105,6 @@ contains
       end do
     end do
 
-
-
     ! calculate g-coefficients of b-field
 
     isk1 = isign(1, kap1)
@@ -164,8 +166,8 @@ contains
     do i = 1, 2
       do j = 1, 2
         do ip = -npemax, mpsmax
-          pc(i, j, ip) = c0
-          qc(i, j, ip) = c0
+          pc(i, j, ip) = czero
+          qc(i, j, ip) = czero
         end do
       end do
     end do
@@ -177,8 +179,8 @@ contains
         i = 3 - j
         pc(j, j, 0) = sqrt(abs(kap(j))-gam(j))
         qc(j, j, 0) = (kap(j)+gam(j))*(csqr/tz)*pc(j, j, 0)
-        pc(i, j, 0) = c0
-        qc(i, j, 0) = c0
+        pc(i, j, 0) = czero
+        qc(i, j, 0) = czero
       end do
 
       ! determine higher expansion coefficients for the wave functions
@@ -274,8 +276,6 @@ contains
       end if
       ! MBE
 
-
-
       ! PERFORM SUMMATION OVER WAVE FUNCTION - EXPANSION COEFFICIENTS
       ! FOR THE FIRST   NABM   R - MESH - POINTS
 
@@ -324,10 +324,10 @@ contains
           m = lb(j)
           dq(j, j, n) = efac*sk(j)*(real(m+1,kind=dp)*cjlz(m,zz)-zz*cjlz(m+1,zz))*drdi(n)*c
 
-          pr(i, j, n) = c0
-          qr(i, j, n) = c0
-          d_p(i, j, n) = c0
-          dq(i, j, n) = c0
+          pr(i, j, n) = czero
+          qr(i, j, n) = czero
+          d_p(i, j, n) = czero
+          dq(i, j, n) = czero
         end do
       end do
 
@@ -393,10 +393,10 @@ contains
       dq(j, j, n) = cfac*sk(j)*(real(m+1,kind=dp)*cjlz(m,zz)-zz*cjlz(m+1,zz))*drdi(n)*c
 
       i = 3 - j
-      pi(i, j, n) = c0
-      qi(i, j, n) = c0
-      d_p(i, j, n) = c0
-      dq(i, j, n) = c0
+      pi(i, j, n) = czero
+      qi(i, j, n) = czero
+      d_p(i, j, n) = czero
+      dq(i, j, n) = czero
     end do
 
     ! =============================================================== n ====

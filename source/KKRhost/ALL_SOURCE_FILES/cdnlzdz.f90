@@ -1,16 +1,23 @@
 module mod_cdnlzdz
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: cdnlzdz
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates derivative of Neumann function
+  !> Author: 
+  !> Category: KKRhost, special-functions, dirac
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Calculates the derivative of the Neumann function 
+  !> d n(L,Z) / dz
+  !> analytically
+  !-------------------------------------------------------------------------------
   function cdnlzdz(l, z, mode)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *     d n(L,Z) / dz    analytically                                *
-    ! *                                                                  *
-    ! ********************************************************************
-    use :: mod_cnlz
+    use :: mod_datatypes, only: dp
+    use :: mod_cnlz, only: cnlz
     implicit none
 
     ! Dummy arguments

@@ -1,14 +1,27 @@
 module mod_hankel
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public hankel
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Analysical expression of Hankel functions
+  !> Author: 
+  !> Category: KKRhost, special-functions, core-electrons
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> This subroutine uses the explicit formulas for the Hankel
+  !> functions. For higher l-values these formulas may lead to
+  !> loss of significant figures. 
+  !> @warning 
+  !> This subroutine should be used
+  !> only for core states.
+  !> @endwarning
+  !-------------------------------------------------------------------------------
   subroutine hankel(h, l, arg)
-    ! this subroutine uses the explicit formulas for the hankel
-    ! functions. for higher l-values these formulas may lead to
-    ! loss of significant figures. This subroutine should be used
-    ! only for core states.
+    use :: mod_datatypes, only: dp
+    use :: mod_constants, only: ci
     implicit none
     ! .. Scalar Arguments ..
     complex (kind=dp) :: arg
@@ -22,11 +35,8 @@ contains
     ! ..
     ! .. Intrinsic Functions ..
     intrinsic :: exp
-    ! ..
-    ! .. Parameters ..
-    complex (kind=dp) :: ci
-    parameter (ci=(0.0e0_dp,1.0e0_dp))
-    ! ..
+    
+
     h(1) = -exp(arg*ci)/arg
     if (l/=1) then
       a1 = (1.e0_dp, 0.e0_dp) - arg*ci

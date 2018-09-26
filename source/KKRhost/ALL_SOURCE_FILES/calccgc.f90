@@ -1,19 +1,24 @@
 module mod_calccgc
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: calccgc
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculate Clebsh-Gordon coefficients in kappa-mue representation
+  !> Author: 
+  !> Category: KKRhost, special-functions, dirac
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> CLEBSCH-GORDON-COEFFICIENTS     CGC(IKM,IS)  in kappa-mue representation
+  !>                                              
+  !> IKM NUMBERS  CGC  FOR INCREASING  K  AND  MUE
+  !> IKM  = L*2*(J+1/2) + J + MUE + 1             
+  !> IS= 1/2  SPIN DOWN/UP
+  !-------------------------------------------------------------------------------
   subroutine calccgc(ltab, kaptab, nmuetab, cgc, nkmax, nmuemax, nkmpmax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   CLEBSCH-GORDON-COEFFICIENTS     CGC(IKM,IS)                    *
-    ! *                                                                  *
-    ! *   IKM NUMBERS  CGC  FOR INCREASING  K  AND  MUE                  *
-    ! *   IKM  = L*2*(J+1/2) + J + MUE + 1                               *
-    ! *   IS= 1/2  SPIN DOWN/UP                                          *
-    ! *                                                                  *
-    ! ********************************************************************
+    use :: mod_datatypes, only: dp
 
     implicit none
 
@@ -55,7 +60,6 @@ contains
 
         end do
       end if
-
 
     end do
 

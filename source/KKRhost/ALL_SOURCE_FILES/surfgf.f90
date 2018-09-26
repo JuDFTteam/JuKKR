@@ -16,7 +16,7 @@ contains
   ! -------------------------------------------------------------------------------
   subroutine surfgf(ndim, ml, m0, mr, x, itermax, errmax, ichck)
 
-    use :: constants
+    use :: mod_constants
     use :: mod_profiling
     use :: global_variables
     use :: mod_datatypes, only: dp

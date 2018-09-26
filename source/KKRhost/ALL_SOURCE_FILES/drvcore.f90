@@ -1,54 +1,60 @@
 module mod_drvcore
 
+private
+public :: drvcore
+
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Driver relativistic core routine
+  !> Author: 
+  !> Category: KKRhost, core-electrons
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Driving routine to call relativistic < CORE > routine           
+  !> counterpart of < COREL > of the non- or scalar-relativistic mode
+  !>
+  !> ATTENTION: all the variables connected with hyperfine fields are
+  !>            OFF                                                  
+  !>
+  !> The non-relativistic variables NCORE and LCORE are used as read 
+  !> in from the potential file; they are not modified and are again 
+  !> written out for the next iteration ( routine <RITES>)           
+  !>
+  !> Relativistic variables passed outside this routine:             
+  !>    NKCORE(1..NCORE)       = number of KAPPA values for a given  
+  !>                             (n,l) core state                    
+  !>    KAPCORE(1..NCORE,1..NCORE) = the (maximum 2) values of KAPPA 
+  !>    ECOREREL(1..NCORE,1..NCORE) = for a given (n,l) state the core
+  !>                              energies corresponding first/second
+  !>                              KAPPA value, AVERAGED over \mu's   
+  !>                              These values are written out to the
+  !>                              potential file (routine <RITES>),  
+  !>                              but the read in (routine <STARTB1>)
+  !>                              updates the ECORE array            
+  !>     Please note that ALL the core energies (also \mu-resolved)  
+  !>     are output by <CORE> routine but not passed out of here     
+  !>
+  !>    ECORE(1..NCORE,1..2) = this (non- or scalar relativistic)    
+  !>                           variable is updated here to be used in
+  !>                           calculating/printing out the spin-    
+  !>                           resolved energies (see <ESPCB> )      
+  !>                           A SUMMATION is done here:             
+  !>        ECORE(L,1/2) = SUM_{\kappa=-L-1,L} E(\kappa,\mu)         
+  !>                       /(2*L+1)                                  
+  !>                           with negative \mu's for E(*,1) and    
+  !>                           positive \mu's for E(*,2)             
+  !>                                                                 
+  !>                           V. Popescu July/2002
+  !-------------------------------------------------------------------------------
   subroutine drvcore(iprint, itprt, lcore, ncore, cscl, vtin, btin, rin, a, b, drdiin, r2drdiin, zat_in, jws_in, ishift, rhoc, ecorerel, nkcore, kapcore, ecore, lmaxd, irmd)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! * driving routine to call relativistic < CORE > routine            *
-    ! * counterpart of < COREL > of the non- or scalar-relativistic mode *
-    ! *                                                                  *
-    ! * ATTENTION: all the variables connected with hyperfine fields are *
-    ! *            OFF                                                   *
-    ! *                                                                  *
-    ! * The non-relativistic variables NCORE and LCORE are used as read  *
-    ! * in from the potential file; they are not modified and are again  *
-    ! * written out for the next iteration ( routine <RITES>)            *
-    ! *                                                                  *
-    ! * Relativistic variables passed outside this routine:              *
-    ! *    NKCORE(1..NCORE)       = number of KAPPA values for a given   *
-    ! *                             (n,l) core state                     *
-    ! *    KAPCORE(1..NCORE,1..NCORE) = the (maximum 2) values of KAPPA  *
-    ! *
-    ! *    ECOREREL(1..NCORE,1..NCORE) = for a given (n,l) state the core*
-    ! *                              energies corresponding first/second *
-    ! *                              KAPPA value, AVERAGED over \mu's    *
-    ! *                              These values are written out to the *
-    ! *                              potential file (routine <RITES>),   *
-    ! *                              but the read in (routine <STARTB1>) *
-    ! *                              updates the ECORE array             *
-    ! *     Please note that ALL the core energies (also \mu-resolved)   *
-    ! *     are output by <CORE> routine but not passed out of here      *
-    ! *                                                                  *
-    ! *    ECORE(1..NCORE,1..2) = this (non- or scalar relativistic)     *
-    ! *                           variable is updated here to be used in *
-    ! *                           calculating/printing out the spin-     *
-    ! *                           resolved energies (see <ESPCB> )       *
-    ! *                           A SUMMATION is done here:              *
-    ! *        ECORE(L,1/2) = SUM_{\kappa=-L-1,L} E(\kappa,\mu)          *
-    ! *                       /(2*L+1)                                   *
-    ! *                           with negative \mu's for E(*,1) and     *
-    ! *                           positive \mu's for E(*,2)              *
-    ! *                                                                  *
-    ! *                           v.popescu July/2002                    *
-    ! ********************************************************************
+
     use :: mod_datatypes, only: dp
-    use :: mod_core
-    use :: mod_rinit
+    use :: mod_core, only: core
+    use :: mod_rinit, only: rinit
     implicit none
 
     ! PARAMETER definitions
-
     integer :: ntmax, nmmax, ncstmax, nmemax, nlmax, nkmmax
     parameter (ntmax=1, nmmax=1, ncstmax=6, nmemax=5, nlmax=5, nkmmax=2*nlmax**2) ! NLMAX should be >= LCOREMAX + 1
     integer :: nrmax
@@ -190,6 +196,14 @@ contains
 
   end subroutine drvcore
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Summation of core-electron energies
+  !> Author: 
+  !> Category: KKRhost, core-electrons
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine sumecore(ncore, lcore, ecortab, nkcore, ecorerel, ecore, kapcore)
     use :: mod_datatypes, only: dp
     implicit none

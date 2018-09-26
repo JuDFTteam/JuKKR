@@ -5,9 +5,9 @@
 #define hostcode ! this is commented out to use the impurity code interface
 
 ! the following optinos need the hostcode interface
-!#define test_run
+! #define test_run
 ! write out files for test runs
-!#define test_prep
+! #define test_prep
 
 module mod_rllsll
 
@@ -110,7 +110,7 @@ contains
       use :: omp_lib               ! omp functions
 #endif
 
-      use :: constants
+      use :: mod_constants
       use :: mod_datatypes, only: dp
 
       implicit none
@@ -834,163 +834,164 @@ contains
 
     ! end subroutine iterativesol
 
+end module mod_rllsll
+
 #ifdef test_run
-  program test_rllsll
+program test_rllsll
 
-    use :: mod_timing
-    use :: constants
-    use :: mod_datatypes, only :: dp
+  use :: mod_timing
+  use :: mod_constants
+  use :: mod_datatypes, only :: dp
 
-    implicit none
+  implicit none
 
-    integer :: ir
-    logical, parameter :: output = .true.
+  integer :: ir
+  logical, parameter :: output = .true.
 
-    integer :: ncheb, npan, lmsize, lmsize2, nvec, nrmax, lbessel, use_sratrick1
-    complex (kind=dp) :: gmatprefactor
-    character (len=1) :: cmoderll, cmodesll, cmodetest
+  integer :: ncheb, npan, lmsize, lmsize2, nvec, nrmax, lbessel, use_sratrick1
+  complex (kind=dp) :: gmatprefactor
+  character (len=1) :: cmoderll, cmodesll, cmodetest
 
-    complex (kind=dp), allocatable :: hlk(:, :), jlk(:, :), hlk2(:, :), jlk2(:, :)
-    integer, allocatable :: jlk_index(:)
-    real (kind=dp), allocatable :: rpanbound(:), rmesh(:)
-    complex (kind=dp), allocatable :: sll(:, :, :), rll(:, :, :), tllp(:, :), vll(:, :, :)
-    complex (kind=dp), allocatable :: alphaget(:, :) ! lly
+  complex (kind=dp), allocatable :: hlk(:, :), jlk(:, :), hlk2(:, :), jlk2(:, :)
+  integer, allocatable :: jlk_index(:)
+  real (kind=dp), allocatable :: rpanbound(:), rmesh(:)
+  complex (kind=dp), allocatable :: sll(:, :, :), rll(:, :, :), tllp(:, :), vll(:, :, :)
+  complex (kind=dp), allocatable :: alphaget(:, :) ! lly
 
-    call timing_init(0)
-    call timing_start('read-in')
+  call timing_init(0)
+  call timing_start('read-in')
 
-    write (*, '(A)') '  === starting test routine for rllsll ==='
-    write (*, '(A)') '  start reading data from file data_rllsll.txt'
+  write (*, '(A)') '  === starting test routine for rllsll ==='
+  write (*, '(A)') '  start reading data from file data_rllsll.txt'
 
-    open (1234, file='data_rllsll.txt')
-    read (1234, '(7i9)') lbessel, nrmax, lmsize, nvec, npan, ncheb, use_sratrick1
-    read (1234, '(3a5)') cmoderll, cmodesll, cmodetest
+  open (1234, file='data_rllsll.txt')
+  read (1234, '(7i9)') lbessel, nrmax, lmsize, nvec, npan, ncheb, use_sratrick1
+  read (1234, '(3a5)') cmoderll, cmodesll, cmodetest
 
-    lmsize2 = nvec*lmsize
+  lmsize2 = nvec*lmsize
 
-    write (*, '(A)') '  read in parameters:'
-    write (*, '(A,3I9)') '  lbessel, nrmax, lmsize, nvec = ', lbessel, nrmax, lmsize, nvec
-    write (*, '(A,2I9)') '  npan, ncheb = ', npan, ncheb
-    write (*, '(A,I9)') '  use_sratrick1 = ', use_sratrick1
-    write (*, '(A,3A9)') '  cmoderll, cmodesll, cmodetest = ', cmoderll, cmodesll, cmodetest
+  write (*, '(A)') '  read in parameters:'
+  write (*, '(A,3I9)') '  lbessel, nrmax, lmsize, nvec = ', lbessel, nrmax, lmsize, nvec
+  write (*, '(A,2I9)') '  npan, ncheb = ', npan, ncheb
+  write (*, '(A,I9)') '  use_sratrick1 = ', use_sratrick1
+  write (*, '(A,3A9)') '  cmoderll, cmodesll, cmodetest = ', cmoderll, cmodesll, cmodetest
 
-    write (*, '(A)') '  reding in arrays ...'
+  write (*, '(A)') '  reding in arrays ...'
 
-    allocate (hlk(lbessel,nrmax), jlk(lbessel,nrmax), hlk2(lbessel,nrmax), jlk2(lbessel,nrmax))
-    allocate (jlk_index(2*lmsize))
-    allocate (sll(lmsize2,lmsize,nrmax), rll(lmsize2,lmsize,nrmax), tllp(lmsize,lmsize), vll(lmsize*nvec,lmsize*nvec,nrmax))
-    allocate (rpanbound(0:npan), rmesh(nrmax))
-    allocate (alphaget(lmsize,lmsize))
+  allocate (hlk(lbessel,nrmax), jlk(lbessel,nrmax), hlk2(lbessel,nrmax), jlk2(lbessel,nrmax))
+  allocate (jlk_index(2*lmsize))
+  allocate (sll(lmsize2,lmsize,nrmax), rll(lmsize2,lmsize,nrmax), tllp(lmsize,lmsize), vll(lmsize*nvec,lmsize*nvec,nrmax))
+  allocate (rpanbound(0:npan), rmesh(nrmax))
+  allocate (alphaget(lmsize,lmsize))
 
-    ! initialize to 0
-    rll = czero
-    sll = czero
-    tllp = czero
+  ! initialize to 0
+  rll = czero
+  sll = czero
+  tllp = czero
 
-    read (1234, '(1ES25.15)') gmatprefactor
-    read (1234, '(1000ES25.15)') hlk(1:lbessel, 1:nrmax), jlk(1:lbessel, 1:nrmax), hlk2(1:lbessel, 1:nrmax), jlk2(1:lbessel, 1:nrmax)
-    read (1234, '(1000i9)') jlk_index(1:2*lmsize)
-    read (1234, '(10000ES25.15)') rmesh(1:nrmax)
-    read (1234, '(10000ES25.15)') rpanbound(0:npan)
+  read (1234, '(1ES25.15)') gmatprefactor
+  read (1234, '(1000ES25.15)') hlk(1:lbessel, 1:nrmax), jlk(1:lbessel, 1:nrmax), hlk2(1:lbessel, 1:nrmax), jlk2(1:lbessel, 1:nrmax)
+  read (1234, '(1000i9)') jlk_index(1:2*lmsize)
+  read (1234, '(10000ES25.15)') rmesh(1:nrmax)
+  read (1234, '(10000ES25.15)') rpanbound(0:npan)
 
+  do ir = 1, nrmax
+    read (1234, '(10000ES25.15)') vll(1:lmsize2, 1:lmsize2, ir)
+  end do
+  close (1234)
+
+  call timing_stop('read-in')
+
+  write (*, '(A)')
+  write (*, '(A)') '  starting rllsll ...'
+  write (*, '(A)')
+
+  call timing_start('total rllsll')
+  call rllsll(rpanbound, rmesh, vll, rll, sll, tllp, ncheb, npan, lmsize, lmsize2, lbessel, nrmax, nrmax, nvec, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, cmoderll, &
+    cmodesll, cmodetest, use_sratrick1, alphaget) ! lly
+  call timing_stop('total rllsll')
+
+  write (*, '(A)')
+  write (*, '(A)') '  finished rllsll run'
+  write (*, '(A)')
+
+  if (output) then
+
+    call timing_start('output')
+
+    write (*, '(A)') '  writing output files'
+    open (1234, file='output_sll.txt')
+    write (1234, '(A)') '# output of rllsll test rountine: sll(1:lmsize2, 1:lmsize, ir) for ir in range(1, nrmax)'
+    write (1234, '(A,3I9)') '# lmsize2, lmsize, nrmax = ', lmsize2, lmsize, nrmax
     do ir = 1, nrmax
-      read (1234, '(10000ES25.15)') vll(1:lmsize2, 1:lmsize2, ir)
+      write (1234, '(10000ES25.15)') sll(1:lmsize2, 1:lmsize, ir)
     end do
     close (1234)
 
-    call timing_stop('read-in')
+    open (1234, file='output_rll.txt')
+    write (1234, '(A)') '# output of rllsll test rountine: rll(1:lmsize2, 1:lmsize, ir) for ir in range(1, nrmax)'
+    write (1234, '(A,3I9)') '# lmsize2, lmsize, nrmax = ', lmsize2, lmsize, nrmax
+    do ir = 1, nrmax
+      write (1234, '(10000ES25.15)') rll(1:lmsize2, 1:lmsize, ir)
+    end do
+    close (1234)
 
-    write (*, '(A)')
-    write (*, '(A)') '  starting rllsll ...'
-    write (*, '(A)')
+    open (1234, file='output_tllp.txt')
+    write (1234, '(A)') '# tllp(1:lmsize2, 1:lmsize) '
+    write (1234, '(A,3I9)') '# lmsize2, lmsize = ', lmsize2, lmsize
+    write (1234, '(10000ES25.15)') tllp(1:lmsize2, 1:lmsize2)
+    close (1234)
 
-    call timing_start('total rllsll')
-    call rllsll(rpanbound, rmesh, vll, rll, sll, tllp, ncheb, npan, lmsize, lmsize2, lbessel, nrmax, nrmax, nvec, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, cmoderll, &
-      cmodesll, cmodetest, use_sratrick1, alphaget) ! lly
-    call timing_stop('total rllsll')
+    write (*, *)
+    write (*, '(A)') '  === finished ==='
 
-    write (*, '(A)')
-    write (*, '(A)') '  finished rllsll run'
-    write (*, '(A)')
+    call timing_stop('output')
 
-    if (output) then
+  end if
 
-      call timing_start('output')
-
-      write (*, '(A)') '  writing output files'
-      open (1234, file='output_sll.txt')
-      write (1234, '(A)') '# output of rllsll test rountine: sll(1:lmsize2, 1:lmsize, ir) for ir in range(1, nrmax)'
-      write (1234, '(A,3I9)') '# lmsize2, lmsize, nrmax = ', lmsize2, lmsize, nrmax
-      do ir = 1, nrmax
-        write (1234, '(10000ES25.15)') sll(1:lmsize2, 1:lmsize, ir)
-      end do
-      close (1234)
-
-      open (1234, file='output_rll.txt')
-      write (1234, '(A)') '# output of rllsll test rountine: rll(1:lmsize2, 1:lmsize, ir) for ir in range(1, nrmax)'
-      write (1234, '(A,3I9)') '# lmsize2, lmsize, nrmax = ', lmsize2, lmsize, nrmax
-      do ir = 1, nrmax
-        write (1234, '(10000ES25.15)') rll(1:lmsize2, 1:lmsize, ir)
-      end do
-      close (1234)
-
-      open (1234, file='output_tllp.txt')
-      write (1234, '(A)') '# tllp(1:lmsize2, 1:lmsize) '
-      write (1234, '(A,3I9)') '# lmsize2, lmsize = ', lmsize2, lmsize
-      write (1234, '(10000ES25.15)') tllp(1:lmsize2, 1:lmsize2)
-      close (1234)
-
-      write (*, *)
-      write (*, '(A)') '  === finished ==='
-
-      call timing_stop('output')
-
-    end if
-
-  end program test_rllsll
+end program test_rllsll
 #endif
 
 
 #ifdef test_prep
-  subroutine write_rllsll_test_input(ncheb, npan, lmsize, nvec, nrmax, lbessel, use_sratrick1, gmatprefactor, cmoderll, cmodesll, cmodetest, hlk, jlk, hlk2, jlk2, jlk_index, &
-    rpanbound, rmesh, sll, rll, tllp, vll, alphaget)
+subroutine write_rllsll_test_input(ncheb, npan, lmsize, nvec, nrmax, lbessel, use_sratrick1, gmatprefactor, cmoderll, cmodesll, cmodetest, hlk, jlk, hlk2, jlk2, jlk_index, &
+  rpanbound, rmesh, sll, rll, tllp, vll, alphaget)
 
-    use :: mod_datatypes, only :: dp
-    implicit none
+  use :: mod_datatypes, only :: dp
+  implicit none
 
-    integer :: ir
+  integer :: ir
 
-    integer, intent (in) :: ncheb, npan, lmsize, nvec, nrmax, lbessel, use_sratrick1
-    complex (kind=dp), intent (in) :: gmatprefactor
-    character (len=1), intent (in) :: cmoderll, cmodesll, cmodetest
+  integer, intent (in) :: ncheb, npan, lmsize, nvec, nrmax, lbessel, use_sratrick1
+  complex (kind=dp), intent (in) :: gmatprefactor
+  character (len=1), intent (in) :: cmoderll, cmodesll, cmodetest
 
-    complex (kind=dp), intent (in) :: hlk(lbessel, nrmax), jlk(lbessel, nrmax), hlk2(lbessel, nrmax), jlk2(lbessel, nrmax)
-    integer, intent (in) :: jlk_index(2*lmsize)
-    real (kind=dp), intent (in) :: rpanbound(0:npan), rmesh(nrmax)
-    complex (kind=dp), intent (in) :: sll(nvec*lmsize, lmsize, nrmax), rll(nvec*lmsize, lmsize, nrmax), tllp(lmsize, lmsize), vll(lmsize*nvec, lmsize*nvec, nrmax)
-    complex (kind=dp), intent (in) :: alphaget(lmsize, lmsize)
+  complex (kind=dp), intent (in) :: hlk(lbessel, nrmax), jlk(lbessel, nrmax), hlk2(lbessel, nrmax), jlk2(lbessel, nrmax)
+  integer, intent (in) :: jlk_index(2*lmsize)
+  real (kind=dp), intent (in) :: rpanbound(0:npan), rmesh(nrmax)
+  complex (kind=dp), intent (in) :: sll(nvec*lmsize, lmsize, nrmax), rll(nvec*lmsize, lmsize, nrmax), tllp(lmsize, lmsize), vll(lmsize*nvec, lmsize*nvec, nrmax)
+  complex (kind=dp), intent (in) :: alphaget(lmsize, lmsize)
 
 
-    write (*, '(A)') '  === starting writeout routine for rllsll ==='
+  write (*, '(A)') '  === starting writeout routine for rllsll ==='
 
-    open (1234, file='data_rllsll.txt')
-    write (1234, '(7i9)') lbessel, nrmax, lmsize, nvec, npan, ncheb, use_sratrick1
-    write (1234, '(3a5)') cmoderll, cmodesll, cmodetest
+  open (1234, file='data_rllsll.txt')
+  write (1234, '(7i9)') lbessel, nrmax, lmsize, nvec, npan, ncheb, use_sratrick1
+  write (1234, '(3a5)') cmoderll, cmodesll, cmodetest
 
-    write (*, '(A)') '  writing arrays ...'
+  write (*, '(A)') '  writing arrays ...'
 
-    write (1234, '(1ES25.15)') gmatprefactor
-    write (1234, '(1000ES25.15)') hlk(1:lbessel, 1:nrmax), jlk(1:lbessel, 1:nrmax), hlk2(1:lbessel, 1:nrmax), jlk2(1:lbessel, 1:nrmax)
-    write (1234, '(1000i9)') jlk_index(1:2*lmsize)
-    write (1234, '(10000ES25.15)') rmesh(1:nrmax)
-    write (1234, '(10000ES25.15)') rpanbound(0:npan)
+  write (1234, '(1ES25.15)') gmatprefactor
+  write (1234, '(1000ES25.15)') hlk(1:lbessel, 1:nrmax), jlk(1:lbessel, 1:nrmax), hlk2(1:lbessel, 1:nrmax), jlk2(1:lbessel, 1:nrmax)
+  write (1234, '(1000i9)') jlk_index(1:2*lmsize)
+  write (1234, '(10000ES25.15)') rmesh(1:nrmax)
+  write (1234, '(10000ES25.15)') rpanbound(0:npan)
 
-    do ir = 1, nrmax
-      write (1234, '(10000ES25.15)') vll(1:nvec*lmsize, 1:nvec*lmsize, ir)
-    end do
-    close (1234)
+  do ir = 1, nrmax
+    write (1234, '(10000ES25.15)') vll(1:nvec*lmsize, 1:nvec*lmsize, ir)
+  end do
+  close (1234)
 
-  end subroutine write_rllsll_test_input
+end subroutine write_rllsll_test_input
 #endif
 
-end module mod_rllsll
