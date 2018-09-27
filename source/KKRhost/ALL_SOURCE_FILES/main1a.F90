@@ -36,7 +36,7 @@ contains
     use :: mod_mympi, only: find_dims_2d
 #endif
 #ifdef CPP_TIMING
-    use :: mod_timing
+    use :: mod_timing, only: timing_start, timing_stop
 #endif
 
     use :: mod_datatypes, only: dp
@@ -53,17 +53,14 @@ contains
     use :: mod_wunfiles, only: get_params_1a, t_params, read_angles
     use :: mod_jijhelp, only: set_jijcalc_flags
     ! array dimensions
-    use :: global_variables, only: natypd, wlength, lmmaxd, nrmaxd, lmpotd, nspotd, irmd, naclsd, nclsd, nrefd, ncleb, nembd
-    use :: global_variables, only: naezd, lm2d, krel, nspind, iemxd, ntotd, nrmaxd, irmind, lmpotd, nspotd, npotd, natomimpd
-    use :: global_variables, only: ipand, knosph, lpotd, irnsd
+    use :: global_variables, only: natypd, wlength, lmmaxd, nrmaxd, lmpotd, nspotd, irmd, naclsd, nclsd, nrefd, ncleb, nembd, &
+      naezd, lm2d, krel, nspind, iemxd, ntotd, nrmaxd, irmind, lmpotd, nspotd, npotd, natomimpd, ipand, knosph, lpotd, irnsd
     ! stuff defined in main0 already
-    use :: mod_main0, only: ielast, nspin, icst, ipan, ircut, lmax, ncls, nineq, idoldau, lly, atom, cls
-    use :: mod_main0, only: icleb, loflm, nacls, refpot, irws, iend, ez, vins, irmin, alat, drdi
-    use :: mod_main0, only: rmesh, zat, rcls, visp, rmtref, vref, cleb, cscl, socscale, socscl, erefldau, ueff
-    use :: mod_main0, only: jeff, solver, deltae, tolrdif, npan_log_at, npan_eq_at, ncheb, npan_tot
-    use :: mod_main0, only: ipan_intervall, rpan_intervall, rnew, r_log, ntldau, jwsrel, zrel, itscf, natomimp
-    use :: mod_main0, only: atomimp, iqat, naez, natyp, nref, nsra, ins, itldau, lopt, vtrel, btrel, drdirel, r2drdirel, rmrel
-    use :: mod_main0, only: itrunldau, wldau, uldau, phildau
+    use :: mod_main0, only: ielast, nspin, icst, ipan, ircut, lmax, ncls, nineq, idoldau, lly, atom, cls, icleb, loflm, nacls, &
+      refpot, irws, iend, ez, vins, irmin, alat, drdi, rmesh, zat, rcls, visp, rmtref, vref, cleb, cscl, socscale, socscl, erefldau, &
+      ueff, jeff, solver, deltae, tolrdif, npan_log_at, npan_eq_at, ncheb, npan_tot, ipan_intervall, rpan_intervall, rnew, r_log, &
+      ntldau, jwsrel, zrel, itscf, natomimp, atomimp, iqat, naez, natyp, nref, nsra, ins, itldau, lopt, vtrel, btrel, drdirel, &
+      r2drdirel, rmrel, itrunldau, wldau, uldau, phildau
 
     implicit none
 

@@ -1,73 +1,79 @@
-! -------------------------------------------------------------------------------
-! MODULE: MOD_MAIN1C
-!> @brief Wrapper module for the calculation of the density for the JM-KKR package
-!> @details The code uses the information obtained in the main0 module, this is
+!-------------------------------------------------------------------------------
+!> Summary: Wrapper module for the calculation of the density for the JM-KKR package
+!> Author: 
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!> The code uses the information obtained in the main0 module, this is
 !> mostly done via the get_params_1c() call, that obtains parameters of the type
 !> t_params and passes them to local variables
-!> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
-!> and many others ...
+!>
 !> @note
 !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
-! -------------------------------------------------------------------------------
+!> @endnote
+!-------------------------------------------------------------------------------
 module mod_main1c
 
-  use :: mod_profiling
-  use :: mod_constants
-  use :: global_variables
-  use :: mod_datatypes
-
-  use :: mod_mvecglobal
-  use :: mod_mixldau
-  use :: mod_interpolate_poten
-  use :: mod_rhoval
-  use :: mod_rhoval0
-  use :: mod_rhocore
-  use :: mod_renorm_lly
-  use :: mod_getscratch, only: opendafile
-  use :: mod_rhovalnew
-  use :: mod_wmatldau
-  use :: mod_wmatldausoc
-  use :: mod_wrldaupot
-  use :: mod_wrldos
-  use :: mod_wrmoms
-  
-  use :: mod_cinit, only: cinit
-  use :: mod_rinit, only: rinit
-
-  implicit none
+  private
+  public :: main1c
 
 contains
 
-  ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: main1c
-  !> @brief Main subroutine regarding the calculation of the electronic density
-  !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
-  !> and many others ...
-  ! ----------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
+  !> Summary: Main subroutine regarding the calculation of the electronic density
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine main1c()
 
 #ifdef CPP_MPI
     use :: mpi
+    use :: mod_types, only: gather_tmat, t_mpi_c_grid, save_t_mpi_c_grid, get_ntot_pt_ioff_pt_2d
+    use :: mod_mympi, only: nranks, find_dims_2d, distribute_linear_on_tasks, mympi_main1c_comm, mympi_main1c_comm_newsosol2
 #endif
 #ifdef CPP_TIMING
     use :: mod_timing
 #endif
-    use :: mod_types, only: t_tgmat, t_inc, t_lloyd
-#ifdef CPP_MPI
-    use :: mod_types, only: gather_tmat, t_mpi_c_grid, save_t_mpi_c_grid, get_ntot_pt_ioff_pt_2d
-#endif
+    use :: mod_datatypes, only: dp
+    use :: mod_constants, only: czero, pi
+    use :: mod_profiling, only: memocc
     use :: mod_mympi, only: myrank, master
-#ifdef CPP_MPI
-    use :: mod_mympi, only: nranks, find_dims_2d, distribute_linear_on_tasks, mympi_main1c_comm, mympi_main1c_comm_newsosol2
-#endif
-    use :: mod_wunfiles
-    use :: mod_version_info
+    use :: mod_types, only: t_tgmat, t_inc, t_lloyd
+    use :: mod_version_info, only: version_print_header
+    use :: mod_wunfiles, only: t_params, get_params_1c, read_angles, save_density
+    use :: mod_mvecglobal, only: mvecglobal
+    use :: mod_mixldau, only: mixldau
+    use :: mod_interpolate_poten, only: interpolate_poten
+    use :: mod_rhoval, only: rhoval
+    use :: mod_rhoval0, only: rhoval0
+    use :: mod_rhocore, only: rhocore
+    use :: mod_renorm_lly, only: renorm_lly
+    use :: mod_getscratch, only: opendafile
+    use :: mod_rhovalnew, only: rhovalnew
+    use :: mod_wmatldau, only: wmatldau
+    use :: mod_wmatldausoc, only: wmatldausoc
+    use :: mod_wrldaupot, only: wrldaupot
+    use :: mod_wrldos, only: wrldos
+    use :: mod_wrmoms, only: wrmoms
+    use :: mod_cinit, only: cinit
+    use :: mod_rinit, only: rinit
 
-    use :: mod_main0
+    use :: global_variables, only: iemxd, mmaxd, krel, lmaxd, natypd, npotd, irmd, nrmaxd, lmpotd, nspotd, naezd, ncleb, lm2d, ipand, &
+      nfund, ntotd, mmaxd, ncelld, irmind, nspind, nspotd, irid, irnsd, knosph, korbit, lmmaxd, lmxspd, lpotd, wlength
+
+    use :: mod_main0, only: ielast, nsra, ins, nspin, icst, kmrot, iqat, idoldau, irws, ipan, ircut, iend, icleb, loflm, jend, ifunm1, &
+      lmsp1, nfu, llmsp, lcore, ncore, ntcell, irmin, ititle, intervx, intervy, intervz, lly, npan_eq_at, ipan_intervall, &
+      npan_log_at, npan_tot, ntldau, lopt, itldau, ielast, iesemicore, npol, irshift, jwsrel, zrel, itrunldau, qmtet, qmphi, conc, alat, zat, &
+      drdi, rmesh, a, b, cleb, thetas, socscale, rpan_intervall, cscl, rnew, socscl, thetasnew, efermi, erefldau, ueff, jeff, emin, emax, tk, &
+      vins, visp, ecore, drdirel, r2drdirel, rmrel, vtrel, btrel, wldau, uldau, ez, wez, phildau, solver, r_log, naez, natyp, &
+      lmax, ncheb
+
+
 
     ! .. Parameters
-    integer :: nmvecmax
-    parameter (nmvecmax=4)
+    integer, parameter :: nmvecmax=4
     ! ..
     ! .. Local variables
     integer :: nqdos
@@ -507,8 +513,8 @@ contains
         if (lmomvec) then
           do is = 1, nmvecmax
             do lm = 1, 3
-              mvevi(i1, lm, is) = (0.0d0, 0.0d0)
-              mvevief(i1, lm, is) = (0.0d0, 0.0d0)
+              mvevi(i1, lm, is) = czero
+              mvevief(i1, lm, is) = czero
               do l = 0, lmax
                 mvevil(l, i1, lm, is) = mvevil1(l, lm, is)
                 mvevi(i1, lm, is) = mvevi(i1, lm, is) + mvevil1(l, lm, is)
@@ -540,7 +546,7 @@ contains
         idim = (lmaxd1+1)*ielast*nqdos*npotd ! qdos
         allocate (workc(0:lmaxd1,ielast,nqdos,npotd)) ! qdos
         call memocc(i_stat, product(shape(workc))*kind(workc), 'workc', 'main1c') ! qdos
-        workc = (0.d0, 0.d0)       ! qdos
+        workc = czero       ! qdos
         ! qdos
         call mpi_allreduce(den, workc, idim, mpi_double_complex, mpi_sum, & ! qdos
           mpi_comm_world, ierr)    ! qdos
@@ -572,7 +578,7 @@ contains
               ! qdos
               do ie = 1, ielast    ! qdos
                 do iq = 1, nqdos   ! qdos
-                  dentot = cmplx(0.d0, 0.d0, kind=dp) ! qdos
+                  dentot = czero ! qdos
                   do l = 0, lmaxd1 ! qdos
                     dentot = dentot + den(l, ie, iq, ipot) ! qdos
                   end do           ! qdos
@@ -602,7 +608,7 @@ contains
                 ! complex qdos
                 do ie = 1, ielast  ! complex qdos
                   do iq = 1, nqdos ! complex qdos
-                    dentot = cmplx(0.d0, 0.d0, kind=dp) ! complex qdos
+                    dentot = czero ! complex qdos
                     do l = 0, lmaxd1 ! complex qdos
                       den(l, ie, iq, ipot) = -2.0d0/pi*den(l, ie, iq, ipot) ! complex qdos
                       dentot = dentot + den(l, ie, iq, ipot) ! complex qdos

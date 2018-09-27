@@ -14,22 +14,8 @@
 ! -------------------------------------------------------------------------------
 program kkrcode
 
-  use :: mod_constants
-  use :: mod_profiling
-  use :: mod_main0
-  use :: mod_main1a
-  use :: mod_main1b
-  use :: mod_main1c
-  use :: mod_main2
-  use :: mod_types
-  use :: mod_timing
-  use :: mod_md5sums
-  use :: memoryhandling
-  use :: mod_version_info
-  use :: global_variables
-  use :: mod_wunfiles, only: t_params
-
 #ifdef CPP_MPI
+  use :: mpi
   use :: mod_mympi, only: mympi_init, myrank, nranks, master, find_dims_2d, distribute_linear_on_tasks, create_newcomms_group_ie, mpiatom, mpiadapt, check_communication_pattern
   use :: mod_save_wavefun, only: t_wavefunctions, bcast_params_savewf
   use :: godfrin, only: t_godfrin, bcast_params_godfrin ! GODFRIN Flaviano
@@ -37,10 +23,35 @@ program kkrcode
   use :: mod_mympi, only: mympi_init, myrank, nranks, master
   use :: mod_save_wavefun, only: t_wavefunctions
 #endif
+  use :: mod_constants, only: czero, nsymaxd
+  use :: mod_profiling, only: memocc
+  use :: mod_types, only: t_inc, t_lloyd, t_cpa, t_mpi_c_grid, t_tgmat, bcast_t_lly_1, bcast_t_inc_tgmat, save_t_mpi_c_grid
+  use :: mod_timing, only: timing_start, timing_stop, timing_init, timings_1a, timings_1b, load_imbalance, print_time_and_date
+  use :: mod_md5sums, only: mympi_bcast_md5sums
+  use :: memoryhandling, only: allocate_cell, allocate_cpa, allocate_soc, allocate_ldau, allocate_magnetization, allocate_potential, &
+    allocate_energies, allocate_relativistic, allocate_clusters, allocate_expansion, allocate_mesh, allocate_pannels, allocate_misc, &
+    allocate_green, allocate_ldau_potential, allocate_rel_transformations, allocate_semi_inf_host
+  use :: mod_version_info, only: version_print_header, construct_serialnr
+  use :: mod_wunfiles, only: t_params, bcast_t_params_scalars, bcast_t_params_arrays, init_t_params
+  use :: mod_main1a, only: main1a
+  use :: mod_main1b, only: main1b
+  use :: mod_main1c, only: main1c
+  use :: mod_main2, only: main2
 
-#ifdef CPP_MPI
-  use :: mpi
-#endif
+  use :: global_variables, only: iemxd, ipand, irid, irmind, irmd, krel, lassld, lm2d, lmaxd, lmmaxd, lmpotd, lmxspd, mmaxd, naclsd, &
+    naezd, natomimpd, natypd, ncelld, nchebd, ncleb, nclsd, nembd, ipand, irid, irmd, irmind, krel, nembd1, nfund, ngshd, nofgij, nrd, &
+    nprincd, nrefd, nsheld, nspotd, nspind, nspindd, npotd, ntotd
+
+  use :: mod_main0, only: main0, a, atom, atomimp, b, btrel, cleb, cls, cmomhost, conc, crel, cscl, dez, drdi, drdirel, dror, drotq, &
+    dsymll, dsymll1, ecore, erefldau, ez, ezoa, fpradius, gsh, hostimp, icheck, icleb, icpa, ifunm, ifunm1, ijtabcalc, ijtabcalc_i, &
+    ijtabsh, ijtabsym, ilm_map, imaxsh, imt, inipol, iofgij, ipan, ipan_intervall, iqat, iqcalc, irc, ircut, irm, irmin, irns, irrel, &
+    irshift, irws, ish, jsh, ititle, itldau, ixipol, jeff, jend, jofgij, jwsrel, kaoez, kfg, kmesh, lcore, lefttinvll, llmsp, lmax, &
+    lmpot, lmsp, lmsp1, lmxc, loflm, lopt, mtfac, nacls, naez, natyp, ncheb, ncore, nemb, nfu, noq, npan_eq_at, npan_log_at, nref, &
+    nshell, ntcell, nsh1, nsh2, nrrel, npan_tot, phildau, qmgam, qmgamtab, qmphi, qmphitab, qmtet, qmtettab, r2drdirel, ratom, rbasis, &
+    rc, rcls, rclsimp, refpot, righttinvll, rmesh, rmtnew, rmtrefat, rnew, rpan_intervall, rr, rrel, rrot, rs, rws, s, rmt, rmtref, &
+    socscale, socscl, srrel, thesme, thetas, thetasnew, tleft, tright, rmrel, uldau, vins, visp, vref, vtrel, wez, wg, wldau, &
+    yrg, zat, zrel, ueff
+
 
   implicit none
 

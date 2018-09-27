@@ -1,19 +1,13 @@
 
 !-------------------------------------------------------------------------------
-!> Summary: 
+!> Summary: Module concerning gmat
 !> Author: 
 !> Deprecated: False ! This needs to be set to True for deprecated subroutines
 !>
-!> 
-!-------------------------------------------------------------------------------
-! -------------------------------------------------------------------------------
-! MODULE: MOD_MAIN1B
-!> @brief Module concerning gmat
-!> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
-!> and many others ...
 !> @note
 !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
-! -------------------------------------------------------------------------------
+!> @endnote
+!-------------------------------------------------------------------------------
 module mod_main1b
 
   private
@@ -21,18 +15,21 @@ module mod_main1b
 
 contains
 
-  ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: main1b
-  !> @brief Main subroutine regarding the claculation of the gmat
-  !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
-  !> and many others ...
-  ! ----------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
+  !> Summary: Main subroutine regarding the claculation of the gmat
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine main1b()
 
 #ifdef CPP_MPI
     use :: mpi
     use :: mod_mympi, only: find_dims_2d, distribute_linear_on_tasks, mpiadapt
-    use :: mod_types, only: t_mpi_c_grid, save_t_mpi_c_grid, get_ntot_pt_ioff_pt_2d, init_params_t_imp, init_t_imp, bcast_t_imp_scalars, bcast_t_imp_arrays
+    use :: mod_types, only: t_mpi_c_grid, save_t_mpi_c_grid, get_ntot_pt_ioff_pt_2d, init_params_t_imp, init_t_imp, bcast_t_imp_scalars, &
+      bcast_t_imp_arrays
 #endif
     use :: mod_mympi, only: myrank, master
     use :: mod_datatypes, only: dp
@@ -55,17 +52,15 @@ contains
     use :: mod_rhoqtools, only: rhoq_save_refpot
     use :: mod_cinit, only: cinit
     ! array dimensions
-    use :: global_variables, only: maxmshd, iemxd, natypd, naezd, kpoibz, lmmaxd, lmgf0d, lmaxd, nrefd, nsheld, wlength, nofgij
-    use :: global_variables, only: naclsd, nspind, nclsd, nembd, krel, korbit, natomimpd, nrd, nembd1, nspindd, nprincd
-    use :: global_variables, only: lmmaxso, irmind, nspotd, irmd, lpotd, ncleb, ipand, irnsd, lmpotd, irid, nfund, ntotd
+    use :: global_variables, only: maxmshd, iemxd, natypd, naezd, kpoibz, lmmaxd, lmgf0d, lmaxd, nrefd, nsheld, wlength, nofgij, &
+      naclsd, nspind, nclsd, nembd, krel, korbit, natomimpd, nrd, nembd1, nspindd, nprincd, lmmaxso, irmind, nspotd, irmd, lpotd, &
+      ncleb, ipand, irnsd, lmpotd, irid, nfund, ntotd
     ! stuff defined in main0 already
-    use :: mod_main0, only: natyp, ielast, npol, nref, naez, nsra, ins, nspin, ncls, lly, atom, cls, nacls, refpot, ez
-    use :: mod_main0, only: alat, rcls, rmtref, vref, atomimp, icc, igf, nlbasis, nrbasis
-    use :: mod_main0, only: ncpa, icpa, itcpamax, cpatol, rbasis, rr, ezoa, nshell, kmrot, kaoez, ish, jsh, nsh1, nsh2
-    use :: mod_main0, only: noq, iqat, natomimp, conc, kmesh, maxmesh, nsymat, nqcalc, ratom, rrot, drotq, ijtabcalc
-    use :: mod_main0, only: ijtabcalc_i, ijtabsym, ijtabsh, iqcalc, dsymll, invmod, icheck, symunitary, rc, crel, rrel, srrel, nrrel
-    use :: mod_main0, only: irrel, lefttinvll, righttinvll, wez, rclsimp, vacflag, iend, lmax, r_log, vins, visp, ipan
-    use :: mod_main0, only: irmin, icleb, zat, rmesh, cleb, ncheb, ircut
+    use :: mod_main0, only: natyp, ielast, npol, nref, naez, nsra, ins, nspin, ncls, lly, atom, cls, nacls, refpot, ez, alat, rmtref, &
+      vref, atomimp, icc, igf, nlbasis, nrbasis, ncpa, icpa, itcpamax, cpatol, rbasis, rr, ezoa, nshell, kmrot, kaoez, ish, jsh, nsh1, &
+      nsh2, noq, iqat, natomimp, conc, kmesh, maxmesh, nsymat, nqcalc, ratom, rrot, drotq, ijtabcalc, ijtabcalc_i, ijtabsym, ijtabsh, &
+      iqcalc, dsymll, invmod, icheck, symunitary, rc, crel, rrel, srrel, nrrel, irrel, lefttinvll, righttinvll, wez, rclsimp, vacflag, &
+      iend, lmax, r_log, vins, visp, ipan, irmin, icleb, zat, rmesh, cleb, ncheb, ircut, rcls
 
     implicit none
 
@@ -707,7 +702,7 @@ contains
               i1 = atomimp(1)
               if (opt('KKRFLEX ')) then
                 ilm = 0
-                gimp = (0.e0, 0.e0) ! complex*8
+                gimp = czero ! complex*8
                 do lm2 = 1, lmmaxd
                   do lm1 = 1, lmmaxd
                     ilm = ilm + 1
@@ -841,7 +836,7 @@ contains
 #ifdef CPP_MPI
         ihelp = ielast*nspin       ! IELAST*NSPIN
         allocate (work(ielast,nspin))
-        work = (0.d0, 0.d0)
+        work = czero
         call mpi_allreduce(cdos_lly, work, ihelp, mpi_double_complex, mpi_sum, t_mpi_c_grid%mympi_comm_at, ierr)
         call zcopy(ihelp, work, 1, cdos_lly, 1)
         deallocate (work)

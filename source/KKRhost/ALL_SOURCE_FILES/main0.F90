@@ -36,7 +36,7 @@ module mod_main0
 #ifdef CPP_TIMING
   use :: mod_timing
 #endif
-  use :: mod_wunfiles
+  use :: mod_wunfiles, only: t_params, wunfiles
   use :: mod_types, only: t_imp
   use :: mod_constants
   use :: memoryhandling
@@ -82,14 +82,14 @@ module mod_main0
   public :: main0, bshift_ns
   ! ------------- > scalars > ------------- 
   !integers
-  public :: kte, kws, kxc, igf, icc, ins, irm, ipe, ipf, ipfe, kcor, kefg, khyp, kpre, nprinc, nsra, lpot, imix, iend
-  public :: icst, naez, nemb, lmax, ncls, nref, npol, npnt1, npnt2, npnt3, lmmax, nvirt, lmpot, kvmad, itscf, ncheb, nineq
-  public :: natyp, ifile, kvrel, nspin, nleft, nright, invmod, khfeld, itdbry, insref, kshape, ielast, ishift, kfrozn, nsymat
-  public :: nqcalc, kforce, n1semi, n2semi, n3semi, nlayer, nlbasis, nrbasis, intervx, intervy, intervz, maxmesh, npan_eq
-  public :: npan_log, npolsemi, scfsteps, natomimp, iesemicore, idosemicore
+  public :: kte, kws, kxc, igf, icc, ins, irm, ipe, ipf, ipfe, kcor, kefg, khyp, kpre, nprinc, nsra, lpot, imix, iend, icst, &
+    naez, nemb, lmax, ncls, nref, npol, npnt1, npnt2, npnt3, lmmax, nvirt, lmpot, kvmad, itscf, ncheb, nineq, natyp, ifile, &
+    kvrel, nspin, nleft, nright, invmod, khfeld, itdbry, insref, kshape, ielast, ishift, kfrozn, nsymat, nqcalc, kforce, n1semi, &
+    n2semi, n3semi, nlayer, nlbasis, nrbasis, intervx, intervy, intervz, maxmesh, npan_eq, npan_log, npolsemi, scfsteps, natomimp, &
+    iesemicore, idosemicore
   !real(kind=dp)
-  public :: tk, fcm, e2in, emin, emax, alat, rmax, gmax, r_log, rcutz, rcutxy, qbound, vconst, hfield, mixing, abasis, bbasis
-  public :: cbasis, efermi, eshift, tksemi, tolrdif, alatnew, volume0, emusemi, ebotsemi, fsemicore, lambda_xc
+  public :: tk, fcm, e2in, emin, emax, alat, rmax, gmax, r_log, rcutz, rcutxy, qbound, vconst, hfield, mixing, abasis, bbasis, &
+    cbasis, efermi, eshift, tksemi, tolrdif, alatnew, volume0, emusemi, ebotsemi, fsemicore, lambda_xc
   !character
   public :: solver, i12, i13, i19, i25, i40
   !logicals
@@ -97,16 +97,16 @@ module mod_main0
   ! ------------- < scalars < ------------- 
   ! ------------- > arrays > ------------- 
   !integer
-  public :: isymindex, cls, irc, imt, nfu, nsh1, nsh2, lmxc, ipan, irns, irws, kmesh, irmin, loflm, nacls, ncore, imaxsh, nshell
-  public :: inipol, ixipol, refpot, ntcell, iqcalc, iofgij, jofgij, atomimp, ijtabsh, ijtabsym, npan_tot, ijtabcalc, npan_eq_at
-  public :: npan_log_at, ijtabcalc_i, ish, jsh, ilm_map, kfg, atom, ezoa, lmsp, lcore, icleb, ircut, llmsp, lmsp1, kaoez, ifunm
-  public :: ifunm1, ititle, icheck, ipan_intervall, jend, kmrot, ncpa, itcpamax, noq, iqat, icpa, hostimp, zrel, jwsrel, irshift
-  public :: nrrel, ntldau, idoldau, itrunldau, kreadldau, lopt, itldau, lly, ivshift, irrel
+  public :: isymindex, cls, irc, imt, nfu, nsh1, nsh2, lmxc, ipan, irns, irws, kmesh, irmin, loflm, nacls, ncore, imaxsh, nshell, &
+    inipol, ixipol, refpot, ntcell, iqcalc, iofgij, jofgij, atomimp, ijtabsh, ijtabsym, npan_tot, ijtabcalc, npan_eq_at, npan_log_at, &
+    ijtabcalc_i, ish, jsh, ilm_map, kfg, atom, ezoa, lmsp, lcore, icleb, ircut, llmsp, lmsp1, kaoez, ifunm, ifunm1, ititle, icheck, &
+    ipan_intervall, jend, kmrot, ncpa, itcpamax, noq, iqat, icpa, hostimp, zrel, jwsrel, irshift, nrrel, ntldau, idoldau, itrunldau, &
+    kreadldau, lopt, itldau, lly, ivshift, irrel
   !real
-  public :: vbc, zperight, zperleft, recbv, bravais, rsymat, a, b, wg, gsh, zat, rmt, rws, vref, vref_temp, mtfac, rmtnew, rmtref
-  public :: rmtref_temp, rmtrefat, fpradius, socscale, rmesh, s, rr, drdi, dror, cleb, visp, cscl, rnew, ratom, ecore, tleft, tright
-  public :: socscl, rbasis, rclsimp, cmomhost, rpan_intervall, rs, yrg, vins, rcls, rrot, qmtet, qmphi, qmgam, qmgamtab, qmphitab, qmtettab
-  public :: cpatol, conc, fact, vtrel, btrel, rmrel, drdirel, r2drdirel, thesme, thetas, thetasnew, ueff, jeff, erefldau, wldau, uldau
+  public :: vbc, zperight, zperleft, recbv, bravais, rsymat, a, b, wg, gsh, zat, rmt, rws, vref, vref_temp, mtfac, rmtnew, rmtref, &
+    rmtref_temp, rmtrefat, fpradius, socscale, rmesh, s, rr, drdi, dror, cleb, visp, cscl, rnew, ratom, ecore, tleft, tright, socscl, &
+    rbasis, rclsimp, cmomhost, rpan_intervall, rs, yrg, vins, rcls, rrot, qmtet, qmphi, qmgam, qmgamtab, qmphitab, qmtettab, cpatol, &
+    conc, fact, vtrel, btrel, rmrel, drdirel, r2drdirel, thesme, thetas, thetasnew, ueff, jeff, erefldau, wldau, uldau
   !complex
   public :: ez, dez, wez, dsymll, dsymll1, lefttinvll, righttinvll, rc, crel, rrel, srrel, drotq, phildau, deltae
   !character
