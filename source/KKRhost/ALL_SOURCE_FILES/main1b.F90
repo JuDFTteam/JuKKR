@@ -1,3 +1,11 @@
+
+!-------------------------------------------------------------------------------
+!> Summary: 
+!> Author: 
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!> 
+!-------------------------------------------------------------------------------
 ! -------------------------------------------------------------------------------
 ! MODULE: MOD_MAIN1B
 !> @brief Module concerning gmat
@@ -8,23 +16,8 @@
 ! -------------------------------------------------------------------------------
 module mod_main1b
 
-  use :: mod_profiling
-  use :: mod_constants
-  use :: global_variables
-  use :: mod_datatypes, only: dp
-
-  use :: mod_operators_for_fscode
-  use :: mod_getscratch, only: opendafile
-  use :: mod_kloopz1, only: kloopz1_qdos
-  use :: mod_greenimp
-  use :: mod_changerep
-  use :: mod_tmatimp_newsolver
-  use :: mod_setfactl
-  use :: mod_calctref13
-  use :: mod_calrmt
-  use :: mod_rotatespinframe, only: rotatematrix
-
-  implicit none
+  private
+  public :: main1b
 
 contains
 
@@ -36,38 +29,46 @@ contains
   ! ----------------------------------------------------------------------------
   subroutine main1b()
 
-    use :: mod_types, only: t_tgmat, t_inc, t_lloyd, t_cpa, init_t_cpa, t_imp
 #ifdef CPP_MPI
-    use :: mod_types, only: t_mpi_c_grid, save_t_mpi_c_grid, get_ntot_pt_ioff_pt_2d, init_params_t_imp, init_t_imp, bcast_t_imp_scalars, bcast_t_imp_arrays
     use :: mpi
+    use :: mod_mympi, only: find_dims_2d, distribute_linear_on_tasks, mpiadapt
+    use :: mod_types, only: t_mpi_c_grid, save_t_mpi_c_grid, get_ntot_pt_ioff_pt_2d, init_params_t_imp, init_t_imp, bcast_t_imp_scalars, bcast_t_imp_arrays
 #endif
     use :: mod_mympi, only: myrank, master
-#ifdef CPP_MPI
-    use :: mod_mympi, only: find_dims_2d, distribute_linear_on_tasks, mpiadapt
-#endif
-    use :: mod_timing
-    use :: mod_wunfiles
+    use :: mod_datatypes, only: dp
+    use :: mod_constants, only: czero, cone, pi, nsymaxd
+    use :: mod_profiling, only: memocc
+    use :: mod_operators_for_fscode, only: operators_for_fscode
+    use :: mod_getscratch, only: opendafile
+    use :: mod_kloopz1, only: kloopz1_qdos
+    use :: mod_greenimp, only: greenimp
+    use :: mod_changerep, only: changerep
+    use :: mod_tmatimp_newsolver, only: tmatimp_newsolver
+    use :: mod_setfactl, only: setfactl
+    use :: mod_calctref13, only: calctref13
+    use :: mod_rotatespinframe, only: rotatematrix
+    use :: mod_types, only: t_tgmat, t_inc, t_lloyd, t_cpa, init_t_cpa, t_imp
+    use :: mod_timing, only: timing_start, timing_pause, timing_stop, timings_1b, print_time_and_date
+    use :: mod_wunfiles, only: get_params_1b, t_params, read_angles
     use :: mod_tbxccpljij, only: tbxccpljij
-    use :: mod_version_info
-    use :: global_variables
     use :: mod_tbxccpljijdij, only: tbxccpljijdij
     use :: mod_rhoqtools, only: rhoq_save_refpot
-
-    use :: mod_main0
+    use :: mod_cinit, only: cinit
+    ! array dimensions
+    use :: global_variables, only: maxmshd, iemxd, natypd, naezd, kpoibz, lmmaxd, lmgf0d, lmaxd, nrefd, nsheld, wlength, nofgij
+    use :: global_variables, only: naclsd, nspind, nclsd, nembd, krel, korbit, natomimpd, nrd, nembd1, nspindd, nprincd
+    use :: global_variables, only: lmmaxso, irmind, nspotd, irmd, lpotd, ncleb, ipand, irnsd, lmpotd, irid, nfund, ntotd
+    ! stuff defined in main0 already
+    use :: mod_main0, only: natyp, ielast, npol, nref, naez, nsra, ins, nspin, ncls, lly, atom, cls, nacls, refpot, ez
+    use :: mod_main0, only: alat, rcls, rmtref, vref, atomimp, icc, igf, nlbasis, nrbasis
+    use :: mod_main0, only: ncpa, icpa, itcpamax, cpatol, rbasis, rr, ezoa, nshell, kmrot, kaoez, ish, jsh, nsh1, nsh2
+    use :: mod_main0, only: noq, iqat, natomimp, conc, kmesh, maxmesh, nsymat, nqcalc, ratom, rrot, drotq, ijtabcalc
+    use :: mod_main0, only: ijtabcalc_i, ijtabsym, ijtabsh, iqcalc, dsymll, invmod, icheck, symunitary, rc, crel, rrel, srrel, nrrel
+    use :: mod_main0, only: irrel, lefttinvll, righttinvll, wez, rclsimp, vacflag, iend, lmax, r_log, vins, visp, ipan
+    use :: mod_main0, only: irmin, icleb, zat, rmesh, cleb, ncheb, ircut
 
     implicit none
 
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ! For KREL = 1 (relativistic mode)
-
-    ! NPOTD = 2 * NATYP
-    ! LMMAXD = 2 * (LMAX+1)^2
-    ! NSPIND = 1
-    ! LMGF0D = (LMAX+1)^2 dimension of the reference system Green
-    ! function, set up in the spin-independent non-relativstic
-    ! (l,m_l)-representation
-
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! .. Local variables
     integer :: nspin1
     integer :: l
@@ -84,7 +85,7 @@ contains
     integer :: irec
     integer :: iltmp
     integer :: nmesh
-    integer :: nqdos               ! qdos ruess:number of qdos points
+    integer :: nqdos               !! number of qdos points
     integer :: isite               ! qdos ruess
     integer :: ideci
     integer :: ispin
@@ -93,7 +94,7 @@ contains
     integer :: lrecgrf
     integer :: lrectmt
     integer :: lrectra             ! LLY Lloyd
-    integer :: iqdosrun            ! qdos ruess: counter to organise qdos run
+    integer :: iqdosrun            !! counter to organise qdos run
     integer :: naclsmax
     integer :: lrecgrf1
     integer :: ncpafail
@@ -115,8 +116,8 @@ contains
     character (len=80) :: tmpdir
 #ifndef CPP_MPI
     character (len=80) :: text                             ! qdos ruess
-
 #endif
+
     ! .. Local arrays
     integer, dimension (maxmshd) :: nofks
     integer, dimension (iemxd) :: iecpafail
@@ -141,8 +142,7 @@ contains
     complex (kind=dp), dimension (lmmaxd, lmmaxd, nrefd) :: dtrefll !! LLY Lloyd dtref/dE
     complex (kind=dp), dimension (lmmaxd, lmmaxd, naezd) :: dtmatll !! LLY Lloyd  dt/dE
     complex (kind=dp), dimension (lmmaxd*lmmaxd) :: gimp !!  Cluster GF (ref. syst.)
-    character (len=35), dimension (0:2), parameter :: invalg = [ 'FULL MATRIX                        ', 'BANDED MATRIX (slab)               ', 'BANDED + CORNERS MATRIX (supercell)' &
-      ]
+    character (len=35), dimension (0:2), parameter :: invalg = [ 'FULL MATRIX                        ', 'BANDED MATRIX (slab)               ', 'BANDED + CORNERS MATRIX (supercell)' ]
 
     ! .. Allocatable local arrays
     real (kind=dp), dimension (:, :), allocatable :: qvec !! qdos ruess, q-vectors for qdos
@@ -175,6 +175,7 @@ contains
     ! -------------------------------------------------------------------------
     ! .. Intrinsic Functions ..
     intrinsic :: atan
+
 
     ! .. Set the parameters
     lrectra = wlength*4            ! LLY Lloyd

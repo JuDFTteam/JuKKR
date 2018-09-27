@@ -1,53 +1,71 @@
-! -------------------------------------------------------------------------------
-! MODULE: MOD_MAIN1A
-!> @brief Wrapper module for the calculation of the T-matrix for the JM-KKR package
-!> @details The code uses the information obtained in the main0 module, this is
+!-------------------------------------------------------------------------------
+!> Summary: Wrapper module for the calculation of the t-matrix for the JM-KKR package
+!> Author: 
+!> Category: KKRhost, 
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!> The code uses the information obtained in the main0 module, this is
 !> mostly done via the get_params_1a() call, that obtains parameters of the type
 !> t_params and passes them to local variables
-!> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
-!> and many others ...
+!>
 !> @note
 !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
-! -------------------------------------------------------------------------------
+!> @endnote
+!-------------------------------------------------------------------------------
 module mod_main1a
 
-  use :: mod_profiling
-  use :: mod_constants
-  use :: global_variables
-  use :: mod_datatypes, only: dp
-  use :: mod_tmatnewsolver, only: tmat_newsolver
-
-  use :: mod_tbref
-  use :: mod_getscratch, only: opendafile
-  use :: mod_interpolate_poten
-  use :: mod_initldau
-  use :: mod_calctmat
-
-  implicit none
+  private
+  public :: main1a
 
 contains
 
-  ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: main1a
-  !> @brief Main subroutine regarding the calculation of the t-matrix
-  !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
-  !> and many others ...
-  ! ----------------------------------------------------------------------------
+
+  !-------------------------------------------------------------------------------
+  !> Summary: Main driver for single-site part of the calculation
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine main1a()
 
-    use :: mod_types, only: t_tgmat, t_inc, t_lloyd, t_dtmatjij, init_t_dtmatjij, init_t_dtmatjij_at, t_mpi_c_grid
-    use :: mod_mympi, only: nranks, master, myrank, distribute_work_atoms, distribute_work_energies
-    use :: mod_wunfiles
-    use :: mod_jijhelp, only: set_jijcalc_flags
-    use :: mod_main0
-#ifdef CPP_TIMING
-    use :: mod_timing
-#endif
 #ifdef CPP_MPI
     use :: mpi
     use :: mod_types, only: gather_tmat, gather_lly_dtmat, save_t_mpi_c_grid, get_ntot_pt_ioff_pt_2d
     use :: mod_mympi, only: find_dims_2d
 #endif
+#ifdef CPP_TIMING
+    use :: mod_timing
+#endif
+
+    use :: mod_datatypes, only: dp
+    use :: mod_constants, only: czero
+    use :: mod_profiling, only: memocc
+    use :: mod_tmatnewsolver, only: tmat_newsolver
+    use :: mod_tbref, only: tbref
+    use :: mod_getscratch, only: opendafile
+    use :: mod_interpolate_poten, only: interpolate_poten
+    use :: mod_initldau, only: initldau
+    use :: mod_calctmat, only: calctmat
+    use :: mod_types, only: t_tgmat, t_inc, t_lloyd, t_dtmatjij, init_t_dtmatjij, init_t_dtmatjij_at, t_mpi_c_grid
+    use :: mod_mympi, only: nranks, master, myrank, distribute_work_atoms, distribute_work_energies
+    use :: mod_wunfiles, only: get_params_1a, t_params, read_angles
+    use :: mod_jijhelp, only: set_jijcalc_flags
+    ! array dimensions
+    use :: global_variables, only: natypd, wlength, lmmaxd, nrmaxd, lmpotd, nspotd, irmd, naclsd, nclsd, nrefd, ncleb, nembd
+    use :: global_variables, only: naezd, lm2d, krel, nspind, iemxd, ntotd, nrmaxd, irmind, lmpotd, nspotd, npotd, natomimpd
+    use :: global_variables, only: ipand, knosph, lpotd, irnsd
+    ! stuff defined in main0 already
+    use :: mod_main0, only: ielast, nspin, icst, ipan, ircut, lmax, ncls, nineq, idoldau, lly, atom, cls
+    use :: mod_main0, only: icleb, loflm, nacls, refpot, irws, iend, ez, vins, irmin, alat, drdi
+    use :: mod_main0, only: rmesh, zat, rcls, visp, rmtref, vref, cleb, cscl, socscale, socscl, erefldau, ueff
+    use :: mod_main0, only: jeff, solver, deltae, tolrdif, npan_log_at, npan_eq_at, ncheb, npan_tot
+    use :: mod_main0, only: ipan_intervall, rpan_intervall, rnew, r_log, ntldau, jwsrel, zrel, itscf, natomimp
+    use :: mod_main0, only: atomimp, iqat, naez, natyp, nref, nsra, ins, itldau, lopt, vtrel, btrel, drdirel, r2drdirel, rmrel
+    use :: mod_main0, only: itrunldau, wldau, uldau, phildau
+
+    implicit none
 
     ! .. Local variables
     integer :: i1
@@ -119,9 +137,9 @@ contains
       ! Remove the next IF statement to have U calculated for each iteration anew.
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-      ! !!!!!!! IF ( ITRUNLDAU.LE.0 ) THEN
+      ! IF ( ITRUNLDAU.LE.0 ) THEN
       call initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, nspin, rmesh, drdi, zat, ipan, ircut, phildau, uldau)
-      ! !!!!!!! END IF
+      ! END IF
     end if
     ! -------------------------------------------------------------------------
     ! End of LDA+U setup
@@ -313,14 +331,23 @@ contains
 
   end subroutine main1a
 
+
 #ifdef CPP_BdG
-    subroutine BdG_write_tmatnewsolver_inputs(nranks, i1, i1_start, ielast, &
-      nspin, lmax, nsra, iend, lmpotd, lly, deltae, idoldau, ncleb, &
-      ncheb, ntotd, mmaxd, nspind, iemxd, nrmaxd, nspotd, cleb, icleb, &
-      ez, ipot, npan_tot, ipan_intervall, zat, phi, theta, &
-      socscale, rnew, rpan_intervall, wldau, vinsnew, i1_end, natyp, lopt)
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
+  subroutine BdG_write_tmatnewsolver_inputs(nranks, i1, i1_start, ielast, &
+    nspin, lmax, nsra, iend, lmpotd, lly, deltae, idoldau, ncleb, &
+    ncheb, ntotd, mmaxd, nspind, iemxd, nrmaxd, nspotd, cleb, icleb, &
+    ez, ipot, npan_tot, ipan_intervall, zat, phi, theta, &
+    socscale, rnew, rpan_intervall, wldau, vinsnew, i1_end, natyp, lopt)
     ! write out inputs for tmat_newsolver to extract first BdG
-    Use mod_datatypes, Only: dp
+    use mod_datatypes, only: dp
     implicit none
     integer, intent(in) :: nranks, i1, i1_start, ielast, nspin ,lmax, ncleb, nsra, natyp, iend, lmpotd, lly, idoldau, ncheb, mmaxd, nspind, iemxd, nrmaxd, nspotd, ipot, i1_end
     integer, intent(in) :: ntotd, icleb(ncleb,4), lopt(natyp), ipan_intervall(0:ntotd,natyp), npan_tot(natyp)

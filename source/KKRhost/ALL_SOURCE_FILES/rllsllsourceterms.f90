@@ -30,7 +30,7 @@ contains
     integer, dimension (2*lmsize), intent (out) :: jlk_index !! index array mapping entries of hlk, jlk (bing/small components one after the other) to L=(l,m,s)
     complex (kind=dp), dimension (1:4*(lmax+1), nrmax), intent (out) :: hlk, jlk !! right hankel and bessel source functions
     complex (kind=dp), dimension (1:4*(lmax+1), nrmax), intent (out) :: hlk2, jlk2 !! left hankel and bessel source functions
-    complex (kind=dp), intent (out) :: gmatprefactor ! prefactor of the Green function (2M_0\kappa in PhD Bauer, p. 63)
+    complex (kind=dp), intent (out) :: gmatprefactor !! prefactor of the Green function (2M_0\kappa in PhD Bauer, p. 63)
 
     ! locals
     integer :: l1, lm1, m1, ivec, ispinfullgmat, ir

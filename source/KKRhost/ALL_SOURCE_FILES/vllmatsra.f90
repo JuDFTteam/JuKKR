@@ -4,39 +4,51 @@ module mod_vllmatsra
 
 contains
 
-  !> constructs potential including big/small components and with relativistic mass terms etc included
+  !-------------------------------------------------------------------------------
+  !> Summary: The perturbation matrix for the SRA-equations are set up
+  !> Author: 
+  !> Category: KKRhost, potential, single-site
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Constructs potential including big/small components and with relativistic mass terms etc. included
+  !>
+  !> Two modes are supported:
+  !>
+  !> `cmode=='Ref=0'`
+  !> ---------------- 
+  !> The SRA-trick is not used. Then the proper mass terms as described in the PhD thesis of D. Bauer are inlcuded.
+  !> This means that the potential matrix is changed in the following way
+  !>
+  !> from  / V11  V12 \   to    / V21  V22 \
+  !>       \ V21  V22 /         \-V11 -V12 /
+  !> because of the convention used for the left solution
+  !>
+  !> `cmode=='Ref=Vsph'`
+  !> -------------------
+  !> THis assumes that the SRA-trick is used in which case the small component of vll vanishes
+  !-------------------------------------------------------------------------------
   subroutine vllmatsra(vll0, vll, rmesh, lmsize, nrmax, nrmaxd, eryd, lmax, lval_in, cmode)
 
-    use :: mod_constants
-    ! ************************************************************************************
-    ! The perturbation matrix for the SRA-equations are set up
-    ! ************************************************************************************
+    use :: mod_constants, only: czero, cone, cvlight
     implicit none
 
     ! inputs
-    integer, intent (in) :: lmax   !! Maximum l component in wave function expansion
-    integer, intent (in) :: nrmax  !! NTOTD*(NCHEBD+1)
-    integer, intent (in) :: nrmaxd !! dimension for rmesh (maximum of nrmax values of all atoms)
-    integer, intent (in) :: lmsize !! (lmax+2)^2
-    integer, intent (in) :: lval_in !! l-value used in spherical calculation of calcpsh (lmsize=1)
-    complex (kind=dp), intent (in) :: eryd !! energy (used in rel-mass factor)
-    character (len=*), intent (in) :: cmode                           !! either 'Ref=0' or 'Ref=Vsph' which determines the used reference system (for calcsph trick or direct evaluation)
-
+    integer, intent (in) :: lmax            !! Maximum l component in wave function expansion
+    integer, intent (in) :: nrmax           !! NTOTD*(NCHEBD+1)
+    integer, intent (in) :: nrmaxd          !! dimension for rmesh (maximum of nrmax values of all atoms)
+    integer, intent (in) :: lmsize          !! (lmax+2)^2
+    integer, intent (in) :: lval_in         !! l-value used in spherical calculation of calcpsh (lmsize=1)
+    complex (kind=dp), intent (in) :: eryd  !! energy (used in rel-mass factor)
+    character (len=*), intent (in) :: cmode !! either 'Ref=0' or 'Ref=Vsph' which determines the used reference system (for calcsph trick or direct evaluation)
     real (kind=dp), dimension (nrmaxd), intent (in) :: rmesh !! radial mesh
     complex (kind=dp), dimension (lmsize, lmsize, nrmax), intent (in) :: vll0 !! input potential in (l,m,s) basis
-
     ! outputs
     complex (kind=dp), dimension (2*lmsize, 2*lmsize, nrmax), intent (out) :: vll !! output potential in (l,m,s) basis with big/small components
-
     ! locals
     integer :: ilm, lval, mval, ival, ir
     integer, dimension (lmsize) :: loflm
     complex (kind=dp) :: mass, mass0
 
-    ! ************************************************************************************
-    ! determine the bounds of the matricies to get the lm-expansion and the max.
-    ! number of radial points
-    ! ************************************************************************************
 
     ! ************************************************************************************
     ! calculate the index array to determine the L value of an LM index
@@ -91,14 +103,14 @@ contains
           ! The pertubation matrix is changed in the following way
 
           ! from  / V11  V12 \   to    / V21  V22 \
-          ! \ V21  V22 /         \-V11 -V12 /
+          !       \ V21  V22 /         \-V11 -V12 /
           ! because of the convention used for the left solution
           ! ************************************************************************************
         end do                     ! ival
 
       end do                       ! ir
     else if (cmode=='Ref=Vsph') then
-      ! for SRA-trick the small component of vll vanishes
+      ! for SRA-trick the small component of vll vanishes, i.e. only big component is copied
       vll(lmsize+1:2*lmsize, 1:lmsize, :) = vll0(1:lmsize, 1:lmsize, :)
     end if
 

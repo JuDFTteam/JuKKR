@@ -4,111 +4,128 @@ module mod_tmatnewsolver
 
 contains
 
-  ! -------------------------------------------------------------------------------
-  ! SUBROUTINE: TMAT_NEWSOLVER
-  !> @brief Calculation of the T-Matrix
-  !> @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to Fortran90
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculation of the t-matrix using the NEWSOSOL
+  !> Author: 
+  !> Category: KKRhost, sigle-site
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Constructs potential matrix (2x2 for SOC) adding SOC potential with proper form 
+  !> of small-component in the case of a scalar-relativistic calculation.
+  !> Then creates source terms needed to solve Lippmann-Schwinger equations as described 
+  !> in the PhD thesis of David Bauer.
+  !>
+  !> @note 
+  !> - in the case of using the `SRATRICK` (default behavior) first the spherical solutions are computed (diagonal)
+  !>   which are then used to compute the non-spherical solutions in a second step
+  !> - Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to Fortran90
+  !> @endnote
+  !-------------------------------------------------------------------------------
   subroutine tmat_newsolver(ielast, nspin, lmax, zat, socscale, ez, nsra, cleb, icleb, iend, ncheb, npan_tot, rpan_intervall, ipan_intervall, rnew, vinsnew, theta, phi, i1, ipot, &
     lmpot, lly, deltae, idoldau, lopt, wldau, t_dtmatjij_at)
 
 #ifdef CPP_OMP
-    use :: omp_lib                 ! necessary for omp functions
+    use :: omp_lib ! necessary for omp functions
 #endif
 #ifdef CPP_MPI
-    use :: mpi
+    use :: mpi ! necessary for MPI functions
     use :: mod_mympi, only: mpiadapt, nranks
-    use :: mod_timing
+    use :: mod_timing, only: timing_start, timing_stop, timings_1a
 #endif
+    use :: mod_datatypes, only: dp
+    use :: mod_constants, only: czero, cone, cvlight
+    use :: global_variables, only: ntotd, ncleb, nrmaxd, mmaxd, nspind, nspotd, iemxd, lmmaxd, lmmaxso, korbit
+    use :: mod_wunfiles, only: t_params
+    use :: mod_profiling, only: memocc
     use :: mod_mympi, only: myrank, master, distribute_work_energies
     use :: mod_types, only: t_tgmat, t_inc, t_mpi_c_grid, init_tgmat, t_lloyd, init_tlloyd, type_dtmatjijdij, init_t_dtmatjij_at
-    use :: mod_constants
-    use :: mod_profiling
-    use :: mod_wunfiles, only: t_params
     use :: mod_save_wavefun, only: t_wavefunctions, find_isave_wavefun, save_wavefunc
     use :: mod_jijhelp, only: calc_dtmatjij
-    use :: global_variables
-    use :: mod_datatypes
-    use :: mod_ioinput
-    use :: mod_calcsph
-    use :: mod_rll_global_solutions
-    use :: mod_rllsllsourceterms
-    use :: mod_rllsll
-    use :: mod_spinorbit_ham
-    use :: mod_vllmat
-    use :: mod_vllmatsra
+    use :: mod_calcsph, only: calcsph
+    use :: mod_rll_global_solutions, only: rll_global_solutions
+    use :: mod_rllsllsourceterms, only: rllsllsourceterms
+    use :: mod_rllsll, only: rllsll
+    use :: mod_spinorbit_ham, only: spinorbit_ham
+    use :: mod_vllmat, only: vllmat
+    use :: mod_vllmatsra, only: vllmatsra
     use :: mod_regns, only: zgeinv1
+#ifdef CPP_BdG
+    use :: mod_ioinput, only: ioinput ! to read in something from inputcard
+#endif
 
     implicit none
 
-    integer, intent (in) :: i1
-    integer, intent (in) :: lly    !! LLY <> 0: apply Lloyds formula
-    integer, intent (in) :: lopt   !! angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
-    integer, intent (in) :: lmax   !! Maximum l component in wave function expansion
-    integer, intent (in) :: nsra
-    integer, intent (in) :: iend   !! Number of nonzero gaunt coefficients
-    integer, intent (in) :: ipot
-    integer, intent (in) :: ncheb  !! Number of Chebychev pannels for the new solver
-    integer, intent (in) :: nspin  !! Counter for spin directions
-    integer, intent (in) :: lmpot  !! (LPOT+1)**2
-    integer, intent (in) :: ielast
-    integer, intent (in) :: npan_tot
-    integer, intent (in) :: idoldau !! flag to perform LDA+U
-    real (kind=dp), intent (in) :: zat !! Nuclear charge for a given atom
-    real (kind=dp), intent (in) :: phi
-    real (kind=dp), intent (in) :: theta
-    real (kind=dp), intent (in) :: socscale !! Spin-orbit scaling for a given atom
+    ! inputs
+    integer, intent (in) :: i1               !! atom index
+    integer, intent (in) :: lly              !! LLY /= 0: apply Lloyds formula
+    integer, intent (in) :: lopt             !! angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
+    integer, intent (in) :: lmax             !! Maximum l component in wave function expansion
+    integer, intent (in) :: nsra             !! use scalar-relativistic (nsra=2) or non-relativistic (nsra=1) wavefunctions  
+    integer, intent (in) :: iend             !! Number of nonzero gaunt coefficients
+    integer, intent (in) :: ipot             !! potential index (ipot=(iatom-1)*nspin+ispin)
+    integer, intent (in) :: ncheb            !! Number of Chebychev pannels for the new solver
+    integer, intent (in) :: nspin            !! Number of spin directions
+    integer, intent (in) :: lmpot            !! maximal LM-value of potential expansion: (LPOT+1)**2
+    integer, intent (in) :: ielast           !! number of energy points in contour
+    integer, intent (in) :: npan_tot         !! total number of panels for Chebychev radial mesh
+    integer, intent (in) :: idoldau          !! flag to perform LDA+U
+    real (kind=dp), intent (in) :: zat       !! Nuclear charge for a given atom
+    real (kind=dp), intent (in) :: phi       !! phi of local spin frame
+    real (kind=dp), intent (in) :: theta     !! theta of local spin frame, relative to z-axis
+    real (kind=dp), intent (in) :: socscale  !! Spin-orbit scaling for a given atom
     complex (kind=dp), intent (in) :: deltae !! Energy difference for numerical derivative
-    integer, dimension (0:ntotd), intent (in) :: ipan_intervall
-    integer, dimension (ncleb, 4), intent (in) :: icleb
-    real (kind=dp), dimension (ncleb), intent (in) :: cleb !! GAUNT coefficients (GAUNT)
-    real (kind=dp), dimension (nrmaxd), intent (in) :: rnew
-    real (kind=dp), dimension (0:ntotd), intent (in) :: rpan_intervall
-    real (kind=dp), dimension (mmaxd, mmaxd, nspind), intent (in) :: wldau !! potential matrix
-    real (kind=dp), dimension (nrmaxd, lmpot, nspotd), intent (in) :: vinsnew
-    complex (kind=dp), dimension (iemxd), intent (in) :: ez
-    ! .. In/Out variables
-    type (type_dtmatjijdij), intent (inout) :: t_dtmatjij_at
+    integer, dimension (0:ntotd), intent (in) :: ipan_intervall !! indices where panels start in radial Chebychev mesh
+    integer, dimension (ncleb, 4), intent (in) :: icleb         !! index array of nonzero Gaunt coefficients [mapping of (lm1, lm2) to lm3]
+    real (kind=dp), dimension (ncleb), intent (in) :: cleb      !! values of GAUNT coefficients 
+    real (kind=dp), dimension (nrmaxd), intent (in) :: rnew     !! radial mesh points in Chebychev mesh
+    real (kind=dp), dimension (0:ntotd), intent (in) :: rpan_intervall        !! radial meshpoints of panel boundaries
+    real (kind=dp), dimension (mmaxd, mmaxd, nspind), intent (in) :: wldau    !! potential matrix for LDA+U
+    real (kind=dp), dimension (nrmaxd, lmpot, nspotd), intent (in) :: vinsnew !! potential interpolated to Chebychev radial mesh
+    complex (kind=dp), dimension (iemxd), intent (in) :: ez  !! list of complex energy points in contour
+    type (type_dtmatjijdij), intent (inout) :: t_dtmatjij_at !! derived Data type to store \[\Delta t\]-matrix for Jij calculation
 
     ! .. Local variables
     integer :: ir, irec, use_sratrick, nvec, lm1, lm2, ie, irmdnew
     integer :: i_stat, lmsize
-    complex (kind=dp) :: eryd
-    complex (kind=dp), dimension (2*(lmax+1)) :: alphasph
+    complex (kind=dp) :: eryd !! energy in Ry
+    complex (kind=dp), dimension (2*(lmax+1)) :: alphasph !! spherical part of alpha-matrix
     ! .. Local allocatable arrays
     integer, dimension (:), allocatable :: jlk_index
     real (kind=dp), dimension (:, :, :), allocatable :: vins !! Non-spherical part of the potential
     complex (kind=dp), dimension (:, :), allocatable :: aux ! LLY
     complex (kind=dp), dimension (:, :), allocatable :: tmat0
     complex (kind=dp), dimension (:, :), allocatable :: alpha0 ! LLY
-    complex (kind=dp), dimension (:, :), allocatable :: tmatll
-    complex (kind=dp), dimension (:, :), allocatable :: dtmatll
-    complex (kind=dp), dimension (:, :), allocatable :: tmatsph
-    complex (kind=dp), dimension (:, :), allocatable :: alphall ! LLY
-    complex (kind=dp), dimension (:, :), allocatable :: dalphall ! LLY
+    complex (kind=dp), dimension (:, :), allocatable :: tmatll !! t-matrix
+    complex (kind=dp), dimension (:, :), allocatable :: dtmatll !! derivative of t-matrix for Lloyd
+    complex (kind=dp), dimension (:, :), allocatable :: tmatsph !! spherical part of t-matrix
+    complex (kind=dp), dimension (:, :), allocatable :: alphall !! alpha matrix for Lloyd
+    complex (kind=dp), dimension (:, :), allocatable :: dalphall !! derivatve of alpha matrix for Lloyd
     complex (kind=dp), dimension (:, :, :), allocatable :: hlk
     complex (kind=dp), dimension (:, :, :), allocatable :: jlk
     complex (kind=dp), dimension (:, :, :), allocatable :: hlk2
     complex (kind=dp), dimension (:, :, :), allocatable :: jlk2
     complex (kind=dp), dimension (:, :, :), allocatable :: vnspll0
-    complex (kind=dp), dimension (:, :, :, :), allocatable :: rll
-    complex (kind=dp), dimension (:, :, :, :), allocatable :: sll
+    complex (kind=dp), dimension (:, :, :, :), allocatable :: rll !! regular solution of radial equation
+    complex (kind=dp), dimension (:, :, :, :), allocatable :: sll !! irregular solution of radial equation
     complex (kind=dp), dimension (:, :, :, :), allocatable :: vnspll
     complex (kind=dp), dimension (:, :, :, :), allocatable :: vnspll1
-    complex (kind=dp), dimension (:, :, :, :), allocatable :: rllleft
-    complex (kind=dp), dimension (:, :, :, :), allocatable :: sllleft
+    complex (kind=dp), dimension (:, :, :, :), allocatable :: rllleft !! regular left solution of radial equation
+    complex (kind=dp), dimension (:, :, :, :), allocatable :: sllleft !! irregular left solution of radial equation
 
     ! .. LDAU local variables
     integer :: lmlo, lmhi
+
     ! .. LLoyd local variables
     integer :: ideriv, signde
     complex (kind=dp) :: tralpha
     complex (kind=dp) :: gmatprefactor
     integer, dimension (:), allocatable :: ipiv ! LLY
+
     ! .. OMP local variables
-    integer :: nth, ith            ! total number of threads and thread id
+    integer :: nth, ith !! total number of threads and thread id for openmp
 
 #ifdef CPP_MPI
-    integer, dimension (0:nranks-1) :: ntot_pt, ioff_pt
+    integer, dimension (0:nranks-1) :: ntot_pt, ioff_pt !! auxiliary arrays for MPI communication
 #endif
     integer :: ie_end, ie_num, ie_start
 
@@ -121,21 +138,22 @@ contains
     complex (kind=dp) :: e_shift
     integer :: ier, KBdG
     character (len=256) :: uio
+    !-------------------------------------------------------------------------------
 
 #ifdef CPP_OMP
     ! determine if omp parallelisation is used (compiled with -openmp flag and OMP_NUM_THREADS>1)
-    ! $omp parallel shared(nth,ith)
-    ! $omp single
+    !$omp parallel shared(nth,ith)
+    !$omp single
     nth = omp_get_num_threads()
     if (t_inc%i_write>0) write (1337, *) 'nth =', nth
-    ! $omp end single
-    ! $omp end parallel
+    !$omp end single
+    !$omp end parallel
 #else
     nth = 1
     ith = 0
 #endif
 
-    lmsize = lmmaxd/2
+    lmsize = lmmaxd/(1+korbit)
     irmdnew = npan_tot*(ncheb+1)
 
     if (nsra==2) then
@@ -175,10 +193,10 @@ contains
         read (unit=uio, fmt=*) e_shift
         write (*, *) 'e_shift=', e_shift
       else
-        e_shift = (0.0_dp, 0.0_dp)
+        e_shift = czero
       end if
     else
-      e_shift = (0.0_dp, 0.0_dp)
+      e_shift = czero
     end if
 #endif
 
@@ -202,6 +220,7 @@ contains
     ! start energy loop
     if (myrank==master .and. (t_inc%i_write>0)) write (1337, *) 'atom: ', i1, ' NSRA:', nsra
 
+    ! handle mpi parallelization
     call distribute_work_energies(ielast)
 #ifdef CPP_MPI
     ie_start = t_mpi_c_grid%ioff_pt2(t_mpi_c_grid%myrank_at)
@@ -235,25 +254,25 @@ contains
     end if
 
 #ifdef CPP_OMP
-    ! $omp parallel do default(none)                                            &
-    ! $omp private(eryd,ie,ir,nvec,lm1,lm2,gmatprefactor)                       &
-    ! $omp private(jlk_index,tmatll,ith,irec, ie_num)                           &
-    ! $omp private(tralpha, aux, ideriv, ipiv)                                  &
-    ! $omp private(alpha0)                                                      &
-    ! $omp private(alphall)                                                     &
-    ! $omp private(tmat0)                                                       &
-    ! $omp private(alphasph)                                                    &
-    ! $omp private(dtmatll)                                                     &
-    ! $omp private(dalphall)                                                    &
-    ! $omp shared(t_inc)                                                        &
-    ! $omp shared(nspin,nsra,lmax,lmsize,iend,ipot,ielast,npan_tot,ncheb)       &
-    ! $omp shared(zat,socscale,ez,cleb,rnew,nth,LMPOT,NRMAXD,LMMAXSO,NTOTD)     &
-    ! $omp shared(rpan_intervall,vinsnew,ipan_intervall,NCLEB)                  &
-    ! $omp shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)                  &
-    ! $omp shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,rllleft,sllleft)     &
-    ! $omp shared(tmatsph, ie_end,t_tgmat,t_lloyd, ie_start, t_dtmatjij_at)     &
-    ! $omp shared(lly,deltae,i1,t_mpi_c_grid, t_wavefunctions, icleb)           &
-    ! $omp shared(mu0, nscoef, e_shift, filename)
+    !$omp parallel do default(none)                                            &
+    !$omp private(eryd,ie,ir,nvec,lm1,lm2,gmatprefactor)                       &
+    !$omp private(jlk_index,tmatll,ith,irec, ie_num)                           &
+    !$omp private(tralpha, aux, ideriv, ipiv)                                  &
+    !$omp private(alpha0)                                                      &
+    !$omp private(alphall)                                                     &
+    !$omp private(tmat0)                                                       &
+    !$omp private(alphasph)                                                    &
+    !$omp private(dtmatll)                                                     &
+    !$omp private(dalphall)                                                    &
+    !$omp shared(t_inc)                                                        &
+    !$omp shared(nspin,nsra,lmax,lmsize,iend,ipot,ielast,npan_tot,ncheb)       &
+    !$omp shared(zat,socscale,ez,cleb,rnew,nth,LMPOT,NRMAXD,LMMAXSO,NTOTD)     &
+    !$omp shared(rpan_intervall,vinsnew,ipan_intervall,NCLEB)                  &
+    !$omp shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)                  &
+    !$omp shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,rllleft,sllleft)     &
+    !$omp shared(tmatsph, ie_end,t_tgmat,t_lloyd, ie_start, t_dtmatjij_at)     &
+    !$omp shared(lly,deltae,i1,t_mpi_c_grid, t_wavefunctions, icleb)           &
+    !$omp shared(mu0, nscoef, e_shift, filename)
 #endif
 
     do ie_num = 1, ie_end
@@ -286,7 +305,7 @@ contains
         eryd = ez(ie) + real(signde, kind=dp)*deltae/2.d0 ! LLY
 
 #ifdef CPP_OMP
-        ! $omp critical
+        !$omp critical
 #endif
 #ifdef CPP_BdG
         if (test('BdG_dev ')) then
@@ -298,7 +317,7 @@ contains
         if (t_inc%i_write>0) write (1337, *) 'energy:', ie, '', eryd
 #ifdef CPP_OMP
         if (ie==1 .and. (t_inc%i_write>0)) write (1337, *) 'nested omp?', omp_get_nested()
-        ! $omp end critical
+        !$omp end critical
 #endif
 
         ! Contruct the spin-orbit coupling hamiltonian and add to potential
@@ -306,7 +325,7 @@ contains
           vnspll0(:,:,:), vnspll1(:,:,:,ith), '1')
 
 #ifdef CPP_OMP
-        ! $omp critical
+        !$omp critical
 #endif
 #ifdef CPP_BdG
         ! test writeout of VNSPLL1
@@ -318,7 +337,7 @@ contains
         end if
 #endif
 #ifdef CPP_OMP
-        ! $omp end critical
+        !$omp end critical
 #endif
 
         ! now extend matrix for the SRA treatment
@@ -335,7 +354,7 @@ contains
         end if
 
 #ifdef CPP_OMP
-        ! $omp critical
+        !$omp critical
 #endif
 #ifdef CPP_BdG
         ! test writeout of VNPSLL
@@ -351,7 +370,7 @@ contains
         end if
 #endif
 #ifdef CPP_OMP
-        ! $omp end critical
+        !$omp end critical
 #endif
 
         ! Calculate the source terms in the Lippmann-Schwinger equation
@@ -364,7 +383,7 @@ contains
         call rllsllsourceterms(nsra, nvec, eryd, rnew, irmdnew, nrmaxd, lmax, lmmaxso, 1, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor)
 
 #ifdef CPP_OMP
-        ! $omp critical
+        !$omp critical
 #endif
 #ifdef CPP_BdG
         if (test('BdG_dev ')) then
@@ -391,7 +410,7 @@ contains
         end if
 #endif
 #ifdef CPP_OMP
-        ! $omp end critical
+        !$omp end critical
 #endif
 
         ! Using spherical potential as reference
@@ -423,7 +442,7 @@ contains
           sll(lmmaxso+1:nvec*lmmaxso, :, :, ith) = sll(lmmaxso+1:nvec*lmmaxso, :, :, ith)/cvlight
         end if
 #ifdef CPP_OMP
-        ! $omp critical
+        !$omp critical
 #endif
 #ifdef CPP_BdG
         if (test('BdG_dev ')) then
@@ -440,7 +459,7 @@ contains
         end if
 #endif
 #ifdef CPP_OMP
-        ! $omp end critical
+        !$omp end critical
 #endif
 
         ! add spherical contribution of tmatrix
@@ -465,7 +484,7 @@ contains
         end if
 
 #ifdef CPP_OMP
-        ! $omp critical
+        !$omp critical
 #endif
 #ifdef CPP_BdG
         if (test('BdG_dev ')) then
@@ -477,7 +496,7 @@ contains
         end if
 #endif
 #ifdef CPP_OMP
-        ! $omp end critical
+        !$omp end critical
 #endif
 
       end do                       ! signde=-ideriv,ideriv,2 ! lly
@@ -630,7 +649,7 @@ contains
 
       ! writeout
 #ifdef CPP_OMP
-      ! $omp critical
+      !$omp critical
 #endif
       if (t_tgmat%tmat_to_file) then
         irec = ie + ielast*(i1-1)
@@ -694,7 +713,7 @@ contains
         end if
       end if
 #ifdef CPP_OMP
-      ! $omp end critical
+      !$omp end critical
 #endif
 
 #ifdef CPP_MPI
@@ -704,7 +723,7 @@ contains
 
     end do                         ! IE loop
 #ifdef CPP_OMP
-    ! $omp end parallel do
+    !$omp end parallel do
 #endif
 
 100 format ('                 |')  ! status bar
@@ -719,6 +738,14 @@ contains
   end subroutine tmat_newsolver
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Allocation and initialization of work arrays of tmat_newsolver
+  !> Author: P. Rüßmann
+  !> Category: KKRhost, single-site, initialization, profiling
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Also takes care of deallocation if `allocmode/=1`
+  !-------------------------------------------------------------------------------
   subroutine allocate_locals_tmat_newsolver(allocmode, irmdnew, lmpot, nspin, vins, aux, ipiv, tmat0, tmatll, alpha0, dtmatll, alphall, dalphall, jlk_index, nsra, lmmaxso, nth, &
     lmax, vnspll, vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
     use :: mod_datatypes, only: dp
@@ -727,13 +754,17 @@ contains
     use :: mod_save_wavefun, only: t_wavefunctions
     implicit none
 
-    integer, intent (in) :: allocmode
-    integer, intent (in) :: irmdnew, lmpot, nspin
-    integer, intent (in) :: nsra
-    integer, intent (in) :: lmmaxso
-    integer, intent (in) :: nth
-    integer, intent (in) :: lmax
+    ! array dimensions
+    integer, intent (in) :: allocmode !! allocation mode (1: allocate and initialize, other: deallocate)
+    integer, intent (in) :: irmdnew   !! number of radial points in Chebycheb mesh
+    integer, intent (in) :: lmpot     !! lm-cutoff of potential expansion
+    integer, intent (in) :: nspin     !! number of spin channels
+    integer, intent (in) :: nsra      !! scalar-relativistic (nsra=2) or non-relativistic (nsra=1)
+    integer, intent (in) :: lmmaxso   !! cutoff of combined (l,m,s) index
+    integer, intent (in) :: nth       !! number of OpenMP threads
+    integer, intent (in) :: lmax      !! lmax cutoff
 
+    ! allocatable arrays
     real (kind=dp), allocatable, intent (inout) :: vins(:, :, :)
     complex (kind=dp), allocatable, intent (inout) :: aux(:, :), tmat0(:, :), tmatll(:, :), alpha0(:, :), dtmatll(:, :), alphall(:, :), dalphall(:, :)
     integer, allocatable, intent (inout) :: ipiv(:), jlk_index(:)
@@ -750,11 +781,13 @@ contains
     complex (kind=dp), allocatable, dimension (:, :, :, :), intent (inout) :: rllleft
     complex (kind=dp), allocatable, dimension (:, :, :, :), intent (inout) :: sllleft
 
+    ! local
     integer :: i_stat
 
     logical, external :: test, opt
 
-    if (allocmode==1) then
+
+    if (allocmode==1) then ! allocate and initialize
 
       ! potential arrays
       if (nsra==2) then
@@ -848,7 +881,7 @@ contains
       call memocc(i_stat, product(shape(jlk_index))*kind(jlk_index), 'JLK_INDEX', 'allocate_locals_tmat_newsolver')
       jlk_index = 0
 
-    else                           ! allocmode
+    else ! allocmode/=1: deallocate arrays
 
       if (nsra==2) then
         deallocate (vnspll, stat=i_stat)
@@ -912,7 +945,7 @@ contains
       deallocate (jlk_index, stat=i_stat)
       call memocc(i_stat, -product(shape(jlk_index))*kind(jlk_index), 'JLK_INDEX', 'allocate_locals_tmat_newsolver')
 
-    end if                         ! allocmode
+    end if ! allocmode ==1 or /=1
 
   end subroutine allocate_locals_tmat_newsolver
 

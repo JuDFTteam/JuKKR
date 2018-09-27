@@ -5,6 +5,7 @@ email: p.ruessmann@fz-juelich.de
 license: by-nc
 version: 1.1.1
 project_website: https://iffgit.fz-juelich.de/kkr/kkrjm
+project_download: https://iffgit.fz-juelich.de/kkr/kkrjm
 src_dir: ./ALL_SOURCE_FILES
 output_dir: ./doc
 media_dir: ./media
@@ -19,28 +20,34 @@ extra_filetypes: 1 #
 		 inc !
 		 mk #
 source: true
-graph: false 
-coloured_edges: true
 search: true 
+graph: true 
+coloured_edges: true
 warn: true 
-license: by-nc
-version: 1.1.1
-project_website: https://iffgit.fz-juelich.de/kkr/kkrjm
 dbg: true
 
 This is the introductory text ...
-code locations [gitlab link](https://iffgit.fz-juelich.de/kkr/kkrjm)
-[code wiki](https://iffwiki.fz-juelich.de/kkr/doku.php)
+
+Code location:
+ - [gitlab link](https://iffgit.fz-juelich.de/kkr/kkrjm)
+ - [code wiki](https://iffwiki.fz-juelich.de/kkr/doku.php)
+ - [online version of the documentation](https://kkr.iffgit.fz-juelich.de/kkrjm)
 
 Some latex example:
 \begin{equation}
 \frac{\partial H}{\partial t} - \kappa\frac{\partial^{2} H}{\partial x^{2}} = f(x)
 \end{equation}
 
-@Note
+@note
 This is an example note
+@endnote
 
 
-@Bug
+@bug
 If you find any bugs, please email [me](mailto:p.ruessmann@fz-juelich.de)
 or file a new issue on the [gitlab page](https://iffgit.fz-juelich.de/kkr/kkrjm/issues)
+@endbug
+
+@warning
+Some warning
+@endwarning

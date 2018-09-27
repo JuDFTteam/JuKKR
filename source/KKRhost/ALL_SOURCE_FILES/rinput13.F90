@@ -3,6 +3,15 @@ module rinput
   implicit none
 
 contains
+
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: RINPUT13
   !> @brief Routine to read the information from the input file
@@ -2824,9 +2833,16 @@ contains
 980 format (1x, 'The CLIGHT will be SCALED')
 
   end subroutine rinput13
-  ! ---------------------------------------------------------------------
-  ! ---------------------------------------------------------------------
+  
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine addopt(string)
     use :: mod_wunfiles, only: t_params
 
@@ -2855,6 +2871,14 @@ contains
 
   end subroutine addopt
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine addtest(string)
     use :: mod_types, only: t_inc
     use :: mod_wunfiles, only: t_params

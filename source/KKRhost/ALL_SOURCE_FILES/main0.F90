@@ -1,3 +1,10 @@
+!-------------------------------------------------------------------------------
+!> Summary: 
+!> Author: 
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!> 
+!-------------------------------------------------------------------------------
 ! -------------------------------------------------------------------------------
 ! MODULE: MOD_MAIN0
 !> @brief Wrapper module for the reading and setup of the JM-KKR program
@@ -23,19 +30,20 @@
 
 module mod_main0
 
-  use :: mod_wunfiles
-  use :: mod_types, only: t_imp
+
+  use :: mod_datatypes, only: dp
+
 #ifdef CPP_TIMING
   use :: mod_timing
 #endif
+  use :: mod_wunfiles
+  use :: mod_types, only: t_imp
   use :: mod_constants
   use :: memoryhandling
   use :: global_variables
   use :: mod_create_newmesh
   use :: mod_rhoqtools, only: rhoq_save_rmesh
   use :: rinput
-  use :: mod_datatypes, only: dp
-
   use :: mod_addvirtual14
   use :: mod_bzkint0
   use :: mod_calcrotmat
@@ -69,6 +77,46 @@ module mod_main0
   use :: mod_writehoststructure
 
   implicit none
+
+  private
+  public :: main0, bshift_ns
+  ! ------------- > scalars > ------------- 
+  !integers
+  public :: kte, kws, kxc, igf, icc, ins, irm, ipe, ipf, ipfe, kcor, kefg, khyp, kpre, nprinc, nsra, lpot, imix, iend
+  public :: icst, naez, nemb, lmax, ncls, nref, npol, npnt1, npnt2, npnt3, lmmax, nvirt, lmpot, kvmad, itscf, ncheb, nineq
+  public :: natyp, ifile, kvrel, nspin, nleft, nright, invmod, khfeld, itdbry, insref, kshape, ielast, ishift, kfrozn, nsymat
+  public :: nqcalc, kforce, n1semi, n2semi, n3semi, nlayer, nlbasis, nrbasis, intervx, intervy, intervz, maxmesh, npan_eq
+  public :: npan_log, npolsemi, scfsteps, natomimp, iesemicore, idosemicore
+  !real(kind=dp)
+  public :: tk, fcm, e2in, emin, emax, alat, rmax, gmax, r_log, rcutz, rcutxy, qbound, vconst, hfield, mixing, abasis, bbasis
+  public :: cbasis, efermi, eshift, tksemi, tolrdif, alatnew, volume0, emusemi, ebotsemi, fsemicore, lambda_xc
+  !character
+  public :: solver, i12, i13, i19, i25, i40
+  !logicals
+  public :: lrhosym, linipol, lcartesian
+  ! ------------- < scalars < ------------- 
+  ! ------------- > arrays > ------------- 
+  !integer
+  public :: isymindex, cls, irc, imt, nfu, nsh1, nsh2, lmxc, ipan, irns, irws, kmesh, irmin, loflm, nacls, ncore, imaxsh, nshell
+  public :: inipol, ixipol, refpot, ntcell, iqcalc, iofgij, jofgij, atomimp, ijtabsh, ijtabsym, npan_tot, ijtabcalc, npan_eq_at
+  public :: npan_log_at, ijtabcalc_i, ish, jsh, ilm_map, kfg, atom, ezoa, lmsp, lcore, icleb, ircut, llmsp, lmsp1, kaoez, ifunm
+  public :: ifunm1, ititle, icheck, ipan_intervall, jend, kmrot, ncpa, itcpamax, noq, iqat, icpa, hostimp, zrel, jwsrel, irshift
+  public :: nrrel, ntldau, idoldau, itrunldau, kreadldau, lopt, itldau, lly, ivshift, irrel
+  !real
+  public :: vbc, zperight, zperleft, recbv, bravais, rsymat, a, b, wg, gsh, zat, rmt, rws, vref, vref_temp, mtfac, rmtnew, rmtref
+  public :: rmtref_temp, rmtrefat, fpradius, socscale, rmesh, s, rr, drdi, dror, cleb, visp, cscl, rnew, ratom, ecore, tleft, tright
+  public :: socscl, rbasis, rclsimp, cmomhost, rpan_intervall, rs, yrg, vins, rcls, rrot, qmtet, qmphi, qmgam, qmgamtab, qmphitab, qmtettab
+  public :: cpatol, conc, fact, vtrel, btrel, rmrel, drdirel, r2drdirel, thesme, thetas, thetasnew, ueff, jeff, erefldau, wldau, uldau
+  !complex
+  public :: ez, dez, wez, dsymll, dsymll1, lefttinvll, righttinvll, rc, crel, rrel, srrel, drotq, phildau, deltae
+  !character
+  public :: txc
+  !logical
+  public :: vacflag, para, symunitary, emeshfile
+  ! ------------- < arrays < ------------- 
+
+  
+  ! definition of common variables
 
   integer :: kte                   !! Calculation of the total energy On/Off (1/0)
   integer :: kws                   !! 0 (MT), 1(ASA)
@@ -169,23 +217,17 @@ module mod_main0
   real (kind=dp) :: fsemicore      !! Initial normalization factor for semicore states (approx. 1.)
   real (kind=dp) :: lambda_xc      !! Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
   character (len=10) :: solver                               !! Type of solver
-
   character (len=40) :: i12                               !! File identifiers
-
   character (len=40) :: i13                               !! Potential file name
-
   character (len=40) :: i19                               !! Shape function file name
-
   character (len=40) :: i25                               !! Scoef file name
-
   character (len=40) :: i40                               !! File identifiers
-
   logical :: lrhosym
   logical :: linipol               !! True: Initial spin polarization; false: no initial spin polarization
   logical :: lcartesian            !! True: Basis in cartesian coords; false: in internal coords
 
   ! ..
-  ! .. Local Arrays ..
+  ! .. Arrays ..
   integer, dimension (nsymaxd) :: isymindex
   integer, dimension (:), allocatable :: cls !! Cluster around atomic sites
   integer, dimension (:), allocatable :: irc !! R point for potential cutting
@@ -401,10 +443,18 @@ module mod_main0
   real (kind=dp), dimension (:, :, :), allocatable :: thetas !! shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
   real (kind=dp), dimension (:, :, :), allocatable :: thetasnew
 
-  public :: main0, bshift_ns
 
 contains
 
+
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! ----------------------------------------------------------------------------
   ! SUBROUTINE: main0
   !> @brief Main wrapper to handle input reading, allocation of arrays, and
@@ -1198,6 +1248,15 @@ contains
 
   end subroutine main0
 
+
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! ----------------------------------------------------------------------------
   ! SUBROUTINE: BSHIFT_NS
   !> @brief Adds a constant (=VSHIFT) to the potentials of atoms
@@ -1295,6 +1354,14 @@ contains
 
   end subroutine bshift_ns
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! -------------------------------------------------------------------------
   ! SUBROUTINE: init_misc_variables
   !> @brief Set default values for misc variables for the calculation
@@ -1332,6 +1399,14 @@ contains
 
   end subroutine init_misc_variables
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! -------------------------------------------------------------------------
   ! subroutine: init_relativistic_variables
   !> @brief set default values for the relativistic variables
@@ -1351,6 +1426,14 @@ contains
 
   end subroutine init_relativistic_variables
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! -------------------------------------------------------------------------
   ! subroutine: init_cluster_variables
   !> @brief set default values for the cluster variables
@@ -1372,6 +1455,14 @@ contains
 
   end subroutine init_cluster_variables
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! -------------------------------------------------------------------------
   ! subroutine: init_io_variables
   !> @brief set default values for the I/O variables
@@ -1395,6 +1486,14 @@ contains
 
   end subroutine init_io_variables
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! -------------------------------------------------------------------------
   ! subroutine: init_cell_variables
   !> @brief set default values for the unit cell variables
@@ -1423,6 +1522,14 @@ contains
 
   end subroutine init_cell_variables
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! -------------------------------------------------------------------------
   ! subroutine: init_slab_variables
   !> @brief set default values for the slab calculation variables
@@ -1445,6 +1552,14 @@ contains
 
   end subroutine init_slab_variables
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! -------------------------------------------------------------------------
   ! subroutine: init_energy_variables
   !> @brief set default values for the energy variables
@@ -1486,6 +1601,14 @@ contains
 
   end subroutine init_energy_variables
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! -------------------------------------------------------------------------
   ! subroutine: init_convergence_variables
   !> @brief set default values for the convergence and solver variables
@@ -1520,6 +1643,14 @@ contains
 
   end subroutine init_convergence_variables
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! -------------------------------------------------------------------------
   ! subroutine: init_potential_variables
   !> @brief set default values for the potential variables
@@ -1558,6 +1689,14 @@ contains
 
   end subroutine init_potential_variables
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! -------------------------------------------------------------------------
   ! subroutine: init_angular_momentum_variables
   !> @brief set default values for the angular momentum variables
@@ -1577,6 +1716,14 @@ contains
 
   end subroutine init_angular_momentum_variables
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! -------------------------------------------------------------------------
   ! subroutine: init_magnetization_variables
   !> @brief set default values for the magnetisation variables for the calculation
@@ -1600,6 +1747,14 @@ contains
 
   end subroutine init_magnetization_variables
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! -------------------------------------------------------------------------
   ! SUBROUTINE: init_CPA_variables
   !> @brief Set default values for the CPA variables for the calculation
@@ -1618,6 +1773,14 @@ contains
 
   end subroutine init_cpa_variables
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! -------------------------------------------------------------------------
   ! SUBROUTINE: init_CPA_variables
   !> @brief Set default values for the LDA+U variables for the calculation
@@ -1637,6 +1800,14 @@ contains
 
   end subroutine init_ldau_variables
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! -------------------------------------------------------------------------
   ! subroutine: init_mesh_variables
   !> @brief set default values for the mesh variables
@@ -1661,6 +1832,14 @@ contains
   end subroutine init_mesh_variables
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! -------------------------------------------------------------------------
   ! subroutine: init_all_wrapper
   !> @brief wrapper for initialization subroutines and allocation of test/opt arrays
@@ -1712,6 +1891,14 @@ contains
   end subroutine init_all_wrapper
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine print_versionserial(iunit, version1, version2, version3, version4, serialnr)
     implicit none
     integer, intent (in) :: iunit

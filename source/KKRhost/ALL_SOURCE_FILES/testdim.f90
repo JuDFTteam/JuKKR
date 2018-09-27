@@ -2,6 +2,14 @@ module mod_testdim
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: TESTDIM
   !> @brief Testing the dimension of several arrays

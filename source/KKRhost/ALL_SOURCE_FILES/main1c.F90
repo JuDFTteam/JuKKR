@@ -30,6 +30,9 @@ module mod_main1c
   use :: mod_wrldaupot
   use :: mod_wrldos
   use :: mod_wrmoms
+  
+  use :: mod_cinit, only: cinit
+  use :: mod_rinit, only: rinit
 
   implicit none
 

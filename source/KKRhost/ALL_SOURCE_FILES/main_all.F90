@@ -27,6 +27,7 @@ program kkrcode
   use :: memoryhandling
   use :: mod_version_info
   use :: global_variables
+  use :: mod_wunfiles, only: t_params
 
 #ifdef CPP_MPI
   use :: mod_mympi, only: mympi_init, myrank, nranks, master, find_dims_2d, distribute_linear_on_tasks, create_newcomms_group_ie, mpiatom, mpiadapt, check_communication_pattern
