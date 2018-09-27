@@ -59,10 +59,10 @@ contains
     use :: mod_wrmoms, only: wrmoms
     use :: mod_cinit, only: cinit
     use :: mod_rinit, only: rinit
-
+    ! array dimensions
     use :: global_variables, only: iemxd, mmaxd, krel, lmaxd, natypd, npotd, irmd, nrmaxd, lmpotd, nspotd, naezd, ncleb, lm2d, ipand, &
       nfund, ntotd, mmaxd, ncelld, irmind, nspind, nspotd, irid, irnsd, knosph, korbit, lmmaxd, lmxspd, lpotd, wlength
-
+    ! stuff defined in main0 already
     use :: mod_main0, only: ielast, nsra, ins, nspin, icst, kmrot, iqat, idoldau, irws, ipan, ircut, iend, icleb, loflm, jend, ifunm1, &
       lmsp1, nfu, llmsp, lcore, ncore, ntcell, irmin, ititle, intervx, intervy, intervz, lly, npan_eq_at, ipan_intervall, &
       npan_log_at, npan_tot, ntldau, lopt, itldau, ielast, iesemicore, npol, irshift, jwsrel, zrel, itrunldau, qmtet, qmphi, conc, alat, zat, &
@@ -70,7 +70,7 @@ contains
       vins, visp, ecore, drdirel, r2drdirel, rmrel, vtrel, btrel, wldau, uldau, ez, wez, phildau, solver, r_log, naez, natyp, &
       lmax, ncheb
 
-
+    implicit none
 
     ! .. Parameters
     integer, parameter :: nmvecmax=4
