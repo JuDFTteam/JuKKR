@@ -1,26 +1,5 @@
-!-------------------------------------------------------------------------------
-!> Summary: 
-!> Author: 
-!> Deprecated: False ! This needs to be set to True for deprecated subroutines
-!>
-!> 
-!-------------------------------------------------------------------------------
-! -------------------------------------------------------------------------------
-! MODULE: MOD_MAIN0
-!> @brief Wrapper module for the reading and setup of the JM-KKR program
-!> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
-!> and many others ...
-!> @todo JC: NATOMIMP and NATOMIMPD seem to be the same variable, however, right
-!> now find no way to eliminate one of them.
-!> @todo JC: There seem to be several repeated variables doing the same, e.g. INS,
-!> KNOSPH, KWS and KSHAPE, all seem to dictate whether one has ASA or FP.
-!> Maybe it would be good to consolidate and eliminate any unnecessary variables.
-!> @todo JC: Several variables such as IRMD and IRNSD are actually determined in
-!> the startb1 subroutine, maybe change the allocations such that they are done
-!> there instead
-!> @note
-!> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
-! -------------------------------------------------------------------------------
+
+! set CPP_OMPSTUFF if either HYBRID or OpenMP parallelization is chosen
 #ifdef CPP_HYBRID
 #define CPP_OMPSTUFF
 #endif
@@ -28,53 +7,32 @@
 #define CPP_OMPSTUFF
 #endif
 
+
+!-------------------------------------------------------------------------------
+!> Summary: Wrapper module for the reading and setup of the JM-KKR program
+!> Author: 
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!> @todo 
+!> - JC: NATOMIMP and NATOMIMPD seem to be the same variable, however, right
+!> now find no way to eliminate one of them.
+!> - JC: There seem to be several repeated variables doing the same, e.g. INS,
+!> KNOSPH, KWS and KSHAPE, all seem to dictate whether one has ASA or FP.
+!> Maybe it would be good to consolidate and eliminate any unnecessary variables.
+!> - JC: Several variables such as IRMD and IRNSD are actually determined in
+!> the startb1 subroutine, maybe change the allocations such that they are done
+!> there instead
+!> @endtodo
+!>
+!> @note
+!> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
+!> @endnote
+!-------------------------------------------------------------------------------
 module mod_main0
 
 
   use :: mod_datatypes, only: dp
-
-#ifdef CPP_TIMING
-  use :: mod_timing
-#endif
-  use :: mod_wunfiles, only: t_params, wunfiles
-  use :: mod_types, only: t_imp
-  use :: mod_constants
-  use :: memoryhandling
-  use :: global_variables
-  use :: mod_create_newmesh
-  use :: mod_rhoqtools, only: rhoq_save_rmesh
-  use :: rinput
-  use :: mod_addvirtual14
-  use :: mod_bzkint0
-  use :: mod_calcrotmat
-  use :: mod_changerep
-  use :: mod_cinit
-  use :: mod_clsgen_tb
-  use :: mod_convol
-  use :: mod_deciopt
-  use :: mod_drvbastrans
-  use :: mod_epathtb
-  use :: mod_gaunt2
-  use :: mod_gaunt
-  use :: mod_generalpot
-  use :: mod_getbr3
-  use :: mod_gfmask
-  use :: mod_lattix99
-  use :: mod_madelung2d
-  use :: mod_madelung3d
-  use :: mod_outpothost
-  use :: mod_outtmathost
-  use :: mod_readimppot
-  use :: mod_relpotcvt
-  use :: mod_rinit
-  use :: mod_scalevec
-  use :: mod_setgijtab
-  use :: mod_shape_corr
-  use :: mod_startb1
-  use :: mod_startldau
-  use :: mod_testdim
-  use :: mod_write_tbkkr_files
-  use :: mod_writehoststructure
+  use :: mod_constants, only: nsymaxd, pi
 
   implicit none
 
@@ -467,7 +425,6 @@ contains
   ! ----------------------------------------------------------------------------
   subroutine main0()
 
-    use :: mod_types
 #ifdef CPP_OMPSTUFF
     use :: omp_lib                 ! necessary for omp functions
 #endif
@@ -475,11 +432,57 @@ contains
     use :: mpi
 #endif
     use :: mod_mympi, only: nranks
-    use :: mod_version
-    use :: mod_version_info
-    use :: mod_md5sums
+    use :: mod_version, only: version1, version2, version3, version4
+    use :: mod_version_info, only: serialnr, construct_serialnr, version_print_header
+    use :: mod_md5sums, only: get_md5sums, md5sum_potential, md5sum_shapefun
+    use :: mod_wunfiles, only: t_params, wunfiles
+    use :: mod_types, only: t_imp, t_inc, init_params_t_imp, init_t_imp
+    use :: memoryhandling, only: memocc, allocate_cell, allocate_cpa, allocate_soc, allocate_ldau, allocate_magnetization, allocate_potential, &
+      allocate_energies, allocate_relativistic, allocate_clusters, allocate_expansion, allocate_mesh, allocate_pannels, allocate_misc, &
+      allocate_green, allocate_ldau_potential, allocate_rel_transformations, allocate_semi_inf_host
+    use :: mod_create_newmesh, only: create_newmesh
+    use :: mod_rhoqtools, only: rhoq_save_rmesh
+    use :: rinput, only: rinput13
+    use :: mod_addvirtual14, only: addviratoms14
+    use :: mod_bzkint0, only: bzkint0
+    use :: mod_calcrotmat, only: calcrotmat
+    use :: mod_changerep, only: changerep
+    use :: mod_cinit, only: cinit
+    use :: mod_clsgen_tb, only: clsgen_tb
+    use :: mod_convol, only: convol
+    use :: mod_deciopt, only: deciopt
+    use :: mod_drvbastrans, only: drvbastrans
+    use :: mod_epathtb, only: epathtb
+    use :: mod_gaunt2, only: gaunt2
+    use :: mod_gaunt, only: gaunt
+    use :: mod_generalpot, only: generalpot
+    use :: mod_getbr3, only: getbr3
+    use :: mod_gfmask, only: gfmask
+    use :: mod_lattix99, only: lattix99
+    use :: mod_madelung2d, only: madelung2d
+    use :: mod_madelung3d, only: madelung3d
+    use :: mod_outpothost, only: outpothost
+    use :: mod_outtmathost, only: outtmathost
+    use :: mod_readimppot, only: readimppot
+    use :: mod_relpotcvt, only: relpotcvt
+    use :: mod_rinit, only: rinit
+    use :: mod_scalevec, only: scalevec
+    use :: mod_setgijtab, only: setgijtab
+    use :: mod_shape_corr, only: shape_corr
+    use :: mod_startb1, only: startb1
+    use :: mod_startldau, only: startldau
+    use :: mod_testdim, only: testdim
+    use :: mod_write_tbkkr_files, only: write_tbkkr_files
+    use :: mod_writehoststructure, only: writehoststructure
+
+    use :: global_variables, only: krel, nspind, nrefd, irmd, ntotd, ipand, ncelld, nrmaxd, nchebd, natypd, naezd, lmaxd, alm, lmmaxd, &
+      almgf0, lmgf0d, ndim_slabinv, nprincd, nembd, nembd1, nembd2, irmind, irnsd, nofgij, natomimpd, lpotd, lmpotd, lmmaxso, npotd, nfund, &
+      lmxspd, mmaxd, iemxd, ncleb, nclsd, nsheld, naclsd, lm2d, irid, lassld, nrd, nspind, nspindd, ngshd, linterface, nlayerd, knosph, &
+      korbit, nmaxd, ishld, wlength, maxmshd, kpoibz, nspotd
+
 
     implicit none
+
     ! .. Local Scalars ..
     integer :: i
     integer :: j
@@ -499,12 +502,15 @@ contains
 
 #ifdef CPP_OMPSTUFF
     ! .. OMP ..
-    integer :: nth, ith            ! total number of threads, thread number
+    integer :: nth, ith !! total number of threads, thread number
 #endif
     ! ..
     ! .. External Functions ..
     logical :: opt, test
     external :: opt, test
+
+
+
     ! -------------------------------------------------------------------------
     ! Write version info:
     ! -------------------------------------------------------------------------
@@ -1264,8 +1270,9 @@ contains
   subroutine bshift_ns(irm, irid, ipand, lmpot, npotd, natyp, nspin, ngshd, nfund, ncelld, irmind, lmxspd, kshape, irc, irmin, inipol, ntcell, imaxsh, ilm_map, lmsp, ifunm, ircut, &
     hfield, gsh, rmesh, thesme, thetas, visp, vins)
 
-    use :: mod_datatypes
-
+    use :: global_variables, only: nspotd
+    use :: mod_convol, only: convol
+    use :: mod_rinit, only: rinit
     implicit none
 
     ! Adds a constant (=VSHIFT) to the potentials of atoms
@@ -1372,6 +1379,7 @@ contains
   ! -------------------------------------------------------------------------
   subroutine init_misc_variables()
 
+    use :: global_variables, only: nsheld
     implicit none
 
     ipe = 0
@@ -1417,6 +1425,7 @@ contains
   ! -------------------------------------------------------------------------
   subroutine init_relativistic_variables()
 
+    use :: global_variables, only: krel, korbit, lnc
     implicit none
 
     krel = 0                       ! Switch for non- (or scalar-) relativistic/relativistic (Dirac) program (0/1). Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
@@ -1444,6 +1453,7 @@ contains
   ! -------------------------------------------------------------------------
   subroutine init_cluster_variables()
 
+    use :: global_variables, only: nofgij, nclsd, naclsd, natomimpd
     implicit none
 
     nclsd = 2                      ! NAEZD + NEMBD maximum number of different TB-clusters
@@ -1473,6 +1483,7 @@ contains
   ! -------------------------------------------------------------------------
   subroutine init_io_variables()
 
+    use :: global_variables, only: wlength
     implicit none
 
     igf = 0                        ! Not printing the Green functions
@@ -1504,6 +1515,7 @@ contains
   ! -------------------------------------------------------------------------
   subroutine init_cell_variables()
 
+    use :: global_variables, only: linterface
     implicit none
 
     naez = 1                       ! Number of atoms in the unit cell
@@ -1540,6 +1552,7 @@ contains
   ! -------------------------------------------------------------------------
   subroutine init_slab_variables()
 
+    use :: global_variables, only: nprincd, nlayerd
     implicit none
 
     nleft = 1
@@ -1570,6 +1583,7 @@ contains
   ! -------------------------------------------------------------------------
   subroutine init_energy_variables()
 
+    use :: global_variables, only: iemxd
     implicit none
 
     lly = 0                        ! No Lloyds formula
@@ -1619,6 +1633,7 @@ contains
   ! -------------------------------------------------------------------------
   subroutine init_convergence_variables()
 
+    use :: global_variables, only: ishld, nmaxd, ntrefd, ntperd
     implicit none
 
     imix = 0                       ! Straight mixing
@@ -1661,6 +1676,7 @@ contains
   ! -------------------------------------------------------------------------
   subroutine init_potential_variables()
 
+    use :: global_variables, only: irid, nfund, ngshd, ipand, ntotd, knosph, ncelld, nspotd, nsatypd
     implicit none
 
     kws = 1                        ! FP/ASA potential ()
@@ -1707,6 +1723,7 @@ contains
   ! -------------------------------------------------------------------------
   subroutine init_angular_momentum_variables()
 
+    use :: global_variables, only: ncleb, lmmaxd
     implicit none
 
     lmax = 3                       ! Maximum l for expansion
@@ -1734,6 +1751,7 @@ contains
   ! -------------------------------------------------------------------------
   subroutine init_magnetization_variables()
 
+    use :: global_variables, only: knoco, nspind, nspindd
     implicit none
 
     kmrot = 0                      ! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
@@ -1818,6 +1836,7 @@ contains
   ! -------------------------------------------------------------------------
   subroutine init_mesh_variables()
 
+    use :: global_variables, only: nrd, irmd, irnsd, kpoibz
     implicit none
 
     nrd = 20000                    ! Number of real space
@@ -1848,6 +1867,7 @@ contains
   ! -------------------------------------------------------------------------
   subroutine init_all_wrapper()
     use :: mod_wunfiles, only: t_params
+    use :: mod_profiling, only: memocc
     implicit none
     integer :: i_stat
 

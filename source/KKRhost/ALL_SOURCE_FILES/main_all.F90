@@ -333,7 +333,7 @@ program kkrcode
       call mpi_finalize(ierr)
 #endif
       stop
-    end if                         ! test
+    end if ! test
 
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Calculate density
@@ -349,7 +349,7 @@ program kkrcode
       call mpi_finalize(ierr)
 #endif
       stop
-    end if                         ! test
+    end if ! test
 
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Calculate DFT stuff (potential from density, exc-potential, calculate total energy, ...)
@@ -404,7 +404,7 @@ program kkrcode
 
     if (myrank==master) call print_time_and_date('Iteration finished')
 
-  end do                           ! scf-iteration
+  end do ! scf-iteration
   ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< SCF-ITERATION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
