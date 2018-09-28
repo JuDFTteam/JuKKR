@@ -1,7 +1,6 @@
 !-------------------------------------------------------------------------------
 !> Summary: Wrapper module for the calculation of the t-matrix for the JM-KKR package
 !> Author: 
-!> Category: KKRhost, 
 !> Deprecated: False ! This needs to be set to True for deprecated subroutines
 !>
 !> The code uses the information obtained in the main0 module, this is
@@ -23,10 +22,17 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Main driver for single-site part of the calculation
   !> Author: 
-  !> Category: KKRhost, 
+  !> Category: KKRhost, single-site
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
-  !> 
+  !> Calls routines that compute singe-site wavefunctions and t-matrices.
+  !> Two modes are impleneted for old (Born-iteration) solver without SOC or
+  !> non-collinear magnetism and new solver (Chebychev mesh) working with larger
+  !> spin-coupled matrices for SOC.
+  !>
+  !> @note
+  !> PR: The BdG solver will only be impleneted with the newsolver for the moment.
+  !> @endnote
   !-------------------------------------------------------------------------------
   subroutine main1a()
 
@@ -54,7 +60,7 @@ contains
     use :: mod_jijhelp, only: set_jijcalc_flags
     ! array dimensions
     use :: global_variables, only: natypd, wlength, lmmaxd, nrmaxd, lmpotd, nspotd, irmd, naclsd, nclsd, nrefd, ncleb, nembd, &
-      naezd, lm2d, krel, nspind, iemxd, ntotd, nrmaxd, irmind, lmpotd, nspotd, npotd, natomimpd, ipand, knosph, lpotd, irnsd
+      naezd, lm2d, krel, nspind, iemxd, ntotd, nrmaxd, irmind, lmpotd, nspotd, npotd, natomimpd, ipand, knosph, lpotd, irnsd, korbit
     ! stuff defined in main0 already
     use :: mod_main0, only: ielast, nspin, icst, ipan, ircut, lmax, ncls, nineq, idoldau, lly, atom, cls, icleb, loflm, nacls, &
       refpot, irws, iend, ez, vins, irmin, alat, drdi, rmesh, zat, rcls, visp, rmtref, vref, cleb, cscl, socscale, socscl, erefldau, &
@@ -195,7 +201,8 @@ contains
         end do
       end do
 
-    else
+    else ! opt('NEWSOSOL')
+
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! For calculation of Jij-tensor: create array for additional t-matrices and
       ! set atom-dependent flags which indicate if t-matrix is needed
@@ -213,25 +220,27 @@ contains
         npan_tot, rnew, ipan_intervall, vinsnew)
 
       do i1 = i1_start, i1_end
+        do ispin = 1, nspin/(1+korbit) ! run spin-loop only if 'NOSOC' test option is not used
 
-        ipot = nspin*(i1-1) + 1
+          ipot = nspin*(i1-1) + ispin
 
 #ifdef CPP_BdG
-        if (test('BdG_dev ')) then
-          call BdG_write_tmatnewsolver_inputs(nranks, i1, i1_start, ielast, &
-            nspin, lmax, nsra, iend, lmpotd, lly, deltae, idoldau, ncleb, &
-            ncheb, ntotd, mmaxd, nspind, iemxd, nrmaxd, nspotd, cleb, icleb, &
-            ez, ipot, npan_tot, ipan_intervall, zat, phi, theta, &
-            socscale, rnew, rpan_intervall, wldau, vinsnew, i1_end, natyp, lopt)
-        end if
+          if (test('BdG_dev ')) then
+            call BdG_write_tmatnewsolver_inputs(nranks, i1, i1_start, ielast, &
+              nspin, lmax, nsra, iend, lmpotd, lly, deltae, idoldau, ncleb, &
+              ncheb, ntotd, mmaxd, nspind, iemxd, nrmaxd, nspotd, cleb, icleb, &
+              ez, ipot, npan_tot, ipan_intervall, zat, phi, theta, &
+              socscale, rnew, rpan_intervall, wldau, vinsnew, i1_end, natyp, lopt)
+          end if
 #endif
 
-        call tmat_newsolver(ielast, nspin, lmax, zat(i1), socscale(i1), ez, nsra, cleb(:,1), icleb, iend, ncheb, npan_tot(i1), rpan_intervall(:,i1), ipan_intervall(:,i1), &
-          rnew(:,i1), vinsnew, theta(i1), phi(i1), i1, ipot, lmpotd, lly, deltae, idoldau, lopt(i1), wldau(:,:,:,i1), t_dtmatjij(i1))
+          call tmat_newsolver(ielast, nspin, lmax, zat(i1), socscale(i1), ez, nsra, cleb(:,1), icleb, iend, ncheb, npan_tot(i1), rpan_intervall(:,i1), ipan_intervall(:,i1), &
+            rnew(:,i1), vinsnew, theta(i1), phi(i1), i1, ipot, lmpotd, lly, deltae, idoldau, lopt(i1), wldau(:,:,:,i1), t_dtmatjij(i1), ispin)
 
-      end do                       ! I1, atom loop
+        end do ! ispin
+      end do ! i1_start, i1_end atom loop
 
-    end if                         ! NEWSOSOL
+    end if ! NEWSOSOL
 
     if (idoldau==1) then
       open (67, file='ldau.unformatted', form='unformatted')

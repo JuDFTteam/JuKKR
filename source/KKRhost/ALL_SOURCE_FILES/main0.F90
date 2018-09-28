@@ -807,7 +807,8 @@ contains
     ! Deal with the potential in the RELATIVISTIC CASE
     ! -------------------------------------------------------------------------
     para = .true.
-    if (krel+korbit==1) then
+    !if (krel+korbit==1) then
+    if (krel==1 .or. opt('NEWSOSOL')) then
       ! ----------------------------------------------------------------------
       if (nspin==1) then
         ! -------------------------------------------------------------------
@@ -860,7 +861,8 @@ contains
         ! call this only if relativisitic solver is used
         call relpotcvt(1, visp, zat, rmesh, drdi, ircut, vtrel, btrel, zrel, rmrel, jwsrel, drdirel, r2drdirel, irshift, ipand, irmd, npotd, natyp)
       end if
-    end if                         ! KREL+KORBIT.EQ.1
+    !end if ! KREL+KORBIT.EQ.1
+    end if ! KREL==1 .or. opt('NEWSOSOL)
     ! -------------------------------------------------------------------------
     ! set up energy contour
     ! -------------------------------------------------------------------------
@@ -1093,7 +1095,7 @@ contains
     if ((krel+korbit)==1) then
       call drvbastrans(rc, crel, rrel, srrel, nrrel, irrel, lmax+1, lmmaxd, 2*(lmax+1), lmmaxd+2*(lmax+1), mmaxd, 2*(lmax+1)*mmaxd)
     end if
-    if (opt('NEWSOSOL')) then
+    if (korbit==1) then
       do ns = 1, nsymat
         call changerep(dsymll1(1,1,ns), 'REL>RLM', dsymll(1,1,ns), lmmaxd, lmmaxd, rc, crel, rrel, 'DSYMLL', 0)
       end do

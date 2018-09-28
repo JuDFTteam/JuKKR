@@ -319,6 +319,14 @@ program kkrcode
     call timing_start('main1a')
     call main1a()
     call timing_stop('main1a')
+    if (test('STOP1A  ')) then
+      if (myrank==master) write (*, *) 'Stop after main1a'
+#ifdef CPP_MPI
+      call mpi_barrier(mpi_comm_world, ierr)
+      call mpi_finalize(ierr)
+#endif
+      stop
+    end if ! test
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Calculate gmat
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

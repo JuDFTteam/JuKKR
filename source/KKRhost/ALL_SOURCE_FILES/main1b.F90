@@ -366,12 +366,12 @@ contains
       end if
 
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! the following write-out has been disabled, because it was assumed to be    !no-green
+      ! the following write-out has been disabled, because it was assumed to be   !no-green
       ! obsolete with the implementation of the MPI-communicated arrays. If I am  !no-green
       ! wrong and the write-out is needed in subsequent parts, construct a        !no-green
       ! test-option around it so that it is only written out in this case.        !no-green
-      ! OPEN (88,ACCESS='direct',RECL=LRECGREEN,                               !no-green
-      ! &             FILE='green',FORM='unformatted')                              !no-green
+      ! OPEN (88,ACCESS='direct',RECL=LRECGREEN,                                  !no-green
+      ! &             FILE='green',FORM='unformatted')                            !no-green
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       irec = 1
 
@@ -387,54 +387,55 @@ contains
         call mpi_barrier(mpi_comm_world, ierr)
 #endif
       end if
-      ! IF ( (.not. OPT('KKRFLEX ') ) ) THEN                !no-green
-      ! WRITE(88,REC=IREC) IELAST,NSPIN,                  !no-green
+      ! IF ( (.not. OPT('KKRFLEX ') ) ) THEN                     !no-green
+      ! WRITE(88,REC=IREC) IELAST,NSPIN,                         !no-green
       ! &         (EZ(IE),IE=1,IELAST),(WEZ(IE),IE=1,IELAST),    !no-green
       ! &         NATOMIMPD*LMMAXD                               !no-green
-      ! END IF                                              !no-green
+      ! END IF                                                   !no-green
     end if
 
     ! Value of NQDOS changes to a read-in value if option qdos is applied, otherwise:
-    nqdos = 1                      ! qdos ruess
-    if (opt('qdos    ') .and. (iqdosrun==1)) then ! qdos ruess
-      ! Read BZ path for qdos calculation:
-      open (67, file='qvec.dat')   ! qdos ruess
-      read (67, *) nqdos           ! qdos ruess
-      i_all = -product(shape(qvec))*kind(qvec)
-      deallocate (qvec, stat=i_stat) ! qdos ruess: deallocate in first run allocated array to change it
-      call memocc(i_stat, i_all, 'QVEC', 'main1b')
-
-      allocate (qvec(3,nqdos), stat=i_stat) ! qdos ruess
-      call memocc(i_stat, product(shape(qvec))*kind(qvec), 'QVEC', 'main1b')
-      do iq = 1, nqdos             ! qdos ruess
-        read (67, *)(qvec(ix,iq), ix=1, 3) ! qdos ruess
-      end do                       ! qdos ruess
-      close (67)                   ! qdos ruess
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! Prepare k-mesh information to be appropriate for qdos calculation.
-      ! The idea is that subr. KLOOPZ1 is called for only one point at a time,
-      ! with weight equal to the full BZ; in this way we avoid changing the
-      ! calling list or the contents of kloopz1.
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      kmesh(1:ielast) = 1          ! qdos ruess
-      nofks(1) = 1                 ! qdos ruess
-      volcub(1, 1) = volbz(1)      ! qdos ruess
-      nsymat = 1
-    else if (opt('qdos    ') .and. (iqdosrun==0)) then ! qdos ruess
-      ! Call the k loop just once with one k point to write out the tmat.qdos file
-      allocate (qvec(3,nqdos), stat=i_stat) ! qdos ruess
-      call memocc(i_stat, product(shape(qvec))*kind(qvec), 'QVEC', 'main1b')
-      if (i_stat/=0) stop '[main1b] Error allocating qvec'
-      qvec(1:3, 1) = 0.d0          ! qdos ruess
-      kmesh(1:ielast) = 1          ! qdos ruess
-      nofks(1) = 1                 ! qdos ruess
-      volcub(1, 1) = volbz(1)      ! qdos ruess
-    end if                         ! qdos ruess
+    nqdos = 1                                                                       ! qdos ruess
+    if (opt('qdos    ') .and. (iqdosrun==1)) then                                   ! qdos ruess
+      ! Read BZ path for qdos calculation:                                          ! qdos ruess
+      open (67, file='qvec.dat')                                                    ! qdos ruess
+      read (67, *) nqdos                                                            ! qdos ruess
+      i_all = -product(shape(qvec))*kind(qvec)                                      ! qdos ruess
+      ! deallocate in first run allocated array to change it                        ! qdos ruess
+      deallocate (qvec, stat=i_stat)                                                ! qdos ruess
+      call memocc(i_stat, i_all, 'QVEC', 'main1b')                                  ! qdos ruess
+                                                                                    ! qdos ruess  
+      allocate (qvec(3,nqdos), stat=i_stat)                                         ! qdos ruess
+      call memocc(i_stat, product(shape(qvec))*kind(qvec), 'QVEC', 'main1b')        ! qdos ruess
+      do iq = 1, nqdos                                                              ! qdos ruess
+        read (67, *)(qvec(ix,iq), ix=1, 3)                                          ! qdos ruess
+      end do                                                                        ! qdos ruess
+      close (67)                                                                    ! qdos ruess
+      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      ! qdos ruess
+      ! Prepare k-mesh information to be appropriate for qdos calculation.          ! qdos ruess
+      ! The idea is that subr. KLOOPZ1 is called for only one point at a time,      ! qdos ruess
+      ! with weight equal to the full BZ; in this way we avoid changing the         ! qdos ruess
+      ! calling list or the contents of kloopz1.                                    ! qdos ruess
+      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      ! qdos ruess
+      kmesh(1:ielast) = 1                                                           ! qdos ruess
+      nofks(1) = 1                                                                  ! qdos ruess
+      volcub(1, 1) = volbz(1)                                                       ! qdos ruess
+      nsymat = 1                                                                    ! qdos ruess
+    else if (opt('qdos    ') .and. (iqdosrun==0)) then                              ! qdos ruess
+      ! Call the k loop just once with one k point to write out the tmat.qdos file  ! qdos ruess
+      allocate (qvec(3,nqdos), stat=i_stat)                                         ! qdos ruess
+      call memocc(i_stat, product(shape(qvec))*kind(qvec), 'QVEC', 'main1b')        ! qdos ruess
+      if (i_stat/=0) stop '[main1b] Error allocating qvec'                          ! qdos ruess
+      qvec(1:3, 1) = 0.d0                                                           ! qdos ruess
+      kmesh(1:ielast) = 1                                                           ! qdos ruess
+      nofks(1) = 1                                                                  ! qdos ruess
+      volcub(1, 1) = volbz(1)                                                       ! qdos ruess
+    end if                                                                          ! qdos ruess
 
     ncpafail = 0
 
-    ! Initialize trace for Lloyd formula                    ! LLY Lloyd
-    lly_grtr(:, :) = czero         ! 1:IELAST,1:NSPIND          ! LLY Lloyd
+    ! Initialize trace for Lloyd formula
+    lly_grtr(:, :) = czero ! 1:IELAST,1:NSPIND
 
     ! determine extend of spin loop
     if (.not. opt('NEWSOSOL')) then
@@ -442,7 +443,11 @@ contains
     else
       ! nonco angles
       call read_angles(t_params, natyp, theta_at, phi_at)
-      nspin1 = 1
+      if (test('NOSOC   ') ) then
+        nspin = nspin
+      else
+        nspin1 = 1
+      end if
     end if
 
 #ifdef CPP_MPI
@@ -509,15 +514,15 @@ contains
           do i1 = 1, nref
             if (.not. opt('NEWSOSOL')) then
               call calctref13(eryd, vref(i1), rmtref(i1), lmax, lm1, wn1, wn2, & ! LLY Lloyd
-                alpharef(0,i1), dalpharef(0,i1), lmax+1, lmmaxd) ! LLY Lloyd
+                alpharef(0,i1), dalpharef(0,i1), lmax+1, lmmaxd)                 ! LLY Lloyd
             else
               call calctref13(eryd, vref(i1), rmtref(i1), lmax, lm1, wn1, wn2, & ! LLY
-                alpharef(0,i1), dalpharef(0,i1), lmax+1, lmgf0d) ! LLY
+                alpharef(0,i1), dalpharef(0,i1), lmax+1, lmgf0d)                 ! LLY
             end if
             do i = 1, lm1
               trefll(i, i, i1) = wn1(i, i)
               if (opt('NEWSOSOL')) trefll(lm1+i, lm1+i, i1) = wn1(i, i)
-              dtrefll(i, i, i1) = wn2(i, i) ! LLY
+              dtrefll(i, i, i1) = wn2(i, i)                              ! LLY
               if (opt('NEWSOSOL')) dtrefll(lm1+i, lm1+i, i1) = wn2(i, i) ! LLY
             end do
 
@@ -528,7 +533,7 @@ contains
           end do                   ! I1
         else
           do i1 = 1, nref
-            call calctref13(eryd, vref(i1), rmtref(i1), lmax, lm1, & ! LLY Lloyd
+            call calctref13(eryd, vref(i1), rmtref(i1), lmax, lm1, &     ! LLY Lloyd
               wn1, wn2, alpharef(0,i1), dalpharef(0,i1), lmax+1, lmgf0d) ! LLY Lloyd
             ! -------------------------------------------------------
             ! add second spin-block for relativistic calculation and transform

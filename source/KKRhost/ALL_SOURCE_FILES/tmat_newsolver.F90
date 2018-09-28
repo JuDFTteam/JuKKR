@@ -22,7 +22,7 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine tmat_newsolver(ielast, nspin, lmax, zat, socscale, ez, nsra, cleb, icleb, iend, ncheb, npan_tot, rpan_intervall, ipan_intervall, rnew, vinsnew, theta, phi, i1, ipot, &
-    lmpot, lly, deltae, idoldau, lopt, wldau, t_dtmatjij_at)
+    lmpot, lly, deltae, idoldau, lopt, wldau, t_dtmatjij_at, ispin)
 
 #ifdef CPP_OMP
     use :: omp_lib ! necessary for omp functions
@@ -57,6 +57,7 @@ contains
 
     ! inputs
     integer, intent (in) :: i1               !! atom index
+    integer, intent (in) :: ispin            !! spin index, only used for 'NOSOC' test option where external spin loop is used in main1a 
     integer, intent (in) :: lly              !! LLY /= 0: apply Lloyds formula
     integer, intent (in) :: lopt             !! angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
     integer, intent (in) :: lmax             !! Maximum l component in wave function expansion
@@ -87,18 +88,19 @@ contains
     ! .. Local variables
     integer :: ir, irec, use_sratrick, nvec, lm1, lm2, ie, irmdnew
     integer :: i_stat, lmsize
+    integer :: use_fullgmat !! use (l,m,s) coupled matrices or not for 'NOSOC' test option (1/0)
     complex (kind=dp) :: eryd !! energy in Ry
     complex (kind=dp), dimension (2*(lmax+1)) :: alphasph !! spherical part of alpha-matrix
     ! .. Local allocatable arrays
     integer, dimension (:), allocatable :: jlk_index
-    real (kind=dp), dimension (:, :, :), allocatable :: vins !! Non-spherical part of the potential
-    complex (kind=dp), dimension (:, :), allocatable :: aux ! LLY
-    complex (kind=dp), dimension (:, :), allocatable :: tmat0
-    complex (kind=dp), dimension (:, :), allocatable :: alpha0 ! LLY
-    complex (kind=dp), dimension (:, :), allocatable :: tmatll !! t-matrix
-    complex (kind=dp), dimension (:, :), allocatable :: dtmatll !! derivative of t-matrix for Lloyd
-    complex (kind=dp), dimension (:, :), allocatable :: tmatsph !! spherical part of t-matrix
-    complex (kind=dp), dimension (:, :), allocatable :: alphall !! alpha matrix for Lloyd
+    real (kind=dp), dimension (:, :, :), allocatable :: vins     !! Non-spherical part of the potential
+    complex (kind=dp), dimension (:, :), allocatable :: aux      ! LLY
+    complex (kind=dp), dimension (:, :), allocatable :: tmat0    !
+    complex (kind=dp), dimension (:, :), allocatable :: alpha0   ! LLY
+    complex (kind=dp), dimension (:, :), allocatable :: tmatll   !! t-matrix
+    complex (kind=dp), dimension (:, :), allocatable :: dtmatll  !! derivative of t-matrix for Lloyd
+    complex (kind=dp), dimension (:, :), allocatable :: tmatsph  !! spherical part of t-matrix
+    complex (kind=dp), dimension (:, :), allocatable :: alphall  !! alpha matrix for Lloyd
     complex (kind=dp), dimension (:, :), allocatable :: dalphall !! derivatve of alpha matrix for Lloyd
     complex (kind=dp), dimension (:, :, :), allocatable :: hlk
     complex (kind=dp), dimension (:, :, :), allocatable :: jlk
@@ -272,7 +274,7 @@ contains
     !$omp shared(vnspll1,vnspll,hlk,jlk,hlk2,jlk2,rll,sll,rllleft,sllleft)     &
     !$omp shared(tmatsph, ie_end,t_tgmat,t_lloyd, ie_start, t_dtmatjij_at)     &
     !$omp shared(lly,deltae,i1,t_mpi_c_grid, t_wavefunctions, icleb)           &
-    !$omp shared(mu0, nscoef, e_shift, filename)
+    !$omp shared(mu0, nscoef, e_shift, filename, use_fullgmat)
 #endif
 
     do ie_num = 1, ie_end
@@ -320,9 +322,11 @@ contains
         !$omp end critical
 #endif
 
-        ! Contruct the spin-orbit coupling hamiltonian and add to potential
-        call spinorbit_ham(lmax, lmsize, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpot, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
-          vnspll0(:,:,:), vnspll1(:,:,:,ith), '1')
+        if ( .not. test('NOSOC   ')) then
+          ! Contruct the spin-orbit coupling hamiltonian and add to potential
+          call spinorbit_ham(lmax, lmsize, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpot, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
+            vnspll0(:,:,:), vnspll1(:,:,:,ith), '1')
+        end if
 
 #ifdef CPP_OMP
         !$omp critical
@@ -380,6 +384,11 @@ contains
         hlk2(:, :, ith) = czero
         jlk2(:, :, ith) = czero
         gmatprefactor = czero
+        if (test('NOSOC   ')) then
+          use_fullgmat = 0
+        else
+          use_fullgmat = 1
+        end if
         call rllsllsourceterms(nsra, nvec, eryd, rnew, irmdnew, nrmaxd, lmax, lmmaxso, 1, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor)
 
 #ifdef CPP_OMP
@@ -652,7 +661,11 @@ contains
       !$omp critical
 #endif
       if (t_tgmat%tmat_to_file) then
-        irec = ie + ielast*(i1-1)
+        if (.not. test('NOSOC   ')) then
+          irec = ie + ielast*(i1-1)
+        else
+          irec = ie + ielast*(ispin-1) + ielast*nspin*(i1-1)
+        end if
 #ifndef CPP_OMP
         if (test('rhoqtest')) then
 

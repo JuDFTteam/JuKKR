@@ -824,6 +824,13 @@ contains
 
 
     if (opt('NEWSOSOL')) korbit = 1
+
+    if (test('NOSOC   ')) then
+      write (*, *) 'Warning: detected test option "NOSOC   ": use spin-decoupled radial equations with new solver'
+      write (1337, *) 'Warning: detected test option "NOSOC   ": reset KORBIT to zero but use NEWSOSOL for spin-decoupled matrices with explicit spin-loop'
+      korbit = 0
+    end if
+
     call ioinput('KORBIT          ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) korbit
@@ -831,6 +838,7 @@ contains
     else
       write (111, *) 'Default KORBIT= ', korbit
     end if
+
 
     ! ----------------------------------------------------------------------------
     ! Start of the reading of variables that used to be in the inc.p
