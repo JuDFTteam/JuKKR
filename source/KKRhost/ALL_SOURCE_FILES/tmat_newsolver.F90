@@ -86,7 +86,7 @@ contains
     type (type_dtmatjijdij), intent (inout) :: t_dtmatjij_at !! derived Data type to store \[\Delta t\]-matrix for Jij calculation
 
     ! .. Local variables
-    integer :: ir, irec, use_sratrick, nvec, lm1, lm2, ie, irmdnew
+    integer :: ir, irec, use_sratrick, nvec, lm1, lm2, ie, irmdnew, i11
     integer :: i_stat, lmsize
     integer :: use_fullgmat !! use (l,m,s) coupled matrices or not for 'NOSOC' test option (1/0)
     complex (kind=dp) :: eryd !! energy in Ry
@@ -688,7 +688,6 @@ contains
 
         end if                     ! test('rhoqtest')
 #endif
-        write (*,*) 'write tmat', irec
         write (69, rec=irec) tmatll(:, :)
         ! human readable writeout if test option is hit
         if (test('fileverb')) then
@@ -696,10 +695,15 @@ contains
         end if
       else
 #ifdef CPP_MPI
-        irec = ie_num + ie_end*(i1-t_mpi_c_grid%ioff_pt1(t_mpi_c_grid%myrank_ie)-1)
+        i11 = i1-t_mpi_c_grid%ioff_pt1(t_mpi_c_grid%myrank_ie)
 #else
-        irec = ie_num + ie_end*(i1-1)
+        i11 = i1
 #endif
+        if (.not. test('NOSOC   ')) then
+          irec = ie_num + ie_end*(i11-1)
+        else
+          irec = ie_num + ie_end*(ispin-1) + ie_num*nspin*(i11-1)
+        end if
         t_tgmat%tmat(:, :, irec) = tmatll(:, :)
       end if
       if (lly/=0) then

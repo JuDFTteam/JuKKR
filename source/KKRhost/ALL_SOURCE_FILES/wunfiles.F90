@@ -666,6 +666,7 @@ contains
     t_inc%naclsmax = naclsmax
     t_inc%nshell0 = nshell(0)
     if (opt('NEWSOSOL')) t_inc%newsosol = .true.
+    if (test('NOSOC   ')) t_inc%nosoc = .true.
     if (opt('deci-out')) t_inc%deci_out = .true.
     ! t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

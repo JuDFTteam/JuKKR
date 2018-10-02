@@ -384,15 +384,12 @@ contains
               do l = 0, lmaxd1     ! qdos
                 dentot = dentot + den(l, ie, iq) ! qdos
               end do               ! qdos
-              write (30, 110) eryd, qvec(1, iq), qvec(2, iq), qvec(3, iq), & ! lmdos
-                -aimag(dentot)/pi, (-aimag(denlm(l,ie,iq))/pi, l=1, lmmaxd) ! lmdos
-              write (31, 110) eryd, qvec(1, iq), qvec(2, iq), qvec(3, iq), & ! qdos
-                -aimag(dentot)/pi, (-aimag(denlm(l,ie,iq))/pi, l=1, lmmaxd) ! qdos
+              write (30, 110) eryd, qvec(1, iq), qvec(2, iq), qvec(3, iq), -aimag(dentot)/pi, (-aimag(denlm(l,ie,iq))/pi, l=1, lmmaxd) ! lmdos
+              write (31, 110) eryd, qvec(1, iq), qvec(2, iq), qvec(3, iq), -aimag(dentot)/pi, (-aimag(denlm(l,ie,iq))/pi, l=1, lmmaxd) ! qdos
 110           format (5f10.6, 40e16.8) ! qdos
               ! writeout complex qdos for interpolation                         ! complex qdos
               if (test('compqdos')) then ! complex qdos
-                write (3031, 120) eryd, qvec(1, iq), qvec(2, iq), qvec(3, iq), & ! complex qdos
-                  dentot, (denlm(l,ie,iq), l=1, lmmaxd) ! complex qdos
+                write (3031, 120) eryd, qvec(1, iq), qvec(2, iq), qvec(3, iq), dentot, (denlm(l,ie,iq), l=1, lmmaxd) ! complex qdos
               end if               ! complex qdos
 120           format (6f10.6, 80e16.8) ! qdos
             end if                 ! qdos
@@ -491,6 +488,20 @@ contains
       end if
 
       if (ihost/=1) return
+
+      ! Transformation of ISPIN=1,2 from (spin-down,spin-up) to (charge-density,spin-density)
+      if (ispin==2) then
+        idim = irmd*lmpotd
+        call dscal(idim, 2.d0, rho2ns(1,1,1), 1)
+        call daxpy(idim, -0.5d0, rho2ns(1,1,1), 1, rho2ns(1,1,2), 1)
+        call daxpy(idim, 1.0d0, rho2ns(1,1,2), 1, rho2ns(1,1,1), 1)
+        ! -------------------------------------------------------------------------
+        ! Do the same at the Fermi energy
+        ! -------------------------------------------------------------------------
+        call dscal(idim, 2.d0, r2nef(1,1,1), 1)
+        call daxpy(idim, -0.5d0, r2nef(1,1,1), 1, r2nef(1,1,2), 1)
+        call daxpy(idim, 1.0d0, r2nef(1,1,2), 1, r2nef(1,1,1), 1)
+      end if
 
     end subroutine rhoval
 

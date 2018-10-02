@@ -457,7 +457,6 @@ contains
     ie_start = 0
     ie_end = ielast
 #endif
-
     if (test('rhoqtest')) then
       ie_start = 1
       ie_end = 1
@@ -559,7 +558,6 @@ contains
           ! read in t-matrix from file
           if (t_tgmat%tmat_to_file) then
             irec = ie + ielast*(ispin-1) + ielast*nspin1*(i1-1)
-            write (*,*) 'read tmat', irec, nspin1, ispin, ielast, ie
             read (69, rec=irec) tmat
           else
             irec = ie_num + ie_end*(ispin-1) + ie_end*nspin1*(i1-1)

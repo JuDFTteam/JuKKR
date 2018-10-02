@@ -526,8 +526,6 @@ contains
 
           else ! new spin-orbit solver
 
-            write(*,*) ispin
-
 #ifdef CPP_TIMING
             call timing_start('main1c - rhovalnew')
 #endif
@@ -595,15 +593,14 @@ contains
 
         ! Transformation of ISPIN=1,2 from (spin-down,spin-up) to (charge-density,spin-density)
         if (nspin==2) then
-
-          ! construct sum and difference of spin channels
-          rho2ns(:,:,i1,1) = 2.0_dp*rho2ns(:,:,i1,1)
-          rho2ns(:,:,i1,2) = rho2ns(:,:,i1,2) - 0.5_dp*rho2ns(:,:,i1,1)
-          rho2ns(:,:,i1,1) = rho2ns(:,:,i1,1) + rho2ns(:,:,i1,2)
-          ! Do the same at the Fermi energy
-          r2nef(:,:,i1,1) = 2.0_dp*r2nef(:,:,i1,1)
-          r2nef(:,:,i1,2) = r2nef(:,:,i1,2) - 0.5_dp*r2nef(:,:,i1,1)
-          r2nef(:,:,i1,1) = r2nef(:,:,i1,1) + r2nef(:,:,i1,2)
+          !! construct sum and difference of spin channels
+          !rho2ns(:,:,i1,1) = 2.0_dp*rho2ns(:,:,i1,1)
+          !rho2ns(:,:,i1,2) = rho2ns(:,:,i1,2) - 0.5_dp*rho2ns(:,:,i1,1)
+          !rho2ns(:,:,i1,1) = rho2ns(:,:,i1,1) + rho2ns(:,:,i1,2)
+          !! Do the same at the Fermi energy
+          !r2nef(:,:,i1,1) = 2.0_dp*r2nef(:,:,i1,1)
+          !r2nef(:,:,i1,2) = r2nef(:,:,i1,2) - 0.5_dp*r2nef(:,:,i1,1)
+          !r2nef(:,:,i1,1) = r2nef(:,:,i1,1) + r2nef(:,:,i1,2)
         end if
          
         ! test writeout 

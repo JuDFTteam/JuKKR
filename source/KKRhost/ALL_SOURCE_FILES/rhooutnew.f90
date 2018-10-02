@@ -190,7 +190,6 @@ contains
         end do
       end do
 
-      write(*,*) ir, nspin*(1+korbit), lmsize, lmshift1, lmshift2
       do jspin = 1, nspin*(1+korbit)
         do lm1 = 1, lmsize
           do lm2 = 1, lm1 - 1
@@ -199,7 +198,6 @@ contains
         end do
       end do ! JSPIN
     end do ! IR
-    write(*,*) 'after loop'
 
 
     ! IF lmdos or LDAU
@@ -235,7 +233,6 @@ contains
       end do
     end if                         ! OPT('lmlm-dos').OR.OPT('LDA+U   ')
 
-    write(*,*) 'cden sum'
 
     ! DO IR = 1,IRMDNEW
     ! DO JSPIN = 1,4
@@ -278,10 +275,8 @@ contains
     end do                         ! L1
 
     ! Then the non-spherical part
-    write(*,*) 'cdenns sum'
 
     cdenns = czero
-
     do j = 1, iend
       lm1 = icleb(j, 1)
       lm2 = icleb(j, 2)
@@ -301,7 +296,6 @@ contains
       end do                       ! JSPIN
     end do                         ! J
 
-    write(*,*) 'done'
 
     i_all = -product(shape(wr))*kind(wr)
     deallocate (wr, stat=i_stat)

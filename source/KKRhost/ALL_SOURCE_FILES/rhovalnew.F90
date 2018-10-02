@@ -87,7 +87,7 @@ contains
     complex (kind=dp), dimension (iemxd), intent (inout) :: wez
     ! .. Output variables
     real (kind=dp), dimension (2), intent (out) :: angles_new
-    real (kind=dp), dimension (0:lmax+1, nspin), intent (out) :: espv
+    real (kind=dp), dimension (0:lmax+1, 2), intent (out) :: espv
     real (kind=dp), dimension (irmd, lmpotd, nspin*(1+korbit)), intent (out) :: r2nef
     real (kind=dp), dimension (irmd, lmpotd, nspin*(1+korbit)), intent (out) :: rho2ns
     complex (kind=dp), dimension (0:lmax+1, ielast, nspin), intent (out) :: den_out
@@ -605,12 +605,6 @@ contains
           end do
         end do
         ! calculate density
-        write(*,*) nsra, lmax, lmpotd, shape(rll(:,:,:,ith))
-        write(*,*) shape(cden(:,:,:,ith))
-        write(*,*) shape(cdenlm(:,:,:,ith))
-        write(*,*) shape(cdenns(:,:,ith))
-        write(*,*) shape(rho2nsc_loop(:,:,:,ie))
-        write(*,*) shape(gflle(:,:,ie,iq))
         call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, df, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll(:,:,:,ith), & ! SLL(:,:,:,ith), commented out since sll is not used in rhooutnew
           rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), rho2nsc_loop(:,:,:,ie), 0, gflle(:,:,ie,iq), rpan_intervall, ipan_intervall, nspin)
 
@@ -647,7 +641,6 @@ contains
             rho2int(jspin) = rho2int(jspin) + den(lmaxd1, ie, iq, jspin)*df
           end if
         end do                     ! JSPIN
-        write(*,*) 'done jspin'
 
         espv(0:lmaxd1, 1:nspin) = espv(0:lmaxd1, 1:nspin) + aimag(eryd*den(0:lmaxd1,ie,iq,1:nspin)*df)
       end do                       ! IQ = 1,NQDOS
@@ -656,7 +649,6 @@ contains
       ! Get charge at the Fermi energy (IELAST)
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if (ie==ielast .and. ldorhoef) then
-        write(*,*) 'ielast'
         call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, cone, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll(:,:,:,ith), & ! SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
           rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), r2nefc_loop(:,:,:,ith), 0, gflle_part(:,:,ith), rpan_intervall, &
           ipan_intervall, nspin)
@@ -665,7 +657,6 @@ contains
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Get orbital moment
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      write(*,*) 'orbmom'
       if (.not. test('NOSOC   ')) then
         do iorb = 1, 3
           call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, cone, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll(:,:,:,ith), & ! SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
@@ -703,7 +694,6 @@ contains
     ! $omp end parallel do
 #endif
 
-    write(*,*) 'done ie loop'
     ! omp: move sum from rhooutnew here after parallel calculation
     do ie = 1, ielast
       rho2nsc(:, :, :) = rho2nsc(:, :, :) + rho2nsc_loop(:, :, :, ie)
@@ -735,19 +725,11 @@ contains
           do iq = 1, nqdos         ! qdos
             if ((iq==1) .and. (ie_num==1)) then ! qdos
               if (natyp>=100) then ! qdos
-                open (31, &        ! qdos
-                  file='qdos.'//char(48+i1/100)//char(48+mod(i1/10,10)) & ! qdos
-                  //char(48+mod(i1,10))//'.'//char(48+1)//'.dat') ! qdos
-                open (32, &        ! qdos
-                  file='qdos.'//char(48+i1/100)//char(48+mod(i1/10,10)) & ! qdos
-                  //char(48+mod(i1,10))//'.'//char(48+2)//'.dat') ! qdos
+                open (31, file='qdos.'//char(48+i1/100)//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+1)//'.dat') ! qdos
+                open (32, file='qdos.'//char(48+i1/100)//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+2)//'.dat') ! qdos
               else                 ! qdos
-                open (31, &        ! qdos
-                  file='qdos.'//char(48+mod(i1/10,10))// & ! qdos
-                  char(48+mod(i1,10))//'.'//char(48+1)//'.dat') ! qdos
-                open (32, &        ! qdos
-                  file='qdos.'//char(48+mod(i1/10,10))// & ! qdos
-                  char(48+mod(i1,10))//'.'//char(48+2)//'.dat') ! qdos
+                open (31, file='qdos.'//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+1)//'.dat') ! qdos
+                open (32, file='qdos.'//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+2)//'.dat') ! qdos
               end if               ! qdos
               call version_print_header(31) ! qdos
               write (31, *) ' '    ! qdos
@@ -827,8 +809,6 @@ contains
     end if                         ! OPT('qdos    ')                                                  ! qdos
 #endif
 
-    write(*,*) 'communication'
-
 #ifdef CPP_MPI
     ! do communication only when compiled with MPI
 #ifdef CPP_TIMING
@@ -863,7 +843,6 @@ contains
 
     ! MPI: do these writeout/data collection steps only on master and broadcast important results afterwards
     if (t_mpi_c_grid%myrank_at==master) then
-      write(*,*) 'serial'
 #endif
       ! CPP_MPI
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -938,7 +917,6 @@ contains
       allocate (rhonewtemp(irws,lmpotd), stat=i_stat)
       call memocc(i_stat, product(shape(rhonewtemp))*kind(rhonewtemp), 'RHONEWTEMP', 'RHOVALNEW')
 
-      write(*,*) 'rho2nsnew', nspin*(1+korbit)
       do jspin = 1, nspin*(1+korbit)
         rhotemp = czero
         rhonewtemp = czero
@@ -954,14 +932,13 @@ contains
           end do
         end do
 
-      write(*,*) 'rho2nefnew'
         rhotemp = czero
         rhonewtemp = czero
         rhotemp(1:irmdnew, 1:lmpotd) = r2nefc(1:irmdnew, 1:lmpotd, jspin)
         call cheb2oldgrid(irws, irmdnew, lmpotd, rmesh, ncheb, npan_tot, rpan_intervall, ipan_intervall, rhotemp, rhonewtemp, irmd)
         r2nefnew(1:irws, 1:lmpotd, jspin) = rhonewtemp(1:irws, 1:lmpotd)
       end do
-      write(*,*) 'before fixmom'
+
       i_all = -product(shape(rhotemp))*kind(rhotemp)
       deallocate (rhotemp, stat=i_stat)
       call memocc(i_stat, i_all, 'RHOTEMP', 'RHOVALNEW')
@@ -1016,19 +993,8 @@ contains
         r2nef(:, :, :) = aimag(r2nefnew(:,:,:))
       end if
 
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! construct sum and difference of spin channels
-      !idim = irmd*lmpotd
-      !call dscal(idim, 2.d0, rho2ns(1,1,1), 1)
-      !call daxpy(idim, -0.5d0, rho2ns(1,1,1), 1, rho2ns(1,1,2), 1)
-      !call daxpy(idim, 1.0d0, rho2ns(1,1,2), 1, rho2ns(1,1,1), 1)
-      ! Do the same at the Fermi energy
-      !call dscal(idim, 2.d0, r2nef(1,1,1), 1)
-      !call daxpy(idim, -0.5d0, r2nef(1,1,1), 1, r2nef(1,1,2), 1)
-      !call daxpy(idim, 1.0d0, r2nef(1,1,2), 1, r2nef(1,1,1), 1)
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
       den_out(0:lmaxd1, 1:ielast, 1:nspin) = den(0:lmaxd1, 1:ielast, 1, 1:nspin)
+
 
 #ifdef CPP_MPI
     end if                         ! (myrank==master)
@@ -1129,7 +1095,6 @@ contains
     i_all = -product(shape(denlm))*kind(denlm)
     deallocate (denlm, stat=i_stat)
     call memocc(i_stat, i_all, 'DENLM', 'RHOVALNEW')
-    write(*,*) 'done rhovalnew', ispin
 
   end subroutine rhovalnew
 
