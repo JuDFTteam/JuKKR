@@ -424,6 +424,23 @@ contains
     ! LLY
     ! -------------------------------------------------------------------------
 
+
+    ! interpolate to Chebychev mesh
+    if (opt('NEWSOSOL')) then
+      ! nonco angles
+      call read_angles(t_params, natyp, theta, phi)
+
+      ! interpolate potential
+      if (idoldau==1) then
+        call cinit(mmaxd*mmaxd*4*natyp, denmatn(1,1,1,1,1))
+      end if
+
+      call interpolate_poten(lpotd, irmd, irnsd, natyp, ipand, lmpotd, nspotd, ntotd, ntotd*(ncheb+1), nspin, rmesh, irmin, irws, ircut, vins, visp, npan_log_at, npan_eq_at, &
+        npan_tot, rnew, ipan_intervall, vinsnew)
+    end if !(.not. opt('NEWSOSOL'))
+
+
+    ! find boundaries for atom loop (MPI parallelization level)
 #ifdef CPP_MPI
     ntot1 = t_inc%natyp
     if (.not. opt('NEWSOSOL')) then
@@ -435,18 +452,6 @@ contains
       t_mpi_c_grid%ntot1 = ntot_pt(t_mpi_c_grid%myrank_ie)
 
     else ! new spin-orbit solver
-
-      ! nonco angles
-      call read_angles(t_params, natyp, theta, phi)
-
-      ! interpolate potential
-      if (idoldau==1) then
-        call cinit(mmaxd*mmaxd*4*natyp, denmatn(1,1,1,1,1))
-      end if
-
-      call interpolate_poten(lpotd, irmd, irnsd, natyp, ipand, lmpotd, nspotd, ntotd, ntotd*(ncheb+1), nspin, rmesh, irmin, irws, ircut, vins, visp, npan_log_at, npan_eq_at, &
-        npan_tot, rnew, ipan_intervall, vinsnew)
-
 
       if (t_mpi_c_grid%dims(1)>1) then
         nranks_local = t_mpi_c_grid%nranks_ie
