@@ -61,6 +61,9 @@ contains
     ! array dimensions
     use :: global_variables, only: natypd, wlength, lmmaxd, nrmaxd, lmpotd, nspotd, irmd, naclsd, nclsd, nrefd, ncleb, nembd, &
       naezd, lm2d, krel, nspind, iemxd, ntotd, nrmaxd, irmind, lmpotd, nspotd, npotd, natomimpd, ipand, knosph, lpotd, irnsd, korbit
+#ifdef CPP_BdG
+    use :: global_variables, only: mmaxd
+#endif
     ! stuff defined in main0 already
     use :: mod_main0, only: ielast, nspin, icst, ipan, ircut, lmax, ncls, nineq, idoldau, lly, atom, cls, icleb, loflm, nacls, &
       refpot, irws, iend, ez, vins, irmin, alat, drdi, rmesh, zat, rcls, visp, rmtref, vref, cleb, cscl, socscale, socscl, erefldau, &
@@ -354,6 +357,7 @@ contains
     socscale, rnew, rpan_intervall, wldau, vinsnew, i1_end, natyp, lopt)
     ! write out inputs for tmat_newsolver to extract first BdG
     use mod_datatypes, only: dp
+    use :: global_variables, only: nchebd
     implicit none
     integer, intent(in) :: nranks, i1, i1_start, ielast, nspin ,lmax, ncleb, nsra, natyp, iend, lmpotd, lly, idoldau, ncheb, mmaxd, nspind, iemxd, nrmaxd, nspotd, ipot, i1_end
     integer, intent(in) :: ntotd, icleb(ncleb,4), lopt(natyp), ipan_intervall(0:ntotd,natyp), npan_tot(natyp)

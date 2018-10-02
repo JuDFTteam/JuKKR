@@ -7,7 +7,7 @@ contains
   !> @note Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
   ! -------------------------------------------------------------------------------
   subroutine rhovalnew(ldorhoef, ielast, nsra, nspin, lmax, ez, wez, zat, socscale, cleb, icleb, iend, ifunm, lmsp, ncheb, npan_tot, npan_log, npan_eq, rmesh, irws, rpan_intervall, &
-    ipan_intervall, rnew, vinsnew, thetasnew, theta, phi, i1, ipot, den_out, espv, rho2ns, r2nef, muorb, angles_new, idoldau, lopt, wldau, denmatn, natyp)
+    ipan_intervall, rnew, vinsnew, thetasnew, theta, phi, i1, ipot, den_out, espv, rho2ns, r2nef, muorb, angles_new, idoldau, lopt, wldau, denmatn, natyp, ispin)
 
 #ifdef CPP_OMP
     use :: omp_lib
@@ -48,6 +48,7 @@ contains
 
     implicit none
 
+    integer, intent (in) :: ispin
     integer, intent (in) :: i1
     integer, intent (in) :: nsra
     integer, intent (in) :: lmax   !! Maximum l component in wave function expansion
@@ -86,16 +87,17 @@ contains
     complex (kind=dp), dimension (iemxd), intent (inout) :: wez
     ! .. Output variables
     real (kind=dp), dimension (2), intent (out) :: angles_new
-    real (kind=dp), dimension (0:lmax+1, 2), intent (out) :: espv
-    real (kind=dp), dimension (irmd, lmpotd, 4), intent (out) :: r2nef
-    real (kind=dp), dimension (irmd, lmpotd, 4), intent (out) :: rho2ns
-    complex (kind=dp), dimension (0:lmax+1, ielast, 2), intent (out) :: den_out
+    real (kind=dp), dimension (0:lmax+1, nspin), intent (out) :: espv
+    real (kind=dp), dimension (irmd, lmpotd, nspin*(1+korbit)), intent (out) :: r2nef
+    real (kind=dp), dimension (irmd, lmpotd, nspin*(1+korbit)), intent (out) :: rho2ns
+    complex (kind=dp), dimension (0:lmax+1, ielast, nspin), intent (out) :: den_out
 
     ! .. Local variables
     integer :: lmsize
     integer :: lmaxd1
     integer :: ir, irec, use_sratrick, nvec, lm1, lm2, ie, irmdnew, imt1, jspin, idim, iorb, l1
     integer :: i_stat, i_all
+    integer :: use_fullgmat !! use (l,m,s) coupled matrices or not for 'NOSOC' test option (1/0)
     integer :: iq, nqdos           ! qdos ruess: number of qdos points
     integer :: lrecgflle, ierr     ! lmlm-dos
     integer :: lmlo, lmhi, is, js, mmax ! LDAU
@@ -112,15 +114,15 @@ contains
     complex (kind=dp) :: gmatprefactor
     integer, dimension (4) :: lmshift1
     integer, dimension (4) :: lmshift2
-    integer, dimension (2*lmmaxso) :: jlk_index
+    integer, dimension (nspin*lmmaxso) :: jlk_index
     real (kind=dp), dimension (3) :: moment
     real (kind=dp), dimension (3) :: denorbmom
     real (kind=dp), dimension (3) :: denorbmomns
-    real (kind=dp), dimension (2, 4) :: denorbmomsp
+    real (kind=dp), dimension (2, 3) :: denorbmomsp
     real (kind=dp), dimension (0:lmax, 3) :: denorbmomlm
-    complex (kind=dp), dimension (4) :: rho2
-    complex (kind=dp), dimension (4) :: rho2int
-    complex (kind=dp), dimension (2*(lmax+1)) :: alphasph
+    complex (kind=dp), dimension (nspin*(1+korbit)) :: rho2
+    complex (kind=dp), dimension (nspin*(1+korbit)) :: rho2int
+    complex (kind=dp), dimension (nspin*(lmax+1)) :: alphasph
     complex (kind=dp), dimension (lmmaxso, lmmaxso) :: gmat0
     complex (kind=dp), dimension (lmmaxso, lmmaxso) :: gldau ! LDAU
     complex (kind=dp), dimension (lmmaxso, lmmaxso) :: tmatll
@@ -196,25 +198,22 @@ contains
     ! .. Parameters
     lmaxd1 = lmax + 1
 
-    irmdnew = npan_tot*(ncheb+1)
-    imt1 = ipan_intervall(npan_log+npan_eq) + 1
-    allocate (vins(irmdnew,lmpotd,nspin), stat=i_stat)
-    call memocc(i_stat, product(shape(vins))*kind(vins), 'VINS', 'RHOVALNEW')
-    vins = 0d0
-    do lm1 = 1, lmpotd
-      do ir = 1, irmdnew
-        vins(ir, lm1, 1) = vinsnew(ir, lm1, ipot)
-        vins(ir, lm1, nspin) = vinsnew(ir, lm1, ipot+nspin-1)
-      end do
-    end do
-
-    ! ! set up the non-spherical ll' matrix for potential VLL'
     if (nsra==2) then
       use_sratrick = 1
       if (test('nosph   ')) use_sratrick = 0
     else
       use_sratrick = 0
     end if
+
+    irmdnew = npan_tot*(ncheb+1)
+    imt1 = ipan_intervall(npan_log+npan_eq) + 1
+    allocate (vins(irmdnew,lmpotd,nspin), stat=i_stat)
+    call memocc(i_stat, product(shape(vins))*kind(vins), 'VINS', 'RHOVALNEW')
+    vins = 0d0
+    vins(1:irmdnew, 1:lmpotd, 1) = vinsnew(1:irmdnew, 1:lmpotd, ipot)
+    if (.not.test('NOSOC   '))  vins(1:irmdnew, 1:lmpotd, nspin) = vinsnew(1:irmdnew, 1:lmpotd, ipot+nspin-1)
+
+    ! set up the non-spherical ll' matrix for potential VLL'
     allocate (vnspll0(lmmaxso,lmmaxso,irmdnew), stat=i_stat)
     call memocc(i_stat, product(shape(vnspll0))*kind(vnspll0), 'VNSPLL0', 'RHOVALNEW')
     vnspll0 = czero
@@ -251,15 +250,15 @@ contains
       call memocc(i_stat, product(shape(vnspll))*kind(vnspll), 'VNSPLL', 'RHOVALNEW')
     end if
 
-    allocate (hlk(4*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
+    allocate (hlk(nsra*(1+korbit)*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(hlk))*kind(hlk), 'HLK', 'RHOVALNEW')
-    allocate (jlk(4*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
+    allocate (jlk(nsra*(1+korbit)*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(jlk))*kind(jlk), 'JLK', 'RHOVALNEW')
-    allocate (hlk2(4*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
+    allocate (hlk2(nsra*(1+korbit)*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(hlk2))*kind(hlk2), 'HLK2', 'RHOVALNEW')
-    allocate (jlk2(4*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
+    allocate (jlk2(nsra*(1+korbit)*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(jlk2))*kind(jlk2), 'JLK2', 'RHOVALNEW')
-    allocate (tmatsph(2*(lmax+1),0:nth-1), stat=i_stat)
+    allocate (tmatsph(nspin*(lmax+1),0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(tmatsph))*kind(tmatsph), 'TMATSPH', 'RHOVALNEW')
     allocate (rll(nsra*lmmaxso,lmmaxso,irmdnew,0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(rll))*kind(rll), 'RLL', 'RHOVALNEW')
@@ -269,25 +268,25 @@ contains
     call memocc(i_stat, product(shape(rllleft))*kind(rllleft), 'RLLLEFT', 'RHOVALNEW')
     allocate (sllleft(nsra*lmmaxso,lmmaxso,irmdnew,0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(sllleft))*kind(sllleft), 'SLLLEFT', 'RHOVALNEW')
-    allocate (cden(irmdnew,0:lmax,4,0:nth-1), stat=i_stat)
+    allocate (cden(irmdnew,0:lmax,nspin*(1+korbit),0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(cden))*kind(cden), 'CDEN', 'RHOVALNEW')
-    allocate (cdenlm(irmdnew,lmsize,4,0:nth-1), stat=i_stat)
+    allocate (cdenlm(irmdnew,lmsize,nspin*(1+korbit),0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(cdenlm))*kind(cdenlm), 'CDENLM', 'RHOVALNEW')
-    allocate (cdenns(irmdnew,4,0:nth-1), stat=i_stat)
+    allocate (cdenns(irmdnew,nspin*(1+korbit),0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(cdenns))*kind(cdenns), 'CDENNS', 'RHOVALNEW')
-    allocate (rho2nsc(irmdnew,lmpotd,4), stat=i_stat)
+    allocate (rho2nsc(irmdnew,lmpotd,nspin*(1+korbit)), stat=i_stat)
     call memocc(i_stat, product(shape(rho2nsc))*kind(rho2nsc), 'RHO2NSC', 'RHOVALNEW')
-    allocate (rho2nsc_loop(irmdnew,lmpotd,4,ielast), stat=i_stat)
+    allocate (rho2nsc_loop(irmdnew,lmpotd,nspin*(1+korbit),ielast), stat=i_stat)
     call memocc(i_stat, product(shape(rho2nsc_loop))*kind(rho2nsc_loop), 'RHO2NSC_loop', 'RHOVALNEW')
-    allocate (rho2nsnew(irmd,lmpotd,4), stat=i_stat)
+    allocate (rho2nsnew(irmd,lmpotd,nspin*(1+korbit)), stat=i_stat)
     call memocc(i_stat, product(shape(rho2nsnew))*kind(rho2nsnew), 'RHO2NSNEW', 'RHOVALNEW')
-    allocate (r2nefc(irmdnew,lmpotd,4), stat=i_stat)
+    allocate (r2nefc(irmdnew,lmpotd,nspin*(1+korbit)), stat=i_stat)
     call memocc(i_stat, product(shape(r2nefc))*kind(r2nefc), 'R2NEFC', 'RHOVALNEW')
-    allocate (r2nefc_loop(irmdnew,lmpotd,4,0:nth-1), stat=i_stat)
+    allocate (r2nefc_loop(irmdnew,lmpotd,nspin*(1+korbit),0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(r2nefc_loop))*kind(r2nefc_loop), 'R2NEFC_loop', 'RHOVALNEW')
-    allocate (r2nefnew(irmd,lmpotd,4), stat=i_stat)
+    allocate (r2nefnew(irmd,lmpotd,nspin*(1+korbit)), stat=i_stat)
     call memocc(i_stat, product(shape(r2nefnew))*kind(r2nefnew), 'R2NEFNEW', 'RHOVALNEW')
-    allocate (r2orbc(irmdnew,lmpotd,4,0:nth-1), stat=i_stat)
+    allocate (r2orbc(irmdnew,lmpotd,nspin*(1+korbit),0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(r2orbc))*kind(r2orbc), 'R2ORBC', 'RHOVALNEW')
     allocate (cdentemp(irmdnew,0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(cdentemp))*kind(cdentemp), 'CDENTEMP', 'RHOVALNEW')
@@ -295,7 +294,7 @@ contains
     call memocc(i_stat, product(shape(gflle_part))*kind(gflle_part), 'GFLLE_PART', 'RHOVALNEW')
     allocate (gflle(lmmaxso,lmmaxso,ielast,1), stat=i_stat)
     call memocc(i_stat, product(shape(gflle))*kind(gflle), 'GFLLE', 'RHOVALNEW')
-    allocate (den(0:lmaxd1,ielast,1,2), denlm(lmsize,ielast,1,2), stat=i_stat)
+    allocate (den(0:lmaxd1,ielast,1,nspin), denlm(lmsize,ielast,1,nspin), stat=i_stat)
     call memocc(i_stat, product(shape(den))*kind(den), 'DEN', 'RHOVALNEW')
     rho2nsc = czero
     rho2nsc_loop = czero
@@ -359,9 +358,9 @@ contains
       ! ! qdos ruess
       allocate (gflle(lmmaxso,lmmaxso,ielast,nqdos), stat=i_stat) ! qdos ruess
       call memocc(i_stat, product(shape(gflle))*kind(gflle), 'GFLLE', 'RHOVALNEW') ! qdos ruess
-      allocate (den(0:lmaxd1,ielast,nqdos,2), stat=i_stat) ! qdos ruess
+      allocate (den(0:lmaxd1,ielast,nqdos,nspin), stat=i_stat) ! qdos ruess
       call memocc(i_stat, product(shape(den))*kind(den), 'DEN', 'RHOVALNEW') ! qdos ruess
-      allocate (denlm(lmsize,ielast,nqdos,2), stat=i_stat) ! qdos ruess
+      allocate (denlm(lmsize,ielast,nqdos,nspin), stat=i_stat) ! qdos ruess
       call memocc(i_stat, product(shape(denlm))*kind(qvec), 'DENLM', 'RHOVALNEW') ! qdos ruess
 100   if (ierr/=0) stop 'ERROR READING ''qvec.dat''' ! qdos ruess
     end if                         ! OPT('qdos    ')                                                     ! qdos ruess
@@ -372,7 +371,7 @@ contains
     i1_myrank = i1                 ! lmlm-dos ruess
 #endif
     if ((opt('lmlm-dos')) .and. (i1_myrank==1)) then ! lmlm-dos ruess
-      lrecgflle = 4*lmmaxso*lmmaxso*ielast*nqdos ! lmlm-dos ruess
+      lrecgflle = nspin*(1+korbit)*lmmaxso*lmmaxso*ielast*nqdos ! lmlm-dos ruess
       open (91, access='direct', recl=lrecgflle, file='gflle' & ! lmlm-dos ruess
         , form='unformatted', status='replace', err=110, iostat=ierr) ! lmlm-dos ruess
 110   if (ierr/=0) stop 'ERROR CREATING ''gflle''' ! lmlm-dos ruess
@@ -447,8 +446,12 @@ contains
 
       ! recalculate wavefuntions, also include left solution
       ! contruct the spin-orbit coupling hamiltonian and add to potential
-      call spinorbit_ham(lmax, lmsize, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpotd, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
-        vnspll0, vnspll1(:,:,:,ith), '1')
+      if ( .not. test('NOSOC   ')) then
+        call spinorbit_ham(lmax, lmsize, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpotd, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
+          vnspll0, vnspll1(:,:,:,ith), '1')
+      else
+        vnspll1(:,:,:,ith) = vnspll0(:,:,:)
+      end if
 
       ! extend matrix for the SRA treatment
       vnspll(:, :, :, ith) = czero
@@ -472,7 +475,12 @@ contains
         jlk2(:, :, ith) = czero
         gmatprefactor = czero
         jlk_index = 0
-        call rllsllsourceterms(nsra, nvec, eryd, rnew, irmdnew, nrmaxd, lmax, lmmaxso, 1, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor)
+        if (test('NOSOC   ')) then
+          use_fullgmat = 0
+        else
+          use_fullgmat = 1
+        end if
+        call rllsllsourceterms(nsra, nvec, eryd, rnew, irmdnew, nrmaxd, lmax, lmmaxso, use_fullgmat, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor)
 
         ! using spherical potential as reference
         if (use_sratrick==1) then
@@ -492,10 +500,10 @@ contains
         ! no irregular solutions SLL are needed in self-consistent iterations
         ! because the density depends only on RLL, RLLLEFT and SLLLEFT
         if (opt('RLL-SLL ') .and. .not. (opt('XCPL    ') .or. opt('OPERATOR'))) then
-          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), tmatll, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, 4*(lmax+1), irmdnew, nsra, jlk_index, &
+          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), tmatll, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, &
             hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
         else
-          call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), sll(:,:,:,ith), tmatll, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, 4*(lmax+1), irmdnew, nsra, jlk_index, &
+          call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), sll(:,:,:,ith), tmatll, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, &
             hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alphall)
         end if
         if (nsra==2) then
@@ -510,8 +518,12 @@ contains
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if ((t_wavefunctions%nwfsavemax>0 .and. (.not. (rllleft_was_read_in .and. sllleft_was_read_in))) .or. (t_wavefunctions%nwfsavemax==0)) then
         ! read/recalc wavefunctions left contruct the TRANSPOSE spin-orbit coupling hamiltonian and add to potential
-        call spinorbit_ham(lmax, lmsize, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpotd, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
-          vnspll0, vnspll1(:,:,:,ith), 'transpose')
+        if ( .not. test('NOSOC   ')) then
+          call spinorbit_ham(lmax, lmsize, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpotd, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
+            vnspll0, vnspll1(:,:,:,ith), 'transpose')
+        else
+          vnspll1(:,:,:,ith) = vnspll0(:,:,:)
+        end if
         ! extend matrix for the SRA treatment
         vnspll(:, :, :, ith) = czero
         if (nsra==2) then
@@ -532,7 +544,7 @@ contains
         jlk2(:, :, ith) = czero
         gmatprefactor = czero
         jlk_index = 0
-        call rllsllsourceterms(nsra, nvec, eryd, rnew, irmdnew, nrmaxd, lmax, lmmaxso, 1, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor)
+        call rllsllsourceterms(nsra, nvec, eryd, rnew, irmdnew, nrmaxd, lmax, lmmaxso, use_fullgmat, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor)
 
         ! using spherical potential as reference
         ! notice that exchange the order of left and right hankel/bessel functions
@@ -550,12 +562,12 @@ contains
         tmattemp = czero
         ! faster calculation of RLLLEFT and SLLLEFT.
         if (opt('RLL-SLL ') .and. .not. (opt('XCPL    ') .or. opt('OPERATOR'))) then
-          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), tmattemp, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, 4*(lmax+1), irmdnew, nsra, &
+          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), tmattemp, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
             jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
-          call sll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), sllleft(:,:,:,ith), ncheb, npan_tot, lmmaxso, nvec*lmmaxso, 4*(lmax+1), irmdnew, nsra, jlk_index, &
+          call sll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), sllleft(:,:,:,ith), ncheb, npan_tot, lmmaxso, nvec*lmmaxso, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, &
             hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick)
         else
-          call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), tmattemp, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, 4*(lmax+1), irmdnew, nsra, &
+          call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), tmattemp, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
             jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alphall)
         end if
         if (nsra==2) then
@@ -566,7 +578,11 @@ contains
 
       do iq = 1, nqdos             ! qdos
         ! read in GF
-        irec = iq + nqdos*(ie-1) + nqdos*ielast*(i1-1) ! qdos
+        if (.not.test('NOSOC    ')) then
+          irec = iq + nqdos*(ie-1) + nqdos*ielast*(i1-1) ! qdos
+        else
+          irec = iq + nqdos*(ie-1) + nqdos*ielast*(ispin-1) + nqdos*ielast*2*(i1-1) ! qdos
+        end if
 #ifdef CPP_OMP
         ! $omp critical
 #endif
@@ -589,10 +605,16 @@ contains
           end do
         end do
         ! calculate density
+        write(*,*) nsra, lmax, lmpotd, shape(rll(:,:,:,ith))
+        write(*,*) shape(cden(:,:,:,ith))
+        write(*,*) shape(cdenlm(:,:,:,ith))
+        write(*,*) shape(cdenns(:,:,ith))
+        write(*,*) shape(rho2nsc_loop(:,:,:,ie))
+        write(*,*) shape(gflle(:,:,ie,iq))
         call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, df, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll(:,:,:,ith), & ! SLL(:,:,:,ith), commented out since sll is not used in rhooutnew
-          rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), rho2nsc_loop(:,:,:,ie), 0, gflle(:,:,ie,iq), rpan_intervall, ipan_intervall)
+          rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), rho2nsc_loop(:,:,:,ie), 0, gflle(:,:,ie,iq), rpan_intervall, ipan_intervall, nspin)
 
-        do jspin = 1, 4
+        do jspin = 1, nspin*(1+korbit)
           do lm1 = 0, lmax
             cdentemp(:, ith) = czero
             dentemp = czero
@@ -619,79 +641,72 @@ contains
             end do
             cdentemp(:, ith) = czero
             dentemp = czero
-            do ir = 1, irmdnew
-              cdentemp(ir, ith) = cdenns(ir, jspin, ith)
-            end do
+            cdentemp(1:irmdnew, ith) = cdenns(1:irmdnew, jspin, ith)
             call intcheb_cell(cdentemp(:,ith), dentemp, rpan_intervall, ipan_intervall, npan_tot, ncheb, irmdnew)
             den(lmaxd1, ie, iq, jspin) = dentemp
             rho2int(jspin) = rho2int(jspin) + den(lmaxd1, ie, iq, jspin)*df
           end if
         end do                     ! JSPIN
+        write(*,*) 'done jspin'
 
-        do jspin = 1, 4
-          if (jspin<=2) then
-            do lm1 = 0, lmaxd1
-              espv(lm1, jspin) = espv(lm1, jspin) + aimag(eryd*den(lm1,ie,iq,jspin)*df)
-            end do
-          end if
-        end do
+        espv(0:lmaxd1, 1:nspin) = espv(0:lmaxd1, 1:nspin) + aimag(eryd*den(0:lmaxd1,ie,iq,1:nspin)*df)
       end do                       ! IQ = 1,NQDOS
 
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Get charge at the Fermi energy (IELAST)
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if (ie==ielast .and. ldorhoef) then
+        write(*,*) 'ielast'
         call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, cone, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll(:,:,:,ith), & ! SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
           rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), r2nefc_loop(:,:,:,ith), 0, gflle_part(:,:,ith), rpan_intervall, &
-          ipan_intervall)
+          ipan_intervall, nspin)
       end if
 
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Get orbital moment
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      do iorb = 1, 3
-        call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, cone, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll(:,:,:,ith), & ! SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
-          rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), r2orbc(:,:,:,ith), iorb, gflle_part(:,:,ith), rpan_intervall, ipan_intervall)
-        do jspin = 1, 4
-          if (jspin<=2) then
-            do lm1 = 0, lmax
-              cdentemp(:, ith) = czero
-              dentemp = czero
-              do ir = 1, irmdnew
-                cdentemp(ir, ith) = cden(ir, lm1, jspin, ith)
-              end do
-              call intcheb_cell(cdentemp(:,ith), dentemp, rpan_intervall, ipan_intervall, npan_tot, ncheb, irmdnew)
+      write(*,*) 'orbmom'
+      if (.not. test('NOSOC   ')) then
+        do iorb = 1, 3
+          call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, cone, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll(:,:,:,ith), & ! SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
+            rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), r2orbc(:,:,:,ith), iorb, gflle_part(:,:,ith), rpan_intervall, ipan_intervall, nspin)
+          do jspin = 1, nspin*(1+korbit)
+            if (jspin<=2) then
+              do lm1 = 0, lmax
+                cdentemp(:, ith) = czero
+                dentemp = czero
+                do ir = 1, irmdnew
+                  cdentemp(ir, ith) = cden(ir, lm1, jspin, ith)
+                end do
+                call intcheb_cell(cdentemp(:,ith), dentemp, rpan_intervall, ipan_intervall, npan_tot, ncheb, irmdnew)
+        
+                rho2(jspin) = dentemp
+                muorb(lm1, jspin) = muorb(lm1, jspin) - aimag(rho2(jspin)*df)
+                denorbmom(iorb) = denorbmom(iorb) - aimag(rho2(jspin)*df)
+                denorbmomsp(jspin, iorb) = denorbmomsp(jspin, iorb) - aimag(rho2(jspin)*df)
+                denorbmomlm(lm1, iorb) = denorbmomlm(lm1, iorb) - aimag(rho2(jspin)*df)
+                cdentemp(:, ith) = czero
+        
+                do ir = 1, irmdnew
+                  cdentemp(ir, ith) = cdenns(ir, jspin, ith)
+                end do
+                call intcheb_cell(cdentemp(:,ith), temp1, rpan_intervall, ipan_intervall, npan_tot, ncheb, irmdnew)
+                denorbmomns(iorb) = denorbmomns(iorb) - aimag(temp1*df)
+              end do ! lm1
+            end if
+          end do ! jspin
+        end do ! IORB
+      end if ! .not. test('NOSOC    ')
 
-              rho2(jspin) = dentemp
-              muorb(lm1, jspin) = muorb(lm1, jspin) - aimag(rho2(jspin)*df)
-              denorbmom(iorb) = denorbmom(iorb) - aimag(rho2(jspin)*df)
-              denorbmomsp(jspin, iorb) = denorbmomsp(jspin, iorb) - aimag(rho2(jspin)*df)
-              denorbmomlm(lm1, iorb) = denorbmomlm(lm1, iorb) - aimag(rho2(jspin)*df)
-              cdentemp(:, ith) = czero
-
-              do ir = 1, irmdnew
-                cdentemp(ir, ith) = cdenns(ir, jspin, ith)
-              end do
-              call intcheb_cell(cdentemp(:,ith), temp1, rpan_intervall, ipan_intervall, npan_tot, ncheb, irmdnew)
-              denorbmomns(iorb) = denorbmomns(iorb) - aimag(temp1*df)
-            end do
-          end if
-        end do
-      end do                       ! IORB
     end do                         ! IE loop
 #ifdef CPP_OMP
     ! $omp end parallel do
 #endif
 
+    write(*,*) 'done ie loop'
     ! omp: move sum from rhooutnew here after parallel calculation
-    do ir = 1, irmdnew
-      do lm1 = 1, lmpotd
-        do jspin = 1, 4
-          do ie = 1, ielast
-            rho2nsc(ir, lm1, jspin) = rho2nsc(ir, lm1, jspin) + rho2nsc_loop(ir, lm1, jspin, ie)
-          end do
-        end do
-      end do
+    do ie = 1, ielast
+      rho2nsc(:, :, :) = rho2nsc(:, :, :) + rho2nsc_loop(:, :, :, ie)
     end do
     ! omp: don't forget to do the same with density at fermi energy:
     do ith = 0, nth - 1
@@ -701,8 +716,8 @@ contains
 #ifdef CPP_MPI
     if (opt('qdos    ')) then      ! qdos
       ! first communicate den array to write out qdos files                      ! qdos
-      idim = (lmaxd1+1)*ielast*2*nqdos ! qdos
-      allocate (workc(0:lmaxd1,ielast,2,nqdos), stat=i_stat) ! qdos
+      idim = (lmaxd1+1)*ielast*nspin*nqdos ! qdos
+      allocate (workc(0:lmaxd1,ielast,nspin,nqdos), stat=i_stat) ! qdos
       call memocc(i_stat, product(shape(workc))*kind(workc), 'workc', 'RHOVALNEW') ! qdos
       workc = czero                ! qdos
       call mpi_reduce(den, workc, idim, mpi_double_complex, mpi_sum, master, & ! qdos
@@ -747,7 +762,7 @@ contains
                   'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...' ! qdos
               end if               ! qdos
             end if                 ! IQ.EQ.1                                                 ! qdos
-            do jspin = 1, 2        ! qdos
+            do jspin = 1, nspin    ! qdos
               dentot(jspin) = cmplx(0.d0, 0.d0, kind=dp) ! qdos
               do l1 = 0, lmaxd1    ! qdos
                 dentot(jspin) = dentot(jspin) + den(l1, ie, iq, jspin) ! qdos
@@ -792,7 +807,7 @@ contains
                     'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...' ! complex qdos
                 end if             ! complex qdos
               end if               ! IQ.EQ.1                                              ! complex qdos
-              do jspin = 1, 2      ! complex qdos
+              do jspin = 1, nspin  ! complex qdos
                 dentot(jspin) = cmplx(0.d0, 0.d0, kind=dp) ! complex qdos
                 do l1 = 0, lmaxd1  ! complex qdos
                   dentot(jspin) = dentot(jspin) + den(l1, ie, iq, jspin) ! complex qdos
@@ -811,6 +826,8 @@ contains
       end if                       ! myrank_at==master                                                  ! qdos
     end if                         ! OPT('qdos    ')                                                  ! qdos
 #endif
+
+    write(*,*) 'communication'
 
 #ifdef CPP_MPI
     ! do communication only when compiled with MPI
@@ -846,6 +863,7 @@ contains
 
     ! MPI: do these writeout/data collection steps only on master and broadcast important results afterwards
     if (t_mpi_c_grid%myrank_at==master) then
+      write(*,*) 'serial'
 #endif
       ! CPP_MPI
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -886,30 +904,21 @@ contains
             iq = 1                 ! lm-dos
             if (ie==1) then        ! lm-dos
               if (natyp>=100) then ! lm-dos
-                open (29, &        ! lm-dos
-                  file='lmdos.'//char(48+i1/100)// & ! lm-dos
-                  char(48+mod(i1/10,10))// & ! lm-dos
-                  char(48+mod(i1,10))//'.'//char(48+1)//'.dat') ! lm-dos
-                open (30, &        ! lm-dos
-                  file='lmdos.'//char(48+i1/100)// & ! lm-dos
-                  char(48+mod(i1/10,10))// & ! lm-dos
-                  char(48+mod(i1,10))//'.'//char(48+2)//'.dat') ! lm-dos
+                open (29, file='lmdos.'//char(48+i1/100)//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+1)//'.dat') ! lm-dos
+                if (nspin==2) open (30, file='lmdos.'//char(48+i1/100)//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+2)//'.dat') ! lm-dos
               else                 ! lm-dos
-                open (29, &        ! lm-dos
-                  file='lmdos.'//char(48+i1/10)// & ! lm-dos
-                  char(48+mod(i1,10))//'.'//char(48+1)//'.dat') ! lm-dos
-                open (30, file='lmdos.'//char(48+i1/10)// & ! lm-dos
-                  char(48+mod(i1,10))//'.'//char(48+2)//'.dat') ! lm-dos
+                open (29, file='lmdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'//char(48+1)//'.dat') ! lm-dos
+                if (nspin==2) open (30, file='lmdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'//char(48+2)//'.dat') ! lm-dos
               end if               ! lm-dos
               call version_print_header(29) ! lm-dos
               write (29, *) ' '    ! lm-dos
               write (29, 150) '# ISPIN=', 1, ' I1=', i1 ! lm-dos
-              call version_print_header(30) ! lm-dos
-              write (30, *) ' '    ! lm-dos
-              write (30, 150) '# ISPIN=', 2, ' I1=', i1 ! lm-dos
+              if (nspin==2) call version_print_header(30) ! lm-dos
+              if (nspin==2) write (30, *) ' '    ! lm-dos
+              if (nspin==2) write (30, 150) '# ISPIN=', 2, ' I1=', i1 ! lm-dos
             end if                 ! IE==1                                                      ! lm-dos
             write (29, 140) ez(ie), (-aimag(denlm(l1,ie,iq,1))/pi, l1=1, lmsize) ! lm-dos
-            write (30, 140) ez(ie), (-aimag(denlm(l1,ie,iq,2))/pi, l1=1, lmsize) ! lm-dos
+            if (nspin==2) write (30, 140) ez(ie), (-aimag(denlm(l1,ie,iq,nspin))/pi, l1=1, lmsize) ! lm-dos
 140         format (30e12.4)       ! lm-dos
 150         format (a8, i3, a4, i5) ! lm-dos/qdos ruess
           end do                   ! IE
@@ -929,7 +938,8 @@ contains
       allocate (rhonewtemp(irws,lmpotd), stat=i_stat)
       call memocc(i_stat, product(shape(rhonewtemp))*kind(rhonewtemp), 'RHONEWTEMP', 'RHOVALNEW')
 
-      do jspin = 1, 4
+      write(*,*) 'rho2nsnew', nspin*(1+korbit)
+      do jspin = 1, nspin*(1+korbit)
         rhotemp = czero
         rhonewtemp = czero
         do lm1 = 1, lmpotd
@@ -944,20 +954,14 @@ contains
           end do
         end do
 
+      write(*,*) 'rho2nefnew'
         rhotemp = czero
         rhonewtemp = czero
-        do lm1 = 1, lmpotd
-          do ir = 1, irmdnew
-            rhotemp(ir, lm1) = r2nefc(ir, lm1, jspin)
-          end do
-        end do
+        rhotemp(1:irmdnew, 1:lmpotd) = r2nefc(1:irmdnew, 1:lmpotd, jspin)
         call cheb2oldgrid(irws, irmdnew, lmpotd, rmesh, ncheb, npan_tot, rpan_intervall, ipan_intervall, rhotemp, rhonewtemp, irmd)
-        do lm1 = 1, lmpotd
-          do ir = 1, irws
-            r2nefnew(ir, lm1, jspin) = rhonewtemp(ir, lm1)
-          end do
-        end do
+        r2nefnew(1:irws, 1:lmpotd, jspin) = rhonewtemp(1:irws, 1:lmpotd)
       end do
+      write(*,*) 'before fixmom'
       i_all = -product(shape(rhotemp))*kind(rhotemp)
       deallocate (rhotemp, stat=i_stat)
       call memocc(i_stat, i_all, 'RHOTEMP', 'RHOVALNEW')
@@ -965,7 +969,7 @@ contains
       deallocate (rhonewtemp, stat=i_stat)
       call memocc(i_stat, i_all, 'RHONEWTEMP', 'RHOVALNEW')
       ! calculate new THETA and PHI for non-colinear
-      if (.not. test('FIXMOM  ')) then
+      if (.not. test('FIXMOM  ') .and. .not.test('NOSOC   ')) then
         rho2ns_temp(1, 1) = rho2int(1)
         rho2ns_temp(2, 2) = rho2int(2)
         rho2ns_temp(1, 2) = rho2int(3)
@@ -1012,30 +1016,25 @@ contains
         r2nef(:, :, :) = aimag(r2nefnew(:,:,:))
       end if
 
-      idim = irmd*lmpotd
-      call dscal(idim, 2.d0, rho2ns(1,1,1), 1)
-      call daxpy(idim, -0.5d0, rho2ns(1,1,1), 1, rho2ns(1,1,2), 1)
-      call daxpy(idim, 1.0d0, rho2ns(1,1,2), 1, rho2ns(1,1,1), 1)
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! construct sum and difference of spin channels
+      !idim = irmd*lmpotd
+      !call dscal(idim, 2.d0, rho2ns(1,1,1), 1)
+      !call daxpy(idim, -0.5d0, rho2ns(1,1,1), 1, rho2ns(1,1,2), 1)
+      !call daxpy(idim, 1.0d0, rho2ns(1,1,2), 1, rho2ns(1,1,1), 1)
       ! Do the same at the Fermi energy
+      !call dscal(idim, 2.d0, r2nef(1,1,1), 1)
+      !call daxpy(idim, -0.5d0, r2nef(1,1,1), 1, r2nef(1,1,2), 1)
+      !call daxpy(idim, 1.0d0, r2nef(1,1,2), 1, r2nef(1,1,1), 1)
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      call dscal(idim, 2.d0, r2nef(1,1,1), 1)
-      call daxpy(idim, -0.5d0, r2nef(1,1,1), 1, r2nef(1,1,2), 1)
-      call daxpy(idim, 1.0d0, r2nef(1,1,2), 1, r2nef(1,1,1), 1)
 
-      do lm1 = 0, lmaxd1
-        do ie = 1, ielast
-          do jspin = 1, nspin
-            den_out(lm1, ie, jspin) = den(lm1, ie, 1, jspin)
-          end do
-        end do
-      end do
+      den_out(0:lmaxd1, 1:ielast, 1:nspin) = den(0:lmaxd1, 1:ielast, 1, 1:nspin)
 
 #ifdef CPP_MPI
     end if                         ! (myrank==master)
 
     ! communicate den_out to all processors with the same atom number
-    idim = (lmax+2)*ielast*2
+    idim = (lmax+2)*ielast*nspin
     call mpi_bcast(den_out, idim, mpi_double_complex, master, t_mpi_c_grid%mympi_comm_at, ierr)
     if (ierr/=mpi_success) stop 'error bcast den_out in rhovalnew'
     idim = 2
@@ -1130,6 +1129,7 @@ contains
     i_all = -product(shape(denlm))*kind(denlm)
     deallocate (denlm, stat=i_stat)
     call memocc(i_stat, i_all, 'DENLM', 'RHOVALNEW')
+    write(*,*) 'done rhovalnew', ispin
 
   end subroutine rhovalnew
 

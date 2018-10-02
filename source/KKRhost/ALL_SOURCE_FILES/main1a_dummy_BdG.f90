@@ -143,7 +143,7 @@ subroutine main1a_dummy
     call init_t_dtmatjij(t_inc, t_dtmatjij)
 
     call tmat_newsolver(ielast, nspin, lmax, zat(i1), socscale(i1), ez, nsra, cleb(:,1), icleb, iend, ncheb, npan_tot(i1), rpan_intervall(:,i1), ipan_intervall(:,i1), rnew(:,i1), &
-      vinsnew, theta(i1), phi(i1), i1, ipot, lmpotd, lly, deltae, idoldau, lopt(i1), wldau(:,:,:,i1), t_dtmatjij(i1))
+      vinsnew, theta(i1), phi(i1), i1, ipot, lmpotd, lly, deltae, idoldau, lopt(i1), wldau(:,:,:,i1), t_dtmatjij(i1), 1)
 
   end do                           ! I1, atom loop
 

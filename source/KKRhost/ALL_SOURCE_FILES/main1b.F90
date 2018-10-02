@@ -444,7 +444,7 @@ contains
       ! nonco angles
       call read_angles(t_params, natyp, theta_at, phi_at)
       if (test('NOSOC   ') ) then
-        nspin = nspin
+        nspin1 = nspin
       else
         nspin1 = 1
       end if
@@ -521,9 +521,9 @@ contains
             end if
             do i = 1, lm1
               trefll(i, i, i1) = wn1(i, i)
-              if (opt('NEWSOSOL')) trefll(lm1+i, lm1+i, i1) = wn1(i, i)
+              if (opt('NEWSOSOL') .and. .not.test('NOSOC   ')) trefll(lm1+i, lm1+i, i1) = wn1(i, i)
               dtrefll(i, i, i1) = wn2(i, i)                              ! LLY
-              if (opt('NEWSOSOL')) dtrefll(lm1+i, lm1+i, i1) = wn2(i, i) ! LLY
+              if (opt('NEWSOSOL') .and. .not.test('NOSOC   ')) dtrefll(lm1+i, lm1+i, i1) = wn2(i, i) ! LLY
             end do
 
             if (test('rhoqtest')) then
@@ -559,6 +559,7 @@ contains
           ! read in t-matrix from file
           if (t_tgmat%tmat_to_file) then
             irec = ie + ielast*(ispin-1) + ielast*nspin1*(i1-1)
+            write (*,*) 'read tmat', irec, nspin1, ispin, ielast, ie
             read (69, rec=irec) tmat
           else
             irec = ie_num + ie_end*(ispin-1) + ie_end*nspin1*(i1-1)

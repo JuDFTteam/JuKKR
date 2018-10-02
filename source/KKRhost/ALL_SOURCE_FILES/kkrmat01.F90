@@ -349,7 +349,7 @@ contains
         ! ----------------------------------------------------------------------
         ! LLY Lloyd
         ! --------------------------------------------------------------------
-        if (.not. opt('NEWSOSOL')) then
+        if (.not. opt('NEWSOSOL') .or. test('NOSOC   ')) then
           ! $omp single
           do i2 = 1, alm
             do i1 = 1, alm

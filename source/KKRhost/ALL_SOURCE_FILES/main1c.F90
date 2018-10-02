@@ -139,8 +139,6 @@ contains
     ! RHOC(IRMD,NPOTD)              ! core charge density
     ! ----------------------------------------------------------------------
     real (kind=dp), dimension (irmd, npotd) :: rhoc !! core charge density
-    real (kind=dp), dimension (irmd, lmpotd, 4) :: rho2m1
-    real (kind=dp), dimension (irmd, lmpotd, 4) :: rho2m2
     real (kind=dp), dimension (nrmaxd, lmpotd, nspotd) :: vinsnew
     ! ---------------------------------------------------------------
 
@@ -191,24 +189,26 @@ contains
 
 
     ! Allocate arrays
-    allocate (rho2n1(irmd,lmpotd,npotd), stat=i_stat)
+    ! work arrays per atom
+    allocate (rho2n1(irmd,lmpotd,2*(1+korbit)), stat=i_stat)
     call memocc(i_stat, product(shape(rho2n1))*kind(rho2n1), 'RHO2N1', 'main1c')
+    allocate (rho2n2(irmd,lmpotd,2*(1+korbit)), stat=i_stat)
+    call memocc(i_stat, product(shape(rho2n2))*kind(rho2n2), 'RHO2N2', 'main1c')
+    ! collected densities for all atoms
     allocate (rho2ns(irmd,lmpotd,natypd,2), stat=i_stat)
     call memocc(i_stat, product(shape(rho2ns))*kind(rho2ns), 'RHO2NS', 'main1c')
-    allocate (rho2n2(irmd,lmpotd,npotd), stat=i_stat)
-    call memocc(i_stat, product(shape(rho2n2))*kind(rho2n2), 'RHO2N2', 'main1c')
     allocate (r2nef(irmd,lmpotd,natypd,2), stat=i_stat)
     call memocc(i_stat, product(shape(r2nef))*kind(r2nef), 'R2NEF', 'main1c')
 
     ! Initialze to zero
-    vins = 0.0d0
-    r2nef = 0.0d0
-    muorb = 0.0d0
-    rho2ns = 0.0d0
-    thetas = 0.0d0
-    vinsnew = 0.0d0
-    thetasnew = 0.0d0
-    angles_new = 0.0d0
+    vins = 0.0_dp
+    r2nef = 0.0_dp
+    muorb = 0.0_dp
+    rho2ns = 0.0_dp
+    thetas = 0.0_dp
+    vinsnew = 0.0_dp
+    thetasnew = 0.0_dp
+    angles_new = 0.0_dp
 
     ! Consistency check
     if ((krel<0) .or. (krel>1)) stop ' set KREL=0/1 (non/fully) relativistic mode in the inputcard'
@@ -225,9 +225,9 @@ contains
       rmrel, vtrel, btrel, wldau, uldau, ez, wez, phildau, tmpdir, solver, nspind, nspotd, irmind, lmaxd1, ncelld, irid, r_log, naez, natyp, lmax)
 
     ! Initialization needed due to merging to one executable
-    espv(:, :) = 0.d0
-    rho2n1(:, :, :) = 0.d0
-    rho2n2(:, :, :) = 0.
+    espv(:, :) = 0.0_dp
+    rho2n1(:, :, :) = 0.0_dp
+    rho2n2(:, :, :) = 0.0_dp
     ! -------------------------------------------------------------------------
     ! End read in variables
     ! -------------------------------------------------------------------------
@@ -259,7 +259,7 @@ contains
 
     call cinit(ielast*(lmax+2)*npotd*nqdos, den)
     call cinit(ielast*(lmmaxd)*npotd*nqdos, denlm)
-    denef = 0.0d0
+    denef = 0.0_dp
     call rinit(natyp, denefat)
 
     itermvdir = opt('ITERMDIR')
@@ -323,8 +323,8 @@ contains
         icell = ntcell(i1)         ! LLY
         do ie = 1, ielast          ! LLY
           call rhoval0(ez(ie), drdi(1,i1), rmesh(1,i1), ipan(i1), & ! LLY
-            ircut(0,i1), irws(i1), thetas(1,1,icell), cdosat0(ie) & ! LLY
-            , cdosat1(ie), irmd, lmax) ! LLY
+            ircut(0,i1), irws(i1), thetas(1,1,icell), cdosat0(ie), & ! LLY
+            cdosat1(ie), irmd, lmax) ! LLY
 
           ! calculate contribution from free space
 
@@ -424,259 +424,17 @@ contains
     ! LLY
     ! -------------------------------------------------------------------------
 
-    if (.not. opt('NEWSOSOL')) then
-      ! ----------------------------------------------------------------------
-      ! NATYP
-      ! ----------------------------------------------------------------------
 #ifdef CPP_MPI
-      ntot1 = t_inc%natyp
+    ntot1 = t_inc%natyp
+    if (.not. opt('NEWSOSOL')) then
+
       call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at, master, ntot1, ntot_pt, ioff_pt, .true.)
 
       i1_start = ioff_pt(t_mpi_c_grid%myrank_ie) + 1
       i1_end = ioff_pt(t_mpi_c_grid%myrank_ie) + ntot_pt(t_mpi_c_grid%myrank_ie)
       t_mpi_c_grid%ntot1 = ntot_pt(t_mpi_c_grid%myrank_ie)
 
-      if (.not. (allocated(t_mpi_c_grid%ntot_pt1) .and. allocated(t_mpi_c_grid%ioff_pt1))) then
-        allocate (t_mpi_c_grid%ntot_pt1(0:t_mpi_c_grid%nranks_ie-1), stat=i_stat)
-        call memocc(i_stat, product(shape(t_mpi_c_grid%ntot_pt1))*kind(t_mpi_c_grid%ntot_pt1), 't_mpi_c_grid%ntot_pT1', 'main1c')
-        allocate (t_mpi_c_grid%ioff_pt1(0:t_mpi_c_grid%nranks_ie-1), stat=i_stat)
-        call memocc(i_stat, product(shape(t_mpi_c_grid%ioff_pt1))*kind(t_mpi_c_grid%ioff_pt1), 't_mpi_c_grid%ioff_pT1', 'main1c')
-      end if
-      t_mpi_c_grid%ntot_pt1 = ntot_pt
-      t_mpi_c_grid%ioff_pt1 = ioff_pt
-#else
-      i1_start = 1
-      i1_end = natyp
-#endif
-      do i1 = i1_start, i1_end
-        ! -------------------------------------------------------------------
-        ! SPIN
-        ! -------------------------------------------------------------------
-        iq = iqat(i1)
-        do ispin = 1, nspin
-          icell = ntcell(i1)
-          ipot = (i1-1)*nspinpot + ispin
-          ipot1 = (i1-1)*nspinpot + 1
-#ifdef CPP_TIMING
-          call timing_start('main1c - rhoval')
-#endif
-          call rhoval(ihost, ldorhoef, icst, ins, ielast, nsra, ispin, nspin, nspinpot, i1, ez, wez, drdi(1,i1), rmesh(1,i1), vins(irmind,1,knosph*ipot+(1- &
-            knosph)), visp(1,ipot), zat(i1), ipan(i1), ircut(0,i1), irmin(i1), thetas(1,1,icell), ifunm1(1,icell), lmsp1(1,icell), rho2n1(1,1,ipot1), rho2n2(1,1,ipot1), &
-            rhoorb(1,i1), den(0,1,1,ipot), denlm(1,1,1,ipot), muorb(0,1,i1), espv(0,ipot1), cleb, loflm, icleb, iend, jend, solver, socscl(1,krel*i1+(1-krel)), cscl(1,krel*i1+(1- &
-            krel)), vtrel(1,i1), btrel(1,i1), rmrel(1,i1), drdirel(1,i1), r2drdirel(1,i1), zrel(i1), jwsrel(i1), irshift(i1), lmomvec, qmtet(iq), qmphi(iq), mvevil1, mvevil2, &
-            nmvecmax, idoldau, lopt(i1), phildau(1,i1), wldau(1,1,1,i1), denmatc(1,1,ipot), natyp, nqdos, lmax)
-#ifdef CPP_TIMING
-          call timing_pause('main1c - rhoval')
-#endif
-        end do
-        ! -------------------------------------------------------------------
-        ! SPIN
-        ! -------------------------------------------------------------------
-        ipot1 = (i1-1)*nspinpot + 1
-
-        do lm = 1, lmpotd
-          do ir = 1, irmd
-            rho2ns(ir, lm, i1, 1) = rho2n1(ir, lm, ipot1)
-            r2nef(ir, lm, i1, 1) = rho2n2(ir, lm, ipot1)
-          end do
-        end do
-
-        do l = 0, lmaxd1
-          denef = denef - 2.0d0*conc(i1)*aimag(den(l,ielast,1,ipot1))/pi/dble(nspinpot)
-          denefat(i1) = denefat(i1) - 2.0d0*aimag(den(l,ielast,1,ipot1))/pi/dble(nspinpot)
-        end do
-
-        if (nspinpot==2) then
-          do lm = 1, lmpotd
-            do ir = 1, irmd
-              rho2ns(ir, lm, i1, 2) = rho2n1(ir, lm, ipot1+1)
-              r2nef(ir, lm, i1, 2) = rho2n2(ir, lm, ipot1+1)
-            end do
-          end do
-
-          do l = 0, lmaxd1
-            denef = denef - 2.0d0*conc(i1)*aimag(den(l,ielast,1,ipot1+1))/pi/dble(nspinpot)
-            denefat(i1) = denefat(i1) - 2.0d0*aimag(den(l,ielast,1,ipot1+1))/pi/dble(nspinpot)
-          end do
-        end if
-
-        if (test('RHOVALW ')) then ! Bauer
-          open (unit=324234, file='out_rhoval')
-          write (324234, *) '#IATOM', i1
-          write (324234, '(50000F14.7)') rho2ns(:, :, i1, 1)
-          if (nspin==2) write (324234, '(50000F14.7)') rho2ns(:, :, i1, 2)
-        end if
-
-        ! -----------------------------------------------------------------------
-        ! itermdir/kmrot <> 0
-        ! -----------------------------------------------------------------------
-        if (lmomvec) then
-          do is = 1, nmvecmax
-            do lm = 1, 3
-              mvevi(i1, lm, is) = czero
-              mvevief(i1, lm, is) = czero
-              do l = 0, lmax
-                mvevil(l, i1, lm, is) = mvevil1(l, lm, is)
-                mvevi(i1, lm, is) = mvevi(i1, lm, is) + mvevil1(l, lm, is)
-
-                mvevief(i1, lm, is) = mvevief(i1, lm, is) + mvevil2(l, lm, is)
-              end do
-            end do
-          end do
-        end if
-      end do
-      ! ----------------------------------------------------------------------
-      ! NATYP
-      ! ----------------------------------------------------------------------
-#ifdef CPP_TIMING
-      ! call timing_stop('main1c - rhoval')
-      if (i1_end>=i1_start .and. t_inc%i_time>0) call timing_stop('main1c - rhoval')
-#endif
-      close (69)                   ! gmat file
-#ifndef CPP_MPI
-      close (30)                   ! close lmdos file if no mpi is used
-      close (31)                   ! close qdos file if no mpi is used, otherwise writeout in the following
-#endif
-      close (96)                   ! close gflle file
-
-#ifdef CPP_MPI
-      ! move writeout of qdos file here                                           ! qdos
-      if (opt('qdos    ')) then    ! qdos
-        ! first communicate den array to write out qdos files                   ! qdos
-        idim = (lmaxd1+1)*ielast*nqdos*npotd ! qdos
-        allocate (workc(0:lmaxd1,ielast,nqdos,npotd)) ! qdos
-        call memocc(i_stat, product(shape(workc))*kind(workc), 'workc', 'main1c') ! qdos
-        workc = czero       ! qdos
-        ! qdos
-        call mpi_allreduce(den, workc, idim, mpi_double_complex, mpi_sum, & ! qdos
-          mpi_comm_world, ierr)    ! qdos
-        call zcopy(idim, workc, 1, den, 1) ! qdos
-        i_all = -product(shape(workc))*kind(workc) ! qdos
-        deallocate (workc, stat=i_stat) ! qdos
-        call memocc(i_stat, i_all, 'workc', 'main1c') ! qdos
-        ! qdos
-        if (myrank==master) then   ! qdos
-          ! qdos
-          do i1 = 1, natyp         ! qdos
-            ! qdos
-            do ispin = 1, nspin    ! qdos
-              ! qdos
-              if (natyp>=100) then ! qdos
-                open (31, &        ! qdos
-                  file='qdos.'//char(48+i1/100)//char(48+mod(i1/10,10))// & ! qdos
-                  char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat') ! qdos
-              else                 ! qdos
-                open (31, &        ! qdos
-                  file='qdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'// & ! qdos
-                  char(48+ispin)//'.dat') ! qdos
-              end if               ! qdos
-              call version_print_header(31) ! qdos
-              write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)', & ! qdos
-                'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...' ! qdos
-              ! qdos
-              ipot = (i1-1)*nspinpot + ispin ! qdos
-              ! qdos
-              do ie = 1, ielast    ! qdos
-                do iq = 1, nqdos   ! qdos
-                  dentot = czero ! qdos
-                  do l = 0, lmaxd1 ! qdos
-                    dentot = dentot + den(l, ie, iq, ipot) ! qdos
-                  end do           ! qdos
-                  write (31, 100) ez(ie), qvec(1, iq), qvec(2, iq), qvec(3, iq), -aimag(dentot)/pi, & ! qdos
-                    (-aimag(den(l,ie,iq,ipot))/pi, l=0, lmaxd1) ! qdos
-                end do             ! IQ=1,NQDOS                                         ! qdos
-              end do               ! IE=1,IELAST                                           ! qdos
-              close (31)           ! qdos
-              ! qdos
-              if (test('compqdos')) then ! complex qdos
-                if (natyp>=100) then ! complex qdos
-                  open (31, &      ! complex qdos
-                    file='cqdos.'//char(48+i1/100)//char(48+mod(i1/10,10))// & ! complex qdos
-                    char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat') ! complex qdos
-                else               ! complex qdos
-                  open (31, &      ! complex qdos
-                    file='cqdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'// & ! complex qdos
-                    char(48+ispin)//'.dat') ! complex qdos
-                end if             ! complex qdos
-                call version_print_header(31) ! complex qdos
-                write (31, '(A)') '#   lmax, natyp, nspin, nqdos, ielast:' ! complex qdos
-                write (31, '(5I9)') lmax, natyp, nspin, nqdos, ielast ! complex qdos
-                write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)', & ! complex qdos
-                  'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...' ! complex qdos
-                ! complex qdos
-                ipot = (i1-1)*nspinpot + ispin ! complex qdos
-                ! complex qdos
-                do ie = 1, ielast  ! complex qdos
-                  do iq = 1, nqdos ! complex qdos
-                    dentot = czero ! complex qdos
-                    do l = 0, lmaxd1 ! complex qdos
-                      den(l, ie, iq, ipot) = -2.0d0/pi*den(l, ie, iq, ipot) ! complex qdos
-                      dentot = dentot + den(l, ie, iq, ipot) ! complex qdos
-                    end do         ! complex qdos
-                    write (31, 110) ez(ie), qvec(1, iq), qvec(2, iq), & ! complex qdos
-                      qvec(3, iq), dentot, (den(l,ie,iq,ipot), l=0, lmaxd1) ! complex qdos
-                  end do           ! IQ=1,NQDOS                                            ! complex qdos
-                end do             ! IE=1,IELAST                                              ! complex qdos
-                close (31)         ! complex qdos
-              end if               ! qdos
-              ! qdos
-            end do                 ! ISPIN=1,NSPIN                                             ! qdos
-          end do                   ! I1                                                            ! qdos
-        end if                     ! myrank_at==master                                              ! qdos
-      end if                       ! OPT('qdos    ')                                                    ! qdos
-100   format (5f10.6, 40e16.8)     ! qdos
-110   format (5f10.6, 80e16.8)     ! complex qdos
-
-      ! reset NQDOS number to avoid loo large communication which is not needed anyways for qdos run
-      nqdos = 1
-
-#ifdef CPP_TIMING
-      call timing_start('main1c - communication')
-#endif
-      ! MPI: reduce these arrays, so that master processor has the results (MPI_REDUCE)
-#ifdef CPP_TIMING
-      call timing_start('main1c - communication')
-#endif
-      call mympi_main1c_comm(irmd, lmpotd, natyp, lmax, lmaxd1, lmmaxd, npotd, ielast, mmaxd, idoldau, natyp, krel, lmomvec, nmvecmax, nqdos, rho2ns, r2nef, espv, den, denlm, &
-        denmatc, denef, denefat, rhoorb, muorb, mvevi, mvevil, mvevief, t_mpi_c_grid%mympi_comm_ie)
-      call mympi_main1c_comm(irmd, lmpotd, natyp, lmax, lmaxd1, lmmaxd, npotd, ielast, mmaxd, idoldau, natyp, krel, lmomvec, nmvecmax, nqdos, rho2ns, r2nef, espv, den, denlm, &
-        denmatc, denef, denefat, rhoorb, muorb, mvevi, mvevil, mvevief, t_mpi_c_grid%mympi_comm_at)
-#ifdef CPP_TIMING
-      call timing_stop('main1c - communication')
-#endif
-
-      ! lmdos writeout
-      if (myrank==master) then     ! lm-dos
-        ! IF (.not.OPT('qdos    ')) THEN                              ! lm-dos
-        if (opt('lmdos    ')) then ! lm-dos
-          do i1 = 1, natyp         ! lm-dos
-            do ispin = 1, nspin    ! lm-dos
-              ipot = (i1-1)*nspinpot + ispin ! lm-dos
-              if (natyp>=100) then ! lm-dos
-                open (30, file='lmdos.'//char(48+i1/100)// & ! lm-dos
-                  char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'// & ! lm-dos
-                  char(48+ispin)//'.dat') ! lm-dos
-              else                 ! lm-dos
-                open (30, file='lmdos.'//char(48+i1/10)// & ! lm-dos
-                  char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat') ! lm-dos
-              end if               ! lm-dos
-              call version_print_header(30)
-              write (30, *) ' '    ! lm-dos
-              write (30, 120) '# ISPIN=', ispin, ' I1=', i1 ! lm-dos
-120           format (a8, i3, a4, i5) ! lm-dos
-              do ie = 1, ielast    ! lm-dos
-                write (30, 130) real(ez(ie), kind=dp), & ! lm-dos
-                  (-aimag(denlm(lm,ie,1,ipot))/pi, lm=1, lmmaxd) ! lm-dos
-              end do               ! IE                                                 ! lm-dos
-            end do                 ! ISPIN                                                 ! lm-dos
-130         format (30e12.4)       ! lm-dos
-            close (30)             ! lm-dos
-          end do                   ! I1                                                        ! lm-dos
-        end if                     ! not qdos option                                             ! lm-dos
-      end if                       ! myrank==master                                                 ! lm-dos
-#endif
-
-    else                           ! new spin-orbit solver
+    else ! new spin-orbit solver
 
       ! nonco angles
       call read_angles(t_params, natyp, theta, phi)
@@ -689,9 +447,6 @@ contains
       call interpolate_poten(lpotd, irmd, irnsd, natyp, ipand, lmpotd, nspotd, ntotd, ntotd*(ncheb+1), nspin, rmesh, irmin, irws, ircut, vins, visp, npan_log_at, npan_eq_at, &
         npan_tot, rnew, ipan_intervall, vinsnew)
 
-
-#ifdef CPP_MPI
-      ntot1 = t_inc%natyp
 
       if (t_mpi_c_grid%dims(1)>1) then
         nranks_local = t_mpi_c_grid%nranks_ie
@@ -716,112 +471,340 @@ contains
         t_mpi_c_grid%ntot1 = ntot_pt(myrank_ie_tmp)
       end if
 
-      if (.not. (allocated(t_mpi_c_grid%ntot_pt1) .and. allocated(t_mpi_c_grid%ioff_pt1))) then
-        allocate (t_mpi_c_grid%ntot_pt1(0:t_mpi_c_grid%nranks_ie-1), stat=i_stat)
-        call memocc(i_stat, product(shape(t_mpi_c_grid%ntot_pt1))*kind(t_mpi_c_grid%ntot_pt1), 't_mpi_c_grid%ntot_pT1', 'main1c')
-        allocate (t_mpi_c_grid%ioff_pt1(0:t_mpi_c_grid%nranks_ie-1), stat=i_stat)
-        call memocc(i_stat, product(shape(t_mpi_c_grid%ioff_pt1))*kind(t_mpi_c_grid%ioff_pt1), 't_mpi_c_grid%ioff_pT1', 'main1c')
-      end if
-      t_mpi_c_grid%ntot_pt1 = ntot_pt
-      t_mpi_c_grid%ioff_pt1 = ioff_pt
+    end if ! new spin-orbit solver
+
+    if (.not. (allocated(t_mpi_c_grid%ntot_pt1) .and. allocated(t_mpi_c_grid%ioff_pt1))) then
+      allocate (t_mpi_c_grid%ntot_pt1(0:t_mpi_c_grid%nranks_ie-1), stat=i_stat)
+      call memocc(i_stat, product(shape(t_mpi_c_grid%ntot_pt1))*kind(t_mpi_c_grid%ntot_pt1), 't_mpi_c_grid%ntot_pT1', 'main1c')
+      allocate (t_mpi_c_grid%ioff_pt1(0:t_mpi_c_grid%nranks_ie-1), stat=i_stat)
+      call memocc(i_stat, product(shape(t_mpi_c_grid%ioff_pt1))*kind(t_mpi_c_grid%ioff_pt1), 't_mpi_c_grid%ioff_pT1', 'main1c')
+    end if
+    t_mpi_c_grid%ntot_pt1 = ntot_pt
+    t_mpi_c_grid%ioff_pt1 = ioff_pt
 #else
-      i1_start = 1
-      i1_end = natyp
+    i1_start = 1
+    i1_end = natyp
 #endif
 
+      ! ----------------------------------------------------------------------
+      ! NATYP
+      ! ----------------------------------------------------------------------
       do i1 = i1_start, i1_end
 
-        icell = ntcell(i1)
-        ipot = (i1-1)*nspin + 1
+        ! -------------------------------------------------------------------
+        ! SPIN
+        ! -------------------------------------------------------------------
+        do ispin = 1, nspin/(1+korbit)
+
+          icell = ntcell(i1)
+          ipot = (i1-1)*nspinpot + ispin
+          ipot1 = (i1-1)*nspinpot + 1
+          
+
+          if (.not. opt('NEWSOSOL')) then
+
+            iq = iqat(i1)
 
 #ifdef CPP_TIMING
-        call timing_start('main1c - rhovalnew')
+            call timing_start('main1c - rhoval')
+#endif
+            call rhoval(ihost, ldorhoef, icst, ins, ielast, nsra, ispin, nspin, nspinpot, i1, ez, wez, drdi(1,i1), rmesh(1,i1), &
+              vins(irmind,1,knosph*ipot+(1-knosph)), visp(1,ipot), zat(i1), ipan(i1), ircut(0,i1), irmin(i1), thetas(1,1,icell), &
+              ifunm1(1,icell), lmsp1(1,icell), rho2n1(1,1,1), rho2n2(1,1,1), rhoorb(1,i1), den(0,1,1,ipot), denlm(1,1,1,ipot), &
+              muorb(0,1,i1), espv(0,ipot1), cleb, loflm, icleb, iend, jend, solver, socscl(1,krel*i1+(1-krel)), cscl(1,krel*i1+(1-krel)), &
+              vtrel(1,i1), btrel(1,i1), rmrel(1,i1), drdirel(1,i1), r2drdirel(1,i1), zrel(i1), jwsrel(i1), irshift(i1), lmomvec, &
+              qmtet(iq), qmphi(iq), mvevil1, mvevil2, nmvecmax, idoldau, lopt(i1), phildau(1,i1), wldau(1,1,1,i1), denmatc(1,1,ipot), &
+              natyp, nqdos, lmax)
+#ifdef CPP_TIMING
+            call timing_pause('main1c - rhoval')
 #endif
 
-        call rhovalnew(ldorhoef, ielast, nsra, nspin, lmax, ez, wez, zat(i1), socscale(i1), cleb(1,1), icleb, iend, ifunm1(1,icell), lmsp1(1,icell), ncheb, npan_tot(i1), &
-          npan_log_at(i1), npan_eq_at(i1), rmesh(1,i1), irws(i1), rpan_intervall(0,i1), ipan_intervall(0,i1), rnew(1,i1), vinsnew, thetasnew(1,1,icell), theta(i1), phi(i1), i1, &
-          ipot, den1(0,1,1), espv1(0,1), rho2m1, rho2m2, muorb(0,1,i1), angles_new(:,i1), idoldau, lopt(i1), wldau(1,1,1,i1), & ! LDAU
-          denmatn(1,1,1,1,i1), natyp) ! LDAU
+          else ! new spin-orbit solver
+
+            write(*,*) ispin
 
 #ifdef CPP_TIMING
-        call timing_pause('main1c - rhovalnew')
+            call timing_start('main1c - rhovalnew')
+#endif
+            call rhovalnew(ldorhoef, ielast, nsra, nspin/(2-korbit), lmax, ez, wez, zat(i1), socscale(i1), cleb(1,1), icleb, iend, &
+              ifunm1(1,icell), lmsp1(1,icell), ncheb, npan_tot(i1), npan_log_at(i1), npan_eq_at(i1), rmesh(1,i1), irws(i1), &
+              rpan_intervall(0,i1), ipan_intervall(0,i1), rnew(1,i1), vinsnew, thetasnew(1,1,icell), theta(i1), phi(i1), i1, &
+              ipot, den1(0,1,ispin), espv1(0,ispin), rho2n1(1,1,ispin), rho2n2(1,1,ispin), muorb(0,1,i1), angles_new(:,i1), idoldau, lopt(i1), wldau(1,1,1,i1), & ! LDAU
+              denmatn(1,1,1,1,i1), natyp, ispin) ! LDAU
+#ifdef CPP_TIMING
+            call timing_pause('main1c - rhovalnew')
 #endif
 
-        do l = 0, lmaxd1
-          espv(l, ipot) = espv1(l, 1)
-          espv(l, ipot+nspin-1) = espv1(l, nspin)
-          do ie = 1, ielast
-            den(l, ie, 1, ipot) = den1(l, ie, 1)
-            den(l, ie, 1, ipot+nspin-1) = den1(l, ie, nspin)
-          end do
-        end do
-        do ispin = 1, nspin
-          do lm = 1, lmpotd
-            do ir = 1, irmd
-              rho2ns(ir, lm, i1, ispin) = rho2m1(ir, lm, ispin)
-              r2nef(ir, lm, i1, ispin) = rho2m2(ir, lm, ispin)
+          end if ! new spin-orbit solver
+
+        end do ! ispin
+        ! -------------------------------------------------------------------
+        ! end SPIN loop ispin
+        ! -------------------------------------------------------------------
+
+        ! collect stuff from working arrays
+        if (.not. opt('NEWSOSOL')) then
+          
+          ! -----------------------------------------------------------------------
+          ! itermdir/kmrot <> 0
+          ! -----------------------------------------------------------------------
+          if (lmomvec) then
+            do is = 1, nmvecmax
+              do lm = 1, 3
+                mvevi(i1, lm, is) = czero
+                mvevief(i1, lm, is) = czero
+                do l = 0, lmax
+                  mvevil(l, i1, lm, is) = mvevil1(l, lm, is)
+                  mvevi(i1, lm, is) = mvevi(i1, lm, is) + mvevil1(l, lm, is)
+                  mvevief(i1, lm, is) = mvevief(i1, lm, is) + mvevil2(l, lm, is)
+                end do
+              end do
             end do
-          end do
-        end do
+          end if
 
-        do l = 0, lmaxd1
-          denef = denef - 2.0d0*conc(i1)*aimag(den(l,ielast,1,ipot))/pi/dble(nspin)
-          denefat(i1) = denefat(i1) - 2.0d0*aimag(den(l,ielast,1,ipot))/pi/dble(nspin)
-        end do
-        do l = 0, lmaxd1
-          denef = denef - 2.0d0*conc(i1)*aimag(den(l,ielast,1,ipot+1))/pi/dble(nspin)
-          denefat(i1) = denefat(i1) - 2.0d0*aimag(den(l,ielast,1,ipot+1))/pi/dble(nspin)
-        end do
-        do ispin = 1, nspin
-          do l = 0, lmaxd1
-            muorb(l, 3, i1) = muorb(l, 3, i1) + muorb(l, ispin, i1)
+        else ! new spin-orbit solver
+
+          do ispin=1, nspin
+            espv(0:lmaxd1, ipot1+ispin-1) = espv1(0:lmaxd1, ispin)
+            den(0:lmaxd1, 1:ielast, 1, ipot1+ispin-1) = den1(0:lmaxd1, 1:ielast, ispin) 
+            
+            ! fill muorb(:,3,:) with sum of both spin channels
+            muorb(0:lmaxd1, 3, i1) = muorb(0:lmaxd1, 3, i1) + muorb(0:lmaxd1, ispin, i1)
           end do
-        end do
-        do ispin = 1, 3
+          ! sum over l-channels
           do l = 0, lmaxd1
-            muorb(lmaxd1+1, ispin, i1) = muorb(lmaxd1+1, ispin, i1) + muorb(l, ispin, i1)
+            muorb(lmaxd1+1, 1:3, i1) = muorb(lmaxd1+1, 1:3, i1) + muorb(l, 1:3, i1)
           end do
-        end do
-      end do                       ! I1
+
+        end if ! new spin-orbit solver
+
+        ! copy results of rho2ns, r2nef, denef, and denefat to big arrays
+        do ispin=1, nspin
+          rho2ns(1:irmd, 1:lmpotd, i1, ispin) = rho2n1(1:irmd, 1:lmpotd, ispin)
+          r2nef(1:irmd, 1:lmpotd, i1, ispin) = rho2n2(1:irmd, 1:lmpotd, ispin)
+          do l = 0, lmaxd1
+            denef = denef - 2.0_dp*conc(i1)*aimag(den(l,ielast,1,ipot1+ispin-1))/pi/dble(nspinpot)
+            denefat(i1) = denefat(i1) - 2.0_dp*aimag(den(l,ielast,1,ipot1+ispin-1))/pi/dble(nspinpot)
+          end do
+        end do ! ispin
+
+        ! Transformation of ISPIN=1,2 from (spin-down,spin-up) to (charge-density,spin-density)
+        if (nspin==2) then
+
+          ! construct sum and difference of spin channels
+          rho2ns(:,:,i1,1) = 2.0_dp*rho2ns(:,:,i1,1)
+          rho2ns(:,:,i1,2) = rho2ns(:,:,i1,2) - 0.5_dp*rho2ns(:,:,i1,1)
+          rho2ns(:,:,i1,1) = rho2ns(:,:,i1,1) + rho2ns(:,:,i1,2)
+          ! Do the same at the Fermi energy
+          r2nef(:,:,i1,1) = 2.0_dp*r2nef(:,:,i1,1)
+          r2nef(:,:,i1,2) = r2nef(:,:,i1,2) - 0.5_dp*r2nef(:,:,i1,1)
+          r2nef(:,:,i1,1) = r2nef(:,:,i1,1) + r2nef(:,:,i1,2)
+        end if
+         
+        ! test writeout 
+        if (test('RHOVALW ')) then ! Bauer
+          open (unit=324234, file='out_rhoval')
+          write (324234, *) '#IATOM', i1
+          write (324234, '(50000F14.7)') rho2ns(:, :, i1, 1)
+          if (nspin==2) write (324234, '(50000F14.7)') rho2ns(:, :, i1, 2)
+        end if
+
+      end do ! I1
+      ! ----------------------------------------------------------------------
+      ! end NATYP loop I1
+      ! ----------------------------------------------------------------------
+
+      if (.not. opt('NEWSOSOL')) then
+
+#ifdef CPP_TIMING
+        ! call timing_stop('main1c - rhoval')
+        if (i1_end>=i1_start .and. t_inc%i_time>0) call timing_stop('main1c - rhoval')
+#endif
 
 #ifdef CPP_MPI
-      ! reset NQDOS to 1 to avoid endless communication
-      nqdos = 1
-      call mympi_main1c_comm_newsosol2(lmaxd1, lmmaxd, ielast, nqdos, npotd, natyp, lmpotd, irmd, mmaxd, den, denlm, muorb, espv, r2nef, rho2ns, denefat, denef, denmatn, &
-        angles_new, t_mpi_c_grid%mympi_comm_ie)
+        ! move writeout of qdos file here                                           ! qdos
+        if (opt('qdos    ')) then    ! qdos
+          ! first communicate den array to write out qdos files                   ! qdos
+          idim = (lmaxd1+1)*ielast*nqdos*npotd ! qdos
+          allocate (workc(0:lmaxd1,ielast,nqdos,npotd)) ! qdos
+          call memocc(i_stat, product(shape(workc))*kind(workc), 'workc', 'main1c') ! qdos
+          workc = czero       ! qdos
+          ! qdos
+          call mpi_allreduce(den, workc, idim, mpi_double_complex, mpi_sum, & ! qdos
+            mpi_comm_world, ierr)    ! qdos
+          call zcopy(idim, workc, 1, den, 1) ! qdos
+          i_all = -product(shape(workc))*kind(workc) ! qdos
+          deallocate (workc, stat=i_stat) ! qdos
+          call memocc(i_stat, i_all, 'workc', 'main1c') ! qdos
+          ! qdos
+          if (myrank==master) then   ! qdos
+            ! qdos
+            do i1 = 1, natyp         ! qdos
+              ! qdos
+              do ispin = 1, nspin    ! qdos
+                ! qdos
+                if (natyp>=100) then ! qdos
+                  open (31, &        ! qdos
+                    file='qdos.'//char(48+i1/100)//char(48+mod(i1/10,10))// & ! qdos
+                    char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat') ! qdos
+                else                 ! qdos
+                  open (31, &        ! qdos
+                    file='qdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'// & ! qdos
+                    char(48+ispin)//'.dat') ! qdos
+                end if               ! qdos
+                call version_print_header(31) ! qdos
+                write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)', & ! qdos
+                  'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...' ! qdos
+                ! qdos
+                ipot = (i1-1)*nspinpot + ispin ! qdos
+                ! qdos
+                do ie = 1, ielast    ! qdos
+                  do iq = 1, nqdos   ! qdos
+                    dentot = czero ! qdos
+                    do l = 0, lmaxd1 ! qdos
+                      dentot = dentot + den(l, ie, iq, ipot) ! qdos
+                    end do           ! qdos
+                    write (31, 100) ez(ie), qvec(1, iq), qvec(2, iq), qvec(3, iq), -aimag(dentot)/pi, & ! qdos
+                      (-aimag(den(l,ie,iq,ipot))/pi, l=0, lmaxd1) ! qdos
+                  end do             ! IQ=1,NQDOS                                         ! qdos
+                end do               ! IE=1,IELAST                                           ! qdos
+                close (31)           ! qdos
+                ! qdos
+                if (test('compqdos')) then ! complex qdos
+                  if (natyp>=100) then ! complex qdos
+                    open (31, &      ! complex qdos
+                      file='cqdos.'//char(48+i1/100)//char(48+mod(i1/10,10))// & ! complex qdos
+                      char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat') ! complex qdos
+                  else               ! complex qdos
+                    open (31, &      ! complex qdos
+                      file='cqdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'// & ! complex qdos
+                      char(48+ispin)//'.dat') ! complex qdos
+                  end if             ! complex qdos
+                  call version_print_header(31) ! complex qdos
+                  write (31, '(A)') '#   lmax, natyp, nspin, nqdos, ielast:' ! complex qdos
+                  write (31, '(5I9)') lmax, natyp, nspin, nqdos, ielast ! complex qdos
+                  write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)', & ! complex qdos
+                    'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...' ! complex qdos
+                  ! complex qdos
+                  ipot = (i1-1)*nspinpot + ispin ! complex qdos
+                  ! complex qdos
+                  do ie = 1, ielast  ! complex qdos
+                    do iq = 1, nqdos ! complex qdos
+                      dentot = czero ! complex qdos
+                      do l = 0, lmaxd1 ! complex qdos
+                        den(l, ie, iq, ipot) = -2.0_dp/pi*den(l, ie, iq, ipot) ! complex qdos
+                        dentot = dentot + den(l, ie, iq, ipot) ! complex qdos
+                      end do         ! complex qdos
+                      write (31, 110) ez(ie), qvec(1, iq), qvec(2, iq), & ! complex qdos
+                        qvec(3, iq), dentot, (den(l,ie,iq,ipot), l=0, lmaxd1) ! complex qdos
+                    end do           ! IQ=1,NQDOS                                            ! complex qdos
+                  end do             ! IE=1,IELAST                                              ! complex qdos
+                  close (31)         ! complex qdos
+                end if               ! qdos
+                ! qdos
+              end do                 ! ISPIN=1,NSPIN                                             ! qdos
+            end do                   ! I1                                                            ! qdos
+          end if                     ! myrank_at==master                                              ! qdos
+        end if                       ! OPT('qdos    ')                                                    ! qdos
+100     format (5f10.6, 40e16.8)     ! qdos
+110     format (5f10.6, 80e16.8)     ! complex qdos
+
+        ! reset NQDOS number to avoid loo large communication which is not needed anyways for qdos run
+        nqdos = 1
+
+#ifdef CPP_TIMING
+        call timing_start('main1c - communication')
+#endif
+        ! MPI: reduce these arrays, so that master processor has the results (MPI_REDUCE)
+#ifdef CPP_TIMING
+        call timing_start('main1c - communication')
+#endif
+        call mympi_main1c_comm(irmd, lmpotd, natyp, lmax, lmaxd1, lmmaxd, npotd, ielast, mmaxd, idoldau, natyp, krel, lmomvec, nmvecmax, nqdos, rho2ns, r2nef, espv, den, denlm, &
+          denmatc, denef, denefat, rhoorb, muorb, mvevi, mvevil, mvevief, t_mpi_c_grid%mympi_comm_ie)
+        call mympi_main1c_comm(irmd, lmpotd, natyp, lmax, lmaxd1, lmmaxd, npotd, ielast, mmaxd, idoldau, natyp, krel, lmomvec, nmvecmax, nqdos, rho2ns, r2nef, espv, den, denlm, &
+          denmatc, denef, denefat, rhoorb, muorb, mvevi, mvevil, mvevief, t_mpi_c_grid%mympi_comm_at)
+#ifdef CPP_TIMING
+        call timing_stop('main1c - communication')
+#endif
+
+        ! lmdos writeout
+        if (myrank==master) then     ! lm-dos
+          ! IF (.not.OPT('qdos    ')) THEN                              ! lm-dos
+          if (opt('lmdos    ')) then ! lm-dos
+            do i1 = 1, natyp         ! lm-dos
+              do ispin = 1, nspin    ! lm-dos
+                ipot = (i1-1)*nspinpot + ispin ! lm-dos
+                if (natyp>=100) then ! lm-dos
+                  open (30, file='lmdos.'//char(48+i1/100)// & ! lm-dos
+                    char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'// & ! lm-dos
+                    char(48+ispin)//'.dat') ! lm-dos
+                else                 ! lm-dos
+                  open (30, file='lmdos.'//char(48+i1/10)// & ! lm-dos
+                    char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat') ! lm-dos
+                end if               ! lm-dos
+                call version_print_header(30)
+                write (30, *) ' '    ! lm-dos
+                write (30, 120) '# ISPIN=', ispin, ' I1=', i1 ! lm-dos
+120             format (a8, i3, a4, i5) ! lm-dos
+                do ie = 1, ielast    ! lm-dos
+                  write (30, 130) real(ez(ie), kind=dp), & ! lm-dos
+                    (-aimag(denlm(lm,ie,1,ipot))/pi, lm=1, lmmaxd) ! lm-dos
+                end do               ! IE                                                 ! lm-dos
+              end do                 ! ISPIN                                                 ! lm-dos
+130           format (30e12.4)       ! lm-dos
+              close (30)             ! lm-dos
+            end do                   ! I1                                                        ! lm-dos
+          end if                     ! not qdos option                                             ! lm-dos
+        end if                       ! myrank==master                                                 ! lm-dos
+#endif
+
+      else ! new spin-orbit solver
+
+#ifdef CPP_MPI
+        ! reset NQDOS to 1 to avoid endless communication
+        nqdos = 1
+        call mympi_main1c_comm_newsosol2(lmaxd1, lmmaxd, ielast, nqdos, npotd, natyp, lmpotd, irmd, mmaxd, den, denlm, muorb, espv, r2nef, rho2ns, denefat, denef, denmatn, &
+          angles_new, t_mpi_c_grid%mympi_comm_ie)
 #endif
 
 #ifdef CPP_TIMING
-      ! call timing_stop('main1c - rhovalnew')
-      if (i1_end>=i1_start) call timing_stop('main1c - rhovalnew')
+        ! call timing_stop('main1c - rhovalnew')
+        if (i1_end>=i1_start) call timing_stop('main1c - rhovalnew')
 #endif
 
-      close (69)
+        if (myrank==master) then
+          ! rewrite new theta and phi to nonco_angle_out.dat, nonco_angle.dat is the input
+          if (.not. test('FIXMOM  ')) then
+            open (unit=13, file='nonco_angle_out.dat', form='formatted')
+            call version_print_header(13)
+            do i1 = 1, natyp
+              ! save to file in converted units (degrees)
+              write (13, *) angles_new(1, i1)/(2.0_dp*pi)*360.0_dp, angles_new(2, i1)/(2.0_dp*pi)*360.0_dp
+              ! use internal units here
+              t_params%theta(i1) = angles_new(1, i1)
+              t_params%phi(i1) = angles_new(2, i1)
+            end do
+            close (13)
+        
+          end if                     ! .not.test('FIXMOM  ')
+        end if                       ! (myrank==master)
 
-      if (myrank==master) then
-        ! rewrite new theta and phi to nonco_angle_out.dat, nonco_angle.dat is the input
-        if (.not. test('FIXMOM  ')) then
-          open (unit=13, file='nonco_angle_out.dat', form='formatted')
-          call version_print_header(13)
-          do i1 = 1, natyp
-            ! save to file in converted units (degrees)
-            write (13, *) angles_new(1, i1)/(2.0d0*pi)*360.0d0, angles_new(2, i1)/(2.0d0*pi)*360.0d0
-            ! use internal units here
-            t_params%theta(i1) = angles_new(1, i1)
-            t_params%phi(i1) = angles_new(2, i1)
-          end do
-          close (13)
+      end if ! new spin-orbit solver
 
-        end if                     ! .not.test('FIXMOM  ')
-      end if                       ! (myrank==master)
-
-      close (29)                   ! close lmdos file
+      close (69)                   ! gmat file
       close (30)                   ! close lmdos file
-      close (31)                   ! close qdos file
-      close (32)                   ! close qdos file
-      close (91)                   ! close gflle file
+      if (.not. opt('NEWSOSOL')) then
+#ifndef CPP_MPI
+        close (31)                   ! close qdos file if no mpi is used, otherwise writeout in the following
+#endif
+        close (96)                   ! close gflle file
+      else ! new spin-orbit solver
+        close (29)                   ! close lmdos file
+        close (31)                   ! close qdos file
+        close (32)                   ! close qdos file
+        close (91)                   ! close gflle file
+      end if ! new spin-orbit solver
 
-    end if                         ! NEWSOSOL
 
 #ifdef CPP_MPI
     if (myrank==master) then
@@ -842,7 +825,7 @@ contains
       ! ----------------------------------------------------------------------
       ! NATYP
       ! ----------------------------------------------------------------------
-      chrgsemicore = 0d0
+      chrgsemicore = 0_dp
       do i1 = 1, natyp
         ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         ! l/m_s/atom-resolved charges
@@ -851,7 +834,7 @@ contains
         do ispin = 1, nspinpot
           ipot = (i1-1)*nspinpot + ispin
           do l = 0, lmaxd1
-            charge(l, i1, ispin) = 0.0d0
+            charge(l, i1, ispin) = 0.0_dp
 
             do ie = 1, ielast
               charge(l, i1, ispin) = charge(l, i1, ispin) + aimag(wez(ie)*den(l,ie,1,ipot))/dble(nspinpot)
@@ -862,10 +845,10 @@ contains
 
           end do
         end do
-        eu(i1) = 0d0
-        edc(i1) = 0d0
+        eu(i1) = 0_dp
+        edc(i1) = 0_dp
         ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        ! Orbital magnetic moments (array initialised to 0.0D0 in rhoval)
+        ! Orbital magnetic moments (array initialised to 0.0_dp in rhoval)
         ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if (krel==1) then
           do ispin = 1, 3

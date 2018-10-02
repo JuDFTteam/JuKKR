@@ -167,7 +167,7 @@ contains
                                  !! corresponding l-index used hlk,..
                                  !! hlk(l) = jlk_index(lm)
 #else
-    integer :: jlk_index(2*lmsize)
+    integer :: jlk_index(nvec*lmsize)
 #endif
 
     character (len=1) :: cmoderll, cmodesll, cmodetest  !! These define the op(V(r)) in the eqs. above
@@ -379,10 +379,10 @@ contains
               do ivec = 1, nvec
                 do lm1 = 1, lmsize
                   l1 = jlk_index(lm1+lmsize*(ivec-1))
-                  vjlr(lm1, lm2+lmsize*(ivec2-1), icheb) = vjlr(lm1, lm2+lmsize*(ivec2-1), icheb) + gmatprefactor*tau(icheb, ipan)*jlk2(l1, mn)*vll(lm1+lmsize*(ivec-1), lm2+ &
-                    lmsize*(ivec2-1), mn)
-                  vhlr(lm1, lm2+lmsize*(ivec2-1), icheb) = vhlr(lm1, lm2+lmsize*(ivec2-1), icheb) + gmatprefactor*tau(icheb, ipan)*hlk2(l1, mn)*vll(lm1+lmsize*(ivec-1), lm2+ &
-                    lmsize*(ivec2-1), mn)
+                  vjlr(lm1, lm2+lmsize*(ivec2-1), icheb) = vjlr(lm1, lm2+lmsize*(ivec2-1), icheb) &
+                    + gmatprefactor*tau(icheb, ipan)*jlk2(l1, mn)*vll(lm1+lmsize*(ivec-1), lm2+lmsize*(ivec2-1), mn)
+                  vhlr(lm1, lm2+lmsize*(ivec2-1), icheb) = vhlr(lm1, lm2+lmsize*(ivec2-1), icheb) &
+                    + gmatprefactor*tau(icheb, ipan)*hlk2(l1, mn)*vll(lm1+lmsize*(ivec-1), lm2+lmsize*(ivec2-1), mn)
                 end do
               end do
             end do
@@ -393,10 +393,10 @@ contains
               do ivec = 1, nvec
                 do lm1 = 1, lmsize
                   l1 = jlk_index(lm1+lmsize*(ivec-1))
-                  vjlr(lm1, lm2+lmsize*(ivec2-1), icheb) = vjlr(lm1, lm2+lmsize*(ivec2-1), icheb) + gmatprefactor*tau(icheb, ipan)*jlk2(l1, mn)*vll(lm2+lmsize*(ivec-1), lm1+ &
-                    lmsize*(ivec2-1), mn)
-                  vhlr(lm1, lm2+lmsize*(ivec2-1), icheb) = vhlr(lm1, lm2+lmsize*(ivec2-1), icheb) + gmatprefactor*tau(icheb, ipan)*hlk2(l1, mn)*vll(lm2+lmsize*(ivec-1), lm1+ &
-                    lmsize*(ivec2-1), mn)
+                  vjlr(lm1, lm2+lmsize*(ivec2-1), icheb) = vjlr(lm1, lm2+lmsize*(ivec2-1), icheb)  &
+                    + gmatprefactor*tau(icheb, ipan)*jlk2(l1, mn)*vll(lm2+lmsize*(ivec-1), lm1+lmsize*(ivec2-1), mn)
+                  vhlr(lm1, lm2+lmsize*(ivec2-1), icheb) = vhlr(lm1, lm2+lmsize*(ivec2-1), icheb)  &
+                    + gmatprefactor*tau(icheb, ipan)*hlk2(l1, mn)*vll(lm2+lmsize*(ivec-1), lm1+lmsize*(ivec2-1), mn)
                 end do
               end do
             end do
@@ -414,10 +414,10 @@ contains
               do ivec = 1, nvec
                 do lm1 = 1, lmsize
                   l1 = jlk_index(lm1+lmsize*(ivec-1))
-                  vjli(lm1, lm2+lmsize*(ivec2-1), icheb) = vjli(lm1, lm2+lmsize*(ivec2-1), icheb) + gmatprefactor*tau(icheb, ipan)*jlk2(l1, mn)*vll(lm1+lmsize*(ivec-1), lm2+ &
-                    lmsize*(ivec2-1), mn)
-                  vhli(lm1, lm2+lmsize*(ivec2-1), icheb) = vhli(lm1, lm2+lmsize*(ivec2-1), icheb) + gmatprefactor*tau(icheb, ipan)*hlk2(l1, mn)*vll(lm1+lmsize*(ivec-1), lm2+ &
-                    lmsize*(ivec2-1), mn)
+                  vjli(lm1, lm2+lmsize*(ivec2-1), icheb) = vjli(lm1, lm2+lmsize*(ivec2-1), icheb) &
+                     + gmatprefactor*tau(icheb, ipan)*jlk2(l1, mn)*vll(lm1+lmsize*(ivec-1), lm2+lmsize*(ivec2-1), mn)
+                  vhli(lm1, lm2+lmsize*(ivec2-1), icheb) = vhli(lm1, lm2+lmsize*(ivec2-1), icheb) &
+                     + gmatprefactor*tau(icheb, ipan)*hlk2(l1, mn)*vll(lm1+lmsize*(ivec-1), lm2+lmsize*(ivec2-1), mn)
                 end do
               end do
             end do
@@ -428,10 +428,10 @@ contains
               do ivec = 1, nvec
                 do lm1 = 1, lmsize
                   l1 = jlk_index(lm1+lmsize*(ivec-1))
-                  vjli(lm1, lm2+lmsize*(ivec2-1), icheb) = vjli(lm1, lm2+lmsize*(ivec2-1), icheb) + gmatprefactor*tau(icheb, ipan)*jlk2(l1, mn)*vll(lm2+lmsize*(ivec-1), lm1+ &
-                    lmsize*(ivec2-1), mn)
-                  vhli(lm1, lm2+lmsize*(ivec2-1), icheb) = vhli(lm1, lm2+lmsize*(ivec2-1), icheb) + gmatprefactor*tau(icheb, ipan)*hlk2(l1, mn)*vll(lm2+lmsize*(ivec-1), lm1+ &
-                    lmsize*(ivec2-1), mn)
+                  vjli(lm1, lm2+lmsize*(ivec2-1), icheb) = vjli(lm1, lm2+lmsize*(ivec2-1), icheb)  &
+                    + gmatprefactor*tau(icheb, ipan)*jlk2(l1, mn)*vll(lm2+lmsize*(ivec-1), lm1+lmsize*(ivec2-1), mn)
+                  vhli(lm1, lm2+lmsize*(ivec2-1), icheb) = vhli(lm1, lm2+lmsize*(ivec2-1), icheb)  &
+                    + gmatprefactor*tau(icheb, ipan)*hlk2(l1, mn)*vll(lm2+lmsize*(ivec-1), lm1+lmsize*(ivec2-1), mn)
                 end do
               end do
             end do
@@ -456,16 +456,16 @@ contains
           end do                 ! ivec=1,nvec
         else if (use_sratrick==1) then
           do lm1 = 1, lmsize
-            l1 = jlk_index(lm1+lmsize*(1-1))
-            l2 = jlk_index(lm1+lmsize*(2-1))
-            yrll1(icheb, lm1+lmsize*(1-1), lm1) = tau(icheb, ipan)*jlk(l1, mn)
-            zrll1(icheb, lm1+lmsize*(1-1), lm1) = tau(icheb, ipan)*hlk(l1, mn)
-            yill1(icheb, lm1+lmsize*(1-1), lm1) = tau(icheb, ipan)*hlk(l1, mn)
-            zill1(icheb, lm1+lmsize*(1-1), lm1) = tau(icheb, ipan)*jlk(l1, mn)
-            yrll2(icheb, lm1+lmsize*(1-1), lm1) = tau(icheb, ipan)*jlk(l2, mn)
-            zrll2(icheb, lm1+lmsize*(1-1), lm1) = tau(icheb, ipan)*hlk(l2, mn)
-            yill2(icheb, lm1+lmsize*(1-1), lm1) = tau(icheb, ipan)*hlk(l2, mn)
-            zill2(icheb, lm1+lmsize*(1-1), lm1) = tau(icheb, ipan)*jlk(l2, mn)
+            l1 = jlk_index(lm1)
+            l2 = jlk_index(lm1+lmsize)
+            yrll1(icheb, lm1, lm1) = tau(icheb, ipan)*jlk(l1, mn)
+            zrll1(icheb, lm1, lm1) = tau(icheb, ipan)*hlk(l1, mn)
+            yill1(icheb, lm1, lm1) = tau(icheb, ipan)*hlk(l1, mn)
+            zill1(icheb, lm1, lm1) = tau(icheb, ipan)*jlk(l1, mn)
+            yrll2(icheb, lm1, lm1) = tau(icheb, ipan)*jlk(l2, mn)
+            zrll2(icheb, lm1, lm1) = tau(icheb, ipan)*hlk(l2, mn)
+            yill2(icheb, lm1, lm1) = tau(icheb, ipan)*hlk(l2, mn)
+            zill2(icheb, lm1, lm1) = tau(icheb, ipan)*jlk(l2, mn)
           end do
         end if
       end do                     ! icheb
@@ -480,10 +480,10 @@ contains
                 do lm3 = 1, lmsize
                   lm1 = lm3 + (ivec-1)*lmsize
                   l1 = jlk_index(lm1)
-                  slv(icheb, lm1, icheb2, lm2) = (tau(icheb,ipan)*jlk(l1,mn)*cslc1(icheb,icheb2)*vhlr(lm3,lm2,icheb2)-tau(icheb,ipan)*hlk(l1,mn)*cslc1(icheb,icheb2)*vjlr(lm3,lm2, &
-                    icheb2))*(rpanbound(ipan)-rpanbound(ipan-1))/2.d0 ! *(b-a)/2 in eq. 5.53, 5.54
-                  srv(icheb, lm1, icheb2, lm2) = (-tau(icheb,ipan)*jlk(l1,mn)*csrc1(icheb,icheb2)*vhli(lm3,lm2,icheb2)+tau(icheb,ipan)*hlk(l1,mn)*csrc1(icheb,icheb2)*vjli(lm3,lm2 &
-                    ,icheb2))*(rpanbound(ipan)-rpanbound(ipan-1))/2.d0
+                  slv(icheb, lm1, icheb2, lm2) = (tau(icheb,ipan)*jlk(l1,mn)*cslc1(icheb,icheb2)*vhlr(lm3,lm2,icheb2) &
+                    - tau(icheb,ipan)*hlk(l1,mn)*cslc1(icheb,icheb2)*vjlr(lm3,lm2,icheb2))*(rpanbound(ipan)-rpanbound(ipan-1))/2._dp ! *(b-a)/2 in eq. 5.53, 5.54
+                  srv(icheb, lm1, icheb2, lm2) = (-tau(icheb,ipan)*jlk(l1,mn)*csrc1(icheb,icheb2)*vhli(lm3,lm2,icheb2) &
+                    + tau(icheb,ipan)*hlk(l1,mn)*csrc1(icheb,icheb2)*vjli(lm3,lm2,icheb2))*(rpanbound(ipan)-rpanbound(ipan-1))/2._dp
                 end do
               end do
             end do
@@ -491,8 +491,8 @@ contains
         end do
         do lm1 = 1, lmsize2
           do icheb = 0, ncheb
-            slv(icheb, lm1, icheb, lm1) = slv(icheb, lm1, icheb, lm1) + 1.d0
-            srv(icheb, lm1, icheb, lm1) = srv(icheb, lm1, icheb, lm1) + 1.d0
+            slv(icheb, lm1, icheb, lm1) = slv(icheb, lm1, icheb, lm1) + 1._dp
+            srv(icheb, lm1, icheb, lm1) = srv(icheb, lm1, icheb, lm1) + 1._dp
           end do
         end do
       else if (use_sratrick==1) then
@@ -506,11 +506,11 @@ contains
                   l1 = jlk_index(lm1)
 
                   ! this is the block to be inverted in SRAtrick. (named C in comment above):
-                  slv1(icheb, lm1, icheb2, lm2) = (tau(icheb,ipan)*jlk(l1,mn)*cslc1(icheb,icheb2)*vhlr(lm3,lm2,icheb2)-tau(icheb,ipan)*hlk(l1,mn)*cslc1(icheb,icheb2)*vjlr(lm3,lm2 &
-                    ,icheb2))*(rpanbound(ipan)-rpanbound(ipan-1))/2.d0
-
-                  srv1(icheb, lm1, icheb2, lm2) = (-tau(icheb,ipan)*jlk(l1,mn)*csrc1(icheb,icheb2)*vhli(lm3,lm2,icheb2)+tau(icheb,ipan)*hlk(l1,mn)*csrc1(icheb,icheb2)*vjli(lm3, &
-                    lm2,icheb2))*(rpanbound(ipan)-rpanbound(ipan-1))/2.d0
+                  slv1(icheb, lm1, icheb2, lm2) = (tau(icheb,ipan)*jlk(l1,mn)*cslc1(icheb,icheb2)*vhlr(lm3,lm2,icheb2) &
+                    - tau(icheb,ipan)*hlk(l1,mn)*cslc1(icheb,icheb2)*vjlr(lm3,lm2,icheb2))*(rpanbound(ipan)-rpanbound(ipan-1))/2._dp
+                                                                                 
+                  srv1(icheb, lm1, icheb2, lm2) = (-tau(icheb,ipan)*jlk(l1,mn)*csrc1(icheb,icheb2)*vhli(lm3,lm2,icheb2) &
+                     + tau(icheb,ipan)*hlk(l1,mn)*csrc1(icheb,icheb2)*vjli(lm3, lm2,icheb2))*(rpanbound(ipan)-rpanbound(ipan-1))/2._dp
                 end do
               end do
             end do
@@ -525,11 +525,11 @@ contains
                   lm1 = lm3 + (ivec-1)*lmsize
                   l1 = jlk_index(lm1)
 
-                  slv2(icheb, lm3, icheb2, lm2) = (tau(icheb,ipan)*jlk(l1,mn)*cslc1(icheb,icheb2)*vhlr(lm3,lm2,icheb2)-tau(icheb,ipan)*hlk(l1,mn)*cslc1(icheb,icheb2)*vjlr(lm3,lm2 &
-                    ,icheb2))*(rpanbound(ipan)-rpanbound(ipan-1))/2.d0
-
-                  srv2(icheb, lm3, icheb2, lm2) = (-tau(icheb,ipan)*jlk(l1,mn)*csrc1(icheb,icheb2)*vhli(lm3,lm2,icheb2)+tau(icheb,ipan)*hlk(l1,mn)*csrc1(icheb,icheb2)*vjli(lm3, &
-                    lm2,icheb2))*(rpanbound(ipan)-rpanbound(ipan-1))/2.d0
+                  slv2(icheb, lm3, icheb2, lm2) = (tau(icheb,ipan)*jlk(l1,mn)*cslc1(icheb,icheb2)*vhlr(lm3,lm2,icheb2) &
+                    - tau(icheb,ipan)*hlk(l1,mn)*cslc1(icheb,icheb2)*vjlr(lm3,lm2,icheb2))*(rpanbound(ipan)-rpanbound(ipan-1))/2._dp
+                                                                                 
+                  srv2(icheb, lm3, icheb2, lm2) = (-tau(icheb,ipan)*jlk(l1,mn)*csrc1(icheb,icheb2)*vhli(lm3,lm2,icheb2) &
+                    + tau(icheb,ipan)*hlk(l1,mn)*csrc1(icheb,icheb2)*vjli(lm3, lm2,icheb2))*(rpanbound(ipan)-rpanbound(ipan-1))/2._dp
 
                 end do
               end do
@@ -538,8 +538,8 @@ contains
         end do
         do lm1 = 1, lmsize
           do icheb = 0, ncheb
-            slv1(icheb, lm1, icheb, lm1) = slv1(icheb, lm1, icheb, lm1) + 1.d0
-            srv1(icheb, lm1, icheb, lm1) = srv1(icheb, lm1, icheb, lm1) + 1.d0
+            slv1(icheb, lm1, icheb, lm1) = slv1(icheb, lm1, icheb, lm1) + 1._dp
+            srv1(icheb, lm1, icheb, lm1) = srv1(icheb, lm1, icheb, lm1) + 1._dp
           end do
         end do
 
@@ -652,7 +652,7 @@ contains
       ! Calculation of eq. 5.19-5.22
 
       do icheb = 0, ncheb
-        zslc1sum(icheb) = slc1sum(icheb)*(rpanbound(ipan)-rpanbound(ipan-1))/(2.d0)
+        zslc1sum(icheb) = slc1sum(icheb)*(rpanbound(ipan)-rpanbound(ipan-1))/(2._dp)
       end do
       call zgemm('n', 'n', lmsize, lmsize, lmsize2, zslc1sum(0), vhlr(1,1,0), lmsize, yrf(1,1,0,ipan), lmsize2, czero, mrnvy(1,1,ipan), lmsize)
       call zgemm('n', 'n', lmsize, lmsize, lmsize2, zslc1sum(0), vjlr(1,1,0), lmsize, yrf(1,1,0,ipan), lmsize2, czero, mrjvy(1,1,ipan), lmsize)
@@ -723,12 +723,12 @@ contains
     ! irregular
     do lm2 = 1, lmsize
       do lm1 = 1, lmsize
-        dllp(lm1, lm2, npan) = 0.d0
-        cllp(lm1, lm2, npan) = 0.d0
+        dllp(lm1, lm2, npan) = 0._dp
+        cllp(lm1, lm2, npan) = 0._dp
       end do
     end do
     do lm1 = 1, lmsize
-      dllp(lm1, lm1, npan) = 1.d0
+      dllp(lm1, lm1, npan) = 1._dp
     end do
     do ipan = npan, 1, -1
       call zcopy(lmsize*lmsize, cllp(1,1,ipan), 1, cllp(1,1,ipan-1), 1)
@@ -894,7 +894,7 @@ program test_rllsll
   write (*, '(A)') '  reding in arrays ...'
 
   allocate (hlk(lbessel,nrmax), jlk(lbessel,nrmax), hlk2(lbessel,nrmax), jlk2(lbessel,nrmax))
-  allocate (jlk_index(2*lmsize))
+  allocate (jlk_index(nvec*lmsize))
   allocate (sll(lmsize2,lmsize,nrmax), rll(lmsize2,lmsize,nrmax), tllp(lmsize,lmsize), vll(lmsize*nvec,lmsize*nvec,nrmax))
   allocate (rpanbound(0:npan), rmesh(nrmax))
   allocate (alphaget(lmsize,lmsize))
@@ -906,7 +906,7 @@ program test_rllsll
 
   read (1234, '(1ES25.15)') gmatprefactor
   read (1234, '(1000ES25.15)') hlk(1:lbessel, 1:nrmax), jlk(1:lbessel, 1:nrmax), hlk2(1:lbessel, 1:nrmax), jlk2(1:lbessel, 1:nrmax)
-  read (1234, '(1000i9)') jlk_index(1:2*lmsize)
+  read (1234, '(1000i9)') jlk_index(1:nvec*lmsize)
   read (1234, '(10000ES25.15)') rmesh(1:nrmax)
   read (1234, '(10000ES25.15)') rpanbound(0:npan)
 
@@ -989,7 +989,7 @@ subroutine write_rllsll_test_input(ncheb, npan, lmsize, nvec, nrmax, lbessel, us
   character (len=1), intent (in) :: cmoderll, cmodesll, cmodetest
 
   complex (kind=dp), intent (in) :: hlk(lbessel, nrmax), jlk(lbessel, nrmax), hlk2(lbessel, nrmax), jlk2(lbessel, nrmax)
-  integer, intent (in) :: jlk_index(2*lmsize)
+  integer, intent (in) :: jlk_index(nvec*lmsize)
   real (kind=dp), intent (in) :: rpanbound(0:npan), rmesh(nrmax)
   complex (kind=dp), intent (in) :: sll(nvec*lmsize, lmsize, nrmax), rll(nvec*lmsize, lmsize, nrmax), tllp(lmsize, lmsize), vll(lmsize*nvec, lmsize*nvec, nrmax)
   complex (kind=dp), intent (in) :: alphaget(lmsize, lmsize)
@@ -1005,7 +1005,7 @@ subroutine write_rllsll_test_input(ncheb, npan, lmsize, nvec, nrmax, lbessel, us
 
   write (1234, '(1ES25.15)') gmatprefactor
   write (1234, '(1000ES25.15)') hlk(1:lbessel, 1:nrmax), jlk(1:lbessel, 1:nrmax), hlk2(1:lbessel, 1:nrmax), jlk2(1:lbessel, 1:nrmax)
-  write (1234, '(1000i9)') jlk_index(1:2*lmsize)
+  write (1234, '(1000i9)') jlk_index(1:nvec*lmsize)
   write (1234, '(10000ES25.15)') rmesh(1:nrmax)
   write (1234, '(10000ES25.15)') rpanbound(0:npan)
 

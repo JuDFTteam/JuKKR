@@ -141,7 +141,7 @@ contains
 
     lm1 = 1
     do ivec = 1, nvec
-      do i = 1, 2
+      do i = 1, nspin
         do l1 = 0, lmax
           do m1 = -l1, l1
             jlk_index(lm1) = l1 + (ivec-1)*nspintemp*(lmax+1) + (i-1)*(lmax+1) + 1

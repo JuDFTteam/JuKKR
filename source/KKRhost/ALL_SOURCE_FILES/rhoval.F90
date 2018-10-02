@@ -195,9 +195,7 @@ contains
       ! ( 1.D0 + DEXP( 20.D0*(R(276)-R(IR)) ) )
       ! CUTOFF(IR) = 1D0/CUTOFF(IR)
       ! -------------------------------------------------------------------------
-      do m1 = 1, irmd
-        cutoff(m1) = 1.d0
-      end do
+      cutoff(:) = 1.0_dp
     end if
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! LDAU
@@ -206,60 +204,17 @@ contains
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Initialise variables
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    if (krel==0) then
-      do lm1 = 1, lmpotd
-        do ir = 1, irmd
-          rho2ns(ir, lm1, ispin) = 0.0d0
-        end do
-      end do
-
-      do l = 0, lmaxd1
-        espv(l, ispin) = 0.0d0
-      end do
-      ! -------------------------------------------------------------------------
-    else
-      ! -------------------------------------------------------------------------
-      do ispinpot = 1, 2
-        do lm1 = 1, lmpotd
-          do ir = 1, irmd
-            rho2ns(ir, lm1, ispinpot) = 0.0d0
-            r2nef(ir, lm1, ispinpot) = 0.0d0
-          end do
-        end do
-
-        do l = 0, lmaxd1
-          espv(l, ispinpot) = 0.0d0
-        end do
-
-      end do
-
-      do ir = 1, irmd
-        rhoorb(ir) = 0.0d0
-      end do
-
-      do ir = 1, 3
-        do l = 0, lmax
-          dmuorb(l, ir) = czero
-        end do
-      end do
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! ITERMDIR
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    rho2ns(:,:,:) = 0.0_dp
+    espv(:,:) = 0.0_dp
+    if (krel/=0) then
+      r2nef(:,:,:) = 0.0_dp
+      rhoorb(:) = 0.0_dp
+      dmuorb(:,:) = 0.0_dp
       if (itermvdir) then
-        do lm1 = 1, 3
-          do lm2 = 1, nmvecmax
-            do l = 0, lmax
-              mvevil(l, lm1, lm2) = czero
-              mvevilef(l, lm1, lm2) = czero
-            end do
-          end do
-        end do
+        mvevil(:,:,:) = czero
+        mvevilef(:,:,:) = czero
       end if
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! ITERMDIR
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    end if                         ! KREL = 0/1
-    ! ----------------------------------------------------------------------------
+    end if ! (krel/=0)
     lastez = ielast
 
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -272,19 +227,15 @@ contains
 #ifndef CPP_MPI
     if (opt('qdos    ')) then      ! qdos
       if (natyp>=100) then         ! qdos
-        open (31, file='qdos.'//char(48+i1/100)//char(48+mod(i1/10,10))// & ! qdos
-          char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat') ! qdos
+        open (31, file='qdos.'//char(48+i1/100)//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat') ! qdos
       else                         ! qdos
-        open (31, file='qdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'// & ! qdos
-          char(48+ispin)//'.dat')  ! qdos
+        open (31, file='qdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat')  ! qdos
       end if                       ! qdos
       call version_print_header(31) ! qdos
-      write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)' & ! qdos
-        , 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...' ! qdos
+      write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...' ! qdos
     end if                         ! qdos
 
-    open (30, file='lmdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'// & ! lmdos
-      char(48+ispin)//'.dat')      ! lmdos
+    open (30, file='lmdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat')      ! lmdos
     call version_print_header(31)  ! lmdos
     write (30, *) ' '              ! lmdos
     write (30, 100) '# ISPIN=', ispin, ' I1=', i1 ! lmdos
@@ -293,17 +244,14 @@ contains
     ! write out complex qdos for interpolation to the real axis                   ! complex qdos
     if (test('compqdos')) then     ! complex qdos
       if (natyp>=100) then         ! complex qdos
-        open (3031, file='cqdos.'//char(48+i1/100)//char(48+mod(i1/10,10))// & ! complex qdos
-          char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat') ! complex qdos
+        open (3031, file='cqdos.'//char(48+i1/100)//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat') ! complex qdos
       else                         ! complex qdos
-        open (3031, file='cqdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'// & ! complex qdos
-          char(48+ispin)//'.dat')  ! complex qdos
+        open (3031, file='cqdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat')  ! complex qdos
       end if                       ! complex qdos
       call version_print_header(3031) ! complex qdos
       write (3031, '(A)') '# lmax, natyp, nspin, nqdos, ielast:' ! complex qdos
       write (3031, '(5I9)') lmax, natyp, nspin, nqdos, ielast ! complex qdos
-      write (3031, '(7(A,3X))') '#   Re(E)', 'Im(E)' & ! complex qdos
-        , 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...' ! complex qdos
+      write (3031, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...' ! complex qdos
     end if                         ! qdos
 #endif
 
@@ -543,20 +491,6 @@ contains
       end if
 
       if (ihost/=1) return
-
-      ! Transformation of ISPIN=1,2 from (spin-down,spin-up) to (charge-density,spin-density)
-      if (ispin==2) then
-        idim = irmd*lmpotd
-        call dscal(idim, 2.d0, rho2ns(1,1,1), 1)
-        call daxpy(idim, -0.5d0, rho2ns(1,1,1), 1, rho2ns(1,1,2), 1)
-        call daxpy(idim, 1.0d0, rho2ns(1,1,2), 1, rho2ns(1,1,1), 1)
-        ! -------------------------------------------------------------------------
-        ! Do the same at the Fermi energy
-        ! -------------------------------------------------------------------------
-        call dscal(idim, 2.d0, r2nef(1,1,1), 1)
-        call daxpy(idim, -0.5d0, r2nef(1,1,1), 1, r2nef(1,1,2), 1)
-        call daxpy(idim, 1.0d0, r2nef(1,1,2), 1, r2nef(1,1,1), 1)
-      end if
 
     end subroutine rhoval
 

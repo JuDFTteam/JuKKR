@@ -172,17 +172,13 @@ contains
 
 
     ! .. allocate and initialize arrays
-    call allocate_locals_tmat_newsolver(1, irmdnew, lmpot, nspin, vins, aux, ipiv, tmat0, tmatll, alpha0, dtmatll, alphall, dalphall, jlk_index, nsra, lmmaxso, nth, lmax, vnspll, &
+    call allocate_locals_tmat_newsolver(1, irmdnew, lmpot, nspin/(2-korbit), vins, aux, ipiv, tmat0, tmatll, alpha0, dtmatll, alphall, dalphall, jlk_index, nsra, lmmaxso, nth, lmax, vnspll, &
       vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
 
-    do lm1 = 1, lmpot
-      do ir = 1, irmdnew
-        vins(ir, lm1, 1) = vinsnew(ir, lm1, ipot)
-        vins(ir, lm1, nspin) = vinsnew(ir, lm1, ipot+nspin-1)
-      end do
-    end do
+    vins(1:irmdnew, 1:lmpot, 1) = vinsnew(1:irmdnew, 1:lmpot, ipot)
+    if (.not.test('NOSOC   ')) vins(1:irmdnew, 1:lmpot, nspin) = vinsnew(1:irmdnew, 1:lmpot, ipot+nspin-1)
 
-      KBdG = 0
+    KBdG = 0
 #ifdef CPP_BdG
     ! shift potential by EF to change referece point of energy to Fermi level
     ! should later be done automatically in main0
@@ -203,7 +199,7 @@ contains
 #endif
 
     ! set up the non-spherical ll' matrix for potential VLL' (done in VLLMAT)
-    call vllmat(1, nrmaxd, irmdnew, lmsize, lmmaxso, vnspll0, vins, lmpot, cleb, icleb, iend, nspin, zat, rnew, use_sratrick, ncleb)
+    call vllmat(1, nrmaxd, irmdnew, lmsize, lmmaxso, vnspll0, vins, lmpot, cleb, icleb, iend, nspin/(2-korbit), zat, rnew, use_sratrick, ncleb)
     ! LDAU
     if (idoldau==1) then
       lmlo = lopt**2 + 1
@@ -326,6 +322,8 @@ contains
           ! Contruct the spin-orbit coupling hamiltonian and add to potential
           call spinorbit_ham(lmax, lmsize, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpot, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
             vnspll0(:,:,:), vnspll1(:,:,:,ith), '1')
+        else
+          vnspll1(:,:,:,ith) = vnspll0(:,:,:)
         end if
 
 #ifdef CPP_OMP
@@ -389,7 +387,7 @@ contains
         else
           use_fullgmat = 1
         end if
-        call rllsllsourceterms(nsra, nvec, eryd, rnew, irmdnew, nrmaxd, lmax, lmmaxso, 1, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor)
+        call rllsllsourceterms(nsra, nvec, eryd, rnew, irmdnew, nrmaxd, lmax, lmmaxso, use_fullgmat, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor)
 
 #ifdef CPP_OMP
         !$omp critical
@@ -425,7 +423,7 @@ contains
         ! Using spherical potential as reference
         if (use_sratrick==1) then
           tmatsph(:, ith) = czero
-          call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, zat, eryd, lmpot, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk(:,:,ith), jlk(:,:,ith), &
+          call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin/(2-korbit), zat, eryd, lmpot, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk(:,:,ith), jlk(:,:,ith), &
             hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, tmatsph(:,ith), alphasph, use_sratrick)
         end if
         ! Calculate the tmat and wavefunctions
@@ -442,7 +440,7 @@ contains
           call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), tmat0(:,:), ncheb, npan_tot, lmmaxso, nvec*lmmaxso, 4*(lmax+1), irmdnew, nsra, &
             jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alpha0(:,:))
         else
-          call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), sll(:,:,:,ith), tmat0(:,:), ncheb, npan_tot, lmmaxso, nvec*lmmaxso, 4*(lmax+1), irmdnew, nsra, &
+          call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), sll(:,:,:,ith), tmat0(:,:), ncheb, npan_tot, lmmaxso, nvec*lmmaxso, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
             jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alpha0(:,:))
         end if
 
@@ -570,7 +568,7 @@ contains
         jlk2(:, :, ith) = czero
         gmatprefactor = czero
         jlk_index = 0
-        call rllsllsourceterms(nsra, nvec, eryd, rnew, irmdnew, nrmaxd, lmax, lmmaxso, 1, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor)
+        call rllsllsourceterms(nsra, nvec, eryd, rnew, irmdnew, nrmaxd, lmax, lmmaxso, use_fullgmat, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor)
 
         ! Using spherical potential as reference
         ! notice that exchange the order of left and right hankel/bessel functions
@@ -594,7 +592,7 @@ contains
         if (opt('RLL-SLL ') .and. .not. (opt('XCPL    ') .or. opt('OPERATOR'))) then
           ! do nothing
         else
-          call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), tmat0, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, 4*(lmax+1), irmdnew, nsra, &
+          call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), tmat0, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
             jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alpha0)
         end if
         if (nsra==2) then
@@ -690,6 +688,7 @@ contains
 
         end if                     ! test('rhoqtest')
 #endif
+        write (*,*) 'write tmat', irec
         write (69, rec=irec) tmatll(:, :)
         ! human readable writeout if test option is hit
         if (test('fileverb')) then
@@ -763,6 +762,7 @@ contains
     lmax, vnspll, vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
     use :: mod_datatypes, only: dp
     use :: mod_constants, only: czero
+    use :: global_variables, only: korbit
     use :: mod_profiling, only: memocc
     use :: mod_save_wavefun, only: t_wavefunctions
     implicit none
@@ -803,15 +803,9 @@ contains
     if (allocmode==1) then ! allocate and initialize
 
       ! potential arrays
-      if (nsra==2) then
-        allocate (vnspll(2*lmmaxso,2*lmmaxso,irmdnew,0:nth-1), stat=i_stat)
-        call memocc(i_stat, product(shape(vnspll))*kind(vnspll), 'VNSPLL', 'allocate_locals_tmat_newsolver')
-        vnspll = czero
-      else
-        allocate (vnspll(lmmaxso,lmmaxso,irmdnew,0:nth-1), stat=i_stat)
-        call memocc(i_stat, product(shape(vnspll))*kind(vnspll), 'VNSPLL', 'allocate_locals_tmat_newsolver')
-        vnspll = czero
-      end if
+      allocate (vnspll(nsra*lmmaxso,nsra*lmmaxso,irmdnew,0:nth-1), stat=i_stat)
+      call memocc(i_stat, product(shape(vnspll))*kind(vnspll), 'VNSPLL', 'allocate_locals_tmat_newsolver')
+      vnspll = czero
       allocate (vnspll0(lmmaxso,lmmaxso,irmdnew), stat=i_stat)
       call memocc(i_stat, product(shape(vnspll0))*kind(vnspll0), 'VNSPLL0', 'allocate_locals_tmat_newsolver')
       vnspll0 = czero
@@ -820,21 +814,21 @@ contains
       vnspll1 = czero
 
       ! source terms (bessel and hankel functions)
-      allocate (hlk(1:4*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
+      allocate (hlk(1:nsra*(1+korbit)*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
       call memocc(i_stat, product(shape(hlk))*kind(hlk), 'HLK', 'allocate_locals_tmat_newsolver')
       hlk = czero
-      allocate (jlk(1:4*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
+      allocate (jlk(1:nsra*(1+korbit)*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
       call memocc(i_stat, product(shape(jlk))*kind(jlk), 'JLK', 'allocate_locals_tmat_newsolver')
       jlk = czero
-      allocate (hlk2(1:4*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
+      allocate (hlk2(1:nsra*(1+korbit)*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
       call memocc(i_stat, product(shape(hlk2))*kind(hlk2), 'HLK2', 'allocate_locals_tmat_newsolver')
       hlk2 = czero
-      allocate (jlk2(1:4*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
+      allocate (jlk2(1:nsra*(1+korbit)*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
       call memocc(i_stat, product(shape(jlk2))*kind(jlk2), 'JLK2', 'allocate_locals_tmat_newsolver')
       jlk2 = czero
 
       ! Spherical part of tmatrix (used with SRATRICK)
-      allocate (tmatsph(2*(lmax+1),0:nth-1), stat=i_stat)
+      allocate (tmatsph(nsra*(lmax+1),0:nth-1), stat=i_stat)
       call memocc(i_stat, product(shape(tmatsph))*kind(tmatsph), 'TMATSPH', 'allocate_locals_tmat_newsolver')
       tmatsph = czero
 
@@ -890,7 +884,7 @@ contains
       allocate (dalphall(lmmaxso,lmmaxso), stat=i_stat)
       call memocc(i_stat, product(shape(dalphall))*kind(dalphall), 'DALPHALL', 'allocate_locals_tmat_newsolver')
       dalphall = czero
-      allocate (jlk_index(2*lmmaxso), stat=i_stat)
+      allocate (jlk_index(nsra*lmmaxso), stat=i_stat)
       call memocc(i_stat, product(shape(jlk_index))*kind(jlk_index), 'JLK_INDEX', 'allocate_locals_tmat_newsolver')
       jlk_index = 0
 

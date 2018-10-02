@@ -27,16 +27,10 @@ contains
   !> `cmode=='Ref=Vsph'`
   !> -------------------
   !> THis assumes that the SRA-trick is used in which case the small component of vll vanishes
-  !> 
-  !> @note 
-  !> If called with `korbit==0`, then small matrix sizes and no coupling of spin-subspaces are assumed, 
-  !> i.e. all factors of 2 have been replaced with `(1+korbit)`
-  !> @endnote
   !-------------------------------------------------------------------------------
   subroutine vllmatsra(vll0, vll, rmesh, lmsize, nrmax, nrmaxd, eryd, lmax, lval_in, cmode)
     use :: mod_datatypes, only: dp
     use :: mod_constants, only: czero, cone, cvlight
-    use :: global_variables, only: korbit
     implicit none
 
     ! inputs
@@ -50,11 +44,13 @@ contains
     real (kind=dp), dimension (nrmaxd), intent (in) :: rmesh !! radial mesh
     complex (kind=dp), dimension (lmsize, lmsize, nrmax), intent (in) :: vll0 !! input potential in (l,m,s) basis
     ! outputs
-    complex (kind=dp), dimension ((1+korbit)*lmsize, (1+korbit)*lmsize, nrmax), intent (out) :: vll !! output potential in (l,m,s) basis with big/small components
+    complex (kind=dp), dimension (2*lmsize, 2*lmsize, nrmax), intent (out) :: vll !! output potential in (l,m,s) basis with big/small components
     ! locals
     integer :: ilm, lval, mval, ival, ir
     integer, dimension (lmsize) :: loflm
     complex (kind=dp) :: mass, mass0
+
+    logical, external :: test
 
 
     ! ************************************************************************************
@@ -74,7 +70,7 @@ contains
           loflm(ilm) = lval
         end do
       end do
-    else if ((1+korbit)*(lmax+1)**2==lmsize) then
+    else if (2*(lmax+1)**2==lmsize) then
       do ival = 1, 2
         do lval = 0, lmax
           do mval = -lval, lval
@@ -118,8 +114,8 @@ contains
 
     else if (cmode=='Ref=Vsph') then
 
-      ! for SRA-trick the small component of vll vanishes, i.e. only big component is copied
-      vll(lmsize+1:(1+korbit)*lmsize, 1:lmsize, :) = vll0(1:lmsize, 1:lmsize, :)
+      ! for SRA-trick the small component of vll vanishes, i.e. only big component is copied (lower half)
+      vll(lmsize+1:2*lmsize, 1:lmsize, :) = vll0(1:lmsize, 1:lmsize, :)
 
     end if
 
