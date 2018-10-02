@@ -426,7 +426,11 @@ contains
 
       eryd = ez(ie)
       ek = sqrt(eryd)
+
       df = wez(ie)/dble(nspin)
+      ! correct double counting with explicit spin loop and artificial nspin==1:
+      if (test('NOSOC   ')) df = df / 2.0_dp
+
       if (nsra==2) then
         ek = sqrt(eryd+eryd*eryd/(cvlight*cvlight))*(1d0+eryd/(cvlight*cvlight))
       end if
