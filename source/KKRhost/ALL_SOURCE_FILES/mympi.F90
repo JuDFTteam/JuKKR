@@ -589,8 +589,8 @@ contains
 
     ! all with reduce instead of allreduce:
     ! complex (kind=dp) arrays
-    idim = irmdnew*lmpotd*4
-    allocate (workc(irmdnew,lmpotd,4,1), stat=ierr)
+    idim = irmdnew*lmpotd*nspin*(1+korbit)
+    allocate (workc(irmdnew,lmpotd,nspin*(1+korbit),1), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, r2nefc'
     workc = (0.d0, 0.d0)
     call mpi_reduce(r2nefc, workc(:,:,:,1), idim, mpi_double_complex, mpi_sum, master, mympi_comm, ierr)
@@ -598,8 +598,8 @@ contains
     call zcopy(idim, workc, 1, r2nefc, 1)
     deallocate (workc)
 
-    idim = irmdnew*lmpotd*4
-    allocate (workc(irmdnew,lmpotd,4,1), stat=ierr)
+    idim = irmdnew*lmpotd*nspin*(1+korbit)
+    allocate (workc(irmdnew,lmpotd,nspin*(1+korbit),1), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, rho2nsc'
     workc = (0.d0, 0.d0)
     call mpi_reduce(rho2nsc, workc, idim, mpi_double_complex, mpi_sum, master, mympi_comm, ierr)
@@ -607,8 +607,8 @@ contains
     call zcopy(idim, workc, 1, rho2nsc, 1)
     deallocate (workc)
 
-    idim = (lmaxd1+1)*ielast*2*nqdos
-    allocate (workc(0:lmaxd1,ielast,2,nqdos), stat=ierr)
+    idim = (lmaxd1+1)*ielast*nspin*nqdos
+    allocate (workc(0:lmaxd1,ielast,nspin,nqdos), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, den'
     workc = (0.d0, 0.d0)
     call mpi_reduce(den, workc, idim, mpi_double_complex, mpi_sum, master, mympi_comm, ierr)
@@ -616,8 +616,8 @@ contains
     call zcopy(idim, workc, 1, den, 1)
     deallocate (workc)
 
-    idim = lmmaxd*ielast*2*nqdos
-    allocate (workc(lmmaxd,ielast,2,nqdos), stat=ierr)
+    idim = lmmaxd*ielast*nspin*nqdos
+    allocate (workc(lmmaxd,ielast,nspin,nqdos), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, denlm'
     workc = (0.d0, 0.d0)
     call mpi_reduce(denlm, workc, idim, mpi_double_complex, mpi_sum, master, mympi_comm, ierr)
@@ -625,8 +625,8 @@ contains
     call zcopy(idim, workc, 1, denlm, 1)
     deallocate (workc)
 
-    idim = 4
-    allocate (workc(4,1,1,1), stat=ierr)
+    idim = nspin*(1+korbit)
+    allocate (workc(nspin*(1+korbit),1,1,1), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, rho2int'
     workc = (0.d0, 0.d0)
     call mpi_reduce(rho2int, workc(:,1,1,1), idim, mpi_double_complex, mpi_sum, master, mympi_comm, ierr)
@@ -668,8 +668,8 @@ contains
     call dcopy(idim, work, 1, denorbmom, 1)
     deallocate (work)
 
-    idim = 2*4
-    allocate (work(2,4,1,1))
+    idim = 2*3
+    allocate (work(2,3,1,1))
     work = 0.d0
     call mpi_reduce(denorbmomsp, work, idim, mpi_double_precision, mpi_sum, master, mympi_comm, ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for denorbmomsp'

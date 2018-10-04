@@ -31,8 +31,8 @@ contains
   !> @note -Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to
   ! Fortran90
   ! -------------------------------------------------------------------------------
-  subroutine rhototb(ipf, natyp, naez, nspin, rho2ns, rhoc, rhoorb, z, drdi, irws, ircut, nfu, llmsp, thetas, ntcell, kshape, ipan, chrgnt, itc, nshell, noq, conc, kaoez, catom, &
-    irm, nemb, lmpot)
+  subroutine rhototb(ipf, natyp, naez, nspin, rho2ns, rhoc, rhoorb, z, drdi, irws, ircut, nfu, llmsp, &
+    thetas, ntcell, kshape, ipan, chrgnt, itc, nshell, noq, conc, kaoez, catom, irm, nemb, lmpot)
 
     use :: global_variables
     use :: mod_datatypes, only: dp
@@ -53,48 +53,22 @@ contains
     integer, intent (in) :: lmpot  !! (LPOT+1)**2
     integer, intent (in) :: kshape !! Exact treatment of WS cell
     ! .. Array Arguments ..
-    integer, dimension (naez), intent (in) :: noq !! Number of diff. atom types
-    ! located
-    integer, dimension (*), intent (in) :: nfu !! number of shape function
-    ! components in cell 'icell'
-    integer, dimension (*), intent (in) :: ipan !! Number of panels in
-    ! non-MT-region
+    integer, dimension (naez), intent (in) :: noq !! Number of diff. atom types located
+    integer, dimension (*), intent (in) :: nfu !! number of shape function components in cell 'icell'
+    integer, dimension (*), intent (in) :: ipan !! Number of panels in non-MT-region
     integer, dimension (*), intent (in) :: irws !! R point at WS radius
-    integer, dimension (0:nsheld), intent (in) :: nshell !! Index of
-    ! atoms/pairs per shell
-    ! (ij-pairs); nshell(0)
-    ! = number of shells
+    integer, dimension (0:nsheld), intent (in) :: nshell !! Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
     integer, dimension (*), intent (in) :: ntcell !! Index for WS cell
 
-    integer, dimension (0:ipand, *), intent (in) :: ircut !! R points of panel
-    ! borders
-    integer, dimension (natyp, *), intent (in) :: llmsp !! lm=(l,m) of
-    ! 'nfund'th nonvanishing
-    ! component of
-    ! non-spherical pot.
-    integer, dimension (natyp, naez+nemb), intent (in) :: kaoez !! Kind of atom
-    ! at site in
-    ! elem. cell
+    integer, dimension (0:ipand, *), intent (in) :: ircut !! R points of panel borders
+    integer, dimension (natyp, *), intent (in) :: llmsp !! lm=(l,m) of 'nfund'th nonvanishing component of non-spherical pot.
+    integer, dimension (natyp, naez+nemb), intent (in) :: kaoez !! Kind of atom at site in elem. cell
     real (kind=dp), dimension (*), intent (in) :: z
-    real (kind=dp), dimension (natyp), intent (in) :: conc !! Concentration of
-    ! a given atom
+    real (kind=dp), dimension (natyp), intent (in) :: conc !! Concentration of a given atom
     real (kind=dp), dimension (irm, *), intent (in) :: drdi !! Derivative dr/di
-    real (kind=dp), dimension (irm, *), intent (in) :: rhoc !! core charge
-    ! density
-    real (kind=dp), dimension (irm*krel+(1-krel), natyp), intent (in) :: rhoorb
-    !! Orbital density
-    real (kind=dp), dimension (irid, nfund, *), intent (in) :: thetas !! shape
-    ! function
-    ! THETA=0
-    ! outer
-    ! space
-    ! THETA =1
-    ! inside
-    ! WS cell
-    ! in
-    ! spherical
-    ! harmonics
-    ! expansion
+    real (kind=dp), dimension (irm, *), intent (in) :: rhoc !! core charge density
+    real (kind=dp), dimension (irm*krel+(1-krel), natyp), intent (in) :: rhoorb !! Orbital density
+    real (kind=dp), dimension (irid, nfund, *), intent (in) :: thetas !! shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
 
     ! .. In/Out variables
     real (kind=dp), dimension (irm, lmpot, natyp, *), intent (inout) :: rho2ns

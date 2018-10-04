@@ -218,17 +218,25 @@ contains
     ! the main0 module, now  instead of unformatted files take parameters from
     ! types defined in wunfiles.F90
     ! -------------------------------------------------------------------------
-    call get_params_2(t_params, krel, natyp, ipand, npotd, natomimpd, lmxspd, nfund, lmpot, ncelld, irmd, nembd1, nembd, irmind, nsra, ins, nspin, ipan, ircut, lcore, ncore, lmax, &
-      ntcell, lpot, nlbasis, nrbasis, nright, nleft, natomimp, atomimp, imix, qbound, fcm, itdbry, irns, kpre, kshape, kte, kvmad, kxc, icc, ishift, ixipol, kforce, ifunm, lmsp, &
-      imt, irc, irmin, irws, llmsp, ititle, nfu, hostimp, ilm_map, imaxsh, ielast, npol, npnt1, npnt2, npnt3, itscf, scfsteps, iesemicore, kaoez, iqat, noq, lly, npolsemi, n1semi, &
-      n2semi, n3semi, zrel, jwsrel, irshift, mixing, lambda_xc, a, b, thetas, drdi, rmesh, zat, rmt, rmtnew, rws, emin, emax, tk, alat, efold, chrgold, cmomhost, conc, gsh, &
-      ebotsemi, emusemi, tksemi, vins, visp, rmrel, drdirel, vbc, fsold, r2drdirel, ecore, ez, wez, txc, linterface, lrhosym, ngshd, naez, irid, nspotd, iemxd)
+    call get_params_2(t_params, krel, natyp, ipand, npotd, natomimpd, lmxspd, nfund, &
+      lmpot, ncelld, irmd, nembd1, nembd, irmind, nsra, ins, nspin, ipan, ircut, lcore, &
+      ncore, lmax, ntcell, lpot, nlbasis, nrbasis, nright, nleft, natomimp, atomimp, &
+      imix, qbound, fcm, itdbry, irns, kpre, kshape, kte, kvmad, kxc, icc, ishift, &
+      ixipol, kforce, ifunm, lmsp, imt, irc, irmin, irws, llmsp, ititle, nfu, hostimp, &
+      ilm_map, imaxsh, ielast, npol, npnt1, npnt2, npnt3, itscf, scfsteps, iesemicore, &
+      kaoez, iqat, noq, lly, npolsemi, n1semi, n2semi, n3semi, zrel, jwsrel, irshift, &
+      mixing, lambda_xc, a, b, thetas, drdi, rmesh, zat, rmt, rmtnew, rws, emin, emax, &
+      tk, alat, efold, chrgold, cmomhost, conc, gsh, ebotsemi, emusemi, tksemi, vins, &
+      visp, rmrel, drdirel, vbc, fsold, r2drdirel, ecore, ez, wez, txc, linterface, &
+      lrhosym, ngshd, naez, irid, nspotd, iemxd)
 
     ! -------------------------------------------------------------------------
     ! Reading the density parameters stored in t_params
     ! -------------------------------------------------------------------------
-    call read_density(t_params, rho2ns, r2nef, rhoc, denef, denefat, espv, ecore, idoldau, lopt, eu, edc, chrgsemicore, rhoorb, ecorerel, nkcore, kapcore, krel, natyp, npotd, irmd, &
-      lmpot, lmaxd1)
+    call read_density(t_params, rho2ns, r2nef, rhoc, denef, denefat, espv, ecore, &
+      idoldau, lopt, eu, edc, chrgsemicore, rhoorb, ecorerel, nkcore, kapcore, krel, &
+      natyp, npotd, irmd, lmpot, lmaxd1)
+
     ! -------------------------------------------------------------------------
     ! End read in variables
     ! -------------------------------------------------------------------------
@@ -273,8 +281,9 @@ contains
     ! Determine total charge density expanded in spherical harmonics
     ! -------------------------------------------------------------------------
     if (test('flow    ')) write (1337, *) '>>> RHOTOTB'
-    call rhototb(ipf, natyp, naez, nspin, rho2ns, rhoc, rhoorb, zat, drdi, irws, ircut, nfu, llmsp, thetas, ntcell, kshape, ipan, chrgnt, itscf, nshell, noq, conc, kaoez, chrgatom, &
-      irmd, nemb, lmpot)
+    call rhototb(ipf, natyp, naez, nspin, rho2ns, rhoc, rhoorb, zat, drdi, irws, ircut, &
+      nfu, llmsp, thetas, ntcell, kshape, ipan, chrgnt, itscf, nshell, noq, conc, kaoez,&
+      chrgatom, irmd, nemb, lmpot)
 
     if (test('flow    ')) write (1337, *) '<<< RHOTOTB'
 
@@ -412,7 +421,8 @@ contains
     cminst(:, :) = 0.d0
     cmom(:, :) = 0.d0
     vons(:, :, :) = 0.d0
-    call vintras(cmom, cminst, lpot, nspin, 1, natyp, rho2ns, vons, rmesh, drdi, irws, ircut, ipan, kshape, ntcell, ilm_map, ifunm, imaxsh, gsh, thetas, lmsp, lmpot, natyp)
+    call vintras(cmom, cminst, lpot, nspin, 1, natyp, rho2ns, vons, rmesh, drdi, irws, &
+      ircut, ipan, kshape, ntcell, ilm_map, ifunm, imaxsh, gsh, thetas, lmsp, lmpot, natyp)
 
     if (test('vintrasp')) then     ! Bauer
       open (unit=786785, file='test_vintraspot')
@@ -428,16 +438,20 @@ contains
     ! fivos     &     .OR. (ICC .GT. 0 ) )THEN
     ! -------------------------------------------------------------------------
     if (linterface) then
-      call vinterface(cmom, cminst, lpot, nspin, naez, natyp, vons, zat, rmesh, irws, ircut, ipan, kshape, noq, kaoez, iqat, conc, chrgatom(1,1), icc, hostimp, nlbasis, nleft, &
-        nrbasis, nright, cmomhost, chrgnt, vinters, naez, lmpot)
+      call vinterface(cmom, cminst, lpot, nspin, naez, natyp, vons, zat, rmesh, irws, &
+        ircut, ipan, kshape, noq, kaoez, iqat, conc, chrgatom(1,1), icc, hostimp, &
+        nlbasis, nleft, nrbasis, nright, cmomhost, chrgnt, vinters, naez, lmpot)
       ! ----------------------------------------------------------------------
     else
       ! ----------------------------------------------------------------------
-      call vmadelblk(cmom, cminst, lpot, nspin, naez, vons, zat, rmesh, irws, ircut, ipan, kshape, noq, kaoez, conc, chrgatom(1,1), icc, hostimp, vinters, nemb, lmpot, natyp)
+      call vmadelblk(cmom, cminst, lpot, nspin, naez, vons, zat, rmesh, irws, ircut, &
+        ipan, kshape, noq, kaoez, conc, chrgatom(1,1), icc, hostimp, vinters, nemb, &
+        lmpot, natyp)
     end if
 
     if (opt('KKRFLEX ')) then
-      call writekkrflex(natomimp, nspin, ielast, (lpot+1)**2, alat, natyp, kshape, vbc, atomimp, hostimp, noq, zat, kaoez, conc, cmom, cminst, vinters, nemb, naez)
+      call writekkrflex(natomimp, nspin, ielast, (lpot+1)**2, alat, natyp, kshape, vbc, &
+        atomimp, hostimp, noq, zat, kaoez, conc, cmom, cminst, vinters, nemb, naez)
     end if
 
     ! -------------------------------------------------------------------------
@@ -505,18 +519,20 @@ contains
     if (kte==1) then
       ! Single-particle core energy
       call espcb(espc, nspin, natyp, ecore, lcore, lcoremax, ncore)
-      ! "Energy of the input potential"
-      ! Int V(r) rho(r) d^3r
-      call epotinb(epotin, nspin, natyp, rho2ns, visp, rmesh, drdi, ins, irmin, irws, lpot, vins, ircut, ipan, zat)
+      ! Energy of the input potential: Int V(r) rho(r) d^3r
+      call epotinb(epotin, nspin, natyp, rho2ns, visp, rmesh, drdi, ins, irmin, irws, &
+        lpot, vins, ircut, ipan, zat)
       ! Coulomb hartree energy
-      call ecoub(cmom, ecou, lpot, nspin, natyp, rho2ns, vons, zat, rmesh, drdi, irws, kvmad, kshape, ircut, ipan, imaxsh, ifunm, ilm_map, ntcell, gsh, thetas, lmsp, lpot)
-
+      call ecoub(cmom, ecou, lpot, nspin, natyp, rho2ns, vons, zat, rmesh, drdi, irws, &
+        kvmad, kshape, ircut, ipan, imaxsh, ifunm, ilm_map, ntcell, gsh, thetas, lmsp, &
+        lpot)
     end if
     ! -------------------------------------------------------------------------
     ! End of calculation of the energy
     ! -------------------------------------------------------------------------
     vxcm(:, :, :) = 0.d0
-    call vxcdrv(exc, kte, kxc, lpot, nspin, 1, natyp, rho2ns, vxcm, rmesh, drdi, a, irws, ircut, ipan, ntcell, kshape, gsh, ilm_map, imaxsh, ifunm, thetas, lmsp)
+    call vxcdrv(exc, kte, kxc, lpot, nspin, 1, natyp, rho2ns, vxcm, rmesh, drdi, a, &
+      irws, ircut, ipan, ntcell, kshape, gsh, ilm_map, imaxsh, ifunm, thetas, lmsp)
 
     if (test('Vspher  ')) vons(1:irmd, 2:lmpot, 1:npotd) = 0.d0
 
@@ -526,7 +542,8 @@ contains
     if (abs(lambda_xc-1.d0)>eps .and. nspin==2) then
       rho2nsnm(:, :, :, 1) = rho2ns(:, :, :, 1) ! Copy charge density
       rho2nsnm(:, :, :, 2) = 0.d0  ! Set spin density to zero
-      call vxcdrv(excnm, kte, kxc, lpot, nspin, 1, natyp, rho2nsnm, vxcnm, rmesh, drdi, a, irws, ircut, ipan, ntcell, kshape, gsh, ilm_map, imaxsh, ifunm, thetas, lmsp)
+      call vxcdrv(excnm, kte, kxc, lpot, nspin, 1, natyp, rho2nsnm, vxcnm, rmesh, drdi, &
+        a, irws, ircut, ipan, ntcell, kshape, gsh, ilm_map, imaxsh, ifunm, thetas, lmsp)
       ! Compute the EXC-difference
       excdiff = 0.d0
       do i1 = 1, natyp
@@ -537,8 +554,8 @@ contains
       write (1337, *) 'LAMBDA_XC=', lambda_xc, 'EXCDIF=', excdiff
     end if
 
-    vons(:, :, :) = vons(:, :, :) + & ! Add xc-potential with magn. part weighted by lambda_xc
-      lambda_xc*vxcm(:, :, :) + (1.d0-lambda_xc)*vxcnm(:, :, :)
+    ! Add xc-potential with magn. part weighted by lambda_xc
+    vons(:, :, :) = vons(:, :, :) + lambda_xc*vxcm(:, :, :) + (1.d0-lambda_xc)*vxcnm(:, :, :)
     exc(:, :) = lambda_xc*exc(:, :) + (1.d0-lambda_xc)*excnm(:, :)
 
 
@@ -576,17 +593,17 @@ contains
       ! iterations are to be remembered, e.g., in Anderson mixing.
       ! ----------------------------------------------------------------------
       ! Shift new potential to initial muffin-tin zero                        ! fxf
-      call mtzero(lmpot, natyp, conc, nspin, vons, vmt_init, zat, rmesh, drdi, & ! fxf
-        imt, ircut, ipan, ntcell, lmsp, ifunm, thetas, irws, e2shift, ishift & ! fxf
-        , nshell, linterface)      ! fxf
+      call mtzero(lmpot, natyp, conc, nspin, vons, vmt_init, zat, rmesh, drdi, imt, &
+        ircut, ipan, ntcell, lmsp, ifunm, thetas, irws, e2shift, ishift, nshell, &
+        linterface)      ! fxf
       open (67, file='vmtzero', form='formatted') ! fxf
       write (67, *) vmt_init(1)    ! fxf
       close (67)                   ! fxf
       ! Shift old potential to initial muffin-tin zero for correct mixing     ! fxf
       vshift = -vbc(1)             ! fxf
-      call potenshift(visp, vins, natyp, nspin, ircut, irc, irmin, ntcell, & ! fxf
-        imaxsh, ilm_map, ifunm, lmsp, lmpot, gsh, thetas, thesme, rfpi, rmesh, kshape & ! fxf
-        , vshift, irmd, npotd, irmind, lmxspd) ! fxf
+      call potenshift(visp, vins, natyp, nspin, ircut, irc, irmin, ntcell, imaxsh, &
+        ilm_map, ifunm, lmsp, lmpot, gsh, thetas, thesme, rfpi, rmesh, kshape, vshift, &
+        irmd, npotd, irmind, lmxspd) ! fxf
     else if (ishift==1) then
       ! Shift new potential to old MT-zero for correct mixing
       ! (convolution with shapes is done later)
@@ -601,7 +618,8 @@ contains
 
     else                           ! fxf
       ! Before fxf, only the following call was present.
-      call mtzero(lmpot, natyp, conc, nspin, vons, vbc, zat, rmesh, drdi, imt, ircut, ipan, ntcell, lmsp, ifunm, thetas, irws, e2shift, ishift, nshell, linterface)
+      call mtzero(lmpot, natyp, conc, nspin, vons, vbc, zat, rmesh, drdi, imt, ircut, &
+        ipan, ntcell, lmsp, ifunm, thetas, irws, e2shift, ishift, nshell, linterface)
     end if                         ! fxf
     ! -------------------------------------------------------------------------
     write (1337, '(79("="),/)')
@@ -627,11 +645,14 @@ contains
             open (unit=12642269, file='test_convol')
             write (12642269, *) '# atom ', i1
 
-            write (12642269, *) ircut(1, i1), irc(i1), imaxsh(lmpot), ilm_map, ifunm, lmpot, gsh, thetas, zat(i1), rfpi, rmesh(:, i1), vons(:, :, ipot), lmsp
+            write (12642269, *) ircut(1, i1), irc(i1), imaxsh(lmpot), ilm_map, ifunm, &
+              lmpot, gsh, thetas, zat(i1), rfpi, rmesh(:, i1), vons(:, :, ipot), lmsp
             close (12642269)
           end if                   ! config_testflag('write_gmatonsite')
 
-          call convol(ircut(1,i1), irc(i1), ntcell(i1), imaxsh(lmpot), ilm_map, ifunm, lmpot, gsh, thetas, thesme, zat(i1), rfpi, rmesh(:,i1), vons(:,:,ipot), vspsmdum(1,1), lmsp)
+          call convol(ircut(1,i1), irc(i1), ntcell(i1), imaxsh(lmpot), ilm_map, ifunm, &
+            lmpot, gsh, thetas, thesme, zat(i1), rfpi, rmesh(:,i1), vons(:,:,ipot), &
+            vspsmdum(1,1), lmsp)
         end do
       end do
     end if
@@ -728,8 +749,9 @@ contains
       mix = mixing/(1.0d0+1.0d+3*abs(chrgnt)/real(naez*nspin,kind=dp))
     end if
     write (1337, *) 'MIXSTR', mix
-    call mixstr(rmsavq, rmsavm, ins, lpot, lmpot, 0, nshell, 1, natyp, conc, nspin, itscf, rfpi, fpi, ipf, mix, fcm, irc, irmin, rmesh, drdi, vons, visp, vins, vspsmdum, vspsmdum, &
-      lsmear)
+    call mixstr(rmsavq, rmsavm, ins, lpot, lmpot, 0, nshell, 1, natyp, conc, nspin, &
+      itscf, rfpi, fpi, ipf, mix, fcm, irc, irmin, rmesh, drdi, vons, visp, vins, &
+      vspsmdum, vspsmdum, lsmear)
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! End of  POTENTIAL PART
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -747,7 +769,8 @@ contains
       ! Potential mixing procedures: Broyden or Andersen updating schemes
       ! ----------------------------------------------------------------------
       if (imix>=3) then
-        call brydbm(visp, vons, vins, vspsmdum, vspsmdum, ins, lmpot, rmesh, drdi, mix, conc, irc, irmin, nspin, 1, natyp, itdbry, imix, iobroy, ipf, lsmear)
+        call brydbm(visp, vons, vins, vspsmdum, vspsmdum, ins, lmpot, rmesh, drdi, mix, &
+          conc, irc, irmin, nspin, 1, natyp, itdbry, imix, iobroy, ipf, lsmear)
       end if
       ! ----------------------------------------------------------------------
       ! Reset to start new iteration
@@ -790,20 +813,22 @@ contains
       vbc(1) = vbc(1) + e2shift    ! fxf
       vbc(2) = vbc(1)              ! fxf
       vshift = vbc(1)              ! fxf
-      call potenshift(visp, vins, natyp, nspin, ircut, irc, irmin, ntcell, & ! fxf
-        imaxsh, ilm_map, ifunm, lmsp, lmpot, gsh, thetas, thesme, rfpi, rmesh, kshape & ! fxf
-        , vshift, irmd, npotd, irmind, lmxspd) ! fxf
+      call potenshift(visp, vins, natyp, nspin, ircut, irc, irmin, ntcell, imaxsh, &
+        ilm_map, ifunm, lmsp, lmpot, gsh, thetas, thesme, rfpi, rmesh, kshape, vshift, &
+        irmd, npotd, irmind, lmxspd) ! fxf
       write (1337, *) 'New VMT ZERO:', vbc(1) ! fxf
     end if                         ! fxf
 
-    call rites(11, 1, natyp, nspin, zat, alat, rmt, rmtnew, rws, ititle, rmesh, drdi, visp, irws, a, b, txc, kxc, ins, irns, lpot, vins, qbound, irc, kshape, efnew, vbc, ecore, &
-      lcore, ncore, ecorerel, nkcore, kapcore, lmpot)
+    call rites(11, 1, natyp, nspin, zat, alat, rmt, rmtnew, rws, ititle, rmesh, drdi, &
+      visp, irws, a, b, txc, kxc, ins, irns, lpot, vins, qbound, irc, kshape, efnew, &
+      vbc, ecore, lcore, ncore, ecorerel, nkcore, kapcore, lmpot)
     close (11)
     ! -------------------------------------------------------------------------
     ! ENERGIES calculation
     ! -------------------------------------------------------------------------
     if ((kte==1 .and. icc==0) .or. opt('KKRFLEX ')) then
-      call etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, nspin, natyp, nshell(1), conc, idoldau, lopt, eu, edc)
+      call etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, nspin, &
+        natyp, nshell(1), conc, idoldau, lopt, eu, edc)
     end if
     ! -------------------------------------------------------------------------
     ! End of ENERGIES calculation
@@ -849,7 +874,9 @@ contains
     ! Update energy contour
     ! -------------------------------------------------------------------------
     if (icont==1) then
-      call epathtb(ez, dez, emax, ielast, iesemicore, idosemicore, emin, emax, tk, npol, npnt1, npnt2, npnt3, ebotsemi, emusemi, tksemi, npolsemi, n1semi, n2semi, n3semi, iemxd)
+      call epathtb(ez, dez, emax, ielast, iesemicore, idosemicore, emin, emax, tk, &
+        npol, npnt1, npnt2, npnt3, ebotsemi, emusemi, tksemi, npolsemi, n1semi, n2semi, &
+        n3semi, iemxd)
       do ie = 1, ielast
         wez(ie) = -2.d0/pi*dez(ie)
         if (ie<=iesemicore) wez(ie) = wez(ie)*fsemicore
@@ -860,7 +887,8 @@ contains
     ! Convert VISP potential to the relativistic form VTREL,BTREL.
     ! -------------------------------------------------------------------------
     if (krel==1) then
-      call relpotcvt(2, visp, zat, rmesh, drdi, ircut, vtrel, btrel, zrel, rmrel, jwsrel, drdirel, r2drdirel, irshift, ipand, irmd, npotd, natyp)
+      call relpotcvt(2, visp, zat, rmesh, drdi, ircut, vtrel, btrel, zrel, rmrel, &
+        jwsrel, drdirel, r2drdirel, irshift, ipand, irmd, npotd, natyp)
     end if
 
     ! -------------------------------------------------------------------------
@@ -869,12 +897,15 @@ contains
     ! -------------------------------------------------------------------------
     ! New_energy_mesh
     ! -------------------------------------------------------------------------
-    call save_emesh(ielast, ez, wez, emin, emax, iesemicore, fsemicore, npol, tk, npnt1, npnt2, npnt3, ebotsemi, emusemi, tksemi, npolsemi, n1semi, n2semi, n3semi, iemxd, t_params)
+    call save_emesh(ielast, ez, wez, emin, emax, iesemicore, fsemicore, npol, tk, &
+      npnt1, npnt2, npnt3, ebotsemi, emusemi, tksemi, npolsemi, n1semi, n2semi, &
+      n3semi, iemxd, t_params)
     ! -------------------------------------------------------------------------
     ! Output_potential
     ! -------------------------------------------------------------------------
-    call save_scfinfo(t_params, vins, visp, ecore, vbc, rmrel, drdirel, r2drdirel, zrel, jwsrel, irshift, vtrel, btrel, itscf, scfsteps, efold, chrgold, cmomhost, krel, irmind, &
-      irmd, lmpot, nspotd, natyp, npotd, nembd1)
+    call save_scfinfo(t_params, vins, visp, ecore, vbc, rmrel, drdirel, r2drdirel, zrel, & 
+      jwsrel, irshift, vtrel, btrel, itscf, scfsteps, efold, chrgold, cmomhost, krel, &
+      irmind, irmd, lmpot, nspotd, natyp, npotd, nembd1)
     ! -------------------------------------------------------------------------
 110 format ('                old', ' E Fermi ', f14.10, ' Delta E_F = ', e16.8)
 120 format ('                new', ' E FERMI ', f14.10, '  DOS(E_F) = ', f12.6)
@@ -910,8 +941,9 @@ contains
   ! SUBROUTINE: POTENSHIFT
   !> @brief Adds a constant (=VSHIFT) to the potentials of atoms
   ! ----------------------------------------------------------------------------
-  subroutine potenshift(visp, vins, natyp, nspin, ircut, irc, irmin, ntcell, imaxsh, ilm_map, ifunm, lmsp, lmpot, gsh, thetas, thesme, rfpi, rmesh, kshape, vshift, irmd, npotd, &
-    irmind, lmxspd)
+  subroutine potenshift(visp, vins, natyp, nspin, ircut, irc, irmin, ntcell, imaxsh, &
+    ilm_map, ifunm, lmsp, lmpot, gsh, thetas, thesme, rfpi, rmesh, kshape, vshift, &
+    irmd, npotd, irmind, lmxspd)
 
     implicit none
 

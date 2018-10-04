@@ -487,22 +487,6 @@ contains
         call memocc(i_stat, i_all, 'GLDAU', 'RHOVAL')
       end if
 
-      if (ihost/=1) return
-
-      ! Transformation of ISPIN=1,2 from (spin-down,spin-up) to (charge-density,spin-density)
-      if (ispin==2) then
-        idim = irmd*lmpotd
-        call dscal(idim, 2.d0, rho2ns(1,1,1), 1)
-        call daxpy(idim, -0.5d0, rho2ns(1,1,1), 1, rho2ns(1,1,2), 1)
-        call daxpy(idim, 1.0d0, rho2ns(1,1,2), 1, rho2ns(1,1,1), 1)
-        ! -------------------------------------------------------------------------
-        ! Do the same at the Fermi energy
-        ! -------------------------------------------------------------------------
-        call dscal(idim, 2.d0, r2nef(1,1,1), 1)
-        call daxpy(idim, -0.5d0, r2nef(1,1,1), 1, r2nef(1,1,2), 1)
-        call daxpy(idim, 1.0d0, r2nef(1,1,2), 1, r2nef(1,1,1), 1)
-      end if
-
     end subroutine rhoval
 
   end module mod_rhoval
