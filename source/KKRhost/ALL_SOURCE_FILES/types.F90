@@ -55,7 +55,7 @@ module mod_types
   !> type holding some array dimensions needed independently of t_params
   type :: type_inc
 
-    integer :: nparams = 22        ! number of parameters in type_inc, excluding allocatable array KMESH
+    integer :: nparams = 23        ! number of parameters in type_inc, excluding allocatable array KMESH
     integer :: lmmaxd = -1
     integer :: nspin = -1
     integer :: ielast = -1

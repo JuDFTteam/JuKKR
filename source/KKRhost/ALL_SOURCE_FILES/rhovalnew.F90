@@ -839,7 +839,7 @@ contains
       denorbmomlm = 0.0d0
       denorbmomns = 0.0d0
     end if
-    call mympi_main1c_comm_newsosol(irmdnew, lmpotd, lmax, lmaxd1, lmsize, lmmaxso, ielast, nqdos, den, denlm, gflle, rho2nsc, r2nefc, rho2int, espv, muorb, denorbmom, denorbmomsp, &
+    call mympi_main1c_comm_newsosol(nspin, korbit, irmdnew, lmpotd, lmax, lmaxd1, lmsize, lmmaxso, ielast, nqdos, den, denlm, gflle, rho2nsc, r2nefc, rho2int, espv, muorb, denorbmom, denorbmomsp, &
       denorbmomlm, denorbmomns, t_mpi_c_grid%mympi_comm_at)
 #ifdef CPP_TIMING
     call timing_pause('main1c - communication')

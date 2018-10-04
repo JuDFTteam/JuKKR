@@ -571,16 +571,16 @@ contains
 #endif
 
 #ifdef CPP_MPI
-  subroutine mympi_main1c_comm_newsosol(irmdnew, lmpotd, lmaxd, lmaxd1, lmmaxd, lmmaxso, ielast, nqdos, den, denlm, gflle, rho2nsc, r2nefc, rho2int, espv, muorb, denorbmom, &
+  subroutine mympi_main1c_comm_newsosol(nspin, korbit, irmdnew, lmpotd, lmaxd, lmaxd1, lmmaxd, lmmaxso, ielast, nqdos, den, denlm, gflle, rho2nsc, r2nefc, rho2int, espv, muorb, denorbmom, &
     denorbmomsp, denorbmomlm, denorbmomns, mympi_comm)
 
     use :: mpi
     implicit none
-    integer, intent (in) :: irmdnew, lmpotd, lmaxd, lmaxd1, lmmaxd, lmmaxso, ielast, nqdos
+    integer, intent (in) :: nspin, korbit, irmdnew, lmpotd, lmaxd, lmaxd1, lmmaxd, lmmaxso, ielast, nqdos
     integer, intent (in) :: mympi_comm
-    complex (kind=dp), intent (inout) :: r2nefc(irmdnew, lmpotd, 4), rho2nsc(irmdnew, lmpotd, 4), den(0:lmaxd1, ielast, nqdos, 2), denlm(lmmaxd, ielast, nqdos, 2), rho2int(4), &
+    complex (kind=dp), intent (inout) :: r2nefc(irmdnew, lmpotd, nspin*(1+korbit)), rho2nsc(irmdnew, lmpotd, nspin*(1+korbit)), den(0:lmaxd1, ielast, nqdos, nspin), denlm(lmmaxd, ielast, nqdos, nspin), rho2int(nspin*(1+korbit)), &
       gflle(lmmaxso, lmmaxso, ielast, nqdos)
-    real (kind=dp), intent (inout) :: espv(0:lmaxd1, 2), muorb(0:lmaxd1+1, 3), denorbmom(3), denorbmomsp(2, 4), denorbmomlm(0:lmaxd, 3), denorbmomns(3)
+    real (kind=dp), intent (inout) :: espv(0:lmaxd1, 2), muorb(0:lmaxd1+1, 3), denorbmom(3), denorbmomsp(2, 3), denorbmomlm(0:lmaxd, 3), denorbmomns(3)
 
     integer :: ierr, idim
     real (kind=dp), allocatable :: work(:, :, :, :)
