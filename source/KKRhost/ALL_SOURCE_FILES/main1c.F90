@@ -466,7 +466,7 @@ contains
 #endif
             call rhoval(ihost, ldorhoef, icst, ins, ielast, nsra, ispin, nspin, nspinpot, i1, ez, wez, drdi(1,i1), rmesh(1,i1), &
               vins(irmind,1,knosph*ipot+(1-knosph)), visp(1,ipot), zat(i1), ipan(i1), ircut(0,i1), irmin(i1), thetas(1,1,icell), &
-              ifunm1(1,icell), lmsp1(1,icell), rho2n1(1,1,1), rho2n2(1,1,1), rhoorb(1,i1), den(0,1,1,ipot), denlm(1,1,1,ipot), &
+              ifunm1(1,icell), lmsp1(1,icell), rho2n1(1,1,ispin), rho2n2(1,1,ispin), rhoorb(1,i1), den(0,1,1,ipot), denlm(1,1,1,ipot), &
               muorb(0,1,i1), espv(0,ipot1), cleb, loflm, icleb, iend, jend, solver, socscl(1,krel*i1+(1-krel)), cscl(1,krel*i1+(1-krel)), &
               vtrel(1,i1), btrel(1,i1), rmrel(1,i1), drdirel(1,i1), r2drdirel(1,i1), zrel(i1), jwsrel(i1), irshift(i1), lmomvec, &
               qmtet(iq), qmphi(iq), mvevil1, mvevil2, nmvecmax, idoldau, lopt(i1), phildau(1,i1), wldau(1,1,1,i1), denmatc(1,1,ipot), &

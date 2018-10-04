@@ -95,8 +95,8 @@ contains
     real (kind=dp), dimension (irmd*krel+(1-krel)), intent (out) :: rhoorb
     real (kind=dp), dimension (0:lmax+1+1, 3), intent (out) :: muorb !! orbital magnetic moment
     real (kind=dp), dimension (0:lmax+1, 2), intent (out) :: espv !! changed for REL case
-    real (kind=dp), dimension (irmd, lmpotd, 2), intent (out) :: r2nef !! rho at FERMI energy
-    real (kind=dp), dimension (irmd, lmpotd, 2), intent (out) :: rho2ns !! radial density
+    real (kind=dp), dimension (irmd, lmpotd, 1+krel), intent (out) :: r2nef !! rho at FERMI energy
+    real (kind=dp), dimension (irmd, lmpotd, 1+krel), intent (out) :: rho2ns !! radial density
     complex (kind=dp), dimension (mmaxd, mmaxd), intent (out) :: denmatc
     ! ----------------------------------------------------------------------------
     ! ITERMDIR variables
@@ -359,9 +359,9 @@ contains
             ! Spherical/non-spherical input potential
             ! -------------------------------------------------------------------
             if (ins==0) then
-              call rholm(den(0,ie,iq), df, gmat0, nsra, rho2ns(1,1,ispin), drdi, ipan, ircut, pz, fz, qz, sz, cleb(1,1), icleb, iend, jend, ekl)
+              call rholm(den(0,ie,iq), df, gmat0, nsra, rho2ns(1,1,1), drdi, ipan, ircut, pz, fz, qz, sz, cleb(1,1), icleb, iend, jend, ekl)
             else
-              call rhons(den(0,ie,iq), df, drdi, gmat0, ek, rho2ns(1,1,ispin), ipan, ircut, irmin, thetas, ifunm, lmsp, & ! Added IRMIN 1.7.2014
+              call rhons(den(0,ie,iq), df, drdi, gmat0, ek, rho2ns(1,1,1), ipan, ircut, irmin, thetas, ifunm, lmsp, & ! Added IRMIN 1.7.2014
                 nsra, qns, pns, ar, cr, pz, fz, qz, sz, cleb(1,1), icleb, jend, iend, ekl, denlm(1,ie,iq), gflle(:,:,ie,iq))
             end if
             ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -406,9 +406,9 @@ contains
           ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
           if ((ie==ielast) .and. ldorhoef) then
             if (ins==0) then
-              call rholm(dendum, cone, gmat0, nsra, r2nef(1,1,ispin), drdi, ipan, ircut, pz, fz, qz, sz, cleb(1,1), icleb, iend, jend, ekl)
+              call rholm(dendum, cone, gmat0, nsra, r2nef(1,1,1), drdi, ipan, ircut, pz, fz, qz, sz, cleb(1,1), icleb, iend, jend, ekl)
             else
-              call rhons(dendum, cone, drdi, gmat0, ek, r2nef(1,1,ispin), ipan, ircut, irmin, thetas, ifunm, lmsp, & ! Added IRMIN 1.7.2014
+              call rhons(dendum, cone, drdi, gmat0, ek, r2nef(1,1,1), ipan, ircut, irmin, thetas, ifunm, lmsp, & ! Added IRMIN 1.7.2014
                 nsra, qns, pns, ar, cr, pz, fz, qz, sz, cleb(1,1), icleb, jend, iend, ekl, dum_denlm, dum_gflle)
             end if
           end if
