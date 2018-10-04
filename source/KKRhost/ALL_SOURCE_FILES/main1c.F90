@@ -157,10 +157,10 @@ contains
     complex (kind=dp), dimension (:), allocatable :: cdosat1
     complex (kind=dp), dimension (:, :), allocatable :: cdos_lly
 
+#ifdef CPP_MPI
     ! -------------------------------------------------------------------------
     ! MPI parameters
     ! -------------------------------------------------------------------------
-#ifdef CPP_MPI
     integer :: ierr, i_all
     integer :: ntot1
     integer :: ihelp
@@ -171,9 +171,9 @@ contains
     complex (kind=dp), dimension (:, :), allocatable :: work
     complex (kind=dp), dimension (:, :, :, :), allocatable :: workc
 #endif
+
     ! .. External Functions ..
-    logical :: opt, test
-    external :: opt, test
+    logical, external :: opt, test
     ! ..
     ! .. Data statements ..
     data textl/' s =', ' p =', ' d =', ' f =', ' g =', ' h =', ' i ='/
@@ -182,25 +182,21 @@ contains
     data ldorhoef/.true./
     data ihost/1/                  ! this is the host program
 
+
     ! .. Calculate parameters
     lmaxd1 = lmax + 1
     lmmaxd1 = lmmaxd + 1
     lrectmt = wlength*4*lmmaxd*lmmaxd
 
+    ! -------------------------------------------------------------------------
+    ! Read in variables and initialize arrays
+    ! -------------------------------------------------------------------------
 
-    ! Allocate arrays
-    ! work arrays per atom
-    allocate (rho2n1(irmd,lmpotd,2*(1+korbit)), stat=i_stat)
-    call memocc(i_stat, product(shape(rho2n1))*kind(rho2n1), 'RHO2N1', 'main1c')
-    allocate (rho2n2(irmd,lmpotd,2*(1+korbit)), stat=i_stat)
-    call memocc(i_stat, product(shape(rho2n2))*kind(rho2n2), 'RHO2N2', 'main1c')
-    ! collected densities for all atoms
-    allocate (rho2ns(irmd,lmpotd,natypd,2), stat=i_stat)
-    call memocc(i_stat, product(shape(rho2ns))*kind(rho2ns), 'RHO2NS', 'main1c')
-    allocate (r2nef(irmd,lmpotd,natypd,2), stat=i_stat)
-    call memocc(i_stat, product(shape(r2nef))*kind(r2nef), 'R2NEF', 'main1c')
+    call allocate_locals_main1c(1, irmd, lmpotd, korbit, natypd, ielast, nspind, lly, lmaxd1, nqdos, npotd, &
+      lmmaxd, lmax,rho2n1,rho2n2, rho2ns, r2nef, cdos0, cdos1, cdos2, cdosat0, cdosat1, cdos_lly, den, denlm, qvec)
 
-    ! Initialze to zero
+    ! Initialze static arrays to zero
+    denef = 0.0_dp
     vins = 0.0_dp
     r2nef = 0.0_dp
     muorb = 0.0_dp
@@ -209,6 +205,8 @@ contains
     vinsnew = 0.0_dp
     thetasnew = 0.0_dp
     angles_new = 0.0_dp
+    espv(:, :) = 0.0_dp
+    call rinit(natyp, denefat)
 
     ! Consistency check
     if ((krel<0) .or. (krel>1)) stop ' set KREL=0/1 (non/fully) relativistic mode in the inputcard'
@@ -224,43 +222,15 @@ contains
       drdi, rmesh, a, b, cleb, thetas, socscale, rpan_intervall, cscl, rnew, socscl, thetasnew, efermi, erefldau, ueff, jeff, emin, emax, tk, vins, visp, ecore, drdirel, r2drdirel, &
       rmrel, vtrel, btrel, wldau, uldau, ez, wez, phildau, tmpdir, solver, nspind, nspotd, irmind, lmaxd1, ncelld, irid, r_log, naez, natyp, lmax)
 
-    ! Initialization needed due to merging to one executable
-    espv(:, :) = 0.0_dp
-    rho2n1(:, :, :) = 0.0_dp
-    rho2n2(:, :, :) = 0.0_dp
     ! -------------------------------------------------------------------------
     ! End read in variables
     ! -------------------------------------------------------------------------
 
     if (idoldau==1) then
-
       open (67, file='ldau.unformatted', form='unformatted')
       read (67) itrunldau, wldau, uldau, phildau
       close (67)
     end if
-
-    nqdos = 1
-    if (opt('qdos    ')) then      ! qdos
-      ! Read BZ path for qdos calculation:                             ! qdos
-      open (67, file='qvec.dat')   ! qdos
-      read (67, *) nqdos           ! qdos
-      allocate (qvec(3,nqdos), stat=i_stat) ! qdos
-      call memocc(i_stat, product(shape(qvec))*kind(qvec), 'QVEC', 'main1c') ! qdos
-      do iq = 1, nqdos             ! qdos
-        read (67, *)(qvec(i1,iq), i1=1, 3) ! qdos
-      end do                       ! qdos
-      close (67)                   ! qdos
-    end if
-
-    allocate (den(0:lmaxd1,ielast,nqdos,npotd), stat=i_stat)
-    call memocc(i_stat, product(shape(den))*kind(den), 'DEN', 'main1c')
-    allocate (denlm(lmmaxd,ielast,nqdos,npotd), stat=i_stat)
-    call memocc(i_stat, product(shape(denlm))*kind(denlm), 'DENLM', 'main1c')
-
-    call cinit(ielast*(lmax+2)*npotd*nqdos, den)
-    call cinit(ielast*(lmmaxd)*npotd*nqdos, denlm)
-    denef = 0.0_dp
-    call rinit(natyp, denefat)
 
     itermvdir = opt('ITERMDIR')
     lmomvec = (itermvdir .or. (kmrot/=0))
@@ -282,90 +252,73 @@ contains
     end if
 
     ! write parameters file that contains passed parameters for further treatment of gflle
-    if (opt('lmlm-dos')) then      ! lmlm-dos
-      qdosopt = 'n'                ! lmlm-dos
-      if (opt('qdos    ')) then    ! lmlm-dos qdos
-        qdosopt = 'y'              ! lmlm-dos qdos
-      end if                       ! lmlm-dos qdos
-      open (67, form='formatted', file='parameters.gflle') ! lmlm-dos
-      df(:) = wez(:)/dble(nspin)   ! lmlm-dos
-      write (67, *) ielast, iemxd, natyp, nspin, lmax, qdosopt, df(1:ielast), & ! lmlm-dos
-        ez(1:ielast), korbit       ! lmlm-dos
-      close (67)                   ! lmlm-dos
-    end if                         ! OPT('lmlm-dos')                                                   ! lmlm-dos
+    if (opt('lmlm-dos')) then
+      qdosopt = 'n'
+      if (opt('qdos    ')) then
+        qdosopt = 'y'          
+      end if
+      open (67, form='formatted', file='parameters.gflle')
+      df(:) = wez(:)/dble(nspin)
+      write (67, *) ielast, iemxd, natyp, nspin, lmax, qdosopt, df(1:ielast), ez(1:ielast), korbit
+      close (67)
+    end if ! OPT('lmlm-dos')
 
     ! ------------------------------------------------------------------------
     ! LLY
     ! ------------------------------------------------------------------------
-    if (lly/=0) then               ! LLY
-
-      allocate (cdos0(ielast), stat=i_stat)
-      call memocc(i_stat, product(shape(cdos0))*kind(cdos0), 'CDOS0', 'main1c')
-      allocate (cdos1(ielast), stat=i_stat)
-      call memocc(i_stat, product(shape(cdos1))*kind(cdos1), 'CDOS1', 'main1c')
-      allocate (cdos2(natypd), stat=i_stat)
-      call memocc(i_stat, product(shape(cdos2))*kind(cdos2), 'CDOS2', 'main1c')
-      allocate (cdosat0(ielast), stat=i_stat)
-      call memocc(i_stat, product(shape(cdosat0))*kind(cdosat0), 'CDOSAT0', 'main1c')
-      allocate (cdosat1(ielast), stat=i_stat)
-      call memocc(i_stat, product(shape(cdosat1))*kind(cdosat1), 'CDOSAT1', 'main1c')
-      allocate (cdos_lly(ielast,nspind), stat=i_stat)
-      call memocc(i_stat, product(shape(cdos_lly))*kind(cdos_lly), 'CDOS_LLY', 'main1c')
-
-      ! LLY
-      ! Calculate free-space contribution to dos                              ! LLY
-      cdos0(1:ielast) = czero      ! LLY
-      cdos1(1:ielast) = czero      ! LLY
-      cdos2(1:naez) = czero        ! LLY
-      do i1 = 1, naez              ! LLY
-        cdosat0(1:ielast) = czero  ! LLY
-        cdosat1(1:ielast) = czero  ! LLY
-        icell = ntcell(i1)         ! LLY
-        do ie = 1, ielast          ! LLY
-          call rhoval0(ez(ie), drdi(1,i1), rmesh(1,i1), ipan(i1), & ! LLY
-            ircut(0,i1), irws(i1), thetas(1,1,icell), cdosat0(ie), & ! LLY
-            cdosat1(ie), irmd, lmax) ! LLY
+    if (lly/=0) then
+      ! Calculate free-space contribution to dos
+      cdos0(1:ielast) = czero
+      cdos1(1:ielast) = czero
+      cdos2(1:naez) = czero
+      do i1 = 1, naez
+        cdosat0(1:ielast) = czero
+        cdosat1(1:ielast) = czero
+        icell = ntcell(i1)       
+        do ie = 1, ielast        
+          call rhoval0(ez(ie), drdi(1,i1), rmesh(1,i1), ipan(i1), & 
+            ircut(0,i1), irws(i1), thetas(1,1,icell), cdosat0(ie), &
+            cdosat1(ie), irmd, lmax)
 
           ! calculate contribution from free space
+          cdos2(i1) = cdos2(i1) + cdosat1(ie)*wez(ie)
+        end do
+        cdos0(1:ielast) = cdos0(1:ielast) + cdosat0(1:ielast)
+        cdos1(1:ielast) = cdos1(1:ielast) + cdosat1(1:ielast)
+      end do
+      cdos0(:) = -cdos0(:)/pi
+      cdos1(:) = -cdos1(:)/pi
 
-          cdos2(i1) = cdos2(i1) + cdosat1(ie)*wez(ie) ! LLY
-        end do                     ! LLY
-        cdos0(1:ielast) = cdos0(1:ielast) + cdosat0(1:ielast) ! LLY
-        cdos1(1:ielast) = cdos1(1:ielast) + cdosat1(1:ielast) ! LLY
-      end do                       ! LLY
-      cdos0(:) = -cdos0(:)/pi      ! LLY
-      cdos1(:) = -cdos1(:)/pi      ! LLY
-      ! LLY
       if (myrank==master) then
-        open (701, file='freedos.dat', form='FORMATTED') ! LLY
-        do ie = 1, ielast          ! LLY
-          write (701, fmt='(10E16.8)') ez(ie), cdos0(ie), cdos1(ie) ! LLY
-        end do                     ! LLY
-        close (701)                ! LLY
-        open (701, file='singledos.dat', form='FORMATTED') ! LLY
-        do i1 = 1, natyp           ! LLY
-          write (701, fmt='(I5,10E16.8)') i1, cdos2(i1) ! LLY
-        end do                     ! LLY
-        close (701)                ! LLY
-      end if                       ! myrank==master
+        open (701, file='freedos.dat', form='FORMATTED')
+        do ie = 1, ielast
+          write (701, fmt='(10E16.8)') ez(ie), cdos0(ie), cdos1(ie)
+        end do     
+        close (701)
+        open (701, file='singledos.dat', form='FORMATTED')
+        do i1 = 1, natyp
+          write (701, fmt='(I5,10E16.8)') i1, cdos2(i1)
+        end do     
+        close (701)
+      end if ! myrank==master
 
       ! energy integration to get cdos_lly
-      cdos_lly(1:ielast, 1:nspin) = czero ! LLY
+      cdos_lly(1:ielast, 1:nspin) = czero
 
       if (t_lloyd%cdos_diff_lly_to_file) then
         if (myrank==master) then
-          open (701, file='cdosdiff_lly.dat', form='FORMATTED') ! LLY
-          do ispin = 1, nspin/(1+korbit) ! LLY
-            do ie = 1, ielast      ! LLY
-              read (701, fmt='(10e25.16)') eread, cdos_lly(ie, ispin) ! lly
-            end do                 ! LLY
-          end do                   ! LLY
-          close (701)              ! LLY
+          open (701, file='cdosdiff_lly.dat', form='FORMATTED')
+          do ispin = 1, nspin/(1+korbit)
+            do ie = 1, ielast
+              read (701, fmt='(10e25.16)') eread, cdos_lly(ie, ispin)
+            end do
+          end do
+          close (701)
         end if
 #ifdef CPP_MPI
         call mpi_bcast(cdos_lly, ielast*nspin, mpi_double_complex, master, t_mpi_c_grid%mympi_comm_at, ierr)
 #endif
-      else                         ! (t_lloyd%cdos_diff_lly_to_file)
+      else ! (t_lloyd%cdos_diff_lly_to_file)
 #ifdef CPP_MPI
         ie_start = t_mpi_c_grid%ioff_pt2(t_mpi_c_grid%myrank_at)
         ie_end = t_mpi_c_grid%ntot_pt2(t_mpi_c_grid%myrank_at)
@@ -373,12 +326,12 @@ contains
         ie_start = 0
         ie_end = ielast
 #endif
-        do ispin = 1, nspin/(1+korbit) ! lly
+        do ispin = 1, nspin/(1+korbit)
           do ie_num = 1, ie_end
             ie = ie_start + ie_num
             cdos_lly(ie, ispin) = t_lloyd%cdos(ie_num, ispin)
-          end do                   ! ie_num                                                 ! lly
-        end do                     ! ispin
+          end do ! ie_num
+        end do ! ispin
 #ifdef CPP_MPI
         ! MPI gather cdos_lly on all processors
         ihelp = ielast*nspin       ! IELAST*NSPIN
@@ -392,34 +345,32 @@ contains
         deallocate (work, stat=i_stat)
         call memocc(i_stat, i_all, 'work', 'main1c')
 #endif
-      end if                       ! (t_lloyd%cdos_diff_lly_to_file)            ! LLY
+      end if ! (t_lloyd%cdos_diff_lly_to_file)
 
-      ! Add free-space contribution cdos0                                  ! LLY
-      do ispin = 1, nspin/(1+korbit) ! LLY
-        cdos_lly(1:ielast, ispin) = cdos_lly(1:ielast, ispin) + real(korbit+1, kind=dp)*cdos0(1:ielast) ! LLY
-      end do                       ! LLY
-      do ispin = 1, nspin/(1+korbit) ! LLY
-        csum = czero               ! LLY
-        do ie = 1, ielast          ! LLY
-          csum = csum + cdos_lly(ie, ispin)*wez(ie) ! LLY
-        end do                     ! LLY
-        charge_lly(ispin) = -aimag(csum)*pi/nspinpot*(1+korbit) ! LLY
-      end do                       ! LLY
+      ! Add free-space contribution cdos0
+      do ispin = 1, nspin/(1+korbit)
+        cdos_lly(1:ielast, ispin) = cdos_lly(1:ielast, ispin) + real(korbit+1, kind=dp)*cdos0(1:ielast)
+      end do                       
+      do ispin = 1, nspin/(1+korbit)
+        csum = czero     
+        do ie = 1, ielast
+          csum = csum + cdos_lly(ie, ispin)*wez(ie)
+        end do                   
+        charge_lly(ispin) = -aimag(csum)*pi/nspinpot*(1+korbit)
+      end do                    
       if (myrank==master) then
-        open (701, file='cdos_lloyd.dat', form='formatted') ! LLY
-        do ispin = 1, nspin/(1+korbit) ! LLY
-          do ie = 1, ielast        ! LLY
-            write (701, fmt='(10e16.8)') ez(ie), cdos_lly(ie, ispin) ! LLY
-          end do                   ! LLY
-        end do                     ! LLY
-        close (701)                ! LLY
-        write (*, *) 'valence charge from lloyds formula:', (charge_lly(ispin), ispin=1, nspin) ! LLY
-        if (t_inc%i_write>0) then  ! LLY
-          write (1337, *) 'valence charge from lloyds formula:', (charge_lly(ispin), ispin=1, nspin) ! LLY
-        end if
-      end if                       ! myrank==master
+        open (701, file='cdos_lloyd.dat', form='formatted')
+        do ispin = 1, nspin/(1+korbit)
+          do ie = 1, ielast       
+            write (701, fmt='(10e16.8)') ez(ie), cdos_lly(ie, ispin)
+          end do   
+        end do  
+        close (701)
+        write (*, *) 'valence charge from lloyds formula:', (charge_lly(ispin), ispin=1, nspin)
+        if (t_inc%i_write>0) write (1337, *) 'valence charge from lloyds formula:', (charge_lly(ispin), ispin=1, nspin) 
+      end if ! myrank==master
 
-    end if                         ! LLY<>0                                                     ! LLY
+    end if ! LLY<>0
     ! -------------------------------------------------------------------------
     ! LLY
     ! -------------------------------------------------------------------------
@@ -624,92 +575,72 @@ contains
 #endif
 
 #ifdef CPP_MPI
-        ! move writeout of qdos file here                                           ! qdos
-        if (opt('qdos    ')) then    ! qdos
-          ! first communicate den array to write out qdos files                   ! qdos
-          idim = (lmaxd1+1)*ielast*nqdos*npotd ! qdos
-          allocate (workc(0:lmaxd1,ielast,nqdos,npotd)) ! qdos
-          call memocc(i_stat, product(shape(workc))*kind(workc), 'workc', 'main1c') ! qdos
-          workc = czero       ! qdos
-          ! qdos
-          call mpi_allreduce(den, workc, idim, mpi_double_complex, mpi_sum, & ! qdos
-            mpi_comm_world, ierr)    ! qdos
-          call zcopy(idim, workc, 1, den, 1) ! qdos
-          i_all = -product(shape(workc))*kind(workc) ! qdos
-          deallocate (workc, stat=i_stat) ! qdos
-          call memocc(i_stat, i_all, 'workc', 'main1c') ! qdos
-          ! qdos
-          if (myrank==master) then   ! qdos
-            ! qdos
-            do i1 = 1, natyp         ! qdos
-              ! qdos
-              do ispin = 1, nspin    ! qdos
-                ! qdos
-                if (natyp>=100) then ! qdos
-                  open (31, &        ! qdos
-                    file='qdos.'//char(48+i1/100)//char(48+mod(i1/10,10))// & ! qdos
-                    char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat') ! qdos
-                else                 ! qdos
-                  open (31, &        ! qdos
-                    file='qdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'// & ! qdos
-                    char(48+ispin)//'.dat') ! qdos
-                end if               ! qdos
-                call version_print_header(31) ! qdos
-                write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)', & ! qdos
-                  'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...' ! qdos
-                ! qdos
-                ipot = (i1-1)*nspinpot + ispin ! qdos
-                ! qdos
-                do ie = 1, ielast    ! qdos
-                  do iq = 1, nqdos   ! qdos
-                    dentot = czero ! qdos
-                    do l = 0, lmaxd1 ! qdos
-                      dentot = dentot + den(l, ie, iq, ipot) ! qdos
-                    end do           ! qdos
-                    write (31, 100) ez(ie), qvec(1, iq), qvec(2, iq), qvec(3, iq), -aimag(dentot)/pi, & ! qdos
-                      (-aimag(den(l,ie,iq,ipot))/pi, l=0, lmaxd1) ! qdos
-                  end do             ! IQ=1,NQDOS                                         ! qdos
-                end do               ! IE=1,IELAST                                           ! qdos
-                close (31)           ! qdos
-                ! qdos
-                if (test('compqdos')) then ! complex qdos
-                  if (natyp>=100) then ! complex qdos
-                    open (31, &      ! complex qdos
-                      file='cqdos.'//char(48+i1/100)//char(48+mod(i1/10,10))// & ! complex qdos
-                      char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat') ! complex qdos
-                  else               ! complex qdos
-                    open (31, &      ! complex qdos
-                      file='cqdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'// & ! complex qdos
-                      char(48+ispin)//'.dat') ! complex qdos
-                  end if             ! complex qdos
-                  call version_print_header(31) ! complex qdos
-                  write (31, '(A)') '#   lmax, natyp, nspin, nqdos, ielast:' ! complex qdos
-                  write (31, '(5I9)') lmax, natyp, nspin, nqdos, ielast ! complex qdos
-                  write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)', & ! complex qdos
-                    'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...' ! complex qdos
-                  ! complex qdos
-                  ipot = (i1-1)*nspinpot + ispin ! complex qdos
-                  ! complex qdos
-                  do ie = 1, ielast  ! complex qdos
-                    do iq = 1, nqdos ! complex qdos
-                      dentot = czero ! complex qdos
-                      do l = 0, lmaxd1 ! complex qdos
-                        den(l, ie, iq, ipot) = -2.0_dp/pi*den(l, ie, iq, ipot) ! complex qdos
-                        dentot = dentot + den(l, ie, iq, ipot) ! complex qdos
-                      end do         ! complex qdos
-                      write (31, 110) ez(ie), qvec(1, iq), qvec(2, iq), & ! complex qdos
-                        qvec(3, iq), dentot, (den(l,ie,iq,ipot), l=0, lmaxd1) ! complex qdos
-                    end do           ! IQ=1,NQDOS                                            ! complex qdos
-                  end do             ! IE=1,IELAST                                              ! complex qdos
-                  close (31)         ! complex qdos
-                end if               ! qdos
-                ! qdos
-              end do                 ! ISPIN=1,NSPIN                                             ! qdos
-            end do                   ! I1                                                            ! qdos
-          end if                     ! myrank_at==master                                              ! qdos
-        end if                       ! OPT('qdos    ')                                                    ! qdos
-100     format (5f10.6, 40e16.8)     ! qdos
-110     format (5f10.6, 80e16.8)     ! complex qdos
+        ! move writeout of qdos file here
+        if (opt('qdos    ')) then
+          ! first communicate den array to write out qdos files
+          idim = (lmaxd1+1)*ielast*nqdos*npotd
+          allocate (workc(0:lmaxd1,ielast,nqdos,npotd))
+          call memocc(i_stat, product(shape(workc))*kind(workc), 'workc', 'main1c')
+          workc = czero
+          call mpi_allreduce(den, workc, idim, mpi_double_complex, mpi_sum, mpi_comm_world, ierr)
+          call zcopy(idim, workc, 1, den, 1)
+          i_all = -product(shape(workc))*kind(workc)
+          deallocate (workc, stat=i_stat)
+          call memocc(i_stat, i_all, 'workc', 'main1c')
+
+          if (myrank==master) then
+            do i1 = 1, natyp
+              do ispin = 1, nspin
+                if (natyp>=100) then
+                  open (31, file='qdos.'//char(48+i1/100)//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat')
+                else
+                  open (31, file='qdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat')
+                end if
+                call version_print_header(31)
+                write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...'
+                ipot = (i1-1)*nspinpot + ispin
+                do ie = 1, ielast   
+                  do iq = 1, nqdos  
+                    dentot = czero
+                    do l = 0, lmaxd1
+                      dentot = dentot + den(l, ie, iq, ipot)
+                    end do
+                    write (31, 100) ez(ie), qvec(1, iq), qvec(2, iq), qvec(3, iq), -aimag(dentot)/pi, (-aimag(den(l,ie,iq,ipot))/pi, l=0, lmaxd1)
+                  end do ! IQ=1,NQDOS
+                end do ! IE=1,IELAST
+                close (31)
+
+                if (test('compqdos')) then
+                  if (natyp>=100) then
+                    open (31, file='cqdos.'//char(48+i1/100)//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat')
+                  else
+                    open (31, file='cqdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat')
+                  end if
+                  call version_print_header(31)
+                  write (31, '(A)') '#   lmax, natyp, nspin, nqdos, ielast:'
+                  write (31, '(5I9)') lmax, natyp, nspin, nqdos, ielast
+                  write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...'
+
+                  ipot = (i1-1)*nspinpot + ispin
+                  do ie = 1, ielast
+                    do iq = 1, nqdos
+                      dentot = czero
+                      do l = 0, lmaxd1
+                        den(l, ie, iq, ipot) = -2.0_dp/pi*den(l, ie, iq, ipot)
+                        dentot = dentot + den(l, ie, iq, ipot)
+                      end do
+                      write (31, 110) ez(ie), qvec(1, iq), qvec(2, iq), qvec(3, iq), dentot, (den(l,ie,iq,ipot), l=0, lmaxd1)
+                    end do ! IQ=1,NQDOS
+                  end do ! IE=1,IELAST
+                  close (31)
+                end if !compqdos
+
+              end do ! ISPIN=1,NSPIN
+            end do ! I1
+          end if ! myrank_at==master
+100       format (5f10.6, 40e16.8) ! qdos
+110       format (5f10.6, 80e16.8) ! complex qdos
+        end if ! OPT('qdos    ') 
 
         ! reset NQDOS number to avoid loo large communication which is not needed anyways for qdos run
         nqdos = 1
@@ -730,34 +661,29 @@ contains
 #endif
 
         ! lmdos writeout
-        if (myrank==master) then     ! lm-dos
-          ! IF (.not.OPT('qdos    ')) THEN                              ! lm-dos
-          if (opt('lmdos    ')) then ! lm-dos
-            do i1 = 1, natyp         ! lm-dos
-              do ispin = 1, nspin    ! lm-dos
-                ipot = (i1-1)*nspinpot + ispin ! lm-dos
-                if (natyp>=100) then ! lm-dos
-                  open (30, file='lmdos.'//char(48+i1/100)// & ! lm-dos
-                    char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'// & ! lm-dos
-                    char(48+ispin)//'.dat') ! lm-dos
-                else                 ! lm-dos
-                  open (30, file='lmdos.'//char(48+i1/10)// & ! lm-dos
-                    char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat') ! lm-dos
-                end if               ! lm-dos
+        if (myrank==master) then
+          if (opt('lmdos    ')) then
+            do i1 = 1, natyp
+              do ispin = 1, nspin
+                ipot = (i1-1)*nspinpot + ispin
+                if (natyp>=100) then
+                  open (30, file='lmdos.'//char(48+i1/100)//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat')
+                else
+                  open (30, file='lmdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat')
+                end if
                 call version_print_header(30)
-                write (30, *) ' '    ! lm-dos
-                write (30, 120) '# ISPIN=', ispin, ' I1=', i1 ! lm-dos
-120             format (a8, i3, a4, i5) ! lm-dos
-                do ie = 1, ielast    ! lm-dos
-                  write (30, 130) real(ez(ie), kind=dp), & ! lm-dos
-                    (-aimag(denlm(lm,ie,1,ipot))/pi, lm=1, lmmaxd) ! lm-dos
-                end do               ! IE                                                 ! lm-dos
-              end do                 ! ISPIN                                                 ! lm-dos
-130           format (30e12.4)       ! lm-dos
-              close (30)             ! lm-dos
-            end do                   ! I1                                                        ! lm-dos
-          end if                     ! not qdos option                                             ! lm-dos
-        end if                       ! myrank==master                                                 ! lm-dos
+                write (30, *) ' '
+                write (30, 120) '# ISPIN=', ispin, ' I1=', i1
+120             format (a8, i3, a4, i5)
+                do ie = 1, ielast
+                  write (30, 130) real(ez(ie), kind=dp), (-aimag(denlm(lm,ie,1,ipot))/pi, lm=1, lmmaxd)
+                end do ! IE
+              end do ! ISPIN
+130           format (30e12.4)
+              close (30)
+            end do ! I1
+          end if ! not qdos option
+        end if ! myrank==master
 #endif
 
       else ! new spin-orbit solver
@@ -815,14 +741,12 @@ contains
       call timing_start('main1c - serial part')
 #endif
 
-      ! In case of Lloyds formula renormalize valence charge                  ! LLY
-      if (lly>0) then              ! LLY
-        lmaxp1 = lmax              ! LLY
-        if (ins/=0) lmaxp1 = lmax + 1 ! LLY
-
+      ! In case of Lloyds formula renormalize valence charge
+      if (lly>0) then
+        lmaxp1 = lmax
+        if (ins/=0) lmaxp1 = lmax + 1
         call renorm_lly(cdos_lly, ielast, nspin, natyp, den(:,:,1,:), lmaxp1, conc, 1, ielast, wez, ircut, ipan, ez, zat, rho2ns, r2nef, denef, denefat, espv)
-
-      end if                       ! LLY
+      end if
 
       ! ----------------------------------------------------------------------
       ! NATYP
@@ -863,6 +787,8 @@ contains
       ! ----------------------------------------------------------------------
       ! NATYP
       ! ----------------------------------------------------------------------
+
+
       ! ----------------------------------------------------------------------
       ! LDA+U
       ! ----------------------------------------------------------------------
@@ -893,11 +819,12 @@ contains
         ! -------------------------------------------------------------------
         call wrldaupot(itrunldau, lopt, ueff, jeff, erefldau, natyp, wldau, uldau, phildau, irmd, natyp, nspind, mmaxd, irws)
       end if
-      ! ----------------------------------------------------------------------
-      ! LDA+U
-      ! ----------------------------------------------------------------------
 
+      ! -------------------------------------------------------------------
+      ! Write out lm charges and moments
+      ! -------------------------------------------------------------------
       call wrmoms(krel+korbit, natyp, nspinpot, texts, textl, textns, charge, muorb, lmax, lmaxd1)
+
       ! ----------------------------------------------------------------------
       ! ITERMDIR
       ! ----------------------------------------------------------------------
@@ -907,11 +834,9 @@ contains
           call mvecglobal(i1, iq, natyp, qmphi(iq), qmtet(iq), mvevi, mvevil, mvevief, natyp, lmax, nmvecmax)
         end do
       end if
+
       ! ----------------------------------------------------------------------
-      ! TERMDIR
-      ! ----------------------------------------------------------------------
-      ! ----------------------------------------------------------------------
-      ! TEST BRAHIM
+      ! write out DOS files
       ! ----------------------------------------------------------------------
       if (npol==0 .or. test('DOS     ')) then
         call wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, emin, emax, alat, tk, nacls1, nspinpot, natyp, conc, ielast, intervx, intervy, intervz, dostot)
@@ -919,10 +844,8 @@ contains
 
       ! ----------------------------------------------------------------------
       ! CORE STATES
+      !> @warning RHO_core is calculated only if also RHO_valence was @endwarning
       ! ----------------------------------------------------------------------
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! RHO_core is calculated only if also RHO_valence was
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if (npol/=0) then
         if (t_inc%i_write>0) then
           write (1337, *)
@@ -936,9 +859,8 @@ contains
             ipot1 = (i1-1)*nspinpot + 1
 
             call rhocore(nsra, ispin, nspin, i1, drdi(1,i1), rmesh(1,i1), visp(1,ipot), a(i1), b(i1), zat(i1), ircut(0,i1), rhoc(1,ipot1), ecore(1,ipot), ncore(ipot), &
-              lcore(1,ipot), cscl(1,krel*i1+(1-krel)), vtrel(1,i1), btrel(1,i1), rmrel(1,i1), drdirel(1,i1), r2drdirel(1,i1), zrel(i1), jwsrel(i1), irshift(i1), ecorerel(1,ipot1), &
-              nkcore(1,i1), kapcore(1,ipot1))
-
+              lcore(1,ipot), cscl(1,krel*i1+(1-krel)), vtrel(1,i1), btrel(1,i1), rmrel(1,i1), drdirel(1,i1), r2drdirel(1,i1), zrel(i1), jwsrel(i1), irshift(i1), &
+              ecorerel(1,ipot1), nkcore(1,i1), kapcore(1,ipot1))
           end do
         end do
         if (t_inc%i_write>0) then
@@ -947,8 +869,9 @@ contains
           write (1337, *)
         end if
       end if
+
       ! ----------------------------------------------------------------------
-      ! CORE STATES
+      ! Store density information in derived data type t_params to be used in main2
       ! ----------------------------------------------------------------------
       call save_density(t_params, rho2ns, r2nef, rhoc, denef, denefat, espv, ecore, idoldau, lopt, eu, edc, chrgsemicore, rhoorb, ecorerel, nkcore, kapcore, krel, natyp, npotd, &
         irmd, lmpotd, lmaxd1)
@@ -972,9 +895,6 @@ contains
         t_params%mvevi = mvevi
         t_params%mvevief = mvevief
       end if
-      ! ----------------------------------------------------------------------
-      ! TERMDIR
-      ! ----------------------------------------------------------------------
 
 
       if (t_inc%i_write>0) then
@@ -987,24 +907,144 @@ contains
 #ifdef CPP_MPI
     end if                         ! myrank==master
 #endif
+    ! ----------------------------------------------------------------------
+    ! Finished with main1c
+    ! ----------------------------------------------------------------------
 
-
-    if (lly/=0) then
-      ! cleanup allocations
-      deallocate (cdos0, stat=i_stat)
-      call memocc(i_stat, -product(shape(cdos0))*kind(cdos0), 'CDOS0', 'main1c')
-      deallocate (cdos1, stat=i_stat)
-      call memocc(i_stat, -product(shape(cdos1))*kind(cdos1), 'CDOS1', 'main1c')
-      deallocate (cdos2, stat=i_stat)
-      call memocc(i_stat, -product(shape(cdos2))*kind(cdos2), 'CDOS2', 'main1c')
-      deallocate (cdosat0, stat=i_stat)
-      call memocc(i_stat, -product(shape(cdosat0))*kind(cdosat0), 'CDOSAT0', 'main1c')
-      deallocate (cdosat1, stat=i_stat)
-      call memocc(i_stat, -product(shape(cdosat1))*kind(cdosat1), 'CDOSAT1', 'main1c')
-      deallocate (cdos_lly, stat=i_stat)
-      call memocc(i_stat, -product(shape(cdos_lly))*kind(cdos_lly), 'CDOS_LLY', 'main1c')
-    end if
+    ! cleanup allocations
+    call allocate_locals_main1c(-1, irmd, lmpotd, korbit, natypd, ielast, nspind, lly, lmaxd1, nqdos, npotd, &
+      lmmaxd, lmax,rho2n1,rho2n2, rho2ns, r2nef, cdos0, cdos1, cdos2, cdosat0, cdosat1, cdos_lly, den, denlm, qvec)
 
   end subroutine main1c
+
+
+  
+  !-------------------------------------------------------------------------------
+  !> Summary: Handels allocations and deallocation of work arrays in main1c
+  !> Author: Philipp Ruessmann
+  !> Category: KKRhost, initialization, profiling
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> The integer `allocmode` determines if arrays are allocated (`allocmode==1`)
+  !> or deallocated (`allocmode/=1`).
+  !-------------------------------------------------------------------------------
+  subroutine allocate_locals_main1c(allocmode, irmd, lmpotd, korbit, natypd, ielast, nspind, lly, lmaxd1, nqdos, npotd, &
+    lmmaxd, lmax, rho2n1, rho2n2, rho2ns, r2nef, cdos0, cdos1, cdos2, cdosat0, cdosat1, cdos_lly, den, denlm, qvec)
+
+    use :: mod_datatypes, only: dp
+    use :: mod_profiling, only: memocc
+    use :: mod_cinit, only: cinit
+    implicit none
+    
+    integer, intent(in) :: allocmode, irmd, lmpotd, korbit, natypd, ielast, nspind, lly, lmaxd1, npotd, lmmaxd, lmax
+    real (kind=dp), dimension (:, :), allocatable, intent(inout) :: qvec
+    real (kind=dp), dimension (:, :, :), allocatable, intent(inout) :: rho2n1
+    real (kind=dp), dimension (:, :, :), allocatable, intent(inout) :: rho2n2
+    real (kind=dp), dimension (:, :, :, :), allocatable, intent(inout) :: r2nef
+    real (kind=dp), dimension (:, :, :, :), allocatable, intent(inout) :: rho2ns
+    complex (kind=dp), dimension (:, :, :, :), allocatable, intent(inout) :: den
+    complex (kind=dp), dimension (:, :, :, :), allocatable, intent(inout) :: denlm
+    complex (kind=dp), dimension (:), allocatable, intent(inout) :: cdos0
+    complex (kind=dp), dimension (:), allocatable, intent(inout) :: cdos1
+    complex (kind=dp), dimension (:), allocatable, intent(inout) :: cdos2
+    complex (kind=dp), dimension (:), allocatable, intent(inout) :: cdosat0
+    complex (kind=dp), dimension (:), allocatable, intent(inout) :: cdosat1
+    complex (kind=dp), dimension (:, :), allocatable, intent(inout) :: cdos_lly
+    integer, intent(out) :: nqdos
+    integer :: i_stat, i1, iq
+    logical, external :: opt
+
+    if (allocmode==1) then
+
+      nqdos = 1
+      if (opt('qdos    ')) then
+        ! Read BZ path for qdos calculation:
+        open (67, file='qvec.dat')
+        read (67, *) nqdos
+        allocate (qvec(3,nqdos), stat=i_stat)
+        call memocc(i_stat, product(shape(qvec))*kind(qvec), 'QVEC', 'main1c')
+        do iq = 1, nqdos
+          read (67, *) (qvec(i1,iq), i1=1, 3)
+        end do
+        close (67)
+      end if
+
+      ! Allocate arrays
+      ! work arrays per atom
+      allocate (rho2n1(irmd,lmpotd,2*(1+korbit)), stat=i_stat)
+      call memocc(i_stat, product(shape(rho2n1))*kind(rho2n1), 'RHO2N1', 'main1c')
+      allocate (rho2n2(irmd,lmpotd,2*(1+korbit)), stat=i_stat)
+      call memocc(i_stat, product(shape(rho2n2))*kind(rho2n2), 'RHO2N2', 'main1c')
+      ! collected densities for all atoms
+      allocate (rho2ns(irmd,lmpotd,natypd,2), stat=i_stat)
+      call memocc(i_stat, product(shape(rho2ns))*kind(rho2ns), 'RHO2NS', 'main1c')
+      allocate (r2nef(irmd,lmpotd,natypd,2), stat=i_stat)
+      call memocc(i_stat, product(shape(r2nef))*kind(r2nef), 'R2NEF', 'main1c')
+      
+      rho2n1(:, :, :) = 0.0_dp
+      rho2n2(:, :, :) = 0.0_dp
+      
+      if (lly/=0) then
+        allocate (cdos0(ielast), stat=i_stat)
+        call memocc(i_stat, product(shape(cdos0))*kind(cdos0), 'CDOS0', 'main1c')
+        allocate (cdos1(ielast), stat=i_stat)
+        call memocc(i_stat, product(shape(cdos1))*kind(cdos1), 'CDOS1', 'main1c')
+        allocate (cdos2(natypd), stat=i_stat)
+        call memocc(i_stat, product(shape(cdos2))*kind(cdos2), 'CDOS2', 'main1c')
+        allocate (cdosat0(ielast), stat=i_stat)
+        call memocc(i_stat, product(shape(cdosat0))*kind(cdosat0), 'CDOSAT0', 'main1c')
+        allocate (cdosat1(ielast), stat=i_stat)
+        call memocc(i_stat, product(shape(cdosat1))*kind(cdosat1), 'CDOSAT1', 'main1c')
+        allocate (cdos_lly(ielast,nspind), stat=i_stat)
+        call memocc(i_stat, product(shape(cdos_lly))*kind(cdos_lly), 'CDOS_LLY', 'main1c')
+      end if ! LLY<>0
+      
+      allocate (den(0:lmaxd1,ielast,nqdos,npotd), stat=i_stat)
+      call memocc(i_stat, product(shape(den))*kind(den), 'DEN', 'main1c')
+      allocate (denlm(lmmaxd,ielast,nqdos,npotd), stat=i_stat)
+      call memocc(i_stat, product(shape(denlm))*kind(denlm), 'DENLM', 'main1c')
+      
+      call cinit(ielast*(lmax+2)*npotd*nqdos, den)
+      call cinit(ielast*(lmmaxd)*npotd*nqdos, denlm)
+
+    else ! allocmode/=1
+
+      if (opt('qdos    ')) then
+        deallocate (qvec, stat=i_stat)
+        call memocc(i_stat, -product(shape(qvec))*kind(qvec), 'QVEC', 'main1c')
+      end if
+
+      deallocate (rho2n1, stat=i_stat)
+      call memocc(i_stat, -product(shape(rho2n1))*kind(rho2n1), 'RHO2N1', 'main1c')
+      deallocate (rho2n2, stat=i_stat)
+      call memocc(i_stat, -product(shape(rho2n2))*kind(rho2n2), 'RHO2N2', 'main1c')
+      deallocate (rho2ns, stat=i_stat)
+      call memocc(i_stat, -product(shape(rho2ns))*kind(rho2ns), 'RHO2NS', 'main1c')
+      deallocate (r2nef, stat=i_stat)
+      call memocc(i_stat, -product(shape(r2nef))*kind(r2nef), 'R2NEF', 'main1c')
+
+      if (lly/=0) then
+        deallocate (cdos0, stat=i_stat)
+        call memocc(i_stat, -product(shape(cdos0))*kind(cdos0), 'CDOS0', 'main1c')
+        deallocate (cdos1, stat=i_stat)
+        call memocc(i_stat, -product(shape(cdos1))*kind(cdos1), 'CDOS1', 'main1c')
+        deallocate (cdos2, stat=i_stat)
+        call memocc(i_stat, -product(shape(cdos2))*kind(cdos2), 'CDOS2', 'main1c')
+        deallocate (cdosat0, stat=i_stat)
+        call memocc(i_stat, -product(shape(cdosat0))*kind(cdosat0), 'CDOSAT0', 'main1c')
+        deallocate (cdosat1, stat=i_stat)
+        call memocc(i_stat, -product(shape(cdosat1))*kind(cdosat1), 'CDOSAT1', 'main1c')
+        deallocate (cdos_lly, stat=i_stat)
+        call memocc(i_stat, -product(shape(cdos_lly))*kind(cdos_lly), 'CDOS_LLY', 'main1c')
+      end if ! LLY<>0
+
+      deallocate (den, stat=i_stat)
+      call memocc(i_stat, -product(shape(den))*kind(den), 'DEN', 'main1c')
+      deallocate (denlm, stat=i_stat)
+      call memocc(i_stat, -product(shape(denlm))*kind(denlm), 'DENLM', 'main1c')
+
+    end if ! allocmode
+
+  end subroutine allocate_locals_main1c
 
 end module mod_main1c
