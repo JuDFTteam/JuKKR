@@ -446,7 +446,7 @@ contains
     integer, intent (in) :: mympi_comm
     real (kind=dp), intent (inout) :: rho2ns(irmd, lmpotd, natypd, 2), r2nef(irmd, lmpotd, natypd, 2), espv(0:lmaxd1, npotd), denef, denefat(natypd), &
       rhoorb(irmd*krel+(1-krel), natypd), muorb(0:lmaxd1+1, 3, natypd)
-    complex (kind=dp), intent (inout) :: den(0:lmaxd1, ielast, npotd, nqdos), denlm(lmmaxd, ielast, npotd, nqdos), denmatc(mmaxd, mmaxd, npotd), mvevi(natypd, 3, nmvecmax), &
+    complex (kind=dp), intent (inout) :: den(0:lmaxd1, ielast, npotd, nqdos), denlm(lmmaxd, ielast, nqdos, npotd), denmatc(mmaxd, mmaxd, npotd), mvevi(natypd, 3, nmvecmax), &
       mvevil(0:lmaxd, natypd, 3, nmvecmax), mvevief(natypd, 3, nmvecmax)
 
     integer :: idim, ierr          ! , myrank_comm
@@ -489,7 +489,7 @@ contains
     call zcopy(idim, work4c, 1, den, 1)
     deallocate (work4c)
 
-    allocate (work4c(ielast,lmmaxd,npotd,nqdos), stat=ierr)
+    allocate (work4c(ielast,lmmaxd,nqdos,npotd), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
     work4c = (0.d0, 0.d0)
     idim = ielast*(lmmaxd)*npotd*nqdos

@@ -447,6 +447,10 @@ contains
       ! ----------------------------------------------------------------------
       do i1 = i1_start, i1_end
 
+        ! reset work arrays before computation
+        rho2n1(:,:,:) = 0.0_dp
+        rho2n2(:,:,:) = 0.0_dp
+
         ! -------------------------------------------------------------------
         ! SPIN
         ! -------------------------------------------------------------------
@@ -532,6 +536,7 @@ contains
 
         end if ! new spin-orbit solver
 
+
         ! copy results of rho2ns, r2nef, denef, and denefat to big arrays
         do ispin=1, nspin
           rho2ns(1:irmd, 1:lmpotd, i1, ispin) = rho2n1(1:irmd, 1:lmpotd, ispin)
@@ -541,6 +546,7 @@ contains
             denefat(i1) = denefat(i1) - 2.0_dp*aimag(den(l,ielast,1,ipot1+ispin-1))/pi/dble(nspinpot)
           end do
         end do ! ispin
+
 
         ! Transformation of ISPIN=1,2 from (spin-down,spin-up) to (charge-density,spin-density)
         if (nspin==2) then
@@ -553,6 +559,7 @@ contains
           r2nef(:,:,i1,2) = r2nef(:,:,i1,2) - 0.5_dp*r2nef(:,:,i1,1)
           r2nef(:,:,i1,1) = r2nef(:,:,i1,1) + r2nef(:,:,i1,2)
         end if
+
          
         ! test writeout 
         if (test('RHOVALW ')) then ! Bauer
@@ -881,7 +888,8 @@ contains
         do i1 = 1, natyp
           do lm = 1, lmpotd
             do ir = 1, irmd
-              write (67, fmt='(I6,2I5,2E25.16)') i1, lm, ir, rho2ns(ir, lm, i1, 1), rho2ns(ir, lm, i1, 2)
+              write (67, fmt='(I6,2I5,4E25.16)') i1, lm, ir, rho2ns(ir, lm, i1, 1), rho2ns(ir, lm, i1, 2)
+              !write (67, fmt='(I6,2I5,4E25.16)') i1, lm, ir, rho2ns(ir, lm, i1, 1), rho2ns(ir, lm, i1, 2), r2nef(ir, lm, i1, 1), r2nef(ir, lm, i1, 2)
             end do
           end do
         end do

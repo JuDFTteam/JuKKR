@@ -38,17 +38,16 @@ contains
 
   subroutine vintras(cmom, cminst, lmax, nspin, nstart, nend, rho2ns, v, r, drdi, irws, ircut, ipan, kshape, ntcell, ilm_map, ifunm, imaxsh, gsh, thetas, lmsp, lmpot, natyp)
 
-    use :: mod_constants
-    use :: global_variables
+    use :: mod_constants, only: pi
+    use :: global_variables, only: lmxspd, ngshd, irmd, nfund, ncelld, npotd, ipand, irid
     use :: mod_datatypes, only: dp
-    use :: mod_sinwk
-    use :: mod_soutk
+    use :: mod_sinwk, only: sinwk
+    use :: mod_soutk, only: soutk
 
     implicit none
 
     ! .. Input Variables
-    integer, intent (in) :: lmax   !! Maximum l component in wave function
-    ! expansion
+    integer, intent (in) :: lmax   !! Maximum l component in wave function expansion
     integer, intent (in) :: nend
     integer, intent (in) :: nspin  !! Counter for spin directions
     integer, intent (in) :: lmpot  !! (LPOT+1)**2
@@ -56,45 +55,20 @@ contains
     integer, intent (in) :: nstart
     integer, intent (in) :: kshape !! Exact treatment of WS cell
     integer, dimension (natyp), intent (in) :: irws !! R point at WS radius
-    integer, dimension (natyp), intent (in) :: ipan !! Number of panels in
-    ! non-MT-region
+    integer, dimension (natyp), intent (in) :: ipan !! Number of panels in non-MT-region
     integer, dimension (natyp), intent (in) :: ntcell !! Index for WS cell
     integer, dimension (0:lmpot), intent (in) :: imaxsh
     integer, dimension (ngshd, 3), intent (in) :: ilm_map
-    integer, dimension (natyp, lmxspd), intent (in) :: lmsp !! 0,1 :
-    ! non/-vanishing
-    ! lm=(l,m) component
-    ! of non-spherical
-    ! potential
+    integer, dimension (natyp, lmxspd), intent (in) :: lmsp !! 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
     integer, dimension (natyp, lmxspd), intent (in) :: ifunm
-    integer, dimension (0:ipand, natyp), intent (in) :: ircut !! R points of
-    ! panel borders
+    integer, dimension (0:ipand, natyp), intent (in) :: ircut !! R points of panel borders
     real (kind=dp), dimension (ngshd), intent (in) :: gsh
-    real (kind=dp), dimension (irmd, natyp), intent (in) :: r !! Radial mesh (
-    ! in units a Bohr)
-    real (kind=dp), dimension (irmd, natyp), intent (in) :: drdi !! Derivative
-    ! dr/di
-    real (kind=dp), dimension (irid, nfund, ncelld), intent (in) :: thetas !!
-    ! shape
-    ! function
-    ! THETA=0
-    ! outer
-    ! space
-    ! THETA
-    ! =1
-    ! inside
-    ! WS
-    ! cell
-    ! in
-    ! spherical
-    ! harmonics
-    ! expansion
-    real (kind=dp), dimension (irmd, lmpot, natyp, 2), intent (in) :: rho2ns
-    !! radial density
+    real (kind=dp), dimension (irmd, natyp), intent (in) :: r !! Radial mesh ( in units a Bohr)
+    real (kind=dp), dimension (irmd, natyp), intent (in) :: drdi !! Derivative dr/di
+    real (kind=dp), dimension (irid, nfund, ncelld), intent (in) :: thetas !! shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
+    real (kind=dp), dimension (irmd, lmpot, natyp, 2), intent (in) :: rho2ns !! radial density
     ! .. Output variables
-    real (kind=dp), dimension (lmpot, natyp), intent (out) :: cmom !! LM moment
-    ! of total
-    ! charge
+    real (kind=dp), dimension (lmpot, natyp), intent (out) :: cmom !! LM moment of total charge
     real (kind=dp), dimension (lmpot, natyp), intent (out) :: cminst
     real (kind=dp), dimension (irmd, lmpot, npotd), intent (out) :: v
     ! .. Local Variables
@@ -114,7 +88,7 @@ contains
         icell = ntcell(iatyp)
         do i = 0, ipan(iatyp)
           ircutm(i) = ircut(i, iatyp)
-        end do                     ! I
+        end do
       else
         irs1 = irws(iatyp)
         irc1 = irs1
@@ -147,7 +121,7 @@ contains
           if (kshape/=0) then
             do i = irs1 + 1, irc1
               v1(i) = 0.0e0_dp
-            end do                 ! I
+            end do
             istart = imaxsh(lm-1) + 1
             iend = imaxsh(lm)
             do j = istart, iend
@@ -157,9 +131,9 @@ contains
                 ifun = ifunm(icell, lm3)
                 do i = irs1 + 1, irc1
                   v1(i) = v1(i) + gsh(j)*rho2ns(i, lm2, iatyp, 1)*thetas(i-irs1, ifun, icell)
-                end do             ! I
+                end do
               end if
-            end do                 ! J
+            end do ! j=istart, iend
 
             do i = irs1 + 1, irc1
               rl = r(i, iatyp)**l
@@ -184,7 +158,7 @@ contains
           do i = 2, irc1
             rl = r(i, iatyp)**l
             v(i, lm, ipot) = fac*(vint1(i)/r(i,iatyp)/rl+vint2(i)*rl)
-          end do                   ! I
+          end do
           ! -------------------------------------------------------------------
           ! Store charge moment - in case of kshape.gt.0 this is the moment
           ! of the charge in the muffin tin sphere
@@ -198,11 +172,11 @@ contains
           if (nspin==2) then
             do i = 1, irc1
               v(i, lm, ipot-1) = v(i, lm, ipot)
-            end do                 ! I
+            end do
           end if
-        end do                     ! M
-      end do                       ! L
-    end do                         ! IATYP
+        end do ! m
+      end do ! l
+    end do ! iatyp
     return
 
   end subroutine vintras
