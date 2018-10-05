@@ -39,7 +39,7 @@ contains
     use :: mod_rll_global_solutions
     use :: mod_intcheb_cell
     use :: mod_rllsllsourceterms
-    use :: mod_rllsll
+    use :: mod_rllsll, only: rllsll
     use :: mod_spinorbit_ham
     use :: mod_sll_global_solutions
     use :: mod_rotatespinframe, only: rotatematrix, rotatevector
@@ -88,8 +88,8 @@ contains
     ! .. Output variables
     real (kind=dp), dimension (2), intent (out) :: angles_new
     real (kind=dp), dimension (0:lmax+1, 2), intent (out) :: espv
-    real (kind=dp), dimension (irmd, lmpotd, nspin*(1+korbit)), intent (out) :: r2nef
-    real (kind=dp), dimension (irmd, lmpotd, nspin*(1+korbit)), intent (out) :: rho2ns
+    real (kind=dp), dimension (irmd, lmpotd, nspin/(2-korbit)*(1+korbit)), intent (out) :: r2nef
+    real (kind=dp), dimension (irmd, lmpotd, nspin/(2-korbit)*(1+korbit)), intent (out) :: rho2ns
     complex (kind=dp), dimension (0:lmax+1, ielast, nspin), intent (out) :: den_out
 
     ! .. Local variables
@@ -114,7 +114,7 @@ contains
     complex (kind=dp) :: gmatprefactor
     integer, dimension (4) :: lmshift1
     integer, dimension (4) :: lmshift2
-    integer, dimension (nspin*lmmaxso) :: jlk_index
+    integer, dimension (nsra*lmmaxso) :: jlk_index
     real (kind=dp), dimension (3) :: moment
     real (kind=dp), dimension (3) :: denorbmom
     real (kind=dp), dimension (3) :: denorbmomns
@@ -221,7 +221,7 @@ contains
     call memocc(i_stat, product(shape(vnspll1))*kind(vnspll1), 'VNSPLL1', 'RHOVALNEW')
     vnspll0 = czero
 
-    call vllmat(1, nrmaxd, irmdnew, lmsize, lmmaxso, vnspll0, vins, lmpotd, cleb, icleb, iend, nspin, zat, rnew, use_sratrick, ncleb)
+    call vllmat(1, nrmaxd, irmdnew, lmsize, lmmaxso, vnspll0, vins, lmpotd, cleb, icleb, iend, nspin/(2-korbit), zat, rnew, use_sratrick, ncleb)
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! LDAU
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -243,7 +243,7 @@ contains
 
     ! initial allocate
     if (nsra==2) then
-      allocate (vnspll(2*lmmaxso,2*lmmaxso,irmdnew,0:nth-1), stat=i_stat)
+      allocate (vnspll(nsra*lmmaxso,nsra*lmmaxso,irmdnew,0:nth-1), stat=i_stat)
       call memocc(i_stat, product(shape(vnspll))*kind(vnspll), 'VNSPLL', 'RHOVALNEW')
     else
       allocate (vnspll(lmmaxso,lmmaxso,irmdnew,0:nth-1), stat=i_stat)
@@ -278,13 +278,13 @@ contains
     call memocc(i_stat, product(shape(rho2nsc))*kind(rho2nsc), 'RHO2NSC', 'RHOVALNEW')
     allocate (rho2nsc_loop(irmdnew,lmpotd,nspin*(1+korbit),ielast), stat=i_stat)
     call memocc(i_stat, product(shape(rho2nsc_loop))*kind(rho2nsc_loop), 'RHO2NSC_loop', 'RHOVALNEW')
-    allocate (rho2nsnew(irmd,lmpotd,nspin*(1+korbit)), stat=i_stat)
+    allocate (rho2nsnew(irmd,lmpotd,nspin/(2-korbit)*(1+korbit)), stat=i_stat)
     call memocc(i_stat, product(shape(rho2nsnew))*kind(rho2nsnew), 'RHO2NSNEW', 'RHOVALNEW')
     allocate (r2nefc(irmdnew,lmpotd,nspin*(1+korbit)), stat=i_stat)
     call memocc(i_stat, product(shape(r2nefc))*kind(r2nefc), 'R2NEFC', 'RHOVALNEW')
     allocate (r2nefc_loop(irmdnew,lmpotd,nspin*(1+korbit),0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(r2nefc_loop))*kind(r2nefc_loop), 'R2NEFC_loop', 'RHOVALNEW')
-    allocate (r2nefnew(irmd,lmpotd,nspin*(1+korbit)), stat=i_stat)
+    allocate (r2nefnew(irmd,lmpotd,nspin/(2-korbit)*(1+korbit)), stat=i_stat)
     call memocc(i_stat, product(shape(r2nefnew))*kind(r2nefnew), 'R2NEFNEW', 'RHOVALNEW')
     allocate (r2orbc(irmdnew,lmpotd,nspin*(1+korbit),0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(r2orbc))*kind(r2orbc), 'R2ORBC', 'RHOVALNEW')
@@ -358,9 +358,9 @@ contains
       ! ! qdos ruess
       allocate (gflle(lmmaxso,lmmaxso,ielast,nqdos), stat=i_stat) ! qdos ruess
       call memocc(i_stat, product(shape(gflle))*kind(gflle), 'GFLLE', 'RHOVALNEW') ! qdos ruess
-      allocate (den(0:lmaxd1,ielast,nqdos,nspin), stat=i_stat) ! qdos ruess
+      allocate (den(0:lmaxd1,ielast,nqdos,nspin/(2-korbit)), stat=i_stat) ! qdos ruess
       call memocc(i_stat, product(shape(den))*kind(den), 'DEN', 'RHOVALNEW') ! qdos ruess
-      allocate (denlm(lmsize,ielast,nqdos,nspin), stat=i_stat) ! qdos ruess
+      allocate (denlm(lmsize,ielast,nqdos,nspin/(2-korbit)), stat=i_stat) ! qdos ruess
       call memocc(i_stat, product(shape(denlm))*kind(qvec), 'DENLM', 'RHOVALNEW') ! qdos ruess
 100   if (ierr/=0) stop 'ERROR READING ''qvec.dat''' ! qdos ruess
     end if                         ! OPT('qdos    ')                                                     ! qdos ruess
@@ -427,9 +427,8 @@ contains
       eryd = ez(ie)
       ek = sqrt(eryd)
 
+      ! set energy integration weight
       df = wez(ie)/dble(nspin)
-      ! correct double counting with explicit spin loop and artificial nspin==1:
-      if (test('NOSOC   ')) df = df / 2.0_dp
 
       if (nsra==2) then
         ek = sqrt(eryd+eryd*eryd/(cvlight*cvlight))*(1d0+eryd/(cvlight*cvlight))
@@ -488,7 +487,7 @@ contains
 
         ! using spherical potential as reference
         if (use_sratrick==1) then
-          call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, zat, eryd, lmpotd, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk(:,:,ith), jlk(:,:,ith), &
+          call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin/(2-korbit), zat, eryd, lmpotd, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk(:,:,ith), jlk(:,:,ith), &
             hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, tmatsph(:,ith), alphasph, use_sratrick)
         end if
 
@@ -553,7 +552,7 @@ contains
         ! using spherical potential as reference
         ! notice that exchange the order of left and right hankel/bessel functions
         if (use_sratrick==1) then
-          call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, zat, eryd, lmpotd, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), &
+          call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin/(2-korbit), zat, eryd, lmpotd, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), &
             hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, alphasph, tmatsph(:,ith), use_sratrick)
         end if
 
@@ -610,9 +609,9 @@ contains
         end do
         ! calculate density
         call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, df, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll(:,:,:,ith), & ! SLL(:,:,:,ith), commented out since sll is not used in rhooutnew
-          rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), rho2nsc_loop(:,:,:,ie), 0, gflle(:,:,ie,iq), rpan_intervall, ipan_intervall, nspin)
+          rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), rho2nsc_loop(:,:,:,ie), 0, gflle(:,:,ie,iq), rpan_intervall, ipan_intervall, nspin/(2-korbit))
 
-        do jspin = 1, nspin*(1+korbit)
+        do jspin = 1, nspin/(2-korbit)*(1+korbit)
           do lm1 = 0, lmax
             cdentemp(:, ith) = czero
             dentemp = czero
@@ -643,10 +642,11 @@ contains
             call intcheb_cell(cdentemp(:,ith), dentemp, rpan_intervall, ipan_intervall, npan_tot, ncheb, irmdnew)
             den(lmaxd1, ie, iq, jspin) = dentemp
             rho2int(jspin) = rho2int(jspin) + den(lmaxd1, ie, iq, jspin)*df
+
+            espv(0:lmaxd1, jspin) = espv(0:lmaxd1, jspin) + aimag(eryd*den(0:lmaxd1,ie,iq,jspin)*df)
           end if
         end do                     ! JSPIN
 
-        espv(0:lmaxd1, 1:nspin) = espv(0:lmaxd1, 1:nspin) + aimag(eryd*den(0:lmaxd1,ie,iq,1:nspin)*df)
       end do                       ! IQ = 1,NQDOS
 
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -655,7 +655,7 @@ contains
       if (ie==ielast .and. ldorhoef) then
         call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, cone, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll(:,:,:,ith), & ! SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
           rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), r2nefc_loop(:,:,:,ith), 0, gflle_part(:,:,ith), rpan_intervall, &
-          ipan_intervall, nspin)
+          ipan_intervall, nspin/(2-korbit))
       end if
 
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -708,109 +708,92 @@ contains
     end do
 
 #ifdef CPP_MPI
-    if (opt('qdos    ')) then      ! qdos
-      ! first communicate den array to write out qdos files                      ! qdos
-      idim = (lmaxd1+1)*ielast*nspin*nqdos ! qdos
-      allocate (workc(0:lmaxd1,ielast,nspin,nqdos), stat=i_stat) ! qdos
-      call memocc(i_stat, product(shape(workc))*kind(workc), 'workc', 'RHOVALNEW') ! qdos
-      workc = czero                ! qdos
-      call mpi_reduce(den, workc, idim, mpi_double_complex, mpi_sum, master, & ! qdos
-        t_mpi_c_grid%mympi_comm_at, ierr) ! qdos
-      call zcopy(idim, workc, 1, den, 1) ! qdos
-      i_all = -product(shape(workc))*kind(workc) ! qdos
-      deallocate (workc, stat=i_stat) ! qdos
-      call memocc(i_stat, i_all, 'workc', 'RHOVALNEW') ! qdos
-      ! ! qdos
-      if (t_mpi_c_grid%myrank_at==master) then ! qdos
-        ie_start = 0               ! qdos
-        ie_end = ielast            ! qdos
-        do ie_num = 1, ie_end      ! qdos
-          ie = ie_start + ie_num   ! qdos
-          do iq = 1, nqdos         ! qdos
-            if ((iq==1) .and. (ie_num==1)) then ! qdos
-              if (natyp>=100) then ! qdos
+    if (opt('qdos    ')) then                                                                                    ! qdos
+      ! first communicate den array to write out qdos files                                                      ! qdos
+      idim = (lmaxd1+1)*ielast*nspin/(2-korbit)*nqdos                                                                       ! qdos
+      allocate (workc(0:lmaxd1,ielast,nspin/(2-korbit),nqdos), stat=i_stat)                                                 ! qdos
+      call memocc(i_stat, product(shape(workc))*kind(workc), 'workc', 'RHOVALNEW')                               ! qdos
+      workc = czero                                                                                              ! qdos
+      call mpi_reduce(den, workc, idim, mpi_double_complex, mpi_sum, master, t_mpi_c_grid%mympi_comm_at, ierr)   ! qdos
+      call zcopy(idim, workc, 1, den, 1)                                                                         ! qdos
+      i_all = -product(shape(workc))*kind(workc)                                                                 ! qdos
+      deallocate (workc, stat=i_stat)                                                                            ! qdos
+      call memocc(i_stat, i_all, 'workc', 'RHOVALNEW')                                                           ! qdos
+                                                                                                                 
+      if (t_mpi_c_grid%myrank_at==master) then                                                                   ! qdos
+        ie_start = 0                                                                                             ! qdos
+        ie_end = ielast                                                                                          ! qdos
+        do ie_num = 1, ie_end                                                                                    ! qdos
+          ie = ie_start + ie_num                                                                                 ! qdos
+          do iq = 1, nqdos                                                                                       ! qdos
+            if ((iq==1) .and. (ie_num==1)) then                                                                  ! qdos
+              if (natyp>=100) then                                                                               ! qdos
                 open (31, file='qdos.'//char(48+i1/100)//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+1)//'.dat') ! qdos
                 open (32, file='qdos.'//char(48+i1/100)//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+2)//'.dat') ! qdos
-              else                 ! qdos
-                open (31, file='qdos.'//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+1)//'.dat') ! qdos
-                open (32, file='qdos.'//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+2)//'.dat') ! qdos
-              end if               ! qdos
-              call version_print_header(31) ! qdos
-              write (31, *) ' '    ! qdos
-              write (31, 150) '# ISPIN=', 1, ' I1=', i1 ! qdos
-              write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', & ! qdos
-                'k_z', 'DEN_tot', 'DEN_s,p,...' ! qdos
-              if (nspin>1) then    ! qdos
-                call version_print_header(32) ! qdos
-                write (32, *) ' '  ! qdos
-                write (32, 150) '# ISPIN=', 2, ' I1=', i1 ! qdos
-                write (32, '(7(A,3X))') '#   Re(E)', 'Im(E)', & ! qdos
-                  'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...' ! qdos
-              end if               ! qdos
-            end if                 ! IQ.EQ.1                                                 ! qdos
-            do jspin = 1, nspin    ! qdos
-              dentot(jspin) = cmplx(0.d0, 0.d0, kind=dp) ! qdos
-              do l1 = 0, lmaxd1    ! qdos
-                dentot(jspin) = dentot(jspin) + den(l1, ie, iq, jspin) ! qdos
-              end do               ! qdos
-            end do                 ! qdos
-            ! write qdos.nn.s.dat                                          ! qdos
-            write (31, 120) ez(ie), qvec(1, iq), qvec(2, iq), qvec(3, iq), & ! qdos
-              -aimag(dentot(1))/pi, (-aimag(den(l1,ie,iq,1))/pi, l1=0, lmaxd1) ! qdos
-            write (32, 120) ez(ie), qvec(1, iq), qvec(2, iq), qvec(3, iq), & ! qdos
-              -aimag(dentot(2))/pi, (-aimag(den(l1,ie,iq,2))/pi, l1=0, lmaxd1) ! qdos
-120         format (5f10.6, 40e16.8) ! qdos
-            ! ! qdos
-            if (test('compqdos')) then ! complex qdos
-              if ((iq==1) .and. (ie_num==1)) then ! complex qdos
-                if (natyp>=100) then ! complex qdos
-                  open (31, &      ! complex qdos
-                    file='cqdos.'//char(48+i1/100)// & ! complex qdos
-                    char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.' & ! complex qdos
-                    //char(48+1)//'.dat') ! complex qdos
-                  open (32, &      ! complex qdos
-                    file='cqdos.'//char(48+i1/100)// & ! complex qdos
-                    char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.' & ! complex qdos
-                    //char(48+2)//'.dat') ! complex qdos
-                else               ! complex qdos
-                  open (31, file='cqdos.'//char(48+mod(i1/10,10))// & ! complex qdos
-                    char(48+mod(i1,10))//'.'//char(48+1)//'.dat') ! complex qdos
-                  open (32, file='cqdos.'//char(48+mod(i1/10,10))// & ! complex qdos
-                    char(48+mod(i1,10))//'.'//char(48+2)//'.dat') ! complex qdos
-                end if             ! complex qdos
-                call version_print_header(31) ! complex qdos
-                write (31, *) ' '  ! complex qdos
-                write (31, '(A)') '#   lmax, natyp, nspin, nqdos, ielast:' ! complex qdos
-                write (31, '(5I9)') lmax, natyp, nspin, nqdos, ielast ! complex qdos
-                write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)', & ! complex qdos
-                  'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...' ! complex qdos
-                if (nspin>1) then  ! complex qdos
-                  call version_print_header(32) ! complex qdos
-                  write (32, *) ' ' ! complex qdos
-                  write (32, '(A)') '# lmax, natyp, nspin, nqdos, ielast:' ! complex qdos
-                  write (32, '(5I9)') lmax, natyp, nspin, nqdos, ielast ! complex qdos
-                  write (32, '(7(A,3X))') '#   Re(E)', 'Im(E)', & ! complex qdos
-                    'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...' ! complex qdos
-                end if             ! complex qdos
-              end if               ! IQ.EQ.1                                              ! complex qdos
-              do jspin = 1, nspin  ! complex qdos
-                dentot(jspin) = cmplx(0.d0, 0.d0, kind=dp) ! complex qdos
-                do l1 = 0, lmaxd1  ! complex qdos
-                  dentot(jspin) = dentot(jspin) + den(l1, ie, iq, jspin) ! complex qdos
-                end do             ! complex qdos
-              end do               ! complex qdos
-              ! write qdos.nn.s.dat                                       ! complex qdos
-              write (31, 130) ez(ie), qvec(1, iq), qvec(2, iq), qvec(3, iq), & ! complex qdos
-                dentot(1), (den(l1,ie,iq,1), l1=0, lmaxd1) ! complex qdos
-              write (32, 130) ez(ie), qvec(1, iq), qvec(2, iq), qvec(3, iq), & ! complex qdos
-                dentot(2), (den(l1,ie,iq,2), l1=0, lmaxd1) ! complex qdos
-130           format (6f10.6, 80e16.8) ! complex qdos
-            end if                 ! complex qdos
-            ! qdos
-          end do                   ! IQ                                                            ! qdos
-        end do                     ! IE                                                               ! qdos
-      end if                       ! myrank_at==master                                                  ! qdos
-    end if                         ! OPT('qdos    ')                                                  ! qdos
+              else                                                                                               ! qdos
+                open (31, file='qdos.'//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+1)//'.dat')    ! qdos
+                open (32, file='qdos.'//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+2)//'.dat')    ! qdos
+              end if                                                                                             ! qdos
+              call version_print_header(31)                                                                      ! qdos
+              write (31, *) ' '                                                                                  ! qdos
+              write (31, 150) '# ISPIN=', 1, ' I1=', i1                                                          ! qdos
+              write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...'        ! qdos
+              if (nspin>1) then                                                                                  ! qdos
+                call version_print_header(32)                                                                    ! qdos
+                write (32, *) ' '                                                                                ! qdos
+                write (32, 150) '# ISPIN=', 2, ' I1=', i1                                                        ! qdos
+                write (32, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...'      ! qdos
+              end if                                                                                             ! qdos
+            end if ! IQ.EQ.1                                                                                     ! qdos
+            do jspin = 1, nspin/(2-korbit)                                                                                  ! qdos
+              dentot(jspin) = cmplx(0.d0, 0.d0, kind=dp)                                                         ! qdos
+              do l1 = 0, lmaxd1                                                                                  ! qdos
+                dentot(jspin) = dentot(jspin) + den(l1, ie, iq, jspin)                                           ! qdos
+              end do                                                                                             ! qdos
+            end do                                                                                               ! qdos
+            ! write qdos.nn.s.dat                                                                                ! qdos
+            write (31, 120) ez(ie), qvec(1, iq), qvec(2, iq), qvec(3, iq), -aimag(dentot(1))/pi, (-aimag(den(l1,ie,iq,1))/pi, l1=0, lmaxd1) ! qdos
+            write (32, 120) ez(ie), qvec(1, iq), qvec(2, iq), qvec(3, iq), -aimag(dentot(2))/pi, (-aimag(den(l1,ie,iq,2))/pi, l1=0, lmaxd1) ! qdos
+120         format (5f10.6, 40e16.8)                                                                             ! qdos
+
+            if (test('compqdos')) then                                                                                            ! complex qdos
+              if ((iq==1) .and. (ie_num==1)) then                                                                                 ! complex qdos
+                if (natyp>=100) then                                                                                              ! complex qdos
+                  open (31, file='cqdos.'//char(48+i1/100)//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+1)//'.dat') ! complex qdos
+                  open (32, file='cqdos.'//char(48+i1/100)//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+2)//'.dat') ! complex qdos
+                else                                                                                                              ! complex qdos
+                  open (31, file='cqdos.'//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+1)//'.dat')                  ! complex qdos
+                  open (32, file='cqdos.'//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+2)//'.dat')                  ! complex qdos
+                end if                                                                                                            ! complex qdos
+                call version_print_header(31)                                                                                     ! complex qdos
+                write (31, *) ' '                                                                                                 ! complex qdos
+                write (31, '(A)') '#   lmax, natyp, nspin, nqdos, ielast:'                                                        ! complex qdos
+                write (31, '(5I9)') lmax, natyp, nspin, nqdos, ielast                                                             ! complex qdos
+                write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...'                       ! complex qdos
+                if (nspin>1) then                                                                                                 ! complex qdos
+                  call version_print_header(32)                                                                                   ! complex qdos
+                  write (32, *) ' '                                                                                               ! complex qdos
+                  write (32, '(A)') '# lmax, natyp, nspin, nqdos, ielast:'                                                        ! complex qdos
+                  write (32, '(5I9)') lmax, natyp, nspin, nqdos, ielast                                                           ! complex qdos
+                  write (32, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...'                     ! complex qdos
+                end if                                                                                                            ! complex qdos
+              end if ! IQ.EQ.1                                                                                                    ! complex qdos
+              do jspin = 1, nspin/(2-korbit)                                                                                                 ! complex qdos
+                dentot(jspin) = cmplx(0.d0, 0.d0, kind=dp)                                                                        ! complex qdos
+                do l1 = 0, lmaxd1                                                                                                 ! complex qdos
+                  dentot(jspin) = dentot(jspin) + den(l1, ie, iq, jspin)                                                          ! complex qdos
+                end do                                                                                                            ! complex qdos
+              end do                                                                                                              ! complex qdos
+              ! write qdos.nn.s.dat                                                                                               ! complex qdos
+              write (31, 130) ez(ie), qvec(1, iq), qvec(2, iq), qvec(3, iq), dentot(1), (den(l1,ie,iq,1), l1=0, lmaxd1)           ! complex qdos
+              write (32, 130) ez(ie), qvec(1, iq), qvec(2, iq), qvec(3, iq), dentot(2), (den(l1,ie,iq,2), l1=0, lmaxd1)           ! complex qdos
+130           format (6f10.6, 80e16.8)                                                                                            ! complex qdos
+            end if                                                                                                                ! complex qdos
+                     
+          end do ! IQ             ! qdos
+        end do ! IE               ! qdos
+      end if ! myrank_at==master  ! qdos
+    end if ! OPT('qdos    ')      ! qdos
 #endif
 
 #ifdef CPP_MPI
@@ -839,7 +822,7 @@ contains
       denorbmomlm = 0.0d0
       denorbmomns = 0.0d0
     end if
-    call mympi_main1c_comm_newsosol(nspin, korbit, irmdnew, lmpotd, lmax, lmaxd1, lmsize, lmmaxso, ielast, nqdos, den, denlm, gflle, rho2nsc, r2nefc, rho2int, espv, muorb, denorbmom, denorbmomsp, &
+    call mympi_main1c_comm_newsosol(nspin/(2-korbit), korbit, irmdnew, lmpotd, lmax, lmaxd1, lmsize, lmmaxso, ielast, nqdos, den, denlm, gflle, rho2nsc, r2nefc, rho2int, espv, muorb, denorbmom, denorbmomsp, &
       denorbmomlm, denorbmomns, t_mpi_c_grid%mympi_comm_at)
 #ifdef CPP_TIMING
     call timing_pause('main1c - communication')
@@ -921,7 +904,7 @@ contains
       allocate (rhonewtemp(irws,lmpotd), stat=i_stat)
       call memocc(i_stat, product(shape(rhonewtemp))*kind(rhonewtemp), 'RHONEWTEMP', 'RHOVALNEW')
 
-      do jspin = 1, nspin*(1+korbit)
+      do jspin = 1, nspin/(2-korbit)*(1+korbit)
         rhotemp = czero
         rhonewtemp = czero
         do lm1 = 1, lmpotd
@@ -997,14 +980,14 @@ contains
         r2nef(:, :, :) = aimag(r2nefnew(:,:,:))
       end if
 
-      den_out(0:lmaxd1, 1:ielast, 1:nspin) = den(0:lmaxd1, 1:ielast, 1, 1:nspin)
+      den_out(0:lmaxd1, 1:ielast, 1:nspin/(2-korbit)) = den(0:lmaxd1, 1:ielast, 1, 1:nspin/(2-korbit))
 
 
 #ifdef CPP_MPI
     end if                         ! (myrank==master)
 
     ! communicate den_out to all processors with the same atom number
-    idim = (lmax+2)*ielast*nspin
+    idim = (lmax+2)*ielast*nspin/(2-korbit)
     call mpi_bcast(den_out, idim, mpi_double_complex, master, t_mpi_c_grid%mympi_comm_at, ierr)
     if (ierr/=mpi_success) stop 'error bcast den_out in rhovalnew'
     idim = 2

@@ -484,11 +484,11 @@ contains
 #ifdef CPP_TIMING
             call timing_start('main1c - rhovalnew')
 #endif
-            call rhovalnew(ldorhoef, ielast, nsra, nspin/(2-korbit), lmax, ez, wez, zat(i1), socscale(i1), cleb(1,1), icleb, iend, &
+            call rhovalnew(ldorhoef, ielast, nsra, nspin, lmax, ez, wez, zat(i1), socscale(i1), cleb(1,1), icleb, iend, &
               ifunm1(1,icell), lmsp1(1,icell), ncheb, npan_tot(i1), npan_log_at(i1), npan_eq_at(i1), rmesh(1,i1), irws(i1), &
               rpan_intervall(0,i1), ipan_intervall(0,i1), rnew(1,i1), vinsnew, thetasnew(1,1,icell), theta(i1), phi(i1), i1, &
-              ipot, den1(0,1,ispin), espv1(0,ispin), rho2n1(1,1,ispin), rho2n2(1,1,ispin), muorb(0,1,i1), angles_new(:,i1), idoldau, lopt(i1), wldau(1,1,1,i1), & ! LDAU
-              denmatn(1,1,1,1,i1), natyp, ispin) ! LDAU
+              ipot, den1(0,1,ispin), espv1(0,ispin), rho2n1(1,1,ispin), rho2n2(1,1,ispin), muorb(0,1,i1), angles_new(:,i1), &
+              idoldau, lopt(i1), wldau(1,1,1,i1), denmatn(1,1,1,1,i1), natyp, ispin) ! LDAU
 #ifdef CPP_TIMING
             call timing_pause('main1c - rhovalnew')
 #endif

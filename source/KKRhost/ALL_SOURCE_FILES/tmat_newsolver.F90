@@ -90,7 +90,7 @@ contains
     integer :: i_stat, lmsize
     integer :: use_fullgmat !! use (l,m,s) coupled matrices or not for 'NOSOC' test option (1/0)
     complex (kind=dp) :: eryd !! energy in Ry
-    complex (kind=dp), dimension (2*(lmax+1)) :: alphasph !! spherical part of alpha-matrix
+    complex (kind=dp), dimension (nspin*(lmax+1)) :: alphasph !! spherical part of alpha-matrix
     ! .. Local allocatable arrays
     integer, dimension (:), allocatable :: jlk_index
     real (kind=dp), dimension (:, :, :), allocatable :: vins     !! Non-spherical part of the potential
@@ -425,6 +425,35 @@ contains
           tmatsph(:, ith) = czero
           call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin/(2-korbit), zat, eryd, lmpot, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk(:,:,ith), jlk(:,:,ith), &
             hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, tmatsph(:,ith), alphasph, use_sratrick)
+#ifdef CPP_BdG
+        if (test('BdG_dev ')) then
+          write (filename, '(A,I0.3,A,I0.3,A)') 'tmatsph_atom_', i1, '_energ_', ie, '.dat'
+          open (888888, file=trim(filename), form='formatted')
+          write (888888, '(A,I9,A,I9,A,I9)') '# dimension: lmmaxso=', lmmaxso, ' lmmaxso=', lmmaxso
+          write (888888, '(2ES21.9)') tmatsph(:, ith)
+          close (888888)
+          write (filename, '(A,I0.3,A,I0.3,A)') 'rll_sph_jlk_atom_', i1, '_energ_', ie, '.dat'
+          open (888888, file=trim(filename), form='formatted')
+          write (888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: 4*(LMAX+1)=', 4*(lmax+1), ' IRMDNEW=', irmdnew, ' ; ERYD=', eryd
+          write (888888, '(2ES21.9)') jlk(:, :, ith)
+          close (888888)
+          write (filename, '(A,I0.3,A,I0.3,A)') 'rll_sph_hlk_atom_', i1, '_energ_', ie, '.dat'
+          open (888888, file=trim(filename), form='formatted')
+          write (888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: 4*(LMAX+1)=', 4*(lmax+1), ' IRMDNEW=', irmdnew, ' ; ERYD=', eryd
+          write (888888, '(2ES21.9)') hlk(:, :, ith)
+          close (888888)
+          write (filename, '(A,I0.3,A,I0.3,A)') 'rll_sph_jlk2_atom_', i1, '_energ_', ie, '.dat'
+          open (888888, file=trim(filename), form='formatted')
+          write (888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: 4*(LMAX+1)=', 4*(lmax+1), ' IRMDNEW=', irmdnew, ' ; ERYD=', eryd
+          write (888888, '(2ES21.9)') jlk2(:, :, ith)
+          close (888888)
+          write (filename, '(A,I0.3,A,I0.3,A)') 'rll_sph_hlk2_atom_', i1, '_energ_', ie, '.dat'
+          open (888888, file=trim(filename), form='formatted')
+          write (888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: 4*(LMAX+1)=', 4*(lmax+1), ' IRMDNEW=', irmdnew, ' ; ERYD=', eryd
+          write (888888, '(2ES21.9)') hlk2(:, :, ith)
+          close (888888)
+        end if
+#endif
         end if
         ! Calculate the tmat and wavefunctions
         rll(:, :, :, ith) = czero
@@ -437,7 +466,7 @@ contains
         ! no irregular solutions are needed in self-consistent iterations
         ! because the t-matrix depends only on RLL
         if (opt('RLL-SLL ') .and. .not. (opt('XCPL    ') .or. opt('OPERATOR'))) then
-          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), tmat0(:,:), ncheb, npan_tot, lmmaxso, nvec*lmmaxso, 4*(lmax+1), irmdnew, nsra, &
+          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), tmat0(:,:), ncheb, npan_tot, lmmaxso, nvec*lmmaxso, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
             jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alpha0(:,:))
         else
           call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), sll(:,:,:,ith), tmat0(:,:), ncheb, npan_tot, lmmaxso, nvec*lmmaxso, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
@@ -574,7 +603,7 @@ contains
         ! notice that exchange the order of left and right hankel/bessel functions
         if (use_sratrick==1) then
           tmatsph(:, ith) = czero
-          call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, zat, eryd, lmpot, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), &
+          call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin/(2-korbit), zat, eryd, lmpot, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), &
             hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, alphasph, tmatsph(:,ith), use_sratrick)
         end if
 
@@ -832,7 +861,7 @@ contains
       jlk2 = czero
 
       ! Spherical part of tmatrix (used with SRATRICK)
-      allocate (tmatsph(nsra*(lmax+1),0:nth-1), stat=i_stat)
+      allocate (tmatsph(nspin*(lmax+1),0:nth-1), stat=i_stat)
       call memocc(i_stat, product(shape(tmatsph))*kind(tmatsph), 'TMATSPH', 'allocate_locals_tmat_newsolver')
       tmatsph = czero
 
