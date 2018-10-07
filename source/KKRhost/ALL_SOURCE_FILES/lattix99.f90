@@ -1,10 +1,33 @@
+!------------------------------------------------------------------------------------
+ !> Summary: Generates the real space and reciprocal lattices
+ !> Author: 
+!> Generates the real space and reciprocal lattices, this lattice is **not** the one
+!> used for the Eawld summation
+!> @note this lattice is **not** the one used for the Ewald summation
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_lattix99
   use :: mod_datatypes, only: dp
+  use :: constants, only: pi
   private :: dp
 
 contains
-
-  subroutine lattix99(lsurf, alat, natyp, naez, conc, rws, bravais, recbv, volume0, rr, nrd, natypd)
+!-------------------------------------------------------------------------------
+    !> Summary: Generates the real space and reciprocal lattices
+    !> Author: 
+    !> Category: geometry, k-points, KKRhost
+    !> Deprecated: False 
+    !> generates the real space and reciprocal lattices.
+    !> `BRAVAIS(I,J)` are basis vectors, with `I=X,Y,Z` and `J=A,B,C`
+    !> **reciprocal** space vectors are in **units** of \(2\pi/a_{lat}^c\)
+    !> `RR` are the direct space vectors `NR+1` is the number of direct space vectors created
+    !> (structure dependent output)
+    !-------------------------------------------------------------------------------
+    !> @note this lattice is **not** the one used for the Ewald summation
+    !> @endnote
+    !-------------------------------------------------------------------------------
+  subroutine lattix99(lsurf,alat,natyp,naez,conc,rws,bravais,recbv,volume0,rr,nrd,  &
+    natypd)
     ! **********************************************************************
     ! *                                                                    *
     ! * LATTIX99 generates the real space and reciprocal lattices.         *
@@ -23,28 +46,32 @@ contains
     implicit none
     ! ..
     ! .. Scalar arguments ..
-    logical :: lsurf
-    integer :: nrd                 ! number of real space vectors
-    integer :: iprint, natyp, naez, natypd
-    real (kind=dp) :: alat, volume0
+    logical, intent(in) :: lsurf  !! If True a matching with semi-inifinite surfaces must be performed
+    integer, intent(in) :: nrd    !! Number of real space vectors
+    integer, intent(in) :: naez   !! Number of atoms in unit cell
+    integer, intent(in) :: natyp  !! Number of kinds of atoms in unit cell
+    integer, intent(in) :: natypd !! Auxiliary number of kinds of atoms in the unit cell
+    real (kind=dp), intent(in) :: alat !! Lattice constant in a.u.
+    real (kins=dp), intent(out) :: volume0 !! Unit cell volume
     ! ..
     ! .. Array arguments ..
 
     ! BRAVAIS(3,3): Real space bravais vectors normalised to ALAT
     ! RECBV(3,3)  : Reciprocal lattice vectors in 2*PI/ALAT
-
-    real (kind=dp) :: bravais(3, 3)
-    real (kind=dp) :: recbv(3, 3), rr(3, 0:nrd)
-    real (kind=dp) :: conc(natypd), rws(natypd)
+    real (kind=dp), dimension(natypd), intent(in) :: conc !! Concentration of a given atom
+    real (kind=sp), dimension(natypd), intent(in) :: rws !! Wigner Seitz radius
+    real (kind=dp), dimension(3,0:nrd), intent(in):: rr !! Set of real space vectors (in a.u.)
+    real (kind=dp), dimension(3,3), intent(in) :: recbv !! Reciprocal basis vectors
+    real (kind=dp), dimension(3,3), intent(in) :: bravais !! Bravais lattice vectors
     ! ..
     ! .. Local Scalars ..
     integer :: i, j, ndim
-    real (kind=dp) :: voluc, det, pi, tpia, sws
+    integer :: iprint
+    real (kind=dp) :: voluc, det, tpia, sws
     ! ..................................................................
 
     ! --> initialise
 
-    pi = 4e0_dp*atan(1e0_dp)
     tpia = 2e0_dp*pi/alat
     iprint = 0
 

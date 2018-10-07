@@ -1,23 +1,41 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculation of the Gaunt coefficients
+!> Author: 
+!> Calculation of the Gaunt coefficients
+!------------------------------------------------------------------------------------
 module mod_madelgaunt
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
-
-  subroutine madelgaunt(lpot, yrg, wg, cleb, icleb, iend, lassld, nclebd)
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculation of the Gaunt coefficients
+  !> Author: Who wrote this subroutine
+  !> Category: electrostatics, KKRhost 
+  !> Deprecated: False
+  !> Calculation of the Gaunt coefficients
+  !-------------------------------------------------------------------------------
+  !> @note Attention: Dimension NCLEBD appears sometimes as NCLEB1
+  !> an empirical factor - it has to be optimized. 
+  !> 
+  !> Jonathan Chico 21.09.2018: Unsure if previous note is still valid
+  !> @endnote
+  !-------------------------------------------------------------------------------
+  subroutine madelgaunt(lpot,yrg,wg,cleb,icleb,iend,lassld,nclebd)
     implicit none
     real (kind=dp), parameter :: eps = 1.0e-12_dp
     ! ..
-    ! .. Scalar arguments
-    integer :: lpot, iend
-    integer :: lassld, nclebd
+    ! .. Input variables
+    integer, intent(in) :: lpot   !! Maximum l component in potential expansion
+    integer, intent(in) :: lassld !! 4*lmax
+    integer, intent(in) :: nclebd !! (LMAX*2+1)**2 * (LMAX+1)**2
+    real (kind=dp), dimension(lassld), intent(in) :: wg !! Integr. weights for Legendre polynomials
+    real (kind=dp), dimension(lassld, 0:lassld, 0:lassld), intent(in) :: yrg !! Spherical harmonics (GAUNT2)
     ! ..
-    ! .. Array arguments
-    ! .. Attention: Dimension NCLEBD appears sometimes as NCLEB1
-    ! ..            an empirical factor - it has to be optimized
-    real (kind=dp) :: yrg(lassld, 0:lassld, 0:lassld), wg(lassld)
-    real (kind=dp) :: cleb(nclebd)
-    integer :: icleb(nclebd, 3)
+    ! .. Output variables 
+    integer, intent(out) :: iend  !! Number of nonzero gaunt coefficients
+    integer, dimension(nclebd,3), intent(out) :: icleb !! Pointer array
+    real (kind=dp), dimension(nclebd), intent(out) :: cleb !! GAUNT coefficients (GAUNT)
     ! ..
     ! .. Local scalars
     real (kind=dp) :: clecg, factor, s

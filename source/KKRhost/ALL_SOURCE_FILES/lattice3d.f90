@@ -1,20 +1,33 @@
+!------------------------------------------------------------------------------------
+!> Summary: Generates the lattice vectors of direct and reciprocal space from
+!> basic translation vectors for a 3D system
+!> Author: 
+!> Generates the lattice vectors of direct and reciprocal space from
+!> basic translation vectors for a 3D system
+!------------------------------------------------------------------------------------
 module mod_lattice3d
   use :: mod_datatypes, only: dp
+  use :: constants, only: pi
   private :: dp
 
 contains
 
-  ! -------------------------------------------------------------------------------
-  ! SUBROUTINE: LATTICE3D
-  !> @brief Generates the lattice vectors of direct and reciprocal space from
-  ! basic translation vectors for a 3D system
-  !> @note - V. Popescu May 2004: Dimension of arrays GN,RM changed from (4,*)
-  ! to (3,*), the 4th
-  !> one it is used only locally (GNR/RMR)
-  !> @note - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote
-  ! to Fortran90
-  ! -------------------------------------------------------------------------------
-  subroutine lattice3d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, nsr, gn, rm, rmax, gmax, iprint, nmaxd, ishld)
+  !-------------------------------------------------------------------------------
+  !> Summary: Generates the lattice vectors of direct and reciprocal space from
+  !> basic translation vectors for a 3D system
+  !> Author: 
+  !> Category: geometry, k-points, electrostatics, KKRhost 
+  !> Deprecated: False 
+  !-------------------------------------------------------------------------------
+  !> @note Popescu May 2004: The routine has been brought to a form which
+  ! is very similar to
+  !> LATTICE2D -- from which it has been originally derived. Dimension of arrays GN,RM
+  !> changed from (4,*) to (2,*), the 4th one it is used only locally (GNR/RMR)
+  !> Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90 
+  !> @endnote
+  !------------------------------------------------------------------------------- 
+  subroutine lattice3d(alat,bravais,recbv,ngmax,nrmax,nshlg,nshlr,nsg,nsr,gn,rm,    &
+    rmax,gmax,iprint,nmaxd,ishld)
     ! **********************************************************************
     ! *                                                                    *
     ! *  generate lattice vectors of direct and reciprocal space from      *
@@ -42,7 +55,7 @@ contains
     ! .. Input variables
     integer, intent (in) :: nmaxd  !! Paremeters for the Ewald summations
     integer, intent (in) :: ishld  !! Paremeters for the Ewald summations
-    integer, intent (in) :: iprint
+    integer, intent (in) :: iprint !! Printing index control
     real (kind=dp), intent (in) :: alat !! Lattice constant in a.u.
     real (kind=dp), dimension (3, 3), intent (in) :: recbv !! Reciprocal basis
     ! vectors
@@ -70,7 +83,7 @@ contains
     ! ..
     ! .. Local scalars ..
     integer :: i, k, l, m, n, n1, ng, nr, nsh, nshl, numg, numgh, numr, numrh
-    real (kind=dp) :: a, absgm, absrm, ag, ar, b, c, da, db, gx, gy, gz, pi, rx, ry, rz, vmin
+    real (kind=dp) :: a, absgm, absrm, ag, ar, b, c, da, db, gx, gy, gz, rx, ry, rz, vmin
     ! ..
     ! .. Local arrays ..
     real (kind=dp), dimension (nmaxd) :: gnr
@@ -80,8 +93,6 @@ contains
     real (kind=dp), dimension (3, 3) :: bg
     real (kind=dp), dimension (3, 3) :: br
     real (kind=dp), dimension (4, nmaxd) :: cj
-    ! ----------------------------------------------------------------------------
-    pi = 4.0e0_dp*atan(1.0e0_dp)
     ! ----------------------------------------------------------------------------
     ! OUTPUT
     ! ----------------------------------------------------------------------------

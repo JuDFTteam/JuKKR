@@ -1,17 +1,15 @@
-! -------------------------------------------------------------------------------
-! PROGRAM: kkrcode
-!> @brief Main program for the JM-KKR
-!> @details The JM-KKR code is a Density Functional Theory software package,
+! -----------------------------------------------------------------------------------
+!> Summary: Main program for the JM-KKR
+!> Author: Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller, and many others ...
+!> The JM-KKR code is a Density Functional Theory software package,
 !> based on the Green function Korringa-Kohn-Rostocker approach.
 !> The package allows the calculation of 3D and 2D systems, as well as the
 !> determination of the needed parameters for the calculation of impurities and
 !> nanoclusters (KKRImp code). The code has also been modified to produce the
 !> needed information for the treatment of TD-DFT calculations based in the linear
 !> response approach (KKRSusc code).
-!> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller, and many others ...
-!! @note
-!> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
-! -------------------------------------------------------------------------------
+!> Category: KKRhost, memory-management, communication
+! -----------------------------------------------------------------------------------
 program kkrcode
 
   use :: constants
@@ -167,26 +165,37 @@ program kkrcode
     ! initialize memocc also for the other ranks after t_inc%i_write has been set
     call memocc(0, 0, 'count', 'start')
 
-    call allocate_cell(1, naezd, nembd, natypd, cls, imt, irws, irns, ntcell, refpot, kfg, kaoez, rmt, zat, rws, mtfac, rmtref, rmtrefat, rmtnew, rbasis, lmxc)
-    call allocate_semi_inf_host(1, nembd, tleft, tright)
-    call allocate_cpa(1, naezd, natypd, noq, icpa, iqat, hostimp, conc)
-    call allocate_soc(1, krel, natypd, lmaxd, socscale, cscl, socscl)
-    call allocate_ldau(1, natypd, lopt, ueff, jeff, erefldau)
-    call allocate_magnetization(1, naezd, natypd, lmmaxd, inipol, ixipol, qmtet, qmphi, drotq)
-    call allocate_potential(1, irmd, natypd, npotd, ipand, nfund, lmxspd, lmpotd, irmind, nspotd, nfu, irc, ncore, irmin, lmsp, lmsp1, ircut, lcore, llmsp, ititle, fpradius, visp, &
+    call allocate_cell(1,naezd,nembd,natypd,cls,imt,irws,irns,ntcell,refpot,kfg,    &
+      kaoez,rmt,zat,rws,mtfac,rmtref,rmtrefat,rmtnew,rbasis,lmxc)
+    call allocate_semi_inf_host(1,nembd,tleft,tright)
+    call allocate_cpa(1,naezd,natypd,noq,icpa,iqat,hostimp,conc)
+    call allocate_soc(1,krel,natypd,lmaxd,socscale,cscl,socscl)
+    call allocate_ldau(1,natypd,lopt,ueff,jeff,erefldau)
+    call allocate_magnetization(1,naezd,natypd,lmmaxd,inipol,ixipol,qmtet,qmphi,    &
+      drotq)
+    call allocate_potential(1,irmd,natypd,npotd,ipand,nfund,lmxspd,lmpotd,irmind,   &
+      nspotd,nfu,irc,ncore,irmin,lmsp,lmsp1,ircut,lcore,llmsp,ititle,fpradius,visp, &
       ecore, vins)
-    call allocate_ldau_potential(1, irmd, natypd, mmaxd, nspind, itldau, wldau, uldau, phildau)
-    call allocate_energies(1, iemxd, ez, dez, wez)
-    call allocate_relativistic(1, krel, irmd, naezd, natypd, zrel, jwsrel, irshift, vtrel, btrel, rmrel, drdirel, r2drdirel, qmgam, qmgamtab, qmphitab, qmtettab)
+    call allocate_ldau_potential(1,irmd,natypd,mmaxd,nspind,itldau,wldau,uldau,     &
+      phildau)
+    call allocate_energies(1,iemxd,ez,dez,wez)
+    call allocate_relativistic(1,krel,irmd,naezd,natypd,zrel,jwsrel,irshift,vtrel,  &
+      btrel,rmrel,drdirel,r2drdirel,qmgam,qmgamtab,qmphitab,qmtettab)
     call allocate_rel_transformations(1, lmmaxd, nrrel, irrel, rc, crel, rrel, srrel)
-    call allocate_clusters(1, naezd, lmaxd, ncleb, nclsd, nembd1, nsheld, naclsd, lmpotd, natomimpd, nsh1, nsh2, nacls, nshell, atomimp, atom, ezoa, icleb, jend, ratom, rclsimp, &
+    call allocate_clusters(1,naezd,lmaxd,ncleb,nclsd,nembd1,nsheld,naclsd,lmpotd,   &
+      natomimpd,nsh1,nsh2,nacls,nshell,atomimp,atom,ezoa,icleb,jend,ratom, rclsimp, &
       cmomhost, rcls)
-    call allocate_expansion(1, lm2d, irid, nfund, ntotd, ncleb, lassld, ncelld, nchebd, loflm, wg, cleb, yrg, thetas, thetasnew)
+    call allocate_expansion(1,lm2d,irid,nfund,ntotd,ncleb,lassld,ncelld,nchebd,     &
+      loflm,wg,cleb,yrg,thetas,thetasnew)
     call allocate_mesh(1, irmd, natypd, a, b, rmesh, drdi)
-    call allocate_pannels(1, natypd, ntotd, ipan, npan_tot, npan_eq_at, npan_log_at, ipan_intervall, rpan_intervall)
-    call allocate_misc(1, nrd, irmd, irid, lmaxd, naezd, natypd, nfund, nrefd, iemxd, ntotd, nsheld, lmmaxd, nembd1, nchebd, ncelld, lmxspd, nspindd, nsymaxd, nprincd, ifunm, &
-      ifunm1, icheck, vref, s, rr, dror, rnew, rs, rrot, thesme, dsymll, dsymll1, lefttinvll, righttinvll)
-    call allocate_green(1, naezd, iemxd, ngshd, nsheld, lmpotd, nofgij, ish, jsh, kmesh, imaxsh, iqcalc, iofgij, jofgij, ijtabsh, ijtabsym, ijtabcalc, ijtabcalc_i, ilm_map, gsh)
+    call allocate_pannels(1,natypd,ntotd,ipan,npan_tot,npan_eq_at,npan_log_at,      &
+      ipan_intervall,rpan_intervall)
+    call allocate_misc(1,nrd,irmd,irid,lmaxd,naezd,natypd,nfund,nrefd,iemxd,ntotd,  &
+      nsheld,lmmaxd,nembd1,nchebd,ncelld,lmxspd,nspindd,nsymaxd,nprincd,ifunm,      &
+      ifunm1,icheck,vref,s,rr,dror,rnew,rs,rrot,thesme,dsymll,dsymll1,lefttinvll,   &
+      righttinvll)
+    call allocate_green(1,naezd,iemxd,ngshd,nsheld,lmpotd,nofgij,ish,jsh,kmesh,     &
+      imaxsh,iqcalc,iofgij,jofgij,ijtabsh,ijtabsym,ijtabcalc,ijtabcalc_i,ilm_map,gsh)
 
   end if                           ! ( myrank/=master )
 
@@ -227,10 +236,12 @@ program kkrcode
   t_mpi_c_grid%dims = dims
 
   ! create communicator for atom/energy matrix
-  call create_newcomms_group_ie(master, nranks, myrank, dims(1), dims(2), t_inc%nkmesh, t_inc%kmesh, mympi_comm_ie, myrank_ie, nranks_ie, mympi_comm_at, myrank_at, nranks_at, &
+  call create_newcomms_group_ie(master,nranks,myrank,dims(1),dims(2),t_inc%nkmesh,  &
+    t_inc%kmesh,mympi_comm_ie,myrank_ie,nranks_ie,mympi_comm_at,myrank_at,nranks_at,&
     myrank_atcomm, nranks_atcomm)
   ! save grid info in type 't_mpi_c_grid'
-  call save_t_mpi_c_grid(t_mpi_c_grid, dims, mympi_comm_ie, mympi_comm_at, myrank_ie, myrank_at, myrank_atcomm, nranks_ie, nranks_at, nranks_atcomm)
+  call save_t_mpi_c_grid(t_mpi_c_grid,dims,mympi_comm_ie,mympi_comm_at,myrank_ie,   &
+    myrank_at,myrank_atcomm,nranks_ie,nranks_at,nranks_atcomm)
   if (myrank==master) call timing_stop('MPI 1')
 
 
@@ -367,7 +378,8 @@ program kkrcode
     ! find out if MPI_communication pattern should be modified: (with test option 'MPIadapt' the program will be forced to change the communication grid after the first iteration and then compares the timings
     ! call myMPI_distribute_ranks(t_inc, MPIatom, MPIadapt, timings_1a, timings_1b, load_imbalance, nranks, myrank, initial=0)
     if (mpiadapt==1 .and. t_inc%i_iteration>1) then
-      call check_communication_pattern(mpiatom, mpiadapt, timings_1a, timings_1b, load_imbalance, t_inc%nkmesh, t_inc%kmesh_ie)
+      call check_communication_pattern(mpiatom,mpiadapt,timings_1a,timings_1b,      &
+        load_imbalance,t_inc%nkmesh,t_inc%kmesh_ie)
     end if
     ! adapt MPI communicator grid to tackle load imbalance better
     if (mpiadapt>0) then
@@ -377,10 +389,12 @@ program kkrcode
       t_mpi_c_grid%dims = dims
 
       ! create communicator for atom/energy matrix (load_imbalance instead of t_inc%kmesh in callig list)
-      call create_newcomms_group_ie(master, nranks, myrank, dims(1), dims(2), t_inc%nkmesh, load_imbalance, mympi_comm_ie, myrank_ie, nranks_ie, mympi_comm_at, myrank_at, &
-        nranks_at, myrank_atcomm, nranks_atcomm)
+      call create_newcomms_group_ie(master,nranks,myrank,dims(1),dims(2),           &
+        t_inc%nkmesh,load_imbalance,mympi_comm_ie,myrank_ie,nranks_ie,mympi_comm_at,&
+        myrank_at,nranks_at,myrank_atcomm, nranks_atcomm)
       ! save grid info in type 't_mpi_c_grid'
-      call save_t_mpi_c_grid(t_mpi_c_grid, dims, mympi_comm_ie, mympi_comm_at, myrank_ie, myrank_at, myrank_atcomm, nranks_ie, nranks_at, nranks_atcomm)
+      call save_t_mpi_c_grid(t_mpi_c_grid,dims,mympi_comm_ie,mympi_comm_at,         &
+        myrank_ie,myrank_at,myrank_atcomm,nranks_ie,nranks_at,nranks_atcomm)
     end if
 
     if (myrank==master) call timing_stop('MPI 2')
@@ -877,26 +891,33 @@ program kkrcode
 #endif
 
   ! Deallocation of input arrays
-  call allocate_cell(-1, naez, nemb, natyp, cls, imt, irws, irns, ntcell, refpot, kfg, kaoez, rmt, zat, rws, mtfac, rmtref, rmtrefat, rmtnew, rbasis, lmxc)
+  call allocate_cell(-1,naez,nemb,natyp,cls,imt,irws,irns,ntcell,refpot,kfg,kaoez,  &
+    rmt,zat,rws,mtfac,rmtref,rmtrefat,rmtnew,rbasis,lmxc)
   call allocate_semi_inf_host(-1, nemb, tleft, tright)
-  call allocate_potential(-1, irm, natyp, npotd, ipand, nfund, lmxspd, lmpot, irmind, nspotd, nfu, irc, ncore, irmin, lmsp, lmsp1, ircut, lcore, llmsp, ititle, fpradius, visp, &
-    ecore, vins)
+  call allocate_potential(-1,irm,natyp,npotd,ipand,nfund,lmxspd,lmpot,irmind,nspotd,&
+    nfu,irc,ncore,irmin,lmsp,lmsp1,ircut,lcore,llmsp,ititle,fpradius,visp,ecore,vins)
   call allocate_cpa(-1, naez, natyp, noq, icpa, iqat, hostimp, conc)
   call allocate_ldau(-1, natyp, lopt, ueff, jeff, erefldau)
-  call allocate_ldau_potential(-1, irm, natyp, mmaxd, nspind, itldau, wldau, uldau, phildau)
-  call allocate_magnetization(-1, naez, natyp, lmmaxd, inipol, ixipol, qmtet, qmphi, drotq)
+  call allocate_ldau_potential(-1,irm,natyp,mmaxd,nspind,itldau,wldau,uldau,phildau)
+  call allocate_magnetization(-1,naez,natyp,lmmaxd,inipol,ixipol,qmtet,qmphi,drotq)
   call allocate_soc(-1, krel, natyp, lmax, socscale, cscl, socscl)
   call allocate_energies(-1, iemxd, ez, dez, wez)
-  call allocate_relativistic(-1, krel, irm, naez, natyp, zrel, jwsrel, irshift, vtrel, btrel, rmrel, drdirel, r2drdirel, qmgam, qmgamtab, qmphitab, qmtettab)
-  call allocate_rel_transformations(-1, lmmaxd, nrrel, irrel, rc, crel, rrel, srrel)
-  call allocate_clusters(-1, naez, lmax, ncleb, nclsd, nembd1, nsheld, naclsd, lmpot, natomimpd, nsh1, nsh2, nacls, nshell, atomimp, atom, ezoa, icleb, jend, ratom, rclsimp, &
+  call allocate_relativistic(-1,krel,irm,naez,natyp,zrel,jwsrel,irshift,vtrel,btrel,&
+    rmrel,drdirel,r2drdirel,qmgam, qmgamtab, qmphitab, qmtettab)
+  call allocate_rel_transformations(-1,lmmaxd,nrrel,irrel,rc,crel,rrel,srrel)
+  call allocate_clusters(-1,naez,lmax,ncleb,nclsd,nembd1,nsheld,naclsd,lmpot,       &
+    natomimpd,nsh1,nsh2,nacls,nshell,atomimp,atom,ezoa,icleb,jend,ratom,rclsimp,    &
     cmomhost, rcls)
-  call allocate_expansion(-1, lm2d, irid, nfund, ntotd, ncleb, lassld, ncelld, ncheb, loflm, wg, cleb, yrg, thetas, thetasnew)
+  call allocate_expansion(-1,lm2d,irid,nfund,ntotd,ncleb,lassld,ncelld,ncheb,loflm, &
+    wg,cleb,yrg,thetas,thetasnew)
   call allocate_mesh(-1, irm, natyp, a, b, rmesh, drdi)
-  call allocate_pannels(-1, natyp, ntotd, ipan, npan_tot, npan_eq_at, npan_log_at, ipan_intervall, rpan_intervall)
-  call allocate_misc(-1, nrd, irm, irid, lmax, naez, natyp, nfund, nref, iemxd, ntotd, nsheld, lmmaxd, nembd1, ncheb, ncelld, lmxspd, nspindd, nsymaxd, nprincd, ifunm, ifunm1, &
-    icheck, vref, s, rr, dror, rnew, rs, rrot, thesme, dsymll, dsymll1, lefttinvll, righttinvll)
-  call allocate_green(-1, naez, iemxd, ngshd, nsheld, lmpot, nofgij, ish, jsh, kmesh, imaxsh, iqcalc, iofgij, jofgij, ijtabsh, ijtabsym, ijtabcalc, ijtabcalc_i, ilm_map, gsh)
+  call allocate_pannels(-1,natyp,ntotd,ipan,npan_tot,npan_eq_at,npan_log_at,        &
+    ipan_intervall,rpan_intervall)
+  call allocate_misc(-1,nrd,irm,irid,lmax,naez,natyp,nfund,nref,iemxd,ntotd,nsheld, &
+    lmmaxd,nembd1,ncheb,ncelld,lmxspd,nspindd,nsymaxd,nprincd,ifunm,ifunm1,icheck,  &
+    vref,s,rr,dror,rnew,rs,rrot,thesme,dsymll,dsymll1,lefttinvll,righttinvll)
+  call allocate_green(-1,naez,iemxd,ngshd,nsheld,lmpot,nofgij,ish,jsh,kmesh,imaxsh, &
+    iqcalc,iofgij,jofgij,ijtabsh,ijtabsym,ijtabcalc,ijtabcalc_i,ilm_map,gsh)
   ! End of deallocation
 
   ! print memory report to stdout

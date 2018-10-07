@@ -1,14 +1,11 @@
-! -------------------------------------------------------------------------------
-! MODULE: MOD_MAIN1A
-!> @brief Wrapper module for the calculation of the T-matrix for the JM-KKR package
-!> @details The code uses the information obtained in the main0 module, this is
+!------------------------------------------------------------------------------------
+!> Summary: Wrapper module for the calculation of the T-matrix for the JM-KKR package
+!> Author: Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
+!> and many others ...
+!> The code uses the information obtained in the main0 module, this is
 !> mostly done via the get_params_1a() call, that obtains parameters of the type
 !> t_params and passes them to local variables
-!> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
-!> and many others ...
-!> @note
-!> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
-! -------------------------------------------------------------------------------
+!------------------------------------------------------------------------------------
 module mod_main1a
 
   use :: mod_profiling
@@ -28,10 +25,12 @@ module mod_main1a
 contains
 
   ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: main1a
-  !> @brief Main subroutine regarding the calculation of the t-matrix
-  !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
+  !> Summary: Main subroutine regarding the calculation of the t-matrix
+  !> Author: Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
   !> and many others ...
+  !> Category: single-site, potential, KKRhost
+  !> Deprecated: False 
+  !> Main subroutine for the calculation of the t-matrix
   ! ----------------------------------------------------------------------------
   subroutine main1a()
 
@@ -97,10 +96,14 @@ contains
     ! the main0 module, now  instead of unformatted files take parameters from
     ! types defined in wunfiles.F90
     ! -------------------------------------------------------------------------
-    call get_params_1a(t_params, ipand, natypd, irmd, naclsd, ielast, nclsd, nrefd, ncleb, nembd, naezd, lm2d, nsra, ins, nspin, icst, ipan, ircut, lmax, ncls, nineq, idoldau, lly, &
-      krel, atom, cls, icleb, loflm, nacls, refpot, irws, iend, ez, vins, irmin, itmpdir, iltmp, alat, drdi, rmesh, zat, rcls, iemxd, visp, rmtref, vref, cleb, cscl, socscale, &
-      socscl, erefldau, ueff, jeff, solver, tmpdir, deltae, tolrdif, npan_log_at, npan_eq_at, ncheb, npan_tot, ipan_intervall, rpan_intervall, rnew, ntotd, nrmaxd, r_log, ntldau, &
-      itldau, lopt, vtrel, btrel, drdirel, r2drdirel, rmrel, irmind, lmpotd, nspotd, npotd, jwsrel, zrel, itscf, natomimpd, natomimp, atomimp, iqat, naez, natyp, nref)
+    call get_params_1a(t_params,ipand,natypd,irmd,naclsd,ielast,nclsd,nrefd,ncleb,  &
+      nembd,naezd,lm2d,nsra,ins,nspin,icst,ipan,ircut,lmax,ncls,nineq,idoldau,lly,  &
+      krel,atom,cls,icleb,loflm,nacls,refpot,irws,iend,ez,vins,irmin,itmpdir,iltmp, &
+      alat,drdi,rmesh,zat,rcls,iemxd,visp,rmtref,vref,cleb,cscl,socscale,socscl,    &
+      erefldau,ueff,jeff,solver,tmpdir,deltae,tolrdif,npan_log_at,npan_eq_at,ncheb, &
+      npan_tot,ipan_intervall,rpan_intervall,rnew,ntotd,nrmaxd,r_log,ntldau,itldau, &
+      lopt,vtrel,btrel,drdirel,r2drdirel,rmrel,irmind,lmpotd,nspotd,npotd,jwsrel,   &
+      zrel,itscf,natomimpd,natomimp,atomimp,iqat,naez,natyp,nref)
 
     if (test('Vspher  ')) vins(irmind:irmd, 2:lmpotd, 1:nspotd) = 0.d0
 
@@ -120,7 +123,8 @@ contains
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       ! !!!!!!! IF ( ITRUNLDAU.LE.0 ) THEN
-      call initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, nspin, rmesh, drdi, zat, ipan, ircut, phildau, uldau)
+      call initldau(nsra,ntldau,itldau,lopt,ueff,jeff,erefldau,visp,nspin,rmesh,    &
+        drdi,zat,ipan,ircut,phildau,uldau)
       ! !!!!!!! END IF
     end if
     ! -------------------------------------------------------------------------
@@ -173,9 +177,12 @@ contains
         do ispin = 1, nspin
           ipot = nspin*(i1-1) + ispin
 
-          call calctmat(icst, ins, ielast, nsra, ispin, nspin, i1, ez, drdi(1,i1), rmesh(1,i1), vins(irmind,1,knosph*ipot+(1- &
-            knosph)), visp(1,ipot), zat(i1), irmin(i1), ipan(i1), ircut(0,i1), cleb, loflm, icleb, iend, solver, socscl(1,krel*i1+(1-krel)), cscl(1,krel*i1+(1- &
-            krel)), vtrel(1,i1), btrel(1,i1), rmrel(1,i1), drdirel(1,i1), r2drdirel(1,i1), zrel(i1), jwsrel(i1), idoldau, lopt(i1), wldau(1,1,1,i1), lly, deltae) ! LLY
+          call calctmat(icst,ins,ielast,nsra,ispin,nspin,i1,ez,drdi(1,i1),          &
+            rmesh(1,i1),vins(irmind,1,knosph*ipot+(1-knosph)),visp(1,ipot),zat(i1), &
+            irmin(i1),ipan(i1),ircut(0,i1),cleb,loflm,icleb,iend,solver,            &
+            socscl(1,krel*i1+(1-krel)),cscl(1,krel*i1+(1-krel)),vtrel(1,i1),        &
+            btrel(1,i1),rmrel(1,i1),drdirel(1,i1),r2drdirel(1,i1),zrel(i1),         &
+            jwsrel(i1),idoldau,lopt(i1),wldau(1,1,1,i1),lly,deltae) ! LLY
 
         end do
       end do
@@ -194,8 +201,9 @@ contains
       call read_angles(t_params, natyp, theta, phi)
 
       ! Interpolate potential
-      call interpolate_poten(lpotd, irmd, irnsd, natyp, ipand, lmpotd, nspotd, ntotd, ntotd*(ncheb+1), nspin, rmesh, irmin, irws, ircut, vins, visp, npan_log_at, npan_eq_at, &
-        npan_tot, rnew, ipan_intervall, vinsnew)
+      call interpolate_poten(lpotd,irmd,irnsd,natyp,ipand,lmpotd,nspotd,ntotd,      &
+        ntotd*(ncheb+1),nspin,rmesh,irmin,irws,ircut,vins,visp,npan_log_at,         &
+        npan_eq_at,npan_tot,rnew,ipan_intervall,vinsnew)
 
       do i1 = i1_start, i1_end
 
@@ -203,13 +211,17 @@ contains
 
 #ifdef CPP_BdG
         if (test('BdG_dev ')) then
-          call bdg_write_tmatnewsolver_inputs(nranks, i1, i1_start, ielast, nspin, lmax, nsra, iend, lmpotd, lly, deltae, idoldau, ncleb, ncheb, ntotd, mmaxd, nspind, iemxd, &
-            nrmaxd, nspotd, cleb, icleb, ez, i1, ipot, npan_tot, lpot, ipan ,_intervall, zat, phi, theta, socscale, rnew, rpan_intervall, wldau, vinsnew, i1_end)
+          call bdg_write_tmatnewsolver_inputs(nranks,i1,i1_start,ielast,nspin,lmax, &
+            nsra,iend,lmpotd,lly,deltae,idoldau,ncleb,ncheb,ntotd,mmaxd,nspind,     &
+            iemxd,nrmaxd,nspotd,cleb,icleb,ez,i1,ipot,npan_tot,lpot,ipan,_intervall,&
+            zat,phi,theta,socscale,rnew,rpan_intervall,wldau,vinsnew,i1_end)
         end if
 #endif
 
-        call tmat_newsolver(ielast, nspin, lmax, zat(i1), socscale(i1), ez, nsra, cleb(:,1), icleb, iend, ncheb, npan_tot(i1), rpan_intervall(:,i1), ipan_intervall(:,i1), &
-          rnew(:,i1), vinsnew, theta(i1), phi(i1), i1, ipot, lmpotd, lly, deltae, idoldau, lopt(i1), wldau(:,:,:,i1), t_dtmatjij(i1))
+        call tmat_newsolver(ielast,nspin,lmax,zat(i1),socscale(i1),ez,nsra,         &
+          cleb(:,1),icleb,iend,ncheb,npan_tot(i1),rpan_intervall(:,i1),             &
+          ipan_intervall(:,i1),rnew(:,i1),vinsnew,theta(i1),phi(i1),i1,ipot,lmpotd, &
+        lly,deltae,idoldau,lopt(i1),wldau(:,:,:,i1),t_dtmatjij(i1))
 
       end do                       ! I1, atom loop
 
@@ -239,7 +251,8 @@ contains
           ioff_all(ii) = t_mpi_c_grid%ioff_pt1(ii)
         end do
         mytot = t_mpi_c_grid%ntot_pt1(t_mpi_c_grid%myrank_ie)
-        call gather_tmat(t_inc, t_tgmat, t_mpi_c_grid, ntot_all, ioff_all, mytot, t_mpi_c_grid%mympi_comm_ie, t_mpi_c_grid%nranks_ie)
+        call gather_tmat(t_inc,t_tgmat,t_mpi_c_grid,ntot_all,ioff_all,mytot,        &
+          t_mpi_c_grid%mympi_comm_ie,t_mpi_c_grid%nranks_ie)
       end if
 
       if (lly/=0 .and. .not. t_lloyd%dtmat_to_file) then
@@ -249,7 +262,7 @@ contains
           t_lloyd%tralpha = czero
           t_lloyd%dtmat = czero
         end if
-        call gather_lly_dtmat(t_mpi_c_grid, t_lloyd, lmmaxd, t_mpi_c_grid%mympi_comm_ie)
+        call gather_lly_dtmat(t_mpi_c_grid,t_lloyd,lmmaxd,t_mpi_c_grid%mympi_comm_ie)
       end if
 
       ! -------------------------------------------------------------------------
@@ -269,7 +282,8 @@ contains
             allocate (work_jij(iwork,1,1,1), stat=i_stat)
             call memocc(i_stat, product(shape(work_jij))*kind(work_jij), 'work_jij', 'main1a')
 
-            call mpi_allreduce(t_dtmatjij(i1)%dtmat_xyz, work_jij, iwork, mpi_double_complex, mpi_sum, t_mpi_c_grid%mympi_comm_ie, ierr)
+            call mpi_allreduce(t_dtmatjij(i1)%dtmat_xyz,work_jij,iwork,             &
+              mpi_double_complex, mpi_sum, t_mpi_c_grid%mympi_comm_ie, ierr)
             if (ierr/=mpi_success) stop 'error communicating t_dtmatJij'
             call zcopy(iwork, work_jij, 1, t_dtmatjij(i1)%dtmat_xyz, 1)
             i_all = -product(shape(work_jij))*kind(work_jij)
@@ -293,7 +307,8 @@ contains
     call timing_start('main1a - tbref')
 #endif
     if (lrefsys) then
-      call tbref(ez, ielast, alat, vref, iend, lmax, ncls, nineq, nref, cleb, rcls, atom, cls, icleb, loflm, nacls, refpot, rmtref, tolrdif, tmpdir, itmpdir, iltmp, naez, lly) ! LLY Lloyd
+      call tbref(ez, ielast,alat,vref,iend,lmax,ncls,nineq,nref,cleb,rcls,atom,cls, &
+        icleb,loflm,nacls,refpot,rmtref,tolrdif,tmpdir,itmpdir,iltmp,naez,lly) ! LLY Lloyd
     end if
 #ifdef CPP_TIMING
     call timing_stop('main1a - tbref')
@@ -311,8 +326,10 @@ contains
   end subroutine main1a
 
 #ifdef CPP_BdG
-  subroutine bdg_write_tmatnewsolver_inputs(nranks, i1, i1_start, ielast, nspin, lmax, nsra, iend, lmpotd, lly, deltae, idoldau, ncleb, ncheb, ntotd, mmaxd, nspind, iemxd, nrmaxd, &
-    nspotd, cleb, icleb, ez, i1, ipot, npan_tot, lpot, ipan ,_intervall, zat, phi, theta, socscale, rnew, rpan_intervall, wldau, vinsnew, i1_end)
+  subroutine bdg_write_tmatnewsolver_inputs(nranks,i1,i1_start,ielast,nspin,lmax,   &
+    nsra,iend,lmpotd,lly,deltae,idoldau,ncleb,ncheb,ntotd,mmaxd,nspind,iemxd,nrmaxd,&
+    nspotd,cleb,icleb,ez,i1,ipot,npan_tot,lpot,ipan,_intervall,zat,phi,theta,       &
+    socscale,rnew,rpan_intervall,wldau,vinsnew,i1_end)
     ! write out inputs for tmat_newsolver to extract first BdG
     if (nranks>1) stop 'test option BdG_dev can only be used in serial!'
     if (i1==i1_start) open (887766, file='BdG_tmat_inputs.txt', form='formatted')

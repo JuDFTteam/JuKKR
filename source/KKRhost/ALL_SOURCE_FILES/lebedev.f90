@@ -1,9 +1,19 @@
+!------------------------------------------------------------------------------------
+!> Summary: This subroutine includes the data from the old mesh-file lebedev
+!> Author: M. Kosuth 
+!> This subroutine includes the data from the old mesh-file lebedev
+!------------------------------------------------------------------------------------
 module mod_lebedev
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
-
+  !-------------------------------------------------------------------------------
+  !> Summary: This subroutine includes the data from the old mesh-file lebedev
+  !> Author: M. Kosuth
+  !> Category: xc-potential, KKRhost 
+  !> Deprecated: False 
+  !------------------------------------------------------------------------------- 
   subroutine lebedev(ij, rij1, rij2, rij3, wij)
     ! **********************************************************************
     ! *                                                                    *
