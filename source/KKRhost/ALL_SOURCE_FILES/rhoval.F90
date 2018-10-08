@@ -93,7 +93,7 @@ contains
     ! ---------------------------------------------------------------------------
     ! .. Output variables
     real (kind=dp), dimension (irmd*krel+(1-krel)), intent (out) :: rhoorb
-    real (kind=dp), dimension (0:lmax+1+1, 3), intent (out) :: muorb !! orbital magnetic moment
+    real (kind=dp), dimension (0:lmax+2, 3), intent (out) :: muorb !! orbital magnetic moment
     real (kind=dp), dimension (0:lmax+1, 2), intent (out) :: espv !! changed for REL case
     real (kind=dp), dimension (irmd, lmpotd, 1+krel), intent (out) :: r2nef !! rho at FERMI energy
     real (kind=dp), dimension (irmd, lmpotd, 1+krel), intent (out) :: rho2ns !! radial density
@@ -205,8 +205,8 @@ contains
     ! Initialise variables
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     rho2ns(:,:,:) = 0.0_dp
-    espv(:,:) = 0.0_dp
     if (krel/=0) then
+      espv(0:lmaxd1,:) = 0.0_dp
       r2nef(:,:,:) = 0.0_dp
       rhoorb(:) = 0.0_dp
       dmuorb(:,:) = 0.0_dp
@@ -214,6 +214,8 @@ contains
         mvevil(:,:,:) = czero
         mvevilef(:,:,:) = czero
       end if
+    else
+      espv(0:lmaxd1,ispin) = 0.0_dp
     end if ! (krel/=0)
     lastez = ielast
 
