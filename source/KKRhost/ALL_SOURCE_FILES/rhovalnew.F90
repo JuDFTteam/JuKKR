@@ -80,17 +80,17 @@ contains
     real (kind=dp), intent (inout) :: theta
     real (kind=dp), dimension (nrmaxd), intent (inout) :: rnew
     real (kind=dp), dimension (0:ntotd), intent (inout) :: rpan_intervall
-    real (kind=dp), dimension (0:lmax+1, 3), intent (inout) :: muorb
+    real (kind=dp), dimension (0:lmax+2, 3), intent (inout) :: muorb
     real (kind=dp), dimension (nrmaxd, nfund), intent (inout) :: thetasnew
     real (kind=dp), dimension (nrmaxd, lmpotd, nspotd), intent (inout) :: vinsnew !! Non-spherical part of the potential
     complex (kind=dp), dimension (iemxd), intent (inout) :: ez
     complex (kind=dp), dimension (iemxd), intent (inout) :: wez
     ! .. Output variables
     real (kind=dp), dimension (2), intent (out) :: angles_new
-    real (kind=dp), dimension (0:lmax+1, 2), intent (out) :: espv
+    real (kind=dp), dimension (0:lmax+1, 2/(2-korbit)), intent (out) :: espv
     real (kind=dp), dimension (irmd, lmpotd, nspin/(2-korbit)*(1+korbit)), intent (out) :: r2nef
     real (kind=dp), dimension (irmd, lmpotd, nspin/(2-korbit)*(1+korbit)), intent (out) :: rho2ns
-    complex (kind=dp), dimension (0:lmax+1, ielast, nspin), intent (out) :: den_out
+    complex (kind=dp), dimension (0:lmax+1, ielast, nspin/(2-korbit)), intent (out) :: den_out
 
     ! .. Local variables
     integer :: lmsize
@@ -120,9 +120,9 @@ contains
     real (kind=dp), dimension (3) :: denorbmomns
     real (kind=dp), dimension (2, 3) :: denorbmomsp
     real (kind=dp), dimension (0:lmax, 3) :: denorbmomlm
-    complex (kind=dp), dimension (nspin*(1+korbit)) :: rho2
-    complex (kind=dp), dimension (nspin*(1+korbit)) :: rho2int
-    complex (kind=dp), dimension (nspin*(lmax+1)) :: alphasph
+    complex (kind=dp), dimension (nspin/(2-korbit)*(1+korbit)) :: rho2
+    complex (kind=dp), dimension (nspin/(2-korbit)*(1+korbit)) :: rho2int
+    complex (kind=dp), dimension (nspin/(2-korbit)*(lmax+1)) :: alphasph
     complex (kind=dp), dimension (lmmaxso, lmmaxso) :: gmat0
     complex (kind=dp), dimension (lmmaxso, lmmaxso) :: gldau ! LDAU
     complex (kind=dp), dimension (lmmaxso, lmmaxso) :: tmatll
@@ -179,6 +179,7 @@ contains
     ! ..
     logical :: test, opt
     external :: test, opt
+    character (len=100) :: filename
 
     ! lmsize is original lm-size (without enhancement through soc etc.)
     lmsize = lmmaxd/(1+korbit)
@@ -207,7 +208,7 @@ contains
 
     irmdnew = npan_tot*(ncheb+1)
     imt1 = ipan_intervall(npan_log+npan_eq) + 1
-    allocate (vins(irmdnew,lmpotd,nspin), stat=i_stat)
+    allocate (vins(irmdnew,lmpotd,nspin/(2-korbit)), stat=i_stat)
     call memocc(i_stat, product(shape(vins))*kind(vins), 'VINS', 'RHOVALNEW')
     vins = 0d0
     vins(1:irmdnew, 1:lmpotd, 1) = vinsnew(1:irmdnew, 1:lmpotd, ipot)
@@ -249,64 +250,83 @@ contains
       allocate (vnspll(lmmaxso,lmmaxso,irmdnew,0:nth-1), stat=i_stat)
       call memocc(i_stat, product(shape(vnspll))*kind(vnspll), 'VNSPLL', 'RHOVALNEW')
     end if
+    vnspll(:,:,:,:) = czero
 
     allocate (hlk(nsra*(1+korbit)*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(hlk))*kind(hlk), 'HLK', 'RHOVALNEW')
+    hlk(:,:,:) = czero
     allocate (jlk(nsra*(1+korbit)*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(jlk))*kind(jlk), 'JLK', 'RHOVALNEW')
+    jlk(:,:,:) = czero
     allocate (hlk2(nsra*(1+korbit)*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(hlk2))*kind(hlk2), 'HLK2', 'RHOVALNEW')
+    hlk2(:,:,:) = czero
     allocate (jlk2(nsra*(1+korbit)*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(jlk2))*kind(jlk2), 'JLK2', 'RHOVALNEW')
-    allocate (tmatsph(nspin*(lmax+1),0:nth-1), stat=i_stat)
+    jlk2(:,:,:) = czero
+    allocate (tmatsph(nspin/(2-korbit)*(lmax+1),0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(tmatsph))*kind(tmatsph), 'TMATSPH', 'RHOVALNEW')
+    tmatsph(:,:) = czero
     allocate (rll(nsra*lmmaxso,lmmaxso,irmdnew,0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(rll))*kind(rll), 'RLL', 'RHOVALNEW')
+    rll(:,:,:,:) = czero
     allocate (sll(nsra*lmmaxso,lmmaxso,irmdnew,0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(sll))*kind(sll), 'SLL', 'RHOVALNEW')
+    sll(:,:,:,:) = czero
     allocate (rllleft(nsra*lmmaxso,lmmaxso,irmdnew,0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(rllleft))*kind(rllleft), 'RLLLEFT', 'RHOVALNEW')
+    rllleft(:,:,:,:) = czero
     allocate (sllleft(nsra*lmmaxso,lmmaxso,irmdnew,0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(sllleft))*kind(sllleft), 'SLLLEFT', 'RHOVALNEW')
-    allocate (cden(irmdnew,0:lmax,nspin*(1+korbit),0:nth-1), stat=i_stat)
+    sllleft(:,:,:,:) = czero
+    allocate (cden(irmdnew,0:lmax,nspin/(2-korbit)*(1+korbit),0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(cden))*kind(cden), 'CDEN', 'RHOVALNEW')
-    allocate (cdenlm(irmdnew,lmsize,nspin*(1+korbit),0:nth-1), stat=i_stat)
+    cden(:,:,:,:) = czero
+    allocate (cdenlm(irmdnew,lmsize,nspin/(2-korbit)*(1+korbit),0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(cdenlm))*kind(cdenlm), 'CDENLM', 'RHOVALNEW')
-    allocate (cdenns(irmdnew,nspin*(1+korbit),0:nth-1), stat=i_stat)
+    cdenlm(:,:,:,:) = czero
+    allocate (cdenns(irmdnew,nspin/(2-korbit)*(1+korbit),0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(cdenns))*kind(cdenns), 'CDENNS', 'RHOVALNEW')
-    allocate (rho2nsc(irmdnew,lmpotd,nspin*(1+korbit)), stat=i_stat)
+    cdenns(:,:,:) = czero
+    allocate (rho2nsc(irmdnew,lmpotd,nspin/(2-korbit)*(1+korbit)), stat=i_stat)
     call memocc(i_stat, product(shape(rho2nsc))*kind(rho2nsc), 'RHO2NSC', 'RHOVALNEW')
-    allocate (rho2nsc_loop(irmdnew,lmpotd,nspin*(1+korbit),ielast), stat=i_stat)
+    rho2nsc(:,:,:) = czero
+    allocate (rho2nsc_loop(irmdnew,lmpotd,nspin/(2-korbit)*(1+korbit),ielast), stat=i_stat)
     call memocc(i_stat, product(shape(rho2nsc_loop))*kind(rho2nsc_loop), 'RHO2NSC_loop', 'RHOVALNEW')
+    rho2nsc_loop(:,:,:,:) = czero
     allocate (rho2nsnew(irmd,lmpotd,nspin/(2-korbit)*(1+korbit)), stat=i_stat)
     call memocc(i_stat, product(shape(rho2nsnew))*kind(rho2nsnew), 'RHO2NSNEW', 'RHOVALNEW')
-    allocate (r2nefc(irmdnew,lmpotd,nspin*(1+korbit)), stat=i_stat)
+    rho2nsnew(:,:,:) = czero
+    allocate (r2nefc(irmdnew,lmpotd,nspin/(2-korbit)*(1+korbit)), stat=i_stat)
     call memocc(i_stat, product(shape(r2nefc))*kind(r2nefc), 'R2NEFC', 'RHOVALNEW')
-    allocate (r2nefc_loop(irmdnew,lmpotd,nspin*(1+korbit),0:nth-1), stat=i_stat)
+    r2nefc(:,:,:) = czero
+    allocate (r2nefc_loop(irmdnew,lmpotd,nspin/(2-korbit)*(1+korbit),0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(r2nefc_loop))*kind(r2nefc_loop), 'R2NEFC_loop', 'RHOVALNEW')
+    r2nefc_loop(:,:,:,:) = czero
     allocate (r2nefnew(irmd,lmpotd,nspin/(2-korbit)*(1+korbit)), stat=i_stat)
     call memocc(i_stat, product(shape(r2nefnew))*kind(r2nefnew), 'R2NEFNEW', 'RHOVALNEW')
-    allocate (r2orbc(irmdnew,lmpotd,nspin*(1+korbit),0:nth-1), stat=i_stat)
+    r2nefnew(:,:,:) = czero
+    allocate (r2orbc(irmdnew,lmpotd,nspin/(2-korbit)*(1+korbit),0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(r2orbc))*kind(r2orbc), 'R2ORBC', 'RHOVALNEW')
+    r2orbc(:,:,:,:) = czero
     allocate (cdentemp(irmdnew,0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(cdentemp))*kind(cdentemp), 'CDENTEMP', 'RHOVALNEW')
+    cdentemp(:,:) = czero
     allocate (gflle_part(lmmaxso,lmmaxso,0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(gflle_part))*kind(gflle_part), 'GFLLE_PART', 'RHOVALNEW')
+    gflle_part(:,:,:) = czero
     allocate (gflle(lmmaxso,lmmaxso,ielast,1), stat=i_stat)
     call memocc(i_stat, product(shape(gflle))*kind(gflle), 'GFLLE', 'RHOVALNEW')
-    allocate (den(0:lmaxd1,ielast,1,nspin), denlm(lmsize,ielast,1,nspin), stat=i_stat)
+    gflle(:,:,:,:) = czero
+    allocate (den(0:lmaxd1,ielast,1,nspin/(2-korbit)), stat=i_stat)
     call memocc(i_stat, product(shape(den))*kind(den), 'DEN', 'RHOVALNEW')
-    rho2nsc = czero
-    rho2nsc_loop = czero
-    r2nefc = czero
-    r2nefc_loop = czero
-    r2orbc = czero
+    den(:,:,:,:) = czero
+    allocate (denlm(lmsize,ielast,1,nspin/(2-korbit)), stat=i_stat)
+    call memocc(i_stat, product(shape(den))*kind(den), 'DENLM', 'RHOVALNEW')
+    denlm(:,:,:,:) = czero
+
     rho2ns = 0.d0                  ! fivos 19.7.2014, this was CZERO
     r2nef = 0.d0                   ! fivos 19.7.2014, this was CZERO
-    rho2nsnew = czero
-    r2nefnew = czero
-    den = czero
-    denlm = czero
     espv = 0d0
     rho2int = czero
     denorbmom = 0d0
@@ -315,8 +335,6 @@ contains
     denorbmomns = 0d0
     thetanew = 0d0
     phinew = 0d0
-    gflle_part = czero
-    gflle = czero
     gldau = czero
     ! LM shifts for correct density summation
     lmshift1(1) = 0                ! qdos ruess
@@ -468,6 +486,16 @@ contains
         vnspll(:, :, :, ith) = vnspll1(:, :, :, ith)
       end if
 
+          open (7352834, file='vnspll_sra.txt', form='formatted')
+          if (nsra==2) then
+            write (7352834, '(A,3I9)') '# 2*LMMAXSO,2*LMMAXSO,IRMDNEW=', 2*lmmaxso, 2*lmmaxso, irmdnew
+          else
+            write (7352834, '(A,3I9)') '# LMMAXSO,LMMAXSO,IRMDNEW=', lmmaxso, lmmaxso, irmdnew
+          end if
+          write (7352834, '(2F25.14)') vnspll(:, :, :, ith)
+          close (7352834)
+
+
       if ((t_wavefunctions%nwfsavemax>0 .and. .not. rll_was_read_in) .or. (t_wavefunctions%nwfsavemax==0)) then ! read/recalc wavefunctions
 
         ! calculate the source terms in the Lippmann-Schwinger equation
@@ -484,11 +512,21 @@ contains
           use_fullgmat = 1
         end if
         call rllsllsourceterms(nsra, nvec, eryd, rnew, irmdnew, nrmaxd, lmax, lmmaxso, use_fullgmat, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor)
+          write (filename, '(A,I0.3,A,I0.3,A)') 'rll_source_jlk_atom_', i1, '_energ_', ie, '.dat'
+          open (888888, file=trim(filename), form='formatted')
+          write (888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: 4*(LMAX+1)=', 4*(lmax+1), ' IRMDNEW=', irmdnew, ' ; ERYD=', eryd
+          write (888888, '(2ES21.9)') jlk(:, :, ith)
+          close (888888)
 
         ! using spherical potential as reference
         if (use_sratrick==1) then
           call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin/(2-korbit), zat, eryd, lmpotd, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk(:,:,ith), jlk(:,:,ith), &
             hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, tmatsph(:,ith), alphasph, use_sratrick)
+          write (filename, '(A,I0.3,A,I0.3,A)') 'tmatsph_atom_', i1, '_energ_', ie, '.dat'
+          open (888888, file=trim(filename), form='formatted')
+          write (888888, '(A,I9,A,I9,A,I9)') '# dimension: lmmaxso=', lmmaxso, ' lmmaxso=', lmmaxso
+          write (888888, '(2ES21.9)') tmatsph(:, ith)
+          close (888888)
         end if
 
         ! calculate the tmat and wavefunctions
@@ -499,6 +537,7 @@ contains
         ! Right solutions
         ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         tmatll = czero
+        alphall = czero
         ! faster calculation of RLL.
         ! no irregular solutions SLL are needed in self-consistent iterations
         ! because the density depends only on RLL, RLLLEFT and SLLLEFT
@@ -513,6 +552,12 @@ contains
           rll(lmmaxso+1:nvec*lmmaxso, :, :, ith) = rll(lmmaxso+1:nvec*lmmaxso, :, :, ith)/cvlight
           sll(lmmaxso+1:nvec*lmmaxso, :, :, ith) = sll(lmmaxso+1:nvec*lmmaxso, :, :, ith)/cvlight
         end if
+
+          write (filename, '(A,I0.3,A,I0.3,A)') 'rll_atom_', i1, '_energ_', ie, '.dat'
+          open (888888, file=trim(filename), form='formatted')
+          write (888888, '(A,I9,A,I9,A,I9)') '# dimension: lmmaxso*nvec=', nvec*lmmaxso, ' lmmaxso=', lmmaxso, ' irmdnew=', irmdnew
+          write (888888, '(2ES21.9)') rll(:, :, :, ith)
+          close (888888)
 
       end if                       ! read/recalc wavefunctions
 
@@ -563,6 +608,7 @@ contains
         ! left solutions
         ! notice that exchange the order of left and right hankel/bessel functions
         tmattemp = czero
+        alphall = czero
         ! faster calculation of RLLLEFT and SLLLEFT.
         if (opt('RLL-SLL ') .and. .not. (opt('XCPL    ') .or. opt('OPERATOR'))) then
           call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), tmattemp, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
@@ -581,18 +627,14 @@ contains
 
       do iq = 1, nqdos             ! qdos
         ! read in GF
-        if (.not.test('NOSOC    ')) then
-          irec = iq + nqdos*(ie-1) + nqdos*ielast*(i1-1) ! qdos
-        else
-          irec = iq + nqdos*(ie-1) + nqdos*ielast*(ispin-1) + nqdos*ielast*2*(i1-1) ! qdos
-        end if
 #ifdef CPP_OMP
         ! $omp critical
 #endif
         if (t_tgmat%gmat_to_file) then
-          read (69, rec=irec) gmat0
+          irec = iq + nqdos*(ie-1) + nqdos*ielast*(ispin-1) + nqdos*ielast*nspin/(1+korbit)*(i1-1)
+          read (70, rec=irec) gmat0
         else
-          irec = iq + nqdos*(ie_num-1) + nqdos*ie_end*(i1-1)
+          irec = iq + nqdos*(ie_num-1) + nqdos*ie_end*(ispin-1) + nqdos*ie_end*nspin/(1+korbit)*(i1-1)
           gmat0(:, :) = t_tgmat%gmat(:, :, irec)
         end if
 #ifdef CPP_OMP
@@ -690,6 +732,15 @@ contains
               end do ! lm1
             end if
           end do ! jspin
+          ! fill summed values of orbital moment
+          do jspin=1, nspin
+            ! fill muorb(:,3,:) with sum of both spin channels
+            muorb(0:lmaxd1, 3) = muorb(0:lmaxd1, 3) + muorb(0:lmaxd1, jspin)
+          end do
+          ! sum over l-channels
+          do lm1 = 0, lmaxd1
+            muorb(lmaxd1+1, 1:3) = muorb(lmaxd1+1, 1:3) + muorb(lm1, 1:3)
+          end do
         end do ! IORB
       end if ! .not. test('NOSOC    ')
 
@@ -822,8 +873,8 @@ contains
       denorbmomlm = 0.0d0
       denorbmomns = 0.0d0
     end if
-    call mympi_main1c_comm_newsosol(nspin/(2-korbit), korbit, irmdnew, lmpotd, lmax, lmaxd1, lmsize, lmmaxso, ielast, nqdos, den, denlm, gflle, rho2nsc, r2nefc, rho2int, espv, muorb, denorbmom, denorbmomsp, &
-      denorbmomlm, denorbmomns, t_mpi_c_grid%mympi_comm_at)
+    call mympi_main1c_comm_newsosol(nspin/(2-korbit), korbit, irmdnew, lmpotd, lmax, lmaxd1, lmsize, lmmaxso, ielast, nqdos, den, denlm, &
+      gflle, rho2nsc, r2nefc, rho2int, espv, muorb, denorbmom, denorbmomsp, denorbmomlm, denorbmomns, t_mpi_c_grid%mympi_comm_at)
 #ifdef CPP_TIMING
     call timing_pause('main1c - communication')
 #endif
@@ -976,8 +1027,8 @@ contains
         call rotatevector(rho2nsnew, rho2ns, irws, lmpotd, thetanew, phinew, theta, phi, irmd)
         call rotatevector(r2nefnew, r2nef, irws, lmpotd, thetanew, phinew, theta, phi, irmd)
       else
-        rho2ns(:, :, :) = aimag(rho2nsnew(:,:,:))
-        r2nef(:, :, :) = aimag(r2nefnew(:,:,:))
+        rho2ns(1:irmd, 1:lmpotd, 1:nspin/(2-korbit)) = aimag(rho2nsnew(1:irmd, 1:lmpotd,1:nspin/(2-korbit)))
+        r2nef(1:irmd, 1:lmpotd, 1:nspin/(2-korbit)) = aimag(r2nefnew(1:irmd, 1:lmpotd,1:nspin/(2-korbit)))
       end if
 
       den_out(0:lmaxd1, 1:ielast, 1:nspin/(2-korbit)) = den(0:lmaxd1, 1:ielast, 1, 1:nspin/(2-korbit))

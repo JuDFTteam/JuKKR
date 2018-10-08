@@ -917,10 +917,13 @@ contains
 
     integer :: ihelp
     integer :: recvcounts(0:nranks-1), displs(0:nranks-1)
-    integer :: ierr
+    integer :: ierr, nspin
+
+    nspin = t_inc%nspin
+    if (t_inc%newsosol .and. .not.t_inc%nosoc) nspin = 1
 
     ! Gather gmat so that all processors have the full matrix
-    ihelp = t_inc%lmmaxd*t_inc%lmmaxd*t_inc%nqdos ! *t_inc%IELAST*t_inc%NSPIN*t_inc%NATYP
+    ihelp = t_inc%lmmaxd*t_inc%lmmaxd*t_inc%nqdos*nspin ! *t_inc%IELAST*t_inc%NSPIN*t_inc%NATYP
     if (t_mpi_c_grid%dims(1)>1) then
       recvcounts = ntot_pt*ihelp
       displs = ioff_pt*ihelp

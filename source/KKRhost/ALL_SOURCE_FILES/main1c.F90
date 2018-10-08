@@ -108,14 +108,12 @@ contains
     real (kind=dp), dimension (natypd) :: denefat
     real (kind=dp), dimension (nspind) :: charge_lly ! LLY
     real (kind=dp), dimension (0:lmaxd+1, npotd) :: espv
-    real (kind=dp), dimension (0:lmaxd+1, 2) :: espv1
     real (kind=dp), dimension (0:lmaxd+1, 2) :: dostot
     real (kind=dp), dimension (krel*20+(1-krel), npotd) :: ecorerel !! for a given (n,l) state the core energies corresponding first/second KAPPA value, AVERAGED over \mu's  These values are written out to the  potential file (routine <RITES>), but the read in (routine <STARTB1>) updates the ECORE array
     real (kind=dp), dimension (2, natypd) :: angles_new
     real (kind=dp), dimension (0:lmaxd+1, natypd, 2) :: charge
     real (kind=dp), dimension (mmaxd, mmaxd, nspind, natypd) :: wldauold
     complex (kind=dp), dimension (iemxd) :: df
-    complex (kind=dp), dimension (0:lmaxd+1, ielast, 2) :: den1
     complex (kind=dp), dimension (natypd, 3, nmvecmax) :: mvevi ! OUTPUT
     complex (kind=dp), dimension (natypd, 3, nmvecmax) :: mvevief ! OUTPUT
     complex (kind=dp), dimension (mmaxd, mmaxd, npotd) :: denmatc
@@ -129,7 +127,7 @@ contains
     !> @note attention: muorb second index means both spins and total
     ! -------------------------------------------------------------------------
     real (kind=dp), dimension (irmd*krel+(1-krel), natypd) :: rhoorb !! orbital density
-    real (kind=dp), dimension (0:lmaxd+1+1, 3, natypd) :: muorb !! orbital magnetic moment
+    real (kind=dp), dimension (0:lmaxd+2, 3, natypd) :: muorb !! orbital magnetic moment
     ! ----------------------------------------------------------------------
     ! R2NEF (IRMD,LMPOTD,NATYP,2)  ! rho at FERMI energy
     ! RHO2NS(IRMD,LMPOTD,NATYP,2)  ! radial density
@@ -248,7 +246,7 @@ contains
     ! LDA+U
     ! -------------------------------------------------------------------------
     if (t_tgmat%gmat_to_file) then
-      call opendafile(69, 'gmat', 4, lrectmt, tmpdir, itmpdir, iltmp)
+      call opendafile(70, 'gmat', 4, lrectmt, tmpdir, itmpdir, iltmp)
     end if
 
     ! write parameters file that contains passed parameters for further treatment of gflle
@@ -447,7 +445,7 @@ contains
       ! ----------------------------------------------------------------------
       do i1 = i1_start, i1_end
 
-        ! reset work arrays before computation
+        ! reset work arrays to zero before computation
         rho2n1(:,:,:) = 0.0_dp
         rho2n2(:,:,:) = 0.0_dp
 
@@ -487,7 +485,7 @@ contains
             call rhovalnew(ldorhoef, ielast, nsra, nspin, lmax, ez, wez, zat(i1), socscale(i1), cleb(1,1), icleb, iend, &
               ifunm1(1,icell), lmsp1(1,icell), ncheb, npan_tot(i1), npan_log_at(i1), npan_eq_at(i1), rmesh(1,i1), irws(i1), &
               rpan_intervall(0,i1), ipan_intervall(0,i1), rnew(1,i1), vinsnew, thetasnew(1,1,icell), theta(i1), phi(i1), i1, &
-              ipot, den1(0,1,ispin), espv1(0,ispin), rho2n1(1,1,ispin), rho2n2(1,1,ispin), muorb(0,1,i1), angles_new(:,i1), &
+              ipot, den(0,1,1,ipot), espv(0,ipot), rho2n1(1,1,ispin), rho2n2(1,1,ispin), muorb(0,1,i1), angles_new(:,i1), &
               idoldau, lopt(i1), wldau(1,1,1,i1), denmatn(1,1,1,1,i1), natyp, ispin) ! LDAU
 #ifdef CPP_TIMING
             call timing_pause('main1c - rhovalnew')
@@ -519,20 +517,6 @@ contains
               end do
             end do
           end if
-
-        else ! new spin-orbit solver
-
-          do ispin=1, nspin
-            espv(0:lmaxd1, ipot1+ispin-1) = espv1(0:lmaxd1, ispin)
-            den(0:lmaxd1, 1:ielast, 1, ipot1+ispin-1) = den1(0:lmaxd1, 1:ielast, ispin) 
-            
-            ! fill muorb(:,3,:) with sum of both spin channels
-            muorb(0:lmaxd1, 3, i1) = muorb(0:lmaxd1, 3, i1) + muorb(0:lmaxd1, ispin, i1)
-          end do
-          ! sum over l-channels
-          do l = 0, lmaxd1
-            muorb(lmaxd1+1, 1:3, i1) = muorb(lmaxd1+1, 1:3, i1) + muorb(l, 1:3, i1)
-          end do
 
         end if ! new spin-orbit solver
 
@@ -726,7 +710,7 @@ contains
 
       end if ! new spin-orbit solver
 
-      close (69)                   ! gmat file
+      close (70)                   ! gmat file
       close (30)                   ! close lmdos file
       if (.not. opt('NEWSOSOL')) then
 #ifndef CPP_MPI
@@ -988,9 +972,6 @@ contains
       call memocc(i_stat, product(shape(rho2ns))*kind(rho2ns), 'RHO2NS', 'main1c')
       allocate (r2nef(irmd,lmpotd,natypd,2), stat=i_stat)
       call memocc(i_stat, product(shape(r2nef))*kind(r2nef), 'R2NEF', 'main1c')
-      
-      rho2n1(:, :, :) = 0.0_dp
-      rho2n2(:, :, :) = 0.0_dp
       
       if (lly/=0) then
         allocate (cdos0(ielast), stat=i_stat)

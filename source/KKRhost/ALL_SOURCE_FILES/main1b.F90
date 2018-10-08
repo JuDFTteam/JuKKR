@@ -438,16 +438,10 @@ contains
     lly_grtr(:, :) = czero ! 1:IELAST,1:NSPIND
 
     ! determine extend of spin loop
-    if (.not. opt('NEWSOSOL')) then
-      nspin1 = nspin
-    else
+    nspin1 = nspin/(1+korbit) ! factor (1+korbit) takes care of NOSOC option
+    if (opt('NEWSOSOL')) then
       ! nonco angles
       call read_angles(t_params, natyp, theta_at, phi_at)
-      if (test('NOSOC   ') ) then
-        nspin1 = nspin
-      else
-        nspin1 = 1
-      end if
     end if
 
 #ifdef CPP_MPI
@@ -600,8 +594,7 @@ contains
             if (ispin==1) then     ! Ref. system is spin-independent     ! LLY
               tralpha1 = czero     ! LLY
               do l1 = 0, lmax      ! LLY
-                tralpha1 = tralpha1 + (2*l1+1)* & ! LLY
-                  dalpharef(l1, refpot(i1))/alpharef(l1, refpot(i1)) ! LLY
+                tralpha1 = tralpha1 + (2*l1+1)*dalpharef(l1, refpot(i1))/alpharef(l1, refpot(i1)) ! LLY
               end do
               tralpharef(ie) = tralpharef(ie) + tralpha1 ! LLY Tr[ alpharef^{-1} dalpharef/dE
             end if

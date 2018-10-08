@@ -161,7 +161,7 @@ contains
     if (nsra==2) then
       use_sratrick = 1
       if (test('nosph   ')) then
-        if (myrank==master .and. ith==0 .and. i1==1) then
+        if (myrank==master .and. ith==0 .and. i1==1 .and. ispin==1) then
           write (*, *) 'Found test option "nosph   ", deactivate SRATRICK'
         end if
         use_sratrick = 0
@@ -200,7 +200,9 @@ contains
 
     ! set up the non-spherical ll' matrix for potential VLL' (done in VLLMAT)
     call vllmat(1, nrmaxd, irmdnew, lmsize, lmmaxso, vnspll0, vins, lmpot, cleb, icleb, iend, nspin/(2-korbit), zat, rnew, use_sratrick, ncleb)
+    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! LDAU
+    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     if (idoldau==1) then
       lmlo = lopt**2 + 1
       lmhi = (lopt+1)**2
@@ -213,7 +215,9 @@ contains
         vnspll0(lmlo:lmhi, lmlo:lmhi, ir) = vnspll0(lmlo:lmhi, lmlo:lmhi, ir) + wldau(1:mmaxd, 1:mmaxd, 2)
       end do
     end if
+    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! LDAU
+    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     ! start energy loop
     if (myrank==master .and. (t_inc%i_write>0)) write (1337, *) 'atom: ', i1, ' NSRA:', nsra
@@ -688,11 +692,6 @@ contains
       !$omp critical
 #endif
       if (t_tgmat%tmat_to_file) then
-        if (.not. test('NOSOC   ')) then
-          irec = ie + ielast*(i1-1)
-        else
-          irec = ie + ielast*(ispin-1) + ielast*nspin*(i1-1)
-        end if
 #ifndef CPP_OMP
         if (test('rhoqtest')) then
 
@@ -717,6 +716,7 @@ contains
 
         end if                     ! test('rhoqtest')
 #endif
+        irec = ie + ielast*(ispin-1) + ielast*nspin/(2-korbit)*(i1-1)
         write (69, rec=irec) tmatll(:, :)
         ! human readable writeout if test option is hit
         if (test('fileverb')) then
@@ -728,11 +728,7 @@ contains
 #else
         i11 = i1
 #endif
-        if (.not. test('NOSOC   ')) then
-          irec = ie_num + ie_end*(i11-1)
-        else
-          irec = ie_num + ie_end*(ispin-1) + ie_num*nspin*(i11-1)
-        end if
+        irec = ie_num + ie_end*(ispin-1) + ie_end*nspin/(1+korbit)*(i11-1)
         t_tgmat%tmat(:, :, irec) = tmatll(:, :)
       end if
       if (lly/=0) then

@@ -93,7 +93,7 @@ contains
 #ifdef CPP_MPI
     integer :: ntot_pt(0:nranks-1), ioff_pt(0:nranks-1)
 #endif
-    integer :: ie_end, ie_num, ie_start
+    integer :: ie_end, ie_num, ie_start, i11
     ! ..
     ! .. External Functions ..
     logical, external :: test
@@ -265,8 +265,8 @@ contains
 
 
       tmat0(:, :) = tmatll(:, :)
-      irec = ie + ielast*(ispin-1) + ielast*nspin*(i1-1)
       if (t_tgmat%tmat_to_file) then
+        irec = ie + ielast*(ispin-1) + ielast*nspin*(i1-1)
         write (69, rec=irec) tmat0
         ! human readable writeout if test option is hit
         if (test('fileverb')) then
@@ -274,10 +274,11 @@ contains
         end if
       else
 #ifdef CPP_MPI
-        irec = ie_num + ie_end*(ispin-1) + ie_end*nspin*(i1-t_mpi_c_grid%ioff_pt1(t_mpi_c_grid%myrank_ie)-1)
+        i11 = i1-t_mpi_c_grid%ioff_pt1(t_mpi_c_grid%myrank_ie)
 #else
-        irec = ie_num + ie_end*(ispin-1) + ie_end*nspin*(i1-1)
+        i11 = i1
 #endif
+        irec = ie_num + ie_end*(ispin-1) + ie_end*nspin*(i11-1)
         t_tgmat%tmat(:, :, irec) = tmat0
       end if
       if (lly/=0) then             ! LLY

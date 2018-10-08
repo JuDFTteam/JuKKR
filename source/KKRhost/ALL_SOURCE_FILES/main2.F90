@@ -288,12 +288,13 @@ contains
     if (test('flow    ')) write (1337, *) '<<< RHOTOTB'
 
     if (test('RHOVALTW')) then     ! Bauer
+      open (unit=324234, file='out_rhotot')
       do i1 = 1, natyp
-        open (unit=324234, file='out_rhotot')
         write (324234, *) '#IATOM', i1
         write (324234, '(50000F14.7)') rho2ns(:, :, i1, 1)
         if (nspin==2) write (324234, '(50000F14.7)') rho2ns(:, :, i1, 2)
       end do
+      close (unit=324234)
     end if
 
     ! -------------------------------------------------------------------------

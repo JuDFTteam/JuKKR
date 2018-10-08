@@ -36,6 +36,7 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
 
     # increase stacksize on mac
     if(CMAKE_SYSTEM_NAME MATCHES Darwin)
+        message("Adding stack size flags for Intel compiler on mac")
         set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -Wl,-stack_size,0x80000000,-stack_addr,0xf0000000")
     endif()
 
@@ -55,6 +56,7 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
 
     # for coverage report
     if(ENABLE_COV)
+        message("Set profiling flags for test coverage report")
         set(CMAKE_Fortran_FLAGS     "${CMAKE_Fortran_FLAGS} -prof-gen:srcpos")
     endif()
 
@@ -82,6 +84,7 @@ elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
 
     # flags for code-coverage
     if(ENABLE_COV)
+        message("Set profiling flags for test coverage report")
         set(CMAKE_Fortran_FLAGS     "${CMAKE_Fortran_FLAGS} -fprofile-arcs -ftest-coverage -fPIC")
     endif()
 

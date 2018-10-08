@@ -343,10 +343,9 @@ contains
             ! -------------------------------------------------------------------
             ! Read in Green function
             ! -------------------------------------------------------------------
-            irec = iq + nqdos*(ie-1) + nqdos*ielast*(ispin-1) + & ! qdos (without qdos, IQ=NQDOS=1)
-              nqdos*ielast*nspin*(i1-1) ! qdos
             if (t_tgmat%gmat_to_file) then
-              read (69, rec=irec) gmat0
+              irec = iq + nqdos*(ie-1) + nqdos*ielast*(ispin-1) + nqdos*ielast*nspin*(i1-1) ! qdos
+              read (70, rec=irec) gmat0
             else
               irec = iq + nqdos*(ie_num-1) + nqdos*t_mpi_c_grid%ntot2*(ispin-1) + nqdos*t_mpi_c_grid%ntot2*nspin*(i1-1)
               gmat0(:, :) = t_tgmat%gmat(:, :, irec)

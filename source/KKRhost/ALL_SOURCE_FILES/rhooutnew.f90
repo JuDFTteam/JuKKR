@@ -67,7 +67,7 @@ contains
     complex (kind=dp), dimension (irmdnew, lmmaxd/(1+korbit), nspin*(1+korbit)), intent (out) :: cdenlm
 
     ! .. In/Out variables
-    complex (kind=dp), dimension (irmdnew, lmpot, nspin*(1+korbit)), intent (inout) :: rho2nsc
+    complex (kind=dp), dimension (irmdnew, lmpot, nspin*(1+korbit)), intent (out) :: rho2nsc
 
     ! .. Local variables
     integer :: lmsize
