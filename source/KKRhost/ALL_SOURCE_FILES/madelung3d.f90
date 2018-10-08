@@ -19,6 +19,9 @@ contains
   !> @note All positions must be scaled with ALAT to get them correct
   !> The record index is simply (IQ1-1)*NAEZ + IQ2 for record (IQ1,IQ2)
   !> @endnote
+  !> @todo This routine uses both naez and naezd which should be the same number, 
+  !> one should replace this to eliminate redundant variables.
+  !> @endtodo
   !-------------------------------------------------------------------------------
   subroutine madelung3d(lpot,yrg,wg,naez,alat,volume0,bravais,recbv,rbasis,rmax,    &
     gmax,naezd,lmxspd,lassld,lpotd, lmpotd,nmaxd,ishld,nembd,wlength)
@@ -40,26 +43,23 @@ contains
     ! ..
     ! .. Scalar Arguments ..
     integer, intent(in) :: lpot     !! Maximum l component in potential expansion
+    integer, intent(in) :: naez     !! Number of atoms in unit cell
     integer, intent(in) :: naezd    !! Number of atoms in unit cell
     integer, intent(in) :: nmaxd    !! Paremeters for the Ewald summations
     integer, intent(in) :: ishld    !! Paremeters for the Ewald summations
     integer, intent(in) :: lpotd    !! Maximum l component in potential expansion
-    integer, intent(in) :: nleft    !! Number of repeated basis for left host to get converged electrostatic potentials
-    integer, intent(in) :: nright   !! Number of repeated basis for right host to get converged electrostatic potentials
     integer, intent(in) :: lassld   !! 4*lmax
     integer, intent(in) :: lmpotd   !! (lpot+1)**2
     integer, intent(in) :: lmxspd   !! (2*lpot+1)**2
     integer, intent(in) :: nembd    !! Number of 'embedding' positions
     integer, intent(in) :: wlength  !! Word length for direct access files, compiler dependent ifort/others (1/4)
-    integer, intent(in) :: nlbasis  !! Number of basis layers of left host (repeated units)
-    integer, intent(in) :: nrbasis  !! Number of basis layers of right host (repeated units)
     real (kind=dp), intent(in) :: alat  !! Lattice constant in a.u.
-    real (kind=sp), intent(in) :: rmax  !! Ewald summation cutoff parameter for real space summation
-    real (kind=dp), intent(in) :: gmax  !! Ewald summation cutoff parameter for reciprocal space summation
+    real (kind=dp), intent(inout) :: rmax  !! Ewald summation cutoff parameter for real space summation
+    real (kind=dp), intent(inout) :: gmax  !! Ewald summation cutoff parameter for reciprocal space summation
     real (kind=dp), intent(in) :: volume0
     ! ..
     ! .. Array Arguments ..
-    real (kind=sp), dimension(lassld), intent(in) :: wg !! Integr. weights for Legendre polynomials
+    real (kind=dp), dimension(lassld), intent(in) :: wg !! Integr. weights for Legendre polynomials
     real (kind=dp), dimension(lassld, 0:lassld, 0:lassld), intent(in) :: yrg  !! Spherical harmonics (GAUNT2)
     real (kind=dp), dimension(3,3), intent(in) :: recbv   !! Reciprocal basis vectors
     real (kind=dp), dimension(3,3), intent(in) :: bravais !! Bravais lattice vectors

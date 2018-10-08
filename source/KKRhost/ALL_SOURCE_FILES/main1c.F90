@@ -1,14 +1,12 @@
-! -------------------------------------------------------------------------------
-! MODULE: MOD_MAIN1C
-!> @brief Wrapper module for the calculation of the density for the JM-KKR package
-!> @details The code uses the information obtained in the main0 module, this is
+!------------------------------------------------------------------------------------
+!> Summary: Wrapper module for the calculation of the density for the JM-KKR package
+!> Author: Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,        
+!> and many others ...
+!> Wrapper module for the calculation of the density for the JM-KKR package.
+!> The code uses the information obtained in the main0 module, this is
 !> mostly done via the get_params_1c() call, that obtains parameters of the type
 !> t_params and passes them to local variables
-!> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
-!> and many others ...
-!> @note
-!> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
-! -------------------------------------------------------------------------------
+!------------------------------------------------------------------------------------
 module mod_main1c
 
   use :: mod_profiling
@@ -35,12 +33,14 @@ module mod_main1c
 
 contains
 
-  ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: main1c
-  !> @brief Main subroutine regarding the calculation of the electronic density
-  !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
+  !------------------------------------------------------------------------------- 
+  !> Summary: Main subroutine regarding the calculation of the electronic density
+  !> Author: Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
   !> and many others ...
-  ! ----------------------------------------------------------------------------
+  !> Category: communication, physical-observables, KKRhost 
+  !> Deprecated: False 
+  !> Main subroutine regarding the calculation of the electronic density
+  !------------------------------------------------------------------------------- 
   subroutine main1c()
 
 #ifdef CPP_MPI
@@ -209,11 +209,16 @@ contains
     ! the main0 module, now  instead of unformatted files take parameters from
     ! types defined in wunfiles.F90
     ! -------------------------------------------------------------------------
-    call get_params_1c(t_params, krel, naezd, natypd, ncleb, lm2d, ncheb, ipand, lmpotd, lmaxd, lmxspd, nfund, npotd, ntotd, mmaxd, iemxd, irmd, nsra, ins, nspin, nacls1, icst, &
-      kmrot, iqat, idoldau, irws, ipan, ircut, iend, icleb, loflm, jend, ifunm1, lmsp1, nfu, llmsp, lcore, ncore, ntcell, irmin, ititle, intervx, intervy, intervz, lly, itmpdir, &
-      iltmp, npan_eq_at, ipan_intervall, npan_log_at, npan_tot, ntldau, lopt, itldau, ielast, iesemicore, npol, irshift, jwsrel, zrel, itrunldau, qmtet, qmphi, conc, alat, zat, &
-      drdi, rmesh, a, b, cleb, thetas, socscale, rpan_intervall, cscl, rnew, socscl, thetasnew, efermi, erefldau, ueff, jeff, emin, emax, tk, vins, visp, ecore, drdirel, r2drdirel, &
-      rmrel, vtrel, btrel, wldau, uldau, ez, wez, phildau, tmpdir, solver, nspind, nspotd, irmind, lmaxd1, ncelld, irid, r_log, naez, natyp, lmax)
+    call get_params_1c(t_params,krel,naezd,natypd,ncleb,lm2d,ncheb,ipand,lmpotd,    &
+      lmaxd,lmxspd,nfund,npotd,ntotd,mmaxd,iemxd,irmd,nsra,ins,nspin, nacls1, icst, &
+      kmrot,iqat,idoldau,irws,ipan,ircut,iend,icleb,loflm,jend,ifunm1,lmsp1,nfu,    &
+      llmsp,lcore,ncore,ntcell,irmin,ititle,intervx,intervy,intervz,lly,itmpdir,    &
+      iltmp,npan_eq_at,ipan_intervall,npan_log_at,npan_tot,ntldau,lopt,itldau,      &
+      ielast,iesemicore,npol,irshift,jwsrel,zrel,itrunldau,qmtet,qmphi,conc,alat,   &
+      zat,drdi,rmesh,a,b,cleb,thetas,socscale,rpan_intervall,cscl,rnew,socscl,      &
+      thetasnew,efermi,erefldau,ueff,jeff,emin,emax,tk,vins,visp,ecore,drdirel,     &
+      r2drdirel,rmrel,vtrel,btrel,wldau,uldau,ez,wez,phildau,tmpdir,solver,nspind,  &
+      nspotd, irmind, lmaxd1, ncelld, irid, r_log, naez, natyp, lmax)
 
     ! Initialization needed due to merging to one executable
     espv(:, :) = 0.d0
@@ -421,7 +426,9 @@ contains
       ! ----------------------------------------------------------------------
 #ifdef CPP_MPI
       ntot1 = t_inc%natyp
-      call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at, master, ntot1, ntot_pt, ioff_pt, .true.)
+      call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie,                       &
+        t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at,master,ntot1,ntot_pt,ioff_pt, &
+        .true.)
 
       i1_start = ioff_pt(t_mpi_c_grid%myrank_ie) + 1
       i1_end = ioff_pt(t_mpi_c_grid%myrank_ie) + ntot_pt(t_mpi_c_grid%myrank_ie)
@@ -451,11 +458,17 @@ contains
 #ifdef CPP_TIMING
           call timing_start('main1c - rhoval')
 #endif
-          call rhoval(ihost, ldorhoef, icst, ins, ielast, nsra, ispin, nspin, nspinpot, i1, ez, wez, drdi(1,i1), rmesh(1,i1), vins(irmind,1,knosph*ipot+(1- &
-            knosph)), visp(1,ipot), zat(i1), ipan(i1), ircut(0,i1), irmin(i1), thetas(1,1,icell), ifunm1(1,icell), lmsp1(1,icell), rho2n1(1,1,ipot1), rho2n2(1,1,ipot1), &
-            rhoorb(1,i1), den(0,1,1,ipot), denlm(1,1,1,ipot), muorb(0,1,i1), espv(0,ipot1), cleb, loflm, icleb, iend, jend, solver, socscl(1,krel*i1+(1-krel)), cscl(1,krel*i1+(1- &
-            krel)), vtrel(1,i1), btrel(1,i1), rmrel(1,i1), drdirel(1,i1), r2drdirel(1,i1), zrel(i1), jwsrel(i1), irshift(i1), lmomvec, qmtet(iq), qmphi(iq), mvevil1, mvevil2, &
-            nmvecmax, idoldau, lopt(i1), phildau(1,i1), wldau(1,1,1,i1), denmatc(1,1,ipot), natyp, nqdos, lmax)
+          call rhoval(ihost,ldorhoef,icst,ins,ielast,nsra,ispin,nspin,nspinpot,i1,  &
+            ez,wez,drdi(1,i1),rmesh(1,i1),vins(irmind,1,knosph*ipot+(1-knosph)),    &
+            visp(1,ipot),zat(i1),ipan(i1),ircut(0,i1),irmin(i1),thetas(1,1,icell),  &
+            ifunm1(1,icell),lmsp1(1,icell),rho2n1(1,1,ipot1),rho2n2(1,1,ipot1),     &
+            rhoorb(1,i1),den(0,1,1,ipot),denlm(1,1,1,ipot),muorb(0,1,i1),           &
+            espv(0,ipot1),cleb,loflm,icleb,iend,jend,solver,                        &
+            socscl(1,krel*i1+(1-krel)),cscl(1,krel*i1+(1-krel)),vtrel(1,i1),        &
+            btrel(1,i1),rmrel(1,i1),drdirel(1,i1),r2drdirel(1,i1),zrel(i1),         &
+            jwsrel(i1),irshift(i1),lmomvec,qmtet(iq),qmphi(iq),mvevil1,mvevil2,     &
+            nmvecmax,idoldau,lopt(i1),phildau(1,i1),wldau(1,1,1,i1),                &
+            denmatc(1,1,ipot),natyp,nqdos,lmax)
 #ifdef CPP_TIMING
           call timing_pause('main1c - rhoval')
 #endif
@@ -628,10 +641,14 @@ contains
 #ifdef CPP_TIMING
       call timing_start('main1c - communication')
 #endif
-      call mympi_main1c_comm(irmd, lmpotd, natyp, lmax, lmaxd1, lmmaxd, npotd, ielast, mmaxd, idoldau, natyp, krel, lmomvec, nmvecmax, nqdos, rho2ns, r2nef, espv, den, denlm, &
-        denmatc, denef, denefat, rhoorb, muorb, mvevi, mvevil, mvevief, t_mpi_c_grid%mympi_comm_ie)
-      call mympi_main1c_comm(irmd, lmpotd, natyp, lmax, lmaxd1, lmmaxd, npotd, ielast, mmaxd, idoldau, natyp, krel, lmomvec, nmvecmax, nqdos, rho2ns, r2nef, espv, den, denlm, &
-        denmatc, denef, denefat, rhoorb, muorb, mvevi, mvevil, mvevief, t_mpi_c_grid%mympi_comm_at)
+      call mympi_main1c_comm(irmd,lmpotd,natyp,lmax,lmaxd1,lmmaxd,npotd,ielast,     &
+        mmaxd,idoldau,natyp,krel,lmomvec,nmvecmax,nqdos,rho2ns,r2nef,espv,den,denlm,&
+        denmatc,denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief,                    &
+        t_mpi_c_grid%mympi_comm_ie)
+      call mympi_main1c_comm(irmd,lmpotd,natyp,lmax,lmaxd1,lmmaxd,npotd,ielast,     &
+        mmaxd,idoldau,natyp,krel,lmomvec,nmvecmax,nqdos,rho2ns,r2nef,espv,den,denlm,&
+        denmatc,denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief,                    &
+        t_mpi_c_grid%mympi_comm_at)
 #ifdef CPP_TIMING
       call timing_stop('main1c - communication')
 #endif
@@ -677,8 +694,9 @@ contains
         call cinit(mmaxd*mmaxd*4*natyp, denmatn(1,1,1,1,1))
       end if
 
-      call interpolate_poten(lpotd, irmd, irnsd, natyp, ipand, lmpotd, nspotd, ntotd, ntotd*(ncheb+1), nspin, rmesh, irmin, irws, ircut, vins, visp, npan_log_at, npan_eq_at, &
-        npan_tot, rnew, ipan_intervall, vinsnew)
+      call interpolate_poten(lpotd,irmd,irnsd,natyp,ipand,lmpotd,nspotd,ntotd,      &
+        ntotd*(ncheb+1),nspin,rmesh,irmin,irws,ircut,vins,visp,npan_log_at,         &
+        npan_eq_at,npan_tot,rnew,ipan_intervall,vinsnew)
 
 
 #ifdef CPP_MPI
@@ -692,7 +710,7 @@ contains
       else
         nranks_local = 1
       end if
-      call distribute_linear_on_tasks(nranks_local, t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at, master, ntot1, ntot_pt, ioff_pt, .true., .true.)
+      call distribute_linear_on_tasks(nranks_local,t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at, master, ntot1, ntot_pt, ioff_pt, .true., .true.)
       if (t_mpi_c_grid%nranks_ie<=t_mpi_c_grid%dims(1)) then
         i1_start = ioff_pt(t_mpi_c_grid%myrank_ie) + 1
         i1_end = ioff_pt(t_mpi_c_grid%myrank_ie) + ntot_pt(t_mpi_c_grid%myrank_ie)
@@ -729,10 +747,13 @@ contains
         call timing_start('main1c - rhovalnew')
 #endif
 
-        call rhovalnew(ldorhoef, ielast, nsra, nspin, lmax, ez, wez, zat(i1), socscale(i1), cleb(1,1), icleb, iend, ifunm1(1,icell), lmsp1(1,icell), ncheb, npan_tot(i1), &
-          npan_log_at(i1), npan_eq_at(i1), rmesh(1,i1), irws(i1), rpan_intervall(0,i1), ipan_intervall(0,i1), rnew(1,i1), vinsnew, thetasnew(1,1,icell), theta(i1), phi(i1), i1, &
-          ipot, den1(0,1,1), espv1(0,1), rho2m1, rho2m2, muorb(0,1,i1), angles_new(:,i1), idoldau, lopt(i1), wldau(1,1,1,i1), & ! LDAU
-          denmatn(1,1,1,1,i1), natyp) ! LDAU
+        call rhovalnew(ldorhoef,ielast,nsra,nspin,lmax,ez,wez,zat(i1),socscale(i1), &
+          cleb(1,1),icleb,iend,ifunm1(1,icell),lmsp1(1,icell),ncheb,npan_tot(i1),   &
+          npan_log_at(i1),npan_eq_at(i1),rmesh(1,i1),irws(i1),rpan_intervall(0,i1), &
+          ipan_intervall(0,i1),rnew(1,i1),vinsnew,thetasnew(1,1,icell),theta(i1),   &
+          phi(i1),i1,ipot,den1(0,1,1),espv1(0,1),rho2m1,rho2m2,muorb(0,1,i1),       &
+          angles_new(:,i1), idoldau, lopt(i1), wldau(1,1,1,i1),                     & ! LDAU
+          denmatn(1,1,1,1,i1), natyp)                                                 ! LDAU
 
 #ifdef CPP_TIMING
         call timing_pause('main1c - rhovalnew')
@@ -778,8 +799,9 @@ contains
 #ifdef CPP_MPI
       ! reset NQDOS to 1 to avoid endless communication
       nqdos = 1
-      call mympi_main1c_comm_newsosol2(lmaxd1, lmmaxd, ielast, nqdos, npotd, natyp, lmpotd, irmd, mmaxd, den, denlm, muorb, espv, r2nef, rho2ns, denefat, denef, denmatn, &
-        angles_new, t_mpi_c_grid%mympi_comm_ie)
+      call mympi_main1c_comm_newsosol2(lmaxd1,lmmaxd,ielast,nqdos,npotd,natyp,      &
+        lmpotd,irmd,mmaxd,den,denlm,muorb,espv,r2nef,rho2ns,denefat,denef,denmatn,  &
+        angles_new,t_mpi_c_grid%mympi_comm_ie)
 #endif
 
 #ifdef CPP_TIMING
@@ -826,7 +848,8 @@ contains
         lmaxp1 = lmax              ! LLY
         if (ins/=0) lmaxp1 = lmax + 1 ! LLY
 
-        call renorm_lly(cdos_lly, ielast, nspin, natyp, den(:,:,1,:), lmaxp1, conc, 1, ielast, wez, ircut, ipan, ez, zat, rho2ns, r2nef, denef, denefat, espv)
+        call renorm_lly(cdos_lly,ielast,nspin,natyp,den(:,:,1,:),lmaxp1,conc,1,     &
+          ielast,wez,ircut,ipan,ez,zat,rho2ns,r2nef,denef,denefat,espv)
 
       end if                       ! LLY
 
@@ -881,9 +904,11 @@ contains
         ! Construct LDA+U interaction matrix for next iteration
         ! -------------------------------------------------------------------
         if (.not. opt('NEWSOSOL')) then
-          call wmatldau(ntldau, itldau, nspinpot, denmatc, lopt, ueff, jeff, uldau, wldau, eu, edc, mmaxd, npotd, natyp, nspin, lmax)
+          call wmatldau(ntldau,itldau,nspinpot,denmatc,lopt,ueff,jeff,uldau,wldau,  &
+            eu,edc,mmaxd,npotd,natyp,nspin,lmax)
         else
-          call wmatldausoc(ntldau, itldau, nspinpot, denmatn, lopt, ueff, jeff, uldau, wldau, eu, edc, mmaxd, natyp, nspin, lmax)
+          call wmatldausoc(ntldau,itldau,nspinpot,denmatn,lopt,ueff,jeff,uldau,     &
+            wldau,eu,edc,mmaxd,natyp,nspin,lmax)
         end if
         ! -> Mix old and new LDA+U interaction matrices
         call mixldau(mmaxd, nspind, natyp, natyp, nspin, lopt, wldauold, wldau)
@@ -897,20 +922,23 @@ contains
         ! -------------------------------------------------------------------
         ! Write full lda+u information in ascii file ldaupot_new
         ! -------------------------------------------------------------------
-        call wrldaupot(itrunldau, lopt, ueff, jeff, erefldau, natyp, wldau, uldau, phildau, irmd, natyp, nspind, mmaxd, irws)
+        call wrldaupot(itrunldau,lopt,ueff,jeff,erefldau,natyp,wldau,uldau,phildau, &
+          irmd,natyp,nspind,mmaxd,irws)
       end if
       ! ----------------------------------------------------------------------
       ! LDA+U
       ! ----------------------------------------------------------------------
 
-      call wrmoms(krel+korbit, natyp, nspinpot, texts, textl, textns, charge, muorb, lmax, lmaxd1)
+      call wrmoms(krel+korbit,natyp,nspinpot,texts,textl,textns,charge,muorb,lmax,  &
+        lmaxd1)
       ! ----------------------------------------------------------------------
       ! ITERMDIR
       ! ----------------------------------------------------------------------
       if ((krel==1) .and. lmomvec) then
         do i1 = 1, natyp
           iq = iqat(i1)
-          call mvecglobal(i1, iq, natyp, qmphi(iq), qmtet(iq), mvevi, mvevil, mvevief, natyp, lmax, nmvecmax)
+          call mvecglobal(i1,iq,natyp,qmphi(iq),qmtet(iq),mvevi,mvevil,mvevief,     &
+            natyp,lmax,nmvecmax)
         end do
       end if
       ! ----------------------------------------------------------------------
@@ -920,7 +948,8 @@ contains
       ! TEST BRAHIM
       ! ----------------------------------------------------------------------
       if (npol==0 .or. test('DOS     ')) then
-        call wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, emin, emax, alat, tk, nacls1, nspinpot, natyp, conc, ielast, intervx, intervy, intervz, dostot)
+        call wrldos(den,ez,wez,lmaxd1,iemxd,npotd,ititle,efermi,emin,emax,alat,tk,  &
+          nacls1,nspinpot,natyp,conc,ielast,intervx,intervy,intervz,dostot)
       end if
 
       ! ----------------------------------------------------------------------
@@ -941,9 +970,11 @@ contains
             ipot = (i1-1)*nspinpot + ispin
             ipot1 = (i1-1)*nspinpot + 1
 
-            call rhocore(nsra, ispin, nspin, i1, drdi(1,i1), rmesh(1,i1), visp(1,ipot), a(i1), b(i1), zat(i1), ircut(0,i1), rhoc(1,ipot1), ecore(1,ipot), ncore(ipot), &
-              lcore(1,ipot), cscl(1,krel*i1+(1-krel)), vtrel(1,i1), btrel(1,i1), rmrel(1,i1), drdirel(1,i1), r2drdirel(1,i1), zrel(i1), jwsrel(i1), irshift(i1), ecorerel(1,ipot1), &
-              nkcore(1,i1), kapcore(1,ipot1))
+            call rhocore(nsra,ispin,nspin,i1,drdi(1,i1),rmesh(1,i1),visp(1,ipot),   &
+              a(i1),b(i1),zat(i1),ircut(0,i1),rhoc(1,ipot1),ecore(1,ipot),          &
+              ncore(ipot),lcore(1,ipot),cscl(1,krel*i1+(1-krel)),vtrel(1,i1),       &
+              btrel(1,i1),rmrel(1,i1),drdirel(1,i1),r2drdirel(1,i1),zrel(i1),       &
+              jwsrel(i1),irshift(i1),ecorerel(1,ipot1),nkcore(1,i1),kapcore(1,ipot1))
 
           end do
         end do
@@ -956,8 +987,9 @@ contains
       ! ----------------------------------------------------------------------
       ! CORE STATES
       ! ----------------------------------------------------------------------
-      call save_density(t_params, rho2ns, r2nef, rhoc, denef, denefat, espv, ecore, idoldau, lopt, eu, edc, chrgsemicore, rhoorb, ecorerel, nkcore, kapcore, krel, natyp, npotd, &
-        irmd, lmpotd, lmaxd1)
+      call save_density(t_params,rho2ns,r2nef,rhoc,denef,denefat,espv,ecore,idoldau,&
+        lopt,eu,edc,chrgsemicore,rhoorb,ecorerel,nkcore,kapcore,krel,natyp,npotd,   &
+        irmd,lmpotd,lmaxd1)
 
       if (test('den-asci')) then
         open (67, file='densitydn.ascii', form='formatted')

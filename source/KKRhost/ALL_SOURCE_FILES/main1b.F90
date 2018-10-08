@@ -1,11 +1,9 @@
-! -------------------------------------------------------------------------------
-! MODULE: MOD_MAIN1B
-!> @brief Module concerning gmat
-!> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
-!> and many others ...
-!> @note
-!> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
-! -------------------------------------------------------------------------------
+!------------------------------------------------------------------------------------
+!> Summary: Wrapper module for the calculation of Gmat
+!> Author: Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,       
+!> and many others ... 
+!> Wrapper module for the calculation of Gmat 
+!------------------------------------------------------------------------------------
 module mod_main1b
 
   use :: mod_profiling
@@ -28,12 +26,14 @@ module mod_main1b
 
 contains
 
-  ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: main1b
-  !> @brief Main subroutine regarding the claculation of the gmat
-  !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
-  !> and many others ...
-  ! ----------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------  
+  !> Summary: Main subroutine regarding the claculation of the gmat 
+  !> Author: Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,     
+  !> and many others ... 
+  !> Category: structural-greensfunction, k-points, reference-system 
+  !> Deprecated: False 
+  !> Main subroutine regarding the claculation of the structural Green's function
+  !-------------------------------------------------------------------------------  
   subroutine main1b()
 
     use :: mod_types, only: t_tgmat, t_inc, t_lloyd, t_cpa, init_t_cpa, t_imp
@@ -214,10 +214,14 @@ contains
     ! the main0 module, now  instead of unformatted files take parameters from
     ! types defined in wunfiles.F90
     ! -------------------------------------------------------------------------
-    call get_params_1b(t_params, natypd, naezd, natyp, naclsd, ielast, npol, nclsd, nrefd, nref, nembd, naez, nsra, ins, nspin, lmaxd, ncls, lly, krel, atom, cls, nacls, refpot, &
-      ez, itmpdir, iltmp, alat, rcls, iemxd, rmtref, vref, tmpdir, nsheld, nprincd, kpoibz, atomimp, natomimpd, icc, igf, nlbasis, nrbasis, ncpa, icpa, itcpamax, cpatol, nrd, &
-      ideci, rbasis, rr, ezoa, nshell, kmrot, kaoez, ish, jsh, nsh1, nsh2, noq, iqat, nofgij, natomimp, conc, kmesh, maxmesh, nsymat, nqcalc, ratom, rrot, drotq, ijtabcalc, &
-      ijtabcalc_i, ijtabsym, ijtabsh, iqcalc, dsymll, invmod, icheck, symunitary, rc, crel, rrel, srrel, nrrel, irrel, lefttinvll, righttinvll, vacflag, nofks, volbz, bzkp, volcub, &
+    call get_params_1b(t_params,natypd,naezd,natyp,naclsd,ielast,npol,nclsd,nrefd,  &
+      nref,nembd,naez,nsra,ins,nspin,lmaxd,ncls,lly,krel,atom,cls,nacls,refpot,     &
+      ez, itmpdir, iltmp, alat, rcls, iemxd, rmtref, vref, tmpdir, nsheld, nprincd, &
+      kpoibz,atomimp,natomimpd,icc,igf,nlbasis,nrbasis,ncpa,icpa,itcpamax,cpatol,   &
+      nrd,ideci,rbasis,rr,ezoa,nshell,kmrot,kaoez,ish,jsh,nsh1,nsh2,noq,iqat,       &
+      nofgij,natomimp,conc,kmesh,maxmesh,nsymat,nqcalc,ratom,rrot,drotq,ijtabcalc,  &
+      ijtabcalc_i,ijtabsym,ijtabsh,iqcalc,dsymll,invmod,icheck,symunitary,rc,crel,  &
+      rrel,srrel,nrrel,irrel,lefttinvll,righttinvll,vacflag,nofks,volbz,bzkp,volcub,&
       wez, nembd1, lmmaxd, nsymaxd, nspindd, maxmshd, rclsimp)
 
     if (test('rhoqtest')) then
@@ -526,14 +530,15 @@ contains
             end do
 
             if (test('rhoqtest')) then
-              call rhoq_save_refpot(ielast, i1, nref, natyp, refpot(1:natyp), wlength, lmmaxd, ie, trefll)
+              call rhoq_save_refpot(ielast,i1,nref,natyp,refpot(1:natyp),wlength,   &
+                lmmaxd,ie,trefll)
             end if                 ! rhoqtest
 
           end do                   ! I1
         else
           do i1 = 1, nref
-            call calctref13(eryd, vref(i1), rmtref(i1), lmax, lm1, & ! LLY Lloyd
-              wn1, wn2, alpharef(0,i1), dalpharef(0,i1), lmax+1, lmgf0d) ! LLY Lloyd
+            call calctref13(eryd,vref(i1),rmtref(i1),lmax,lm1,wn1,wn2,              & ! LLY Lloyd
+              alpharef(0,i1),dalpharef(0,i1),lmax+1,lmgf0d)                           ! LLY Lloyd
             ! -------------------------------------------------------
             ! add second spin-block for relativistic calculation and transform
             ! from NREL to REL representation
@@ -655,12 +660,16 @@ contains
 #ifdef CPP_TIMING
           call timing_start('main1b - kloopz')
 #endif
-          call kloopz1_qdos(eryd, gmatll, ins, alat, ie, igf, nshell, naez, nofks(nmesh), volbz(nmesh), bzkp(1,1,nmesh), volcub(1,nmesh), cls, nacls, naclsmax, ncls, rr, rbasis, &
-            ezoa, atom, rcls, icc, ginp, ideci, lefttinvll(1,1,1,1,ie), righttinvll(1,1,1,1,ie), vacflag, nlbasis, nrbasis, factl, natomimp, nsymat, dsymll, ratom, rrot, nsh1, &
-            nsh2, ijtabsym, ijtabsh, icheck, invmod, refpot, trefll, tsst, msst, cfctor, cfctorinv, crel, rc, rrel, srrel, irrel, nrrel, drotq, symunitary, kmrot, natyp, ncpa, &
-            icpa, itcpamax, cpatol, noq, iqat, itoq, conc, iprint, icpaflag, ispin, nspindd, tqdos, iqdosrun, & ! qdos
-            dtrefll, dtmatll, dginp, lly_grtr(ie,ispin), & ! LLY Lloyd
-            tracet(ie,ispin), lly) ! LLY Lloyd
+          call kloopz1_qdos(eryd,gmatll,ins,alat,ie,igf,nshell,naez,nofks(nmesh),   &
+            volbz(nmesh),bzkp(1,1,nmesh),volcub(1,nmesh),cls,nacls,naclsmax,ncls,rr,&
+            rbasis,ezoa,atom,rcls,icc,ginp,ideci,lefttinvll(1,1,1,1,ie),            &
+            righttinvll(1,1,1,1,ie),vacflag,nlbasis,nrbasis,factl,natomimp,nsymat,  &
+            dsymll,ratom,rrot,nsh1,nsh2,ijtabsym,ijtabsh,icheck,invmod,refpot,      &
+            trefll,tsst,msst,cfctor,cfctorinv,crel,rc,rrel,srrel,irrel,nrrel,drotq, &
+            symunitary,kmrot,natyp,ncpa,icpa,itcpamax,cpatol,noq,iqat,itoq,conc,    &
+            iprint, icpaflag, ispin, nspindd, tqdos, iqdosrun,                      & ! qdos
+            dtrefll, dtmatll, dginp, lly_grtr(ie,ispin),                            & ! LLY Lloyd
+            tracet(ie,ispin), lly)                                                    ! LLY Lloyd
 
 #ifdef CPP_TIMING
           call timing_pause('main1b - kloopz')
@@ -876,11 +885,13 @@ contains
 #endif
       if (nqdos/=1) stop 'QDOS option not compatible with XCPL'
       if (.not. opt('NEWSOSOL')) then
-        call tbxccpljij(69, ielast, ez, wez, nspindd, ncpa, naez, natyp, noq, itoq, iqat, nshell, natomimp, atomimp, ratom, nofgij, nqcalc, iqcalc, ijtabcalc, ijtabsym, ijtabsh, &
-          ish, jsh, dsymll, iprint, natyp, nsheld, lmmaxd, npol)
+        call tbxccpljij(69,ielast,ez,wez,nspindd,ncpa,naez,natyp,noq,itoq,iqat,     &
+          nshell,natomimp,atomimp,ratom,nofgij,nqcalc,iqcalc,ijtabcalc,ijtabsym,    &
+          ijtabsh,ish, jsh, dsymll, iprint, natyp, nsheld, lmmaxd, npol)
       else                         ! .NOT.OPT('NEWSOSOL'))
-        call tbxccpljijdij(naez, natyp, lmmaxd, lmgf0d, natomimpd, iemxd, theta_at, phi_at, natomimp, atomimp, nofgij, iqat, rclsimp, ijtabcalc, ijtabcalc_i, ijtabsh, ijtabsym, &
-          ielast, ez, wez, npol, dsymll, noq, itoq, ncpa)
+        call tbxccpljijdij(naez,natyp,lmmaxd,lmgf0d,natomimpd,iemxd,theta_at,phi_at,&
+          natomimp,atomimp,nofgij,iqat,rclsimp,ijtabcalc,ijtabcalc_i,ijtabsh,       &
+          ijtabsym,ielast, ez, wez, npol, dsymll, noq, itoq, ncpa)
       end if
 #ifdef CPP_TIMING
       call timing_stop('main1b - tbxccpl')
@@ -972,11 +983,15 @@ contains
 
         ! find DTMTRX (written out for IELAST==1), parallelized with
         ! mpi over atoms
-        call tmatimp_newsolver(irmd, nsra-1, lmax, iend, irid, lpotd, natyp, ncleb, ipand, irnsd, nfund, t_imp%ihost, ntotd, nspin, lmpotd, ncheb, lmmaxd/(1+korbit), korbit, &
-          nspotd, ielast, irmind, t_params%npan_eq, t_params%npan_log, t_imp%natomimp, r_log, vins, visp, ipan, irmin, t_imp%hostimp(1:t_imp%natomimp), &
-          t_imp%ipanimp(1:t_imp%natomimp), t_imp%irwsimp(1:t_imp%natomimp), atomimp(1:t_imp%natomimp), t_imp%irminimp(1:t_imp%natomimp), icleb, ircut, &
-          t_imp%ircutimp(0:ipand,1:t_imp%natomimp), zat, t_imp%zimp(1:t_imp%natomimp), rmesh, cleb(1,1), t_imp%rimp(1:irmd,1:t_imp%natomimp), rclsimp, ez(ie), t_imp%vispimp, &
-          t_imp%vinsimp, dtmtrx, lmmaxso)
+        call tmatimp_newsolver(irmd,nsra-1,lmax,iend,irid,lpotd,natyp,ncleb,ipand,  &
+          irnsd,nfund,t_imp%ihost,ntotd,nspin,lmpotd,ncheb,lmmaxd/(1+korbit),korbit,&
+          nspotd,ielast,irmind,t_params%npan_eq,t_params%npan_log,t_imp%natomimp,   &
+          r_log, vins, visp, ipan, irmin, t_imp%hostimp(1:t_imp%natomimp),          &
+          t_imp%ipanimp(1:t_imp%natomimp), t_imp%irwsimp(1:t_imp%natomimp),         &
+          atomimp(1:t_imp%natomimp), t_imp%irminimp(1:t_imp%natomimp), icleb, ircut,&
+          t_imp%ircutimp(0:ipand,1:t_imp%natomimp),zat,t_imp%zimp(1:t_imp%natomimp),&
+          rmesh,cleb(1,1),t_imp%rimp(1:irmd,1:t_imp%natomimp),rclsimp,ez(ie),       &
+          t_imp%vispimp,t_imp%vinsimp, dtmtrx, lmmaxso)
 
         ! compute GMATLL_GES, on master rank only
         if (ielast==3 .and. myrank==master) then

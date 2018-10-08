@@ -1,6 +1,6 @@
 !------------------------------------------------------------------------------------
- !> Summary: Generates the real space and reciprocal lattices
- !> Author: 
+!> Summary: Generates the real space and reciprocal lattices
+!> Author: 
 !> Generates the real space and reciprocal lattices, this lattice is **not** the one
 !> used for the Eawld summation
 !> @note this lattice is **not** the one used for the Ewald summation
@@ -12,7 +12,7 @@ module mod_lattix99
   private :: dp
 
 contains
-!-------------------------------------------------------------------------------
+    !-------------------------------------------------------------------------------
     !> Summary: Generates the real space and reciprocal lattices
     !> Author: 
     !> Category: geometry, k-points, KKRhost
@@ -52,17 +52,17 @@ contains
     integer, intent(in) :: natyp  !! Number of kinds of atoms in unit cell
     integer, intent(in) :: natypd !! Auxiliary number of kinds of atoms in the unit cell
     real (kind=dp), intent(in) :: alat !! Lattice constant in a.u.
-    real (kins=dp), intent(out) :: volume0 !! Unit cell volume
+    real (kind=dp), intent(out) :: volume0 !! Unit cell volume
     ! ..
     ! .. Array arguments ..
 
     ! BRAVAIS(3,3): Real space bravais vectors normalised to ALAT
     ! RECBV(3,3)  : Reciprocal lattice vectors in 2*PI/ALAT
     real (kind=dp), dimension(natypd), intent(in) :: conc !! Concentration of a given atom
-    real (kind=sp), dimension(natypd), intent(in) :: rws !! Wigner Seitz radius
+    real (kind=dp), dimension(natypd), intent(in) :: rws !! Wigner Seitz radius
     real (kind=dp), dimension(3,0:nrd), intent(in):: rr !! Set of real space vectors (in a.u.)
-    real (kind=dp), dimension(3,3), intent(in) :: recbv !! Reciprocal basis vectors
     real (kind=dp), dimension(3,3), intent(in) :: bravais !! Bravais lattice vectors
+    real (kind=dp), dimension(3,3), intent(out) :: recbv !! Reciprocal basis vectors
     ! ..
     ! .. Local Scalars ..
     integer :: i, j, ndim

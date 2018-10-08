@@ -1,7 +1,16 @@
-! uncomment the following line and compile with -D for testing
+!------------------------------------------------------------------------------------
+!> Summary: Container for several routines regarding checksum verification 
+!> Author: 
+!> The idea of the routine seems to be to verify the checksum of potential files
+!> and shapefunction files for unientional corruption. It also contains helper
+!> routines for the broadcast
+!------------------------------------------------------------------------------------
+!> @note JC: Is there a checksum verification actually happening?
+!> 
+!> Uncomment the line `#define test` and compile with -D for testing
+!> @endnote
+!------------------------------------------------------------------------------------
 !#define test
-
-
 module mod_md5sums
 
   implicit none
@@ -62,8 +71,6 @@ contains
     allocate (character(len=lmd5sum_pot) :: md5sum_potential, stat=istat)
     if (istat/=0) stop '[get_md5sums] Error allocating md5sum_potential'
     md5sum_potential = tmp_char(1:lmd5sum_pot)
-
-
 
 
     if (ins>0) then

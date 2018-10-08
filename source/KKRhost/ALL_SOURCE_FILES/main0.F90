@@ -431,7 +431,7 @@ contains
     integer :: lm
     integer :: ns
     integer :: isvatom, nvatom
-    integer :: i_stat
+    integer :: i_stat, i_all
     integer :: irec
     integer :: lrecabmad
     real (kind=dp) :: zattemp
@@ -583,16 +583,23 @@ contains
      natyp)
 
     ! rr has changed, fix allocation of array to new nrd size
-    allocate (tmp_rr(3,0:nrd), stat=ierr)
-    if (ierr/=0) stop 'error allocating tmp_rr in main0'
+    allocate(tmp_rr(3,0:nrd),stat=i_stat)
+    call memocc(i_stat, product(shape(tmp_rr))*kind(tmp_rr), 'tmp_rr', 'main0')
+
     tmp_rr(:, :) = rr(1:3, 0:nrd)
-    deallocate (rr, stat=ierr)
-    if (ierr/=0) stop 'error deallocating rr in main0'
-    allocate (rr(3,0:nrd), stat=ierr)
-    if (ierr/=0) stop 'error reallocating rr in main0'
+
+    i_all = -product(shape(rr))*kind(rr)
+    deallocate (rr, stat=i_stat)
+    call memocc(i_stat, i_all, 'rr', 'main0')
+
+    allocate(rr(3,0:nrd),stat=i_stat)
+    call memocc(i_stat, product(shape(rr))*kind(rr), 'rr', 'main0')
+
     rr(:, :) = tmp_rr(:, :)
-    deallocate (tmp_rr, stat=ierr)
-    if (ierr/=0) stop 'error allocating tmp_rr in main0'
+    
+    i_all = -product(shape(tmp_rr))*kind(tmp_rr)
+    deallocate (tmp_rr, stat=i_stat)
+    call memocc(i_stat, i_all, 'tmp_rr', 'main0')
 
     call scalevec(lcartesian,rbasis,abasis,bbasis,cbasis,nlbasis,nrbasis,nleft,     &
       nright,zperleft,zperight,tleft,tright,linterface,naez,nemb,bravais,kaoez,noq, &
@@ -1267,13 +1274,13 @@ contains
 
   end subroutine main0
 
-  ! ----------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   !> Summary: Adds a constant (=VSHIFT) to the potentials of atoms
   !> Author:
   !> Category: potential, KKRhost
   !> Deprecated: False 
   !> Adds a constant (=VSHIFT) to the potentials of atoms
-  ! ----------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine bshift_ns(irm,irid,ipand,lmpot,npotd,natyp,nspin,ngshd,nfund,ncelld,   &
     irmind,lmxspd,kshape,irc,irmin,inipol,ntcell,imaxsh,ilm_map,lmsp, ifunm, ircut, &
     hfield, gsh, rmesh, thesme, thetas, visp, vins)
@@ -1799,15 +1806,21 @@ contains
 
   end subroutine init_all_wrapper
 
-
+  !-------------------------------------------------------------------------------  
+  !> Summary: Print the version info and header to the output file
+  !> Author: Philipp Ruessmann                  
+  !> Category: input-output, KKRhost 
+  !> Deprecated: False 
+  !> Print the version info and header to the output file
+  !-------------------------------------------------------------------------------  
   subroutine print_versionserial(iunit,version1,version2,version3,version4,serialnr)
     implicit none
-    integer, intent (in) :: iunit
-    character (len=*), intent (in) :: version1
-    character (len=*), intent (in) :: version2
-    character (len=*), intent (in) :: version3
-    character (len=*), intent (in) :: version4
-    character (len=*), intent (in) :: serialnr
+    integer, intent (in) :: iunit !! Unit identifier for the output file
+    character (len=*), intent (in) :: version1  !! Version of the code
+    character (len=*), intent (in) :: version2  !! Compilation option
+    character (len=*), intent (in) :: version3  !! Compilation option
+    character (len=*), intent (in) :: version4  !! Compilation option
+    character (len=*), intent (in) :: serialnr  !! File serial number
 
     write (iunit, '(1A)') '     Screened Korringa-Kohn-Rostoker Electronic Structure Code'
     write (iunit, '(1A)') '                      for Bulk and Interfaces'

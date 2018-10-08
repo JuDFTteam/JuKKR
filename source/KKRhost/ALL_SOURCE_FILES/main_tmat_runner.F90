@@ -1,4 +1,11 @@
-!> this is dummy version of main_all, used to execute first main0 and then main1a_dummy in which tmat_newsolver is called
+!------------------------------------------------------------------------------------
+!> Summary: Dummy version of `main_all` which is used to test the `tmat_newsolver`
+!> Author: Philipp Ruessmann
+!> Category: unit-test 
+!> Deprecated: False 
+!> This is dummy version of `main_all`, used to execute first `main0` and then 
+!> `main1a_dummy` in which `tmat_newsolver` is called
+!------------------------------------------------------------------------------------
 program tmat_runner
 
   use :: constants

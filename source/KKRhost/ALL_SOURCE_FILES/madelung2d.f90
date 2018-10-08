@@ -83,11 +83,11 @@ contains
     integer, intent(in) :: nrbasis  !! Number of basis layers of right host (repeated units)
     real (kind=dp), intent(in) :: vol
     real (kind=dp), intent(in) :: alat  !! Lattice constant in a.u.
-    real (kind=sp), intent(in) :: rmax  !! Ewald summation cutoff parameter for real space summation
-    real (kind=dp), intent(in) :: gmax  !! Ewald summation cutoff parameter for reciprocal space summation
+    real (kind=dp), intent(inout) :: rmax  !! Ewald summation cutoff parameter for real space summation
+    real (kind=dp), intent(inout) :: gmax  !! Ewald summation cutoff parameter for reciprocal space summation
     ! ..
     ! .. Array Arguments ..
-    real (kind=sp), dimension(lassld), intent(in) :: wg !! Integr. weights for Legendre polynomials
+    real (kind=dp), dimension(lassld), intent(in) :: wg !! Integr. weights for Legendre polynomials
     real (kind=dp), dimension(3), intent(in) :: zperight  !! Vector to define how to repeat the basis of the right host
     real (kind=dp), dimension(3), intent(in) :: zperleft  !! Vector to define how to repeat the basis of the left host
     real (kind=dp), dimension(3,3), intent(in) :: recbv   !! Reciprocal basis vectors

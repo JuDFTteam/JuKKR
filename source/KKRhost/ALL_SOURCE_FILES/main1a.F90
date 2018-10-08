@@ -117,15 +117,15 @@ contains
       open (67, file='ldau.unformatted', form='unformatted')
       read (67) itrunldau, wldau, uldau, phildau
       close (67)
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! !---------------------------------------------------------------------
       ! Calculate Coulomb matrix ULDAU it calculates U matrix only once.
       ! Remove the next IF statement to have U calculated for each iteration anew.
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! !---------------------------------------------------------------------
 
-      ! !!!!!!! IF ( ITRUNLDAU.LE.0 ) THEN
+      ! !------ IF ( ITRUNLDAU.LE.0 ) THEN
       call initldau(nsra,ntldau,itldau,lopt,ueff,jeff,erefldau,visp,nspin,rmesh,    &
         drdi,zat,ipan,ircut,phildau,uldau)
-      ! !!!!!!! END IF
+      ! !------ END IF
     end if
     ! -------------------------------------------------------------------------
     ! End of LDA+U setup
@@ -188,10 +188,10 @@ contains
       end do
 
     else
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! !---------------------------------------------------------------------
       ! For calculation of Jij-tensor: create array for additional t-matrices and
       ! set atom-dependent flags which indicate if t-matrix is needed
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! !---------------------------------------------------------------------
       call init_t_dtmatjij(t_inc, t_dtmatjij)
       if (opt('XCPL    ')) then
         call set_jijcalc_flags(t_dtmatjij, natyp, natomimpd, natomimp, atomimp, iqat)
@@ -326,6 +326,17 @@ contains
   end subroutine main1a
 
 #ifdef CPP_BdG
+  !-------------------------------------------------------------------------------  
+  !> Summary: Write out inputs for tmat_newsolver to extract first BdG 
+  !> Author: Philipp Ruessmann  
+  !> Category: input-output, unit-test, KKRhost
+  !> Deprecated: False 
+  !> Write out inputs for tmat_newsolver to extract first BdG
+  !-------------------------------------------------------------------------------  
+  !> @note JC: not sure how this exactly works bur variables do not seem to need 
+  !> declaration before being run. Maybe it is a good idea to add it.                    
+  !> @endnote                                                                       
+  !-------------------------------------------------------------------------------  
   subroutine bdg_write_tmatnewsolver_inputs(nranks,i1,i1_start,ielast,nspin,lmax,   &
     nsra,iend,lmpotd,lly,deltae,idoldau,ncleb,ncheb,ntotd,mmaxd,nspind,iemxd,nrmaxd,&
     nspotd,cleb,icleb,ez,i1,ipot,npan_tot,lpot,ipan,_intervall,zat,phi,theta,       &
