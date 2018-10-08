@@ -1,22 +1,21 @@
-      MODULE MOD_RITES
-      CONTAINS
-      SUBROUTINE RITES(NSPIN,NATOM,ZATOM,ALAT,NRMAXD,LMAXD,INS, &
+MODULE MOD_RITES
+  CONTAINS
+    !---------------------------------------------------------------------
+    !> Summary: Writes the potential file
+    !> Category: input-output, KKRimp, potential
+    !>   this subroutine stores in 'ifile' the necessary results
+    !>   (potentials e.t.c.) to start self-consistency iterations
+    !>    modified for the full potential case - if ins .gt. 0 there
+    !>    is written a different potential card
+    !>    if the sum of absolute values of an lm component of vins (non
+    !>    spher. potential) is less than the given rms error qbound this
+    !>    component will not be stored .
+    !>        (see to subroutine start , where most of the arrays are
+    !>      described)
+    !>                            modified by b. drittler  aug. 1988
+    !--------------------------------------------------------------------
+    SUBROUTINE RITES(NSPIN,NATOM,ZATOM,ALAT,NRMAXD,LMAXD,INS, &
                        QBOUND,EFERMI,VBC,CELL,CORESTATE,LMAXATOM,VPOT_OUT)
-! c ************************************************************************
-! c      this subroutine stores in 'ifile' the necessary results
-! c      (potentials e.t.c.) to start self-consistency iterations
-! c
-! c      modified for the full potential case - if ins .gt. 0 there
-! c       is written a different potential card
-! c       if the sum of absolute values of an lm component of vins (non
-! c       spher. potential) is less than the given rms error qbound this
-! c       component will not be stored .
-! c
-! c        (see to subroutine start , where most of the arrays are
-! c         described)
-! c
-! c                            modified by b. drittler  aug. 1988
-! c-----------------------------------------------------------------------
 ! C     .. Parameters ..
 !       include 'inc.p'
       USE TYPE_CELL
