@@ -486,16 +486,6 @@ contains
         vnspll(:, :, :, ith) = vnspll1(:, :, :, ith)
       end if
 
-          open (7352834, file='vnspll_sra.txt', form='formatted')
-          if (nsra==2) then
-            write (7352834, '(A,3I9)') '# 2*LMMAXSO,2*LMMAXSO,IRMDNEW=', 2*lmmaxso, 2*lmmaxso, irmdnew
-          else
-            write (7352834, '(A,3I9)') '# LMMAXSO,LMMAXSO,IRMDNEW=', lmmaxso, lmmaxso, irmdnew
-          end if
-          write (7352834, '(2F25.14)') vnspll(:, :, :, ith)
-          close (7352834)
-
-
       if ((t_wavefunctions%nwfsavemax>0 .and. .not. rll_was_read_in) .or. (t_wavefunctions%nwfsavemax==0)) then ! read/recalc wavefunctions
 
         ! calculate the source terms in the Lippmann-Schwinger equation
@@ -512,21 +502,10 @@ contains
           use_fullgmat = 1
         end if
         call rllsllsourceterms(nsra, nvec, eryd, rnew, irmdnew, nrmaxd, lmax, lmmaxso, use_fullgmat, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor)
-          write (filename, '(A,I0.3,A,I0.3,A)') 'rll_source_jlk_atom_', i1, '_energ_', ie, '.dat'
-          open (888888, file=trim(filename), form='formatted')
-          write (888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: 4*(LMAX+1)=', 4*(lmax+1), ' IRMDNEW=', irmdnew, ' ; ERYD=', eryd
-          write (888888, '(2ES21.9)') jlk(:, :, ith)
-          close (888888)
-
         ! using spherical potential as reference
         if (use_sratrick==1) then
           call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin/(2-korbit), zat, eryd, lmpotd, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk(:,:,ith), jlk(:,:,ith), &
             hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, tmatsph(:,ith), alphasph, use_sratrick)
-          write (filename, '(A,I0.3,A,I0.3,A)') 'tmatsph_atom_', i1, '_energ_', ie, '.dat'
-          open (888888, file=trim(filename), form='formatted')
-          write (888888, '(A,I9,A,I9,A,I9)') '# dimension: lmmaxso=', lmmaxso, ' lmmaxso=', lmmaxso
-          write (888888, '(2ES21.9)') tmatsph(:, ith)
-          close (888888)
         end if
 
         ! calculate the tmat and wavefunctions
@@ -552,12 +531,6 @@ contains
           rll(lmmaxso+1:nvec*lmmaxso, :, :, ith) = rll(lmmaxso+1:nvec*lmmaxso, :, :, ith)/cvlight
           sll(lmmaxso+1:nvec*lmmaxso, :, :, ith) = sll(lmmaxso+1:nvec*lmmaxso, :, :, ith)/cvlight
         end if
-
-          write (filename, '(A,I0.3,A,I0.3,A)') 'rll_atom_', i1, '_energ_', ie, '.dat'
-          open (888888, file=trim(filename), form='formatted')
-          write (888888, '(A,I9,A,I9,A,I9)') '# dimension: lmmaxso*nvec=', nvec*lmmaxso, ' lmmaxso=', lmmaxso, ' irmdnew=', irmdnew
-          write (888888, '(2ES21.9)') rll(:, :, :, ith)
-          close (888888)
 
       end if                       ! read/recalc wavefunctions
 
