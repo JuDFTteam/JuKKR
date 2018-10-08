@@ -9,9 +9,9 @@ module ShapeCriticalPoints_mod
   
   
 #ifdef DEBUGSHAPEFUNCTIONS
-  integer, parameter :: verbosity = 2
+  integer, parameter :: o = 6 !! debug log to stdout
 #else
-  integer, parameter :: verbosity = 0
+  integer, parameter :: o = 0 !! no logging
 #endif
   
   contains
@@ -44,26 +44,24 @@ module ShapeCriticalPoints_mod
 
   !=====================================================================
   subroutine criticalShapePoints(planes, tolvdist, toleuler, nvertices, vert, nface, faces, npan, crt, atom_id)
-
     use Constants_mod, only: pi
     use PolygonFaces_mod, only: PolygonFace
     use ShapeGeometryHelpers_mod, only: polchk
 
-    integer, intent(in) :: nvertices(:) ! (nfaced)
-    double precision, intent(in) :: planes(0:,:) ! (0:3,nfaced)
-    double precision, intent(in) :: vert(:,:,:) ! (3,nvertd,nfaced)
-    integer, intent(in) :: nface
-    double precision, intent(in) :: tolvdist, toleuler
-    
+    double precision, intent(in) :: planes(0:,:) ! dim(0:3,nfaced)
+    double precision, intent(in) :: tolvdist !!
+    double precision, intent(in) :: toleuler !!
+    integer,          intent(in) :: nvertices(:) !! dim(nfaced)
+    double precision, intent(in) :: vert(:,:,:) !! dim(3,nvertd,nfaced)
+    integer,          intent(in) :: nface
     type(PolygonFace), intent(out) :: faces(:)
-    integer, intent(out) :: npan
-    double precision, intent(out) :: crt(:)
-    
-    integer, intent(in) :: atom_id
+    integer,           intent(out) :: npan
+    double precision,  intent(out) :: crt(:)
+    integer,          intent(in) :: atom_id
     
     logical, parameter :: check_geometry = .true.
     double precision :: z(3)
-    integer :: iface, itt, iv, ivtot!, l
+    integer :: iface, itt, iv, ivtot
 
     if (check_geometry) call polchk(nface, nvertices, vert, tolvdist, atom_id) !  this call does some geometrical tests (n.stefanou 98)
 
@@ -100,7 +98,7 @@ module ShapeCriticalPoints_mod
 
       call critical_points(faces(iface), nvertices(iface), vert(:,:,iface), z, npan, ivtot, toleuler, tolvdist, crt, face_index=iface)
 
-      if (verbosity > 0) write(6,fmt="(/10x,i3,'-th pyramid subdivided in ',i3,' tetrahedra')") iface,faces(iface)%ntt
+      if (o > 0) write(6,fmt="(/10x,i3,'-th pyramid subdivided in ',i3,' tetrahedra')") iface,faces(iface)%ntt
 
     enddo ! iface ! end of loop over faces
 
@@ -110,18 +108,19 @@ module ShapeCriticalPoints_mod
     !     definition of the suitable mesh
     !.......................................................................
 
-    if (verbosity > 1) then
-      write(6,fmt="(//15x,'fa/pi',5x,'fb/pi',5x,'fd/pi',6x,'rd',8x,'isignu'/)")
+    if (o > 0) then
+      write(o, fmt="(//15x,'fa/pi',5x,'fb/pi',5x,'fd/pi',6x,'rd',8x,'isignu'/)")
       iv = 0
       do iface = 1, nface
         do itt = 1, faces(iface)%ntt
           iv = iv+1
 #define tet faces(iface)%ta(itt)
-          write(6,fmt="(i10,4f10.4,i10)") iv, [tet%fa, tet%fb, tet%fd]/pi, tet%rd, tet%isignu
+          write(o, fmt="(i10,4f10.4,i10)") iv, [tet%fa, tet%fb, tet%fd]/pi, tet%rd, tet%isignu
 #undef tet
         enddo ! itt
       enddo ! iface
-    endif ! verbosity
+      write(o, fmt="(a)") ! empty line
+    endif ! o
     
   endsubroutine criticalShapePoints
 
@@ -158,7 +157,7 @@ module ShapeCriticalPoints_mod
   !>    @param[in,out] IVTOT tetrahedron index: has to be 0 for 1st call
   !>    @param[in]     TOLEULER tolerance for Euler angles
   !>    @param[in]     TOLVDIST tolerance for distances
-  !>    @param[in,out] CRT   array of critical points, CRT(NPAND)
+  !>    @param[in,out] CRT   
   !>    @param[in]     NPAND maximal number of panels allowed
   subroutine critical_points(face, nvert, v, z, ipan, ivtot, toleuler, tolvdist, crt, face_index)
     !-----------------------------------------------------------------------
@@ -173,34 +172,35 @@ module ShapeCriticalPoints_mod
     use PolygonFaces_mod, only: TetrahedronAngles, PolygonFace
     use ShapeGeometryHelpers_mod, only: perp, nrm2, operator(.dot.)
 
-    integer, intent(in) :: nvert
-    type(PolygonFace), intent(inout) :: face
-    integer, intent(inout) :: ipan, ivtot ! ivtot can be removed when we do not try to have the verbose output compatible with older versions
-    double precision, intent(in) :: toleuler, tolvdist
-    double precision, intent(in) :: v(:,:) ! (3,nvertd)
-    double precision, intent(inout) :: z(3)
-    double precision, intent(inout) :: crt(:)
-    integer, intent(in) :: face_index ! is only needed for verbose output since we pass the face descriptor to this routine
-    
+    type(PolygonFace), intent(inout) :: face !!
+    integer, intent(in) :: nvert !!
+    double precision, intent(in) :: v(:,:) !! dim(3,nvertd)
+    double precision, intent(inout) :: z(3) !!
+    integer, intent(inout) :: ipan
+    integer, intent(inout) :: ivtot !! can be removed when we do not try to have the verbose output compatible with older versions
+    double precision, intent(in) :: toleuler !!
+    double precision, intent(in) :: tolvdist !!
+    double precision, intent(inout) :: crt(:) !! array of critical points
+    integer, intent(in) :: face_index !! is only needed for verbose output since we pass the face descriptor to this routine
+
     integer :: iv, ivert, ivxp1, jvert, npand
-    double precision :: arg, a1, a2, a3, cf1, cf2, cf3, co, crrt, dd, down, d1, d2, ff, f1, f2, f3, omega, rdd, s, sf1, sf2, sf3, up, xj, yj, zmod2, vmz(3)
+    double precision :: arg, a1, a2, a3, cf1, cf2, cf3, co, crrt, dd, down
+    double precision :: d1, d2, ff, f1, f2, f3, omega, rdd, s, sf1, sf2, sf3, up, xj, yj, zmod2, vmz(3)
 
     logical(kind=1), allocatable :: in(:) ! (nvertd)
     double precision, allocatable :: vz(:,:) ! (3,nvertd)
     double precision :: rdv(3)
     logical :: inside, new, corner
     double precision, parameter :: origin(3) = 0.d0
-    double precision, parameter :: tol_small = 1.d-6
-    double precision, parameter :: tol_large = 1.d-4
+    double precision, parameter :: tol_small = 1.d-6, tol_large = 1.d-4
     type(TetrahedronAngles) :: ta(nvert), t1
     integer :: ist
-    
+
     npand = size(crt)
     
     allocate(in(nvert), vz(1:3,nvert), stat=ist)
 
-
-    if (verbosity > 0) write(6,fmt="(//80('*')/3x,'face:',i3,' equation:',f10.4,'*x +',f10.4,'*y +',f10.4,'*z  =  1')") face_index,z(1:3)
+    if (o > 0) write(6,fmt="(//80('*')/3x,'face:',i3,' equation:',f10.4,'*x +',f10.4,'*y +',f10.4,'*z  =  1')") face_index,z(1:3)
 
     zmod2 = nrm2(z)
 
@@ -215,7 +215,7 @@ module ShapeCriticalPoints_mod
     iv = 1; if (nrm2(vmz) < tol_small*tol_small) iv = 2 ! if the norm of the first vector is too small, use the second one
     face%euler = euler_angles(z, v(:,iv), toleuler) ! get euler angles directly
 
-    if (verbosity > 0) write(6, fmt="(3x,'rotation angles  :',3(f10.4,4x)/)") face%euler(1:3)/pi
+    if (o > 0) write(6, fmt="(3x,'rotation angles  :',3(f10.4,4x)/)") face%euler(1:3)/pi
 
     call rotate(face%euler(1:3), nvert, v(1:3,1:nvert), vz) ! pass the angles directly
 
@@ -223,7 +223,7 @@ module ShapeCriticalPoints_mod
     
     corner = .false. ! is not a corner
 
-    if (verbosity > 0) write(6, fmt="(/'tetrahedron',14x,'coordinates'/11('*'),14x,11('*')/)")
+    if (o > 0) write(6, fmt="(/'tetrahedron',14x,'coordinates'/11('*'),14x,11('*')/)")
 
     face%ntt = 0
     
@@ -289,7 +289,7 @@ module ShapeCriticalPoints_mod
           face%ntt = face%ntt + 1 ! count up the number of accepted tetrahedra
           
           ivtot = ivtot + 1 ! can be removed when we do not try to have the verbose output compatible with older versions
-          if (verbosity > 0) then
+          if (o > 0) then
             write(6, fmt="(i5,'       vz(',i2,')  =  (',3f10.4,' )')") ivtot, ivert, vz(1:3,ivert)
             write(6, fmt="(5x,'       vz(',i2,')  =  (',3f10.4,' )')")        ivxp1, vz(1:3,ivxp1)
           endif
@@ -417,11 +417,11 @@ module ShapeCriticalPoints_mod
     use Constants_mod, only: pi
     use ShapeGeometryHelpers_mod, only: nrm2, operator(.dot.) ! TODO: operator(.cross.)
 
-    double precision, intent(in) :: xx(3)
-    double precision, intent(in) :: zz(3)
-    double precision, intent(in) :: toleuler ! introduced by phivos (05.2008) to account for inaccuracies.
+    double precision, intent(in) :: xx(3) !!
+    double precision, intent(in) :: zz(3) !!
+    double precision, intent(in) :: toleuler !! introduced by Phivos (05.2008) to account for inaccuracies.
     ! earlier, 1.d-5 was hard-coded at the places in this subr. where tol is used data toleuler /1.d-10/
-    double precision :: alpha_beta_gamma(3) ! result
+    double precision :: alpha_beta_gamma(3) !! result
 
     double precision :: rx, rz, s, p, rzp, sa, ca, sg, cg, x(3), y(3), z(3)
     double precision, parameter :: tolerance = 1.d-6
@@ -494,8 +494,8 @@ module ShapeCriticalPoints_mod
 
     double precision, intent(in) :: abg(3) ! former alpha, beta, gamma
     integer, intent(in) :: nvert
-    double precision, intent(in)  ::  v(3,*) ! (3,nvertd)
-    double precision, intent(out) :: vz(3,*) ! (3,nvertd)
+    double precision, intent(in)  ::  v(3,*) !! (3,nvertd)
+    double precision, intent(out) :: vz(3,*) !! (3,nvertd)
 
     integer :: j, ivert
     double precision :: sn(3), cs(3), a(3,3)
