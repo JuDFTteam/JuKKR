@@ -1,82 +1,78 @@
       MODULE MOD_RHOLM
       CONTAINS
+!-------------------------------------------------------------------------
+!> Summary: Driver for valence charge density for spherical potential
+!> Category: physical-observables, KKRimp
+!>
+!> calculate in the paramagnetic case (nspin=1) :
+!>     the valence charge density times r**2 from the greensfunction
+!> calculate in the spin-polarized case (nspin=2) :
+!>     the valence charge density times r**2 and the valence spin
+!>     density times r**2 from the greensfunction ,
+!>     ( convention spin density :=
+!>                        density(spin up)-density(spin down) )
+!> calculate the valence density of states , in the spin-polarized
+!>  case spin dependent ; splitted into its l-contributions .
+!>
+!>   in this subroutine an implicit energy-spin integration is  done :
+!>    this subroutine is called for each energy and spin value
+!>    and n(r,e) times df (the energy weight) is calculated .
+!>
+!>  recognize that the density of states is always complex also in
+!>  the case of "real-energy-integation" (ief>0) since in that case
+!>  the energy integration is done parallel to the real energy axis
+!>  but not on the real energy axis .
+!>  in the paramagnetic case only rho2ns(irmd,lmxtsq,natypd,1)
+!>  is used containing  the charge density times r**2 .
+!>  in the spin-polarized case rho2ns(...,1) contains the charge
+!>  density times r**2 and rho2ns(...,2) the spin density times
+!>  r**2 .
+!>
+!>  the charge density is expanded in spherical harmonics :
+!>
+!>           rho(r) =   { rho(lm,r) * y(r,lm) }       (summed over lm)
+!>
+!>        rho(lm,r) =   { do rho(r) * y(r,lm)         (integrated over
+!>                                                       unit sphere)
+!> in the case of spin-polarization :
+!>   the spin density is developed in spherical harmonics :
+!>
+!>          sden(r) =   { sden(lm,r) * y(r,lm) }      (summed over lm)
+!>
+!>       sden(lm,r) =   { do sden(r) * y(r,lm)        (integrated over
+!>                                                       unit sphere)
+!> n(r,e) is developed in
+!>
+!>      n(r,e) = { y(r,l'm') * n(l'm',lm,r,e) * y(r,lm) }
+!>
+!>   therefore a faltung of n(l'm',lm,r,e) with the gaunt coeffients
+!> has to be used to calculate the lm-contribution of the charge
+!> density .
+!>         (see notes by b.drittler)
+!>
+!>   attention : the gaunt coeffients are stored in an index array
+!>             (see subroutine gaunt)
+!>             the structure part of the greens-function (gmat) is
+!>             symmetric in its lm-indices , therefore only one
+!>             half of the matrix is calculated in the subroutine
+!>             for the back-symmetrisation . the gaunt coeffients
+!>             are symmetric too (since the are calculated for
+!>             real spherical harmonics) . that is why the lm2-
+!>             loop only goes up to lm1 and the summands are
+!>             multiplied by a factor of 2 in the case of lm1
+!>             not equal to lm2 .
+!>
+!>                             b.drittler   may 1987
+!>                               changed  dec 1988
+!>
+!> For KREL = 1 (relativistic mode)
+!>  NPOTD = 2 * NATYPD             
+!>  LMMAXD = 2 * (LMAXD+1)^2       
+!>  NSPIND = 1                     
       SUBROUTINE RHOLM(DEN,DF,GMAT,NSRA,RHO2NS,DRDI,IPAN,IRCUT,PZ,FZ,
      +                   QZ,SZ,CLEB,ICLEB,IEND,JEND,EKL,
      +                   IRMD,NCLEB,LMAXD,LMMAXD,LMPOTD)
-c-----------------------------------------------------------------------
-c     calculate in the paramagnetic case (nspin=1) :
-c         the valence charge density times r**2 from the greensfunction
-c     calculate in the spin-polarized case (nspin=2) :
-c         the valence charge density times r**2 and the valence spin
-c         density times r**2 from the greensfunction ,
-c         ( convention spin density :=
-c                            density(spin up)-density(spin down) )
-c     calculate the valence density of states , in the spin-polarized
-c      case spin dependent ; splitted into its l-contributions .
-c
-c     in this subroutine an implicit energy-spin integration is  done :
-c        this subroutine is called for each energy and spin value
-c        and n(r,e) times df (the energy weight) is calculated .
-c
-c     recognize that the density of states is always complex also in
-c      the case of "real-energy-integation" (ief>0) since in that case
-c      the energy integration is done parallel to the real energy axis
-c      but not on the real energy axis .
-c      in the paramagnetic case only rho2ns(irmd,lmxtsq,natypd,1)
-c      is used containing  the charge density times r**2 .
-c      in the spin-polarized case rho2ns(...,1) contains the charge
-c      density times r**2 and rho2ns(...,2) the spin density times
-c      r**2 .
-c
-c     the charge density is expanded in spherical harmonics :
-c
-c             rho(r) =   { rho(lm,r) * y(r,lm) }       (summed over lm)
-c
-c          rho(lm,r) =   { do rho(r) * y(r,lm)         (integrated over
-c                                                           unit sphere)
-c     in the case of spin-polarization :
-c       the spin density is developed in spherical harmonics :
-c
-c            sden(r) =   { sden(lm,r) * y(r,lm) }      (summed over lm)
-c
-c         sden(lm,r) =   { do sden(r) * y(r,lm)        (integrated over
-c                                                           unit sphere)
-c     n(r,e) is developed in
-c
-c        n(r,e) = { y(r,l'm') * n(l'm',lm,r,e) * y(r,lm) }
-c
-c     therefore a faltung of n(l'm',lm,r,e) with the gaunt coeffients
-c     has to be used to calculate the lm-contribution of the charge
-c     density .
-c             (see notes by b.drittler)
-c
-c     attention : the gaunt coeffients are stored in an index array
-c                 (see subroutine gaunt)
-c                 the structure part of the greens-function (gmat) is
-c                 symmetric in its lm-indices , therefore only one
-c                 half of the matrix is calculated in the subroutine
-c                 for the back-symmetrisation . the gaunt coeffients
-c                 are symmetric too (since the are calculated for
-c                 real spherical harmonics) . that is why the lm2-
-c                 loop only goes up to lm1 and the summands are
-c                 multiplied by a factor of 2 in the case of lm1
-c                 not equal to lm2 .
-c
-c                               b.drittler   may 1987
-c                                   changed  dec 1988
-c-----------------------------------------------------------------------
-C     .. Parameters ..
-!       INCLUDE 'inc.p'
-C
-C *********************************************************************
-C * For KREL = 1 (relativistic mode)                                  *
-C *                                                                   *
-C *  NPOTD = 2 * NATYPD                                               *
-C *  LMMAXD = 2 * (LMAXD+1)^2                                         *
-C *  NSPIND = 1                                                       *
-C *                                                                   *
-C *********************************************************************
-C
+
       USE MOD_CSIMPK
       IMPLICIT NONE
 

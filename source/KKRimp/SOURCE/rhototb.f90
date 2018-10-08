@@ -1,8 +1,37 @@
-      MODULE MOD_RHOTOTB
+MODULE MOD_RHOTOTB
 
-      CONTAINS
-
-      SUBROUTINE RHOTOTB(ITSCF,NATOM,NSPIN,LMAXATOM,density, &
+  CONTAINS
+    !-------------------------------------------------------------------------
+    !> Summary: Calculation of total charge density
+    !> Category: physical-observables, KKRimp
+    !> Get total charge density (as sum of valence and core charge)
+    !> and output atomic charge and spin-moments.
+    !>
+    !>   add core and valence density expanded in spherical harmonics
+    !>       ( convention see subroutine rholm )
+    !>   in the paramagnetic case (nspin=1) the core valence charge times
+    !>       r**2 is add to the valence charge density times r**2
+    !>       then only rho2ns(irmd,lmxtsq,natypd,1) is used .
+    !>   in the spin-polarized case (nspin=2) the spin-splitted core
+    !>       charge density times r**2 is converted into core charge
+    !>        density times r**2 and core spin density times r**2 .
+    !>        then these parts are added to corresponding parts of
+    !>        the valence densities times r**2 , that are rho2ns(...,1)
+    !>        which contains the charge density  and rho2ns(...,2) which
+    !>        contains in that case the spin density .
+    !>             (see notes by b.drittler)
+    !>
+    !>    attention : the core density is spherically averaged and multi-
+    !>                plied by 4 pi. therefore the core density is only
+    !>                added to l=0 part .
+    !>
+    !>                              b.drittler   nov. 1989
+    !>
+    !>    total orbital moment within the WS sphere is also calculated
+    !>    in the relativistic case; orbital density is normalised in the
+    !>    same way as the charge density. v.popescu march 2002
+    !-------------------------------------------------------------------------
+    SUBROUTINE RHOTOTB(ITSCF,NATOM,NSPIN,LMAXATOM,density, &
                          ZATOM,CELL,SHAPEFUN,INS)
 
       use nrtype
@@ -14,31 +43,6 @@
       use mod_simpk
       use mod_config, only: config_testflag
       implicit none
-! ************************************************************************
-!     add core and valence density expanded in spherical harmonics
-!         ( convention see subroutine rholm )
-!     in the paramagnetic case (nspin=1) the core valence charge times
-!         r**2 is add to the valence charge density times r**2
-!         then only rho2ns(irmd,lmxtsq,natypd,1) is used .
-!     in the spin-polarized case (nspin=2) the spin-splitted core
-!         charge density times r**2 is converted into core charge
-!c         density times r**2 and core spin density times r**2 .
-!c         then these parts are added to corresponding parts of
-!c         the valence densities times r**2 , that are rho2ns(...,1)
-!c         which contains the charge density  and rho2ns(...,2) which
-!c         contains in that case the spin density .
-!!c             (see notes by b.drittler)
-!c
-!c     attention : the core density is spherically averaged and multi-
-!c                 plied by 4 pi. therefore the core density is only
-!c                 added to l=0 part .
-!c
-!c                               b.drittler   nov. 1989
-!c
-!c     total orbital moment within the WS sphere is also calculated
-!c     in the relativistic case; orbital density is normalised in the
-!c     same way as the charge density. v.popescu march 2002
-!c-----------------------------------------------------------------------
 !C     .. Parameters ..
 !       include 'inc.p'
 !       INTEGER LMPOTD
@@ -215,6 +219,6 @@
  9073 FORMAT ('         ',' total orb. moment =',f10.6)
  9074 FORMAT ('      total magnetic moment =',f10.6)
 
-      END SUBROUTINE RHOTOTB
+    END SUBROUTINE RHOTOTB
 
-      END MODULE MOD_RHOTOTB
+END MODULE MOD_RHOTOTB

@@ -1,10 +1,11 @@
-      MODULE MOD_RHOOUTNEW
-       CONTAINS
-
-
-
-
-      SUBROUTINE RHOOUTNEW(gauntcoeff,DF,GMATIN,EK,cellnew,wavefunction,RHO2NSC, &
+MODULE MOD_RHOOUTNEW
+CONTAINS
+!-------------------------------------------------------------------------
+!> Summary: Calculation of valence charge density, new solver
+!> Category: physical-observables, KKRimp
+!>
+!-------------------------------------------------------------------------
+SUBROUTINE RHOOUTNEW(gauntcoeff,DF,GMATIN,EK,cellnew,wavefunction,RHO2NSC, &
                           NSRA, &
                       LMAXD,LMAXATOM,LMMAXATOM,LMSIZE,LMSIZE2,LMPOTD,IRMD,&
                          ISPIN,NSPINDEN,imt1,cden,cdenlm,cdenns,shapefun,corbital, &
@@ -380,9 +381,6 @@ use mod_chebyshev   ! lda+u
 
       deallocate(wr,cwr)
 
-
       END SUBROUTINE
 
-      END MODULE MOD_RHOOUTNEW
-
-
+END MODULE MOD_RHOOUTNEW

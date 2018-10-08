@@ -1,5 +1,13 @@
 MODULE MOD_RHOVAL
   CONTAINS
+!-------------------------------------------------------------------------
+!> Summary: Main driver for valence charge density, old solver
+!> Category: physical-observables, KKRimp
+!>
+!> @todo Code looks very messy. Clean up required. @endtodo
+!> @warning Contains ToDos for LDA+U case. @endwarning
+!-------------------------------------------------------------------------
+
       SUBROUTINE RHOVAL(IE,IELAST, ERYD ,WEZ, GMATLL,ISPIN, NSPIN, &
                         IATOM,CELL,VPOT,SHAPEFUN,GAUNTCOEFF, ZATOM, DENSITY, &
                          LMAXATOM,LMMAXATOM,config,lmaxd,energyparts,efermi)
