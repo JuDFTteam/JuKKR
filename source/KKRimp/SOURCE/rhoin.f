@@ -1,74 +1,77 @@
       MODULE MOD_RHOIN
-        CONTAINS
+      CONTAINS
+!-------------------------------------------------------------------------
+!> Summary: Valence charge density inside MT-sphere (where potential is spherical)
+!> Category: physical-observables, KKRimp
+!>
+!>     calculates the charge density inside r(irmin) in case
+!>      of a non spherical input potential .
+!>
+!>     fills the array cden for the complex density of states
+!>
+!>      the non spher. wavefunctions are approximated in that region
+!>       in the following way :
+!>
+!>           the regular one (ir < irmin = irws-irns) :
+!>
+!>              pns(ir,lm1,lm2) = pz(ir,l1) * ar(lm1,lm2)
+!>
+!>          where pz is the regular wavefct of the spherically symmetric
+!>          part of the potential and ar the alpha matrix .
+!>          (see subroutine regns)
+!>
+!>
+!>           the irregular one (ir < irmin) :
+!>
+!>              qns(ir,lm1,lm2) = pz(ir,l1) * cr(lm1,lm2)
+!>                                    + qz(ir,l1) * dr(lm1,lm2)
+!>
+!>          where pz is the regular and qz is the irregular
+!>          wavefct of the spherically symmetric part of the
+!>          potential and cr , dr the matrices calculated
+!>          at the point irmin .  (see subroutine irwns)
+!>
+!>     attention : the gaunt coeffients which are used here
+!>                 are ordered in a special way !   (see subroutine
+!>                 gaunt)
+!>
+!>                 remember that the matrices ar,cr,dr are rescaled !
+!>                 (see subroutines irwns and regns)
+!>
+!>                 arrays rho2ns and cden are initialize in subroutine
+!>                 rhoout .
+!>
+!>
+!>     the structured part of the greens-function (gmat) is symmetric in
+!>       its lm-indices , therefore only one half of the matrix is
+!>       calculated in the subroutine for the back-symmetrisation .
+!>       the gaunt coeffients are symmetric too (since the are calculated
+!>       using the real spherical harmonics) . that is why the lm2- and
+!>       the lm02- loops are only only going up to lm1 or lm01 and the
+!>       summands are multiplied by a factor of 2 in the case of lm1 .ne.
+!>       lm2 or lm01 .ne. lm02 .
+!>
+!>             (see notes by b.drittler)
+!>
+!>                               b.drittler   aug. 1988
+!> *********************************************************************
+!> * For KREL = 1 (relativistic mode)                                  *
+!> *                                                                   *
+!> *  NPOTD = 2 * NATYPD                                               *
+!> *  LMMAXD = 2 * (LMAXD+1)^2                                         *
+!> *  NSPIND = 1                                                       *
+!> *                                                                   *
+!> *********************************************************************
+!>-----------------------------------------------------------------------
       SUBROUTINE RHOIN(AR,CDEN,CR,DF,GMAT,EK,RHO2NS,IRC1,NSRA,EFAC,PZ,
      +                   FZ,QZ,SZ,CLEB,ICLEB,JEND,IEND,EKL
      +                  ,CDENLM, ! lm-dos
      +                   NCLEB,LMAXD,LMMAXD,LMPOTD,IRMD)
-c-----------------------------------------------------------------------
-c
-c     calculates the charge density inside r(irmin) in case
-c      of a non spherical input potential .
-c
-c     fills the array cden for the complex density of states
-c
-c      the non spher. wavefunctions are approximated in that region
-c       in the following way :
-c
-c           the regular one (ir < irmin = irws-irns) :
-c
-c              pns(ir,lm1,lm2) = pz(ir,l1) * ar(lm1,lm2)
-c
-c          where pz is the regular wavefct of the spherically symmetric
-c          part of the potential and ar the alpha matrix .
-c          (see subroutine regns)
-c
-c
-c           the irregular one (ir < irmin) :
-c
-c              qns(ir,lm1,lm2) = pz(ir,l1) * cr(lm1,lm2)
-c                                    + qz(ir,l1) * dr(lm1,lm2)
-c
-c          where pz is the regular and qz is the irregular
-c          wavefct of the spherically symmetric part of the
-c          potential and cr , dr the matrices calculated
-c          at the point irmin .  (see subroutine irwns)
-c
-c     attention : the gaunt coeffients which are used here
-c                 are ordered in a special way !   (see subroutine
-c                 gaunt)
-c
-c                 remember that the matrices ar,cr,dr are rescaled !
-c                 (see subroutines irwns and regns)
-c
-c                 arrays rho2ns and cden are initialize in subroutine
-c                 rhoout .
-c
-c
-c     the structured part of the greens-function (gmat) is symmetric in
-c       its lm-indices , therefore only one half of the matrix is
-c       calculated in the subroutine for the back-symmetrisation .
-c       the gaunt coeffients are symmetric too (since the are calculated
-c       using the real spherical harmonics) . that is why the lm2- and
-c       the lm02- loops are only only going up to lm1 or lm01 and the
-c       summands are multiplied by a factor of 2 in the case of lm1 .ne.
-c       lm2 or lm01 .ne. lm02 .
-c
-c             (see notes by b.drittler)
-c
-c                               b.drittler   aug. 1988
-c-----------------------------------------------------------------------
 C     .. Parameters ..
       IMPLICIT NONE
 !       INCLUDE 'inc.p'
 C
-C *********************************************************************
-C * For KREL = 1 (relativistic mode)                                  *
-C *                                                                   *
-C *  NPOTD = 2 * NATYPD                                               *
-C *  LMMAXD = 2 * (LMAXD+1)^2                                         *
-C *  NSPIND = 1                                                       *
-C *                                                                   *
-C *********************************************************************
+
 C
       INTEGER LMAXD
       INTEGER LMMAXD

@@ -1,32 +1,37 @@
       MODULE MOD_RHOOUT
-       CONTAINS
+      CONTAINS
+!-------------------------------------------------------------------------
+!> Summary: Valence charge density outside MT-sphere (non-spherical part)
+!> Category: physical-observables, KKRimp
+!>     
+!>     calculates the charge density from r(irmin) to r(irc)
+!>      in case of a non spherical input potential .
+!>
+!>     fills the array cden for the complex density of states
+!>
+!>     attention : the gaunt coeffients are stored in index array
+!>                   (see subroutine gaunt)
+!>
+!>     the structured part of the greens-function (gmat) is symmetric in
+!>       its lm-indices , therefore only one half of the matrix is
+!>       calculated in the subroutine for the back-symmetrisation .
+!>       the gaunt coeffients are symmetric too (since the are calculated
+!>       using the real spherical harmonics) . that is why the lm2- and
+!>       the lm02- loops are only only going up to lm1 or lm01 and the
+!>       summands are multiplied by a factor of 2 in the case of lm1 .ne.
+!>       lm2 or lm01 .ne. lm02 .
+!>
+!>             (see notes by b.drittler)
+!>
+!>                        b.drittler   aug. 1988
+!-------------------------------------------------------------------------
       SUBROUTINE RHOOUT(CDEN,DF,GMAT,EK,PNS,QNS,RHO2NS,THETAS,IFUNM,
      +                    IPAN1,IMT1,LMSP,CDENNS,NSRA,CLEB,ICLEB,IEND
      +                   ,CDENLM,  ! lm-dos
      +                   NCLEB,LMAXD,LMMAXD,LMPOTD,IRMD,IRMIND,IRID,
      +                   NFUND)
 c-----------------------------------------------------------------------
-c
-c     calculates the charge density from r(irmin) to r(irc)
-c      in case of a non spherical input potential .
-c
-c     fills the array cden for the complex density of states
-c
-c     attention : the gaunt coeffients are stored in index array
-c                   (see subroutine gaunt)
-c
-c     the structured part of the greens-function (gmat) is symmetric in
-c       its lm-indices , therefore only one half of the matrix is
-c       calculated in the subroutine for the back-symmetrisation .
-c       the gaunt coeffients are symmetric too (since the are calculated
-c       using the real spherical harmonics) . that is why the lm2- and
-c       the lm02- loops are only only going up to lm1 or lm01 and the
-c       summands are multiplied by a factor of 2 in the case of lm1 .ne.
-c       lm2 or lm01 .ne. lm02 .
-c
-c             (see notes by b.drittler)
-c
-c                               b.drittler   aug. 1988
+
 c-----------------------------------------------------------------------
 C     .. Parameters ..
 !       INCLUDE 'inc.p'

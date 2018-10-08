@@ -1,52 +1,55 @@
       MODULE MOD_RHONS
       CONTAINS
+!-------------------------------------------------------------------------
+!> Summary: Driver for valence charge density for non-spherical potential
+!> Category: physical-observables, KKRimp
+!>
+!>     the charge density is developed in spherical harmonics :
+!>
+!>             rho(r) =   { rho(lm,r) * y(r,lm) }       (summed over lm)
+!>
+!>          rho(lm,r) =   { do rho(r) * y(r,lm)         (integrated over
+!>                                                           unit sphere)
+!>     in the case of spin-polarization :
+!>       the spin density is developed in spherical harmonics :
+!>
+!>            sden(r) =   { sden(lm,r) * y(r,lm) }      (summed over lm)
+!>
+!>         sden(lm,r) =   { do sden(r) * y(r,lm)        (integrated over
+!>                                                           unit sphere)
+!>     n(r,e) is developed in
+!>
+!>        n(r,e) = { y(r,l'm') * n(l'm',lm,r,e) * y(r,lm) }
+!>
+!>     therefore a faltung of n(l'm',lm,r,e) with the gaunt coeffients
+!>     has to be used to calculate the lm-contribution of the charge
+!>     density .
+!>
+!>
+!>     calculate the valence density of states , in the spin-polarized
+!>      case spin dependent .
+!>     recognize that the density of states is always complex also in
+!>      the case of "real-energy-integation" (ief>0) since in that case
+!>      the energy integration is done parallel to the real energy axis
+!>      but not on the real energy axis .
+!>     in the last energy-spin loop the l-contribution of the valence
+!>      charge is calculated .
+!>
+!>                               b.drittler   aug. 1988
+!>
+!>     modified for the use of shape functions
+!>
+!>     attention : irmin + 3 has to be less then imt
+!>                 if shape functions are used
+!>
+!>                               b.drittler   july 1989
+!>-----------------------------------------------------------------------
       SUBROUTINE RHONS(DEN,DENLM,DF,DRDI,GMAT,EK,RHO2NS,IPAN,IRCUT,
      +                 THETAS,
      +                   IFUNM,LMSP,NSRA,QNS,PNS,AR,CR,PZ,FZ,QZ,SZ,CLEB,
      +                   ICLEB,JEND,IEND,EKL,
      +                   IRID,NFUND,IRMIND,
      +                   IRMD,NCLEB,LMAXD,LMMAXD,LMPOTD)
-c-----------------------------------------------------------------------
-c
-c     the charge density is developed in spherical harmonics :
-c
-c             rho(r) =   { rho(lm,r) * y(r,lm) }       (summed over lm)
-c
-c          rho(lm,r) =   { do rho(r) * y(r,lm)         (integrated over
-c                                                           unit sphere)
-c     in the case of spin-polarization :
-c       the spin density is developed in spherical harmonics :
-c
-c            sden(r) =   { sden(lm,r) * y(r,lm) }      (summed over lm)
-c
-c         sden(lm,r) =   { do sden(r) * y(r,lm)        (integrated over
-c                                                           unit sphere)
-c     n(r,e) is developed in
-c
-c        n(r,e) = { y(r,l'm') * n(l'm',lm,r,e) * y(r,lm) }
-c
-c     therefore a faltung of n(l'm',lm,r,e) with the gaunt coeffients
-c     has to be used to calculate the lm-contribution of the charge
-c     density .
-c
-c
-c     calculate the valence density of states , in the spin-polarized
-c      case spin dependent .
-c     recognize that the density of states is always complex also in
-c      the case of "real-energy-integation" (ief>0) since in that case
-c      the energy integration is done parallel to the real energy axis
-c      but not on the real energy axis .
-c     in the last energy-spin loop the l-contribution of the valence
-c      charge is calculated .
-c
-c                               b.drittler   aug. 1988
-c
-c     modified for the use of shape functions
-c
-c     attention : irmin + 3 has to be less then imt
-c                 if shape functions are used
-c
-c                               b.drittler   july 1989
 c-----------------------------------------------------------------------
 C     .. Parameters ..
 !       INCLUDE 'inc.p'

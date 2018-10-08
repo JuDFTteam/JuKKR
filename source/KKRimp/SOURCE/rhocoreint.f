@@ -2,18 +2,24 @@
 
       CONTAINS
 
+      !----------------------------------------------------------------------
+      !> Summary: Calculation of core states
+      !> Category: core-electrons, KKRimp, initialization
+      !>     
+      !> Performs sum over L-channels.
+      !> 
+      !> Explanation of some arrays:
+      !>     lmxc = lmaxcore = (0,1,2,...), .e.g, argon core : lmxc = 1
+      !>                                        krypton core : lmxc = 2
+      !>     kfg = configuration of core, e.g., argon core: 3300=3s,3p,0d
+      !>                                      krypton core: 4430=4s,4p,3d
+      !>                                        xenon core: 5540=5s,5p,4d
+      !> @note Similar to routine 'corel' of KKRhost code @endnote
+      !----------------------------------------------------------------------
       SUBROUTINE RHOCOREINT(NSRA,IPR,IP,RHOC,V,ECORE,
      +                      LCORE,NCORE,DRDI,Z,QC,
      +                      A,B,IS,NSPIN,NR,RMAX,IRMD)
-c-----------------------------------------------------------------------
-c     subroutine for core states
-c-----------------------------------------------------------------------
-c     lmxc = lmaxcore = (0,1,2,...), .e.g, argon core : lmxc = 1
-c                                        krypton core : lmxc = 2
-c     kfg = configuration of core, e.g., argon core: 3300=3s,3p,0d
-c                                      krypton core: 4430=4s,4p,3d
-c                                      xenon core: 5540=5s,5p,4d
-c-----------------------------------------------------------------------
+
 C     .. Parameters ..
       USE MOD_SIMP3
       IMPLICIT NONE
@@ -129,7 +135,13 @@ c
       END SUBROUTINE RHOCOREINT
 
 
-
+      !----------------------------------------------------------------------
+      !> Summary: Integrate core density
+      !> Category: core-electrons, KKRimp
+      !> 
+      !> @note Similar to routine 'intcor' of KKRhost code @endnote
+      !> @warning uses own (hardcoded) value of `cvlight` which is changed for `nsra==1` @endwarning
+      !----------------------------------------------------------------------
       SUBROUTINE RHOCOREINT_INTCOR(F1,F2,RHO,G,F,V,VALUE,
      +                             SLOPE,L,NN,E,SUM,NRE,VLNC,A,B,Z,
      +                             RN,NR,TOL,IRM,IPR,NITMAX,NSRA)
@@ -309,6 +321,13 @@ c--->   single site  boundary condition
       END SUBROUTINE RHOCOREINT_INTCOR
 
 
+      !----------------------------------------------------------------------
+      !> Summary: 
+      !> Category: core-electrons, KKRimp
+      !> 
+      !> @note Similar to routine 'intin' of KKRhost code @endnote
+      !> @warning uses own (hardcoded) value of `cvlight` which is changed for `nsra==1` @endwarning
+      !----------------------------------------------------------------------
       SUBROUTINE RHOCOREINT_INTIN(G,F,V,E,L,NNE,VALU,SLOP,
      +                            K1,K2,KC,DG,A,B,Z,NSRA)
 
@@ -443,7 +462,15 @@ C     ..
       END SUBROUTINE RHOCOREINT_INTIN
 
 
-
+      !-------------------------------------------------------------------------------
+      !> Summary:
+      !> Author:
+      !> Category: KKRimp, core-electrons
+      !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+      !>
+      !> @note Similar to routine 'intout' of KKRhost code @endnote
+      !> @warning uses own (hardcoded) value of `cvlight` which is changed for `nsra==1` @endwarning
+      !-------------------------------------------------------------------------------
       SUBROUTINE RHOCOREINT_INTOUT(G,F,V,E,L,NNE,K2,DG,A,B,Z,NSRA)
 
 C     .. Scalar Arguments ..
@@ -569,12 +596,21 @@ C     ..
       DG = DG3
       END SUBROUTINE RHOCOREINT_INTOUT
 
-
+      !-------------------------------------------------------------------------------
+      !> Summary:
+      !> Author:
+      !> Category: KKRimp, core-electrons
+      !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+      !>
+      !> This subroutine uses the explicit formulas for the hankel
+      !> functions. for higher l-values these formulas may lead to
+      !> loss of significant figures. This subroutine should be used
+      !> only for core states.
+      !>
+      !> @note Similar to routine 'hankel' of KKRhost code @endnote
+      !-------------------------------------------------------------------------------
       SUBROUTINE RHOCOREINT_HANKEL(H,L,ARG)
-c  this subroutine uses the explicit formulas for the hankel
-c  functions. for higher l-values these formulas may lead to
-c  loss of significant figures. This subroutine should be used
-c  only for core states.
+
 C     .. Scalar Arguments ..
       DOUBLE COMPLEX ARG
       INTEGER L

@@ -1,7 +1,11 @@
 module mod_rhoval_new
 
 contains
-
+!-------------------------------------------------------------------------
+!> Summary: Main driver for valence charge density, new solver
+!> Category: physical-observables, KKRimp
+!>
+!-------------------------------------------------------------------------
 subroutine rhoval_new(eryd,ie,wez,cellnew,wavefunction,cell,gmatll,iatom,ispin,nspin,SHAPEFUN,GAUNTCOEFF, ZATOM, DENSITY, &
                          LMAXATOM,LMMAXATOM,config,lmaxd,energyparts,kspinorbit,use_fullgmat,nspinden,efermi, &
                          ldau) ! lda+u
@@ -51,13 +55,13 @@ type(energyparts_type)                    :: energyparts
 integer                                   :: kspinorbit
 integer                                   :: use_fullgmat
 integer                                   :: nspinden
-double precision                          ::  efermi
-type(ldau_type)                           ::  ldau                       ! lda+u variables
+double precision                          :: efermi
+type(ldau_type)                           :: ldau                       ! lda+u variables
 
 !local
 double complex,allocatable                :: rho2ns_complex(:,:,:)
 double complex,allocatable                :: rho2ns_complex_temp(:)
-!       real(kind=dp)                         ::   espv(0:lmaxatom+1,2)
+!real(kind=dp)                             ::   espv(0:lmaxatom+1,2)
 complex(kind=dpc)                         ::   df,ek
 double complex                            :: rho2ns_integrated(4),temp1
 integer                                   :: lval,imt1
