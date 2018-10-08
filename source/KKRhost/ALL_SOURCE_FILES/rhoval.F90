@@ -205,17 +205,15 @@ contains
     ! Initialise variables
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     rho2ns(:,:,:) = 0.0_dp
+    espv(0:lmaxd1,:) = 0.0_dp
     if (krel/=0) then
-      espv(0:lmaxd1,:) = 0.0_dp
       r2nef(:,:,:) = 0.0_dp
       rhoorb(:) = 0.0_dp
-      dmuorb(:,:) = 0.0_dp
+      dmuorb(:,:) = czero
       if (itermvdir) then
         mvevil(:,:,:) = czero
         mvevilef(:,:,:) = czero
       end if
-    else
-      espv(0:lmaxd1,ispin) = 0.0_dp
     end if ! (krel/=0)
     lastez = ielast
 

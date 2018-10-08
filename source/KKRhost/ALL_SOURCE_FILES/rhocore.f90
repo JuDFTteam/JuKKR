@@ -47,11 +47,9 @@ contains
     nr = ircut(1)
     rmax = r(nr)
 
-
     ! =======================================================================
     if (krel==0) then
       ! =======================================================================
-
       call corel(nsra, ipr, i1, rhoc(1,ispin), visp, ecore, lcore, ncore, drdi, zat, qc1, a, b, ispin, nspin, nr, rmax, irmd)
       ! non/scalar-relativistic OR relativistic
       if (ipr/=0) write (1337, fmt=100) i1
@@ -59,12 +57,8 @@ contains
       if (ispin==nspin) write (1337, fmt=110) zat, qc
       ! =======================================================================
     else
-      ! *********************************************************************
       call drvcore(ipr, i1, lcore, ncore, cscl, vtrel, btrel, rmrel, a, b, drdirel, r2drdirel, zrel, jwsrel, irshift, rhoc, ecorerel, nkcore, kapcore, ecore, lmaxd, irmd)
     end if
-    ! * For KREL = 1 (relativistic mode)                                  *
-    ! *                                                                   *
-    ! *  NPOTD = 2 * NATYPD                                               *
     return
 100 format (1x, 5('*'), ' core-relaxation for ', i3, 'th cell', ' was done ', 5('*'))
 110 format (4x, 'nuclear charge  ', f10.6, 9x, 'core charge =   ', f10.6)

@@ -123,6 +123,7 @@ contains
     complex (kind=dp), dimension (0:lmaxd, natypd, 3, nmvecmax) :: mvevil
     character (len=7), dimension (3) :: texts
     character (len=4), dimension (0:6) :: textl
+    integer :: withorbmom !! integer flag used to tell wrmoms how output is written
     ! -------------------------------------------------------------------------
     !> @note attention: muorb second index means both spins and total
     ! -------------------------------------------------------------------------
@@ -300,7 +301,7 @@ contains
         close (701)
       end if ! myrank==master
 
-      ! energy integration to get cdos_lly
+      ! energy integration to get ly
       cdos_lly(1:ielast, 1:nspin) = czero
 
       if (t_lloyd%cdos_diff_lly_to_file) then
@@ -485,7 +486,7 @@ contains
             call rhovalnew(ldorhoef, ielast, nsra, nspin, lmax, ez, wez, zat(i1), socscale(i1), cleb(1,1), icleb, iend, &
               ifunm1(1,icell), lmsp1(1,icell), ncheb, npan_tot(i1), npan_log_at(i1), npan_eq_at(i1), rmesh(1,i1), irws(i1), &
               rpan_intervall(0,i1), ipan_intervall(0,i1), rnew(1,i1), vinsnew, thetasnew(1,1,icell), theta(i1), phi(i1), i1, &
-              ipot, den(0,1,1,ipot), espv(0,ipot), rho2n1(1,1,ispin), rho2n2(1,1,ispin), muorb(0,1,i1), angles_new(:,i1), &
+              ipot, den(0,1,1,ipot), espv(0,ipot), rho2n1(1,1,1), rho2n2(1,1,1), muorb(0,1,i1), angles_new(:,i1), &
               idoldau, lopt(i1), wldau(1,1,1,i1), denmatn(1,1,1,1,i1), natyp, ispin) ! LDAU
 #ifdef CPP_TIMING
             call timing_pause('main1c - rhovalnew')
@@ -522,9 +523,9 @@ contains
 
 
         ! copy results of rho2ns, r2nef, denef, and denefat to big arrays
+        rho2ns(1:irmd, 1:lmpotd, i1, :) = rho2n1(1:irmd, 1:lmpotd, :)
+        r2nef(1:irmd, 1:lmpotd, i1, :) = rho2n2(1:irmd, 1:lmpotd, :)
         do ispin=1, nspin
-          rho2ns(1:irmd, 1:lmpotd, i1, ispin) = rho2n1(1:irmd, 1:lmpotd, ispin)
-          r2nef(1:irmd, 1:lmpotd, i1, ispin) = rho2n2(1:irmd, 1:lmpotd, ispin)
           do l = 0, lmaxd1
             denef = denef - 2.0_dp*conc(i1)*aimag(den(l,ielast,1,ipot1+ispin-1))/pi/dble(nspinpot)
             denefat(i1) = denefat(i1) - 2.0_dp*aimag(den(l,ielast,1,ipot1+ispin-1))/pi/dble(nspinpot)
@@ -549,8 +550,8 @@ contains
         if (test('RHOVALW ')) then ! Bauer
           open (unit=324234, file='out_rhoval')
           write (324234, *) '#IATOM', i1
-          write (324234, '(50000F14.7)') rho2ns(:, :, i1, 1)
-          if (nspin==2) write (324234, '(50000F14.7)') rho2ns(:, :, i1, 2)
+          write (324234, '(50000F25.16)') rho2ns(:, :, i1, 1)
+          if (nspin==2) write (324234, '(50000F25.16)') rho2ns(:, :, i1, 2)
         end if
 
       end do ! I1
@@ -570,7 +571,7 @@ contains
         if (opt('qdos    ')) then
           ! first communicate den array to write out qdos files
           idim = (lmaxd1+1)*ielast*nqdos*npotd
-          allocate (workc(0:lmaxd1,ielast,nqdos,npotd))
+          allocate (workc(0:lmaxd1,ielast,nqdos,npotd), stat=i_stat)
           call memocc(i_stat, product(shape(workc))*kind(workc), 'workc', 'main1c')
           workc = czero
           call mpi_allreduce(den, workc, idim, mpi_double_complex, mpi_sum, mpi_comm_world, ierr)
@@ -814,7 +815,9 @@ contains
       ! -------------------------------------------------------------------
       ! Write out lm charges and moments
       ! -------------------------------------------------------------------
-      call wrmoms(krel+korbit, natyp, nspinpot, texts, textl, textns, charge, muorb, lmax, lmaxd1)
+      withorbmom = krel+korbit
+      if (test('NOSOC   ')) withorbmom = withorbmom+1
+      call wrmoms(withorbmom, natyp, nspinpot, texts, textl, textns, charge, muorb, lmax, lmaxd1)
 
       ! ----------------------------------------------------------------------
       ! ITERMDIR

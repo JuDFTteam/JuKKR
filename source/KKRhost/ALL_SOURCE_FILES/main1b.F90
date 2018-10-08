@@ -614,31 +614,30 @@ contains
         ! qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos
         ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if (opt('readcpa ') .or. (opt('qdos    ') .and. (iqdosrun==1))) then ! qdos ruess: read in cpa t-matrix
-          do isite = 1, naez       ! qdos ruess
-            tqdos(:, :, isite) = czero ! qdos ruess
+          do isite = 1, naez                                                 ! qdos ruess
+            tqdos(:, :, isite) = czero                                       ! qdos ruess
 #ifdef CPP_MPI
             do lm1 = 1, lmmaxd
               do lm2 = 1, lmmaxd
                 irec = lm2 + (lm1-1)*lmmaxd + lmmaxd**2*(isite-1) + lmmaxd**2*naez*(ie-1) + lmmaxd**2*ielast*naez*(ispin-1)
                 read (37, rec=irec) tread
-                if ((lm1+lm2)/=0) then ! qdos ruess
+                if ((lm1+lm2)/=0) then                     ! qdos ruess
                   tqdos(lm1, lm2, isite) = tread/cfctorinv ! qdos ruess
-                end if             ! qdos ruess
+                end if                                     ! qdos ruess
               end do
             end do
-
 #else
-            read (37, *) text      ! qdos ruess
-            read (37, *) text      ! qdos ruess
-110         continue               ! qdos ruess
-            read (37, *) lm1, lm2, tread ! qdos ruess
-            if ((lm1+lm2)/=0) then ! qdos ruess
+            read (37, *) text                          ! qdos ruess
+            read (37, *) text                          ! qdos ruess
+110         continue                                   ! qdos ruess
+            read (37, *) lm1, lm2, tread               ! qdos ruess
+            if ((lm1+lm2)/=0) then                     ! qdos ruess
               tqdos(lm1, lm2, isite) = tread/cfctorinv ! qdos ruess
-              if ((lm1+lm2)<2*lmmaxd) go to 110 ! qdos ruess
-            end if                 ! qdos ruess
+              if ((lm1+lm2)<2*lmmaxd) go to 110        ! qdos ruess
+            end if                                     ! qdos ruess
 #endif
-          end do                   ! qdos ruess
-        end if                     ! qdos ruess
+          end do                                       ! qdos ruess
+        end if                                         ! qdos ruess
         ! -------------------------------------------------------------------
         ! Loop over all QDOS points and change volume for KLOOPZ run accordingly
         ! -------------------------------------------------------------------
@@ -744,7 +743,7 @@ contains
 
         if (lly/=0) then           ! LLY
 
-          if (opt('NEWSOSOL')) then
+          if (opt('NEWSOSOL') .and. .not.test('NOSOC   ')) then
             cdos_lly(ie, ispin) = tralpha(ie, ispin) - lly_grtr(ie, ispin)/volbz(1) + 2.0_dp*lly_g0tr(ie) ! LLY
           else
             if (lly/=2) then       ! LLY Lloyd

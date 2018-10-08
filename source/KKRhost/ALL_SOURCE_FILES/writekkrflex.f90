@@ -76,40 +76,28 @@ contains
 
       do iatom = 1, natomimp
         i1 = atomimp(iatom)
-        if (korbit==0) then
-          do ispin = 1, nspin
-            do ie = 1, ielast
-              if (i1<=natyp) then
-                irec = ie + ielast*(ispin-1) + ielast*nspin*(i1-1)
-                if (t_tgmat%tmat_to_file) then
-                  read (69, rec=irec) tmat0
-                else
-                  stop 'WRONG tmat_to_file for KKRFLEX writeout!!'
-                  ! not correctly read in with this option, to fix this
-                  ! communication is needed
-                  ! tmat0(:,:) = t_tgmat%tmat(:,:,irec)
-                end if
-              else
-                tmat0 = (0.0d0, 0.0d0)
-              end if
-              write (6699, '(4I12,50000E25.16)') iatom, ispin, ie, 0, tmat0
-            end do                 ! ie=1,ielast
-          end do                   ! ispin=1,nspin
-        else if (korbit==1) then
-          ispin = 1
+        do ispin = 1, nspin/(1+korbit)
           do ie = 1, ielast
             if (i1<=natyp) then
-              irec = ie + ielast*(i1-1)
-              read (69, rec=irec) tmat0
-              ! perform here a transformation from the local to the global
-              ! spin-frame of reference
-              call rotatematrix(tmat0, theta(i1), phi(i1), lmgf0d, 0)
+              irec = ie + ielast*(ispin-1) + ielast*nspin/(1+korbit)*(i1-1)
+              if (t_tgmat%tmat_to_file) then
+                read (69, rec=irec) tmat0
+              else
+                stop 'WRONG tmat_to_file for KKRFLEX writeout!!'
+                ! not correctly read in with this option, to fix this communication is needed
+                ! tmat0(:,:) = t_tgmat%tmat(:,:,irec)
+              end if
+              if (korbit==1) then
+                ! perform here a transformation from the local to the global
+                ! spin-frame of reference
+                call rotatematrix(tmat0, theta(i1), phi(i1), lmgf0d, 0)
+              end if
             else
               tmat0 = (0d0, 0d0)
             end if
             write (6699, '(4I12,50000E25.16)') iatom, ispin, ie, 0, tmat0
           end do
-        end if
+        end do
       end do
       close (69)
       close (6699)

@@ -262,7 +262,7 @@ contains
       ! qdos ruess
       irec = ipoint + nqdos*(iecurr-1) + nqdos*ielast*(i1-1) ! qdos ruess
       if (t_tgmat%gmat_to_file) then
-        read (69, rec=irec) gmat0  ! qdos ruess
+        read (70, rec=irec) gmat0  ! qdos ruess
       else
         gmat0(:, :) = t_tgmat%gmat(:, :, irec)
       end if

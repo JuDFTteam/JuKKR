@@ -716,7 +716,7 @@ contains
 
         end if                     ! test('rhoqtest')
 #endif
-        irec = ie + ielast*(ispin-1) + ielast*nspin/(2-korbit)*(i1-1)
+        irec = ie + ielast*(ispin-1) + ielast*nspin/(1+korbit)*(i1-1)
         write (69, rec=irec) tmatll(:, :)
         ! human readable writeout if test option is hit
         if (test('fileverb')) then
@@ -733,23 +733,23 @@ contains
       end if
       if (lly/=0) then
         if (t_lloyd%dtmat_to_file) then
-          irec = ie + ielast*(i1-1)
+          irec = ie + ielast*(ispin-1) + ielast*nspin/(1+korbit)*(i1-1)
           write (691, rec=irec) dtmatll(:, :) ! LLY
           if (test('fileverb')) then
             write (691691691, '(i9,20000F15.7)') irec, dtmatll(:, :)
           end if
         else
-          irec = ie_num + ie_end*(i1-1)
+          irec = ie_num + ie_end*(ispin-1) + ie_end*nspin/(1+korbit)*(i1-1)
           t_lloyd%dtmat(:, :, irec) = dtmatll(:, :)
         end if
         if (t_lloyd%tralpha_to_file) then
-          irec = ie + ielast*(i1-1)
+          irec = ie + ielast*(ispin-1) + ielast*nspin/(1+korbit)*(i1-1)
           write (692, rec=irec) tralpha ! LLY
           if (test('fileverb')) then
             write (692692692, '(i9,20000F15.7)') irec, tralpha
           end if
         else
-          irec = ie_num + ie_end*(i1-1)
+          irec = ie_num + ie_end*(ispin-1) + ie_end*nspin/(1+korbit)*(i1-1)
           t_lloyd%tralpha(irec) = tralpha
         end if
       end if
