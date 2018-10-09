@@ -1,13 +1,11 @@
 !------------------------------------------------------------------------------------
 !> Summary: Container for several routines regarding checksum verification 
-!> Author: 
+!> Author: Philipp Ruessmann
 !> The idea of the routine seems to be to verify the checksum of potential files
 !> and shapefunction files for unientional corruption. It also contains helper
 !> routines for the broadcast
 !------------------------------------------------------------------------------------
-!> @note JC: Is there a checksum verification actually happening?
-!> 
-!> Uncomment the line `#define test` and compile with -D for testing
+!> @note  Uncomment the line `#define test` and compile with -D for testing
 !> @endnote
 !------------------------------------------------------------------------------------
 !#define test
@@ -27,10 +25,19 @@ module mod_md5sums
 
 contains
 
+  !-------------------------------------------------------------------------------  
+  !> Summary: Perform the md5 checksum for the potential and shapefunction files
+  !> Author: Philipp Ruessmann 
+  !> Category: potential, shape-functions, KKRhost
+  !> Deprecated: False 
+  !> Generates the checksum of the potential and shapefunction files as obtained
+  !> via the `md5sum` bash command.
+  !-------------------------------------------------------------------------------  
   subroutine get_md5sums(ins, filename_pot, filename_shape)
     implicit none
-    integer, intent (in) :: ins
-    character (len=40), intent (in) :: filename_pot, filename_shape
+    integer, intent (in) :: ins !! 0 (MT), 1(ASA), 2(Full Potential)
+    character (len=40), intent (in) :: filename_pot   !! Name of the potential file
+    character (len=40), intent (in) :: filename_shape !! Name of the shapefunction file
     character (len=100) :: tmp_char
     integer :: istat
 
@@ -109,11 +116,20 @@ contains
   end subroutine get_md5sums
 
 #ifdef CPP_MPI
+  !-------------------------------------------------------------------------------  
+  !> Summary: Broadcast the md5sum checksums to the different nodes 
+  !> Author: Philipp Ruessmann 
+  !> Category: potential, shape-functions, communication, KKRhost
+  !> Deprecated: False 
+  !> Broadcast the md5sum checksums to the different nodes
+  !-------------------------------------------------------------------------------  
   subroutine mympi_bcast_md5sums(ins, myrank, master)
 
     use :: mpi
     implicit none
-    integer, intent (in) :: ins, myrank, master
+    integer, intent (in) :: ins     !! 0 (MT), 1(ASA), 2(Full Potential)
+    integer, intent (in) :: master  !! Index of master process
+    integer, intent (in) :: myrank  !! Index of current process
     integer :: ierr
 
     ! broadcast and allocate checksum for potential
@@ -128,8 +144,6 @@ contains
     ! broadcast checksum
     call mpi_bcast(md5sum_potential, lmd5sum_pot, mpi_character, master, mpi_comm_world, ierr)
     if (ierr/=mpi_success) stop '[myMPI_Bcast_md5sums] error broadcasting md5sum_potential in main_all'
-
-
 
     ! do the same for shapefunction
     if (ins>0) then
@@ -156,6 +170,13 @@ end module mod_md5sums
 
 ! TESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTESTTEST
 #ifdef test
+!-------------------------------------------------------------------------------  
+!> Summary: Test the md5sums routine 
+!> Author: Philipp Ruessmann 
+!> Category: potential, shape-functions, unit-test, KKRhost
+!> Deprecated: False 
+!> Test the md5sums routine
+!-------------------------------------------------------------------------------  
 program test
 
   use :: mod_md5sums

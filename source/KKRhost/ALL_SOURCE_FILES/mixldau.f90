@@ -1,19 +1,34 @@
+!------------------------------------------------------------------------------------
+!> Summary: Routine for the mixing of the potential matrix in the case of LDA+U
+!> Author:
+!> Routine for the mixing of the potential matrix in the case of LDA+U 
+!------------------------------------------------------------------------------------
 module mod_mixldau
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
-
+   !-------------------------------------------------------------------------------  
+   !> Summary: Routine for the mixing of the potential matrix in the case of LDA+U
+   !> Author: 
+   !> Category: potential, KKRhost 
+   !> Deprecated: False 
+   !> Routine for the mixing of the potential matrix in the case of LDA+U as well as 
+   !> the rms error in the interaction matrix
+   !-------------------------------------------------------------------------------  
   subroutine mixldau(mmaxd, nspind, natypd, natyp, nspin, lopt, wldauold, wldau)
     use :: mod_ioinput
     implicit none
     ! Input:
-    integer :: natypd, nspind, mmaxd
-    integer :: lopt(natypd)
-    integer :: natyp, nspin
-    real (kind=dp) :: wldauold(mmaxd, mmaxd, nspind, natypd)
+    integer, intent(in) :: mmaxd   !! 2*lmax + 1
+    integer, intent(in) :: nspind  !! krel + (1-krel)*2
+    integer, intent(in) :: natypd  !! Number of kinds of atoms in unit cell
+    integer, intent(in) :: nspin   !! Counter for spin directions 
+    integer, intent(in) :: natyp   !! Number of kinds of atoms in unit cell
+    integer, dimension(natypd), intent(in) :: lopt !! angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
+    real (kind=dp), dimension(mmaxd, mmaxd, nspind, natypd), intent(in) :: wldauold
     ! Input/Output:
-    real (kind=dp) :: wldau(mmaxd, mmaxd, nspind, natypd)
+    real (kind=dp), dimension(mmaxd, mmaxd, nspind, natypd), intent(inout) :: wldau !! potential matrix
     ! Inside:
     integer :: iat, is, m1, m2, mmax
     integer :: ier

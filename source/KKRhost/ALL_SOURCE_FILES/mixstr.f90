@@ -2,24 +2,30 @@ module mod_mixstr
 
 contains
 
-  ! 13.10.95 ***************************************************************
-  subroutine mixstr(rmsavq, rmsavm, ins, lpot, lmpot, natref, nshell, nstart, nend, conc, nspin, itc, rfpi, fpi, ipf, mixing, fcm, irc, irmin, r, drdi, vons, visp, vins, vspsmo, &
-    vspsme, lsmear)
-    ! ************************************************************************
+  subroutine mixstr(rmsavq,rmsavm,ins,lpot,lmpot,natref,nshell,nstart,nend,conc,    &
+    nspin,itc,rfpi,fpi,ipf,mixing,fcm,irc,irmin,r,drdi,vons,visp,vins,vspsmo,vspsme,&
+    lsmear)
+  
     use :: global_variables
     use :: mod_datatypes, only: dp
     implicit none
-    ! ..
-    ! .. Local Scalars ..
     real (kind=dp) :: fcm, fpi, mixing, rfpi, rmsavm, rmsavq
+
     integer :: ins, ipf, itc, lmpot, lpot, natref, nend, nspin, nstart
-    integer :: lsmear
-    ! ..
-    ! .. Intrinsic Functions ..
-    real (kind=dp) :: drdi(irmd, natypd), r(irmd, natypd), vins(irmind:irmd, lmpotd, *), visp(irmd, *), vons(irmd, lmpotd, *), conc(natypd), vspsmo(irmd, nspotd), &
-      vspsme(irmd, nspotd)
-    integer :: irc(natypd), irmin(natypd), nshell(0:nsheld)
-    ! ..
+    integer, intent(in) :: lsmear
+
+    real (kind=dp), dimension(natypd), intent(in) :: conc
+    real (kind=dp), dimension(irmd, natypd), intent(in) :: r
+    real (kind=dp), dimension(irmd, natypd), intent(in) :: drdi
+    real (kind=dp), dimension(irmd, *), intent(in)      :: visp
+    real (kind=dp), dimension(irmind:irmd, lmpotd, *), intent(in) :: vins
+    real (kind=dp), dimension(irmd, lmpotd, *), intent(in) :: vons
+    real (kind=dp), dimension(irmd, nspotd), intent(inout) :: vspsmo
+    real (kind=dp), dimension(irmd, nspotd), intent(inout) :: vspsme
+    
+    integer, dimension(natypd), intent(in) :: irc
+    integer, dimension(natypd), intent(in) :: irmin
+    integer, dimension(0:nsheld), intent(in) :: nshell
 
     real (kind=dp) :: fac, rmserm, rmserq, vmn, vnm, vnp, voldm, voldp, vpn
     real (kind=dp) :: natom
@@ -33,10 +39,6 @@ contains
 
     ! first mixing scheme : straight mixing
     ! ---> determination of the root mean sqare error
-
-
-
-
 
     natom = 0.0e0_dp
 

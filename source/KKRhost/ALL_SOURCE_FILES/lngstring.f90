@@ -21,7 +21,7 @@ module mod_lngstring
     !> Deprecated: False 
     !> Finds the length of a string
     !-------------------------------------------------------------------------------
-    !> @note Joathan Chico: This routine seems to do the same than the `length()` function. Both
+    !> @note Jonathan Chico: This routine seems to do the same than the `length()` function. Both
     !> seem to be unnecessary if one instead uses fortran intrinsic functions.
     !> @endnote
     !-------------------------------------------------------------------------------

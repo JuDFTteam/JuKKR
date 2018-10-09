@@ -20,7 +20,7 @@ module mod_length
     !> Deprecated: False 
     !> Finds the length of a string
     !-------------------------------------------------------------------------------
-    !> @note Joathan Chico: This seems to be used only in the subroutine `sname()` which seems to be 
+    !> @note Jonathan Chico: This seems to be used only in the subroutine `sname()` which seems to be 
     !> deprecated, maybe this funtcion is unneccessary.
     !> @endnote
     !-------------------------------------------------------------------------------
