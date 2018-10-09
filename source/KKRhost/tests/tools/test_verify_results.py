@@ -268,7 +268,7 @@ class Test_SOC():
         # cross check both runs against each other (comparing output writte to 'out_last.txt')
         num, text = read_file(path0+'NEWSOSOL_NOSOC/out_last.txt')
         num_ref, text_ref = read_file(path0+'NEWSOSOL_SOCSCL0/out_last.txt')
-        assert std(num-num_ref)<2*10**-13
+        assert std(num-num_ref)<5*10**-13
         assert set(text)-set(text_ref)==set()
 
     def test_4_Jijs_SOC(self):
