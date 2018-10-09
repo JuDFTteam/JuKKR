@@ -1,16 +1,15 @@
 !-------------------------------------------------------------------------------
-!> Summary: 
+!> Summary: Data type holding single-site tmatix and Delta-t-matrix (for Jijs)
 !> Author: 
-!> Category: KKRimp, 
+!> Category: KKRimp, single-site
 !> Deprecated: False ! This needs to be set to True for deprecated subroutines
 !>
 !-------------------------------------------------------------------------------
 module type_tmat
 
- TYPE                              ::  TMAT_TYPE
-   DOUBLE COMPLEX,ALLOCATABLE              ::  TMAT(:,:)
-   DOUBLE COMPLEX,ALLOCATABLE              ::  deltaT_Jij(:,:,:)
-
- END TYPE TMAT_TYPE
+  type ::  tmat_type
+    double complex, allocatable :: tmat(:,:)          !! single-site t-matrix
+    double complex, allocatable :: deltat_jij(:,:,:)  !! \[\Delta t\] matrix for Jij calculation
+  end type tmat_type
 
 end module type_tmat

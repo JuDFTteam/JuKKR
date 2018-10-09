@@ -1,5 +1,5 @@
 !-------------------------------------------------------------------------------
-!> Summary: 
+!> Summary: Type holding wavefunctions and corresponding array dimensions and save-flags
 !> Author: 
 !> Category: KKRimp, 
 !> Deprecated: False ! This needs to be set to True for deprecated subroutines
@@ -7,18 +7,19 @@
 !-------------------------------------------------------------------------------
 module type_wavefunction
 
- TYPE                              ::  wavefunction_TYPE
-       INTEGER                     :: lmsize,lmsize2,nrmaxnew
-       INTEGER                     :: NVEC
-       DOUBLE COMPLEX,allocatable  ::  SLL(:,:,:,:), RLL(:,:,:,:)
-       DOUBLE COMPLEX,allocatable  ::  SLLleft(:,:,:,:), RLLleft(:,:,:,:)
+  type :: wavefunction_type
 
-       INTEGER                     :: deallocate
-       INTEGER                     :: rll_saved
-       INTEGER                     :: sll_saved
-       INTEGER                     :: rllleft_saved
-       INTEGER                     :: sllleft_saved
+    integer                     :: lmsize,lmsize2,nrmaxnew
+    integer                     :: nvec
+    double complex,allocatable  :: sll(:,:,:,:), rll(:,:,:,:)
+    double complex,allocatable  :: sllleft(:,:,:,:), rllleft(:,:,:,:)
 
- END TYPE wavefunction_TYPE
+    integer                     :: deallocate
+    integer                     :: rll_saved
+    integer                     :: sll_saved
+    integer                     :: rllleft_saved
+    integer                     :: sllleft_saved
+
+  end type wavefunction_type
 
 end module type_wavefunction

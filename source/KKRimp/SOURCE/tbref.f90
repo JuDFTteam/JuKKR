@@ -3,10 +3,10 @@ module mod_tbref
 contains
 
 !-------------------------------------------------------------------------------
-!> Summary: 
+!> Summary: Compute reference system
 !> Author: 
-!> Category: KKRimp, deprecated
-!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!> Category: KKRimp, reference-system
+!> Deprecated: True ! This needs to be set to True for deprecated subroutines
 !>
 !-------------------------------------------------------------------------------
 subroutine tbref(eryd,natom, ntotatom,tbcluster,alatc,vref,rmtref,lmaxatom,lmaxd,lmgf0d)

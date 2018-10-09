@@ -7,17 +7,21 @@
 !-------------------------------------------------------------------------------
 module mod_rllslltools
 
+  private
+  public :: rllslltools_solvesra, inverse
+
 contains
   
   !-------------------------------------------------------------------------------
-  !> Summary: 
+  !> Summary: Solve SRA equation
   !> Author: 
   !> Category: KKRimp, single-site
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
+  !> Solves SRA equation by inversion of a subblock of the 2x2 matrix and subsequent 
+  !> matrix-matrix multiplication to get the rest of the blocks
   !-------------------------------------------------------------------------------
   subroutine rllslltools_solvesra(nmat,ns,mat,s1,s2)
-    ! use mod_wrapper
     use mod_mathtools, only: inverse
     use mod_timing, only: timing_start, timing_stop
     implicit none
@@ -55,9 +59,9 @@ contains
   end subroutine rllslltools_solvesra
   
   !-------------------------------------------------------------------------------
-  !> Summary: 
+  !> Summary: Complex matrix-matrix multiplication
   !> Author: 
-  !> Category: KKRimp, 
+  !> Category: KKRimp, numerical-tools
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
   !-------------------------------------------------------------------------------
@@ -74,11 +78,12 @@ contains
   end function matmat_zmzm
   
   !-------------------------------------------------------------------------------
-  !> Summary: 
+  !> Summary: Computes inverse of complex matrix using LAPACK calls to LU decomposition
   !> Author: 
-  !> Category: KKRimp, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !> Category: KKRimp, numerical-tools 
+  !> Deprecated: True ! This needs to be set to True for deprecated subroutines
   !>
+  !> @note Only used in rllsll, can be replaced with inverse from mathtools module. @endnote
   !-------------------------------------------------------------------------------
   subroutine inverse(nmat,mat,work,ipiv)
     !interface
@@ -99,9 +104,10 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: 
   !> Author: 
-  !> Category: KKRimp, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !> Category: KKRimp, deprecated
+  !> Deprecated: True ! This needs to be set to True for deprecated subroutines
   !>
+  !> @note not used @endnote
   !-------------------------------------------------------------------------------
   subroutine rllslltools(dim1,dimblock,nblock,mat1,mat2,mat3)
     use mod_mathtools, only: linearsolve2_dc

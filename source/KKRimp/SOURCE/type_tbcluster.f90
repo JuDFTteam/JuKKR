@@ -1,27 +1,29 @@
 !-------------------------------------------------------------------------------
-!> Summary: 
+!> Summary: Type holding screening (tight-binding) cluster information
 !> Author: 
-!> Category: KKRimp, 
+!> Category: KKRimp, reference-system
 !> Deprecated: False ! This needs to be set to True for deprecated subroutines
 !>
 !-------------------------------------------------------------------------------
 module type_tbcluster
-use nrtype, only: dp
- TYPE                      :: TBCLUSTER_TYPE
 
- INTEGER                   :: NACLSD !! maximum number of atoms in a cluster
- INTEGER                   :: NCLSD !! maximum number of clusters
- INTEGER                   :: NCLS !! number of clusters
- REAL(kind=DP),allocatable :: RCLS(:,:,:) !! real space position of atom in cluster (:,:,:NATOM)
- INTEGER,allocatable       :: CLS(:) !! sort of cluster around atom (NATOM) 
- INTEGER,allocatable       :: NACLS(:) !! number of atoms in cluster(NCLSD) 
- INTEGER,allocatable       :: NACLSIMPMAX(:) !! number of impurity atoms in cluster
- INTEGER,allocatable       :: ATOM(:,:) !! (NACLSD,NR)
- INTEGER,allocatable       :: NACLSIMP(:)
- INTEGER,allocatable       :: IATOM2INDEX(:,:) !!(NATOM,NCLSD)
- INTEGER,allocatable       :: INDEX2IATOM(:,:) !!(NACLSD*LMAXD,NCLSD)
- INTEGER,allocatable       :: NCLSGF(:) !!(NCLSD) 
+  use nrtype, only: dp
 
- END TYPE TBCLUSTER_TYPE
+  type                      :: tbcluster_type
+
+  integer                   :: naclsd           !! maximum number of atoms in a cluster
+  integer                   :: nclsd            !! maximum number of clusters
+  integer                   :: ncls             !! number of clusters
+  real(kind=dp),allocatable :: rcls(:,:,:)      !! real space position of atom in cluster (:,:,:natom)
+  integer,allocatable       :: cls(:)           !! sort of cluster around atom (natom) 
+  integer,allocatable       :: nacls(:)         !! number of atoms in cluster(nclsd) 
+  integer,allocatable       :: naclsimpmax(:)   !! number of impurity atoms in cluster
+  integer,allocatable       :: atom(:,:)        !! (naclsd,nr)
+  integer,allocatable       :: naclsimp(:)      !!
+  integer,allocatable       :: iatom2index(:,:) !!(natom,nclsd)
+  integer,allocatable       :: index2iatom(:,:) !!(naclsd*lmaxd,nclsd)
+  integer,allocatable       :: nclsgf(:)        !!(nclsd) 
+
+  end type tbcluster_type
 
 end module type_tbcluster

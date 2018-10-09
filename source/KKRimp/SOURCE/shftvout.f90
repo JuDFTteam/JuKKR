@@ -3,199 +3,170 @@ MODULE MOD_SHFTVOUT
   CONTAINS
 
   !-------------------------------------------------------------------------------
-  !> Summary: 
+  !> Summary: Shift outer potntial to new expansion around relaxed expansion center
   !> Author: 
-  !> Category: KKRimp, 
+  !> Category: KKRimp, potential, radial-grid
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
+  !> Transform the 'outer' potential from the old expansion around
+  !> the ideal positions to the new expansion around the shifted
+  !> positions in case of lattice relaxations.
+  !> The 'outer' potential is the madelung potential of the ideal
+  !> host minus the intracell potential of the host for the perturbed
+  !> cluster.
+  !>
+  !> @note
+  !> gaunt2 has to be called bevor to set up the common block assleg
+  !> @endnote
+  !> @note PR: The previous note is probably not valid anymore. @endnote
+  !>
+  !> @warning ncleb is an empirical factor - it has to be optimized @endwarning
   !-------------------------------------------------------------------------------
-  SUBROUTINE SHFTVOUT(VIN, VOUT, SN, LPOT, WG, YRG, LMMAXD, LASSLD, LPOTD, LM3D, NCLEB)
-    use mod_ymy, only: YMY
+  subroutine shftvout(vin, vout, sn, lpot, wg, yrg, lmmaxd, lassld, lpotd, lm3d, ncleb)
+    use mod_ymy, only: ymy
     implicit none
-    !-----------------------------------------------------------------------
-    !     Transform the 'outer' potential from the old expansion around
-    !     the ideal positions to the new expansion around the shifted
-    !     positions in case of lattice relaxations.
-    !     The 'outer' potential is the madelung potential of the ideal
-    !     host minus the intracell potential of the host for the perturbed
-    !     cluster.
-    !
-    !                 gaunt2 has to be called bevor to set up the common
-    !                 block assleg
-    !
-    !-----------------------------------------------------------------------
-    !     .. Parameters ..
-    !
-    !---> attention : ncleb is an empirical factor - it has to be optimized
-    !
-    !       include 'parameters.file'
-    !      INTEGER NTPERD,NTREFD,NATYPD,NATOMD
-    !      PARAMETER (NATYPD=19,NTREFD=4,NATOMD=15,NTPERD=NATYPD-NTREFD)
-    !      INTEGER LMAXD,LMX,LPOTD
-    INTEGER LPOTD
-    !      PARAMETER (LMAXD=3,LMX=LMAXD+1,LPOTD=6)
-    INTEGER LMMAXD,LM3D !,L3D
-    !       PARAMETER (LMMAXD= (LPOTD+1)**2,L3D=2*LPOTD,LM3D= (L3D+1)**2)
-    INTEGER LASSLD
-    !       PARAMETER (LASSLD=4*LMAXD)
-    INTEGER NCLEB
-    !       PARAMETER (NCLEB=LM3D*LMMAXD)
-    !     ..
-    !     .. Scalar Arguments ..
-    INTEGER LPOT
-    !     ..
-    !     .. Array Arguments ..
-    REAL*8 SN(3),VIN(*),VOUT(*) !bauer
-    !       REAL*8 A(LMMAXD,LMMAXD),SN(3),VIN(*),VOUT(*)
-    !     ..
-    !     .. Arrays in Common ..
-    REAL*8  WG(LASSLD),YRG(LASSLD,0:LASSLD,0:LASSLD)
-    !     ..
-    !     .. Local Scalars ..
-    REAL*8 CLECG,EPI,FACTOR,FPI,PI,R,R1,R2,R3,S,R0
-    INTEGER I,IEND,J,L,L1,L2,L3,L3MAX,LM1,LM2,LM3,LMMAX,LX,LY,M,M1,M1A,M1S,M2,M2A,M2S,M3,M3A,M3S,LM
-    !     ..
-    !     .. Local Arrays ..
-    REAL*8 CLEB(NCLEB),DFAC(0:LPOTD,0:LPOTD),Y(LM3D)
-    INTEGER ICLEB(NCLEB,3),LOFLM(LM3D)
-    !     ..
-    !     ..
-    !     .. Save statement ..
-    SAVE PI
-    !     ..
-    !     .. External Subroutines ..
-    !       EXTERNAL YMY
-    !     ..
-    !     .. Intrinsic Functions ..
-    INTRINSIC ABS,REAL,SIGN
-    !     ..
-    PI = 4.D0*DATAN(1.D0)
-    !
+    integer lpotd
+    integer lmmaxd, lm3d
+    integer lassld
+    integer ncleb
+    !     .. scalar arguments ..
+    integer lpot
+    !     .. array arguments ..
+    real*8 sn(3),vin(*),vout(*)
+    !     .. arrays in common ..
+    real*8  wg(lassld),yrg(lassld,0:lassld,0:lassld)
+    !     .. local scalars ..
+    real*8 clecg,epi,factor,fpi,pi,r,r1,r2,r3,s,r0
+    integer i,iend,j,l,l1,l2,l3,l3max,lm1,lm2,lm3,lmmax,lx,ly,m,m1,m1a,m1s,m2,m2a,m2s,m3,m3a,m3s,lm
+    !     .. local arrays ..
+    real*8 cleb(ncleb),dfac(0:lpotd,0:lpotd),y(lm3d)
+    integer icleb(ncleb,3),loflm(lm3d)
+    !     .. intrinsic functions ..
+    intrinsic abs,real,sign
+
+
+    pi = 4.d0*datan(1.d0)
+  
     !---> determine the l-value for given lm
+    i = 1
+    do l = 0,2*lpot
+      do m = -l,l
+        loflm(i) = l
+        i = i + 1
+      end do
+    end do
+    do lm=1,lmmaxd
+      vout(lm) = 0.d0
+    end do
     
-    I = 1
-    DO L = 0,2*LPOT !Bauer L3D
-      DO M = -L,L
-        LOFLM(I) = L
-        I = I + 1
-      END DO
-    END DO
-    DO LM=1,LMMAXD
-      VOUT(LM) = 0.D0
-    END DO
+    fpi = 4.0d0*pi
+    epi = 8.0d0*pi
+    l3max = 2*lpot
+    lmmax = (lpot+1)**2
     
-    FPI = 4.0D0*PI
-    EPI = 8.0D0*PI
-    L3MAX = 2*LPOT
-    LMMAX = (LPOT+1)**2
-    !
     !--->calculate:                  (2*(l+l')+1)!!
     !                dfac(l,l')= ----------------------
     !                            (2*l+1)!! * (2*l'+1)!!
-    
-    DFAC(0,0) = 1.D0
-    DO LX = 1,LPOT
-      DFAC(LX,0) = DFAC(LX-1,0)
-      DFAC(0,LX) = DFAC(LX,0)
-      DO LY = 1,LX
-        DFAC(LX,LY) = DFAC(LX,LY-1)*REAL(2* (LX+LY)+1)/REAL(2*LY+1)
-        DFAC(LY,LX) = DFAC(LX,LY)
-      END DO
-    END DO
-    !
+    dfac(0,0) = 1.d0
+    do lx = 1,lpot
+      dfac(lx,0) = dfac(lx-1,0)
+      dfac(0,lx) = dfac(lx,0)
+      do ly = 1,lx
+        dfac(lx,ly) = dfac(lx,ly-1)*real(2* (lx+ly)+1)/real(2*ly+1)
+        dfac(ly,lx) = dfac(lx,ly)
+      end do
+    end do
+
     !---> set up of the gaunt coefficients with an index field
     !     recognize that they are needed here only for l3=l1+l2
-    !
-    I = 1
-      DO L1 = 0,LPOT
-        DO L2 = 0,L1
-        L3 = L1 - L2
-        DO M1 = -L1,L1
-          DO M2 = -L2,L2
-            DO M3 = -L3,L3
-              M1S = SIGN(1,M1)
-              M2S = SIGN(1,M2)
-              M3S = SIGN(1,M3)
+    i = 1
+      do l1 = 0,lpot
+        do l2 = 0,l1
+        l3 = l1 - l2
+        do m1 = -l1,l1
+          do m2 = -l2,l2
+            do m3 = -l3,l3
+              m1s = sign(1,m1)
+              m2s = sign(1,m2)
+              m3s = sign(1,m3)
               
-              IF (M1S*M2S*M3S.GE.0) THEN
+              if (m1s*m2s*m3s.ge.0) then
               
-                M1A = ABS(M1)
-                M2A = ABS(M2)
-                M3A = ABS(M3)
+                m1a = abs(m1)
+                m2a = abs(m2)
+                m3a = abs(m3)
                 
-                FACTOR = 0.0D0
+                factor = 0.0d0
                 
-                IF (M1A+M2A.EQ.M3A) FACTOR = FACTOR + REAL(3*M3S+SIGN(1,-M3))/8.0D0
-                IF (M1A-M2A.EQ.M3A) FACTOR = FACTOR + REAL(M1S)/4.0D0
-                IF (M2A-M1A.EQ.M3A) FACTOR = FACTOR + REAL(M2S)/4.0D0
+                if (m1a+m2a.eq.m3a) factor = factor + real(3*m3s+sign(1,-m3))/8.0d0
+                if (m1a-m2a.eq.m3a) factor = factor + real(m1s)/4.0d0
+                if (m2a-m1a.eq.m3a) factor = factor + real(m2s)/4.0d0
                 
-                IF (FACTOR.NE.0.0D0) THEN
+                if (factor.ne.0.0d0) then
                 
-                  IF (M1S*M2S.NE.1 .OR. M2S*M3S.NE.1 .OR. M1S*M3S.NE.1) FACTOR = -FACTOR
+                  if (m1s*m2s.ne.1 .or. m2s*m3s.ne.1 .or. m1s*m3s.ne.1) factor = -factor
                   
-                  S = 0.0D0
-                  DO J = 1,LASSLD
-                    S = S + WG(J)*YRG(J,L1,M1A)*YRG(J,L2,M2A)*YRG(J,L3,M3A)
-                  END DO
-                  CLECG = S*FACTOR
-                  IF (ABS(CLECG).GT.1.D-10) THEN
-                    CLEB(I) = CLECG
-                    ICLEB(I,1) = L1* (L1+1) + M1 + 1
-                    ICLEB(I,2) = L2* (L2+1) + M2 + 1
-                    ICLEB(I,3) = L3* (L3+1) + M3 + 1
-                    I = I + 1
-                  END IF
+                  s = 0.0d0
+                  do j = 1,lassld
+                    s = s + wg(j)*yrg(j,l1,m1a)*yrg(j,l2,m2a)*yrg(j,l3,m3a)
+                  end do
+                  clecg = s*factor
+                  if (abs(clecg).gt.1.d-10) then
+                    cleb(i) = clecg
+                    icleb(i,1) = l1* (l1+1) + m1 + 1
+                    icleb(i,2) = l2* (l2+1) + m2 + 1
+                    icleb(i,3) = l3* (l3+1) + m3 + 1
+                    i = i + 1
+                  end if
 
-                END IF
+                end if
 
-              END IF
+              end if
 
-            END DO
-          END DO
-        END DO
-      END DO
-    END DO
-    IEND = I - 1
-    IF (NCLEB.LT.IEND) THEN
-      STOP 13
+            end do
+          end do
+        end do
+      end do
+    end do
+    iend = i - 1
 
-    ELSE
-      !        WRITE (6,FMT='(I10)') IEND
 
-      DO LM1 = 1,LMMAX
-        ! DO 140 LM2 = 1,LMMAX
-        !    A(LM1,LM2) = 0.0D0
-        ! END DO
-        VOUT(LM1)=0.0D0
-      END DO
+    if (ncleb.lt.iend) then
+
+      stop 13
+
+    else
+
+      do lm1 = 1,lmmax
+        vout(lm1)=0.0d0
+      end do
+
+      r1 = sn(1)
+      r2 = sn(2)
+      r3 = sn(3)
       
-
-      R1 = SN(1)
-      R2 = SN(2)
-      R3 = SN(3)
+      r0 = r1**2+r2**2 +r3**2
+      if (r0.gt.1.d-10) then
+        call ymy(r1,r2,r3,r,y,l3max)
+      else
+        do lm=1,lmmax
+          vout(lm) = vin(lm)
+        end do
+        return
+      end if
       
-      R0 = R1**2+R2**2 +R3**2
-      IF (R0.GT.1.D-10) THEN
-        CALL YMY(R1,R2,R3,R,Y,L3MAX)
-      ELSE
-        DO LM=1,LMMAX
-          VOUT(LM) = VIN(LM)
-        END DO
-        RETURN
-      END IF
-      
-      DO I = 1,IEND
-        LM1 = ICLEB(I,1)
-        LM2 = ICLEB(I,2)
-        LM3 = ICLEB(I,3)
-        L1 = LOFLM(LM1)
-        L2 = LOFLM(LM2)
-        L3 = LOFLM(LM3)
+      do i = 1,iend
+        lm1 = icleb(i,1)
+        lm2 = icleb(i,2)
+        lm3 = icleb(i,3)
+        l1 = loflm(lm1)
+        l2 = loflm(lm2)
+        l3 = loflm(lm3)
 
-        VOUT(LM2) = VOUT(LM2) + FPI*(-1.D0)**L3*DFAC(L2,L3)*CLEB(I)*VIN(LM1)*R**L3*Y(LM3)
+        vout(lm2) = vout(lm2) + fpi*(-1.d0)**l3*dfac(l2,l3)*cleb(i)*vin(lm1)*r**l3*y(lm3)
+      end do
 
-      END DO
+    end if
 
-    END IF
-  END SUBROUTINE
-END MODULE MOD_SHFTVOUT
+  end subroutine shftvout
+end module mod_shftvout

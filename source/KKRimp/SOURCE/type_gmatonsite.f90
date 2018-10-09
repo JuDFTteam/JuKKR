@@ -1,7 +1,7 @@
 !-------------------------------------------------------------------------------
-!> Summary: 
+!> Summary: Type holding onsite gmat
 !> Author: 
-!> Category: KKRimp, 
+!> Category: KKRimp, structural-greensfunction
 !> Deprecated: False ! This needs to be set to True for deprecated subroutines
 !>
 !-------------------------------------------------------------------------------

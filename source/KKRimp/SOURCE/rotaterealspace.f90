@@ -1,5 +1,5 @@
 !-------------------------------------------------------------------------------
-!> Summary: 
+!> Summary: Collection of routines for rotations of vectors and matrices
 !> Author: 
 !> Deprecated: False ! This needs to be set to True for deprecated subroutines
 !>
@@ -8,14 +8,18 @@ module rotaterealspace
 
   integer, parameter :: verbose = 0
 
+  private
+  public :: rotaterealspace_matrix2
+
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: 
+  !> Summary: Rotate vector around theta and phi to (from) global from (to) local frame
   !> Author: 
-  !> Category: KKRimp, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !> Category: KKRimp, numerical-tools
+  !> Deprecated: True ! This needs to be set to True for deprecated subroutines
   !>
+  !> @note seems to be unused @endnote
   !-------------------------------------------------------------------------------
   subroutine rotaterealspace_vector(vec1,theta,phi,mode1)
     use mod_mathtools, only: matvec_dmdm, transpose_dm
@@ -43,11 +47,12 @@ contains
   end subroutine
   
   !-------------------------------------------------------------------------------
-  !> Summary: 
+  !> Summary: Rotate matrix around theta and phi to (from) global from (to) local frame
   !> Author: 
-  !> Category: KKRimp, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !> Category: KKRimp, numerical-tools
+  !> Deprecated: True ! This needs to be set to True for deprecated subroutines
   !>
+  !> @note unused @endnote
   !-------------------------------------------------------------------------------
   subroutine rotaterealspace_matrix(mat1,theta,phi,mode1)
     use mod_mathtools, only: matmat_dmdm, matmat1T_dmdm, transpose_dm
@@ -74,11 +79,12 @@ contains
   end subroutine
   
   !-------------------------------------------------------------------------------
-  !> Summary: 
+  !> Summary: Rotate matrix around theta1,2 and phi1,2 to (from) global from (to) local frame
   !> Author: 
-  !> Category: KKRimp, 
+  !> Category: KKRimp,  numerical-tools
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
+  !> @note Generalized form of rotaterealspace_matrix @endnote
   !-------------------------------------------------------------------------------
   subroutine rotaterealspace_matrix2(mat1,theta,phi,theta2,phi2,mode1)
     use mod_mathtools, only: matmat_dmdm, matmat1T_dmdm, transpose_dm
@@ -112,9 +118,9 @@ contains
   end subroutine
   
   !-------------------------------------------------------------------------------
-  !> Summary: 
+  !> Summary: Prepare rotation matrix for given angles theta and phi
   !> Author: 
-  !> Category: KKRimp, 
+  !> Category: KKRimp, numerical-tools
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
   !-------------------------------------------------------------------------------
@@ -124,15 +130,15 @@ contains
     !local
     double precision :: rotaterealspace_createrotmatrix(3,3)
     
-     rotaterealspace_createrotmatrix(1,1) =  cos(phi)* cos(theta)
-     rotaterealspace_createrotmatrix(1,2) = -sin(phi)
-     rotaterealspace_createrotmatrix(1,3) =  cos(phi)* sin(theta)
-     rotaterealspace_createrotmatrix(2,1) =  sin(phi)* cos(theta)
-     rotaterealspace_createrotmatrix(2,2) =  cos(phi)
-     rotaterealspace_createrotmatrix(2,3) =  sin(phi)* sin(theta)
-     rotaterealspace_createrotmatrix(3,1) =             -sin(theta)
-     rotaterealspace_createrotmatrix(3,2) =  0.0D0
-     rotaterealspace_createrotmatrix(3,3) =              cos(theta)
+     rotaterealspace_createrotmatrix(1,1) =  cos(phi) * cos(theta)
+     rotaterealspace_createrotmatrix(1,2) = -sin(phi) 
+     rotaterealspace_createrotmatrix(1,3) =  cos(phi) * sin(theta)
+     rotaterealspace_createrotmatrix(2,1) =  sin(phi) * cos(theta)
+     rotaterealspace_createrotmatrix(2,2) =  cos(phi) 
+     rotaterealspace_createrotmatrix(2,3) =  sin(phi) * sin(theta)
+     rotaterealspace_createrotmatrix(3,1) =            -sin(theta)
+     rotaterealspace_createrotmatrix(3,2) =         0.0D0
+     rotaterealspace_createrotmatrix(3,3) =             cos(theta)
     
     if (verbose=='1') then
       print *,'-----------------------------------------------------------------'
@@ -147,11 +153,12 @@ contains
   
   
   !-------------------------------------------------------------------------------
-  !> Summary: 
+  !> Summary: Prepare rotation matrix for direction and angle (alpha)
   !> Author: 
-  !> Category: KKRimp, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !> Category: KKRimp, numerical-tools
+  !> Deprecated: True ! This needs to be set to True for deprecated subroutines
   !>
+  !> @note unused @endnote
   !-------------------------------------------------------------------------------
   function rotaterealspace_createrotmatrix_nvec(alpha,nvec)
     implicit none
@@ -185,11 +192,11 @@ contains
   end function rotaterealspace_createrotmatrix_nvec
   
   !-------------------------------------------------------------------------------
-  !> Summary: 
+  !> Summary: Prepare rotation matrix for direction and angle (alpha)
   !> Author: 
-  !> Category: KKRimp, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
+  !> Category: KKRimp, numerical-tools
+  !> Deprecated: True ! This needs to be set to True for deprecated subroutines
+  !> @note Unused @endnote
   !-------------------------------------------------------------------------------
   function rotaterealspace_createdrotmatrixdalpha_nvec(alpha,nvec)
     implicit none
@@ -224,11 +231,11 @@ contains
   
   
   !-------------------------------------------------------------------------------
-  !> Summary: 
+  !> Summary: rotaterealspace_createrotmatrix_nvec with minus sign
   !> Author: 
-  !> Category: KKRimp, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
+  !> Category: KKRimp, numerical-tools
+  !> Deprecated: True ! This needs to be set to True for deprecated subroutines
+  !> @note unused @endnote
   !-------------------------------------------------------------------------------
   function rotaterealspace_created2rotmatrixdalpha2_nvec(alpha,nvec)
     implicit none

@@ -1,7 +1,7 @@
 !-------------------------------------------------------------------------------
-!> Summary: 
+!> Summary: Data structure holding reference GF
 !> Author: 
-!> Category: KKRimp, 
+!> Category: KKRimp, reference-system, structural-greensfunction
 !> Deprecated: False ! This needs to be set to True for deprecated subroutines
 !>
 !-------------------------------------------------------------------------------

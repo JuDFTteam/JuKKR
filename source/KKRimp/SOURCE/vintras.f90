@@ -1,244 +1,204 @@
-MODULE MOD_VINTRAS
-  CONTAINS
+module mod_vintras
 
-!-------------------------------------------------------------------------------
-!> Summary: 
-!> Author: 
-!> Category: KKRimp, 
-!> Deprecated: False ! This needs to be set to True for deprecated subroutines
-!>
-!-------------------------------------------------------------------------------
-SUBROUTINE VINTRAS(NATOM, NSPIN, NRMAXD,LMAXD, LMAXATOM,CELL, VPOT_OUT, SHAPEFUN, GAUNTSHAPE, DENSITY,CMOM,CMOM_INTERST,ins)
- Use mod_sinwk, only: sinwk
- Use mod_soutk, only: soutk
- use type_cell, only: CELL_TYPE
- use type_shapefun, only: shapefun_TYPE
- use type_gauntshape, only: gauntshape_TYPE
- use type_density, only: density_type
- Implicit None
-!-----------------------------------------------------------------------
-!     calculate the electron-intracell-potentials and the charge-
-!     moments of given charge densities . ( for each spin-direc-
-!     tion the potential is the same in the polarized case . )
-!     initialize the potential v with the electron-intracell-potentials
-!    the intracell-potential is expanded into spherical harmonics .
-!     the lm-term of the intracell-potential of the representive atom i
-!     is given by
-!                    8pi        r      r'** l
-!      v(r,lm,i) =  ----- *  (  s dr' --------   rho2ns(r',lm,i,1)
-!                   2*l+1       0     r **(l+1)
-!
-!                                 rcut    r ** l
-!                               +  s dr' ---------   rho2ns(r',lm,i,1) )
-!                                  r     r' **(l+1)
-!
-!     the lm contribution of the charge moment of the representive
-!     atom i is given by
-!
-!                             rcut
-!              cmom(lm,i) =    s dr' r'** l rho2ns(r',lm,i,1)
-!                              0
-!
-!             (see notes by b.drittler and u.klemradt)
-!
-!              rcut is muffin tin or wigner seitz sphere radius,
-!              depending on kshape turned on or off
-!
-!     attention : rho2ns(...,1) is the real charge density times r**2
-!                 developed into spherical harmonics . (see deck rholm)
-!
-!                               b.drittler   may 1987
-!-----------------------------------------------------------------------
-integer :: natom
-integer :: nspin
-integer :: nrmaxd
-integer :: lmaxd
-integer :: lmaxatom(natom)
-real*8,allocatable  :: cmom(:,:)
-real*8,allocatable  :: CMOM_INTERST(:,:)
-real*8                ::  vpot_out(nrmaxd,(2*lmaxd+1)**2,nspin,natom) !thetas(iri,nfund,*),
+contains
 
-type(cell_type)                     :: cell(natom)
-type(shapefun_type)                 :: shapefun(natom)
-type(gauntshape_type)               :: gauntshape(lmaxd)
-type(density_type)                  :: density(natom)
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculate the electron-intracell-potentials and the charge-moments of given charge densities
+  !> Author: B. Drittler, U. Klemradt
+  !> Date: May 1987
+  !> Category: KKRimp, potential
+  !> Deprecated: False ! this needs to be set to true for deprecated subroutines
+  !>
+  !> Calculate the electron-intracell-potentials and the charge-
+  !> moments of given charge densities. ( for each spin-direc-
+  !> tion the potential is the same in the polarized case. )
+  !> initialize the potential v with the electron-intracell-potentials
+  !> the intracell-potential is expanded into spherical harmonics.
+  !> the lm-term of the intracell-potential of the representive atom i
+  !> is given by
+  !>                8pi        r      r'** l
+  !>  v(r,lm,i) =  ----- *  (  s dr' --------   rho2ns(r',lm,i,1)
+  !>               2*l+1       0     r **(l+1)
+  !
+  !>                             rcut    r ** l
+  !>                           +  s dr' ---------   rho2ns(r',lm,i,1) )
+  !>                              r     r' **(l+1)
+  !
+  !> the lm contribution of the charge moment of the representive
+  !> atom i is given by
+  !
+  !>                         rcut
+  !>          cmom(lm,i) =    s dr' r'** l rho2ns(r',lm,i,1)
+  !>                          0
+  !
+  !>         (see notes by B. Drittler and U. Klemradt)
+  !
+  !>          rcut is muffin tin or wigner seitz sphere radius,
+  !>          depending on kshape turned on or off
+  !
+  !> @warning rho2ns(...,1) is the real charge density times r**2
+  !> developed into spherical harmonics. (see deck rholm) @endwarning
+  !-------------------------------------------------------------------------------
+  subroutine vintras(natom, nspin, nrmaxd,lmaxd, lmaxatom,cell, vpot_out, shapefun, gauntshape, density,cmom,cmom_interst,ins)
 
-REAL*8 FAC,PI,RL
+  use mod_sinwk, only: sinwk
+  use mod_soutk, only: soutk
+  use type_cell, only: cell_type
+  use type_shapefun, only: shapefun_type
+  use type_gauntshape, only: gauntshape_type
+  use type_density, only: density_type
+  implicit none
 
+  integer :: natom
+  integer :: nspin
+  integer :: nrmaxd
+  integer :: lmaxd
+  integer :: lmaxatom(natom)
+  real*8,allocatable  :: cmom(:,:)
+  real*8,allocatable  :: cmom_interst(:,:)
+  real*8                ::  vpot_out(nrmaxd,(2*lmaxd+1)**2,nspin,natom) !thetas(iri,nfund,*),
 
-INTEGER I,IATOM,IEND,IFUN,IRC1,IRS1,ISTART,J,LVAL,LM,LM2,LM3,MVAL,LMAX
-REAL*8 V1(NRMaxD),V2(NRMaxD),VINT1(NRMaxD),VINT2(NRMaxD)
-INTEGER ins
-integer ipand
-INTEGER,allocatable :: IRCUTM(:)
-!       INTEGER IFUNM(NATYPD,*)
+  type(cell_type)                     :: cell(natom)
+  type(shapefun_type)                 :: shapefun(natom)
+  type(gauntshape_type)               :: gauntshape(lmaxd)
+  type(density_type)                  :: density(natom)
 
-!       INTEGER ins,LMAX,NEND,NSPIN,NSTART, irm, iri
-!C     ..
-!C     .. Array Arguments ..
-!       REAL*8 CMINST(LMPOTD,*),CMOM(LMPOTD,*)
-! ,DRDI(IRM,*),
-!      +                 GSH(*),R(IRM,*),RHO2NS(IRM,LMPOTD,NATYPD,*),
-!     REAL*8                  V(IRM,LMPOTD,NSPIN) !THETAS(IRI,NFUND,*),
-!       INTEGER IFUNM(NATYPD,*)
-! ,ILM(NGSHD,3),IMAXSH(0:LMPOTD),IPAN(*),
-!      +        IRCUT(0:IPAND,*),IRWS(*),LMSP(NATYPD,*),NTCELL(*)
-!C     ..
-!C     .. Local Scalars ..
-!       REAL*8 FAC,PI,RL
-
-!C     ..
-!C     .. Local Arrays ..
-!       REAL*8 V1(CELL(1)%NRMaxD),V2(CELL(1)%NRMaxD),VINT1(CELL(1)%NRMaxD),VINT2(CELL(1)%NRMaxD)
-!C     ..
-!C     .. External Subroutines ..
-!       EXTERNAL SINWK,SOUTK
-!C     ..
-!C     .. Intrinsic Functions ..
-!       INTRINSIC DATAN,REAL
-!       SAVE
-!C     ..
-
-! ######################################################
-! calculate the maximum number of panels
-! ######################################################
-ipand=0
-do iatom=1,natom
-  if (CELL(IATOM)%NPAN> ipand) ipand=CELL(IATOM)%NPAN
-end do !natom
-
-! write(*,*) 'ipand',ipand
-
-! allocate( cmom((2*lmaxd+1)**2,natom)  )
+  real*8 fac,pi,rl
 
 
+  integer i,iatom,iend,ifun,irc1,irs1,istart,j,lval,lm,lm2,lm3,mval,lmax
+  real*8 v1(nrmaxd),v2(nrmaxd),vint1(nrmaxd),vint2(nrmaxd)
+  integer ins
+  integer ipand
+  integer,allocatable :: ircutm(:)
 
-allocate(IRCUTM(0:IPAND))
 
-PI = 4.D0*DATAN(1.D0)
+  ! ######################################################
+  ! calculate the maximum number of panels
+  ! ######################################################
+  ipand=0
+  do iatom=1,natom
+    if (cell(iatom)%npan> ipand) ipand=cell(iatom)%npan
+  end do !natom
 
-DO IATOM = 1,NATOM
-!   write(*,*) 'ins',ins
-  IF (ins.NE.0) THEN
-    IRS1 = CELL(IATOM)%NRCUT(      1           ) !IRCUT(1,IATOM)
-!     write(*,*) 'irs1',irs1
-    IRC1 = CELL(IATOM)%NRCUT( CELL(IATOM)%NPAN ) !IRCUT(IPAN(IATOM),IATOM)
-!     write(*,*) 'irc1',irc1
-!     ICELL = IATOM
-!cccc ERROR IN HERE
-!cccc          DO 10 I = 0,IPAN(ICELL)
-!cccc Next line is correct one (T.Korhonen, Nov 1997)
-    IRCUTM=0
-    DO I = 0, CELL(IATOM)%NPAN  !IPAN(IATOM)
-      IRCUTM(I) = CELL(IATOM)%NRCUT(I) !IRCUT(I,IATOM)
-    END DO
-!     write(*,*) 'ircutm',ircutm
-  ELSE
-      IRS1 = CELL(IATOM)%NRMAX !IRWS(IATOM) ????
-      IRC1 = IRS1
-      IRCUTM(0) = CELL(IATOM)%NRCUT(0) !IRCUT(0,IATOM)
-      IRCUTM(1) = IRC1
-  END IF
-!c---> determine the right potential numbers
-!         IPOT = NSPIN*IATOM
+  allocate(ircutm(0:ipand))
 
-  LMAX=LMAXATOM(IATOM)
-  DO LVAL = 0,2*LMAXATOM(IATOM)
-    V1=0.0D0
-    V2=0.0D0
-    VINT1=0.0D0
-    VINT2=0.0D0
+  pi = 4.d0*datan(1.d0)
 
-    FAC = 8.0D0*PI/REAL(2*LVAL+1)
-    DO MVAL = -LVAL,LVAL
-      LM = LVAL*LVAL + LVAL + MVAL + 1
-!c
-!c---> set up of the integrands v1 and v2
-!c
-      V1(1) = 0.0D0
-      V2(1) = 0.0D0
-      DO I = 2,IRS1
-        RL = CELL(IATOM)%RMESH(I)**LVAL
-        V1(I) = DENSITY(IATOM)%RHO2NS(I,LM,1)*RL*CELL(IATOM)%DRMESHDI(I)
-        V2(I) = DENSITY(IATOM)%RHO2NS(I,LM,1)/CELL(IATOM)%RMESH(I)/RL*CELL(IATOM)%DRMESHDI(I)
-      END DO ! I
-!c
-!c---> convolute charge density of interstial with shape function
-!c        if ins.gt.0
-!c
-      IF (ins.NE.0) THEN
-        DO I = IRS1 + 1,IRC1
-          V1(I) = 0.0D0
-        END DO !I
-        ISTART = GAUNTSHAPE(LMAX)%IMAXSH(LM-1) + 1
-        IEND   = GAUNTSHAPE(LMAX)%IMAXSH(LM)
-        DO J = ISTART,IEND
-          LM2 = GAUNTSHAPE(LMAX)%ILM(J,2)
-          LM3 = GAUNTSHAPE(LMAX)%ILM(J,3)
-          IF (SHAPEFUN(IATOM)%lmused(lm3).GT.0) THEN !LMSP(ICELL,LM3).GT.0
-            IFUN = SHAPEFUN(IATOM)%LM2INDEX(LM3) !IFUNM(ICELL,LM3)
-            DO I = IRS1 + 1,IRC1
-              V1(I) = V1(I) + GAUNTSHAPE(LMAX)%GSH(J)*DENSITY(IATOM)%RHO2NS(I,LM2,1)* &
-                              SHAPEFUN(IATOM)%THETAS(I-IRS1,IFUN)
-            END DO !I
-          END IF
-        END DO !J
+  do iatom = 1,natom
 
-        DO I = IRS1 + 1,IRC1
-          RL = CELL(IATOM)%RMESH(I)**LVAL
-          V2(I) = V1(I)/CELL(IATOM)%RMESH(I)/RL*CELL(IATOM)%DRMESHDI(I)
-          V1(I) = V1(I)*RL*CELL(IATOM)%DRMESHDI(I)
-        END DO !I
-      END IF
-!c
-!c---> now integrate v1 and v2
-!c
-!             write(*,*) 'call soutk'
-!             write(*,*) ircutm
-!             write(*,*) CELL(IATOM)%NRCUT
-      CALL SOUTK(V1,VINT1,CELL(IATOM)%NPAN,IRCUTM)
-!             write(*,*) 'call sinwk'
-      CALL SINWK(V2,VINT2,CELL(IATOM)%NPAN,IRCUTM)
-!c
-!c---> gather all parts
-!c
-      IF (LM.EQ.1) THEN
-        VPOT_OUT(1,LM,1,IATOM) = FAC*VINT2(1)
-      ELSE
-        VPOT_OUT(1,LM,1,IATOM) = 0.0D0
-      END IF
+    if (ins.ne.0) then
+    irs1 = cell(iatom)%nrcut(      1           ) !ircut(1,iatom)
 
-      DO I = 2,IRC1
-        RL = CELL(IATOM)%RMESH(I)**LVAL
-        VPOT_OUT(I,LM,1,IATOM) = FAC* (VINT1(I)/CELL(IATOM)%RMESH(I)/RL+VINT2(I)*RL)
-      END DO
-!c
-!c---> store charge moment - in case of kshape.gt.0 this is the moment
-!c      of the charge in the muffin tin sphere
-!c            CMOM(LM,IATYP) = VINT1(IRS1)
+    irc1 = cell(iatom)%nrcut( cell(iatom)%npan ) !ircut(ipan(iatom),iatom)
 
-!c
-!c---> store charge moment of interstial in case of kshape.gt.0
-!c
-!             IF (KSHAPE.NE.0) CMINST(LM,IATOM) = VINT1(IRC1) - VINT1(IRS1)
-      IF (ins.NE.0) THEN
-         CMOM_INTERST(LM,IATOM) = VINT1(IRC1) - VINT1(IRS1)
-      END IF
-!       ELSE
-        CMOM(LM,IATOM) = VINT1(IRC1)
-!       END IF
-!c
-      IF (NSPIN.EQ.2) THEN
-        DO I = 1,IRC1
-          VPOT_OUT(I,LM,2,IATOM) = VPOT_OUT(I,LM,1,IATOM)
-        END DO  
-      END IF
+    ! error in here
+    !          do 10 i = 0,ipan(icell)
+    ! next line is correct one (t.korhonen, nov 1997)
+    ircutm=0
+    do i = 0, cell(iatom)%npan  !ipan(iatom)
+    ircutm(i) = cell(iatom)%nrcut(i) !ircut(i,iatom)
+    end do
 
-    END DO !M
+    else
+    irs1 = cell(iatom)%nrmax !irws(iatom) ????
+    irc1 = irs1
+    ircutm(0) = cell(iatom)%nrcut(0) !ircut(0,iatom)
+    ircutm(1) = irc1
+    end if
+    !---> determine the right potential numbers
+    !        ipot = nspin*iatom
 
-  END DO !L
+    lmax=lmaxatom(iatom)
+    do lval = 0,2*lmaxatom(iatom)
+      v1=0.0d0
+      v2=0.0d0
+      vint1=0.0d0
+      vint2=0.0d0
 
-END DO !IATOM
+      fac = 8.0d0*pi/real(2*lval+1)
+      do mval = -lval,lval
+        lm = lval*lval + lval + mval + 1
+        
+        !---> set up of the integrands v1 and v2
+        v1(1) = 0.0d0
+        v2(1) = 0.0d0
+        do i = 2,irs1
+          rl = cell(iatom)%rmesh(i)**lval
+          v1(i) = density(iatom)%rho2ns(i,lm,1)*rl*cell(iatom)%drmeshdi(i)
+          v2(i) = density(iatom)%rho2ns(i,lm,1)/cell(iatom)%rmesh(i)/rl*cell(iatom)%drmeshdi(i)
+        end do ! i
 
-END SUBROUTINE
-END MODULE MOD_VINTRAS
+        !---> convolute charge density of interstial with shape function
+        !        if ins.gt.0
+        if (ins.ne.0) then
+          do i = irs1 + 1,irc1
+            v1(i) = 0.0d0
+          end do !i
+          istart = gauntshape(lmax)%imaxsh(lm-1) + 1
+          iend   = gauntshape(lmax)%imaxsh(lm)
+          do j = istart,iend
+            lm2 = gauntshape(lmax)%ilm(j,2)
+            lm3 = gauntshape(lmax)%ilm(j,3)
+            if (shapefun(iatom)%lmused(lm3).gt.0) then !lmsp(icell,lm3).gt.0
+              ifun = shapefun(iatom)%lm2index(lm3) !ifunm(icell,lm3)
+              do i = irs1 + 1,irc1
+                v1(i) = v1(i) + gauntshape(lmax)%gsh(j)*density(iatom)%rho2ns(i,lm2,1)* shapefun(iatom)%thetas(i-irs1,ifun)
+              end do !i
+            end if
+          end do !j
+
+          do i = irs1 + 1,irc1
+            rl = cell(iatom)%rmesh(i)**lval
+            v2(i) = v1(i)/cell(iatom)%rmesh(i)/rl*cell(iatom)%drmeshdi(i)
+            v1(i) = v1(i)*rl*cell(iatom)%drmeshdi(i)
+          end do !i
+        end if
+
+        !---> now integrate v1 and v2
+        call soutk(v1,vint1,cell(iatom)%npan,ircutm)
+
+        call sinwk(v2,vint2,cell(iatom)%npan,ircutm)
+
+        !---> gather all parts
+        if (lm.eq.1) then
+          vpot_out(1,lm,1,iatom) = fac*vint2(1)
+        else
+          vpot_out(1,lm,1,iatom) = 0.0d0
+        end if
+
+        do i = 2,irc1
+          rl = cell(iatom)%rmesh(i)**lval
+          vpot_out(i,lm,1,iatom) = fac* (vint1(i)/cell(iatom)%rmesh(i)/rl+vint2(i)*rl)
+        end do
+
+        !---> store charge moment - in case of kshape.gt.0 this is the moment
+        !      of the charge in the muffin tin sphere
+        !            cmom(lm,iatyp) = vint1(irs1)
+
+
+        !---> store charge moment of interstial in case of kshape.gt.0
+
+        ! if (kshape.ne.0) cminst(lm,iatom) = vint1(irc1) - vint1(irs1)
+        if (ins.ne.0) then
+          cmom_interst(lm,iatom) = vint1(irc1) - vint1(irs1)
+        end if
+        ! else
+        cmom(lm,iatom) = vint1(irc1)
+        ! end if
+
+        if (nspin.eq.2) then
+          do i = 1,irc1
+            vpot_out(i,lm,2,iatom) = vpot_out(i,lm,1,iatom)
+          end do  
+        end if
+
+      end do !m
+
+    end do !l
+
+  end do !iatom
+
+  end subroutine vintras
+
+end module mod_vintras
