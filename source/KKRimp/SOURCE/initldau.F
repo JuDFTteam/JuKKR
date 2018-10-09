@@ -61,7 +61,7 @@ C
       INTEGER NINT,IERROR
 
 #ifdef MPI
-      include 'mpif.h'
+      use mpi
 #endif
 
 !      EXTERNAL CGCRAC,GAUNTC1
