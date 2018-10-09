@@ -248,7 +248,7 @@ pages:
   allow_failure: true
   script:
     - apt-get update && apt-get upgrade -y  && apt-get install -y python-pip && apt-get install -y graphviz
-    - pip install ford
+    - pip install ford==5.0.6
     - ford ford_settings.md
     - mv doc/ public/
   artifacts:
