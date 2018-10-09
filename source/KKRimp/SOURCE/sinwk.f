@@ -1,5 +1,13 @@
       MODULE MOD_SINWK
       CONTAINS
+      
+!-------------------------------------------------------------------------------
+!> Summary: 
+!> Author: 
+!> Category: KKRimp, 
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!-------------------------------------------------------------------------------
       SUBROUTINE SINWK(F,FINT,IPAN,IRCUT)
 c-----------------------------------------------------------------------
 c    this subroutine does an inwards integration of a function

@@ -1,9 +1,16 @@
 MODULE MOD_VINTRAS
   CONTAINS
 
+!-------------------------------------------------------------------------------
+!> Summary: 
+!> Author: 
+!> Category: KKRimp, 
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!-------------------------------------------------------------------------------
 SUBROUTINE VINTRAS(NATOM, NSPIN, NRMAXD,LMAXD, LMAXATOM,CELL, VPOT_OUT, SHAPEFUN, GAUNTSHAPE, DENSITY,CMOM,CMOM_INTERST,ins)
- Use mod_sinwk
- Use mod_soutk
+ Use mod_sinwk, only: sinwk
+ Use mod_soutk, only: soutk
  use type_cell, only: CELL_TYPE
  use type_shapefun, only: shapefun_TYPE
  use type_gauntshape, only: gauntshape_TYPE

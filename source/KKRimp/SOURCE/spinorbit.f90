@@ -1,15 +1,27 @@
+!-------------------------------------------------------------------------------
+!> Summary: 
+!> Author: 
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!-------------------------------------------------------------------------------
 module mod_spinorbit
   
   contains
 
+!-------------------------------------------------------------------------------
+!> Summary: 
+!> Author: 
+!> Category: KKRimp, 
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!-------------------------------------------------------------------------------
 subroutine spinorbit(lmax,zatom,eryd,cellnew,nrmaxnew,nspin,vpotll,theta,phi,ncoll,mode)
 use mod_rotatespinframe, only: rotatematrix
-use type_cellnew
-use mod_mathtools
+use type_cellnew, only: cell_typenew
+use mod_mathtools, only: matvec_dmdm
 use mod_chebyshev, only: getCLambdaCinv
 use mod_physic_params, only: cvlight
 use mod_config, only: config_testflag
-use mod_basistransform
 implicit none
 !interface
 integer            :: lmax

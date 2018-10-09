@@ -1,48 +1,56 @@
 module mod_vinters2010
 contains
-! c-----------------------------------------------------------------------
-! c     calculate the intercell-potentials and add these to the poten-
-! c     tial v  (in the spin-polarized case for each spin-direction
-! c     the intercell-potential is the same . )
-! c     it uses the structure dependent matrices amat and bmat which
-! c     are calculate once in the subroutine amn .
-! c     the charge-moments are calculated in the subroutine vintra2 ,
-! c     therefore vintra2 has to be called first .
-! c     the intercell-potential is expanded into spherical harmonics .
-! c     the lm-term of the intercell-potential v of the representive
-! c     atom i is given by
-! c     
-! c     v(r,lm,i) =  (-r)**l * {amat(i1,i2,lm,l'm')*cmom(i2,l'm')
-! c     +bmat(i1,i2,lm)*z(i2)}
-! c     
-! c     summed over i2 (all shells) and l'm' .    (i1=i-natref)
-! c     (see notes by b.drittler)
-! c     
-! c     in case of shape correction the madelung potential of the host
-! c     is taken into account . in all other case the madelung poten-
-! c     tial of the host is set to be zero .
-! c     as actual values for z and cmom the differences between the
-! c     values of the  representive atoms and those of the references
-! c     are used .
-! c     
-! c     attention : the first index of cmom (moment of the charge
-! c     density - calculated in vintr2) and of z (nuclear
-! c     charge of the atoms in the shell) is in the program
-! c     different defined , there one has to use :
-! c     cmom(natref+i2,l'm')  and  z(natref+i2)
-! c     
-! c     b.drittler   june 1987
-! c--------------------------------------------------------------------
-! c In the case of impurities on surfaces, the intercell potential of the
-! c reference system is read in from the fxdr file 'intercell_ref'; which
-! c is calculated in the surface program. 
-! c                  july 1998
-! c-----------------------------------------------------------------------
+
+!-------------------------------------------------------------------------------
+!> Summary: 
+!> Author: 
+!> Category: KKRimp, 
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!-------------------------------------------------------------------------------
+!>-----------------------------------------------------------------------
+!>     calculate the intercell-potentials and add these to the poten-
+!>     tial v  (in the spin-polarized case for each spin-direction
+!>     the intercell-potential is the same . )
+!>     it uses the structure dependent matrices amat and bmat which
+!>     are calculate once in the subroutine amn .
+!>     the charge-moments are calculated in the subroutine vintra2 ,
+!>     therefore vintra2 has to be called first .
+!>     the intercell-potential is expanded into spherical harmonics .
+!>     the lm-term of the intercell-potential v of the representive
+!>     atom i is given by
+!>     
+!>     v(r,lm,i) =  (-r)**l * {amat(i1,i2,lm,l'm')*cmom(i2,l'm')
+!>     +bmat(i1,i2,lm)*z(i2)}
+!>     
+!>     summed over i2 (all shells) and l'm' .    (i1=i-natref)
+!>     (see notes by b.drittler)
+!>     
+!>     in case of shape correction the madelung potential of the host
+!>     is taken into account . in all other case the madelung poten-
+!>     tial of the host is set to be zero .
+!>     as actual values for z and cmom the differences between the
+!>     values of the  representive atoms and those of the references
+!>     are used .
+!>     
+!>     attention : the first index of cmom (moment of the charge
+!>     density - calculated in vintr2) and of z (nuclear
+!>     charge of the atoms in the shell) is in the program
+!>     different defined , there one has to use :
+!>     cmom(natref+i2,l'm')  and  z(natref+i2)
+!>     
+!>     b.drittler   june 1987
+!>--------------------------------------------------------------------
+!> In the case of impurities on surfaces, the intercell potential of the
+!> reference system is read in from the fxdr file 'intercell_ref'; which
+!> is calculated in the surface program. 
+!>                  july 1998
+!>-----------------------------------------------------------------------
 subroutine vinters2010(natom,nspin,lmaxd,lmaxatom,cell,ratom,cmom,alat,ins,nrmaxd,vpot_out,intercell_ach,zat,lattice_relax,rimpshift)
-use nrtype
-use type_cell
-use mod_shftvout
-use mod_amn2010
+use nrtype, only: DP
+use type_cell, only: cell_type
+use mod_shftvout, only: SHFTVOUT
+use mod_amn2010, only: amn2010
 use mod_gauntharmonics, only: gauntcoeff
 use mod_config, only: config_testflag
 implicit none

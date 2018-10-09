@@ -1,5 +1,12 @@
+!-------------------------------------------------------------------------------
+!> Summary: 
+!> Author: 
+!> Category: KKRimp, 
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!-------------------------------------------------------------------------------
 module type_tmat
-use nrtype
+
  TYPE                              ::  TMAT_TYPE
    DOUBLE COMPLEX,ALLOCATABLE              ::  TMAT(:,:)
    DOUBLE COMPLEX,ALLOCATABLE              ::  deltaT_Jij(:,:,:)

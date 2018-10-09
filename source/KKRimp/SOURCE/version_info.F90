@@ -6,6 +6,13 @@
 !#define voro
 
 
+!-------------------------------------------------------------------------------
+!> Summary: Module containing routines for version control and serial number generation
+!> Author: Philipp Rüßmann
+!> Category: KKRimp, version-control
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!-------------------------------------------------------------------------------
 module mod_version_info
 
   implicit none
@@ -34,9 +41,15 @@ module mod_version_info
 
 contains
 
+!-------------------------------------------------------------------------------
+!> Summary: Take information from version file and create serial number with time stamp
+!> Author: Philipp Rüßmann
+!> Category: KKRimp, version-control
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!-------------------------------------------------------------------------------
   subroutine construct_serialnr()
-    ! take information from version file and create serial number with time stamp
-    use mod_version
+    use mod_version, only: version
     implicit none
     integer,dimension(8) :: values
     character(len=500)     :: tmpname
@@ -56,12 +69,17 @@ contains
   end subroutine construct_serialnr
 
 
+!-------------------------------------------------------------------------------
+!> Summary: Print version header to file
+!> Author: Philipp Rüßmann
+!> Category: KKRimp, version-control
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!> This is called after an open statement of a file that is written
+!> prints header line
+!-------------------------------------------------------------------------------
   subroutine version_print_header(unit)
-    ! this is called after an open statement of a file that is written
-    ! prints header line
     implicit none
     integer, intent(in) :: unit
-    
     ! write header:             code     version     compver   timestamp
     !               "# serial: kkrjm_v2.0-38-g6593f48_debug_20160907113604"
     write(unit, '(2A)') '# serial: ',serialnr
@@ -69,10 +87,17 @@ contains
   end subroutine version_print_header
 
 
+!-------------------------------------------------------------------------------
+!> Summary: Checks for version header in file and rewinds to beginning if not found 
+!> Author: Philipp Rüßmann
+!> Category: KKRimp, version-control
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!> This is called after an open statement of a file that is read
+!> checks if a header with serial-number is in the first line
+!> if not rewinds the file back to start
+!-------------------------------------------------------------------------------
   subroutine version_check_header(unit)
-    ! this is called after an open statement of a file that is read
-    ! checks if a header with serial-number is in the first line
-    ! if not rewinds the file back to start
     implicit none
     integer, intent(in) :: unit
     character(len=10) :: first_characters

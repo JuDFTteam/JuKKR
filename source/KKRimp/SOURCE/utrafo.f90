@@ -1,10 +1,18 @@
 module mod_utrafo
 contains
+
+!-------------------------------------------------------------------------------
+!> Summary: 
+!> Author: 
+!> Category: KKRimp, 
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!-------------------------------------------------------------------------------
 subroutine utrafo(ielast,ez,natom,lmaxatom,gmatbulk,rimpshift)
 use mod_preconditioning, only: preconditioning_writegreenfn, preconditioning_readgreenfn
-use type_gmatbulk
+use type_gmatbulk, only: gmatbulk_type
 use mod_config, only: config_testflag
-use mod_umatrix
+use mod_umatrix, only: umatrix
 use nrtype, only: wlength
 implicit none
 !interface
@@ -15,7 +23,6 @@ integer         :: lmaxatom(natom)
 type(gmatbulk_type) :: gmatbulk
 !local
 double precision         :: rimpshift(3,natom)
-
 
 double complex,allocatable :: umat(:,:)
 double complex,allocatable :: gmatvoid(:,:)

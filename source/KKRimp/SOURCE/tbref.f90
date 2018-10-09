@@ -2,12 +2,19 @@ module mod_tbref
 
 contains
 
+!-------------------------------------------------------------------------------
+!> Summary: 
+!> Author: 
+!> Category: KKRimp, deprecated
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!-------------------------------------------------------------------------------
 subroutine tbref(eryd,natom, ntotatom,tbcluster,alatc,vref,rmtref,lmaxatom,lmaxd,lmgf0d)
-  use nrtype
-  use type_tbcluster
-  use type_gref
-  use mod_gll95
-  use mod_calctref
+  use nrtype, only: dp
+  use type_tbcluster, only: tbcluster_type
+  use type_gref, only: gref_type
+  use mod_gll95, only: gll95
+  use mod_calctref, only: calctref
   use mod_config, only: config_testflag
     implicit none
 

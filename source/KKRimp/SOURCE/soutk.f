@@ -1,5 +1,13 @@
       MODULE MOD_SOUTK
       CONTAINS
+      
+!-------------------------------------------------------------------------------
+!> Summary: 
+!> Author: 
+!> Category: KKRimp, 
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!-------------------------------------------------------------------------------
       SUBROUTINE SOUTK(F,FINT,IPAN,IRCUT)
 !c-----------------------------------------------------------------------
 !c    this subroutine does an outwards integration of a function

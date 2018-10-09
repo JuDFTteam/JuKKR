@@ -2,23 +2,31 @@ module mod_rllsllsourceterms
 
 contains
 
+!-------------------------------------------------------------------------------
+!> Summary: Calculation of Bessel and Hankel source terms 
+!> Author: 
+!> Category: KKRimp, single-site
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!> Constructs potential matrix (2x2 for SOC) adding SOC potential with proper form 
+!> of small-component in the case of a scalar-relativistic calculation.
+!> Then creates source terms needed to solve Lippmann-Schwinger equations as described 
+!> in the PhD thesis of David Bauer.
+!>
+!> Calculates the source terms J,H and the left solution J2, H2 for:
+!> - non-relativistic
+!> - scalar-relativistic
+!> - full-relativistic
+!> calculations
+!-------------------------------------------------------------------------------
 subroutine rllsllsourceterms(nsra,nvec,eryd,rmesh,nrmax,lmax,lmsize,use_fullgmat,jlk_index,hlk,jlk,hlk2,jlk2,GMATPREFACTOR)
 use mod_physic_params, only: cvlight
-use mod_timing
-use mod_beshank
-use mod_chebint
+use mod_beshank, only: beshank, beshank_smallcomp
 use mod_config, only: config_testflag
-use mod_rllslltools
 use mod_physic_params,only: cvlight
-use sourceterms
+use sourceterms, only: sourcetermsupervector
 implicit none
-! ************************************************************************
-! calculates the source terms J,H and the left solution J2, H2 for:
-! - non-relativistic
-! - scalar-relativistic
-! - full-relativistic
-! calculations
-! ************************************************************************
+
 double complex,parameter   :: ci=(0.0d0,1.0d0)
 integer                    :: nsra
 integer                    :: nvec

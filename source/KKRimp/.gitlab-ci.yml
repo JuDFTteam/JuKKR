@@ -1,3 +1,7 @@
+###############################################################################
+####         continuous integration setting of the KKRimp code             ####
+###############################################################################
+
 # docker image containing Developlement Tools and the current Intel compilers based on CentOS 7
 image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers
 
@@ -17,6 +21,7 @@ stages:
   - run_features
   - verify
 
+###############################################################################
 # first build executables
 
 build:intel:hybrid:
@@ -41,6 +46,7 @@ build:intel:mpi:
       - SOURCE/kkrflex.exe_mpi
     expire_in: 1 day
 
+###############################################################################
 # then run checks with old solver to check parallelism
 
 run_parallel:intel:mpi_1:
@@ -134,6 +140,7 @@ run_parallel:intel:hybrid_4_2:
       - tests/test_case_kkrflex_host_in_host/imp/test_run_hybrid_4_2
     expire_in: 2 days
 
+###############################################################################
 # now run tests for features of the code (SOC+mpi, SOC+hybrid, Jijs, wf-saving, sratrick)
 
 run_features:intel:tmatnew-hybrid:
@@ -218,6 +225,7 @@ run_features:intel:tmatnew-Jij_nosratrick:
     expire_in: 2 days
 
 
+###############################################################################
 # finally check outcome of calculations
 
 verify:intel:
@@ -231,3 +239,22 @@ verify:intel:
     - cd tests
     - pytest -v
 
+###############################################################################
+# for Gitlab pages (online code documentation build with ford)
+
+pages:
+  stage: build
+  image: ubuntu:latest
+  allow_failure: true
+  script:
+    - apt-get update && apt-get upgrade -y  && apt-get install -y python-pip && apt-get install -y graphviz
+    - pip install ford
+    - ford ford_settings.md
+    - mv doc/ public/
+  artifacts:
+    paths:
+      - public
+#  only:
+#    - schedules
+#    - triggers
+#    - web
