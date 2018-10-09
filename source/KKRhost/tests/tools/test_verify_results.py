@@ -260,6 +260,17 @@ class Test_SOC():
         path0 = 'test_run03.1_hybrid_1_3/'
         standard_verify(path0, rms_threshold=6*10**-9, rms_threshold_end=6*10**-9)
 
+    def test_3_2_NOSOC(self):
+        path0 = 'test_run03.2_hybrid_1_3/'
+        # check convergence of both runs
+        standard_verify(path0+'NEWSOSOL_NOSOC/', rms_threshold=1.5*10**-6, rms_threshold_end=1.5*10**-6, neutr_threshold=8*10**-5)
+        standard_verify(path0+'NEWSOSOL_SOCSCL0/', rms_threshold=1.5*10**-6, rms_threshold_end=1.5*10**-6, neutr_threshold=8*10**-5)
+        # cross check both runs against each other (comparing output writte to 'out_last.txt')
+        num, text = read_file(path0+'NEWSOSOL_NOSOC/out_last.txt')
+        num_ref, text_ref = read_file(path0+'NEWSOSOL_SOCSCL0/out_last.txt')
+        assert std(num-num_ref)<2*10**-13
+        assert set(text)-set(text_ref)==set()
+
     def test_4_Jijs_SOC(self):
         paths = ['test_run04.1_hybrid_1_3/']
         path0 = 'test_inputs/test_04.1/ref/'
