@@ -26,7 +26,7 @@ warn: true
 license: by-nc
 version: 0.0.1
 project_website: https://iffgit.fz-juelich.de/kkr/kkrimp
-#dbg: true
+
 
 This is the introductory text ...
 code locations [gitlab link](https://iffgit.fz-juelich.de/kkr/kkrimp)
