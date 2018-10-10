@@ -1,4 +1,11 @@
       MODULE MOD_CALCWLDAU
+!-------------------------------------------------------------------------------
+!> Summary: Calculation of Coulomb interaction potential in LDA+U in the
+!> non-relativistic case
+!> Author:
+!> Category: KKRimp, single-site, electrostatics, potential, lda+u 
+!>           
+!-------------------------------------------------------------------------------
       CONTAINS
 
       SUBROUTINE CALCWLDAU(

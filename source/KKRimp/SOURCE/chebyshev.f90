@@ -1,4 +1,10 @@
 module mod_chebyshev
+!-------------------------------------------------------------------------------
+!> Summary: Routines which are needed to use the Chebyshev mesh 
+!> Author:
+!> Category: KKRimp, radial-grid
+!>           
+!-------------------------------------------------------------------------------
 double complex,allocatable :: intweight(:)
 
 contains 

@@ -1,5 +1,11 @@
 module mod_checkinterpolation
-
+!-------------------------------------------------------------------------------
+!> Summary: Checks the validity of the interpolation between 'old' mesh
+!> and Chebyshev mesh
+!> Author:
+!> Category: KKRimp, radial-grid
+!>           
+!-------------------------------------------------------------------------------
 contains
 
 subroutine checkinterpolation(cell,cellnew,vpotin,config)!,lmpot)

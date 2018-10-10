@@ -1,4 +1,12 @@
 module mod_calctmat_bauernew
+!-------------------------------------------------------------------------------
+!> Summary: Calculate t-matrices including non-collinear magnetism and
+!> spin-orbit coupling
+!> Author: David Bauer
+!> Category: KKRimp, single-site, spin-orbit-coupling, dirac, potential   
+!>           
+!-------------------------------------------------------------------------------
+
 contains
 subroutine calctmat_bauernew(cell,tmat,lmaxatom,eryd_in,ZATOM,cellnew,wavefunction, &
                              ispin,nspin,kspinorbit,use_fullgmat,theta,phi,ncoll,nsra,config,idotime, &

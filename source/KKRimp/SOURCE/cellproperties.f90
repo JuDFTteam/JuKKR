@@ -1,5 +1,10 @@
 module cellproperties
-
+!-------------------------------------------------------------------------------
+!> Summary: Reads the 'kkrflex_hoststructure' file 
+!> Author:
+!> Category: KKRimp, input-output
+!>           
+!-------------------------------------------------------------------------------
 contains
 
 

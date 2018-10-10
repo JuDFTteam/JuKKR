@@ -1,4 +1,9 @@
 module mod_calctmat_bauernew_testtools
+!-------------------------------------------------------------------------------
+!> Summary: Some debugging helper routines for 'calctmat_bauernew' 
+!> Author: David Bauer
+!> Category: KKRimp, unit_test
+!-------------------------------------------------------------------------------
 
 contains
 

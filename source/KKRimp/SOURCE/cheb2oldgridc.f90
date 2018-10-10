@@ -1,4 +1,10 @@
 module mod_cheb2oldgridc
+!-------------------------------------------------------------------------------
+!> Summary: Interpolates from the Chebychev mesh to the 'old' radial mesh 
+!> Author:
+!> Category: KKRimp, radial-grid
+!>           
+!-------------------------------------------------------------------------------
 use mod_chebyshev
 integer :: first=1
 contains
