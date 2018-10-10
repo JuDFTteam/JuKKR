@@ -1,32 +1,61 @@
+!------------------------------------------------------------------------------------
+!> Summary: Performs a straight mixing of the potential 
+!> Author: 
+!> Performs a straight mixing between the potential from a previous iteration
+!> and the one from the current iteration to speed up convergence. 
+!------------------------------------------------------------------------------------
 module mod_mixstr
 
 contains
 
+  !-------------------------------------------------------------------------------  
+  !> Summary: Performs a straight mixing of the potential 
+  !> Author: 
+  !> Category: potential, solver, KKRhost
+  !> Deprecated: False 
+  !> Performs a straight mixing between the potential from a previous iteration 
+  !> and the one from the current iteration to speed up convergence. 
+  !-------------------------------------------------------------------------------  
   subroutine mixstr(rmsavq,rmsavm,ins,lpot,lmpot,natref,nshell,nstart,nend,conc,    &
     nspin,itc,rfpi,fpi,ipf,mixing,fcm,irc,irmin,r,drdi,vons,visp,vins,vspsmo,vspsme,&
     lsmear)
   
     use :: global_variables
     use :: mod_datatypes, only: dp
+    
     implicit none
-    real (kind=dp) :: fcm, fpi, mixing, rfpi, rmsavm, rmsavq
 
-    integer :: ins, ipf, itc, lmpot, lpot, natref, nend, nspin, nstart
+    ! .. Input variables
+    integer, intent(in) :: ins    !! 0 (MT), 1(ASA), 2(Full Potential)
+    integer, intent(in) :: ipf    !! Not real used, IPFE should be 0
+    integer, intent(in) :: itc    !! Current iteration number
+    integer, intent(in) :: lpot   !! Maximum l component in potential expansion
+    integer, intent(in) :: nend   !! Final atom in the loop
+    integer, intent(in) :: lmpot  !! (LPOT+1)**2
+    integer, intent(in) :: nspin  !! Counter for spin directions
+    integer, intent(in) :: natref
+    integer, intent(in) :: nstart !! First atom in the loop
     integer, intent(in) :: lsmear
-
-    real (kind=dp), dimension(natypd), intent(in) :: conc
-    real (kind=dp), dimension(irmd, natypd), intent(in) :: r
-    real (kind=dp), dimension(irmd, natypd), intent(in) :: drdi
-    real (kind=dp), dimension(irmd, *), intent(in)      :: visp
-    real (kind=dp), dimension(irmind:irmd, lmpotd, *), intent(in) :: vins
-    real (kind=dp), dimension(irmd, lmpotd, *), intent(in) :: vons
+    real (kind=dp), intent(in) :: fcm  !! Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
+    real (kind=dp), intent(in) :: fpi  !! 4 $$\pi$$
+    real (kind=dp), intent(in) :: rfpi !! $$\sqrt{4\pi}$$
+    real (kind=dp), intent(in) :: mixing !! Magnitude of the mixing parameter
+    integer, dimension(natypd), intent(in) :: irc  !! R point for potential cutting
+    integer, dimension(natypd), intent(in) :: irmin  !! Max R for spherical treatment
+    integer, dimension(0:nsheld), intent(in) :: nshell !! Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
+    real (kind=dp), dimension(natypd), intent(in) :: conc !! Concentration of a given atom
+    real (kind=dp), dimension(irmd, natypd), intent(in) :: r !! Radial mesh ( in units a Bohr)
+    real (kind=dp), dimension(irmd, natypd), intent(in) :: drdi !! Derivative dr/di
+    real (kind=dp), dimension(irmd, *), intent(in)      :: visp !! Spherical part of the potential
+    real (kind=dp), dimension(irmind:irmd, lmpotd, *), intent(in) :: vins !! Non-spherical part of the potential
+    ! .. Output variables 
+    real (kind=dp), intent(out) :: rmsavm !! RMS value of the magnetization
+    real (kind=dp), intent(out) :: rmsavq !! RMS value of the charge
+    ! .. In/Out variables
     real (kind=dp), dimension(irmd, nspotd), intent(inout) :: vspsmo
     real (kind=dp), dimension(irmd, nspotd), intent(inout) :: vspsme
-    
-    integer, dimension(natypd), intent(in) :: irc
-    integer, dimension(natypd), intent(in) :: irmin
-    integer, dimension(0:nsheld), intent(in) :: nshell
-
+    real (kind=dp), dimension(irmd, lmpotd, *), intent(inout) :: vons !! output potential (nonspherical VONS)
+    ! .. Local variables
     real (kind=dp) :: fac, rmserm, rmserq, vmn, vnm, vnp, voldm, voldp, vpn
     real (kind=dp) :: natom
     integer :: i, ih, ihp1, irc1, irmin1, j, lm, np

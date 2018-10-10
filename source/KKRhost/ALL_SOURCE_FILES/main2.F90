@@ -91,8 +91,8 @@ contains
     real (kind=dp) :: rv
     real (kind=dp) :: mix
     real (kind=dp) :: sum
-    real (kind=dp) :: fpi
-    real (kind=dp) :: rfpi
+    real (kind=dp) :: fpi        !! 4$$\pi$$
+    real (kind=dp) :: rfpi       !! $$\sqrt{4\pi}$$
     real (kind=dp) :: efold
     real (kind=dp) :: efnew
     real (kind=dp) :: denef

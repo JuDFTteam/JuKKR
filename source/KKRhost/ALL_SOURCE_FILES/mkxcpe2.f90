@@ -1,10 +1,26 @@
+!------------------------------------------------------------------------------------
+!> Summary: PBE exchange correlation functional                                     
+!> Author: M. Ogura, K. Burke, E. Engel 
+!> Exchange correlation potential making use of GGA, the parametrization is given 
+!> by the PBE functional                                                                
+!------------------------------------------------------------------------------------
 module mod_mkxcpe2
   use :: mod_datatypes, only: dp
+  use :: constants, only : pi
   private :: dp
 
 contains
 
-  subroutine mkxcpe2(ir, np, rv, rholm, vxcp, excp, ylm, dylmt1, dylmf1, dylmf2, dylmtf, drrl, ddrrl, drrul, ddrrul, irmd, lmpotd, lmmax, use_sol)
+ !-------------------------------------------------------------------------------   
+ !> Summary: PBE exchange correlation functional                                   
+ !> Author: M. Ogura                                                                    
+ !> Category: xc-potential, potential, KKRhost                                      
+ !> Deprecated: False                                                               
+ !> Exchange correlation potential making use of GGA, the parametrization is given  
+ !> by the PBE functional                                                          
+ !-------------------------------------------------------------------------------   
+  subroutine mkxcpe2(ir,np,rv,rholm,vxcp,excp,ylm,dylmt1,dylmf1,dylmf2,dylmtf,drrl, &
+    ddrrl,drrul,ddrrul,irmd,lmpotd,lmmax,use_sol)
     ! ------------------------------------------------------------------
     ! Calculation of the exchange-correlation potential.
     ! coded by M. Ogura, Apr. 2015, Munich
@@ -12,20 +28,36 @@ contains
     implicit none
     integer :: ijd
     parameter (ijd=434)
-
-    real (kind=dp) :: rv
-    integer :: ir, irmd, lmmax, lmpotd, np
-    real (kind=dp) :: ddrrl(irmd, lmpotd), ddrrul(irmd, lmpotd), drrl(irmd, lmpotd), drrul(irmd, lmpotd), dylmf1(ijd, lmpotd), dylmf2(ijd, lmpotd), dylmt1(ijd, lmpotd), &
-      dylmtf(ijd, lmpotd), excp(ijd), rholm(lmpotd, 2), vxcp(ijd, 2), ylm(ijd, lmpotd)
-
-    real (kind=dp) :: c, pi, s
+    ! .. Input variables                                                             
+    integer, intent(in) :: ir                                                        
+    integer, intent(in) :: np                                                        
+    integer, intent(in) :: irmd    !! Maximum number of radial points                
+    integer, intent(in) :: lmmax   !! (LMAX+1)^2
+    integer, intent(in) :: nspin   !! Counter for spin directions                    
+    integer, intent(in) :: lmpotd  !! (lpot+1)**2                                    
+    real (kind=dp), intent(in) :: rv                                                 
+    logical, intent(in) :: use_sol !! use_sol=0 -> PBE, use_sol=1 -> PBEsol
+    real (kind=dp), dimension(ijd), intent(in) :: thet                               
+    real (kind=dp), dimension(ijd, lmpotd), intent(in)  :: ylm !! real spherical harmonic to a given l,m
+    real (kind=dp), dimension(irmd, lmpotd), intent(in) :: drrl                      
+    real (kind=dp), dimension(lmpotd, 2), intent(in)    :: rholm !! l,m decomposed charge density
+    real (kind=dp), dimension(irmd, lmpotd), intent(in) :: drrul                     
+    real (kind=dp), dimension(irmd, lmpotd), intent(in) :: ddrrl                     
+    real (kind=dp), dimension(irmd, lmpotd), intent(in) :: ddrrul                    
+    real (kind=dp), dimension(ijd, lmpotd), intent(in)  :: dylmf1                    
+    real (kind=dp), dimension(ijd, lmpotd), intent(in)  :: dylmf2                    
+    real (kind=dp), dimension(ijd, lmpotd), intent(in)  :: dylmt1                    
+    real (kind=dp), dimension(ijd, lmpotd), intent(in)  :: dylmt2                    
+    real (kind=dp), dimension(ijd, lmpotd), intent(in)  :: dylmtf    
+    ! .. In/Out variables                                                            
+    real (kind=dp), dimension(ijd), intent(inout) :: excp !! XC-energy               
+    real (kind=dp), dimension(ijd,2), intent(inout) :: vxcp !! XC-potential   
+    ! .. Local variables
     integer :: ip, ispin, l1, lm, n
-    real (kind=dp) :: d(2), d1(3, 2), d2(5, 2), dl(2)
-    ! use_sol=0 -> PBE, use_sol=1 -> PBEsol
-    logical :: use_sol
-    real (kind=dp) :: um, bet
-
-    pi = 4e0_dp*atan(1e0_dp)
+    real (kind=dp) :: c, s, um, bet
+    real (kind=dp), dimension(2) :: d, dl
+    real (kind=dp), dimension(3,2) :: d1
+    real (kind=dp), dimension(5,2) :: d2
 
     ! Set 'UM' for subroutine 'excpbex' and 'BET' for subroutine 'excpbec' for
     ! PBE or PBEsol
@@ -99,6 +131,14 @@ contains
     return
   end subroutine mkxcpe2
 
+ !-------------------------------------------------------------------------------    
+ !> Summary: Driver routine for PBE GGA subroutines 
+ !> Author: M. Ogura                                                                    
+ !> Category: xc-potential, potential, KKRhost                                       
+ !> Deprecated: False                                                                
+ !> Driver routine for the PBE GGA subroutines. It is the place where the actual
+ !> exchange and correlation potentials are calculated.
+ !-------------------------------------------------------------------------------   
   subroutine fpexcpbe(ro, rol, ro1, ro2, xr, s, c, v1, v2, exc, um, bet)
     ! ----------------------------------------------------------------------
     ! driver routine for PBE GGA subroutines.
@@ -107,20 +147,32 @@ contains
     ! ----------------------------------------------------------------------
     implicit none
 
-    real (kind=dp) :: c, exc, s, v1, v2, xr
-    real (kind=dp) :: ro(2), rol(2), ro1(3, 2), ro2(5, 2)
-    real (kind=dp) :: um, bet
-
-    real (kind=dp) :: conf, conrs, d, drv1, drv2, drv2s, drv3, drv4, ec, ex, fk, g, pi, rs, sk, ss, thrd, thrd2, tt, uu, vcdn, vcup, vv, vx, vxcdn, vxcup, ww, x, xd, xu, y, z, zet
+    ! .. Input variables
+    real (kind=dp), intent(in) :: c
+    real (kind=dp), intent(in) :: s
+    real (kind=dp), intent(in) :: xr
+    real (kind=dp), intent(in) :: um
+    real (kind=dp), intent(in) :: bet
+    real (kind=dp), dimension(2), intent(in) :: ro
+    real (kind=dp), dimension(2), intent(in) :: rol
+    real (kind=dp), dimension(3,2), intent(in) :: ro1
+    real (kind=dp), dimension(5,2), intent(in) :: ro2
+    ! .. Output variables
+    real (kind=dp), intent(out) :: v1 !! xc-potential up
+    real (kind=dp), intent(out) :: v2 !! xc-potential down
+    real (kind=dp), intent(out) :: exc !! xc-energy
+    ! .. Local variables
     integer :: jsp, llda
+    real (kind=dp) :: conf, conrs, d, drv1, drv2, drv2s, drv3, drv4, ec, ex, fk, g 
+    real (kind=dp) :: rs, sk, ss, thrd, thrd2, tt, uu, vcdn, vcup, vv, vx
+    real (kind=dp) :: vxcdn, vxcup, ww, x, xd, xu, y, z, zet
 
-    pi = 4e0_dp*atan(1e0_dp)
-    thrd = 1e0_dp/3e0_dp
+    thrd  = 1e0_dp/3e0_dp
     thrd2 = 2e0_dp/3e0_dp
-    conf = (3e0_dp*pi**2)**thrd
+    conf  = (3e0_dp*pi**2)**thrd
     conrs = (3e0_dp/(4e0_dp*pi))**thrd
-    llda = 0
-    exc = 0e0_dp
+    llda  = 0
+    exc   = 0e0_dp
     vxcup = 0e0_dp
     vxcdn = 0e0_dp
     if (ro(1)>1e-12_dp .and. ro(2)>1e-12_dp) then
@@ -128,11 +180,11 @@ contains
       ! ---begin the spin loop for exchange
       if (ro(1)<=1e-6_dp .or. ro(2)<=1e-6_dp) llda = 1
       do jsp = 1, 2
-        d = 2e0_dp*ro(jsp)
+        d  = 2e0_dp*ro(jsp)
         fk = conf*d**thrd
-        x = ro1(1, jsp)
-        y = ro1(2, jsp)
-        z = ro1(3, jsp)
+        x  = ro1(1, jsp)
+        y  = ro1(2, jsp)
+        z  = ro1(3, jsp)
         drv1 = sqrt(x**2+y**2+z**2)*2e0_dp
         if (abs(drv1)<1e-8_dp) then
           drv2 = 0e0_dp
@@ -186,13 +238,46 @@ contains
     end if
     ! ---convert from h to ry
     exc = 2e0_dp*exc
-    xu = 2e0_dp*vxcup
-    xd = 2e0_dp*vxcdn
+    xu  = 2e0_dp*vxcup
+    xd  = 2e0_dp*vxcdn
 
     v1 = xu
     v2 = xd
   end subroutine fpexcpbe
 
+ !-------------------------------------------------------------------------------    
+ !> Summary: PBE exchange for a spin-**unpolarized** electronic system
+ !> Author: K. Burke, E. Engel                  
+ !> Category: xc-potential, potential, KKRhost                                       
+ !> Deprecated: False                                                                
+ !> PBE exchange for a spin-**unpolarized** electronic system. This is calculated
+ !> using the fact that the exchange in LDA is given by
+ !> \begin{equation}
+ !> e_x[unif]=a_x\rho^{\frac{4}{3}}
+ !> \end{equation}
+ !> with
+ !> \begin{equation}
+ !> a_x = -\frac{3}{4}\left(\frac{3}{\pi}\right)^{\frac{1}{3}}
+ !> \end{equation}
+ !> where the $$e_x[PBE]$$ is given by 
+ !> \begin{equation}
+ !> e_x[PBE] =e_x[unif]*F_x^{PBE}(s)
+ !> \end{equation}
+ !> where
+ !> \begin{equation}
+ !> F_x^{PBE}(s)=1+u_k-\frac{u_k}{1+u_l s^2}
+ !> \end{equation}
+ !> with $$u_k$$ and $$u_l$$ being defined in Eq.13 of [a]
+ !> @note
+ !> [a] J.P. Perdew, K. Burke, and M. Ernzerhof, Phys. Rev. Lett. 77, 3865 (1996).
+ !> [b] J.P. Perdew and Y. Wang, Phys. Rev. B33, 8800 (1986); B40, 3399 (1989)(E).
+ !> 
+ !> K Burke's modification of PW91 codes, May 14, 1996
+ !> Modified again by K. Burke, June 29, 1996, with simpler Fx(s)
+ !> 
+ !> **All input and output is in atomic units**
+ !> @endnote
+ !-------------------------------------------------------------------------------   
   subroutine excpbex(rho, s, u, v, ex, vx, llda, um)
     ! ----------------------------------------------------------------------
     ! PBE EXCHANGE FOR A SPIN-UNPOLARIZED ELECTRONIC SYSTEM
@@ -228,7 +313,7 @@ contains
     implicit none
 
     ! PARAMETER definitions
-    real (kind=dp), parameter :: thrd = 1.e0_dp/3.e0_dp
+    real (kind=dp), parameter :: thrd  = 1.e0_dp/3.e0_dp
     real (kind=dp), parameter :: thrd4 = 4.e0_dp/3.e0_dp
     real (kind=dp), parameter :: ax = -0.738558766382022405884230032680836e0_dp
     real (kind=dp), parameter :: uk = 0.8040e0_dp
