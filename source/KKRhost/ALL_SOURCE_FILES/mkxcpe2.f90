@@ -1,8 +1,8 @@
 !------------------------------------------------------------------------------------
-!> Summary: PBE exchange correlation functional                                     
+!> Summary: PBE exchange correlation functional
 !> Author: M. Ogura, K. Burke, E. Engel 
 !> Exchange correlation potential making use of GGA, the parametrization is given 
-!> by the PBE functional                                                                
+!> by the PBE functional
 !------------------------------------------------------------------------------------
 module mod_mkxcpe2
   use :: mod_datatypes, only: dp
@@ -11,14 +11,14 @@ module mod_mkxcpe2
 
 contains
 
- !-------------------------------------------------------------------------------   
- !> Summary: PBE exchange correlation functional                                   
- !> Author: M. Ogura                                                                    
- !> Category: xc-potential, potential, KKRhost                                      
- !> Deprecated: False                                                               
- !> Exchange correlation potential making use of GGA, the parametrization is given  
- !> by the PBE functional                                                          
- !-------------------------------------------------------------------------------   
+  !-------------------------------------------------------------------------------   
+  !> Summary: PBE exchange correlation functional
+  !> Author: M. Ogura
+  !> Category: xc-potential, potential, KKRhost
+  !> Deprecated: False
+  !> Exchange correlation potential making use of GGA, the parametrization is given  
+  !> by the PBE functional
+  !-------------------------------------------------------------------------------   
   subroutine mkxcpe2(ir,np,rv,rholm,vxcp,excp,ylm,dylmt1,dylmf1,dylmf2,dylmtf,drrl, &
     ddrrl,drrul,ddrrul,irmd,lmpotd,lmmax,use_sol)
     ! ------------------------------------------------------------------
@@ -28,16 +28,14 @@ contains
     implicit none
     integer :: ijd
     parameter (ijd=434)
-    ! .. Input variables                                                             
-    integer, intent(in) :: ir                                                        
-    integer, intent(in) :: np                                                        
+    ! .. Input variables
+    integer, intent(in) :: ir
+    integer, intent(in) :: np 
     integer, intent(in) :: irmd    !! Maximum number of radial points                
     integer, intent(in) :: lmmax   !! (LMAX+1)^2
-    integer, intent(in) :: nspin   !! Counter for spin directions                    
-    integer, intent(in) :: lmpotd  !! (lpot+1)**2                                    
-    real (kind=dp), intent(in) :: rv                                                 
+    integer, intent(in) :: lmpotd  !! (lpot+1)**2 
+    real (kind=dp), intent(in) :: rv
     logical, intent(in) :: use_sol !! use_sol=0 -> PBE, use_sol=1 -> PBEsol
-    real (kind=dp), dimension(ijd), intent(in) :: thet                               
     real (kind=dp), dimension(ijd, lmpotd), intent(in)  :: ylm !! real spherical harmonic to a given l,m
     real (kind=dp), dimension(irmd, lmpotd), intent(in) :: drrl                      
     real (kind=dp), dimension(lmpotd, 2), intent(in)    :: rholm !! l,m decomposed charge density
@@ -47,7 +45,6 @@ contains
     real (kind=dp), dimension(ijd, lmpotd), intent(in)  :: dylmf1                    
     real (kind=dp), dimension(ijd, lmpotd), intent(in)  :: dylmf2                    
     real (kind=dp), dimension(ijd, lmpotd), intent(in)  :: dylmt1                    
-    real (kind=dp), dimension(ijd, lmpotd), intent(in)  :: dylmt2                    
     real (kind=dp), dimension(ijd, lmpotd), intent(in)  :: dylmtf    
     ! .. In/Out variables                                                            
     real (kind=dp), dimension(ijd), intent(inout) :: excp !! XC-energy               
@@ -68,7 +65,6 @@ contains
       um = 0.2195149727645171e0_dp
       bet = 0.06672455060314922e0_dp
     end if
-
 
     ! --- surface integration
     do ip = 1, np
@@ -131,14 +127,14 @@ contains
     return
   end subroutine mkxcpe2
 
- !-------------------------------------------------------------------------------    
- !> Summary: Driver routine for PBE GGA subroutines 
- !> Author: M. Ogura                                                                    
- !> Category: xc-potential, potential, KKRhost                                       
- !> Deprecated: False                                                                
- !> Driver routine for the PBE GGA subroutines. It is the place where the actual
- !> exchange and correlation potentials are calculated.
- !-------------------------------------------------------------------------------   
+  !-------------------------------------------------------------------------------    
+  !> Summary: Driver routine for PBE GGA subroutines 
+  !> Author: M. Ogura
+  !> Category: xc-potential, potential, KKRhost
+  !> Deprecated: False
+  !> Driver routine for the PBE GGA subroutines. It is the place where the actual
+  !> exchange and correlation potentials are calculated.
+  !-------------------------------------------------------------------------------   
   subroutine fpexcpbe(ro, rol, ro1, ro2, xr, s, c, v1, v2, exc, um, bet)
     ! ----------------------------------------------------------------------
     ! driver routine for PBE GGA subroutines.
@@ -245,39 +241,39 @@ contains
     v2 = xd
   end subroutine fpexcpbe
 
- !-------------------------------------------------------------------------------    
- !> Summary: PBE exchange for a spin-**unpolarized** electronic system
- !> Author: K. Burke, E. Engel                  
- !> Category: xc-potential, potential, KKRhost                                       
- !> Deprecated: False                                                                
- !> PBE exchange for a spin-**unpolarized** electronic system. This is calculated
- !> using the fact that the exchange in LDA is given by
- !> \begin{equation}
- !> e_x[unif]=a_x\rho^{\frac{4}{3}}
- !> \end{equation}
- !> with
- !> \begin{equation}
- !> a_x = -\frac{3}{4}\left(\frac{3}{\pi}\right)^{\frac{1}{3}}
- !> \end{equation}
- !> where the $$e_x[PBE]$$ is given by 
- !> \begin{equation}
- !> e_x[PBE] =e_x[unif]*F_x^{PBE}(s)
- !> \end{equation}
- !> where
- !> \begin{equation}
- !> F_x^{PBE}(s)=1+u_k-\frac{u_k}{1+u_l s^2}
- !> \end{equation}
- !> with $$u_k$$ and $$u_l$$ being defined in Eq.13 of [a]
- !> @note
- !> [a] J.P. Perdew, K. Burke, and M. Ernzerhof, Phys. Rev. Lett. 77, 3865 (1996).
- !> [b] J.P. Perdew and Y. Wang, Phys. Rev. B33, 8800 (1986); B40, 3399 (1989)(E).
- !> 
- !> K Burke's modification of PW91 codes, May 14, 1996
- !> Modified again by K. Burke, June 29, 1996, with simpler Fx(s)
- !> 
- !> **All input and output is in atomic units**
- !> @endnote
- !-------------------------------------------------------------------------------   
+  !-------------------------------------------------------------------------------    
+  !> Summary: PBE exchange for a spin-**unpolarized** electronic system
+  !> Author: K. Burke, E. Engel
+  !> Category: xc-potential, potential, KKRhost
+  !> Deprecated: False
+  !> PBE exchange for a spin-**unpolarized** electronic system. This is calculated
+  !> using the fact that the exchange in LDA is given by
+  !> \begin{equation}
+  !> e_x[unif]=a_x\rho^{\frac{4}{3}}
+  !> \end{equation}
+  !> with
+  !> \begin{equation}
+  !> a_x = -\frac{3}{4}\left(\frac{3}{\pi}\right)^{\frac{1}{3}}
+  !> \end{equation}
+  !> where the $$e_x[PBE]$$ is given by 
+  !> \begin{equation}
+  !> e_x[PBE] =e_x[unif]*F_x^{PBE}(s)
+  !> \end{equation}
+  !> where
+  !> \begin{equation}
+  !> F_x^{PBE}(s)=1+u_k-\frac{u_k}{1+u_l s^2}
+  !> \end{equation}
+  !> with $$u_k$$ and $$u_l$$ being defined in Eq.13 of [a]
+  !> @note
+  !> [a] J.P. Perdew, K. Burke, and M. Ernzerhof, Phys. Rev. Lett. 77, 3865 (1996).
+  !> [b] J.P. Perdew and Y. Wang, Phys. Rev. B33, 8800 (1986); B40, 3399 (1989)(E).
+  !> 
+  !> K Burke's modification of PW91 codes, May 14, 1996
+  !> Modified again by K. Burke, June 29, 1996, with simpler Fx(s)
+  !> 
+  !> **All input and output is in atomic units**
+  !> @endnote
+  !-------------------------------------------------------------------------------   
   subroutine excpbex(rho, s, u, v, ex, vx, llda, um)
     ! ----------------------------------------------------------------------
     ! PBE EXCHANGE FOR A SPIN-UNPOLARIZED ELECTRONIC SYSTEM
@@ -291,25 +287,7 @@ contains
     ! (for U,V, see PW86(24))
     ! OUTPUT:  EXCHANGE ENERGY PER ELECTRON (EX) AND POTENTIAL (VX)
     ! ----------------------------------------------------------------------
-    ! References:
-    ! [a] J.P. Perdew, K. Burke, and M. Ernzerhof,
-    ! Phys. Rev. Lett. 77, 3865 (1996).
-    ! [b] J.P. Perdew and Y. Wang,
-    ! Phys. Rev. B33, 8800 (1986); B40, 3399 (1989) (E).
-    ! ----------------------------------------------------------------------
-    ! Formulas:
-    ! e_x[unif]=ax*rho^(4/3)  [LDA]
-    ! ax = -0.75*(3/pi)^(1/3)
-    ! e_x[PBE]=e_x[unif]*FxPBE(s)
-    ! FxPBE(s)=1+uk-uk/(1+ul*s*s)                 [a](13)
-    ! uk, ul defined after [a](13)
-    ! ----------------------------------------------------------------------
 
-    ! All input and output is in atomic units!
-
-    ! Modifications by: E. Engel
-    ! Last revision:    May 9, 2001
-    ! engel
     implicit none
 
     ! PARAMETER definitions
@@ -317,14 +295,20 @@ contains
     real (kind=dp), parameter :: thrd4 = 4.e0_dp/3.e0_dp
     real (kind=dp), parameter :: ax = -0.738558766382022405884230032680836e0_dp
     real (kind=dp), parameter :: uk = 0.8040e0_dp
-    real (kind=dp) :: ul
 
     ! Dummy arguments
-    real (kind=dp) :: ex, rho, s, u, v, vx, um
-    integer :: llda
+    integer, intent(in) :: llda
+    real (kind=dp), intent(in) :: rho !! density
+    real (kind=dp), intent(in) :: s !! $$\frac{\| \nabla \rho\|}{2K_F \rho} $$ with $$\K_F=\left(3 \pi^2 \rho\right)^\frac{1}{3}$$
+    real (kind=dp), intent(in) :: u !!$$\frac{\nabla^2 \rho}{\rho\left(2K_F\right)^2}$$
+    real (kind=dp), intent(in) :: v
+    real (kind=dp), intent(in) :: um
+    real (kind=dp), intent(out) :: vx !! exchange potential
+    real (kind=dp), intent(out) :: ex !! exchange energy per electron
 
     ! Local variables
     real (kind=dp) :: exunif, fs, fss, fxpbe, p0, s2
+    real (kind=dp) :: ul
 
     ! ----------------------------------------------------------------------
     ! Define UL with via UM and UK
@@ -359,41 +343,26 @@ contains
     vx = exunif*(thrd4*fxpbe-(u-thrd4*s2*s)*fss-v*fs)
   end subroutine excpbex
 
+  !-------------------------------------------------------------------------------    
+  !> Summary: This subroutine evaluates the correlation energy per particle for PBE
+  !> xc-potential
+  !> Author: K. Burke, E. Engel
+  !> Category: xc-potential, potential, KKRhost
+  !> Deprecated: False
+  !> This subroutine evaluates the correlation energy per particle and
+  !> spin-up and spin-dn correlation potentials within the Perdew-Burke-
+  !> Ernzerhof GGA. It is a slightly modified version of K. Burke's
+  !> official PBE subroutine.
+  !> @note
+  !> [a] J.P. Perdew, K. Burke, and M. Ernzerhof, Phys. Rev. Lett. 77, 3865 (1996).
+  !> [b] J. P. Perdew, K. Burke, and Y. Wang, Phys. Rev. B54, 16533 (1996).
+  !> [c] J. P. Perdew and Y. Wang, Phys. Rev. B45, 13244 (1992).
+  !> 
+  !> **All input and output is in atomic units**
+  !> @endnote
+  !-------------------------------------------------------------------------------   
   subroutine excpbec(rs, zeta, t, uu, vv, ww, ec, vcup, vcdn, llda, bet)
-    ! engel
-    ! This subroutine evaluates the correlation energy per particle and
-    ! spin-up and spin-dn correlation potentials within the Perdew-Burke-
-    ! Ernzerhof GGA. It is a slightly modified version of K. Burke's
-    ! official PBE subroutine.
 
-    ! Input:  RS   = WIGNER-SEITZ RADIUS = ( 3 / (4*PI*(DUP+DDN)) )**(1/3)
-    ! ZETA = RELATIVE SPIN POLARIZATION = (DUP-DDN)/(DUP+DDN)
-    ! T    = ABS(GRAD D) / ( (2*SK*G) * D )
-    ! UU   = (GRAD D)*GRAD(ABS(GRAD D)) / ( (2*SK*G)**3 * D**2 )
-    ! VV   = (LAPLACIAN D) / ( (2*SK*G)**2 * D )
-    ! WW   = (GRAD D)*(GRAD ZETA) / ( (2*SK*G)**2 * D )
-    ! where:  FK   = LOCAL FERMI MOMENTUM = (3*PI**2*(DUP+DDN))**(1/3)
-    ! SK   = LOCAL SCREENING MOMENTUM = (4*FK/PI)**(1/2)
-
-    ! Output: EC   = correlation energy per particle
-    ! VCUP = spin-up correlation potential
-    ! VCDN = spin-dn correlation potential
-
-    ! All input and output is in atomic units!
-
-    ! References:
-    ! [a] J.P. Perdew, K. Burke, and M. Ernzerhof,
-    ! Phys. Rev. Lett. 77, 3865 (1996).
-    ! [b] J. P. Perdew, K. Burke, and Y. Wang,
-    ! Phys. Rev. B54, 16533 (1996).
-    ! [c] J. P. Perdew and Y. Wang,
-    ! Phys. Rev. B45, 13244 (1992).
-
-
-    ! Last revision:    May 9, 2001
-    ! Written by:       K. Burke, May 14, 1996.
-    ! Modifications by: E. Engel
-    ! engel
     implicit none
 
     ! PARAMETER definitions
@@ -408,12 +377,25 @@ contains
     real (kind=dp), parameter :: eta = 1.e-12_dp
 
     ! Dummy arguments
-    real (kind=dp) :: ec, rs, t, uu, vcdn, vcup, vv, ww, zeta, bet
-    integer :: llda
+    real (kind=dp), intent(in) :: rs !! Wigner-Seitz radius $$\left(\frac{3}{4\pi\left(\rho_{up}+\rho_{down}\right)}\right)^\frac{1}{3}$$
+    real (kind=dp), intent(in) :: t  !! $$\frac{\| \nabla D\|}{2S_K G D} $$
+    real (kind=dp), intent(in) :: uu !! $$\frac{\nabla D \nabla\|\nabla D \|}{\left(2S_K G\right)^3 D^2}$$
+    real (kind=dp), intent(in) :: vv !! $$ \frac{\nabla^2 D}{\left(2S_K G\right)^2 D}$$
+    real (kind=dp), intent(in) :: ww !! $$ \frac{\nabla D \nabla Z}{\left(2S_K G\right)^2 D}$$
+    real (kind=dp), intent(in) :: zeta !! $$Z=\frac{\rho_{up}-\rho_{down}}{\rho_{up}+\rho_{down}}$$ relative spin polarization
+    real (kind=dp), intent(in) :: bet !! coefficient in gradient expansion for correlation, [a](4).
+    integer, intent(in) :: llda
+    real (kind=dp), intent(out) :: ec !! correlation energy per particle
+    real (kind=dp), intent(out) :: vcdn !! spin-up correlation potential
+    real (kind=dp), intent(out) :: vcup !! spin-dn correlation potential
 
+    !! Local Feri momentum  $$F_K = \left(3\pi^2\left(\rho_{up}+\rho_{down}\right)\right)^\frac{1}{3}$$
+    !! Local screening momentum  $$S_K = \lef(\frac{4*F_K}{\pi}\right)^\frac{1}{2}$$
     ! Local variables
-    real (kind=dp) :: alfm, alfrsm, b, b2, bec, bg, comm, ecrs, eczeta, ep, eprs, eu, eurs, f, fac, fact0, fact1, fact2, fact3, fact5, fz, g, g3, g4, gz, h, hb, hbt, hrs, hrst, ht, &
-      htt, hz, hzt, pon, pref, q4, q5, q8, q9, rsthrd, rtrs, t2, t4, t6, z4, delt
+    real (kind=dp) :: alfm, alfrsm, b, b2, bec, bg, comm, ecrs, eczeta, ep, eprs, eu
+    real (kind=dp) :: eurs, f, fac, fact0, fact1, fact2, fact3, fact5, fz, g, g3, g4
+    real (kind=dp) :: gz, h, hb, hbt, hrs, hrst, ht, htt, hz, hzt, pon, pref, q4, q5
+    real (kind=dp) :: q8, q9, rsthrd, rtrs, t2, t4, t6, z4, delt
 
     ! thrd*=various multiples of 1/3
     ! numbers for use in LSD energy spin-interpolation formula, [c](9).
@@ -512,14 +494,20 @@ contains
     end if
   end subroutine excpbec
 
+  !-------------------------------------------------------------------------------    
+  !> Summary: Slimmed down version of GCOR used in PW91 routines, to interpolate
+  !> LSD correlation energy
+  !> Author: K. Burke
+  !> Category: xc-potential, potential, KKRhost
+  !> Deprecated: False
+  !> Slimmed down version of GCOR used in PW91 routines, to interpolate LSD
+  !> correlation energy as given by Eq. 10 of [a] 
+  !> @note
+  !> [a] J. P. Perdew and Y. Wang, Phys. Rev. B 45, 13244 (1992).
+  !> @endnote
+  !-------------------------------------------------------------------------------   
   subroutine excgcor2(a, a1, b1, b2, b3, b4, rtrs, gg, ggrs)
-    ! ----------------------------------------------------------------------
-    ! ######################################################################
-    ! ----------------------------------------------------------------------
-    ! slimmed down version of GCOR used in PW91 routines, to interpolate
-    ! LSD correlation energy, as given by (10) of
-    ! J. P. Perdew and Y. Wang, Phys. Rev. B {\bf 45}, 13244 (1992).
-    ! K. Burke, May 11, 1996.
+
     implicit none
 
     ! Dummy arguments
