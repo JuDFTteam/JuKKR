@@ -1,3 +1,9 @@
+!------------------------------------------------------------------------------------
+!> Summary: Determine muffin tin zero and shift potential to muffin tin zero
+!> Author: 
+!> Determine muffin tin zero and shift potential to muffin tin zero. For spin 
+!> polarized calculations muffin tin zero is related to the average of the 2 spins.
+!------------------------------------------------------------------------------------
 module mod_mtzero
 
 contains
@@ -17,27 +23,43 @@ contains
     use :: global_variables
     use :: mod_simp3
     use :: mod_simpk
+    use :: constants, only : pi
     implicit none
     ! ..
-    ! .. Local Scalars ..
-    real (kind=dp) :: eshift, vbc(*)
-    integer :: ishift, lmpot, natyp, nspin
-    ! ..
-    ! .. Local Arrays ..
-    real (kind=dp) :: drdi(irmd, *), conc(natypd), r(irmd, *), thetas(irid, nfund, *), v(irmd, lmpotd, *), z(*)
-    integer :: ifunm(natypd, *), imt(*), ipan(*), ircut(0:ipand, *), irws(*), lmsp(natypd, *), ntcell(*), nshell(0:nsheld)
-    logical :: lsurf
-    ! ..
+    ! .. Input variables
+    integer, intent(in) :: lmpot !! (LPOT+1)**2 
+    integer, intent(in) :: natyp !! Number of kinds of atoms in unit cell
+    integer, intent(in) :: nspin !! Counter for spin directions
+    integer, intent(in) :: ishift
+    real (kind=dp), intent(in) :: eshift
+    logical, intent(in) :: lsurf !! If True a matching with semi-inifinite surfaces must be performed
+    integer, dimension(*), intent(in) :: imt    !! R point at MT radius
+    integer, dimension(*), intent(in) :: ipan   !! Number of panels in non-MT-region
+    integer, dimension(*), intent(in) :: irws   !! R point at WS radius
+    integer, dimension(*), intent(in) :: ntcell !! Index for WS cell
+    integer, dimension(0:nsheld), intent(in) :: nshell !! Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
+    integer, dimension(natypd,*), intent(in)  :: lmsp  !! 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
+    integer, dimension(0:ipand,*), intent(in) :: ircut !! R points of panel borders
+    integer, dimension(natypd,*), intent(in)  :: ifunm
+    real (kind=dp), dimension(*), intent(in) :: z  !! Nuclear charge
+    real (kind=dp), dimension(natypd), intent(in) :: conc !! Concentration of a given atom
+    real (kind=dp), dimension(irmd,*), intent(in) :: r !! Radial mesh ( in units a Bohr)
+    real (kind=dp), dimension(irmd,*), intent(in) :: drdi !! Derivative dr/di
+    real (kind=dp), dimension(irid,nfund,*), intent(in) :: thetas !! shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
+    ! .. In/Out variables
+    real (kind=dp), dimension(*), intent(inout) :: vbc !! Potential constants
+    real (kind=dp), dimension(irmd,lmpotd,*), intent(inout) :: v !! output potential (nonspherical VONS)
+    ! .. Local variables
     real (kind=dp) :: fpi, rfpi, vav0, vol0, zzor
     integer :: icell, ifun, ih, imt1, ipan1, ipot, ir, irc1, irh, is, lm
-    ! ..
-    real (kind=dp) :: v1(irmd), v2(irmd), vav1(2), vol1(2)
+    real (kind=dp), dimension(2) :: vav1, vol1
+    real (kind=dp), dimension(irmd) :: v1, v2
 
     logical, external :: test, opt
 
-    intrinsic :: atan, sqrt
+    intrinsic :: sqrt
 
-    fpi = 16.0e0_dp*atan(1.0e0_dp)
+    fpi = 4.0_dp*pi
     rfpi = sqrt(fpi)
     ! ---  >     muffin tin or atomic sphere calculation
     vav0 = 0.0e0_dp

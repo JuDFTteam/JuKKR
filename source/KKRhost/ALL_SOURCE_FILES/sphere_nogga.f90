@@ -1,20 +1,29 @@
+!------------------------------------------------------------------------------------
+!> Summary: Generate an angular mesh and spherical harmonics at those
+!> mesh points. For an angular integration the weights are generated .
+!> Author: R. Zeller
+!> Generate an angular mesh and spherical harmonics at those
+!> mesh points. For an angular integration the weights are generated  
+!------------------------------------------------------------------------------------
 module mod_sphere_nogga
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  ! -------------------------------------------------------------------------------
-  !> @brief Generate an angular mesh and spherical harmonics at those
-  !> mesh points. For an angular integration the weights are generated .
 
-  !> @author R. Zeller
-  !> @date Feb. 1996
-  !> @note - Jonathan Chico: Rewrote to Fortran90
-  ! -------------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
+  !> Summary: Generate an angular mesh and spherical harmonics at those
+  !> mesh points. For an angular integration the weights are generated .
+  !> Author: R. Zeller
+  !> Category: special-functions, radial-mesh, KKRhost 
+  !> Deprecated: False 
+  !> Generate an angular mesh and spherical harmonics at those
+  !> mesh points. For an angular integration the weights are generated  
+  !-------------------------------------------------------------------------------
   subroutine sphere_nogga(lmax, yr, wtyr, rij, ijd)
 
-    use :: constants
+    use :: constants, only : pi
     use :: mod_lebedev
     use :: mod_ymy
     ! ..

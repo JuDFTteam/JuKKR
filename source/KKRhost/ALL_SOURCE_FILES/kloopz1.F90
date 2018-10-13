@@ -95,10 +95,9 @@ contains
     complex (kind=dp), dimension (lmmaxd, lmmaxd), intent (in) :: rrel !! Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
     complex (kind=dp), dimension (lmmaxd, lmmaxd), intent (in) :: factl
     complex (kind=dp), dimension (lmmaxd, lmmaxd, natyp), intent (in) :: tsst
-    complex (kind=dp), dimension (lmmaxd, lmmaxd, natyp), intent (in) :: msst
-    complex (kind=dp), dimension (2, 2, lmmaxd), intent (in) :: srrel
-    complex (kind=dp), dimension (lmmaxd, lmmaxd, naez), intent (in) :: tqdos ! qdos : Read-in inverse t-matrix
-    complex (kind=dp), dimension (lmmaxd, lmmaxd, naez), intent (in) :: drotq !! Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
+    complex (kind=dp), dimension (2, 2, lmmaxd), intent (in)          :: srrel
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, naez), intent (in)  :: tqdos ! qdos : Read-in inverse t-matrix
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, naez), intent (in)  :: drotq !! Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
     complex (kind=dp), dimension (lmmaxd, lmmaxd, nrefd), intent (in) :: trefll
     complex (kind=dp), dimension (lmmaxd, lmmaxd, nsymaxd), intent (in) :: dsymll
     complex (kind=dp), dimension (lmmaxd, lmmaxd, nrefd), intent (in) :: dtrefll !! LLY Lloyd dtref/dE
@@ -115,6 +114,7 @@ contains
     integer, intent (inout) :: itcpamax !! Max. number of CPA iterations
     complex (kind=dp), intent (inout) :: tracet !! \f$Tr\left[ (t-tref)^{-1} \frac{d(t-tref)}{dE} \right]\f$
     complex (kind=dp), intent (inout) :: lly_grtr !! Trace Eq.5.38 PhD Thiess (k-integrated)! LLY Lloyd
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, natyp), intent (inout) :: msst
     complex (kind=dp), dimension (lmmaxd, lmmaxd, nsheld), intent (inout) :: gmatll !! GMATLL = diagonal elements of the G matrix (system)
     ! .. Local Scalars
     integer :: i_stat, i_all

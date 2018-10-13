@@ -1,67 +1,54 @@
+!------------------------------------------------------------------------------------
+!> Summary: Printing to file the TBKKR files, containing key information of the
+!> input parameters
+!> Author:
+!> Printing to file the TBKKR files, containing key information of the input
+!> parameters
+!------------------------------------------------------------------------------------
 module mod_write_tbkkr_files
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  ! -------------------------------------------------------------------------------
-  ! SUBROUTINE: WRITE_TBKKR_FILES
-  !> @brief Printing to file the TBKKR files, containing key information of the
-  !parameters
-  !> and structure of the system.
-  !> @note
-  !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to
-  ! Fortran90
-  subroutine write_tbkkr_files(lmax, nemb, ncls, natyp, naez, ielast, ins, alat, bravais, recbv, rbasis, cls, nacls, rcls, ezoa, atom, rr, nspin, nr, korbit, nclsd, naclsd)
+  !-------------------------------------------------------------------------------
+  !> Summary: Printing to file the TBKKR files, containing key information of the
+  !> input parameters
+  !> Author: 
+  !> Category: input-output, KKRhost
+  !> Deprecated: False 
+  !> Printing to file the TBKKR files, containing key information of the input
+  !> parameters
+  !-------------------------------------------------------------------------------
+  subroutine write_tbkkr_files(lmax,nemb,ncls,natyp,naez,ielast,ins,alat,bravais,   &
+    recbv,rbasis,cls,nacls,rcls,ezoa,atom,rr,nspin,nr,korbit,nclsd,naclsd)
 
     use :: mod_version_info, only: serialnr
 
     implicit none
     ! interface
-    integer, intent (in) :: nr     ! < Number of real space vectors rr
-    integer, intent (in) :: ins    ! < 0 (MT), 1(ASA), 2(Full Potential)
-    integer, intent (in) :: lmax   ! < Maximum l component in wave function
-    ! expansion
-    integer, intent (in) :: nemb   ! < Number of 'embedding' positions
-    integer, intent (in) :: ncls   ! < Number of reference clusters
-    integer, intent (in) :: naez   ! < Number of atoms in unit cell
-    integer, intent (in) :: natyp  ! < Number of kinds of atoms in unit cell
-    integer, intent (in) :: nspin  ! < Counter for spin directions
-    integer, intent (in) :: nclsd  ! < Maximum number of different TB-clusters
-    integer, intent (in) :: naclsd ! < Maximum number of atoms in a TB-cluster
+    integer, intent (in) :: nr     !! Number of real space vectors rr
+    integer, intent (in) :: ins    !! 0 (MT), 1(ASA), 2(Full Potential)
+    integer, intent (in) :: lmax   !! Maximum l component in wave function expansion
+    integer, intent (in) :: nemb   !! Number of 'embedding' positions
+    integer, intent (in) :: ncls   !! Number of reference clusters
+    integer, intent (in) :: naez   !! Number of atoms in unit cell
+    integer, intent (in) :: natyp  !! Number of kinds of atoms in unit cell
+    integer, intent (in) :: nspin  !! Counter for spin directions
+    integer, intent (in) :: nclsd  !! Maximum number of different TB-clusters
+    integer, intent (in) :: naclsd !! Maximum number of atoms in a TB-cluster
     integer, intent (in) :: ielast
-    integer, intent (in) :: korbit ! < Spin-orbit/non-spin-orbit (1/0) added
-    ! to the Schroedinger or SRA equations.
-    ! Works with FP. KREL and KORBIT cannot be
-    ! both non-zero.
-    real (kind=dp), intent (in) :: alat ! < Lattice constant in a.u.
-    real (kind=dp), dimension (3, 3), intent (in) :: recbv ! < Reciprocal basis
-    ! vectors
-    real (kind=dp), dimension (3, 3), intent (in) :: bravais ! < Bravais lattice
-    ! vectors
-    real (kind=dp), dimension (3, naez+nemb), intent (in) :: rbasis ! < Position
-    ! of atoms
-    ! in the
-    ! unit cell
-    ! in units
-    ! of bravais
-    ! vectors
-    real (kind=dp), dimension (3, naclsd, nclsd), intent (in) :: rcls ! < Real
-    ! space
-    ! position
-    ! of atom
-    ! in
-    ! cluster
-    real (kind=dp), dimension (3, 0:nr), intent (in) :: rr ! < Set of real space
-    ! vectors (in a.u.)
-    integer, dimension (naez), intent (in) :: cls ! < Cluster around atomic
-    ! sites
-    integer, dimension (nclsd), intent (in) :: nacls ! < Number of atoms in
-    ! cluster
-    integer, dimension (naclsd, naez), intent (in) :: ezoa ! < EZ of atom at
-    ! site in cluster
-    integer, dimension (naclsd, naez), intent (in) :: atom ! < Atom at site in
-    ! cluster
+    integer, intent (in) :: korbit !! Spin-orbit/non-spin-orbit (1/0) added to the Schroedinger or SRA equations. Works with FP. KREL and KORBIT cannot be both non-zero.
+    real (kind=dp), intent (in) :: alat !! Lattice constant in a.u.
+    real (kind=dp), dimension (3, 3), intent (in) :: recbv !! Reciprocal basis vectors
+    real (kind=dp), dimension (3, 3), intent (in) :: bravais !! Bravais lattice vectors
+    real (kind=dp), dimension (3, naez+nemb), intent (in) :: rbasis !! Position of atoms in the unit cell in units of bravais vectors
+    real (kind=dp), dimension (3, naclsd, nclsd), intent (in) :: rcls !! Real space position of atom in cluster
+    real (kind=dp), dimension (3, 0:nr), intent (in) :: rr !! Set of real space vectors (in a.u.)
+    integer, dimension (naez), intent (in) :: cls !! Cluster around atomic sites
+    integer, dimension (nclsd), intent (in) :: nacls !! Number of atoms in cluster
+    integer, dimension (naclsd, naez), intent (in) :: ezoa !! EZ of atom at site in cluster
+    integer, dimension (naclsd, naez), intent (in) :: atom !! Atom at site in cluster
     ! .. Local variables
     integer :: i1, i2, j, naclsmax
 

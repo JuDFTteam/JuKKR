@@ -4,7 +4,21 @@ module mod_mvecglobal
 
 contains
 
-  subroutine mvecglobal(it, iq, natyp, qmphi, qmtet, mvevi, mvevil, mvevief, natypd, lmaxd, nmvecmax)
+  !-------------------------------------------------------------------------------
+  !> Summary: Transforms the magnetization to the cartesian global frame of reference 
+  !> Author: 
+  !> Category: TAGS for the code they must be written as TAG1, TAG2, ..., TAGN
+  !> Deprecated: False 
+  !> Transforms the magnetization to the cartesian global frame of reference, first
+  !> by transforming from the local $$\pm z$$ coordinate system, to the local 
+  !> cartesian coordinate system, and then to the gloabl reference frame.
+  !-------------------------------------------------------------------------------
+  !> @note This routine has been build up from the last part of the original
+  !> Munich `CALCMVEC` routine
+  !> @endnote
+  !-------------------------------------------------------------------------------
+  subroutine mvecglobal(it,iq,natyp,qmphi,qmtet,mvevi,mvevil,mvevief,natypd,lmaxd,  &
+    nmvecmax)
     ! ********************************************************************
     ! *                                                                  *
     ! *  this routine has been build up from the last part of the        *
@@ -15,17 +29,22 @@ contains
     ! ********************************************************************
     use :: mod_datatypes
     use :: mod_calcrotmat
+    use :: constants, only : ci,czero,pi
     implicit none
 
-    ! Parameter definitions
+    ! .. Parameter definitions
     integer :: lmaxdloc
     parameter (lmaxdloc=8)
-    complex (kind=dp) :: ci, czero
-    parameter (ci=(0.0e0_dp,1.0e0_dp), czero=(0.0e0_dp,0.0e0_dp))
 
     ! Scalar Arguments
-    integer :: it, iq, natyp, natypd, lmaxd, nmvecmax
-    real (kind=dp) :: qmphi, qmtet
+    integer, intent(in) :: it !! Index of the current atom type
+    integer, intent(in) :: iq !! Chemical type of the current atom
+    integer, intent(in) :: lmaxd  !! Maximum l component in wave function expansion
+    integer, intent(in) :: natyp  !! Number of kinds of atoms in unit cell
+    integer, intent(in) :: natypd !! Number of kinds of atoms in unit cell
+    integer, intent(in) :: nmvecmax !! 4
+    real (kind=dp), intent(in) :: qmphi !! \f$ \phi\f$ angle of the agnetization with respect to the z-axis
+    real (kind=dp), intent(in) :: qmtet !! \f$ \theta\f$ angle of the agnetization with respect to the z-axis
 
     ! Array Arguments
     complex (kind=dp) :: mvevi(natypd, 3, nmvecmax), mvevil(0:lmaxd, natypd, 3, nmvecmax)
@@ -79,7 +98,6 @@ contains
       write (1337, 110)
 
       nmvec = 2
-      pi = 4.e0_dp*atan(1.e0_dp)
 
       fact(0) = 1.0e0_dp
       do i = 1, 100
@@ -115,15 +133,12 @@ contains
     ! -----------------------------------------------------------------------
     ! create the rotation matrices  DROT4 for complex spherical harmonics
     ! -----------------------------------------------------------------------
-
     call calcrotmat(2, 1, qmphi, qmtet, 0.0e0_dp, drot4, fact, 4)
-
     ! -----------------------------------------------------------------------
     ! create the rotation matrix  MROT for vectors in cartesian coordinates
     ! NOTE:  U^+ D^T U gives the inverse of the real matrix  M
     ! for that reason  the transposed matrix is stored as  MROT(J,I)
     ! -----------------------------------------------------------------------
-
     do i = 1, 3
       do j = 1, 3
         cs = 0.0e0_dp
@@ -171,7 +186,7 @@ contains
       end do
       ! -----------------------------------------------------------------------
       ! transform from LOCAL cartesian coordinates (x,y,z)
-      ! to  GLOBAL cartesian coordinates
+      ! to GLOBAL cartesian coordinates
       ! -----------------------------------------------------------------------
       do i = 1, 3
         mvg(i, imv) = czero

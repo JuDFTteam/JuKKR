@@ -49,7 +49,7 @@ contains
     complex (kind=dp), dimension(lmmaxd, lmmaxd, naezd), intent(in)  :: drotq !! Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
     complex (kind=dp), dimension(lmmaxd, lmmaxd, nrefd), intent(in)  :: trefll
     ! .. Output variables
-    complex (kind=dp), dimension(lmmaxd, lmmaxd, natypd), intent(out) :: msst !! (TSST-TREF)^(-1) in the LOCAL frame 
+    complex (kind=dp), dimension(lmmaxd, lmmaxd, natypd), intent(inout) :: msst !! (TSST-TREF)^(-1) in the LOCAL frame 
     complex (kind=dp), dimension(lmmaxd, lmmaxd, naezd), intent(out)  :: mssq !! $$\Delta t^{-1}$$ matrix in the global frame
     ! .. Local variables
     integer :: it, iq, rf, j, io, info, lm1, lm2, lp, ld, lmp, lmd

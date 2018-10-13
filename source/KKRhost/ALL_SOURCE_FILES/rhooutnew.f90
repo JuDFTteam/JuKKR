@@ -7,8 +7,9 @@ contains
   !> @note -Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to
   ! Fortran90
   ! -------------------------------------------------------------------------------
-  subroutine rhooutnew(nsra, lmax, gmatll, ek, lmpot, df, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll, rllleft, sllleft, cden, cdenlm, cdenns, &
-    rho2nsc, corbital, gflle_part, rpan_intervall, ipan_intervall)
+  subroutine rhooutnew(nsra,lmax,gmatll,ek,lmpot,df,npan_tot,ncheb,cleb,icleb,iend, &
+    irmdnew,thetasnew,ifunm,imt1,lmsp,rll,rllleft,sllleft,cden,cdenlm,cdenns,       &
+    rho2nsc,corbital,gflle_part,rpan_intervall,ipan_intervall)
 
     use :: constants
     use :: mod_profiling
@@ -32,28 +33,14 @@ contains
     integer, intent (in) :: npan_tot
     complex (kind=dp), intent (in) :: ek
     complex (kind=dp), intent (in) :: df
-    integer, dimension (*), intent (in) :: lmsp !! 0,1 : non/-vanishing
-    ! lm=(l,m) component of
-    ! non-spherical potential
+    integer, dimension (*), intent (in) :: lmsp !! 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
     integer, dimension (*), intent (in) :: ifunm
     integer, dimension (0:ntotd), intent (in) :: ipan_intervall
     integer, dimension (ncleb, 4), intent (in) :: icleb !! Pointer array
-    real (kind=dp), dimension (*), intent (in) :: cleb !! GAUNT coefficients
-    ! (GAUNT)
+    real (kind=dp), dimension (*), intent (in) :: cleb !! GAUNT coefficients (GAUNT)
     real (kind=dp), dimension (0:ntotd), intent (in) :: rpan_intervall
     real (kind=dp), dimension (ntotd*(ncheb+1), nfund), intent (in) :: thetasnew
-    complex (kind=dp), dimension (lmmaxso, lmmaxso), intent (in) :: gmatll !!
-    ! GMATLL
-    ! =
-    ! diagonal
-    ! elements
-    ! of
-    ! the
-    ! G
-    ! matrix
-    ! (system)
-    ! Note that SLL is not needed for calculation of density, only needed for
-    ! calculation of Green function
+    complex (kind=dp), dimension (lmmaxso, lmmaxso), intent (in) :: gmatll !! GMATLL=diagonal elements of the G matrix (system) Note that SLL is not needed for calculation of density, only needed for calculation of Green function
     complex (kind=dp), dimension (nsra*lmmaxso, lmmaxso, irmdnew), intent (in) :: rll
     complex (kind=dp), dimension (nsra*lmmaxso, lmmaxso, irmdnew), intent (in) :: rllleft
     complex (kind=dp), dimension (nsra*lmmaxso, lmmaxso, irmdnew), intent (in) :: sllleft
