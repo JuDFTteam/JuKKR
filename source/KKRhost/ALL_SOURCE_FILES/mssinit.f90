@@ -1,9 +1,30 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculation of the $$\Delta t^{-1}$$ matrix in the global frame of reference
+!> Author: 
+!> Calculation of the $$\Delta t^{-1}$$ matrix in the global frame of reference
+!> @note Jonathan Chico: This routine seems to make use of the variables `naezd` and `natypd`, these
+!> are unnecessary as they are duplicates of `natyp` and `naez`. These should be 
+!> unified.
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_mssinit
 
 contains
 
-  ! **********************************************************************
-  subroutine mssinit(ncpa, icpastart, tsst, msst, mssq, trefll, drotq, refpot, iqat, itoq, noq, conc, kmrot, natyp, naez) ! nrefd was taken out of
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculation of the $$\Delta t^{-1}$$ matrix in the global frame of reference
+  !> Author:
+  !> Category: single-site, KKRhost
+  !> Deprecated: False 
+  !> Calculation of the $$\Delta t^{-1}$$ matrix in the global frame of reference
+  !-------------------------------------------------------------------------------
+  !> @note Jonathan Chico: This routine seems to make use of the variables `naezd` and `natypd`, these
+  !> are unnecessary as they are duplicates of `natyp` and `naez`. These should be 
+  !> unified.
+  !> @endnote
+  !-------------------------------------------------------------------------------
+  subroutine mssinit(ncpa,icpastart,tsst,msst,mssq,trefll,drotq,refpot,iqat,itoq,   &
+    noq, conc, kmrot, natyp, naez) ! nrefd was taken out of
     ! calling list 1.2.2012
     use :: global_variables
     use :: mod_mympi, only: myrank, master
@@ -11,29 +32,31 @@ contains
     use :: mod_rotate
     use :: mod_cmatstr
     use :: mod_cinit
+    use :: constants, only : czero,cone
     implicit none
 
+    integer, intent(in) :: naez  !! Number of atoms in unit cell 
+    integer, intent(in) :: ncpa  !! NCPA = 0/1 CPA flag
+    integer, intent(in) :: kmrot !! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
+    integer, intent(in) :: natyp !! Number of kinds of atoms in unit cell
+    integer, intent(in) :: icpastart
+    integer, dimension(naezd), intent(in) :: noq !! Number of diff. atom types located
+    integer, dimension(natypd), intent(in) :: iqat !! The site on which an atom is located on a given site
+    integer, dimension(naezd), intent(in) :: refpot !! Ref. pot. card  at position
+    integer, dimension(natypd,naezd), intent(in) :: itoq  !! Kind of atom at site in elem. cell
+    real (kind=dp), dimension(natypd), intent(in) :: conc !! Concentration of a given atom
+    complex (kind=dp), dimension(lmmaxd, lmmaxd, natypd), intent(in) :: tsst !! t-matrix in the local frame
+    complex (kind=dp), dimension(lmmaxd, lmmaxd, naezd), intent(in)  :: drotq !! Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
+    complex (kind=dp), dimension(lmmaxd, lmmaxd, nrefd), intent(in)  :: trefll
+    ! .. Output variables
+    complex (kind=dp), dimension(lmmaxd, lmmaxd, natypd), intent(out) :: msst !! (TSST-TREF)^(-1) in the LOCAL frame 
+    complex (kind=dp), dimension(lmmaxd, lmmaxd, naezd), intent(out)  :: mssq !! $$\Delta t^{-1}$$ matrix in the global frame
     ! .. Local variables
-    complex (kind=dp) :: czero, cone
-    parameter (czero=(0.0d0,0.0d0))
-    parameter (cone=(1.0d0,0.0d0))
-    ! ..
-    ! .. External Subroutines ..
-    integer :: kmrot, natyp, naez, ncpa, icpastart
-    integer :: iqat(natypd), itoq(natypd, naezd)
-    integer :: refpot(naezd), noq(naezd)
-    real (kind=dp) :: conc(natypd)
-    complex (kind=dp) :: tsst(lmmaxd, lmmaxd, natypd), trefll(lmmaxd, lmmaxd, nrefd)
-    complex (kind=dp) :: msst(lmmaxd, lmmaxd, natypd)
-    complex (kind=dp) :: mssq(lmmaxd, lmmaxd, naezd)
-    complex (kind=dp) :: drotq(lmmaxd, lmmaxd, naezd)
-    ! ======================================================================
-
     integer :: it, iq, rf, j, io, info, lm1, lm2, lp, ld, lmp, lmd
-    integer :: ipvt(lmmaxd)
     complex (kind=dp) :: zc
-    complex (kind=dp) :: w1(lmmaxd, lmmaxd)
-    complex (kind=dp) :: w2(lmmaxd, lmmaxd)
+    integer, dimension(lmmaxd) :: ipvt
+    complex (kind=dp), dimension(lmmaxd,lmmaxd) :: w1
+    complex (kind=dp), dimension(lmmaxd,lmmaxd) :: w2
     ! --> set up the Delta_t^-1 matrix (MSST) in the LOCAL frame
 
     logical :: test, opt
@@ -57,9 +80,6 @@ contains
         end do
       end if
 
-
-
-
       ! --> inversion
       do lm1 = 1, lmmaxd
         do lm2 = 1, lmmaxd
@@ -74,7 +94,6 @@ contains
       if (.not. opt('VIRATOMS')) then
         if (.not. test('testgmat')) then
           call zgetrf(lmmaxd, lmmaxd, msst(1,1,it), lmmaxd, ipvt, info)
-
 
           do lm1 = 1, lmmaxd
             do lm2 = 1, lmmaxd
@@ -115,10 +134,7 @@ contains
     ! mssq(IQ)  refer to the GLOBAL frame
     ! tsst(IT),msst(IT)  refer to the LOCAL  frame
 
-
     ! ----------------------------------------------------------------------
-
-
 
     ! write(*,*) 'test fivos mssinit IO,IQ,IT',IO,IQ,IT ! test fivos
 
@@ -135,8 +151,6 @@ contains
         end do
       end do
 
-
-
       if (kmrot/=0) then
         call rotate(mssq(1,1,iq), 'L->G', w1, lmmaxd, drotq(1,1,iq), lmmaxd)
         do j = 1, lmmaxd
@@ -148,10 +162,7 @@ contains
 
       ! write(*,*) 'RF',RF
 
-
-
       rf = refpot(iq)
-
 
       do lm1 = 1, lmmaxd
         do lm2 = 1, lmmaxd
@@ -192,9 +203,7 @@ contains
 
     ! ---> loop over all atoms in unit cell, get Delta_t^(-1) = MSSQ
 
-
     ! ---> inversion
-
 
     do iq = 1, naez
       ! CALL ZGETRI(LMMAXD,MSSQ(1,1,IQ),LMMAXD,IPVT,W1,
@@ -232,8 +241,6 @@ contains
 
     ! ------------------------------------------ s,p blocks
     if ((ncpa/=0) .and. (icpastart==2)) then
-
-
 
       lp = 1
       ld = 2

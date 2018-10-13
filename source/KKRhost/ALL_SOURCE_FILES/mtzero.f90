@@ -2,18 +2,17 @@ module mod_mtzero
 
 contains
 
-  ! ************************************************************************
-  subroutine mtzero(lmpot, natyp, conc, nspin, v, vbc, z, r, drdi, imt, ircut, ipan, ntcell, lmsp, ifunm, thetas, irws, eshift, ishift, nshell, lsurf)
-    ! ************************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Determine muffin tin zero and shift potential to muffin tin zero
+  !> Author: 
+  !> Category: potential, KKRhost
+  !> Deprecated: False 
+  !> Determine muffin tin zero and shift potential to muffin tin zero. For spin 
+  !> polarized calculations muffin tin zero is related to the average of the 2 spins.
+  !-------------------------------------------------------------------------------
+  subroutine mtzero(lmpot,natyp,conc,nspin,v,vbc,z,r,drdi,imt,ircut,ipan,ntcell,    &
+    lmsp,ifunm,thetas,irws,eshift,ishift,nshell,lsurf)
 
-    ! determine muffin tin zero and shift potential to muffin tin zero
-
-    ! for spin polarized calculations muffin tin zero is related to
-    ! the average of the 2 spins
-
-    ! may,2000 (new version)
-
-    ! -----------------------------------------------------------------------
     use :: mod_datatypes, only: dp
     use :: global_variables
     use :: mod_simp3
@@ -74,8 +73,6 @@ contains
 
         else
 
-
-
           irc1 = ircut(ipan1, ih)
           icell = ntcell(ih)
           imt1 = imt(ih)
@@ -111,7 +108,6 @@ contains
 
       ! added 10.11.99 to fix vbc
 
-
       if (lsurf .and. (ih==1)) write (1337, *) 'Vacancies are ignored for VBC'
       if (lsurf .and. (z(ih)<1.e0_dp)) cycle
       ! ---  > shift potential to muffin tin zero
@@ -126,7 +122,6 @@ contains
 
     write (1337, fmt=100) vol0, vav0, vbc(1)
     vbc(2) = vbc(1)
-
 
     ! ************************************************************************
     do is = 1, nspin
