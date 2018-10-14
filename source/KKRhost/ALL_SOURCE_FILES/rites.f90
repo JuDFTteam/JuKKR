@@ -8,7 +8,7 @@
 !> component will not be stored .
 !> See to subroutine start, where most of the arrays are described
 !------------------------------------------------------------------------------------
-!> @note Modified by B. Drittler  aug. 1988
+!> @note Modified by B. Drittler aug. 1988
 !> @endnote
 !------------------------------------------------------------------------------------
 module mod_rites

@@ -1,13 +1,23 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculation of the density for the new solver 
+!> Author:
+!> Calculation of the density for the new solver
+!------------------------------------------------------------------------------------
 module mod_rhovalnew
 
 contains
 
-  ! -------------------------------------------------------------------------------
-  ! SUBROUTINE: RHOVALNEW
-  !> @note Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
-  ! -------------------------------------------------------------------------------
-  subroutine rhovalnew(ldorhoef, ielast, nsra, nspin, lmax, ez, wez, zat, socscale, cleb, icleb, iend, ifunm, lmsp, ncheb, npan_tot, npan_log, npan_eq, rmesh, irws, rpan_intervall, &
-    ipan_intervall, rnew, vinsnew, thetasnew, theta, phi, i1, ipot, den_out, espv, rho2ns, r2nef, muorb, angles_new, idoldau, lopt, wldau, denmatn, natyp)
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculation of the density for the new solver
+  !> Author: 
+  !> Category: physical-observables, KKRhost 
+  !> Deprecated: False 
+  !> Calculation of the density for the new solver
+  !-------------------------------------------------------------------------------
+  subroutine rhovalnew(ldorhoef,ielast,nsra,nspin,lmax,ez,wez,zat,socscale,cleb,    &
+    icleb,iend,ifunm,lmsp,ncheb,npan_tot,npan_log,npan_eq,rmesh,irws,rpan_intervall,&
+    ipan_intervall,rnew,vinsnew,thetasnew,theta,phi,i1,ipot,den_out,espv,rho2ns,    &
+    r2nef,muorb,angles_new,idoldau,lopt,wldau,denmatn,natyp)
 
 #ifdef CPP_OMP
     use :: omp_lib
@@ -222,10 +232,11 @@ contains
     call memocc(i_stat, product(shape(vnspll1))*kind(vnspll1), 'VNSPLL1', 'RHOVALNEW')
     vnspll0 = czero
 
-    call vllmat(1, nrmaxd, irmdnew, lmsize, lmmaxso, vnspll0, vins, lmpotd, cleb, icleb, iend, nspin, zat, rnew, use_sratrick, ncleb)
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    call vllmat(1,nrmaxd,irmdnew,lmsize,lmmaxso,vnspll0,vins,lmpotd,cleb,icleb,iend,&
+      nspin,zat,rnew,use_sratrick,ncleb)
+    !--------------------------------------------------------------------------------
     ! LDAU
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     if (idoldau==1) then
       lmlo = lopt**2 + 1
       lmhi = (lopt+1)**2
@@ -238,9 +249,9 @@ contains
         vnspll0(lmlo:lmhi, lmlo:lmhi, ir) = vnspll0(lmlo:lmhi, lmlo:lmhi, ir) + wldau(1:mmaxd, 1:mmaxd, 2)
       end do
     end if
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! LDAU
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
 
     ! initial allocate
     if (nsra==2) then
@@ -441,22 +452,26 @@ contains
 
       if (t_wavefunctions%nwfsavemax>0) then ! read wavefunctions?
         ! read in wavefunction from memory
-        call read_wavefunc(t_wavefunctions, rll, rllleft, sll, sllleft, i1, ie, nsra, lmmaxso, irmdnew, ith, nth, rll_was_read_in, sll_was_read_in, rllleft_was_read_in, &
-          sllleft_was_read_in)
+        call read_wavefunc(t_wavefunctions,rll,rllleft,sll,sllleft,i1,ie,nsra,      &
+          lmmaxso,irmdnew,ith,nth,rll_was_read_in,sll_was_read_in,                  &
+          rllleft_was_read_in,sllleft_was_read_in)
       end if
 
       ! recalculate wavefuntions, also include left solution
       ! contruct the spin-orbit coupling hamiltonian and add to potential
-      call spinorbit_ham(lmax, lmsize, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpotd, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
-        vnspll0, vnspll1(:,:,:,ith), '1')
+      call spinorbit_ham(lmax,lmsize,vins,rnew,eryd,zat,cvlight,socscale,nspin,     &
+        lmpotd,theta,phi,ipan_intervall,rpan_intervall,npan_tot,ncheb,irmdnew,      &
+        nrmaxd,vnspll0,vnspll1(:,:,:,ith),'1')
 
       ! extend matrix for the SRA treatment
       vnspll(:, :, :, ith) = czero
       if (nsra==2) then
         if (use_sratrick==0) then
-          call vllmatsra(vnspll1(:,:,:,ith), vnspll(:,:,:,ith), rnew, lmmaxso, irmdnew, nrmaxd, eryd, lmax, 0, 'Ref=0')
+          call vllmatsra(vnspll1(:,:,:,ith),vnspll(:,:,:,ith),rnew,lmmaxso,irmdnew, &
+            nrmaxd,eryd,lmax,0,'Ref=0')
         else if (use_sratrick==1) then
-          call vllmatsra(vnspll1(:,:,:,ith), vnspll(:,:,:,ith), rnew, lmmaxso, irmdnew, nrmaxd, eryd, lmax, 0, 'Ref=Vsph')
+          call vllmatsra(vnspll1(:,:,:,ith),vnspll(:,:,:,ith),rnew,lmmaxso,irmdnew, &
+            nrmaxd,eryd,lmax,0,'Ref=Vsph')
         end if
       else
         vnspll(:, :, :, ith) = vnspll1(:, :, :, ith)
@@ -472,31 +487,39 @@ contains
         jlk2(:, :, ith) = czero
         gmatprefactor = czero
         jlk_index = 0
-        call rllsllsourceterms(nsra, nvec, eryd, rnew, irmdnew, nrmaxd, lmax, lmmaxso, 1, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor)
+        call rllsllsourceterms(nsra,nvec,eryd,rnew,irmdnew,nrmaxd,lmax,lmmaxso,1,   &
+          jlk_index,hlk(:,:,ith),jlk(:,:,ith),hlk2(:,:,ith),jlk2(:,:,ith),          &
+          gmatprefactor)
 
         ! using spherical potential as reference
         if (use_sratrick==1) then
-          call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, zat, eryd, lmpotd, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk(:,:,ith), jlk(:,:,ith), &
-            hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, tmatsph(:,ith), alphasph, use_sratrick)
+          call calcsph(nsra,irmdnew,nrmaxd,lmax,nspin,zat,eryd,lmpotd,lmmaxso,rnew, &
+            vins,ncheb,npan_tot,rpan_intervall,jlk_index,hlk(:,:,ith),jlk(:,:,ith), &
+            hlk2(:,:,ith),jlk2(:,:,ith),gmatprefactor,tmatsph(:,ith),alphasph,      &
+            use_sratrick)
         end if
 
         ! calculate the tmat and wavefunctions
         rll(:, :, :, ith) = czero
         sll(:, :, :, ith) = czero
 
-        ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !----------------------------------------------------------------------------
         ! Right solutions
-        ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !----------------------------------------------------------------------------
         tmatll = czero
         ! faster calculation of RLL.
         ! no irregular solutions SLL are needed in self-consistent iterations
         ! because the density depends only on RLL, RLLLEFT and SLLLEFT
         if (opt('RLL-SLL ') .and. .not. (opt('XCPL    ') .or. opt('OPERATOR'))) then
-          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), tmatll, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, 4*(lmax+1), irmdnew, nsra, jlk_index, &
-            hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
+          call rll_global_solutions(rpan_intervall,rnew,vnspll(:,:,:,ith),          &
+            rll(:,:,:,ith),tmatll,ncheb,npan_tot,lmmaxso,nvec*lmmaxso,4*(lmax+1),   &
+            irmdnew,nsra,jlk_index,hlk(:,:,ith),jlk(:,:,ith),hlk2(:,:,ith),         &
+            jlk2(:,:,ith),gmatprefactor,'1',use_sratrick,alphall)
         else
-          call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), sll(:,:,:,ith), tmatll, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, 4*(lmax+1), irmdnew, nsra, jlk_index, &
-            hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alphall)
+          call rllsll(rpan_intervall,rnew,vnspll(:,:,:,ith),rll(:,:,:,ith),         &
+            sll(:,:,:,ith),tmatll,ncheb,npan_tot,lmmaxso,nvec*lmmaxso,4*(lmax+1),   &
+            irmdnew,nsra,jlk_index,hlk(:,:,ith),jlk(:,:,ith),hlk2(:,:,ith),         &
+            jlk2(:,:,ith),gmatprefactor,'1','1','0',use_sratrick,alphall)
         end if
         if (nsra==2) then
           rll(lmmaxso+1:nvec*lmmaxso, :, :, ith) = rll(lmmaxso+1:nvec*lmmaxso, :, :, ith)/cvlight
@@ -505,20 +528,23 @@ contains
 
       end if                       ! read/recalc wavefunctions
 
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !------------------------------------------------------------------------------
       ! Left solutions
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !------------------------------------------------------------------------------
       if ((t_wavefunctions%nwfsavemax>0 .and. (.not. (rllleft_was_read_in .and. sllleft_was_read_in))) .or. (t_wavefunctions%nwfsavemax==0)) then
         ! read/recalc wavefunctions left contruct the TRANSPOSE spin-orbit coupling hamiltonian and add to potential
-        call spinorbit_ham(lmax, lmsize, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpotd, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
-          vnspll0, vnspll1(:,:,:,ith), 'transpose')
+        call spinorbit_ham(lmax,lmsize,vins,rnew,eryd,zat,cvlight,socscale,nspin,   &
+          lmpotd,theta,phi,ipan_intervall,rpan_intervall,npan_tot,ncheb,irmdnew,    &
+          nrmaxd,vnspll0,vnspll1(:,:,:,ith),'transpose')
         ! extend matrix for the SRA treatment
         vnspll(:, :, :, ith) = czero
         if (nsra==2) then
           if (use_sratrick==0) then
-            call vllmatsra(vnspll1(:,:,:,ith), vnspll(:,:,:,ith), rnew, lmmaxso, irmdnew, nrmaxd, eryd, lmax, 0, 'Ref=0')
+            call vllmatsra(vnspll1(:,:,:,ith),vnspll(:,:,:,ith),rnew,lmmaxso,       &
+              irmdnew,nrmaxd,eryd,lmax,0,'Ref=0')
           else if (use_sratrick==1) then
-            call vllmatsra(vnspll1(:,:,:,ith), vnspll(:,:,:,ith), rnew, lmmaxso, irmdnew, nrmaxd, eryd, lmax, 0, 'Ref=Vsph')
+            call vllmatsra(vnspll1(:,:,:,ith),vnspll(:,:,:,ith),rnew,lmmaxso,       &
+              irmdnew,nrmaxd,eryd,lmax,0,'Ref=Vsph')
           end if
         else
           vnspll(:, :, :, ith) = vnspll1(:, :, :, ith)
@@ -532,13 +558,17 @@ contains
         jlk2(:, :, ith) = czero
         gmatprefactor = czero
         jlk_index = 0
-        call rllsllsourceterms(nsra, nvec, eryd, rnew, irmdnew, nrmaxd, lmax, lmmaxso, 1, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor)
+        call rllsllsourceterms(nsra,nvec,eryd,rnew,irmdnew,nrmaxd,lmax,lmmaxso,1,   &
+          jlk_index,hlk(:,:,ith),jlk(:,:,ith),hlk2(:,:,ith),jlk2(:,:,ith),          &
+          gmatprefactor)
 
         ! using spherical potential as reference
         ! notice that exchange the order of left and right hankel/bessel functions
         if (use_sratrick==1) then
-          call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, zat, eryd, lmpotd, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), &
-            hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, alphasph, tmatsph(:,ith), use_sratrick)
+          call calcsph(nsra,irmdnew,nrmaxd,lmax,nspin,zat,eryd,lmpotd,lmmaxso,rnew, &
+            vins,ncheb,npan_tot,rpan_intervall,jlk_index,hlk2(:,:,ith),             &
+            jlk2(:,:,ith),hlk(:,:,ith),jlk(:,:,ith),gmatprefactor,alphasph,         &
+            tmatsph(:,ith),use_sratrick)
         end if
 
         ! calculate the tmat and wavefunctions
@@ -550,13 +580,19 @@ contains
         tmattemp = czero
         ! faster calculation of RLLLEFT and SLLLEFT.
         if (opt('RLL-SLL ') .and. .not. (opt('XCPL    ') .or. opt('OPERATOR'))) then
-          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), tmattemp, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, 4*(lmax+1), irmdnew, nsra, &
-            jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
-          call sll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), sllleft(:,:,:,ith), ncheb, npan_tot, lmmaxso, nvec*lmmaxso, 4*(lmax+1), irmdnew, nsra, jlk_index, &
-            hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick)
+          call rll_global_solutions(rpan_intervall,rnew,vnspll(:,:,:,ith),          &
+            rllleft(:,:,:,ith),tmattemp,ncheb,npan_tot,lmmaxso,nvec*lmmaxso,        &
+            4*(lmax+1),irmdnew,nsra,jlk_index,hlk2(:,:,ith),jlk2(:,:,ith),          &
+            hlk(:,:,ith),jlk(:,:,ith),gmatprefactor,'1',use_sratrick,alphall)
+          call sll_global_solutions(rpan_intervall,rnew,vnspll(:,:,:,ith),          &
+            sllleft(:,:,:,ith),ncheb,npan_tot,lmmaxso,nvec*lmmaxso,4*(lmax+1),      &
+            irmdnew,nsra,jlk_index,hlk2(:,:,ith),jlk2(:,:,ith),hlk(:,:,ith),        &
+            jlk(:,:,ith),gmatprefactor,'1',use_sratrick)
         else
-          call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), tmattemp, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, 4*(lmax+1), irmdnew, nsra, &
-            jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alphall)
+          call rllsll(rpan_intervall,rnew,vnspll(:,:,:,ith),rllleft(:,:,:,ith),     &
+            sllleft(:,:,:,ith),tmattemp,ncheb,npan_tot,lmmaxso,nvec*lmmaxso,        &
+            4*(lmax+1),irmdnew,nsra,jlk_index,hlk2(:,:,ith),jlk2(:,:,ith),          &
+            hlk(:,:,ith),jlk(:,:,ith),gmatprefactor,'1','1','0',use_sratrick,alphall)
         end if
         if (nsra==2) then
           rllleft(lmmaxso+1:nvec*lmmaxso, :, :, ith) = rllleft(lmmaxso+1:nvec*lmmaxso, :, :, ith)/cvlight
@@ -589,8 +625,11 @@ contains
           end do
         end do
         ! calculate density
-        call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, df, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll(:,:,:,ith), & ! SLL(:,:,:,ith), commented out since sll is not used in rhooutnew
-          rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), rho2nsc_loop(:,:,:,ie), 0, gflle(:,:,ie,iq), rpan_intervall, ipan_intervall)
+        call rhooutnew(nsra,lmax,gmatll(1,1,ie),ek,lmpotd,df,npan_tot,ncheb,cleb,   &
+          icleb,iend,irmdnew,thetasnew,ifunm,imt1,lmsp,rll(:,:,:,ith),              & ! SLL(:,:,:,ith), commented out since sll is not used in rhooutnew
+          rllleft(:,:,:,ith),sllleft(:,:,:,ith),cden(:,:,:,ith),cdenlm(:,:,:,ith),  &
+          cdenns(:,:,ith),rho2nsc_loop(:,:,:,ie),0,gflle(:,:,ie,iq),rpan_intervall, &
+          ipan_intervall)
 
         do jspin = 1, 4
           do lm1 = 0, lmax
@@ -599,7 +638,8 @@ contains
             do ir = 1, irmdnew
               cdentemp(ir, ith) = cden(ir, lm1, jspin, ith)
             end do
-            call intcheb_cell(cdentemp(:,ith), dentemp, rpan_intervall, ipan_intervall, npan_tot, ncheb, irmdnew)
+            call intcheb_cell(cdentemp(:,ith),dentemp,rpan_intervall,ipan_intervall,&
+              npan_tot,ncheb,irmdnew)
             rho2(jspin) = dentemp
             rho2int(jspin) = rho2int(jspin) + rho2(jspin)*df
             if (jspin<=2) then
@@ -614,7 +654,8 @@ contains
               do ir = 1, irmdnew
                 cdentemp(ir, ith) = cdenlm(ir, lm1, jspin, ith)
               end do
-              call intcheb_cell(cdentemp(:,ith), dentemp, rpan_intervall, ipan_intervall, npan_tot, ncheb, irmdnew)
+              call intcheb_cell(cdentemp(:,ith),dentemp,rpan_intervall,             &
+                ipan_intervall,npan_tot,ncheb,irmdnew)
               denlm(lm1, ie, iq, jspin) = dentemp
             end do
             cdentemp(:, ith) = czero
@@ -622,7 +663,8 @@ contains
             do ir = 1, irmdnew
               cdentemp(ir, ith) = cdenns(ir, jspin, ith)
             end do
-            call intcheb_cell(cdentemp(:,ith), dentemp, rpan_intervall, ipan_intervall, npan_tot, ncheb, irmdnew)
+            call intcheb_cell(cdentemp(:,ith),dentemp,rpan_intervall,ipan_intervall,&
+              npan_tot,ncheb,irmdnew)
             den(lmaxd1, ie, iq, jspin) = dentemp
             rho2int(jspin) = rho2int(jspin) + den(lmaxd1, ie, iq, jspin)*df
           end if
@@ -637,21 +679,26 @@ contains
         end do
       end do                       ! IQ = 1,NQDOS
 
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !------------------------------------------------------------------------------
       ! Get charge at the Fermi energy (IELAST)
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !------------------------------------------------------------------------------
       if (ie==ielast .and. ldorhoef) then
-        call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, cone, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll(:,:,:,ith), & ! SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
-          rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), r2nefc_loop(:,:,:,ith), 0, gflle_part(:,:,ith), rpan_intervall, &
-          ipan_intervall)
+        call rhooutnew(nsra,lmax,gmatll(1,1,ie),ek,lmpotd,cone,npan_tot,ncheb,cleb, &
+          icleb,iend,irmdnew,thetasnew,ifunm,imt1,lmsp,rll(:,:,:,ith),              & ! SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
+          rllleft(:,:,:,ith),sllleft(:,:,:,ith),cden(:,:,:,ith),cdenlm(:,:,:,ith),  &
+          cdenns(:,:,ith),r2nefc_loop(:,:,:,ith),0,gflle_part(:,:,ith),             &
+          rpan_intervall,ipan_intervall)
       end if
 
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !------------------------------------------------------------------------------
       ! Get orbital moment
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !------------------------------------------------------------------------------
       do iorb = 1, 3
-        call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, cone, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll(:,:,:,ith), & ! SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
-          rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), r2orbc(:,:,:,ith), iorb, gflle_part(:,:,ith), rpan_intervall, ipan_intervall)
+        call rhooutnew(nsra,lmax,gmatll(1,1,ie),ek,lmpotd,cone,npan_tot,ncheb,cleb, &
+          icleb,iend,irmdnew,thetasnew,ifunm,imt1,lmsp,rll(:,:,:,ith),              & ! SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
+          rllleft(:,:,:,ith),sllleft(:,:,:,ith),cden(:,:,:,ith),cdenlm(:,:,:,ith),  &
+          cdenns(:,:,ith),r2orbc(:,:,:,ith),iorb,gflle_part(:,:,ith),rpan_intervall,&
+          ipan_intervall)
         do jspin = 1, 4
           if (jspin<=2) then
             do lm1 = 0, lmax
@@ -660,7 +707,8 @@ contains
               do ir = 1, irmdnew
                 cdentemp(ir, ith) = cden(ir, lm1, jspin, ith)
               end do
-              call intcheb_cell(cdentemp(:,ith), dentemp, rpan_intervall, ipan_intervall, npan_tot, ncheb, irmdnew)
+              call intcheb_cell(cdentemp(:,ith),dentemp,rpan_intervall,             &
+                ipan_intervall,npan_tot,ncheb,irmdnew)
 
               rho2(jspin) = dentemp
               muorb(lm1, jspin) = muorb(lm1, jspin) - aimag(rho2(jspin)*df)
@@ -672,7 +720,8 @@ contains
               do ir = 1, irmdnew
                 cdentemp(ir, ith) = cdenns(ir, jspin, ith)
               end do
-              call intcheb_cell(cdentemp(:,ith), temp1, rpan_intervall, ipan_intervall, npan_tot, ncheb, irmdnew)
+              call intcheb_cell(cdentemp(:,ith),temp1,rpan_intervall,ipan_intervall,&
+                npan_tot,ncheb,irmdnew)
               denorbmomns(iorb) = denorbmomns(iorb) - aimag(temp1*df)
             end do
           end if
@@ -838,8 +887,9 @@ contains
       denorbmomlm = 0.0d0
       denorbmomns = 0.0d0
     end if
-    call mympi_main1c_comm_newsosol(irmdnew, lmpotd, lmax, lmaxd1, lmsize, lmmaxso, ielast, nqdos, den, denlm, gflle, rho2nsc, r2nefc, rho2int, espv, muorb, denorbmom, denorbmomsp, &
-      denorbmomlm, denorbmomns, t_mpi_c_grid%mympi_comm_at)
+    call mympi_main1c_comm_newsosol(irmdnew,lmpotd,lmax,lmaxd1,lmsize,lmmaxso,      &
+      ielast,nqdos,den,denlm,gflle,rho2nsc,r2nefc,rho2int,espv,muorb,denorbmom,     &
+      denorbmomsp,denorbmomlm,denorbmomns,t_mpi_c_grid%mympi_comm_at)
 #ifdef CPP_TIMING
     call timing_pause('main1c - communication')
 #endif
@@ -937,7 +987,8 @@ contains
             rhotemp(ir, lm1) = rho2nsc(ir, lm1, jspin)
           end do
         end do
-        call cheb2oldgrid(irws, irmdnew, lmpotd, rmesh, ncheb, npan_tot, rpan_intervall, ipan_intervall, rhotemp, rhonewtemp, irmd)
+        call cheb2oldgrid(irws,irmdnew,lmpotd,rmesh,ncheb,npan_tot,rpan_intervall,  &
+          ipan_intervall,rhotemp,rhonewtemp,irmd)
         do lm1 = 1, lmpotd
           do ir = 1, irws
             rho2nsnew(ir, lm1, jspin) = rhonewtemp(ir, lm1)
@@ -951,7 +1002,8 @@ contains
             rhotemp(ir, lm1) = r2nefc(ir, lm1, jspin)
           end do
         end do
-        call cheb2oldgrid(irws, irmdnew, lmpotd, rmesh, ncheb, npan_tot, rpan_intervall, ipan_intervall, rhotemp, rhonewtemp, irmd)
+        call cheb2oldgrid(irws,irmdnew,lmpotd,rmesh,ncheb,npan_tot,rpan_intervall,  &
+          ipan_intervall,rhotemp,rhonewtemp,irmd)
         do lm1 = 1, lmpotd
           do ir = 1, irws
             r2nefnew(ir, lm1, jspin) = rhonewtemp(ir, lm1)
@@ -1005,8 +1057,8 @@ contains
         ! only on master different from zero:
         angles_new(1) = thetanew
         angles_new(2) = phinew
-        call rotatevector(rho2nsnew, rho2ns, irws, lmpotd, thetanew, phinew, theta, phi, irmd)
-        call rotatevector(r2nefnew, r2nef, irws, lmpotd, thetanew, phinew, theta, phi, irmd)
+        call rotatevector(rho2nsnew,rho2ns,irws,lmpotd,thetanew,phinew,theta,phi,irmd)
+        call rotatevector(r2nefnew,r2nef,irws,lmpotd,thetanew,phinew,theta,phi,irmd)
       else
         rho2ns(:, :, :) = aimag(rho2nsnew(:,:,:))
         r2nef(:, :, :) = aimag(r2nefnew(:,:,:))
@@ -1036,10 +1088,10 @@ contains
 
     ! communicate den_out to all processors with the same atom number
     idim = (lmax+2)*ielast*2
-    call mpi_bcast(den_out, idim, mpi_double_complex, master, t_mpi_c_grid%mympi_comm_at, ierr)
+    call mpi_bcast(den_out,idim,mpi_double_complex,master,t_mpi_c_grid%mympi_comm_at,ierr)
     if (ierr/=mpi_success) stop 'error bcast den_out in rhovalnew'
     idim = 2
-    call mpi_bcast(angles_new, idim, mpi_double_precision, master, t_mpi_c_grid%mympi_comm_at, ierr)
+    call mpi_bcast(angles_new,idim,mpi_double_precision,master,t_mpi_c_grid%mympi_comm_at,ierr)
     if (ierr/=mpi_success) stop 'error bcast angles_new in rhovalnew'
 #endif
 

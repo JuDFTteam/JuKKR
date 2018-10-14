@@ -1,15 +1,24 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculation of the t-matrix for the new solver
+!> Author: 
+!> Calculation of the t-matrix for the new solver
+!------------------------------------------------------------------------------------
 module mod_tmatnewsolver
 
   implicit none
 
 contains
 
-  ! -------------------------------------------------------------------------------
-  ! SUBROUTINE: TMAT_NEWSOLVER
-  !> @brief Calculation of the T-Matrix
-  !> @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to Fortran90
-  subroutine tmat_newsolver(ielast, nspin, lmax, zat, socscale, ez, nsra, cleb, icleb, iend, ncheb, npan_tot, rpan_intervall, ipan_intervall, rnew, vinsnew, theta, phi, i1, ipot, &
-    lmpot, lly, deltae, idoldau, lopt, wldau, t_dtmatjij_at)
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculation of the t-matrix for the new solver
+  !> Author: 
+  !> Category: solver, single-site, KKRhost
+  !> Deprecated: False 
+  !> Calculation of the t-matrix for the new solver 
+  !-------------------------------------------------------------------------------
+  subroutine tmat_newsolver(ielast,nspin,lmax,zat,socscale,ez,nsra,cleb,icleb,iend, &
+    ncheb,npan_tot,rpan_intervall,ipan_intervall,rnew,vinsnew,theta,phi,i1,ipot,    &
+    lmpot,lly,deltae,idoldau,lopt,wldau,t_dtmatjij_at)
 
 #ifdef CPP_OMP
     use :: omp_lib                 ! necessary for omp functions
@@ -150,10 +159,10 @@ contains
       use_sratrick = 0
     end if
 
-
-    ! .. allocate and initialize arrays
-    call allocate_locals_tmat_newsolver(1, irmdnew, lmpot, nspin, vins, aux, ipiv, tmat0, tmatll, alpha0, dtmatll, alphall, dalphall, jlk_index, nsra, lmmaxso, nth, lmax, vnspll, &
-      vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
+    ! Allocate and initialize arrays
+    call allocate_locals_tmat_newsolver(1,irmdnew,lmpot,nspin,vins,aux,ipiv,tmat0,  &
+      tmatll,alpha0,dtmatll,alphall,dalphall,jlk_index,nsra,lmmaxso,nth,lmax,vnspll,&
+      vnspll0,vnspll1,hlk,jlk,hlk2,jlk2,tmatsph,rll,sll,rllleft,sllleft)
 
     do lm1 = 1, lmpot
       do ir = 1, irmdnew
@@ -182,7 +191,8 @@ contains
 #endif
 
     ! set up the non-spherical ll' matrix for potential VLL' (done in VLLMAT)
-    call vllmat(1, nrmaxd, irmdnew, lmsize, lmmaxso, vnspll0, vins, lmpot, cleb, icleb, iend, nspin, zat, rnew, use_sratrick, ncleb)
+    call vllmat(1,nrmaxd,irmdnew,lmsize,lmmaxso,vnspll0,vins,lmpot,cleb,icleb,iend, &
+      nspin,zat,rnew,use_sratrick,ncleb)
     ! LDAU
     if (idoldau==1) then
       lmlo = lopt**2 + 1
@@ -301,8 +311,9 @@ contains
 #endif
 
         ! Contruct the spin-orbit coupling hamiltonian and add to potential
-        call spinorbit_ham(lmax, lmsize, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpot, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
-          vnspll0(:,:,:), vnspll1(:,:,:,ith), '1')
+        call spinorbit_ham(lmax,lmsize,vins,rnew,eryd,zat,cvlight,socscale,nspin,   &
+          lmpot,theta,phi,ipan_intervall,rpan_intervall,npan_tot,ncheb,irmdnew,     &
+          nrmaxd,vnspll0(:,:,:),vnspll1(:,:,:,ith),'1')
 
 #ifdef CPP_OMP
         ! $omp critical
@@ -325,9 +336,11 @@ contains
 
         if (nsra==2) then
           if (use_sratrick==0) then
-            call vllmatsra(vnspll1(:,:,:,ith), vnspll(:,:,:,ith), rnew, lmmaxso, irmdnew, nrmaxd, eryd, lmax, 0, 'Ref=0')
+            call vllmatsra(vnspll1(:,:,:,ith),vnspll(:,:,:,ith),rnew,lmmaxso,       &
+              irmdnew,nrmaxd,eryd,lmax,0,'Ref=0')
           else if (use_sratrick==1) then
-            call vllmatsra(vnspll1(:,:,:,ith), vnspll(:,:,:,ith), rnew, lmmaxso, irmdnew, nrmaxd, eryd, lmax, 0, 'Ref=Vsph')
+            call vllmatsra(vnspll1(:,:,:,ith),vnspll(:,:,:,ith),rnew,lmmaxso,       &
+              irmdnew,nrmaxd,eryd,lmax,0,'Ref=Vsph')
           end if
         else
           vnspll(:, :, :, ith) = vnspll1(:, :, :, ith)
@@ -360,7 +373,9 @@ contains
         hlk2(:, :, ith) = czero
         jlk2(:, :, ith) = czero
         gmatprefactor = czero
-        call rllsllsourceterms(nsra, nvec, eryd, rnew, irmdnew, nrmaxd, lmax, lmmaxso, 1, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor)
+        call rllsllsourceterms(nsra,nvec,eryd,rnew,irmdnew,nrmaxd,lmax,lmmaxso,1,   &
+          jlk_index,hlk(:,:,ith),jlk(:,:,ith),hlk2(:,:,ith),jlk2(:,:,ith),          &
+          gmatprefactor)
 
 #ifdef CPP_OMP
         ! $omp critical
@@ -396,8 +411,10 @@ contains
         ! Using spherical potential as reference
         if (use_sratrick==1) then
           tmatsph(:, ith) = czero
-          call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, zat, eryd, lmpot, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk(:,:,ith), jlk(:,:,ith), &
-            hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, tmatsph(:,ith), alphasph, use_sratrick)
+          call calcsph(nsra,irmdnew,nrmaxd,lmax,nspin,zat,eryd,lmpot,lmmaxso,rnew,  &
+            vins,ncheb,npan_tot,rpan_intervall,jlk_index,hlk(:,:,ith),jlk(:,:,ith), &
+            hlk2(:,:,ith),jlk2(:,:,ith),gmatprefactor,tmatsph(:,ith),alphasph,      &
+            use_sratrick)
         end if
         ! Calculate the tmat and wavefunctions
         rll(:, :, :, ith) = czero
@@ -410,11 +427,16 @@ contains
         ! no irregular solutions are needed in self-consistent iterations
         ! because the t-matrix depends only on RLL
         if (opt('RLL-SLL ') .and. .not. (opt('XCPL    ') .or. opt('OPERATOR'))) then
-          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), tmat0(:,:), ncheb, npan_tot, lmmaxso, nvec*lmmaxso, 4*(lmax+1), irmdnew, nsra, &
-            jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alpha0(:,:))
+          call rll_global_solutions(rpan_intervall,rnew, vnspll(:,:,:,ith),         &
+            rll(:,:,:,ith),tmat0(:,:),ncheb,npan_tot,lmmaxso,nvec*lmmaxso,          &
+            4*(lmax+1),irmdnew,nsra,jlk_index,hlk(:,:,ith),jlk(:,:,ith),            &
+            hlk2(:,:,ith),jlk2(:,:,ith),gmatprefactor,'1',use_sratrick,alpha0(:,:))
         else
-          call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), sll(:,:,:,ith), tmat0(:,:), ncheb, npan_tot, lmmaxso, nvec*lmmaxso, 4*(lmax+1), irmdnew, nsra, &
-            jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alpha0(:,:))
+          call rllsll(rpan_intervall,rnew,vnspll(:,:,:,ith),rll(:,:,:,ith),         &
+            sll(:,:,:,ith),tmat0(:,:),ncheb,npan_tot,lmmaxso,nvec*lmmaxso,          &
+            4*(lmax+1),irmdnew,nsra,jlk_index,hlk(:,:,ith),jlk(:,:,ith),            &
+            hlk2(:,:,ith),jlk2(:,:,ith),gmatprefactor,'1','1','0',use_sratrick,     &
+            alpha0(:,:))
         end if
 
         if (nsra==2) then
@@ -494,7 +516,8 @@ contains
         alpha0 = czero             ! LLY
         aux = czero                ! LLY
         call zgeinv1(alphall, alpha0, aux, ipiv, lmmaxso)
-        call zgemm('N', 'N', lmmaxso, lmmaxso, lmmaxso, cone, alpha0, lmmaxso, dalphall, lmmaxso, czero, aux, lmmaxso) ! LLY
+        call zgemm('N','N',lmmaxso,lmmaxso,lmmaxso,cone,alpha0,lmmaxso,dalphall,    &
+          lmmaxso,czero,aux,lmmaxso) ! LLY
         ! Trace of AUX
         tralpha = czero            ! LLY
         do lm1 = 1, lmmaxso
@@ -510,24 +533,28 @@ contains
       end if
 
       ! Calculate additional t-matrices for Jij-tensor calculation
-      if (t_dtmatjij_at%calculate .or. (t_wavefunctions%isave_wavefun(i1,ie)>0 .and. (t_wavefunctions%save_rllleft .or. t_wavefunctions%save_sllleft)) .or. ((test('rhoqtest') .and. &
-        ie==2) .and. (i1==mu0))) then ! rhoqtest
+      if (t_dtmatjij_at%calculate .or. (t_wavefunctions%isave_wavefun(i1,ie)>0 .and.&
+         (t_wavefunctions%save_rllleft .or. t_wavefunctions%save_sllleft)) .or.     &
+         ((test('rhoqtest') .and. ie==2) .and. (i1==mu0))) then ! rhoqtest
         ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         ! Calculate the left-hand side solution this needs to be done for the
         ! calculation of t-matrices for Jij tensor or if wavefunctions should be saved
         ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         ! Contruct the spin-orbit coupling hamiltonian and add to potential
-        call spinorbit_ham(lmax, lmsize, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpot, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
-          vnspll0(:,:,:), vnspll1(:,:,:,ith), 'transpose')
+        call spinorbit_ham(lmax,lmsize,vins,rnew,eryd,zat,cvlight,socscale,nspin,   &
+          lmpot,theta,phi,ipan_intervall,rpan_intervall,npan_tot,ncheb,irmdnew,     &
+          nrmaxd,vnspll0(:,:,:),vnspll1(:,:,:,ith),'transpose')
 
         ! Extend matrix for the SRA treatment
         vnspll(:, :, :, ith) = czero
         if (nsra==2) then
           if (use_sratrick==0) then
-            call vllmatsra(vnspll1(:,:,:,ith), vnspll(:,:,:,ith), rnew, lmmaxso, irmdnew, nrmaxd, eryd, lmax, 0, 'Ref=0')
+            call vllmatsra(vnspll1(:,:,:,ith),vnspll(:,:,:,ith),rnew,lmmaxso,       &
+              irmdnew,nrmaxd,eryd,lmax,0,'Ref=0')
           else if (use_sratrick==1) then
-            call vllmatsra(vnspll1(:,:,:,ith), vnspll(:,:,:,ith), rnew, lmmaxso, irmdnew, nrmaxd, eryd, lmax, 0, 'Ref=Vsph')
+            call vllmatsra(vnspll1(:,:,:,ith),vnspll(:,:,:,ith),rnew,lmmaxso,       &
+              irmdnew,nrmaxd,eryd,lmax,0,'Ref=Vsph')
           end if
         else
           vnspll(:, :, :, ith) = vnspll1(:, :, :, ith)
@@ -541,14 +568,18 @@ contains
         jlk2(:, :, ith) = czero
         gmatprefactor = czero
         jlk_index = 0
-        call rllsllsourceterms(nsra, nvec, eryd, rnew, irmdnew, nrmaxd, lmax, lmmaxso, 1, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor)
+        call rllsllsourceterms(nsra,nvec,eryd,rnew,irmdnew,nrmaxd,lmax,lmmaxso,1,   &
+          jlk_index,hlk(:,:,ith),jlk(:,:,ith),hlk2(:,:,ith),jlk2(:,:,ith),          &
+          gmatprefactor)
 
         ! Using spherical potential as reference
         ! notice that exchange the order of left and right hankel/bessel functions
         if (use_sratrick==1) then
           tmatsph(:, ith) = czero
-          call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, zat, eryd, lmpot, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), &
-            hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, alphasph, tmatsph(:,ith), use_sratrick)
+          call calcsph(nsra,irmdnew,nrmaxd,lmax,nspin,zat,eryd,lmpot,lmmaxso,rnew,  &
+            vins,ncheb,npan_tot,rpan_intervall,jlk_index,hlk2(:,:,ith),             &
+            jlk2(:,:,ith),hlk(:,:,ith),jlk(:,:,ith),gmatprefactor,alphasph,         &
+            tmatsph(:,ith),use_sratrick)
         end if
 
         ! Calculate the tmat and wavefunctions
@@ -565,8 +596,10 @@ contains
         if (opt('RLL-SLL ') .and. .not. (opt('XCPL    ') .or. opt('OPERATOR'))) then
           ! do nothing
         else
-          call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), tmat0, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, 4*(lmax+1), irmdnew, nsra, &
-            jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alpha0)
+          call rllsll(rpan_intervall,rnew,vnspll(:,:,:,ith),rllleft(:,:,:,ith),     &
+            sllleft(:,:,:,ith),tmat0,ncheb,npan_tot,lmmaxso,nvec*lmmaxso,4*(lmax+1),&
+            irmdnew,nsra,jlk_index,hlk2(:,:,ith),jlk2(:,:,ith),hlk(:,:,ith),        &
+            jlk(:,:,ith),gmatprefactor,'1','1','0',use_sratrick,alpha0)
         end if
         if (nsra==2) then
           rllleft(lmmaxso+1:nvec*lmmaxso, :, :, ith) = rllleft(lmmaxso+1:nvec*lmmaxso, :, :, ith)/cvlight
@@ -587,8 +620,7 @@ contains
 
           open (9999, file='host.txt')
           write (9999, *) t_params%rbasis(1:3, 1:t_params%natyp)
-          write (9999, *) t_params%rcls(1:3, 1:t_params%nclsd, 1:t_params%nclsd), t_params%rr(1:3, 0:t_params%nr), t_params%atom(1:t_params%nclsd, 1:t_params%naez+t_params%nembd1-1 &
-            )
+          write (9999, *) t_params%rcls(1:3, 1:t_params%nclsd, 1:t_params%nclsd),t_params%rr(1:3, 0:t_params%nr),t_params%atom(1:t_params%nclsd,1:t_params%naez+t_params%nembd1-1)
           write (9999, *) t_params%cls(1:t_params%naez+t_params%nembd1-1), t_params%ezoa(1:t_params%nclsd, 1:t_params%naez+t_params%nembd1-1), t_params%nacls(1:t_params%nclsd)
           close (9999)
 
@@ -609,21 +641,23 @@ contains
 #endif
         end if                     ! test('rhoqtest')
 
-        ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !----------------------------------------------------------------------------
         ! Calculate the left-hand side solution
-        ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !----------------------------------------------------------------------------
 
       end if                       ! t_dtmatJij_at%calculate .or. t_wavefunctions%Nwfsavemax>0
 
       ! save_wavefuncions
       if (t_wavefunctions%nwfsavemax>0) then
         ! here all four (left, right, regular and irregular) are stored, the memory demand cound be reduced by a factor 2 if only the right solution would be computed here and saved and the left solution would be calculated later in main1c
-        call save_wavefunc(t_wavefunctions, rll, rllleft, sll, sllleft, i1, ie, nsra, lmmaxso, irmdnew, ith)
+        call save_wavefunc(t_wavefunctions,rll,rllleft,sll,sllleft,i1,ie,nsra,      &
+          lmmaxso,irmdnew,ith)
       end if
 
       if (t_dtmatjij_at%calculate) then
-        call calc_dtmatjij(lmsize, lmmaxso, lmpot, ntotd, nrmaxd, nsra, irmdnew, nspin, vins, rllleft(:,:,:,ith), rll(:,:,:,ith), rpan_intervall, ipan_intervall, npan_tot, ncheb, &
-          cleb, icleb, iend, ncleb, rnew, t_dtmatjij_at%dtmat_xyz(:,:,:,ie_num))
+        call calc_dtmatjij(lmsize,lmmaxso,lmpot,ntotd,nrmaxd,nsra,irmdnew,nspin,    &
+          vins,rllleft(:,:,:,ith),rll(:,:,:,ith),rpan_intervall,ipan_intervall,     &
+          npan_tot,ncheb,cleb,icleb,iend,ncleb,rnew,t_dtmatjij_at%dtmat_xyz(:,:,:,ie_num))
 
       end if                       ! t_dtmatJij_at%calculate
 
@@ -712,14 +746,24 @@ contains
     ! finished kpts status bar
 
     ! deallocate arrays
-    call allocate_locals_tmat_newsolver(-1, irmdnew, lmpot, nspin, vins, aux, ipiv, tmat0, tmatll, alpha0, dtmatll, alphall, dalphall, jlk_index, nsra, lmmaxso, nth, lmax, vnspll, &
-      vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
+    call allocate_locals_tmat_newsolver(-1,irmdnew,lmpot,nspin,vins,aux,ipiv,tmat0, &
+      tmatll,alpha0,dtmatll,alphall,dalphall,jlk_index,nsra,lmmaxso,nth,lmax,vnspll,&
+      vnspll0,vnspll1,hlk,jlk,hlk2,jlk2,tmatsph,rll,sll,rllleft,sllleft)
 
   end subroutine tmat_newsolver
 
-
-  subroutine allocate_locals_tmat_newsolver(allocmode, irmdnew, lmpot, nspin, vins, aux, ipiv, tmat0, tmatll, alpha0, dtmatll, alphall, dalphall, jlk_index, nsra, lmmaxso, nth, &
-    lmax, vnspll, vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
+  !-------------------------------------------------------------------------------
+  !> Summary: Wrapper routine for the allocation/deallocation of the arrays for the t-matrix
+  !> calculation 
+  !> Author: Philipp Ruessmann
+  !> Category: solver, single-site, memory-management, KKRhost
+  !> Deprecated: False 
+  !> Wrapper routine for the allocation/deallocation of the arrays for the t-matrix
+  !> calculation.
+  !-------------------------------------------------------------------------------
+  subroutine allocate_locals_tmat_newsolver(allocmode,irmdnew,lmpot,nspin,vins,aux, &
+    ipiv,tmat0,tmatll,alpha0,dtmatll,alphall,dalphall,jlk_index,nsra,lmmaxso,nth,   &
+    lmax,vnspll,vnspll0,vnspll1,hlk,jlk,hlk2,jlk2,tmatsph,rll,sll,rllleft,sllleft)
     use :: mod_datatypes, only: dp
     use :: constants, only: czero
     use :: mod_profiling, only: memocc
@@ -727,15 +771,17 @@ contains
     implicit none
 
     integer, intent (in) :: allocmode
-    integer, intent (in) :: irmdnew, lmpot, nspin
+    integer, intent (in) :: irmdnew
+    integer, intent (in) :: lmpot !! (LPOT+1)**2
+    integer, intent (in) :: nspin !! Counter for spin directions
     integer, intent (in) :: nsra
     integer, intent (in) :: lmmaxso
     integer, intent (in) :: nth
-    integer, intent (in) :: lmax
+    integer, intent (in) :: lmax !! Maximum l component in wave function expansion
 
-    real (kind=dp), allocatable, intent (inout) :: vins(:, :, :)
-    complex (kind=dp), allocatable, intent (inout) :: aux(:, :), tmat0(:, :), tmatll(:, :), alpha0(:, :), dtmatll(:, :), alphall(:, :), dalphall(:, :)
-    integer, allocatable, intent (inout) :: ipiv(:), jlk_index(:)
+    real (kind=dp), dimension(:,:,:), allocatable, intent (inout) :: vins !! Non-spherical part of the potential
+    complex (kind=dp), dimension(:,:), allocatable, intent (inout) :: aux, tmat0, tmatll, alpha0, dtmatll, alphall, dalphall
+    integer, dimension(:), allocatable, intent (inout) :: ipiv, jlk_index
     complex (kind=dp), allocatable, dimension (:, :, :, :), intent (inout) :: vnspll
     complex (kind=dp), allocatable, dimension (:, :, :), intent (inout) :: vnspll0
     complex (kind=dp), allocatable, dimension (:, :, :, :), intent (inout) :: vnspll1

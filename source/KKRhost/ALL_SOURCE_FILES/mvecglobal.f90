@@ -54,7 +54,7 @@ contains
     integer :: icall, i, j, k, l, imv, nmvec
     complex (kind=dp) :: cs
     complex (kind=dp) :: amin, apls
-    real (kind=dp) :: pi, mv, mvx, mvxy, mvy, mvz, wsq2
+    real (kind=dp) :: mv, mvx, mvxy, mvy, mvz, wsq2
 
     ! Local Arrays
     complex (kind=dp) :: usc(3, 3), drot4(4, 4), w3x3(3, 3)
@@ -69,7 +69,7 @@ contains
     data icall/0/
 
     ! Save Statements
-    save :: icall, nmvec, usc, fact, txtl, pi
+    save :: icall, nmvec, usc, fact, txtl
 
     icall = icall + 1
     ! =======================================================================

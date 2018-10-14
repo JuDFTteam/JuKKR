@@ -1,26 +1,35 @@
+!------------------------------------------------------------------------------------
+!> Summary: Expresses the potential in the Chebychev mesh and (l,m,s)-space 
+!> Author: 
+!> Expresses the potential in the Chebychev mesh and (l,m,s)-space 
+!------------------------------------------------------------------------------------
 module mod_vllmat
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  ! -------------------------------------------------------------------------------
-  ! SUBROUTINE: VLLMAT
-  !> @brief
-  ! -------------------------------------------------------------------------------
-  subroutine vllmat(irmin, nrmaxd, irc, lmmax, lmmaxso, vnspll0, vins, lmpot, cleb, icleb, iend, nspin, zat, rnew, use_sratrick, ncleb)
+  !-------------------------------------------------------------------------------
+  !> Summary: Expresses the potential in the Chebychev mesh and (l,m,s)-space 
+  !> Author:
+  !> Category: potential, solver, KKRhost
+  !> Deprecated: False
+  !> Expresses the potential in the Chebychev mesh and (l,m,s)-space 
+  !-------------------------------------------------------------------------------
+  subroutine vllmat(irmin,nrmaxd,irc,lmmax,lmmaxso,vnspll0,vins,lmpot,cleb,icleb,   &
+    iend,nspin,zat,rnew,use_sratrick,ncleb)
 
     implicit none
 
     ! .. Input variables
-    integer, intent (in) :: irc    !! r point for potential cutting
-    integer, intent (in) :: iend   !! maximal number of non-vanishing Gaunt coefficients
-    integer, intent (in) :: ncleb  !! Number of Gaunt coefficients
-    integer, intent (in) :: irmin  !! max r for spherical treatment, afterwards non-spherical contribution
-    integer, intent (in) :: lmmax  !! (LMAX+1)^2
-    integer, intent (in) :: nspin  !! spin-degree of freedom
-    integer, intent (in) :: lmpot  !! (LPOT+1)**2
-    integer, intent (in) :: nrmaxd !! NTOTD*(NCHEBD+1), maximal number of radial points in Chebychev mesh
+    integer, intent (in) :: irc     !! r point for potential cutting
+    integer, intent (in) :: iend    !! maximal number of non-vanishing Gaunt coefficients
+    integer, intent (in) :: ncleb   !! Number of Gaunt coefficients
+    integer, intent (in) :: irmin   !! max r for spherical treatment, afterwards non-spherical contribution
+    integer, intent (in) :: lmmax   !! (LMAX+1)^2
+    integer, intent (in) :: nspin   !! spin-degree of freedom
+    integer, intent (in) :: lmpot   !! (LPOT+1)**2
+    integer, intent (in) :: nrmaxd  !! NTOTD*(NCHEBD+1), maximal number of radial points in Chebychev mesh
     integer, intent (in) :: lmmaxso !! 2*(LMAX+1)^2, for SOC L=(l,m,s) instead of L=(l,m)
     integer, intent (in) :: use_sratrick !! switch to use SRA trick (see routine rllsll) or not
     real (kind=dp), intent (in) :: zat !! atomic charge
