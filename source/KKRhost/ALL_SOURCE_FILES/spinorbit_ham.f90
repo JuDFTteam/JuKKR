@@ -1,12 +1,27 @@
+!------------------------------------------------------------------------------------
+!> Summary: Subroutine that constructs SOC potential for the new solver
+!> Author: 
+!> Subroutine that constructs SOC potential for the new solverfrom radial derivative 
+!> of `vins` and adds this to `vnspll` (output is `vnspll1=vnspll+V_SOC`)
+!------------------------------------------------------------------------------------
 module mod_spinorbit_ham
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  !! subroutine that constructs SOC potential from radial derivative of vins and adds this to vnspll (output is vnspll1=vnspll+V_SOC)
-  subroutine spinorbit_ham(lmax, lmmaxd, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpotd, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
-    vnspll, vnspll1, mode)
+  !-------------------------------------------------------------------------------
+  !> Summary: Subroutine that constructs SOC potential for the new solver
+  !> Author:
+  !> Category: spin-orbit-coupling, potential, KKRhost 
+  !> Deprecated: False 
+  !> Subroutine that constructs SOC potential for the new solverfrom radial derivative 
+  !> of `vins` and adds this to `vnspll` (output is `vnspll1=vnspll+V_SOC`)
+  !-------------------------------------------------------------------------------
+  subroutine spinorbit_ham(lmax,lmmaxd,vins,rnew,eryd,zat,cvlight,socscale,nspin,   &
+    lmpotd,theta,phi,ipan_intervall,rpan_intervall,npan_tot,ncheb,irmdnew,nrmaxd,   &
+    vnspll,vnspll1,mode)
+
     use :: mod_cheb, only: getclambdacinv
     use :: mod_spin_orbit_compl
     use :: mod_rotatespinframe, only: rotatematrix
@@ -25,16 +40,14 @@ contains
     real (kind=dp), intent (in) :: zat !! atom charge
     complex (kind=dp), intent (in) :: eryd !! complex energy
     real (kind=dp), intent (in) :: socscale !! scaling factor for SOC strength
-    real (kind=dp), intent (in) :: vins(irmdnew, lmpotd, nspin) !! non-sperical input potential in (l,m) basis, separately spin-polarized
-    real (kind=dp), intent (in) :: rnew(nrmaxd) !! radial points of Chebychev mesh
-    real (kind=dp), intent (in) :: rpan_intervall(0:npan_tot) !!
-    integer, intent (in) :: ipan_intervall(0:npan_tot) !!
-    complex (kind=dp), intent (in) :: vnspll(2*lmmaxd, 2*lmmaxd, irmdnew) !! input potential in (l,m,s) basis
-    character (len=*), intent (in) :: mode                           !! either '1' or 'transpose', depending whether SOC potential is constructed for right or left solution
-
-
+    real (kind=dp), dimension(irmdnew, lmpotd, nspin), intent (in) :: vins !! non-sperical input potential in (l,m) basis, separately spin-polarized
+    real (kind=dp), dimension(nrmaxd), intent (in) :: rnew !! radial points of Chebychev mesh
+    real (kind=dp), dimension(0:npan_tot), intent (in) :: rpan_intervall !!
+    integer, dimension(0:npan_tot), intent (in) :: ipan_intervall !!
+    complex (kind=dp), dimension(2*lmmaxd, 2*lmmaxd, irmdnew), intent (in) :: vnspll !! input potential in (l,m,s) basis
+    character (len=*), intent (in) :: mode   !! either '1' or 'transpose', depending whether SOC potential is constructed for right or left solution
     ! outputs
-    complex (kind=dp), intent (out) :: vnspll1(2*lmmaxd, 2*lmmaxd, irmdnew) !! output potential (sum of input + V_SOC) in (l,m,s) basis
+    complex (kind=dp), dimension(2*lmmaxd, 2*lmmaxd, irmdnew), intent (out) :: vnspll1 !! output potential (sum of input + V_SOC) in (l,m,s) basis
 
     ! locals
     real (kind=dp) :: vr(irmdnew)
@@ -67,7 +80,6 @@ contains
       dvdr(irmin:irmax) = dvdr(irmin:irmax)*widthfac
     end do
 
-
     ! ! core potential
     ! if (Zat>24e0_dp) then
     ! atn = -16.1532921_dp + 2.70335346_dp*Zat
@@ -90,7 +102,6 @@ contains
     ! contruct LS matrix (output: lsmh)
     call spin_orbit_compl(lmax, lmmaxd, lsmh)
 
-
     ! roate LS matrix
     ncoll = 1
     if (ncoll==1) then
@@ -108,7 +119,6 @@ contains
     else if (mode=='1') then
       ! do nothing
     end if
-
 
     ! contruct prefactor of spin-orbit hamiltonian
     hsofac = 0e0_dp

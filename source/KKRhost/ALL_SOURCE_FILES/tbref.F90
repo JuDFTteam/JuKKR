@@ -3,11 +3,11 @@ module mod_tbref
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: 
+  !> Summary: Calculate the reference system for the decimation case
   !> Author: 
-  !> Category: 
+  !> Category: reference-system, structural-greensfunction, single-site, KKRhost
   !> Deprecated: False 
-  !> 
+  !> Calculate the reference system for the decimation case. 
   !-------------------------------------------------------------------------------
   subroutine tbref(ez,ielast,alatc,vref,iend,lmax,ncls,nineq,nref,cleb,rcls,atom,   &
     cls,icleb,loflm,nacls,refpot,rmtref,tolrdif,tmpdir,itmpdir,iltmp,naez,lly)

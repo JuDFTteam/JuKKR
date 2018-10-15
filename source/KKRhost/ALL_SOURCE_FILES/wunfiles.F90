@@ -1,16 +1,21 @@
-! -------------------------------------------------------------------------------
-! MODULE: mod_wunfiles
-!> @brief Module responsible for storing the input variables and primary arrays
+!------------------------------------------------------------------------------------
+!> Summary: Module responsible for storing the input variables and primary arrays
 !> so that they are distributed via MPI processes.
-!> @details Previously this routine wrote unformatted files to disk, so that they
+!> Author: Philipp Ruessmann and many others ...
+!> Previously this routine wrote unformatted files to disk, so that they
 !> would be used by the different executables. Since the advent of the single
 !> executable mode, this routine creates a copy of most of the variables in the program
 !> as special `type` parameters. This are then used in the MPI communication, and
 !> in the rest of the variables used in the code.
-!> @author Philipp Rüssmann and many others ...
 !> @note Jonatan Chico: 02.01.2018 Modifications to ensure compatibility for the removal of
 !> the inc.p file. Also added the memory profiling calls to the allocation/deallocation
-!> of the arrays.
+!> of the arrays. 
+!------------------------------------------------------------------------------------
+!> @note Jonatan Chico: 02.01.2018 Modifications to ensure compatibility for the removal of
+!> the inc.p file. Also added the memory profiling calls to the allocation/deallocation
+!> of the arrays. 
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_wunfiles
 
   use :: mod_profiling
@@ -26,109 +31,109 @@ module mod_wunfiles
 
     ! .. Scalars
     integer :: i1
-    integer :: nr                  !! Number of real space vectors rr
-    integer :: irm                 !! Maximum number of radial points
-    integer :: lly                 !! LLY!> 0 : apply Lloyds formula
-    integer :: ins                 !! 0 (MT), 1(ASA), 2(Full Potential)
-    integer :: icc                 !! Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
-    integer :: igf                 !! Do not print or print (0/1) the KKRFLEX_* files
-    integer :: kte                 !! Calculation of the total energy On/Off (1/0)
-    integer :: kxc                 !! Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
-    integer :: naez                !! Number of atoms in unit cell
-    integer :: lmax                !! Maximum l component in wave function expansion
-    integer :: nref                !! Number of diff. ref. potentials
-    integer :: lm2d                !! (2*LMAX+1)**2
-    integer :: irid                !! Shape functions parameters in non-spherical part
-    integer :: krel                !! Switch for non-relativistic/relativistic (0/1) program. Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
+    integer :: nr       !! Number of real space vectors rr
+    integer :: irm      !! Maximum number of radial points
+    integer :: lly      !! LLY!> 0 : apply Lloyds formula
+    integer :: ins      !! 0 (MT), 1(ASA), 2(Full Potential)
+    integer :: icc      !! Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
+    integer :: igf      !! Do not print or print (0/1) the KKRFLEX_* files
+    integer :: kte      !! Calculation of the total energy On/Off (1/0)
+    integer :: kxc      !! Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
+    integer :: naez     !! Number of atoms in unit cell
+    integer :: lmax     !! Maximum l component in wave function expansion
+    integer :: nref     !! Number of diff. ref. potentials
+    integer :: lm2d     !! (2*LMAX+1)**2
+    integer :: irid     !! Shape functions parameters in non-spherical part
+    integer :: krel     !! Switch for non-relativistic/relativistic (0/1) program. Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
     integer :: kpre
     integer :: nsra
-    integer :: nemb                !! Number of sites added to the slab in 2D calculations to extend the structure left and right (down and up)
-    integer :: ncls                !! Number of reference clusters
-    integer :: iend                !! Number of nonzero gaunt coefficients
-    integer :: ncpa                !! NCPA = 0/1 CPA flag
-    integer :: icst                !! Number of Born approximation
-    integer :: imix                !! Type of mixing scheme used (0=straight, 4=Broyden 2nd, 5=Anderson)
+    integer :: nemb     !! Number of sites added to the slab in 2D calculations to extend the structure left and right (down and up)
+    integer :: ncls     !! Number of reference clusters
+    integer :: iend     !! Number of nonzero gaunt coefficients
+    integer :: ncpa     !! NCPA = 0/1 CPA flag
+    integer :: icst     !! Number of Born approximation
+    integer :: imix     !! Type of mixing scheme used (0=straight, 4=Broyden 2nd, 5=Anderson)
     integer :: itab
-    integer :: lpot                !! Maximum l component in potential expansion
-    integer :: npol                !! Number of Matsubara Poles (EMESHT)
-    integer :: npnt1               !! number of E points (EMESHT) for the contour integration
-    integer :: npnt2               !! number of E points (EMESHT) for the contour integration
-    integer :: npnt3               !! number of E points (EMESHT) for the contour integration
+    integer :: lpot     !! Maximum l component in potential expansion
+    integer :: npol     !! Number of Matsubara Poles (EMESHT)
+    integer :: npnt1    !! number of E points (EMESHT) for the contour integration
+    integer :: npnt2    !! number of E points (EMESHT) for the contour integration
+    integer :: npnt3    !! number of E points (EMESHT) for the contour integration
     integer :: itscf
-    integer :: iemxd               !! Dimension for energy-dependent arrays
-    integer :: npotd               !! (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
-    integer :: natyp               !! Number of kinds of atoms in unit cell
-    integer :: ipand               !! Number of panels in non-spherical part
-    integer :: ncleb               !! Number of Clebsch-Gordon coefficients
-    integer :: nclsd               !! Maximum number of different TB-clusters
-    integer :: nfund               !! Shape functions parameters in non-spherical part
-    integer :: ngshd               !! Shape functions parameters in non-spherical part
-    integer :: mmaxd               !! 2*LMAX+1
-    integer :: nineq               !! Number of ineq. positions in unit cell
-    integer :: nspin               !! Counter for spin directions
-    integer :: kmrot               !! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
+    integer :: iemxd    !! Dimension for energy-dependent arrays
+    integer :: npotd    !! (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
+    integer :: natyp    !! Number of kinds of atoms in unit cell
+    integer :: ipand    !! Number of panels in non-spherical part
+    integer :: ncleb    !! Number of Clebsch-Gordon coefficients
+    integer :: nclsd    !! Maximum number of different TB-clusters
+    integer :: nfund    !! Shape functions parameters in non-spherical part
+    integer :: ngshd    !! Shape functions parameters in non-spherical part
+    integer :: mmaxd    !! 2*LMAX+1
+    integer :: nineq    !! Number of ineq. positions in unit cell
+    integer :: nspin    !! Counter for spin directions
+    integer :: kmrot    !! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
     integer :: iltmp
-    integer :: ncheb               !! Number of Chebychev pannels for the new solver
+    integer :: ncheb    !! Number of Chebychev pannels for the new solver
     integer :: ntotd
     integer :: kvmad
-    integer :: irnsd               !! Number of radial mesh points in (RMT,...,RWS)
-    integer :: knoco               !! (0/1) Collinear/Non-collinear magnetism (even in non-relativistic non-spin-orbit case)
-    integer :: lmpot               !! (LPOT+1)**2
-    integer :: nleft               !! Number of repeated basis for left host to get converged electrostatic potentials
-    integer :: nright              !! Number of repeated basis for right host to get converged electrostatic potentials
-    integer :: korbit              !! Spin-orbit/non-spin-orbit (1/0) added to the Schroedinger or SRA equations. Works with FP. KREL and KORBIT cannot be both non-zero.
-    integer :: ntperd              !! Parameter in broyden subroutines
+    integer :: irnsd    !! Number of radial mesh points in (RMT,...,RWS)
+    integer :: knoco    !! (0/1) Collinear/Non-collinear magnetism (even in non-relativistic non-spin-orbit case)
+    integer :: lmpot    !! (LPOT+1)**2
+    integer :: nleft    !! Number of repeated basis for left host to get converged electrostatic potentials
+    integer :: nright   !! Number of repeated basis for right host to get converged electrostatic potentials
+    integer :: korbit   !! Spin-orbit/non-spin-orbit (1/0) added to the Schroedinger or SRA equations. Works with FP. KREL and KORBIT cannot be both non-zero.
+    integer :: ntperd   !! Parameter in broyden subroutines
     integer :: ielast
-    integer :: nrmaxd              !! NTOTD*(NCHEBD+1)
+    integer :: nrmaxd   !! NTOTD*(NCHEBD+1)
     integer :: ishift
-    integer :: knosph              !! Switch for spherical/non-spherical (0/1) program. Same obs. as for KREL applies.
-    integer :: kforce              !! Calculation of the forces
-    integer :: itdbry              !! Number of SCF steps to remember for the Broyden mixing
-    integer :: kshape              !! Exact treatment of WS cell
-    integer :: nofgij              !! number of GF pairs IJ to be calculated as determined from IJTABCALC<>0
-    integer :: nspind              !! KREL+(1-KREL)*(NSPIN+1)
-    integer :: irmind              !! IRM-IRNSD
-    integer :: nspotd              !! Number of potentials for storing non-sph. potentials
-    integer :: nembd1              !! NEMB+1
-    integer :: lmmaxd              !! (KREL+KORBIT+1)(LMAX+1)^2
+    integer :: knosph   !! Switch for spherical/non-spherical (0/1) program. Same obs. as for KREL applies.
+    integer :: kforce   !! Calculation of the forces
+    integer :: itdbry   !! Number of SCF steps to remember for the Broyden mixing
+    integer :: kshape   !! Exact treatment of WS cell
+    integer :: nofgij   !! number of GF pairs IJ to be calculated as determined from IJTABCALC<>0
+    integer :: nspind   !! KREL+(1-KREL)*(NSPIN+1)
+    integer :: irmind   !! IRM-IRNSD
+    integer :: nspotd   !! Number of potentials for storing non-sph. potentials
+    integer :: nembd1   !! NEMB+1
+    integer :: lmmaxd   !! (KREL+KORBIT+1)(LMAX+1)^2
     integer :: nembd2
-    integer :: naclsd              !! Maximum number of atoms in a TB-cluster
+    integer :: naclsd   !! Maximum number of atoms in a TB-cluster
     integer :: lmaxd1
-    integer :: nsheld              !! Number of blocks of the GF matrix that need to be calculated (NATYP + off-diagonals in case of impurity)
-    integer :: ncelld              !! Number of cells (shapes) in non-spherical part
-    integer :: lmxspd              !! (2*LPOT+1)**2
+    integer :: nsheld   !! Number of blocks of the GF matrix that need to be calculated (NATYP + off-diagonals in case of impurity)
+    integer :: ncelld   !! Number of cells (shapes) in non-spherical part
+    integer :: lmxspd   !! (2*LPOT+1)**2
     integer :: nsymat
-    integer :: nprinc              !! Number of atoms in one principal layer
-    integer :: n1semi              !! Number of energy points for the semicore contour
-    integer :: n2semi              !! Number of energy points for the semicore contour
-    integer :: n3semi              !! Number of energy points for the semicore contour
-    integer :: invmod              !! Inversion scheme
+    integer :: nprinc   !! Number of atoms in one principal layer
+    integer :: n1semi   !! Number of energy points for the semicore contour
+    integer :: n2semi   !! Number of energy points for the semicore contour
+    integer :: n3semi   !! Number of energy points for the semicore contour
+    integer :: invmod   !! Inversion scheme
     integer :: nqcalc
-    integer :: ntldau              !! number of atoms on which LDA+U is applied
-    integer :: kpoibz              !! Number of reciprocal space vectors
-    integer :: nsatypd             !! (NATYP-1)*NSPIN+1
-    integer :: idoldau             !! flag to perform LDA+U
-    integer :: nlayerd             !! Number of principal layers (NAEZD/NPRINCD) used in the inversion routines (independent on NATYPD)
-    integer :: intervx             !! Number of intervals in x-direction for k-net in IB of the BZ
-    integer :: intervy             !! Number of intervals in y-direction for k-net in IB of the BZ
-    integer :: intervz             !! Number of intervals in z-direction for k-net in IB of the BZ
-    integer :: nlbasis             !! Number of basis layers of left host (repeated units)
-    integer :: nrbasis             !! Number of basis layers of right host (repeated units)
+    integer :: ntldau   !! number of atoms on which LDA+U is applied
+    integer :: kpoibz   !! Number of reciprocal space vectors
+    integer :: nsatypd  !! (NATYP-1)*NSPIN+1
+    integer :: idoldau  !! flag to perform LDA+U
+    integer :: nlayerd  !! Number of principal layers (NAEZD/NPRINCD) used in the inversion routines (independent on NATYPD)
+    integer :: intervx  !! Number of intervals in x-direction for k-net in IB of the BZ
+    integer :: intervy  !! Number of intervals in y-direction for k-net in IB of the BZ
+    integer :: intervz  !! Number of intervals in z-direction for k-net in IB of the BZ
+    integer :: nlbasis  !! Number of basis layers of left host (repeated units)
+    integer :: nrbasis  !! Number of basis layers of right host (repeated units)
     integer :: nsymaxd
-    integer :: wlength             !! Word length for direct access files, compiler dependent ifort/others (1/4)
+    integer :: wlength  !! Word length for direct access files, compiler dependent ifort/others (1/4)
     integer :: naezdpd
     integer :: maxmesh
     integer :: itmpdir
-    integer :: nspindd             !! NSPIND-KORBIT
-    integer :: npan_eq             !! Variables for the pannels for the new solver
-    integer :: npan_log            !! Variables for the pannels for the new solver
-    integer :: scfsteps            !! number of scf iterations
-    integer :: itcpamax            !! Max. number of CPA iterations
-    integer :: natomimp            !! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+    integer :: nspindd  !! NSPIND-KORBIT
+    integer :: npan_eq  !! Variables for the pannels for the new solver
+    integer :: npan_log !! Variables for the pannels for the new solver
+    integer :: scfsteps !! number of scf iterations
+    integer :: itcpamax !! Max. number of CPA iterations
+    integer :: natomimp !! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
     integer :: nmvecmax
-    integer :: npolsemi            !! Number of poles for the semicore contour
-    integer :: natomimpd           !! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-    integer :: itrunldau           !! Iteration index for LDA+U
+    integer :: npolsemi !! Number of poles for the semicore contour
+    integer :: natomimpd !! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+    integer :: itrunldau !! Iteration index for LDA+U
     integer :: iesemicore
     real (kind=dp) :: tk           !! Temperature
     real (kind=dp) :: fcm
@@ -155,7 +160,7 @@ module mod_wunfiles
     logical :: lnc                 !! Coupled equations in two spins (switches true if KREL=1 or KORBIT=1 or KNOCO=1)
     logical :: lrhosym
     logical :: linterface          !! If True a matching with semi-inifinite surfaces must be performed
-    character (len=10) :: solver                             !! Type of solver
+    character (len=10) :: solver   !! Type of solver
 
     character (len=80) :: tmpdir
 
@@ -307,24 +312,36 @@ module mod_wunfiles
 
 contains
 
-  ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: WUNFILES
-  !> @brief This routine takes the read parameters from the inputcard and stores
-  !> them in the t_params type to be distributed via MPI
-  !> @details This routine was oiginally meant to write unformated files to then
+  !-------------------------------------------------------------------------------
+  !> Summary: This routine takes the read parameters from the `inputcard` and stores
+  !> them in the `t_params` type to be distributed via MPI
+  !> Author: Philipp Rüssmann and many others ...
+  !> Category: communication, input-output, KKRhost 
+  !> Deprecated: False 
+  !> This routine was oiginally meant to write unformated files to then
   !> be read by other executables, now it does the same job via storing types instead
   !> reducing I/O and allowing for MPI communication.
-  !> @author Philipp Rüssmann and many others ...
-  subroutine wunfiles(npol, npnt1, npnt2, npnt3, ielast, tk, emin, emax, ez, wez, efermi, npolsemi, n1semi, n2semi, n3semi, iesemicore, tksemi, ebotsemi, emusemi, fsemicore, vins, &
-    visp, vbc, vtrel, btrel, rmrel, drdirel, r2drdirel, zrel, jwsrel, irshift, itscf, scfsteps, cmomhost, ecore, lcore, ncore, qmtet, qmphi, qmphitab, qmtettab, qmgamtab, drotq, &
-    nsra, ins, natyp, naez, nineq, nref, nspin, ncls, icst, ipan, ircut, alat, zat, r, drdi, refpot, rmtref, vref, iend, jend, cleb, icleb, atom, cls, rcls, nacls, loflm, solver, &
-    socscl, cscl, icc, igf, nlbasis, nrbasis, ncpa, icpa, itcpamax, cpatol, rbasis, rr, ezoa, nshell, nsh1, nsh2, ijtabcalc, ijtabcalc_i, ish, jsh, ijtabsym, ijtabsh, nofgij, &
-    nqcalc, iqcalc, kmrot, kaoez, iqat, noq, conc, kmesh, maxmesh, nsymat, symunitary, rrot, dsymll, invmod, icheck, natomimp, ratom, atomimp, rc, crel, rrel, srrel, nrrel, irrel, &
-    lefttinvll, righttinvll, vacflag, a, b, ifunm, ifunm1, intervx, intervy, intervz, ititle, lmsp1, ntcell, thetas, lpot, lmpot, nright, nleft, linterface, imix, mixing, qbound, &
-    fcm, itdbry, irns, kpre, kshape, kte, kvmad, kxc, lambda_xc, txc, ishift, ixipol, lrhosym, kforce, lmsp, llmsp, rmt, rmtnew, rws, imt, irc, irmin, irws, nfu, hostimp, gsh, &
-    ilm_map, imaxsh, idoldau, itrunldau, ntldau, lopt, itldau, ueff, jeff, erefldau, uldau, wldau, phildau, iemxd, irmind, irm, nspotd, npotd, nembd1, lmmaxd, ipand, nembd2, lmax, &
-    ncleb, naclsd, nclsd, lm2d, lmaxd1, mmaxd, nr, nsheld, nsymaxd, naezdpd, natomimpd, nspind, irid, nfund, ncelld, lmxspd, ngshd, krel, ntotd, ncheb, npan_log, npan_eq, &
-    npan_log_at, npan_eq_at, r_log, npan_tot, rnew, rpan_intervall, ipan_intervall, nspindd, thetasnew, socscale, tolrdif, lly, deltae, rclsimp)
+  !-------------------------------------------------------------------------------
+  subroutine wunfiles(npol,npnt1,npnt2,npnt3,ielast,tk,emin,emax,ez,wez,efermi,     &
+    npolsemi,n1semi,n2semi,n3semi,iesemicore,tksemi,ebotsemi,emusemi,fsemicore,vins,&
+    visp,vbc,vtrel,btrel,rmrel,drdirel,r2drdirel,zrel,jwsrel,irshift,itscf,scfsteps,&
+    cmomhost,ecore,lcore,ncore,qmtet,qmphi,qmphitab,qmtettab,qmgamtab,drotq,nsra,   &
+    ins,natyp,naez,nineq,nref,nspin,ncls,icst,ipan,ircut,alat,zat,r,drdi,refpot,    &
+    rmtref,vref,iend,jend,cleb,icleb,atom,cls,rcls,nacls,loflm,solver,socscl,cscl,  &
+    icc,igf,nlbasis,nrbasis,ncpa,icpa,itcpamax,cpatol,rbasis,rr,ezoa,nshell,nsh1,   &
+    nsh2,ijtabcalc,ijtabcalc_i,ish,jsh,ijtabsym,ijtabsh,nofgij,nqcalc,iqcalc,kmrot, &
+    kaoez,iqat,noq,conc,kmesh,maxmesh,nsymat,symunitary,rrot,dsymll,invmod,icheck,  &
+    natomimp,ratom,atomimp,rc,crel,rrel,srrel,nrrel,irrel,lefttinvll,righttinvll,   &
+    vacflag,a,b,ifunm,ifunm1,intervx,intervy,intervz,ititle,lmsp1,ntcell,thetas,    &
+    lpot,lmpot,nright,nleft,linterface,imix,mixing,qbound,fcm,itdbry,irns,kpre,     &
+    kshape,kte,kvmad,kxc,lambda_xc,txc,ishift,ixipol,lrhosym,kforce,lmsp,llmsp,rmt, &
+    rmtnew,rws,imt,irc,irmin,irws,nfu,hostimp,gsh,ilm_map,imaxsh,idoldau,itrunldau, &
+    ntldau,lopt,itldau,ueff,jeff,erefldau,uldau,wldau,phildau,iemxd,irmind,irm,     &
+    nspotd,npotd,nembd1,lmmaxd,ipand,nembd2,lmax,ncleb,naclsd,nclsd,lm2d,lmaxd1,    &
+    mmaxd,nr,nsheld,nsymaxd,naezdpd,natomimpd,nspind,irid,nfund,ncelld,lmxspd,ngshd,&
+    krel,ntotd,ncheb,npan_log,npan_eq,npan_log_at,npan_eq_at,r_log,npan_tot,rnew,   &
+    rpan_intervall,ipan_intervall,nspindd,thetasnew,socscale,tolrdif,lly,deltae,    &
+    rclsimp)
     ! **********************************************************************
     ! *                                                                    *
     ! *  This subroutine is part of the MAIN0 program in the tbkkr package *
@@ -653,8 +670,9 @@ contains
       nqdos = 1
     end if
 
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc
+    !--------------------------------------------------------------------------------
     ! fill t_inc
     t_inc%lmmaxd = lmmaxd
     t_inc%nspin = nspin
@@ -667,12 +685,13 @@ contains
     t_inc%nshell0 = nshell(0)
     if (opt('NEWSOSOL')) t_inc%newsosol = .true.
     if (opt('deci-out')) t_inc%deci_out = .true.
+    !--------------------------------------------------------------------------------
     ! t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
 
-
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags
+    !--------------------------------------------------------------------------------
     ! set logical switches in t_tgmat which control if tmat, gmat and gref are written to files or stored in memory
     if (test('tmatfile')) t_tgmat%tmat_to_file = .true.
     if (test('gmatfile')) t_tgmat%gmat_to_file = .true.
@@ -680,7 +699,9 @@ contains
     if (test('projfile')) t_cpa%dmatproj_to_file = .true.
 
 
+    !--------------------------------------------------------------------------------
     ! bug bug bug bug bug
+    !--------------------------------------------------------------------------------
     ! in case of ASA DIRAC solver (KREL==1) then gmat file has to be written out otherwise something is going wrong.
     if (krel>0) t_tgmat%gmat_to_file = .true.
     ! bug bug bug bug bug
@@ -706,10 +727,10 @@ contains
     if (test('timings0')) t_inc%i_time = 0 ! only timings from master, only the last iteration
     if (test('timings2')) t_inc%i_time = 2 ! all timing files, all iterations
     ! writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! MPI communication scheme
+    !--------------------------------------------------------------------------------
     ! set switch for MPIatom test option (see mod_types and mod_mympi)
     ! default values for MPIadapt and MPIatom
     if (natyp<=ielast) then
@@ -776,43 +797,61 @@ contains
     if (test('MPIatom ') .and. test('MPIenerg')) then
       stop '[wunfiles] Found test options ''MPIenerg'' and ''MPIatom'' which do not work together. Please choose only one of these.'
     end if
+    !--------------------------------------------------------------------------------
     ! MPI communication scheme
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+    !--------------------------------------------------------------------------------
 
     ! all parameters are stored in t_params fomr mod_wunfiles
     ! first fill scalar values
-    call fill_t_params_scalars(iemxd, irmind, irm, lmpot, nspotd, npotd, natyp, nembd1, lmmaxd, naez, ipand, nembd2, nref, lmax, ncleb, naclsd, nclsd, lm2d, lmaxd1, nr, nsheld, &
-      nsymaxd, naezdpd, natomimpd, nofgij, nspind, nspindd, irid, nfund, ncelld, lmxspd, ngshd, krel, mmaxd, ielast, npol, npnt1, npnt2, npnt3, itscf, scfsteps, lly, nsra, ins, &
-      nineq, nspin, ncls, icst, iend, icc, igf, nlbasis, nrbasis, ncpa, itcpamax, kmrot, maxmesh, nsymat, natomimp, invmod, nqcalc, intervx, intervy, intervz, lpot, nright, nleft, &
-      imix, itdbry, kpre, kshape, kte, kvmad, kxc, ishift, kforce, idoldau, itrunldau, ntldau, npolsemi, n1semi, n2semi, n3semi, iesemicore, ebotsemi, emusemi, tksemi, fsemicore, &
-      r_log, emin, emax, tk, efermi, alat, cpatol, mixing, qbound, fcm, lambda_xc, tolrdif, linterface, lrhosym, solver, tmpdir, itmpdir, iltmp, ntotd, ncheb, deltae, t_params)
+    call fill_t_params_scalars(iemxd,irmind,irm,lmpot,nspotd,npotd,natyp,nembd1,    &
+      lmmaxd,naez,ipand,nembd2,nref,lmax,ncleb,naclsd,nclsd,lm2d,lmaxd1,nr,nsheld,  &
+      nsymaxd,naezdpd,natomimpd,nofgij,nspind,nspindd,irid,nfund,ncelld,lmxspd,     &
+      ngshd,krel,mmaxd,ielast,npol,npnt1,npnt2,npnt3,itscf,scfsteps,lly,nsra,ins,   &
+      nineq,nspin,ncls,icst,iend,icc,igf,nlbasis,nrbasis,ncpa,itcpamax,kmrot,       &
+      maxmesh,nsymat,natomimp,invmod,nqcalc,intervx,intervy,intervz,lpot,nright,    &
+      nleft,imix,itdbry,kpre,kshape,kte,kvmad,kxc,ishift,kforce,idoldau,itrunldau,  &
+      ntldau,npolsemi,n1semi,n2semi,n3semi,iesemicore,ebotsemi,emusemi,tksemi,      &
+      fsemicore,r_log,emin,emax,tk,efermi,alat,cpatol,mixing,qbound,fcm,lambda_xc,  &
+      tolrdif,linterface,lrhosym,solver,tmpdir,itmpdir,iltmp,ntotd,ncheb,deltae,    &
+      t_params)
 
     ! initialize allocatable arrays
     call init_t_params(t_params)
 
     ! now fill arrays that have just been allocated
-    call fill_t_params_arrays(t_params, iemxd, lmmaxd, naez, nsymaxd, nembd1, nspindd, irmind, irm, lmpot, nspotd, npotd, natyp, nr, nembd2, nref, ncleb, nclsd, naclsd, nsheld, &
-      ngshd, nfund, irid, ncelld, mmaxd, lm2d, lmxspd, lmaxd1, nspind, ntotd, ncheb, ipand, lmax, nofgij, naezdpd, natomimpd, ez, wez, drotq, dsymll, lefttinvll, righttinvll, crel, &
-      rc, rrel, srrel, phildau, vins, visp, vbc, vtrel, btrel, socscale, drdirel, r2drdirel, rmrel, cmomhost, ecore, qmtet, qmphi, qmphitab, qmtettab, qmgamtab, zat, r, drdi, &
-      rmtref, vref, cleb, rcls, socscl, cscl, rbasis, rr, conc, rrot, ratom, a, b, thetas, rmt, rmtnew, rws, gsh, erefldau, ueff, jeff, uldau, wldau, rpan_intervall, rnew, &
-      thetasnew, lopt, itldau, irshift, jwsrel, zrel, lcore, ncore, ipan, ircut, jend, icleb, atom, cls, nacls, loflm, ezoa, kaoez, iqat, icpa, noq, kmesh, nshell, nsh1, nsh2, &
-      ijtabcalc, ijtabcalc_i, ijtabsym, ijtabsh, ish, jsh, iqcalc, icheck, atomimp, refpot, irrel, nrrel, ifunm1, ititle, lmsp1, ntcell, ixipol, irns, ifunm, llmsp, lmsp, imt, irc, &
-      irmin, irws, nfu, hostimp, ilm_map, imaxsh, npan_log, npan_eq, npan_log_at, npan_eq_at, npan_tot, ipan_intervall, symunitary, vacflag, txc, rclsimp, krel)
+    call fill_t_params_arrays(t_params,iemxd,lmmaxd,naez,nsymaxd,nembd1,nspindd,    &
+      irmind,irm,lmpot,nspotd,npotd,natyp,nr,nembd2,nref,ncleb,nclsd,naclsd,nsheld, &
+      ngshd,nfund,irid,ncelld,mmaxd,lm2d,lmxspd,lmaxd1,nspind,ntotd,ncheb,ipand,    &
+      lmax,nofgij,naezdpd,natomimpd,ez,wez,drotq,dsymll,lefttinvll,righttinvll,crel,&
+      rc,rrel,srrel,phildau,vins,visp,vbc,vtrel,btrel,socscale,drdirel,r2drdirel,   &
+      rmrel,cmomhost,ecore,qmtet,qmphi,qmphitab,qmtettab,qmgamtab,zat,r,drdi,rmtref,&
+      vref,cleb,rcls,socscl,cscl,rbasis,rr,conc,rrot,ratom,a,b,thetas,rmt,rmtnew,   &
+      rws,gsh,erefldau,ueff,jeff,uldau,wldau,rpan_intervall,rnew,thetasnew,lopt,    &
+      itldau,irshift,jwsrel,zrel,lcore,ncore,ipan,ircut,jend,icleb,atom,cls,nacls,  &
+      loflm,ezoa,kaoez,iqat,icpa,noq,kmesh,nshell,nsh1,nsh2,ijtabcalc,ijtabcalc_i,  &
+      ijtabsym,ijtabsh,ish,jsh,iqcalc,icheck,atomimp,refpot,irrel,nrrel,ifunm1,     &
+      ititle,lmsp1,ntcell,ixipol,irns,ifunm,llmsp,lmsp,imt,irc,irmin,irws,nfu,      &
+      hostimp,ilm_map,imaxsh,npan_log,npan_eq,npan_log_at,npan_eq_at,npan_tot,      &
+      ipan_intervall,symunitary,vacflag,txc,rclsimp,krel)
 
     ! save information about the energy mesh
-    call save_emesh(ielast, ez, wez, emin, emax, iesemicore, fsemicore, npol, tk, npnt1, npnt2, npnt3, ebotsemi, emusemi, tksemi, npolsemi, n1semi, n2semi, n3semi, iemxd, t_params)
+    call save_emesh(ielast,ez,wez,emin,emax,iesemicore,fsemicore,npol,tk,npnt1,     &
+      npnt2,npnt3,ebotsemi,emusemi,tksemi,npolsemi,n1semi,n2semi,n3semi,iemxd,      &
+      t_params)
 
   end subroutine wunfiles
 
 
-  ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: init_t_params
-  !> @brief Allocate initial parameters to be broadcasted via mpi
-  !> @author Philipp Rüssmann
+  !-------------------------------------------------------------------------------
+  !> Summary: Allocate initial parameters to be broadcasted via mpi
+  !> Author: Philipp Ruessmann 
+  !> Category: memory-management, profiling, KKRhost 
+  !> Deprecated: False 
+  !> Allocate initial parameters to be broadcasted via mpi. allocate arrays, has to
+  !> be done after `bcast t_params_scalars` for myrank<>master otherwise are the parameters not set
+  !-------------------------------------------------------------------------------
   subroutine init_t_params(t_params)
-    ! allocate arrays, has to be done after bcast t_params_scalars for myrank<>master
-    ! otherwise are the parameters not set
+
     implicit none
 
     type (type_params), intent (inout) :: t_params
@@ -1147,12 +1186,15 @@ contains
 
 
 #ifdef CPP_MPI
-  ! ----------------------------------------------------------------------------
-  ! subroutine: bcast_t_params_scalars
-  !> @brief Broadcast scalar parameters via MPI
-  !> @author Philipp Rüssmann
+  !-------------------------------------------------------------------------------
+  !> Summary: Broadcast scalar parameters via MPI
+  !> Author: Philipp Ruessmann 
+  !> Category: communication, KKRhost 
+  !> Deprecated: False !
+  !> Broadcast scalar parameters via MPI. Broadcast scalar parameters, deal with arrays later 
+  !-------------------------------------------------------------------------------
   subroutine bcast_t_params_scalars(t_params)
-    ! broadcast scalar parameters, deal with arrays later
+
     use :: mpi
     use :: mod_mympi, only: master
 
@@ -1483,12 +1525,15 @@ contains
 
   end subroutine bcast_t_params_scalars
 
-  ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: bcast_t_params_scalars
-  !> @brief Broadcast arrays via MPI
-  !> @author Philipp Rüssmann
+  !-------------------------------------------------------------------------------
+  !> Summary: Broadcast arrays via MPI
+  !> Author: Philipp Ruessmann
+  !> Category: communication, KKRhost 
+  !> Deprecated: False 
+  !> Broadcast arrays via MP. Broadcast arrays from t_params 
+  !-------------------------------------------------------------------------------
   subroutine bcast_t_params_arrays(t_params)
-    ! broadcast arrays from t_params
+
     use :: mpi
     use :: mod_mympi, only: master
     implicit none
@@ -1669,11 +1714,23 @@ contains
   ! SUBROUTINE: fill_t_params_scalars
   !> @brief Set the values of the t_params scalars with the input values
   !> @author Philipp Rüssmann
-  subroutine fill_t_params_scalars(iemxd, irmind, irm, lmpot, nspotd, npotd, natyp, nembd1, lmmaxd, naez, ipand, nembd2, nref, lmax, ncleb, naclsd, nclsd, lm2d, lmaxd1, nr, nsheld, &
-    nsymaxd, naezdpd, natomimpd, nofgij, nspind, nspindd, irid, nfund, ncelld, lmxspd, ngshd, krel, mmaxd, ielast, npol, npnt1, npnt2, npnt3, itscf, scfsteps, lly, nsra, ins, &
-    nineq, nspin, ncls, icst, iend, icc, igf, nlbasis, nrbasis, ncpa, itcpamax, kmrot, maxmesh, nsymat, natomimp, invmod, nqcalc, intervx, intervy, intervz, lpot, nright, nleft, &
-    imix, itdbry, kpre, kshape, kte, kvmad, kxc, ishift, kforce, idoldau, itrunldau, ntldau, npolsemi, n1semi, n2semi, n3semi, iesemicore, ebotsemi, emusemi, tksemi, fsemicore, &
-    r_log, emin, emax, tk, efermi, alat, cpatol, mixing, qbound, fcm, lambda_xc, tolrdif, linterface, lrhosym, solver, tmpdir, itmpdir, iltmp, ntotd, ncheb, deltae, t_params)
+  !-------------------------------------------------------------------------------
+  !> Summary: Set the values of the `t_params` scalars with the input values
+  !> Author: Philipp Ruessmann 
+  !> Category: initialization, communication, KKRhost 
+  !> Deprecated: False 
+  !> Set the values of the `t_params` scalars with the input values
+  !-------------------------------------------------------------------------------
+  subroutine fill_t_params_scalars(iemxd,irmind,irm,lmpot,nspotd,npotd,natyp,nembd1,&
+    lmmaxd,naez,ipand,nembd2,nref,lmax,ncleb,naclsd,nclsd,lm2d,lmaxd1,nr,nsheld,    &
+    nsymaxd,naezdpd,natomimpd,nofgij,nspind,nspindd,irid,nfund,ncelld,lmxspd,ngshd, &
+    krel,mmaxd,ielast,npol,npnt1,npnt2,npnt3,itscf,scfsteps,lly,nsra,ins,nineq,     &
+    nspin,ncls,icst,iend,icc,igf,nlbasis,nrbasis,ncpa,itcpamax,kmrot,maxmesh,nsymat,&
+    natomimp,invmod,nqcalc,intervx,intervy,intervz,lpot,nright,nleft,imix,itdbry,   &
+    kpre,kshape,kte,kvmad,kxc,ishift,kforce,idoldau,itrunldau,ntldau,npolsemi,      &
+    n1semi,n2semi,n3semi,iesemicore,ebotsemi,emusemi,tksemi,fsemicore,r_log,emin,   &
+    emax,tk,efermi,alat,cpatol,mixing,qbound,fcm,lambda_xc,tolrdif,linterface,      &
+    lrhosym,solver,tmpdir,itmpdir,iltmp,ntotd,ncheb,deltae,t_params)
     ! fill scalars into t_params
     implicit none
 
@@ -1913,18 +1970,28 @@ contains
 
   end subroutine fill_t_params_scalars
 
-  ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: fill_t_params_arrays
-  !> @brief Set the values of the t_params arrays with the input values of the arrays
-  !> @author Philipp Rüssmann
-  subroutine fill_t_params_arrays(t_params, iemxd, lmmaxd, naez, nsymaxd, nembd1, nspindd, irmind, irm, lmpot, nspotd, npotd, natyp, nr, nembd2, nref, ncleb, nclsd, naclsd, nsheld, &
-    ngshd, nfund, irid, ncelld, mmaxd, lm2d, lmxspd, lmaxd1, nspind, ntotd, ncheb, ipand, lmax, nofgij, naezdpd, natomimpd, ez, wez, drotq, dsymll, lefttinvll, righttinvll, crel, &
-    rc, rrel, srrel, phildau, vins, visp, vbc, vtrel, btrel, socscale, drdirel, r2drdirel, rmrel, cmomhost, ecore, qmtet, qmphi, qmphitab, qmtettab, qmgamtab, zat, r, drdi, rmtref, &
-    vref, cleb, rcls, socscl, cscl, rbasis, rr, conc, rrot, ratom, a, b, thetas, rmt, rmtnew, rws, gsh, erefldau, ueff, jeff, uldau, wldau, rpan_intervall, rnew, thetasnew, lopt, &
-    itldau, irshift, jwsrel, zrel, lcore, ncore, ipan, ircut, jend, icleb, atom, cls, nacls, loflm, ezoa, kaoez, iqat, icpa, noq, kmesh, nshell, nsh1, nsh2, ijtabcalc, ijtabcalc_i, &
-    ijtabsym, ijtabsh, ish, jsh, iqcalc, icheck, atomimp, refpot, irrel, nrrel, ifunm1, ititle, lmsp1, ntcell, ixipol, irns, ifunm, llmsp, lmsp, imt, irc, irmin, irws, nfu, &
-    hostimp, ilm_map, imaxsh, npan_log, npan_eq, npan_log_at, npan_eq_at, npan_tot, ipan_intervall, symunitary, vacflag, txc, rclsimp, krel)
-    ! fill arrays after they have been allocated in init_t_params
+  !-------------------------------------------------------------------------------
+  !> Summary: Set the values of the t_params arrays with the input values of the arrays
+  !> Author: Who wrote this subroutine
+  !> Category: initialization, communication, KKRhost 
+  !> Deprecated: False 
+  !> Set the values of the t_params arrays with the input values of the arrays.
+  !> Fill arrays after they have been allocated in `init_t_params`
+  !-------------------------------------------------------------------------------
+  subroutine fill_t_params_arrays(t_params,iemxd,lmmaxd,naez,nsymaxd,nembd1,nspindd,& 
+    irmind,irm,lmpot,nspotd,npotd,natyp,nr,nembd2,nref,ncleb,nclsd,naclsd,nsheld,   &
+    ngshd,nfund,irid,ncelld,mmaxd,lm2d,lmxspd,lmaxd1,nspind,ntotd,ncheb,ipand,lmax, &
+    nofgij,naezdpd,natomimpd,ez,wez,drotq,dsymll,lefttinvll,righttinvll,crel,rc,    &
+    rrel,srrel,phildau,vins,visp,vbc,vtrel,btrel,socscale,drdirel,r2drdirel,rmrel,  &
+    cmomhost,ecore,qmtet,qmphi,qmphitab,qmtettab,qmgamtab,zat,r,drdi,rmtref,vref,   &
+    cleb,rcls,socscl,cscl,rbasis,rr,conc,rrot,ratom,a,b,thetas,rmt,rmtnew,rws,gsh,  &
+    erefldau,ueff,jeff,uldau,wldau,rpan_intervall,rnew,thetasnew,lopt,itldau,       &
+    irshift,jwsrel,zrel,lcore,ncore,ipan,ircut,jend,icleb,atom,cls,nacls,loflm,ezoa,&
+    kaoez,iqat,icpa,noq,kmesh,nshell,nsh1,nsh2,ijtabcalc,ijtabcalc_i,ijtabsym,      &
+    ijtabsh,ish,jsh,iqcalc,icheck,atomimp,refpot,irrel,nrrel,ifunm1,ititle,lmsp1,   &
+    ntcell,ixipol,irns,ifunm,llmsp,lmsp,imt,irc,irmin,irws,nfu,hostimp,ilm_map,     &
+    imaxsh,npan_log,npan_eq,npan_log_at,npan_eq_at,npan_tot,ipan_intervall,         &
+    symunitary,vacflag,txc,rclsimp,krel)
     ! ..
     implicit none
 
@@ -2225,17 +2292,23 @@ contains
 
   end subroutine fill_t_params_arrays
 
-  ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: get_params_1a
-  !> @brief Set the values of the local variables according to the stored t_params
-  !> so that they can be passed between different control modules, specifically for main1a
-  !> @author Philipp Rüssmann
-  !> @note JC: NPAN_EQ seems to have been passed here as an array, while in the
-  !> rest of the routines it is an scalar. Why?
-  subroutine get_params_1a(t_params, ipand, natypd, irmd, naclsd, ielast, nclsd, nrefd, ncleb, nembd, naezd, lm2d, nsra, ins, nspin, icst, ipan, ircut, lmax, ncls, nineq, idoldau, &
-    lly, krel, atom, cls, icleb, loflm, nacls, refpot, irws, iend, ez, vins, irmin, itmpdir, iltmp, alat, drdi, rmesh, zat, rcls, iemxd, visp, rmtref, vref, cleb, cscl, socscale, &
-    socscl, erefldau, ueff, jeff, solver, tmpdir, deltae, tolrdif, npan_log, npan_eq, ncheb, npan_tot, ipan_intervall, rpan_intervall, rnew, ntotd, nrmaxd, r_log, ntldau, itldau, &
-    lopt, vtrel, btrel, drdirel, r2drdirel, rmrel, irmind, lmpot, nspotd, npotd, jwsrel, zrel, itscf, natomimpd, natomimp, atomimp, iqat, naez, natyp, nref)
+  !-------------------------------------------------------------------------------
+  !> Summary: Set the values of the local variables according to the stored `t_params`
+  !> so that they can be passed between different control modules, specifically for `main1a`
+  !> Author: Philipp Ruessmann 
+  !> Category: communication, KKRhost 
+  !> Deprecated: False 
+  !> Set the values of the local variables according to the stored `t_params`
+  !> so that they can be passed between different control modules, specifically for `main1a`
+  !-------------------------------------------------------------------------------
+  subroutine get_params_1a(t_params,ipand,natypd,irmd,naclsd,ielast,nclsd,nrefd,    &
+    ncleb,nembd,naezd,lm2d,nsra,ins,nspin,icst,ipan,ircut,lmax,ncls,nineq,idoldau,  &
+    lly,krel,atom,cls,icleb,loflm,nacls,refpot,irws,iend,ez,vins,irmin,itmpdir,     &
+    iltmp,alat,drdi,rmesh,zat,rcls,iemxd,visp,rmtref,vref,cleb,cscl,socscale,       &
+    socscl,erefldau,ueff,jeff,solver,tmpdir,deltae,tolrdif,npan_log,npan_eq,ncheb,  &
+    npan_tot,ipan_intervall,rpan_intervall,rnew,ntotd,nrmaxd,r_log,ntldau,itldau,   &
+    lopt,vtrel,btrel,drdirel,r2drdirel,rmrel,irmind,lmpot,nspotd,npotd,jwsrel,zrel, &
+    itscf,natomimpd,natomimp,atomimp,iqat,naez,natyp,nref)
     ! get relevant parameters from t_params
     ! ..
 #ifdef CPP_MPI
@@ -2334,7 +2407,6 @@ contains
     character (len=10), intent (inout) :: solver                           !! Type of solver
 
     character (len=80), intent (inout) :: tmpdir
-
 
     nsra = t_params%nsra
     ins = t_params%ins
@@ -2443,16 +2515,24 @@ contains
 
   end subroutine get_params_1a
 
-  ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: get_params_1b
-  !> @brief Set the values of the local variables according to the stored t_params
-  !> so that they can be passed between different control modules, specifically for main1b
-  !> @author Philipp Rüssmann
-  subroutine get_params_1b(t_params, natypd, naezd, natyp, naclsd, ielast, npol, nclsd, nrefd, nref, nembd, naez, nsra, ins, nspin, lmax, ncls, lly, krel, atom, cls, nacls, refpot, &
-    ez, itmpdir, iltmp, alat, rcls, iemxd, rmtref, vref, tmpdir, nsheld, nprincd, kpoibz, atomimp, natomimpd, icc, igf, nlbasis, nrbasis, ncpa, icpa, itcpamax, cpatol, nrd, ideci, &
-    rbasis, rr, ezoa, nshell, kmrot, kaoez, ish, jsh, nsh1, nsh2, noq, iqat, nofgij, natomimp, conc, kmesh, maxmesh, nsymat, nqcalc, ratom, rrot, drotq, ijtabcalc, ijtabcalc_i, &
-    ijtabsym, ijtabsh, iqcalc, dsymll, invmod, icheck, symunitary, rc, crel, rrel, srrel, nrrel, irrel, lefttinvll, righttinvll, vacflag, nofks, volbz, bzkp, volcub, wez, nembd1, &
-    lmmaxd, nsymaxd, nspindd, maxmshd, rclsimp)
+  !-------------------------------------------------------------------------------
+  !> Summary: Set the values of the local variables according to the stored `t_params`
+  !> so that they can be passed between different control modules, specifically for `main1b`
+  !> Author: Philipp Ruessmann 
+  !> Category: communication, KKRhost 
+  !> Deprecated: False 
+  !> Set the values of the local variables according to the stored `t_params`
+  !> so that they can be passed between different control modules, specifically for `main1b`
+  !-------------------------------------------------------------------------------
+  subroutine get_params_1b(t_params,natypd,naezd,natyp,naclsd,ielast,npol,nclsd,    &
+    nrefd,nref,nembd,naez,nsra,ins,nspin,lmax,ncls,lly,krel,atom,cls,nacls,refpot,  &
+    ez,itmpdir,iltmp,alat,rcls,iemxd,rmtref,vref,tmpdir,nsheld,nprincd,kpoibz,      &
+    atomimp,natomimpd,icc,igf,nlbasis,nrbasis,ncpa,icpa,itcpamax,cpatol,nrd,ideci,  &
+    rbasis,rr,ezoa,nshell,kmrot,kaoez,ish,jsh,nsh1,nsh2,noq,iqat,nofgij,natomimp,   &
+    conc,kmesh,maxmesh,nsymat,nqcalc,ratom,rrot,drotq,ijtabcalc,ijtabcalc_i,        &
+    ijtabsym,ijtabsh,iqcalc,dsymll,invmod,icheck,symunitary,rc,crel,rrel,srrel,     &
+    nrrel,irrel,lefttinvll,righttinvll,vacflag,nofks,volbz,bzkp,volcub,wez,nembd1,  &
+    lmmaxd,nsymaxd,nspindd,maxmshd,rclsimp)
     ! get relevant parameters from t_params
     ! ..
     implicit none
@@ -2706,17 +2786,25 @@ contains
 
   end subroutine get_params_1b
 
-
-  ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: get_params_1c
-  !> @brief Set the values of the local variables according to the stored t_params
-  !> so that they can be passed between different control modules, specifically for main1c
-  !> @author Philipp Rüssmann
-  subroutine get_params_1c(t_params, krel, naezd, natypd, ncleb, lm2d, ncheb, ipand, lmpotd, lmaxd, lmxspd, nfund, npotd, ntotd, mmaxd, iemxd, irmd, nsra, ins, nspin, nacls1, icst, &
-    kmrot, iqat, idoldau, irws, ipan, ircut, iend, icleb, loflm, jend, ifunm1, lmsp1, nfu, llmsp, lcore, ncore, ntcell, irmin, ititle, intervx, intervy, intervz, lly, itmpdir, &
-    iltmp, npan_eq, ipan_intervall, npan_log, npan_tot, ntldau, lopt, itldau, ielast, iesemicore, npol, irshift, jwsrel, zrel, itrunldau, qmtet, qmphi, conc, alat, zat, drdi, &
-    rmesh, a, b, cleb, thetas, socscale, rpan_intervall, cscl, rnew, socscl, thetasnew, efermi, erefldau, ueff, jeff, emin, emax, tk, vins, visp, ecore, drdirel, r2drdirel, rmrel, &
-    vtrel, btrel, wldau, uldau, ez, wez, phildau, tmpdir, solver, nspind, nspotd, irmind, lmaxd1, ncelld, irid, r_log, naez, natyp, lmax)
+  !-------------------------------------------------------------------------------
+  !> Summary: Set the values of the local variables according to the stored `t_params`
+  !> so that they can be passed between different control modules, specifically for `main1c`
+  !> Author: Philipp Ruessmann 
+  !> Category: communication, KKRhost 
+  !> Deprecated: False 
+  !> Set the values of the local variables according to the stored `t_params`
+  !> so that they can be passed between different control modules, specifically for `main1c`
+  !-------------------------------------------------------------------------------
+  subroutine get_params_1c(t_params,krel,naezd,natypd,ncleb,lm2d,ncheb,ipand,lmpotd,& 
+    lmaxd,lmxspd,nfund,npotd,ntotd,mmaxd,iemxd,irmd,nsra,ins,nspin,nacls1,icst,     &
+    kmrot,iqat,idoldau,irws,ipan,ircut,iend,icleb,loflm,jend,ifunm1,lmsp1,nfu,llmsp,& 
+    lcore,ncore,ntcell,irmin,ititle,intervx,intervy,intervz,lly,itmpdir,iltmp,      &
+    npan_eq,ipan_intervall,npan_log,npan_tot,ntldau,lopt,itldau,ielast,iesemicore,  &
+    npol,irshift,jwsrel,zrel,itrunldau,qmtet,qmphi,conc,alat,zat,drdi,rmesh,a,b,    &
+    cleb,thetas,socscale,rpan_intervall,cscl,rnew,socscl,thetasnew,efermi,erefldau, &
+    ueff,jeff,emin,emax,tk,vins,visp,ecore,drdirel,r2drdirel,rmrel,vtrel,btrel,     &
+    wldau,uldau,ez,wez,phildau,tmpdir,solver,nspind,nspotd,irmind,lmaxd1,ncelld,    &
+    irid,r_log,naez,natyp,lmax)
     ! get relevant parameters from t_params
     ! ..
     implicit none
@@ -2813,23 +2901,16 @@ contains
     real (kind=dp), dimension (irmd, natypd), intent (inout) :: drdi
     real (kind=dp), dimension (irmd, natypd), intent (inout) :: rmesh
     real (kind=dp), dimension (ncleb, 2), intent (inout) :: cleb
-    ! real (kind=dp), dimension(LMAXD1,NATYPD), intent(inout)          :: CSCL
     real (kind=dp), dimension (krel*lmaxd+1, krel*natypd+(1-krel)), intent (inout) :: cscl !! Speed of light scaling
     real (kind=dp), dimension (irmd, npotd), intent (inout) :: visp
     real (kind=dp), dimension (ntotd*(ncheb+1), natypd), intent (inout) :: rnew
-    ! real (kind=dp), dimension(IRMD,NATYPD), intent(inout)             :: RMREL
     real (kind=dp), dimension (irmd*krel+(1-krel), natypd), intent (inout) :: rmrel !! radial mesh
-    ! real (kind=dp), dimension(IRMD,NATYPD), intent(inout)             :: VTREL
     real (kind=dp), dimension (irmd*krel+(1-krel), natypd), intent (inout) :: vtrel !! potential (spherical part)
-    ! real (kind=dp), dimension(IRMD,NATYPD), intent(inout)             :: BTREL
     real (kind=dp), dimension (irmd*krel+(1-krel), natypd), intent (inout) :: btrel !! magnetic field
     real (kind=dp), dimension (20, npotd), intent (inout) :: ecore
-    ! real (kind=dp), dimension(LMAXD1,NATYPD), intent(inout)          :: SOCSCL
     real (kind=dp), dimension (krel*lmaxd+1, krel*natypd+(1-krel)), intent (inout) :: socscl
-    ! real (kind=dp), dimension(IRMD,NATYPD), intent(inout)             :: DRDIREL
     real (kind=dp), dimension (irmd*krel+(1-krel), natypd), intent (inout) :: drdirel
-    ! real (kind=dp), dimension(IRMD,NATYPD), intent(inout)             :: R2DRDIREL
-    real (kind=dp), dimension (irmd*krel+(1-krel), natypd), intent (inout) :: r2drdirel !! \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
+    real (kind=dp), dimension (irmd*krel+(1-krel), natypd), intent (inout) :: r2drdirel !! $$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}$$ (r**2 * drdi)
     real (kind=dp), dimension (0:ntotd, natypd), intent (inout) :: rpan_intervall
     real (kind=dp), dimension (irmind:irmd, lmpotd, nspotd), intent (inout) :: vins
     real (kind=dp), dimension (irid, nfund, ncelld), intent (inout) :: thetas
@@ -2844,7 +2925,6 @@ contains
     ! .. External Functions ..
     logical :: opt, test
     external :: opt, test
-
 
     nsra = t_params%nsra
     ins = t_params%ins
@@ -2976,16 +3056,25 @@ contains
 
   end subroutine get_params_1c
 
-  ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: get_params_2
-  !> @brief Set the values of the local variables according to the stored t_params
-  !> so that they can be passed between different control modules, specifically for main2
-  !> @author Philipp Rüssmann
-  subroutine get_params_2(t_params, krel, natyp, ipand, npotd, natomimpd, lmxspd, nfund, lmpot, ncelld, irmd, nembd1, nembd, irmind, nsra, ins, nspin, ipan, ircut, lcore, ncore, &
-    lmax, ntcell, lpot, nlbasis, nrbasis, nright, nleft, natomimp, atomimp, imix, qbound, fcm, itdbry, irns, kpre, kshape, kte, kvmad, kxc, icc, ishift, ixipol, kforce, ifunm, &
-    lmsp, imt, irc, irmin, irws, llmsp, ititle, nfu, hostimp, ilm_map, imaxsh, ielast, npol, npnt1, npnt2, npnt3, itscf, scfsteps, iesemicore, kaoez, iqat, noq, lly, npolsemi, &
-    n1semi, n2semi, n3semi, zrel, jwsrel, irshift, mixing, lambda_xc, a, b, thetas, drdi, r, zat, rmt, rmtnew, rws, emin, emax, tk, alat, efold, chrgold, cmomhost, conc, gsh, &
-    ebotsemi, emusemi, tksemi, vins, visp, rmrel, drdirel, vbc, fsold, r2drdirel, ecore, ez, wez, txc, linterface, lrhosym, ngshd, naez, irid, nspotd, iemxd)
+  !-------------------------------------------------------------------------------
+  !> Summary: Set the values of the local variables according to the stored `t_params`
+  !> so that they can be passed between different control modules, specifically for `main2`
+  !> Author: Philipp Ruessmann 
+  !> Category: communication, KKRhost 
+  !> Deprecated: False 
+  !> Set the values of the local variables according to the stored `t_params`
+  !> so that they can be passed between different control modules, specifically for `main2`
+  !-------------------------------------------------------------------------------
+  subroutine get_params_2(t_params,krel,natyp,ipand,npotd,natomimpd,lmxspd,nfund,   &
+    lmpot,ncelld,irmd,nembd1,nembd,irmind,nsra,ins,nspin,ipan,ircut,lcore,ncore,    &
+    lmax,ntcell,lpot,nlbasis,nrbasis,nright,nleft,natomimp,atomimp,imix,qbound,fcm, &
+    itdbry,irns,kpre,kshape,kte,kvmad,kxc,icc,ishift,ixipol,kforce,ifunm,lmsp,imt,  &
+    irc,irmin,irws,llmsp,ititle,nfu,hostimp,ilm_map,imaxsh,ielast,npol,npnt1,npnt2, &
+    npnt3,itscf,scfsteps,iesemicore,kaoez,iqat,noq,lly,npolsemi,n1semi,n2semi,      &
+    n3semi,zrel,jwsrel,irshift,mixing,lambda_xc,a,b,thetas,drdi,r,zat,rmt,rmtnew,   &
+    rws,emin,emax,tk,alat,efold,chrgold,cmomhost,conc,gsh,ebotsemi,emusemi,tksemi,  &
+    vins,visp,rmrel,drdirel,vbc,fsold,r2drdirel,ecore,ez,wez,txc,linterface,lrhosym,& 
+    ngshd,naez,irid,nspotd,iemxd)
     ! get relevant parameters from t_params
     ! ..
     implicit none
@@ -3236,13 +3325,17 @@ contains
 
   end subroutine get_params_2
 
-  ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: save_emesh
-  !> @brief Store the values of the local variables related to the energy mesh,
-  !> in the t_params data types
-  !> @author Philipp Rüssmann
-  subroutine save_emesh(ielast, ez, wez, emin, emax, iesemicore, fsemicore, npol, tk, npnt1, npnt2, npnt3, ebotsemi, emusemi, tksemi, npolsemi, n1semi, n2semi, n3semi, iemxd, &
-    t_params)
+  !-------------------------------------------------------------------------------
+  !> Summary: Store the values of the local variables related to the energy mesh,
+  !> in the `t_params` data types
+  !> Author: Philipp Ruessmann 
+  !> Category: communication, KKRhost 
+  !> Deprecated: False 
+  !> Store the values of the local variables related to the energy mesh,
+  !> in the `t_params` data types
+  !-------------------------------------------------------------------------------
+  subroutine save_emesh(ielast,ez,wez,emin,emax,iesemicore,fsemicore,npol,tk,npnt1, &
+    npnt2,npnt3,ebotsemi,emusemi,tksemi,npolsemi,n1semi,n2semi,n3semi,iemxd,t_params)
     ! save information of energy mesh in t_params
     implicit none
 
@@ -3291,13 +3384,19 @@ contains
 
   end subroutine save_emesh
 
-  ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: save_scfinfo
-  !> @brief Store the values of the local variables related to the SCF parameters
-  !> in the t_params data types
-  !> @author Philipp Rüssmann
-  subroutine save_scfinfo(t_params, vins, visp, ecore, vbc, rmrel, drdirel, r2drdirel, zrel, jwsrel, irshift, vtrel, btrel, itscf, scfsteps, efold, chrgold, cmomhost, krel, irmind, &
-    irm, lmpot, nspotd, natyp, npotd, nembd1)
+  !-------------------------------------------------------------------------------
+  !> Summary: Store the values of the local variables related to the SCF parameters
+  !> in the `t_params` data types
+  !> Author: Philipp Ruessmann 
+  !> Category: communication, KKRhost 
+  !> Deprecated: False 
+  !> Store the values of the local variables related to the SCF parameters
+  !> in the `t_params` data types. Save information that is needed in next iteration 
+  !> and that is changeing, i.e. potential etc.
+  !-------------------------------------------------------------------------------
+  subroutine save_scfinfo(t_params,vins,visp,ecore,vbc,rmrel,drdirel,r2drdirel,zrel,&
+    jwsrel,irshift,vtrel,btrel,itscf,scfsteps,efold,chrgold,cmomhost,krel,irmind,   &
+    irm,lmpot,nspotd,natyp,npotd,nembd1)
     ! save information that is needed in next iteration and that is changeing, i.e. potential etc.
     implicit none
 
@@ -3350,14 +3449,20 @@ contains
     t_params%cmomhost = cmomhost
   end subroutine save_scfinfo
 
-  ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: save_density
-  !> @brief Store the values of the local variables related to the electronic density
-  !> in the t_params data types
-  !> @author Philipp Rüssmann
-  subroutine save_density(t_params, rho2ns, r2nef, rhoc, denef, denefat, espv, ecore, idoldau, lopt, eu, edc, chrgsemicore, rhoorb, ecorerel, nkcore, kapcore, krel, natyp, npotd, &
-    irm, lmpot, lmaxd1)
-    ! save density after it has been calculated in main1c, is further processed in main2
+  !-------------------------------------------------------------------------------
+  !> Summary: Store the values of the local variables related to the electronic density
+  !> in the `t_params` data types
+  !> Author: Philipp Ruessmann 
+  !> Category: communication, physical-observables, KKRhost 
+  !> Deprecated: False 
+  !> Store the values of the local variables related to the electronic density
+  !> in the `t_params` data types. Save density after it has been calculated in 
+  !> `main1c`, is further processed in `main2`
+  !-------------------------------------------------------------------------------
+  subroutine save_density(t_params,rho2ns,r2nef,rhoc,denef,denefat,espv,ecore,      &
+    idoldau,lopt,eu,edc,chrgsemicore,rhoorb,ecorerel,nkcore,kapcore,krel,natyp,     &
+    npotd,irm,lmpot,lmaxd1)
+
     implicit none
 
     type (type_params), intent (inout) :: t_params
@@ -3406,14 +3511,19 @@ contains
 
   end subroutine save_density
 
-  ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: read_density
-  !> @brief Store the values of the t_params data types related to the electronic
-  !> density in local variables
-  !> @author Philipp Rüssmann
-  subroutine read_density(t_params, rho2ns, r2nef, rhoc, denef, denefat, espv, ecore, idoldau, lopt, eu, edc, chrgsemicore, rhoorb, ecorerel, nkcore, kapcore, krel, natyp, npotd, &
-    irm, lmpot, lmaxd1)
-    ! read density in main2
+  !-------------------------------------------------------------------------------
+  !> Summary: Set the values of the local variables related to the electronic density
+  !> in the `t_params` data types
+  !> Author: Philipp Ruessmann 
+  !> Category: communication, physical-observables, KKRhost 
+  !> Deprecated: False 
+  !> Set the values of the local variables related to the electronic density
+  !> in the `t_params` data types. Store the values of the density in `main2`
+  !-------------------------------------------------------------------------------
+  subroutine read_density(t_params,rho2ns,r2nef,rhoc,denef,denefat,espv,ecore,      &
+    idoldau,lopt,eu,edc,chrgsemicore,rhoorb,ecorerel,nkcore,kapcore,krel,natyp,     &
+    npotd,irm,lmpot,lmaxd1)
+
     implicit none
 
     type (type_params), intent (inout) :: t_params
@@ -3463,16 +3573,21 @@ contains
 
   end subroutine read_density
 
-  ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: read_angles
-  !> @brief Read the angles variables associated with the angles of magnetic
-  !> moments in a non-collinear calcula
-  !> @author Philipp Rüssmann
+  !-------------------------------------------------------------------------------
+  !> Summary: Read the angles variables associated with the angles of magnetic
+  !> moments in a non-collinear calculation
+  !> Author: Philipp Ruessmann 
+  !> Category: input-output, dirac, KKRhost 
+  !> Deprecated: False 
+  !>  Read the angles variables associated with the angles of magnetic
+  !> moments in a non-collinear calculation. Read `nonco_angles`.
+  !-------------------------------------------------------------------------------
   subroutine read_angles(t_params, natyp, theta, phi)
     ! read nonco_angles
     use :: mod_types, only: t_inc
     use :: mod_mympi, only: myrank, master
     use :: mod_version_info
+    use :: constants, only: pi
 
     implicit none
 
@@ -3485,7 +3600,6 @@ contains
     logical :: lread, lcheckangles
     integer :: i1, i_stat
     real (kind=dp) :: th1, ph1
-    real (kind=dp), parameter :: pi = 4.d0*datan(1.d0), eps = 1d-5
 
     ! if executed first in wunfiles theta is not allocated, thus read angles from file
     if (.not. allocated(t_params%theta)) then
