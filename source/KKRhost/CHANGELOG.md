@@ -1,3 +1,7 @@
+---
+title: Changelog
+---
+
 # Changelog
 
 ## Conventions used for this changelog

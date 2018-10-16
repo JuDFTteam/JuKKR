@@ -38,3 +38,8 @@ List of default values for `-D<options>` (used if not specified):
 - The [source code documentation](https://kkr.iffgit.fz-juelich.de/kkrjm/)
 
 
+## Found a bug?
+
+If you find any bugs, please file a new issue on the [gitlab page](https://iffgit.fz-juelich.de/kkr/kkrjm/issues)
+
+
