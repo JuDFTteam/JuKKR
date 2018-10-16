@@ -1,33 +1,35 @@
 module mod_getdmat
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: getdmat
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculate projection matrices DMATT and DTILT
+  !> Author: Hubert Ebert
+  !> Date: 01/11/2000
+  !> Category: KKRhost, k-points, coherent-potential-approximation
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Calculate projection matrices   DMATT  and  DTILT
+  !> for preselected atom type  IT  on preselected site  IQ   
+  !>
+  !>  DM = m(t)-m(c)
+  !>
+  !>  D~(t) = ( 1 + ( m(t) - m(c) ) * TAU )**(-1)
+  !>  D(t)  = ( 1 + TAU * ( m(t) - m(c) ) )**(-1)
+  !>
+  !> on entry ALL matrices have to refer to the SAME frame
+  !> i.e. for KMROT <> 0 prior to calling <GETDMAT> one has to
+  !> - rotate TAUQ, MSSQ to the local frame        OR
+  !> - rotate MSST to the global frame
+  !-------------------------------------------------------------------------------
   subroutine getdmat(tauq, dmatt, dtilt, dm, n, mssq, msst, m)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   calculate projection matrices   DMATT  and  DTILT              *
-    ! *   for preselected atom type  IT  on preselected site  IQ         *
-    ! *                                                                  *
-    ! *    DM = m(t)-m(c)                                                *
-    ! *                                                                  *
-    ! *    D~(t) = ( 1 + ( m(t) - m(c) ) * TAU )**(-1)                   *
-    ! *    D(t)  = ( 1 + TAU * ( m(t) - m(c) ) )**(-1)                   *
-    ! *                                                                  *
-    ! *   on entry ALL matrices have to refer to the SAME frame          *
-    ! *   i.e. for KMROT <> 0 prior to calling <GETDMAT> one has to      *
-    ! *   - rotate TAUQ, MSSQ to the local frame        OR               *
-    ! *   - rotate MSST to the global frame                              *
-    ! *                                                                  *
-    ! * 01/11/2000 HE                                                    *
-    ! ********************************************************************
 
+    use :: mod_datatypes, only: dp
+    use :: mod_constants, only: czero, cone
     implicit none
-
-    ! PARAMETER definitions
-    complex (kind=dp) :: c0, c1
-    parameter (c0=(0.0e0_dp,0.0e0_dp), c1=(1.0e0_dp,0.0e0_dp))
 
     ! Dummy arguments
     integer :: m, n
@@ -46,15 +48,15 @@ contains
     ! -------------------------------------------
     ! ( m(t) - m(c) ) * TAU
     ! -------------------------------------------
-    call zgemm('N', 'N', n, n, n, c1, dm, m, tauq, m, c0, dtilt, m)
-    call zgemm('N', 'N', n, n, n, c1, tauq, m, dm, m, c0, dmatt, m)
+    call zgemm('N', 'N', n, n, n, cone, dm, m, tauq, m, czero, dtilt, m)
+    call zgemm('N', 'N', n, n, n, cone, tauq, m, dm, m, czero, dmatt, m)
 
     ! -------------------------------------------
     ! 1 + ( m(t) - m(c) ) * TAU
     ! -------------------------------------------
     do i = 1, n
-      dtilt(i, i) = c1 + dtilt(i, i)
-      dmatt(i, i) = c1 + dmatt(i, i)
+      dtilt(i, i) = cone + dtilt(i, i)
+      dmatt(i, i) = cone + dmatt(i, i)
     end do
 
     ! -------------------------------------------

@@ -28,7 +28,7 @@ contains
     use :: mod_mympi, only: distribute_linear_on_tasks
 #endif
     use :: mod_types, only: t_tgmat, t_inc, t_mpi_c_grid, init_tgmat
-    use :: constants
+    use :: mod_constants
     use :: mod_profiling
     use :: mod_version_info
     use :: global_variables
@@ -93,10 +93,10 @@ contains
     ! ---------------------------------------------------------------------------
     ! .. Output variables
     real (kind=dp), dimension (irmd*krel+(1-krel)), intent (out) :: rhoorb
-    real (kind=dp), dimension (0:lmax+1+1, 3), intent (out) :: muorb !! orbital magnetic moment
+    real (kind=dp), dimension (0:lmax+2, 3), intent (out) :: muorb !! orbital magnetic moment
     real (kind=dp), dimension (0:lmax+1, 2), intent (out) :: espv !! changed for REL case
-    real (kind=dp), dimension (irmd, lmpotd, 2), intent (out) :: r2nef !! rho at FERMI energy
-    real (kind=dp), dimension (irmd, lmpotd, 2), intent (out) :: rho2ns !! radial density
+    real (kind=dp), dimension (irmd, lmpotd, 1+krel), intent (out) :: r2nef !! rho at FERMI energy
+    real (kind=dp), dimension (irmd, lmpotd, 1+krel), intent (out) :: rho2ns !! radial density
     complex (kind=dp), dimension (mmaxd, mmaxd), intent (out) :: denmatc
     ! ----------------------------------------------------------------------------
     ! ITERMDIR variables
@@ -195,9 +195,7 @@ contains
       ! ( 1.D0 + DEXP( 20.D0*(R(276)-R(IR)) ) )
       ! CUTOFF(IR) = 1D0/CUTOFF(IR)
       ! -------------------------------------------------------------------------
-      do m1 = 1, irmd
-        cutoff(m1) = 1.d0
-      end do
+      cutoff(:) = 1.0_dp
     end if
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! LDAU
@@ -206,60 +204,19 @@ contains
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Initialise variables
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    if (krel==0) then
-      do lm1 = 1, lmpotd
-        do ir = 1, irmd
-          rho2ns(ir, lm1, ispin) = 0.0d0
-        end do
-      end do
-
-      do l = 0, lmaxd1
-        espv(l, ispin) = 0.0d0
-      end do
-      ! -------------------------------------------------------------------------
-    else
-      ! -------------------------------------------------------------------------
-      do ispinpot = 1, 2
-        do lm1 = 1, lmpotd
-          do ir = 1, irmd
-            rho2ns(ir, lm1, ispinpot) = 0.0d0
-            r2nef(ir, lm1, ispinpot) = 0.0d0
-          end do
-        end do
-
-        do l = 0, lmaxd1
-          espv(l, ispinpot) = 0.0d0
-        end do
-
-      end do
-
-      do ir = 1, irmd
-        rhoorb(ir) = 0.0d0
-      end do
-
-      do ir = 1, 3
-        do l = 0, lmax
-          dmuorb(l, ir) = czero
-        end do
-      end do
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! ITERMDIR
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    rho2ns(:,:,:) = 0.0_dp
+    if (krel/=0) then
+      espv(0:lmaxd1,:) = 0.0_dp
+      r2nef(:,:,:) = 0.0_dp
+      rhoorb(:) = 0.0_dp
+      dmuorb(:,:) = czero
       if (itermvdir) then
-        do lm1 = 1, 3
-          do lm2 = 1, nmvecmax
-            do l = 0, lmax
-              mvevil(l, lm1, lm2) = czero
-              mvevilef(l, lm1, lm2) = czero
-            end do
-          end do
-        end do
+        mvevil(:,:,:) = czero
+        mvevilef(:,:,:) = czero
       end if
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! ITERMDIR
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    end if                         ! KREL = 0/1
-    ! ----------------------------------------------------------------------------
+    else
+      espv(0:lmaxd1,ispin) = 0.0_dp
+    end if ! (krel/=0)
     lastez = ielast
 
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -272,19 +229,15 @@ contains
 #ifndef CPP_MPI
     if (opt('qdos    ')) then      ! qdos
       if (natyp>=100) then         ! qdos
-        open (31, file='qdos.'//char(48+i1/100)//char(48+mod(i1/10,10))// & ! qdos
-          char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat') ! qdos
+        open (31, file='qdos.'//char(48+i1/100)//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat') ! qdos
       else                         ! qdos
-        open (31, file='qdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'// & ! qdos
-          char(48+ispin)//'.dat')  ! qdos
+        open (31, file='qdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat')  ! qdos
       end if                       ! qdos
       call version_print_header(31) ! qdos
-      write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)' & ! qdos
-        , 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...' ! qdos
+      write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...' ! qdos
     end if                         ! qdos
 
-    open (30, file='lmdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'// & ! lmdos
-      char(48+ispin)//'.dat')      ! lmdos
+    open (30, file='lmdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat')      ! lmdos
     call version_print_header(31)  ! lmdos
     write (30, *) ' '              ! lmdos
     write (30, 100) '# ISPIN=', ispin, ' I1=', i1 ! lmdos
@@ -293,17 +246,14 @@ contains
     ! write out complex qdos for interpolation to the real axis                   ! complex qdos
     if (test('compqdos')) then     ! complex qdos
       if (natyp>=100) then         ! complex qdos
-        open (3031, file='cqdos.'//char(48+i1/100)//char(48+mod(i1/10,10))// & ! complex qdos
-          char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat') ! complex qdos
+        open (3031, file='cqdos.'//char(48+i1/100)//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat') ! complex qdos
       else                         ! complex qdos
-        open (3031, file='cqdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'// & ! complex qdos
-          char(48+ispin)//'.dat')  ! complex qdos
+        open (3031, file='cqdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat')  ! complex qdos
       end if                       ! complex qdos
       call version_print_header(3031) ! complex qdos
       write (3031, '(A)') '# lmax, natyp, nspin, nqdos, ielast:' ! complex qdos
       write (3031, '(5I9)') lmax, natyp, nspin, nqdos, ielast ! complex qdos
-      write (3031, '(7(A,3X))') '#   Re(E)', 'Im(E)' & ! complex qdos
-        , 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...' ! complex qdos
+      write (3031, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...' ! complex qdos
     end if                         ! qdos
 #endif
 
@@ -395,10 +345,9 @@ contains
             ! -------------------------------------------------------------------
             ! Read in Green function
             ! -------------------------------------------------------------------
-            irec = iq + nqdos*(ie-1) + nqdos*ielast*(ispin-1) + & ! qdos (without qdos, IQ=NQDOS=1)
-              nqdos*ielast*nspin*(i1-1) ! qdos
             if (t_tgmat%gmat_to_file) then
-              read (69, rec=irec) gmat0
+              irec = iq + nqdos*(ie-1) + nqdos*ielast*(ispin-1) + nqdos*ielast*nspin*(i1-1) ! qdos
+              read (70, rec=irec) gmat0
             else
               irec = iq + nqdos*(ie_num-1) + nqdos*t_mpi_c_grid%ntot2*(ispin-1) + nqdos*t_mpi_c_grid%ntot2*nspin*(i1-1)
               gmat0(:, :) = t_tgmat%gmat(:, :, irec)
@@ -411,9 +360,9 @@ contains
             ! Spherical/non-spherical input potential
             ! -------------------------------------------------------------------
             if (ins==0) then
-              call rholm(den(0,ie,iq), df, gmat0, nsra, rho2ns(1,1,ispin), drdi, ipan, ircut, pz, fz, qz, sz, cleb(1,1), icleb, iend, jend, ekl)
+              call rholm(den(0,ie,iq), df, gmat0, nsra, rho2ns(1,1,1), drdi, ipan, ircut, pz, fz, qz, sz, cleb(1,1), icleb, iend, jend, ekl)
             else
-              call rhons(den(0,ie,iq), df, drdi, gmat0, ek, rho2ns(1,1,ispin), ipan, ircut, irmin, thetas, ifunm, lmsp, & ! Added IRMIN 1.7.2014
+              call rhons(den(0,ie,iq), df, drdi, gmat0, ek, rho2ns(1,1,1), ipan, ircut, irmin, thetas, ifunm, lmsp, & ! Added IRMIN 1.7.2014
                 nsra, qns, pns, ar, cr, pz, fz, qz, sz, cleb(1,1), icleb, jend, iend, ekl, denlm(1,ie,iq), gflle(:,:,ie,iq))
             end if
             ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -436,15 +385,12 @@ contains
               do l = 0, lmaxd1     ! qdos
                 dentot = dentot + den(l, ie, iq) ! qdos
               end do               ! qdos
-              write (30, 110) eryd, qvec(1, iq), qvec(2, iq), qvec(3, iq), & ! lmdos
-                -aimag(dentot)/pi, (-aimag(denlm(l,ie,iq))/pi, l=1, lmmaxd) ! lmdos
-              write (31, 110) eryd, qvec(1, iq), qvec(2, iq), qvec(3, iq), & ! qdos
-                -aimag(dentot)/pi, (-aimag(denlm(l,ie,iq))/pi, l=1, lmmaxd) ! qdos
+              write (30, 110) eryd, qvec(1, iq), qvec(2, iq), qvec(3, iq), -aimag(dentot)/pi, (-aimag(denlm(l,ie,iq))/pi, l=1, lmmaxd) ! lmdos
+              write (31, 110) eryd, qvec(1, iq), qvec(2, iq), qvec(3, iq), -aimag(dentot)/pi, (-aimag(denlm(l,ie,iq))/pi, l=1, lmmaxd) ! qdos
 110           format (5f10.6, 40e16.8) ! qdos
               ! writeout complex qdos for interpolation                         ! complex qdos
               if (test('compqdos')) then ! complex qdos
-                write (3031, 120) eryd, qvec(1, iq), qvec(2, iq), qvec(3, iq), & ! complex qdos
-                  dentot, (denlm(l,ie,iq), l=1, lmmaxd) ! complex qdos
+                write (3031, 120) eryd, qvec(1, iq), qvec(2, iq), qvec(3, iq), dentot, (denlm(l,ie,iq), l=1, lmmaxd) ! complex qdos
               end if               ! complex qdos
 120           format (6f10.6, 80e16.8) ! qdos
             end if                 ! qdos
@@ -461,9 +407,9 @@ contains
           ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
           if ((ie==ielast) .and. ldorhoef) then
             if (ins==0) then
-              call rholm(dendum, cone, gmat0, nsra, r2nef(1,1,ispin), drdi, ipan, ircut, pz, fz, qz, sz, cleb(1,1), icleb, iend, jend, ekl)
+              call rholm(dendum, cone, gmat0, nsra, r2nef(1,1,1), drdi, ipan, ircut, pz, fz, qz, sz, cleb(1,1), icleb, iend, jend, ekl)
             else
-              call rhons(dendum, cone, drdi, gmat0, ek, r2nef(1,1,ispin), ipan, ircut, irmin, thetas, ifunm, lmsp, & ! Added IRMIN 1.7.2014
+              call rhons(dendum, cone, drdi, gmat0, ek, r2nef(1,1,1), ipan, ircut, irmin, thetas, ifunm, lmsp, & ! Added IRMIN 1.7.2014
                 nsra, qns, pns, ar, cr, pz, fz, qz, sz, cleb(1,1), icleb, jend, iend, ekl, dum_denlm, dum_gflle)
             end if
           end if
@@ -540,22 +486,6 @@ contains
         i_all = -product(shape(gldau))*kind(gldau)
         deallocate (gldau, stat=i_stat)
         call memocc(i_stat, i_all, 'GLDAU', 'RHOVAL')
-      end if
-
-      if (ihost/=1) return
-
-      ! Transformation of ISPIN=1,2 from (spin-down,spin-up) to (charge-density,spin-density)
-      if (ispin==2) then
-        idim = irmd*lmpotd
-        call dscal(idim, 2.d0, rho2ns(1,1,1), 1)
-        call daxpy(idim, -0.5d0, rho2ns(1,1,1), 1, rho2ns(1,1,2), 1)
-        call daxpy(idim, 1.0d0, rho2ns(1,1,2), 1, rho2ns(1,1,1), 1)
-        ! -------------------------------------------------------------------------
-        ! Do the same at the Fermi energy
-        ! -------------------------------------------------------------------------
-        call dscal(idim, 2.d0, r2nef(1,1,1), 1)
-        call daxpy(idim, -0.5d0, r2nef(1,1,1), 1, r2nef(1,1,2), 1)
-        call daxpy(idim, 1.0d0, r2nef(1,1,2), 1, r2nef(1,1,1), 1)
       end if
 
     end subroutine rhoval

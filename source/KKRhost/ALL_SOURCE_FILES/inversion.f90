@@ -2,23 +2,27 @@ module mod_inversion
 
 contains
 
-  ! ************************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Driver of matrix inversion used in Dyson equation 
+  !> Author: 
+  !> Category: KKRhost, structural-greensfunction
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> This subroutine calculates the inversion of a matrix
+  !> in 4 different ways depending on the form of the matrix
+  !>
+  !> INVMOD = 0  ----> total inversion scheme
+  !> INVMOD = 1  ----> band matrix inversion scheme
+  !> INVMOD = 2  ----> corner band matrix inversion scheme
+  !> INVMOD = 3  ----> godfrin module
+  !-------------------------------------------------------------------------------
   subroutine inversion(gllke, invmod, icheck)
-    ! ************************************************************************
-    ! This subroutine calculates the inversion of a matrix
-    ! in 4 different ways depending on the form of the matrix
 
-    ! INVMOD = 0  ----> total inversion scheme
-    ! INVMOD = 1  ----> band matrix inversion scheme
-    ! INVMOD = 2  ----> corner band matrix inversion scheme
-    ! INVMOD = 3  ----> godfrin module
-
-    ! ------------------------------------------------------------------------
     use :: mod_datatypes, only: dp
-    use :: global_variables
-    use :: godfrin
-    use :: mod_invslab
-    use :: mod_invsupercell
+    use :: global_variables, only: alm, ndim_slabinv, nlayerd, naezd, nprincd, lmmaxd
+    use :: godfrin, only: sparse_inverse, t_godfrin
+    use :: mod_invslab, only: invslab
+    use :: mod_invsupercell, only: invsupercell
     implicit none
 
     complex (kind=dp) :: czero, cone

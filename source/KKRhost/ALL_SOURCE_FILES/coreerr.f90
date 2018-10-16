@@ -1,16 +1,22 @@
 module mod_coreerr
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: coreerr
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculate mismathc of radial wavefunctions for inward and outward integration
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> CALCULATE THE MISMATCH OF THE RADIAL WAVE FUNCTIONS AT THE
+  !> POINT  NMATCH  FOR OUT- AND INWARD INTEGRATION 
+  !-------------------------------------------------------------------------------
   subroutine coreerr(err, var, s, nsol, pow, qow, piw, qiw)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   CALCULATE THE MISMATCH OF THE RADIAL WAVE FUNCTIONS AT THE     *
-    ! *   POINT  NMATCH  FOR OUT- AND INWARD INTEGRATION                 *
-    ! *                                                                  *
-    ! ********************************************************************
+
+    use :: mod_datatypes, only: dp
     implicit none
     ! Dummy arguments
     integer :: nsol, s

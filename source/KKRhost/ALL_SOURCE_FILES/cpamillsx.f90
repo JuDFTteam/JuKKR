@@ -2,35 +2,38 @@ module mod_cpamillsx
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Perform CPA iteration with Mills algorithm
+  !> Author: 
+  !> Date: 15/12/03
+  !> Category: KKRhost, coherent-potential-approx
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Perform  CPA-iteration according    MILLS's  algorithm
+  !>                                                                 
+  !> the CPA - iteration step for site IQ is omitted if            
+  !> ICPA(IQ) = 0 ( set in <INITALL> )                             
+  !>                                                               
+  !> only the projection matrix  DTILT(G) is needed                
+  !> this is set up with respect to the global frame               
+  !> for this reason MSST has to be rotated prior calling <GETDMAT>
+  !>                                                               
+  !> allows an atom type IT to have different orientation of       
+  !> its moment on different but equivalent sites  IQ
+  !-------------------------------------------------------------------------------
   subroutine cpamillsx(itcpa, cpaerr, cpacorr, cpachng, iprint, icpa, nq, nkmq, noq, itoq, conc, mssq, msst, tauq, dmssq, kmrot, drotq, ntmax, nqmax, nkmmax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   perform  CPA-iteration according    MILLS's  algorithm         *
-    ! *                                                                  *
-    ! *   the CPA - iteration step for site IQ is omitted if             *
-    ! *   ICPA(IQ) = 0 ( set in <INITALL> )                              *
-    ! *                                                                  *
-    ! *   only the projection matrix  DTILT(G) is needed                 *
-    ! *   this is set up with respect to the global frame                *
-    ! *   for this reason MSST has to be rotated prior calling <GETDMAT> *
-    ! *                                                                  *
-    ! *   allows an atom type IT to have different orientation of        *
-    ! *   its moment on different but equivalent sites  IQ               *
-    ! *                                                                  *
-    ! * 15/12/03                                                         *
-    ! ********************************************************************
+
     use :: mod_types, only: t_inc
     use :: mod_datatypes, only: dp
-    use :: mod_getdmat
-    use :: mod_rotate
-    use :: mod_cinit
-    implicit complex (kind=dp)(a-h, o-z)
+    use :: mod_getdmat, only: getdmat
+    use :: mod_rotate, only: rotate
+    use :: mod_cinit, only: cinit
+    use :: mod_constants, only: czero, cone
+    implicit none
 
     ! PARAMETER definitions
     real (kind=dp) :: tol, sclstd
     parameter (tol=10d0, sclstd=1d0)
-    complex (kind=dp) :: c0, c1
-    parameter (c0=(0.0d0,0.0d0), c1=(1.0d0,0.0d0))
 
     ! Dummy arguments
     real (kind=dp) :: cpachng, cpacorr, cpaerr
@@ -71,7 +74,7 @@ contains
         n = nkmq(iq)
 
         do j = 1, n
-          dq(j, iq) = -c1
+          dq(j, iq) = -cone
           call cinit(n, err(1,j))
         end do
 
@@ -101,7 +104,7 @@ contains
           ! -------------------------------------------
           ! - E[a] = D~[a] * ( m[a] - m[c] )
           ! -------------------------------------------
-          call zgemm('N', 'N', n, n, n, c1, dtiltg(1,1), m, dmamc, m, c0, w1, m)
+          call zgemm('N', 'N', n, n, n, cone, dtiltg(1,1), m, dmamc, m, czero, w1, m)
 
           ! -------------------------------------------
           ! E = SUM[a]  c[a] *  E[a]
@@ -120,13 +123,13 @@ contains
         ! E * TAU
         ! -------------------------------------------
 
-        call zgemm('N', 'N', n, n, n, c1, err, m, tauq(1,1,iq), m, c0, w2, m)
+        call zgemm('N', 'N', n, n, n, cone, err, m, tauq(1,1,iq), m, czero, w2, m)
 
         ! -------------------------------------------
         ! 1 + E * TAU
         ! -------------------------------------------
         do i = 1, n
-          w2(i, i) = c1 + w2(i, i)
+          w2(i, i) = cone + w2(i, i)
         end do
 
         ! -------------------------------------------
@@ -140,7 +143,7 @@ contains
         ! ( 1 + E * TAU )**(-1) * E
         ! -------------------------------------------
 
-        call zgemm('N', 'N', n, n, n, c1, w2, m, err, m, c0, w1, m)
+        call zgemm('N', 'N', n, n, n, cone, w2, m, err, m, czero, w1, m)
 
         ! -------------------------------------------
         ! APPLY CORRECTION  TO  MEFF
@@ -183,7 +186,7 @@ contains
         cpaerr = cpachng
 
         if (iprint>=2 .or. check) then
-          csum = c0
+          csum = czero
           do i = 1, n
             csum = csum + mssq(i, i, iq)
           end do

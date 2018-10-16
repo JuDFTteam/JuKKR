@@ -4,36 +4,40 @@ module mod_vllmat
 
 contains
 
-  ! -------------------------------------------------------------------------------
-  ! SUBROUTINE: VLLMAT
-  !> @brief
-  ! -------------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
+  !> Summary: Construct non-spherical FP potential matrix \(V^{ns}_{LL'}\) from `vins` 
+  !> Author: 
+  !> Category: KKRhost, potential, single-site
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Sets up non-spherical potential without SOC contribution but already as complex numbers.
+  !-------------------------------------------------------------------------------
   subroutine vllmat(irmin, nrmaxd, irc, lmmax, lmmaxso, vnspll0, vins, lmpot, cleb, icleb, iend, nspin, zat, rnew, use_sratrick, ncleb)
 
     implicit none
 
-    ! .. Input variables
-    integer, intent (in) :: irc    !! r point for potential cutting
-    integer, intent (in) :: iend   !! maximal number of non-vanishing Gaunt coefficients
-    integer, intent (in) :: ncleb  !! Number of Gaunt coefficients
-    integer, intent (in) :: irmin  !! max r for spherical treatment, afterwards non-spherical contribution
-    integer, intent (in) :: lmmax  !! (LMAX+1)^2
-    integer, intent (in) :: nspin  !! spin-degree of freedom
-    integer, intent (in) :: lmpot  !! (LPOT+1)**2
-    integer, intent (in) :: nrmaxd !! NTOTD*(NCHEBD+1), maximal number of radial points in Chebychev mesh
-    integer, intent (in) :: lmmaxso !! 2*(LMAX+1)^2, for SOC L=(l,m,s) instead of L=(l,m)
+    ! input
+    integer, intent (in) :: irc          !! r point for potential cutting
+    integer, intent (in) :: iend         !! maximal number of non-vanishing Gaunt coefficients
+    integer, intent (in) :: ncleb        !! Number of Gaunt coefficients
+    integer, intent (in) :: irmin        !! max r for spherical treatment, afterwards non-spherical contribution
+    integer, intent (in) :: lmmax        !! (LMAX+1)^2
+    integer, intent (in) :: nspin        !! spin-degree of freedom
+    integer, intent (in) :: lmpot        !! (LPOT+1)^2
+    integer, intent (in) :: nrmaxd       !! NTOTD*(NCHEBD+1), maximal number of radial points in Chebychev mesh
+    integer, intent (in) :: lmmaxso      !! 2*(LMAX+1)^2, for SOC L=(l,m,s) instead of L=(l,m)
     integer, intent (in) :: use_sratrick !! switch to use SRA trick (see routine rllsll) or not
-    real (kind=dp), intent (in) :: zat !! atomic charge
-    integer, dimension (ncleb, 4), intent (in) :: icleb !! index array for Gaunt coefficients
+    real (kind=dp), intent (in) :: zat   !! atomic charge
+    integer, dimension (ncleb, 4), intent (in) :: icleb    !! index array for Gaunt coefficients
     real (kind=dp), dimension (ncleb), intent (in) :: cleb !! GAUNT coefficients
     real (kind=dp), dimension (irmin:irc, lmpot, nspin), intent (in) :: vins !! Non-spherical part of the potential
     real (kind=dp), dimension (irmin:nrmaxd), intent (in) :: rnew !! radial mesh points of Chebychev mesh
+    ! output
     complex (kind=dp), dimension (lmmaxso, lmmaxso, irmin:irc), intent (out) :: vnspll0 !! output potential in Chebychev mesh and (l,m,s)-space
-
-    ! .. Local variables
-    integer :: isp
+    ! local
+    integer :: isp !! counter for spin-degree
     integer :: i, ir, j, lm1, lm2, lm3
-    real (kind=dp), dimension (lmmax, lmmax, irmin:irc, nspin) :: vnspll
+    real (kind=dp), dimension (lmmax, lmmax, irmin:irc, nspin) :: vnspll !! work array of potential, is casted to complex array `vnspll0` in the the end
 
     do isp = 1, nspin
       do lm1 = 1, lmmax

@@ -2,23 +2,28 @@ module mod_epathtb
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Driver for emery mesh creation
+  !> Author: Ph. Mavropoulos, V. Popescu
+  !> Category: KKRhost, undefined
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Generating the energy mesh.
+  !>
+  !> Calls the routine EMESHT once for the valence contour and once for 
+  !> the semicore contour.
+  !> In the semicore range, -NPOLSEM is used to create a rectangular
+  !> contour.
+  !>              Ph. Mavropoulos, V. Popescu Juelich/Munich 2004 
+  !-------------------------------------------------------------------------------
   subroutine epathtb(ez, df, efermi, npnt, iesemicore, idosemicore, ebotval, emuval, tkval, npolval, n1val, n2val, n3val, ebotsem, emusem, tksem, npolsem, n1sem, n2sem, n3sem, &
     iemxd)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * Generating the energy mesh.                                        *
-    ! *                                                                    *
-    ! * Calls the routine EMESHT once for the valence contour and once for *
-    ! * the semicore contour.                                              *
-    ! * In the semicore range, -NPOLSEM is used to create a rectangular    *
-    ! * contour.                                                           *
-    ! *              ph. mavropoulos, v.popescu Juelich/Munich 2004        *
-    ! *                                                                    *
-    ! **********************************************************************
+
     use :: mod_types, only: t_inc
     use :: mod_datatypes, only: dp
-    use :: mod_emesht
+    use :: mod_emesht, only: emesht
     implicit none
+    
     integer :: iemxd
     complex (kind=dp) :: ez(*), df(*), ezsemi(iemxd), dfsemi(iemxd)
     complex (kind=dp) :: ezval(iemxd), dfval(iemxd)

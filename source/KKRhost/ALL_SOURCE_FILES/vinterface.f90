@@ -34,7 +34,7 @@ contains
   subroutine vinterface(cmom, cminst, lpot, nspin, nlayers, natyp, v, zat, r, irws, ircut, ipan, kshape, noq, kaoez, iqat, conc, catom, icc, hostimp, nlbasis, nleft, nrbasis, &
     nright, cmomhost, chrgnt, vinters, naez, lmpot)
 
-    use :: constants
+    use :: mod_constants
     use :: global_variables
     use :: mod_datatypes, only: dp
 

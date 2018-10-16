@@ -1,29 +1,36 @@
 module mod_cmomsread
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: cmomsread
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Read CMOMS for host for decimation
+  !> Author: 
+  !> Date: 29.10.99
+  !> Category: KKRhost, input-output
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> This subroutine reads in the CMOMHOST from the decimation files  
+  !> Note that they are needed only in case of an SCF decimation 
+  !> calculation (SCFSTEPS > 1 )                                         
+  !>                                                                  
+  !> The t-matrices are writen out in kloopz1 (option 'deci-out')    
+  !>                                                                  
+  !> This subroutine must be called after the t-matrices for all the  
+  !> energies are read in (see < decimaread > )                       
+  !> It returns the CMOMHOST array. First the left bulk (unit 37) then
+  !> the right bulk (unit 38) are indexed.                            
+  !> CMOMHOST(*,NEMBD1) =                                             
+  !>                CMOMHOST(*,1..NLBASIS,NLBASIS+1..NLBASIS+NRBASIS) 
+  !> Condider this mapping for further use.                           
+  !>                                                                  
+  !>                                                  29.10.99        
+  !>                                                  05.06.04
+  !-------------------------------------------------------------------------------
   subroutine cmomsread(nlbasis, nrbasis, naez, cmomhost, vacflag, kaoez, natypd, nembd1, lmpotd)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * This subroutine reads in the CMOMHOST from the decimation files    *
-    ! * Note that they are needed only in case of an SCF decimation cal-   *
-    ! * culation (SCFSTEPS > 1 )                                           *
-    ! *                                                                    *
-    ! * The t-matrices are writen out in kloopz1  (option 'deci-out')      *
-    ! *                                                                    *
-    ! * This subroutine must be called after the t-matrices for all the    *
-    ! * energies are read in (see < decimaread > )                         *
-    ! * It returns the CMOMHOST array. First the left bulk (unit 37) then  *
-    ! * the right bulk (unit 38) are indexed.                              *
-    ! * CMOMHOST(*,NEMBD1) =                                               *
-    ! *                CMOMHOST(*,1..NLBASIS,NLBASIS+1..NLBASIS+NRBASIS)   *
-    ! * Condider this mapping for further use.                             *
-    ! *                                                                    *
-    ! *                                                  29.10.99          *
-    ! *                                                  05.06.04          *
-    ! **********************************************************************
+    use :: mod_datatypes, only: dp
     implicit none
     ! ..
     ! .. Arguments

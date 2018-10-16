@@ -1,19 +1,27 @@
 module mod_dsort
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: dsort
 
 contains
 
-  ! ************************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Sort double precision array returning sorted index array
+  !> Author: P. Zahn
+  !> Date: April 96
+  !> Category: KKRhost, numerical tools
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> W   is the original array returned unchanged
+  !> IND is an array that holds the new positions
+  !> max number of ellements to be sorted
+  !> pos the position where the first element is found
+  !-------------------------------------------------------------------------------
   subroutine dsort(w, ind, max, pos)
-    ! ************************************************************************
-    ! p.zahn, april 96
-    ! W   is the original array returned unchanged
-    ! IND is an array that holds the new positions
-    ! max number of ellements to be sorted
-    ! pos the position where the first element is found
-    ! ------------------------------------------------------------------------
+
+    use :: mod_datatypes, only: dp
     implicit none
+
     integer :: max, pos
     real (kind=dp) :: w(*)
     integer :: ind(*)

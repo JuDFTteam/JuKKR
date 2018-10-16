@@ -1,20 +1,28 @@
 module mod_cmatmul
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: cmatmul
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Complex matrix-matrix multiplication
+  !> Author: 
+  !> Category: KKRhost, undefined
+  !> Deprecated: True ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Perform  the matrix-matrix operation           C = A * B
+  !>
+  !>  A,B,C   complex  SQUARE  N x N - matrices
+  !>  N       dimension of A, B and C
+  !>  M       array size of A, B, C with M >= N
+  !>
+  !> @note
+  !> Can easily be replaced with intrinsic MATMUL or LAPACK call (should be much more optimized)
+  !> @endnote
+  !-------------------------------------------------------------------------------
   subroutine cmatmul(n, m, a, b, c)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   perform  the matrix-matrix operation           C = A * B       *
-    ! *                                                                  *
-    ! *   A,B,C   complex  SQUARE  N x N - matrices                      *
-    ! *   N       dimension of A, B and C                                *
-    ! *   M       array size of A, B, C with M >= N                      *
-    ! *                                                                  *
-    ! ********************************************************************
-
+    use :: mod_datatypes, only: dp
     implicit none
 
     ! PARAMETER definitions

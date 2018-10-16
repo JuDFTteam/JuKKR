@@ -159,7 +159,7 @@ contains
   ! -------------------------------------------------------------------------------
   subroutine create_umatrix(theta, phi, lmmax, umat, udeggamat)
 
-    use :: constants
+    use :: mod_constants
 
     implicit none
     ! interface

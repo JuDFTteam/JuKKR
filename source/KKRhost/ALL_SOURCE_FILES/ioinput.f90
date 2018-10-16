@@ -1,69 +1,65 @@
 module mod_ioinput
 
+  private
+  public :: ioinput
+
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Read value of keyword from inputcard
+  !> Author: 
+  !> Category: KKRhost, input-output
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> This subroutine is responsible for the I/O with the input file.
+  !>
+  !> GIVEN a KEYWORD: CHARKEY it positions the
+  !> reading just after the CHARKEY if this
+  !> includes a '=', or ILINE lines after the
+  !> occurence of THE CHARKEY.
+  !> USAGE :
+  !> To read lmax include in the inputcard (ifile)
+  !>
+  !>     LMAX= 3      CORRECT!
+  !>
+  !>     or
+  !>
+  !>     LMAX         CORRECT!     (iline=1)
+  !>      3
+  !>   (without  the '=' )
+  !>     LMAX
+  !>  ---------                    (iline=2),etc
+  !>      3
+  !> be carefull in this case to put the value after the
+  !> keyword example:
+  !>
+  !>    LMAX
+  !>  3               WRONG!
+  !>
+  !> will NOT work
+  !> Comments etc in the program are ignored.
+  !>                                               1.6.99
+  !>
+  !> @warning
+  !>  - The error handler is not working yet in all cases ...
+  !>  - In this version only files 5000 lines long can be read in
+  !> @endwarning
+  !-------------------------------------------------------------------------------
   subroutine ioinput(charkey, char, iline, ifile, ierror)
-    ! *********************************************************
-    ! *  This subroutine is responsible for the I/O
-    ! *  with the input file.
-    ! *
-    ! *  GIVEN a KEYWORD: CHARKEY it positions the
-    ! *  reading just after the CHARKEY if this
-    ! *  includes a '=', or ILINE lines after the
-    ! *  occurence of THE CHARKEY.
-    ! *  USAGE :
-    ! *  To read lmax include in the input card (ifile)
-    ! *
-    ! *      LMAX= 3      CORRECT!
-    ! *
-    ! *      or
-    ! *
-    ! *      LMAX         CORRECT!     (iline=1)
-    ! *       3
-    ! *    (without  the '=' )
-    ! *      LMAX
-    ! *   ---------                    (iline=2),etc
-    ! *       3
-    ! *  be carefull in this case to put the value after the
-    ! *  keyword example:
-    ! *
-    ! *     LMAX
-    ! *   3               WRONG!
-    ! *
-    ! * will NOT work
-    ! * Comments etc in the program are ignored.
-    ! *                                               1.6.99
-    ! *
-    ! * The error handler is not working yet in all cases ....
-    ! * In this version only files 5000 lines long can be read in
-    ! *******************************************************
+
     implicit none
     integer :: nchar, nabc, ncolio, nlinio
     parameter (nchar=16, nabc=40, ncolio=256, nlinio=5000)
-    character (len=nchar) :: charkey                             ! *NCHAR
-
-
-
-    character (len=ncolio) :: char                             ! *NCOLIO
-
-
-
+    character (len=nchar) :: charkey
+    character (len=ncolio) :: char
     integer :: iline, ierror, ifile
     integer :: i, ios, ier, npt, ilen, ipos, ipos1, iklen
-    character (len=ncolio) :: string(nlinio)                             ! *NCOLIO
-
-
-
-    character (len=ncolio) :: string1                             ! *NCOLIO
-
-
-
-    character (len=nabc) :: abc                             ! *NABC
-
-
-
+    character (len=ncolio) :: string(nlinio)
+    character (len=ncolio) :: string1
+    character (len=nabc) :: abc
     character :: atest
     data abc/'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_<>'/
+
 
     ierror = 0
     ier = 0
@@ -73,7 +69,6 @@ contains
       write (6, *) 'Error in reading the inputcard file'
       stop
     end if
-
 
     npt = 1
     do
@@ -151,32 +146,31 @@ contains
     stop
   end subroutine ioinput
 
+
+  !-------------------------------------------------------------------------------
+  !> Summary: Return position of first whitespace and letter
+  !> Author: 
+  !> Category: KKRhost, input-output
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> This sub returns the position of the first space character
+  !> in ipos2, and the position of the first letter in the string
+  !> STR1
+  !-------------------------------------------------------------------------------
   subroutine verify77(nabc, abc, nchar, str1, ipos1, ipos2)
-    ! This sub returns the position of the first space character
-    ! in ipos2, and the position of the first letter in the string
-    ! STR1
+
     implicit none
     integer :: nchar, nabc
-    character (len=nchar) :: str1                             ! *NCHAR
-
-
-
-    character (len=nabc) :: abc                             ! *NABC
-
-
-
-    character (len=1) :: char                             ! *1
-
-
-
+    character (len=nchar) :: str1
+    character (len=nabc) :: abc
+    character (len=1) :: char
     integer :: ipos, ipos1, ipos2, i, j
-    ! DATA ABC/'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_<>'/
+
     ipos2 = 0
 
     ipos1 = index(str1, ' ')
     do j = 1, 10
       char = str1(j:j+1)
-      ! write(6,*) 'char : ',j, char
       ipos = 0
       do i = 1, 40
         ipos = index(char, abc(i:i))
@@ -185,7 +179,6 @@ contains
           return
         end if
       end do
-
     end do
     return
   end subroutine verify77

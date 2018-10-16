@@ -1,20 +1,26 @@
 module mod_decipotbas
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: decipotbas
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Reads base of potential for decimation
+  !> Author: 
+  !> Category: KKRhost, input-output, potential
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Reads in the potential data for the host atoms from the potential
+  !> file 'decimate.pot'                                              
+  !>                                        V. Popescu - Munich, Dec 04
+  !>
+  !> Note: so far, only  SPHERICAL case implemented
+  !-------------------------------------------------------------------------------
   subroutine decipotbas(ihost, iqoff, itoff, nq, nt, rbasis, qmtet, qmphi, noq, kaoez, zat, iqat, conc, irws, ipan, ircut, rr, drdi, visp, nspin, krel, solver, socscl, cscl, vtrel, &
     btrel, irmd, ipand, nembd1, ntmax, nspind, lmaxd)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * reads in the potential data for the host atoms from the potential  *
-    ! * file 'decimate.pot'                                                *
-    ! *                                        v.popescu - munich, Dec 04  *
-    ! *                                                                    *
-    ! * Note: so far, only  SPHERICAL case implemented                     *
-    ! *                                                                    *
-    ! **********************************************************************
+
+    use :: mod_datatypes, only: dp
     implicit none
     ! ..
     ! .. Arguments

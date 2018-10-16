@@ -4,19 +4,30 @@ module mod_dscal1
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Scaling of vector by constant
+  !> Author: 
+  !> Category: KKRhost, numerical-tools
+  !> Deprecated: True ! This needs to be set to True for deprecated subroutines
+  !>
+  !> @note
+  !> This can be easily be replace with `dx(:) = a*dx(:)` but this routine is anyways only used by
+  !> dead parts of the core base
+  !> @endnote
+  !>
+  !>  Scales a vector by a constant  dx(i) -> a * dx(i)
+  !> ----------------------------------------------------------------------
+  !> i Inputs:
+  !> i   n     :lenght of dx and dy
+  !> i   da    :constant
+  !> i   dx    :vector
+  !> i   incx  :incrementation for x
+  !> o Outputs:
+  !> o   dx    :vector
+  !> r Remarks:
+  !> r   Adapted from: jack dongarra, linpack, 3/11/78.
+  !-------------------------------------------------------------------------------
   subroutine dscal1(n, da, dx, incx)
-    ! - Scales a vector by a constant  dx(i) -> a * dx(i)
-    ! ----------------------------------------------------------------------
-    ! i Inputs:
-    ! i   n     :lenght of dx and dy
-    ! i   da    :constant
-    ! i   dx    :vector
-    ! i   incx  :incrementation for x
-    ! o Outputs:
-    ! o   dx    :vector
-    ! r Remarks:
-    ! r   Adapted from: jack dongarra, linpack, 3/11/78.
-    ! ----------------------------------------------------------------------
 
     implicit none
     ! Passed parameters:

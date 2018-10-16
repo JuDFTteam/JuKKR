@@ -1,26 +1,33 @@
 module mod_ddet33
+
   use :: mod_datatypes, only: dp
   private :: dp
+  public :: ddet33
 
 contains
 
-  function ddet33(matrix)
-    ! - calculates the determinant of a 3X3 matrix
-    ! ----------------------------------------------------------------------
-    ! i Inputs:
-    ! i   matrix:input matrix
-    ! o Outputs:
-    ! o   ddet33:determinant
-    ! ----------------------------------------------------------------------
-    use :: mod_cross
+  !-------------------------------------------------------------------------------
+  !> Summary: Determinant of 3x3 double precision matrix
+  !> Author: 
+  !> Category: KKRhost, numerical-tools
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Calculates the determinant of a 3X3 matrix
+  !> 
+  !> Inputs:
+  !>   matrix:input matrix
+  !> Outputs:
+  !>   ddet33: determinant
+  !-------------------------------------------------------------------------------
+  real(kind=dp) function ddet33(matrix)
+    use :: mod_cross, only: cross
     implicit none
-    real (kind=dp) :: ddet33
     ! Passed parameters:
-    real (kind=dp) :: matrix(*)
+    real (kind=dp), intent(in) :: matrix(*) !! ipnut matrix
     ! Local parameters:
-    real (kind=dp) :: ddot, m1cm2(3)
+    real (kind=dp) :: m1cm2(3) !! temporary value of cross product
     ! external calls:
-    external :: ddot
+    real (kind=dp), external :: ddot !! ddot is a LAPACK function
 
     call cross(matrix(4), matrix(7), m1cm2)
     ddet33 = ddot(3, matrix(1), 1, m1cm2, 1)

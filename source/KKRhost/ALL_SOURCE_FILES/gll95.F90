@@ -1,30 +1,37 @@
 module mod_gll13
 
+  private
+  public :: gll13
+
 contains
 
-  ! **********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Solution of the DYSON equation for a cluster
+  !> Author: P. Zahn, Ph. Mavropoulos
+  !> Date: Oct. 2013
+  !> Category: KKRhost, structural-greensfunction, reference-system
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> solution of the DYSON equation for a cluster of potentials
+  !> (TMATLL) centered at positions RATOM in free space,
+  !>
+  !> (modified version of GLL91 by P. Zahn, Sept. 95)
+  !> (modified by Phivos Mavropoulos to apply Lloyds formula
+  !> ported from KKRnano, Oct. 2013)
+  !-------------------------------------------------------------------------------
   subroutine gll13(ez, cleb, icleb, loflm, iend, tmatll, dtmatll, atom, refpot, ratom, natom, tolrdif, alat, out_wr, gref0, dgdeout, naclsmax, lly_g0tr, lly)
-    ! **********************************************************************
 
-    ! solution of the DYSON equation for a cluster of potentials
-    ! (TMATLL) centered at positions RATOM in free space,
 
-    ! (modified version of GLL91 by P. Zahn, Sept. 95)
-    ! (modified by Phivos Mavropoulos to apply Lloyds formula
-    ! ported from KKRnano, Oct. 2013)
-    ! ----------------------------------------------------------------------
 #ifdef CPP_HYBRID
     use :: omp_lib
 #endif
     use :: mod_types, only: t_inc
-    use :: global_variables
+    use :: global_variables, only: lmgf0d, nrefd, ncleb, naclsd, naezd, nembd, lm2d
     use :: mod_datatypes, only: dp
-    use :: mod_gfree13
-    use :: mod_grefsy13
+    use :: mod_gfree13, only: gfree13
+    use :: mod_grefsy13, only: grefsy13
+    use :: mod_constants, only: cone, czero
     implicit none
-    ! .. Parameters ..
-    complex (kind=dp) :: cone, czero
-    parameter (cone=(1.d0,0.d0), czero=(0.d0,0.d0))
     ! ..
     ! .. Scalar Arguments ..
     complex (kind=dp) :: ez
@@ -51,16 +58,17 @@ contains
     integer :: lly                 ! LLY =0 : no Lloyd's formula; <>0: use Lloyd's formula
     ! ..
     ! .. External Functions ..
-    logical :: test
-    external :: test
+    logical, external :: test
     ! ..
     ! .. Intrinsic Functions ..
     intrinsic :: abs
+    ! ..
+    ! .. OpenMP stuff ..
 #ifdef CPP_HYBRID
     integer :: thread_id
 #endif
 
-    ! ..
+
     ngd1 = naclsmax*lmgf0d
     ndim = lmgf0d*natom
 

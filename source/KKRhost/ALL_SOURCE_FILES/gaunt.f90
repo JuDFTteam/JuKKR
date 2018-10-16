@@ -1,59 +1,60 @@
 module mod_gaunt
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: gaunt
 
 contains
 
-  ! ************************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Computes Gaunt coefficients
+  !> Author: M. Weinert,  E. Wimmer, B. Drittler
+  !> Date: March 1980
+  !> Category: KKRhost, special-functions
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> - fills the array cleb with the gaunt coeffients ,i.e.
+  !>   the integral of \(y(l_1,m_1) \cdot y(l_2,m_2) \cdot y(l_3,m_3)\)
+  !>   but only for \(lm_2 \le lm_1\) and \(lm_3>1\)
+  !> - calculate the pointer array jend  to project the indices
+  !>   array cleb with the same \(lm_3\), \(l_1\), \(l_2\) values - because of
+  !>   the special ordering of array cleb only the last index
+  !>   has to be determined.
+  !> (the parameter n has to be chosen that \(l_1+l_2+l_3 < 2 n\) )
+  !> using gaussian quadrature as given by
+  !> M. Abramowitz and I. A. Stegun, Handbook of Mathematical Functions,
+  !> NBS Applied Mathematics Series 55 (1968), pages 887 and 916
+  !>
+  !> An index array - `icleb` - is used to save storage place.
+  !> fills the array loflm which is used to determine the
+  !> l-value of a given lm-value.
+  !>
+  !> @note
+  !> This subroutine has to be called only once!
+  !> @endnote
+  !>
+  !> B. Drittler   November 1987
+  !>
+  !> Modified Gaunt coefficients are als calculated defined by
+  !> the integral of \(y(l_1,m_1) \cdot y(l_2,m_2) \cdot y(l_3,m_3) \cdot i^{l_2-l_1+l_3}\)
+  !> 
+  !>
+  !> @warning Attention: `ncleb` is an empirical factor - it has to be optimized @endwarning
+  !-------------------------------------------------------------------------------
   subroutine gaunt(lmax, lpot, w, yr, cleb, loflm, icleb, iend, jend, ncleb, lmaxd, lmgf0d, lmpotd)
-    ! ************************************************************************
 
-    ! - fills the array cleb with the gaunt coeffients ,i.e.
-    ! the integral of y(l1,m1)*y(l2,m2)*y(l3,m3)
-    ! but only for lm2.le.lm1 and lm3>1
-    ! - calculate the pointer array jend  to project the indices
-    ! array cleb with the same lm3,l1,l2 values - because of
-    ! the special ordering of array cleb only the last index
-    ! has to be determined .
-    ! (the parameter n has to be chosen that l1+l2+l3 .lt. 2*n)
-    ! using gaussian quadrature as given by
-    ! m. abramowitz and i.a. stegun, handbook of mathematical functions,
-    ! nbs applied mathematics series 55 (1968), pages 887 and 916
-    ! m. weinert and e. wimmer
-    ! northwestern university march 1980
-
-    ! an index array -icleb- is used to save storage place .
-    ! fills the array loflm which is used to determine the
-    ! l-value of a given lm-value .
-    ! this subroutine has to be called only once !
-
-    ! b.drittler   november 1987
-
-    ! modified gaunt coefficients are als calculated defined by
-    ! the integral of y(l1,m1)*y(l2,m2)*y(l3,m3)*i**(l2-l1+l3)
-    ! -----------------------------------------------------------------------
-
-    ! ---> attention : ncleb is an empirical factor - it has to be optimized
-
-    use :: mod_rcstop
+    use :: mod_datatypes, only: dp
+    use :: mod_rcstop, only: rcstop
     implicit none
-    ! ..
+
     real (kind=dp), parameter :: eps = 1.0e-12_dp
     complex (kind=dp), parameter :: ci = (0.0e0_dp, 1.0e0_dp)
-    ! ..
     integer :: lmpotd, lmgf0d, lmaxd, ncleb
-    ! ..
-    ! .. Scalar Arguments ..
     integer :: iend, lmax, lpot
-    ! ..
-    ! .. Array Arguments ..
     real (kind=dp) :: cleb(ncleb, 2), w(*), yr(4*lmaxd, 0:4*lmaxd, 0:4*lmaxd)
     integer :: icleb(ncleb, 4), jend(lmpotd, 0:lmaxd, 0:lmaxd), loflm(*)
-    ! ..
-    ! .. Local Scalars ..
     real (kind=dp) :: clecg, factor, fci, s
     integer :: i, j, l, l1, l1p, l2, l2p, l3, lm1, lm2, lm3, lm3p, lmpot, m, m1, m1a, m1s, m2, m2a, m2s, m3, m3a, m3s
-    ! ..
+
 
     i = 1
     do l = 0, 2*lmax

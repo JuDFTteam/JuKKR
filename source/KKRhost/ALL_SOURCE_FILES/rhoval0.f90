@@ -9,7 +9,7 @@ contains
   ! -------------------------------------------------------------------------------
   subroutine rhoval0(ez, drdi, rmesh, ipan, ircut, irws, thetas, dos0, dos1, irm, lmax)
 
-    use :: constants
+    use :: mod_constants
     use :: global_variables
     use :: mod_datatypes, only: dp
     use :: mod_beshan

@@ -445,6 +445,16 @@ run:intel:Si_LLY_SOC_3_1:
       - build/*dyn
     expire_in: 1 day
 
+run:intel:NOSOC_3_2:
+  stage: run_features_SOC
+  script:
+    - tests/tools/run_test_03_2.sh
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
+
 run:intel:Jijs_SOC_4_1:
   stage: run_features_SOC
   script:

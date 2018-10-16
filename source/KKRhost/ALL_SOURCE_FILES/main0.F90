@@ -1,19 +1,5 @@
-! -------------------------------------------------------------------------------
-! MODULE: MOD_MAIN0
-!> @brief Wrapper module for the reading and setup of the JM-KKR program
-!> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
-!> and many others ...
-!> @todo JC: NATOMIMP and NATOMIMPD seem to be the same variable, however, right
-!> now find no way to eliminate one of them.
-!> @todo JC: There seem to be several repeated variables doing the same, e.g. INS,
-!> KNOSPH, KWS and KSHAPE, all seem to dictate whether one has ASA or FP.
-!> Maybe it would be good to consolidate and eliminate any unnecessary variables.
-!> @todo JC: Several variables such as IRMD and IRNSD are actually determined in
-!> the startb1 subroutine, maybe change the allocations such that they are done
-!> there instead
-!> @note
-!> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
-! -------------------------------------------------------------------------------
+
+! set CPP_OMPSTUFF if either HYBRID or OpenMP parallelization is chosen
 #ifdef CPP_HYBRID
 #define CPP_OMPSTUFF
 #endif
@@ -21,54 +7,74 @@
 #define CPP_OMPSTUFF
 #endif
 
+
+!-------------------------------------------------------------------------------
+!> Summary: Wrapper module for the reading and setup of the JM-KKR program
+!> Author: 
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!> @todo 
+!> - JC: NATOMIMP and NATOMIMPD seem to be the same variable, however, right
+!> now find no way to eliminate one of them.
+!> - JC: There seem to be several repeated variables doing the same, e.g. INS,
+!> KNOSPH, KWS and KSHAPE, all seem to dictate whether one has ASA or FP.
+!> Maybe it would be good to consolidate and eliminate any unnecessary variables.
+!> - JC: Several variables such as IRMD and IRNSD are actually determined in
+!> the startb1 subroutine, maybe change the allocations such that they are done
+!> there instead
+!> @endtodo
+!>
+!> @note
+!> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
+!> @endnote
+!-------------------------------------------------------------------------------
 module mod_main0
 
-  use :: mod_wunfiles
-  use :: mod_types, only: t_imp
-#ifdef CPP_TIMING
-  use :: mod_timing
-#endif
-  use :: constants
-  use :: memoryhandling
-  use :: global_variables
-  use :: mod_create_newmesh
-  use :: mod_rhoqtools, only: rhoq_save_rmesh
-  use :: rinput
-  use :: mod_datatypes, only: dp
 
-  use :: mod_addvirtual14
-  use :: mod_bzkint0
-  use :: mod_calcrotmat
-  use :: mod_changerep
-  use :: mod_cinit
-  use :: mod_clsgen_tb
-  use :: mod_convol
-  use :: mod_deciopt
-  use :: mod_drvbastrans
-  use :: mod_epathtb
-  use :: mod_gaunt2
-  use :: mod_gaunt
-  use :: mod_generalpot
-  use :: mod_getbr3
-  use :: mod_gfmask
-  use :: mod_lattix99
-  use :: mod_madelung2d
-  use :: mod_madelung3d
-  use :: mod_outpothost
-  use :: mod_outtmathost
-  use :: mod_readimppot
-  use :: mod_relpotcvt
-  use :: mod_rinit
-  use :: mod_scalevec
-  use :: mod_setgijtab
-  use :: mod_shape_corr
-  use :: mod_startb1
-  use :: mod_startldau
-  use :: mod_testdim
-  use :: mod_write_tbkkr_files
-  use :: mod_writehoststructure
+  use :: mod_datatypes, only: dp
+  use :: mod_constants, only: nsymaxd, pi
 
   implicit none
+
+  private
+  public :: main0, bshift_ns
+  ! ------------- > scalars > ------------- 
+  !integers
+  public :: kte, kws, kxc, igf, icc, ins, irm, ipe, ipf, ipfe, kcor, kefg, khyp, kpre, nprinc, nsra, lpot, imix, iend, icst, &
+    naez, nemb, lmax, ncls, nref, npol, npnt1, npnt2, npnt3, lmmax, nvirt, lmpot, kvmad, itscf, ncheb, nineq, natyp, ifile, &
+    kvrel, nspin, nleft, nright, invmod, khfeld, itdbry, insref, kshape, ielast, ishift, kfrozn, nsymat, nqcalc, kforce, n1semi, &
+    n2semi, n3semi, nlayer, nlbasis, nrbasis, intervx, intervy, intervz, maxmesh, npan_eq, npan_log, npolsemi, scfsteps, natomimp, &
+    iesemicore, idosemicore
+  !real(kind=dp)
+  public :: tk, fcm, e2in, emin, emax, alat, rmax, gmax, r_log, rcutz, rcutxy, qbound, vconst, hfield, mixing, abasis, bbasis, &
+    cbasis, efermi, eshift, tksemi, tolrdif, alatnew, volume0, emusemi, ebotsemi, fsemicore, lambda_xc
+  !character
+  public :: solver, i12, i13, i19, i25, i40
+  !logicals
+  public :: lrhosym, linipol, lcartesian
+  ! ------------- < scalars < ------------- 
+  ! ------------- > arrays > ------------- 
+  !integer
+  public :: isymindex, cls, irc, imt, nfu, nsh1, nsh2, lmxc, ipan, irns, irws, kmesh, irmin, loflm, nacls, ncore, imaxsh, nshell, &
+    inipol, ixipol, refpot, ntcell, iqcalc, iofgij, jofgij, atomimp, ijtabsh, ijtabsym, npan_tot, ijtabcalc, npan_eq_at, npan_log_at, &
+    ijtabcalc_i, ish, jsh, ilm_map, kfg, atom, ezoa, lmsp, lcore, icleb, ircut, llmsp, lmsp1, kaoez, ifunm, ifunm1, ititle, icheck, &
+    ipan_intervall, jend, kmrot, ncpa, itcpamax, noq, iqat, icpa, hostimp, zrel, jwsrel, irshift, nrrel, ntldau, idoldau, itrunldau, &
+    kreadldau, lopt, itldau, lly, ivshift, irrel
+  !real
+  public :: vbc, zperight, zperleft, recbv, bravais, rsymat, a, b, wg, gsh, zat, rmt, rws, vref, vref_temp, mtfac, rmtnew, rmtref, &
+    rmtref_temp, rmtrefat, fpradius, socscale, rmesh, s, rr, drdi, dror, cleb, visp, cscl, rnew, ratom, ecore, tleft, tright, socscl, &
+    rbasis, rclsimp, cmomhost, rpan_intervall, rs, yrg, vins, rcls, rrot, qmtet, qmphi, qmgam, qmgamtab, qmphitab, qmtettab, cpatol, &
+    conc, fact, vtrel, btrel, rmrel, drdirel, r2drdirel, thesme, thetas, thetasnew, ueff, jeff, erefldau, wldau, uldau
+  !complex
+  public :: ez, dez, wez, dsymll, dsymll1, lefttinvll, righttinvll, rc, crel, rrel, srrel, drotq, phildau, deltae
+  !character
+  public :: txc
+  !logical
+  public :: vacflag, para, symunitary, emeshfile
+  ! ------------- < arrays < ------------- 
+
+  
+  ! decalration of common variables
 
   integer :: kte                   !! Calculation of the total energy On/Off (1/0)
   integer :: kws                   !! 0 (MT), 1(ASA)
@@ -84,8 +90,8 @@ module mod_main0
   integer :: kefg
   integer :: khyp
   integer :: kpre
-  integer :: nprinc
-  integer :: nsra
+  integer :: nprinc                !! number of principal layers used for slab-inversion
+  integer :: nsra                  !! scalar-relativistic (nsra==2) or non-relativistic (nsra==1)
   integer :: lpot                  !! Maximum l component in potential expansion
   integer :: imix                  !! Type of mixing scheme used (0=straight, 4=Broyden 2nd, 5=Anderson)
   integer :: iend                  !! Number of nonzero gaunt coefficients
@@ -103,7 +109,7 @@ module mod_main0
   integer :: nvirt
   integer :: lmpot                 !! (LPOT+1)**2
   integer :: kvmad
-  integer :: itscf
+  integer :: itscf                 !! counter scf iterations
   integer :: ncheb                 !! Number of Chebychev pannels for the new solver
   integer :: nineq                 !! Number of ineq. positions in unit cell
   integer :: natyp                 !! Number of kinds of atoms in unit cell
@@ -117,7 +123,7 @@ module mod_main0
   integer :: itdbry                !! Number of SCF steps to remember for the Broyden mixing
   integer :: insref                !! INS for reference pot. (usual 0)
   integer :: kshape                !! Exact treatment of WS cell
-  integer :: ielast
+  integer :: ielast                !! number of energy points in complex energy contour
   integer :: ishift
   integer :: kfrozn
   integer :: nsymat
@@ -132,7 +138,7 @@ module mod_main0
   integer :: intervx               !! Number of intervals in x-direction for k-net in IB of the BZ
   integer :: intervy               !! Number of intervals in y-direction for k-net in IB of the BZ
   integer :: intervz               !! Number of intervals in z-direction for k-net in IB of the BZ
-  integer :: maxmesh
+  integer :: maxmesh               !! Number of different k-meshes
   integer :: npan_eq               !! Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
   integer :: npan_log              !! Number of intervals from nucleus to [R_LOG] Used in conjunction with runopt NEWSOSOL
   integer :: npolsemi              !! Number of poles for the semicore contour
@@ -168,24 +174,18 @@ module mod_main0
   real (kind=dp) :: ebotsemi       !! Bottom of semicore contour in Ryd
   real (kind=dp) :: fsemicore      !! Initial normalization factor for semicore states (approx. 1.)
   real (kind=dp) :: lambda_xc      !! Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
-  character (len=10) :: solver                               !! Type of solver
-
-  character (len=40) :: i12                               !! File identifiers
-
-  character (len=40) :: i13                               !! Potential file name
-
-  character (len=40) :: i19                               !! Shape function file name
-
-  character (len=40) :: i25                               !! Scoef file name
-
-  character (len=40) :: i40                               !! File identifiers
-
+  character (len=10) :: solver     !! Type of solver
+  character (len=40) :: i12        !! File identifiers
+  character (len=40) :: i13        !! Potential file name
+  character (len=40) :: i19        !! Shape function file name
+  character (len=40) :: i25        !! Scoef file name
+  character (len=40) :: i40        !! File identifiers
   logical :: lrhosym
   logical :: linipol               !! True: Initial spin polarization; false: no initial spin polarization
   logical :: lcartesian            !! True: Basis in cartesian coords; false: in internal coords
 
   ! ..
-  ! .. Local Arrays ..
+  ! .. Arrays ..
   integer, dimension (nsymaxd) :: isymindex
   integer, dimension (:), allocatable :: cls !! Cluster around atomic sites
   integer, dimension (:), allocatable :: irc !! R point for potential cutting
@@ -238,31 +238,31 @@ module mod_main0
   integer, dimension (:, :), allocatable :: icheck
   integer, dimension (:, :), allocatable :: ipan_intervall
   integer, dimension (:, :, :), allocatable :: jend !! Pointer array for icleb()
-  real (kind=dp), dimension (2) :: vbc !! Potential constants
-  real (kind=dp), dimension (3) :: zperight !! Vector to define how to repeat the basis of the right host
-  real (kind=dp), dimension (3) :: zperleft !! Vector to define how to repeat the basis of the left host
-  real (kind=dp), dimension (3, 3) :: recbv !! Reciprocal basis vectors
-  real (kind=dp), dimension (3, 3) :: bravais !! Bravais lattice vectors
+  real (kind=dp), dimension (2) :: vbc              !! Potential constants
+  real (kind=dp), dimension (3) :: zperight         !! Vector to define how to repeat the basis of the right host
+  real (kind=dp), dimension (3) :: zperleft         !! Vector to define how to repeat the basis of the left host
+  real (kind=dp), dimension (3, 3) :: recbv         !! Reciprocal basis vectors
+  real (kind=dp), dimension (3, 3) :: bravais       !! Bravais lattice vectors
   real (kind=dp), dimension (64, 3, 3) :: rsymat
-  real (kind=dp), dimension (:), allocatable :: a !! Constants for exponential R mesh
-  real (kind=dp), dimension (:), allocatable :: b !! Constants for exponential R mesh
-  real (kind=dp), dimension (:), allocatable :: wg !! Integr. weights for Legendre polynomials
-  real (kind=dp), dimension (:), allocatable :: gsh
+  real (kind=dp), dimension (:), allocatable :: a   !! Constants for exponential R mesh
+  real (kind=dp), dimension (:), allocatable :: b   !! Constants for exponential R mesh
+  real (kind=dp), dimension (:), allocatable :: wg  !! Integr. weights for Legendre polynomials
+  real (kind=dp), dimension (:), allocatable :: gsh 
   real (kind=dp), dimension (:), allocatable :: zat !! Nuclear charge
   real (kind=dp), dimension (:), allocatable :: rmt !! Muffin-tin radius of true system
   real (kind=dp), dimension (:), allocatable :: rws !! Wigner Seitz radius
   real (kind=dp), dimension (:), allocatable :: vref
   real (kind=dp), dimension (:), allocatable :: vref_temp
-  real (kind=dp), dimension (:), allocatable :: mtfac !! Scaling factor for radius MT
-  real (kind=dp), dimension (:), allocatable :: rmtnew !! Adapted muffin-tin radius
-  real (kind=dp), dimension (:), allocatable :: rmtref !! Muffin-tin radius of reference system
+  real (kind=dp), dimension (:), allocatable :: mtfac       !! Scaling factor for radius MT
+  real (kind=dp), dimension (:), allocatable :: rmtnew      !! Adapted muffin-tin radius
+  real (kind=dp), dimension (:), allocatable :: rmtref      !! Muffin-tin radius of reference system
   real (kind=dp), dimension (:), allocatable :: rmtref_temp !! Muffin-tin radius of reference system
   real (kind=dp), dimension (:), allocatable :: rmtrefat
   real (kind=dp), dimension (:), allocatable :: fpradius !! R point at which full-potential treatment starts
   real (kind=dp), dimension (:), allocatable :: socscale !! Spin-orbit scaling
   real (kind=dp), dimension (:, :), allocatable :: rmesh !! Radial mesh ( in units a Bohr)
   real (kind=dp), dimension (:, :), allocatable :: s
-  real (kind=dp), dimension (:, :), allocatable :: rr !! Set of real space vectors (in a.u.)
+  real (kind=dp), dimension (:, :), allocatable :: rr   !! Set of real space vectors (in a.u.)
   real (kind=dp), dimension (:, :), allocatable :: drdi !! Derivative dr/di
   real (kind=dp), dimension (:, :), allocatable :: dror
   real (kind=dp), dimension (:, :), allocatable :: cleb !! GAUNT coefficients (GAUNT)
@@ -270,8 +270,8 @@ module mod_main0
   real (kind=dp), dimension (:, :), allocatable :: cscl !! Speed of light scaling
   real (kind=dp), dimension (:, :), allocatable :: rnew
   real (kind=dp), dimension (:, :), allocatable :: ratom
-  real (kind=dp), dimension (:, :), allocatable :: ecore !! Core energies
-  real (kind=dp), dimension (:, :), allocatable :: tleft !! Vectors of the basis for the left host
+  real (kind=dp), dimension (:, :), allocatable :: ecore  !! Core energies
+  real (kind=dp), dimension (:, :), allocatable :: tleft  !! Vectors of the basis for the left host
   real (kind=dp), dimension (:, :), allocatable :: tright !! Vectors of the basis for the right host
   real (kind=dp), dimension (:, :), allocatable :: socscl
   real (kind=dp), dimension (:, :), allocatable :: rbasis !! Position of atoms in the unit cell in units of bravais vectors
@@ -279,13 +279,13 @@ module mod_main0
   real (kind=dp), dimension (:, :), allocatable :: cmomhost !! Charge moments of each atom of the (left/right) host
   real (kind=dp), dimension (:, :), allocatable :: rpan_intervall
   real (kind=dp), dimension (:, :, :), allocatable :: rs
-  real (kind=dp), dimension (:, :, :), allocatable :: yrg !! Spherical harmonics (GAUNT2)
+  real (kind=dp), dimension (:, :, :), allocatable :: yrg  !! Spherical harmonics (GAUNT2)
   real (kind=dp), dimension (:, :, :), allocatable :: vins !! Non-spherical part of the potential
   real (kind=dp), dimension (:, :, :), allocatable :: rcls !! Real space position of atom in cluster
   real (kind=dp), dimension (:, :, :), allocatable :: rrot
-  complex (kind=dp), dimension (:), allocatable :: ez
-  complex (kind=dp), dimension (:), allocatable :: dez
-  complex (kind=dp), dimension (:), allocatable :: wez
+  complex (kind=dp), dimension (:), allocatable :: ez  !! complex energy points
+  complex (kind=dp), dimension (:), allocatable :: dez !! length of energy interval: (EF-EMIN)/NEPTS for uniform distribution of points
+  complex (kind=dp), dimension (:), allocatable :: wez !! integration weights: wez(ie) = -2.0_dp/pi*dez(ie)
   complex (kind=dp), dimension (:, :, :), allocatable :: dsymll
   complex (kind=dp), dimension (:, :, :), allocatable :: dsymll1
   complex (kind=dp), dimension (:, :, :, :, :), allocatable :: lefttinvll
@@ -296,15 +296,15 @@ module mod_main0
   ! -------------------------------------------------------------------------
   ! Magnetisation angles -- description see RINPUT13
   ! -------------------------------------------------------------------------
-  integer :: kmrot                 !! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
-  real (kind=dp), dimension (:), allocatable :: qmtet !! \f$ \theta\f$ angle of the agnetization with respect to the z-axis
-  real (kind=dp), dimension (:), allocatable :: qmphi !! \f$ \phi\f$ angle of the agnetization with respect to the z-axis
+  integer :: kmrot                                    !! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
+  real (kind=dp), dimension (:), allocatable :: qmtet !! \( \theta\) angle of the agnetization with respect to the z-axis
+  real (kind=dp), dimension (:), allocatable :: qmphi !! \( \phi\) angle of the agnetization with respect to the z-axis
   ! -------------------------------------------------------------------------
   ! CPA variables
   ! -------------------------------------------------------------------------
-  integer :: ncpa                  !! NCPA = 0/1 CPA flag
-  integer :: itcpamax              !! Max. number of CPA iterations
-  integer, dimension (:), allocatable :: noq !! Number of diff. atom types located
+  integer :: ncpa                             !! NCPA = 0/1 CPA flag
+  integer :: itcpamax                         !! Max. number of CPA iterations
+  integer, dimension (:), allocatable :: noq  !! Number of diff. atom types located
   integer, dimension (:), allocatable :: iqat !! The site on which an atom is located on a given site
   integer, dimension (:), allocatable :: icpa !! ICPA = 0/1 site-dependent CPA flag
 
@@ -312,6 +312,7 @@ module mod_main0
   !> @note ITERMDIR running option introduced Apr 2003 -- Munich
   !>              (H. Ebert + V. Popescu) allows a self-consistent
   !>              determination of the magnetic configuration in REL mode
+  !> @endnote
   ! -------------------------------------------------------------------------
   real (kind=dp), dimension (:), allocatable :: qmgam
   real (kind=dp), dimension (:, :), allocatable :: qmgamtab
@@ -319,28 +320,29 @@ module mod_main0
   real (kind=dp), dimension (:, :), allocatable :: qmtettab
   ! -------------------------------------------------------------------------
   !> @note changes for impurity 20/02/2004 -- v.popescu according to
-  !>                                          n.papanikolaou VINS()
+  !>                                          n.papanikolaou
+  !> @endnote
   ! -------------------------------------------------------------------------
-  integer, dimension (:), allocatable :: hostimp
-  real (kind=dp) :: cpatol         !! Convergency tolerance for CPA-cycle
+  integer, dimension (:), allocatable :: hostimp     !! 
+  real (kind=dp) :: cpatol                           !! Convergency tolerance for CPA-cycle
   real (kind=dp), dimension (:), allocatable :: conc !! Concentration of a given atom
   ! -------------------------------------------------------------------------------
-  complex (kind=dp), dimension (:, :), allocatable :: rc !! NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
-  complex (kind=dp), dimension (:, :), allocatable :: crel !! Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
-  complex (kind=dp), dimension (:, :), allocatable :: rrel !! Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
+  complex (kind=dp), dimension (:, :), allocatable :: rc       !! NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
+  complex (kind=dp), dimension (:, :), allocatable :: crel     !! Non-relat. CMPLX. spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. CMPLX. spher. harm.
+  complex (kind=dp), dimension (:, :), allocatable :: rrel     !! Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
   complex (kind=dp), dimension (:, :, :), allocatable :: srrel
   complex (kind=dp), dimension (:, :, :), allocatable :: drotq !! Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
-  integer, dimension (:), allocatable :: zrel !! atomic number (cast integer)
-  integer, dimension (:), allocatable :: jwsrel !! index of the WS radius
-  integer, dimension (:), allocatable :: irshift !! shift of the REL radial mesh with respect no NREL
+  integer, dimension (:), allocatable :: zrel                  !! atomic number (cast integer)
+  integer, dimension (:), allocatable :: jwsrel                !! index of the WS radius
+  integer, dimension (:), allocatable :: irshift               !! shift of the REL radial mesh with respect no NREL
   integer, dimension (:, :), allocatable :: nrrel
   integer, dimension (:, :, :), allocatable :: irrel
   real (kind=dp), dimension (0:100) :: fact
-  real (kind=dp), dimension (:, :), allocatable :: vtrel !! potential (spherical part)
-  real (kind=dp), dimension (:, :), allocatable :: btrel !! magnetic field
-  real (kind=dp), dimension (:, :), allocatable :: rmrel !! radial mesh
-  real (kind=dp), dimension (:, :), allocatable :: drdirel !! derivative of radial mesh
-  real (kind=dp), dimension (:, :), allocatable :: r2drdirel !! \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
+  real (kind=dp), dimension (:, :), allocatable :: vtrel     !! potential (spherical part)
+  real (kind=dp), dimension (:, :), allocatable :: btrel     !! magnetic field
+  real (kind=dp), dimension (:, :), allocatable :: rmrel     !! radial mesh
+  real (kind=dp), dimension (:, :), allocatable :: drdirel   !! derivative of radial mesh
+  real (kind=dp), dimension (:, :), allocatable :: r2drdirel !! \( r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\) (r**2 * drdi)
   real (kind=dp), dimension (:, :, :), allocatable :: thesme
   logical :: para
   logical, dimension (nsymaxd) :: symunitary !! unitary/antiunitary symmetry flag
@@ -365,71 +367,116 @@ module mod_main0
   !>              WLDAU - potential matrix
   !>              ITLDAU - integer pointer connecting the NTLDAU atoms to
   !>                       their corresponding index in the unit cell
-
+  !> @endnote
   ! -------------------------------------------------------------------------
-  integer :: ntldau                !! number of atoms on which LDA+U is applied
-  integer :: idoldau               !! flag to perform LDA+U
-  integer :: itrunldau             !! Iteration index for LDA+U
-  integer :: kreadldau             !! LDA+U arrays available
-  integer, dimension (:), allocatable :: lopt !! angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
-  integer, dimension (:), allocatable :: itldau !! integer pointer connecting the NTLDAU atoms to heir corresponding index in the unit cell
-  real (kind=dp), dimension (:), allocatable :: ueff !! input U parameter for each atom
-  real (kind=dp), dimension (:), allocatable :: jeff !! input J parameter for each atom
+  integer :: ntldau    !! number of atoms on which LDA+U is applied
+  integer :: idoldau   !! flag to perform LDA+U
+  integer :: itrunldau !! Iteration index for LDA+U
+  integer :: kreadldau !! LDA+U arrays available
+  integer, dimension (:), allocatable :: lopt            !! angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
+  integer, dimension (:), allocatable :: itldau          !! integer pointer connecting the NTLDAU atoms to heir corresponding index in the unit cell
+  real (kind=dp), dimension (:), allocatable :: ueff     !! input U parameter for each atom
+  real (kind=dp), dimension (:), allocatable :: jeff     !! input J parameter for each atom
   real (kind=dp), dimension (:), allocatable :: erefldau !! the energies of the projector's wave functions (REAL)
   ! ..
   ! .. distinguish between spin-dependent and spin-independent
   ! .. quantities
-  real (kind=dp), dimension (:, :, :, :), allocatable :: wldau !! potential matrix
+  real (kind=dp), dimension (:, :, :, :), allocatable :: wldau    !! potential matrix
   real (kind=dp), dimension (:, :, :, :, :), allocatable :: uldau !! calculated Coulomb matrix elements (EREFLDAU)
   complex (kind=dp), dimension (:, :), allocatable :: phildau
   ! -------------------------------------------------------------------------
   ! LDA+U LDA+U LDA+U
   ! -------------------------------------------------------------------------
   ! Lloyds formula
-  integer :: lly                   !! LLY <> 0 : apply Lloyds formula
-  complex (kind=dp) :: deltae      !! Energy difference for numerical derivative
+  integer :: lly              !! LLY <> 0 : apply Lloyds formula
+  complex (kind=dp) :: deltae !! Energy difference for numerical derivative
 
-  ! SUSC (BEGIN: modifications by Manuel and Benedikt)             ! susc
-  ! LOGICAL THAT CHECKS WHETHER ENERGY MESH FILE EXISTS            ! susc
-  logical :: emeshfile             ! susc
-  ! SUSC (END:   modifications by Manuel and Benedikt)             ! susc
+  ! SUSC (BEGIN: modifications by Manuel and Benedikt)    ! susc
+  ! LOGICAL THAT CHECKS WHETHER ENERGY MESH FILE EXISTS   ! susc
+  logical :: emeshfile                                    ! susc
+  ! SUSC (END:   modifications by Manuel and Benedikt)    ! susc
 
   ! ruess: IVSHIFT test option
   integer :: ivshift
 
   ! allocations:
-  real (kind=dp), dimension (:, :, :), allocatable :: thetas !! shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
-  real (kind=dp), dimension (:, :, :), allocatable :: thetasnew
+  real (kind=dp), dimension (:, :, :), allocatable :: thetas     !! shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
+  real (kind=dp), dimension (:, :, :), allocatable :: thetasnew  !! shape function interpolated to Chebychev radial mesh
 
-  public :: main0, bshift_ns
 
 contains
 
-  ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: main0
-  !> @brief Main wrapper to handle input reading, allocation of arrays, and
+
+  !-------------------------------------------------------------------------------
+  !> Summary: Main wrapper to handle input reading, allocation of arrays, and
   !> preparation of all the necessary data structures for a calculation.
-  !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
-  !> and many others ...
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
   !> @note Jonathan Chico: Re-wrote the module from Fixed format Fortran to
   !> fortran90 Free Form. Also performed modifications to get rid of the inc.p
-  !> file. 22.12.2017
-  ! ----------------------------------------------------------------------------
+  !> file. 22.12.2017 @endnote
+  !-------------------------------------------------------------------------------
   subroutine main0()
 
-    use :: mod_types
 #ifdef CPP_OMPSTUFF
-    use :: omp_lib                 ! necessary for omp functions
+    use :: omp_lib ! necessary for omp functions
 #endif
 #ifdef CPP_MPI
     use :: mpi
 #endif
     use :: mod_mympi, only: nranks
-    use :: mod_version
-    use :: mod_version_info
-    use :: mod_md5sums
+    use :: mod_version, only: version1, version2, version3, version4
+    use :: mod_version_info, only: serialnr, construct_serialnr, version_print_header
+    use :: mod_md5sums, only: get_md5sums, md5sum_potential, md5sum_shapefun
+    use :: mod_wunfiles, only: t_params, wunfiles
+    use :: mod_types, only: t_imp, t_inc, init_params_t_imp, init_t_imp
+    use :: memoryhandling, only: memocc, allocate_cell, allocate_cpa, allocate_soc, allocate_ldau, allocate_magnetization, allocate_potential, &
+      allocate_energies, allocate_relativistic, allocate_clusters, allocate_expansion, allocate_mesh, allocate_pannels, allocate_misc, &
+      allocate_green, allocate_ldau_potential, allocate_rel_transformations, allocate_semi_inf_host
+    use :: mod_create_newmesh, only: create_newmesh
+    use :: mod_rhoqtools, only: rhoq_save_rmesh
+    use :: rinput, only: rinput13
+    use :: mod_addvirtual14, only: addviratoms14
+    use :: mod_bzkint0, only: bzkint0
+    use :: mod_calcrotmat, only: calcrotmat
+    use :: mod_changerep, only: changerep
+    use :: mod_cinit, only: cinit
+    use :: mod_clsgen_tb, only: clsgen_tb
+    use :: mod_convol, only: convol
+    use :: mod_deciopt, only: deciopt
+    use :: mod_drvbastrans, only: drvbastrans
+    use :: mod_epathtb, only: epathtb
+    use :: mod_gaunt2, only: gaunt2
+    use :: mod_gaunt, only: gaunt
+    use :: mod_generalpot, only: generalpot
+    use :: mod_getbr3, only: getbr3
+    use :: mod_gfmask, only: gfmask
+    use :: mod_lattix99, only: lattix99
+    use :: mod_madelung2d, only: madelung2d
+    use :: mod_madelung3d, only: madelung3d
+    use :: mod_outpothost, only: outpothost
+    use :: mod_outtmathost, only: outtmathost
+    use :: mod_readimppot, only: readimppot
+    use :: mod_relpotcvt, only: relpotcvt
+    use :: mod_rinit, only: rinit
+    use :: mod_scalevec, only: scalevec
+    use :: mod_setgijtab, only: setgijtab
+    use :: mod_shape_corr, only: shape_corr
+    use :: mod_startb1, only: startb1
+    use :: mod_startldau, only: startldau
+    use :: mod_testdim, only: testdim
+    use :: mod_write_tbkkr_files, only: write_tbkkr_files
+    use :: mod_writehoststructure, only: writehoststructure
+    ! array dimensions
+    use :: global_variables, only: krel, nspind, nrefd, irmd, ntotd, ipand, ncelld, nrmaxd, nchebd, natypd, naezd, lmaxd, alm, lmmaxd, &
+      almgf0, lmgf0d, ndim_slabinv, nprincd, nembd, nembd1, nembd2, irmind, irnsd, nofgij, natomimpd, lpotd, lmpotd, lmmaxso, npotd, nfund, &
+      lmxspd, mmaxd, iemxd, ncleb, nclsd, nsheld, naclsd, lm2d, irid, lassld, nrd, nspind, nspindd, ngshd, linterface, nlayerd, knosph, &
+      korbit, nmaxd, ishld, wlength, maxmshd, kpoibz, nspotd
 
     implicit none
+
     ! .. Local Scalars ..
     integer :: i
     integer :: j
@@ -449,12 +496,15 @@ contains
 
 #ifdef CPP_OMPSTUFF
     ! .. OMP ..
-    integer :: nth, ith            ! total number of threads, thread number
+    integer :: nth, ith !! total number of threads, thread number
 #endif
     ! ..
     ! .. External Functions ..
     logical :: opt, test
     external :: opt, test
+
+
+
     ! -------------------------------------------------------------------------
     ! Write version info:
     ! -------------------------------------------------------------------------
@@ -489,6 +539,7 @@ contains
     ! Reading of the inputcard, and allocation of several arrays
     !> @note JC: have added reading calls for the parameters that used to be in
     !> the inc.p and can now be modified via the inputcard directly
+    !> @endnote
     ! -------------------------------------------------------------------------
     call rinput13(kte, igf, kxc, lly, icc, ins, kws, ipe, ipf, ipfe, icst, imix, lpot, naez, nemb, nref, ncls, npol, lmax, kcor, kefg, khyp, kpre, kvmad, lmmax, lmpot, ncheb, &
       nleft, ifile, kvrel, nspin, natyp, nineq, npnt1, npnt2, npnt3, kfrozn, ishift, n1semi, n2semi, n3semi, scfsteps, insref, kshape, itdbry, nright, kforce, ivshift, khfeld, &
@@ -537,6 +588,7 @@ contains
     !> and the arrays would only be allocated if a CPA calculation is actually performed
     !> in the current way ALL arrays are allocated which could cause an unnecessary memory
     !> consumption
+    !> @endnote
 
     ! Call to allocate the arrays associated with the potential
     call allocate_potential(1, irmd, natypd, npotd, ipand, nfund, lmxspd, lmpotd, irmind, nspotd, nfu, irc, ncore, irmin, lmsp, lmsp1, ircut, lcore, llmsp, ititle, fpradius, visp, &
@@ -755,7 +807,8 @@ contains
     ! Deal with the potential in the RELATIVISTIC CASE
     ! -------------------------------------------------------------------------
     para = .true.
-    if (krel+korbit==1) then
+    !if (krel+korbit==1) then
+    if (krel==1 .or. opt('NEWSOSOL')) then
       ! ----------------------------------------------------------------------
       if (nspin==1) then
         ! -------------------------------------------------------------------
@@ -808,7 +861,8 @@ contains
         ! call this only if relativisitic solver is used
         call relpotcvt(1, visp, zat, rmesh, drdi, ircut, vtrel, btrel, zrel, rmrel, jwsrel, drdirel, r2drdirel, irshift, ipand, irmd, npotd, natyp)
       end if
-    end if                         ! KREL+KORBIT.EQ.1
+    !end if ! KREL+KORBIT.EQ.1
+    end if ! KREL==1 .or. opt('NEWSOSOL)
     ! -------------------------------------------------------------------------
     ! set up energy contour
     ! -------------------------------------------------------------------------
@@ -913,6 +967,7 @@ contains
       !> slab mode.
       !> Reason: the 2d-mode gives wrong results sometimes [e.g. in diamond
       !> structure (110)].
+      !> @endnote
       if (linterface .and. (opt('ewald2d ') .or. opt('DECIMATE'))) then ! ewald2d
         write (*, *) 'Calling MADELUNG2D'
         ! -------------------------------------------------------------------
@@ -935,7 +990,7 @@ contains
       end if
 
       ! CLOSE(99)
-    else                           ! NPOL==0
+    else ! NPOL==0
       ! write dummy files
 
       ! real (kind=dp) AVMAD(LMPOT,LMPOT),BVMAD(LMPOT)
@@ -949,7 +1004,7 @@ contains
       end do
       close (69)
 
-    end if                         ! npol==0
+    end if ! npol==0
     ! -------------------------------------------------------------------------
     ! fivos      END IF
     ! -------------------------------------------------------------------------
@@ -1004,28 +1059,28 @@ contains
     ! -------------------------------------------------------------------------
     if (icc/=0 .and. .not. opt('KKRFLEX ')) then
       open (58, file='shells.dat')
-      write (1337, *) 'Writing out shells (also in shells.dat):' ! fivos
-      write (1337, *) 'itype,jtype,iat,jat,r(iat),r(jat)' ! fivos
-      write (1337, *) nshell(0), 'NSHELL(0)' ! fivos
-      write (58, *) nshell(0), 'NSHELL(0)' ! fivos
-      do i1 = 1, nshell(0)         ! fivos
-        write (1337, *) i1, nshell(i1), 'No. of shell, No. of atoms in shell' ! fivos
-        write (58, *) i1, nshell(i1), 'No. of shell, No. of atoms in shell' ! fivos
-        do lm = 1, nshell(i1)      ! fivos
+      write (1337, *) 'Writing out shells (also in shells.dat):'                 ! fivos
+      write (1337, *) 'itype,jtype,iat,jat,r(iat),r(jat)'                        ! fivos
+      write (1337, *) nshell(0), 'NSHELL(0)'                                     ! fivos
+      write (58, *) nshell(0), 'NSHELL(0)'                                       ! fivos
+      do i1 = 1, nshell(0)                                                       ! fivos
+        write (1337, *) i1, nshell(i1), 'No. of shell, No. of atoms in shell'    ! fivos
+        write (58, *) i1, nshell(i1), 'No. of shell, No. of atoms in shell'      ! fivos
+        do lm = 1, nshell(i1)                                                    ! fivos
           write (1337, *) 'ish(i1,lm)', ish(i1, lm)
-          if (ish(i1,lm)>0 .and. jsh(i1,lm)>0) then ! fix bernd
-            write (1337, 100) nsh1(i1), nsh2(i1), ish(i1, lm), jsh(i1, lm) & ! fivos
+          if (ish(i1,lm)>0 .and. jsh(i1,lm)>0) then                              ! fix bernd
+            write (1337, 100) nsh1(i1), nsh2(i1), ish(i1, lm), jsh(i1, lm) &     ! fivos
               , (rclsimp(i,ish(i1,lm)), i=1, 3), (rclsimp(i,jsh(i1,lm)), i=1, 3) ! fivos
-            write (58, 100) nsh1(i1), nsh2(i1), ish(i1, lm), jsh(i1, lm), & ! fivos
-              (rclsimp(i,ish(i1,lm)), i=1, 3), (rclsimp(i,jsh(i1,lm)), i=1, 3) ! fivos
-          else                     ! fix bernd
-            write (1337, 110) nsh1(i1), nsh2(i1), ish(i1, lm), jsh(i1, lm) ! fix bernd
-            write (58, 110) nsh1(i1), nsh2(i1), ish(i1, lm), jsh(i1, lm) ! fix bernd
-          end if                   ! fix bernd
-100       format (4i5, 6f16.6)     ! fivos
-110       format (4i5)             ! fix bernd
-        end do                     ! fivos
-      end do                       ! fivos
+            write (58, 100) nsh1(i1), nsh2(i1), ish(i1, lm), jsh(i1, lm), &      ! fivos
+              (rclsimp(i,ish(i1,lm)), i=1, 3), (rclsimp(i,jsh(i1,lm)), i=1, 3)   ! fivos
+          else                                                                   ! fix bernd
+            write (1337, 110) nsh1(i1), nsh2(i1), ish(i1, lm), jsh(i1, lm)       ! fix bernd
+            write (58, 110) nsh1(i1), nsh2(i1), ish(i1, lm), jsh(i1, lm)         ! fix bernd
+          end if                                                                 ! fix bernd
+100       format (4i5, 6f16.6)                                                   ! fivos
+110       format (4i5)                                                           ! fix bernd
+        end do                                                                   ! fivos
+      end do                                                                     ! fivos
       write (1337, *) '###################'
       close (58)
     end if
@@ -1040,7 +1095,7 @@ contains
     if ((krel+korbit)==1) then
       call drvbastrans(rc, crel, rrel, srrel, nrrel, irrel, lmax+1, lmmaxd, 2*(lmax+1), lmmaxd+2*(lmax+1), mmaxd, 2*(lmax+1)*mmaxd)
     end if
-    if (opt('NEWSOSOL')) then
+    if (korbit==1) then
       do ns = 1, nsymat
         call changerep(dsymll1(1,1,ns), 'REL>RLM', dsymll(1,1,ns), lmmaxd, lmmaxd, rc, crel, rrel, 'DSYMLL', 0)
       end do
@@ -1134,11 +1189,11 @@ contains
       ipand, nembd2, lmax, ncleb, naclsd, nclsd, lm2d, lmax+1, mmaxd, nrd, nsheld, nsymaxd, naez/nprincd, natomimpd, nspind, irid, nfund, ncelld, lmxspd, ngshd, krel, ntotd, ncheb, &
       npan_log, npan_eq, npan_log_at, npan_eq_at, r_log, npan_tot, rnew, rpan_intervall, ipan_intervall, nspindd, thetasnew, socscale, tolrdif, lly, deltae, rclsimp)
 
-    if (opt('FERMIOUT')) then      ! fswrt
-      call write_tbkkr_files(lmax, nemb, ncls, natyp, naez, ielast, ins, alat, & ! fswrt
+    if (opt('FERMIOUT')) then                                                           ! fswrt
+      call write_tbkkr_files(lmax, nemb, ncls, natyp, naez, ielast, ins, alat, &        ! fswrt
         bravais, recbv, rbasis, cls, nacls, rcls, ezoa, atom, rr, nspin, nrd, korbit, & ! fswrt
-        nclsd, naclsd)             ! fswrt
-    end if                         ! fswrt
+        nclsd, naclsd)                                                                  ! fswrt
+    end if                                                                              ! fswrt
 
     if (opt('OPERATOR')) then
       ! check if impurity files are present (otherwise no imp.
@@ -1154,27 +1209,26 @@ contains
       operator_imp = .false.
     end if
 
-    if (opt('GREENIMP') .or. operator_imp) then ! GREENIMP
-      ! fill array dimensions and allocate arrays in t_imp          ! GREENIMP
+    if (opt('GREENIMP') .or. operator_imp) then                        ! GREENIMP
+      ! fill array dimensions and allocate arrays in t_imp             ! GREENIMP
       call init_params_t_imp(t_imp, ipand, natyp, irmd, irid, nfund, & ! GREENIMP
-        nspin, irmind, lmpot)      ! GREENIMP
-      call init_t_imp(t_inc, t_imp) ! GREENIMP
-      ! GREENIMP
-      ! next read impurity potential and shapefunction              ! GREENIMP
-      call readimppot(natomimp, ins, 1337, 0, 0, 2, nspin, lpot, & ! GREENIMP
-        t_imp%ipanimp, t_imp%thetasimp, t_imp%ircutimp & ! GREENIMP
-        , t_imp%irwsimp, khfeld, hfield, t_imp%vinsimp, & ! GREENIMP
-        t_imp%vispimp, t_imp%irminimp, & ! GREENIMP
-        t_imp%rimp, t_imp%zimp, irmd, irnsd, irid, nfund, ipand) ! GREENIMP
-    end if                         ! GREENIMP
+        nspin, irmind, lmpot)                                          ! GREENIMP
+      call init_t_imp(t_inc, t_imp)                                    ! GREENIMP
+      ! next read impurity potential and shapefunction                 ! GREENIMP
+      call readimppot(natomimp, ins, 1337, 0, 0, 2, nspin, lpot, &     ! GREENIMP
+        t_imp%ipanimp, t_imp%thetasimp, t_imp%ircutimp &               ! GREENIMP
+        , t_imp%irwsimp, khfeld, hfield, t_imp%vinsimp, &              ! GREENIMP
+        t_imp%vispimp, t_imp%irminimp, &                               ! GREENIMP
+        t_imp%rimp, t_imp%zimp, irmd, irnsd, irid, nfund, ipand)       ! GREENIMP
+    end if                                                             ! GREENIMP
 
 
-    if (ishift==2) then            ! fxf
+    if (ishift==2) then                           ! fxf
       open (67, file='vmtzero', form='formatted') ! fxf
-      write (67, 120) vbc(1)       ! fxf
-      close (67)                   ! fxf
-120   format (d20.12)              ! fxf
-    end if                         ! fxf
+      write (67, 120) vbc(1)                      ! fxf
+      close (67)                                  ! fxf
+120   format (d20.12)                             ! fxf
+    end if                                        ! fxf
 
     ! Check for inputcard consistency in case of qdos option
     if (opt('qdos    ')) then
@@ -1198,20 +1252,24 @@ contains
 
   end subroutine main0
 
-  ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: BSHIFT_NS
-  !> @brief Adds a constant (=VSHIFT) to the potentials of atoms
-  ! ----------------------------------------------------------------------------
+
+  !-------------------------------------------------------------------------------
+  !> Summary: Adds a constant (=VSHIFT) to the potentials of atoms
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Includes non-spherical part and convolution with shapefunctions
+  !-------------------------------------------------------------------------------
   subroutine bshift_ns(irm, irid, ipand, lmpot, npotd, natyp, nspin, ngshd, nfund, ncelld, irmind, lmxspd, kshape, irc, irmin, inipol, ntcell, imaxsh, ilm_map, lmsp, ifunm, ircut, &
     hfield, gsh, rmesh, thesme, thetas, visp, vins)
 
-    use :: mod_datatypes
-
+    use :: global_variables, only: nspotd
+    use :: mod_convol, only: convol
+    use :: mod_rinit, only: rinit
+    use :: mod_constants, only: pi
     implicit none
 
-    ! Adds a constant (=VSHIFT) to the potentials of atoms
-
-    ! Parameters:
     ! Input
     integer, intent (in) :: irm
     integer, intent (in) :: irid
@@ -1247,11 +1305,11 @@ contains
 
     ! Inside
     integer :: ispin, ih, ipot, ir, lm, imt1, irc1, irmin1
-    real (kind=dp) :: rfpi, vshift
+    real (kind=dp) :: vshift
     real (kind=dp), dimension (irm) :: pshiftr
     real (kind=dp), dimension (irm, lmpot) :: pshiftlmr
 
-    rfpi = sqrt(16.0d0*atan(1.0d0))
+    real (kind=dp), parameter :: rfpi = sqrt(4.0_dp*pi)
 
     do ih = 1, natyp
 
@@ -1295,16 +1353,19 @@ contains
 
   end subroutine bshift_ns
 
-  ! -------------------------------------------------------------------------
-  ! SUBROUTINE: init_misc_variables
-  !> @brief Set default values for misc variables for the calculation
-  !> @details The idea behind this kind of routine is to separate the initialization
+  !-------------------------------------------------------------------------------
+  !> Summary: Set default values for misc variables for the calculation
+  !> Author: Jonathan Chico
+  !> Date: 22.12.2017
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @author Jonathan Chico
-  !> @date 22.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_misc_variables()
 
+    use :: global_variables, only: nsheld
     implicit none
 
     ipe = 0
@@ -1319,29 +1380,32 @@ contains
     nvirt = 0
     kvmad = 0
     itscf = 0
-    nsheld = 301                   ! Number of blocks of the GF matrix that need to be calculated (NATYPD + off-diagonals in case of impurity)
-    invmod = 2                     ! Corner band matrix inversion scheme
+    nsheld = 301 !! Number of blocks of the GF matrix that need to be calculated (NATYPD + off-diagonals in case of impurity)
+    invmod = 2   !! Corner band matrix inversion scheme
     ielast = 0
     ishift = 0
     kfrozn = 0
     nsymat = 0
     nqcalc = 0
-    kforce = 0                     ! Calculation of the forces
+    kforce = 0   !! Calculation of the forces
     para = .true.
     lrhosym = .false.
 
   end subroutine init_misc_variables
 
-  ! -------------------------------------------------------------------------
-  ! subroutine: init_relativistic_variables
-  !> @brief set default values for the relativistic variables
-  !> @details The idea behind this kind of routine is to separate the initialization
+  !-------------------------------------------------------------------------------
+  !> Summary: set default values for the relativistic variables
+  !> Author: Jonathan Chico
+  !> Date: 26.12.2017
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @author Jonathan Chico
-  !> @date 26.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_relativistic_variables()
 
+    use :: global_variables, only: krel, korbit, lnc
     implicit none
 
     krel = 0                       ! Switch for non- (or scalar-) relativistic/relativistic (Dirac) program (0/1). Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
@@ -1351,16 +1415,19 @@ contains
 
   end subroutine init_relativistic_variables
 
-  ! -------------------------------------------------------------------------
-  ! subroutine: init_cluster_variables
-  !> @brief set default values for the cluster variables
-  !> @details The idea behind this kind of routine is to separate the initialization
+  !-------------------------------------------------------------------------------
+  !> Summary: set default values for the cluster variables
+  !> Author: Jonathan Chico
+  !> Date: 26.12.2017
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @author Jonathan Chico
-  !> @date 26.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_cluster_variables()
 
+    use :: global_variables, only: nofgij, nclsd, naclsd, natomimpd
     implicit none
 
     nclsd = 2                      ! NAEZD + NEMBD maximum number of different TB-clusters
@@ -1372,16 +1439,19 @@ contains
 
   end subroutine init_cluster_variables
 
-  ! -------------------------------------------------------------------------
-  ! subroutine: init_io_variables
-  !> @brief set default values for the I/O variables
-  !> @details The idea behind this kind of routine is to separate the initialization
+  !-------------------------------------------------------------------------------
+  !> Summary: set default values for the I/O variables
+  !> Author: Jonathan Chico
+  !> Date: 26.12.2017
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @author Jonathan Chico
-  !> @date 26.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_io_variables()
 
+    use :: global_variables, only: wlength
     implicit none
 
     igf = 0                        ! Not printing the Green functions
@@ -1395,16 +1465,19 @@ contains
 
   end subroutine init_io_variables
 
-  ! -------------------------------------------------------------------------
-  ! subroutine: init_cell_variables
-  !> @brief set default values for the unit cell variables
-  !> @details The idea behind this kind of routine is to separate the initialization
+  !-------------------------------------------------------------------------------
+  !> Summary: set default values for the unit cell variables
+  !> Author: Jonathan Chico
+  !> Date: 26.12.2017
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @author Jonathan Chico
-  !> @date 26.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_cell_variables()
 
+    use :: global_variables, only: linterface
     implicit none
 
     naez = 1                       ! Number of atoms in the unit cell
@@ -1423,16 +1496,19 @@ contains
 
   end subroutine init_cell_variables
 
-  ! -------------------------------------------------------------------------
-  ! subroutine: init_slab_variables
-  !> @brief set default values for the slab calculation variables
-  !> @details The idea behind this kind of routine is to separate the initialization
+  !-------------------------------------------------------------------------------
+  !> Summary: set default values for the slab calculation variables
+  !> Author: Jonathan Chico
+  !> Date: 26.12.2017
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @author Jonathan Chico
-  !> @date 26.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_slab_variables()
 
+    use :: global_variables, only: nprincd, nlayerd
     implicit none
 
     nleft = 1
@@ -1445,16 +1521,19 @@ contains
 
   end subroutine init_slab_variables
 
-  ! -------------------------------------------------------------------------
-  ! subroutine: init_energy_variables
-  !> @brief set default values for the energy variables
-  !> @details The idea behind this kind of routine is to separate the initialization
+  !-------------------------------------------------------------------------------
+  !> Summary: set default values for the energy variables
+  !> Author: Jonathan Chico
+  !> Date: 26.12.2017
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @author Jonathan Chico
-  !> @date 26.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_energy_variables()
 
+    use :: global_variables, only: iemxd
     implicit none
 
     lly = 0                        ! No Lloyds formula
@@ -1486,16 +1565,19 @@ contains
 
   end subroutine init_energy_variables
 
-  ! -------------------------------------------------------------------------
-  ! subroutine: init_convergence_variables
-  !> @brief set default values for the convergence and solver variables
-  !> @details The idea behind this kind of routine is to separate the initialization
+  !-------------------------------------------------------------------------------
+  !> Summary: set default values for the convergence and solver variables
+  !> Author: Jonathan Chico
+  !> Date: 26.12.2017
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @author Jonathan Chico
-  !> @date 26.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_convergence_variables()
 
+    use :: global_variables, only: ishld, nmaxd, ntrefd, ntperd
     implicit none
 
     imix = 0                       ! Straight mixing
@@ -1520,16 +1602,19 @@ contains
 
   end subroutine init_convergence_variables
 
-  ! -------------------------------------------------------------------------
-  ! subroutine: init_potential_variables
-  !> @brief set default values for the potential variables
-  !> @details The idea behind this kind of routine is to separate the initialization
+  !-------------------------------------------------------------------------------
+  !> Summary: set default values for the potential variables
+  !> Author: Jonathan Chico
+  !> Date: 26.12.2017
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @author Jonathan Chico
-  !> @date 26.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_potential_variables()
 
+    use :: global_variables, only: irid, nfund, ngshd, ipand, ntotd, knosph, ncelld, nspotd, nsatypd
     implicit none
 
     kws = 1                        ! FP/ASA potential ()
@@ -1558,16 +1643,19 @@ contains
 
   end subroutine init_potential_variables
 
-  ! -------------------------------------------------------------------------
-  ! subroutine: init_angular_momentum_variables
-  !> @brief set default values for the angular momentum variables
-  !> @details The idea behind this kind of routine is to separate the initialization
+  !-------------------------------------------------------------------------------
+  !> Summary: set default values for the angular momentum variables
+  !> Author: Jonathan Chico
+  !> Date: 26.12.2017
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @author Jonathan Chico
-  !> @date 26.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_angular_momentum_variables()
 
+    use :: global_variables, only: ncleb, lmmaxd
     implicit none
 
     lmax = 3                       ! Maximum l for expansion
@@ -1577,16 +1665,19 @@ contains
 
   end subroutine init_angular_momentum_variables
 
-  ! -------------------------------------------------------------------------
-  ! subroutine: init_magnetization_variables
-  !> @brief set default values for the magnetisation variables for the calculation
-  !> @details the idea behind this kind of routine is to separate the initialization
+  !-------------------------------------------------------------------------------
+  !> Summary: set default values for the magnetisation variables for the calculation
+  !> Author: Jonathan Chico
+  !> Date: 22.12.2017
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> the idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @author Jonathan Chico
-  !> @date 22.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_magnetization_variables()
 
+    use :: global_variables, only: knoco, nspind, nspindd
     implicit none
 
     kmrot = 0                      ! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
@@ -1600,14 +1691,16 @@ contains
 
   end subroutine init_magnetization_variables
 
-  ! -------------------------------------------------------------------------
-  ! SUBROUTINE: init_CPA_variables
-  !> @brief Set default values for the CPA variables for the calculation
-  !> @details The idea behind this kind of routine is to separate the initialization
+  !-------------------------------------------------------------------------------
+  !> Summary: Set default values for the CPA variables for the calculation
+  !> Author: Jonathan Chico
+  !> Date: 22.12.2017
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @author Jonathan Chico
-  !> @date 22.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_cpa_variables()
 
     implicit none
@@ -1618,14 +1711,16 @@ contains
 
   end subroutine init_cpa_variables
 
-  ! -------------------------------------------------------------------------
-  ! SUBROUTINE: init_CPA_variables
-  !> @brief Set default values for the LDA+U variables for the calculation
-  !> @details The idea behind this kind of routine is to separate the initialization
+  !-------------------------------------------------------------------------------
+  !> Summary: Set default values for the LDA+U variables for the calculation
+  !> Author: Jonathan Chico
+  !> Date: 22.12.2017
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @author Jonathan Chico
-  !> @date 22.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_ldau_variables()
 
     implicit none
@@ -1637,16 +1732,19 @@ contains
 
   end subroutine init_ldau_variables
 
-  ! -------------------------------------------------------------------------
-  ! subroutine: init_mesh_variables
-  !> @brief set default values for the mesh variables
-  !> @details The idea behind this kind of routine is to separate the initialization
+  !-------------------------------------------------------------------------------
+  !> Summary: set default values for the mesh variables
+  !> Author: Jonathan Chico
+  !> Date: 26.12.2017
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @author Jonathan Chico
-  !> @date 26.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_mesh_variables()
 
+    use :: global_variables, only: nrd, irmd, irnsd, kpoibz
     implicit none
 
     nrd = 20000                    ! Number of real space
@@ -1661,14 +1759,17 @@ contains
   end subroutine init_mesh_variables
 
 
-  ! -------------------------------------------------------------------------
-  ! subroutine: init_all_wrapper
-  !> @brief wrapper for initialization subroutines and allocation of test/opt arrays
-  !> @author Philipp Ruessmann
-  !> @date 22.08.2018
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
+  !> Summary: Wrapper for initialization subroutines and allocation of test/opt arrays
+  !> Author: Philipp Rüßmann
+  !> Date: 22.08.2018
+  !> Category: KKRhost, initialization
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !-------------------------------------------------------------------------------
   subroutine init_all_wrapper()
     use :: mod_wunfiles, only: t_params
+    use :: mod_profiling, only: memocc
     implicit none
     integer :: i_stat
 
@@ -1712,6 +1813,13 @@ contains
   end subroutine init_all_wrapper
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Prints Version info
+  !> Author: Philipp Rüßmann
+  !> Category: KKRhost, version-control
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !-------------------------------------------------------------------------------
   subroutine print_versionserial(iunit, version1, version2, version3, version4, serialnr)
     implicit none
     integer, intent (in) :: iunit

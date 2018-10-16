@@ -1,53 +1,58 @@
 module mod_calctmat
 
+  private
+  public :: calctmat
+
 contains
 
-
-  subroutine calctmat(icst, ins, ielast, nsra, ispin, nspin, i1, ez, drdi, rmesh, vins, visp, zat, irmin, ipan, & ! Added IRMIN 1.7.2014  &
-    ircut, cleb, loflm, icleb, iend, solver, soctl, ctl, vtrel, btrel, rmrel, drdirel, r2drdirel, zrel, jwsrel, idoldau, lopt, wldau, lly, deltae) ! LLY
-
-    ! *********************************************************************
-    ! * For KREL = 1 (relativistic mode)                                  *
-    ! *                                                                   *
-    ! *  NPOTD = 2 * NATYPD                                               *
-    ! *  LMMAXD = 2 * (LMAXD+1)^2                                         *
-    ! *  NSPIND = 1                                                       *
-    ! *                                                                   *
-    ! *  LDA+U implementation     Mar. 2002-Dec.2004                      *
-    ! *                           ph.mavropoulos, h. ebert, v. popescu    *
-    ! * Notes:                                                            *
-    ! *  average WLDAU for spherical wavefunctions:                       *
-    ! *  The spherical part of the d or f wavefunction is found by adding *
-    ! *  the average interaction potential WLDAUAV to the spherical       *
-    ! *  potential. Then the non-spherical parts are found by using only  *
-    ! *  the deviation of WLDAU from the average. This speeds up the      *
-    ! *  convergence of the Born series. See also subroutines             *
-    ! *  regsol, pnstmat and pnsqns                                       *
-    ! *                                                                   *
-    ! *********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Computes single site t-matrix without SOC
+  !> Author: 
+  !> Category: KKRhost, single-site
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Computes single-site t-matrix starting from potential by calculating the
+  !> scattering wavefunctions and from there the t-matrix
+  !>
+  !> For KREL = 1 (relativistic mode)                                 
+  !>      and                                                                
+  !>  NPOTD = 2 * NATYPD                                              
+  !>  LMMAXD = 2 * (LMAXD+1)^2                                        
+  !>  NSPIND = 1                                                      
+  !>                                                                  
+  !>  LDA+U implementation     Mar. 2002-Dec.2004                     
+  !>                           ph.mavropoulos, h. ebert, v. popescu   
+  !>
+  !> Notes:                                                           
+  !>  average WLDAU for spherical wavefunctions:                      
+  !>  The spherical part of the d or f wavefunction is found by adding
+  !>  the average interaction potential WLDAUAV to the spherical      
+  !>  potential. Then the non-spherical parts are found by using only 
+  !>  the deviation of WLDAU from the average. This speeds up the     
+  !>  convergence of the Born series. See also subroutines            
+  !>  regsol, pnstmat and pnsqns   
+  !-------------------------------------------------------------------------------
+  subroutine calctmat(icst, ins, ielast, nsra, ispin, nspin, i1, ez, drdi, rmesh, vins, visp, zat, irmin, ipan, &
+    ircut, cleb, loflm, icleb, iend, solver, soctl, ctl, vtrel, btrel, rmrel, drdirel, r2drdirel, zrel, jwsrel, idoldau, lopt, wldau, lly, deltae)
+  
 #ifdef CPP_MPI
     use :: mpi
     use :: mod_mympi, only: mpiadapt
-    use :: mod_timing
+    use :: mod_timing, only: timing_start, timing_stop, timings_1a
 #endif
     use :: mod_mympi, only: myrank, nranks, master, distribute_work_energies
     use :: mod_types, only: t_tgmat, t_inc, t_mpi_c_grid, init_tgmat, t_lloyd, init_tlloyd
-    use :: mod_datatypes
-    use :: global_variables
-    use :: mod_pnstmat
-    use :: mod_cradwf
-    use :: mod_wfmesh
+    use :: mod_datatypes, only: dp
+    use :: global_variables, only: iemxd, lmmaxd, irmind, irmd, lmpotd, ncleb, krel, lm2d, lmaxd, ipand, mmaxd, nspind
+    use :: mod_pnstmat, only: pnstmat
+    use :: mod_cradwf, only: cradwf
+    use :: mod_wfmesh, only: wfmesh
     use :: mod_regns, only: zgeinv1
-    use :: mod_cmatstr
-    use :: mod_drvreltmat
+    use :: mod_cmatstr, only: cmatstr
+    use :: mod_drvreltmat, only: drvreltmat
+    use :: mod_constants, only: cvlight, czero, cone
 
     implicit none
-
-    ! .. Parameters ..
-    real (kind=dp) :: cvlight
-    parameter (cvlight=274.0720442d0)
-    complex (kind=dp) :: czero, cone
-    parameter (czero=(0.d0,0.d0), cone=(1.d0,0.d0))
     ! ..
     ! .. Scalar Arguments ..
     real (kind=dp) :: zat
@@ -73,8 +78,7 @@ contains
     integer :: ie, irec, lm1, lm2, lmhi, lmlo, m1, mmax, irmin
     real (kind=dp) :: wldauav
     ! .. this routine does not need irregular wavefunctions
-    logical :: lirrsol
-    parameter (lirrsol=.true.)
+    logical, parameter :: lirrsol = .true.
     ! ..
     ! .. Local Arrays ..
     complex (kind=dp) :: alpha(0:lmaxd), fz(irmd, 0:lmaxd), pns(lmmaxd, lmmaxd, irmind:irmd, 2), pz(irmd, 0:lmaxd), qz(irmd, 0:lmaxd), sz(irmd, 0:lmaxd), tmat(0:lmaxd), &
@@ -89,19 +93,16 @@ contains
 #ifdef CPP_MPI
     integer :: ntot_pt(0:nranks-1), ioff_pt(0:nranks-1)
 #endif
-    integer :: ie_end, ie_num, ie_start
+    integer :: ie_end, ie_num, ie_start, i11
     ! ..
     ! .. External Functions ..
-    logical :: test
-    external :: test
+    logical, external :: test
     ! ..
     ! .. Data Statements
     data txts/'spin   UP', 'spin DOWN'/
     ! ..................................................................
 
     ! save timing information to array, needed to tackle load imbalance adaptively
-
-
 
     ! ==LDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAU
 
@@ -114,7 +115,6 @@ contains
         wldauav = wldauav + wldau(m1, m1, ispin)
       end do
       wldauav = wldauav/dble(mmax)
-
 
       ! -> Note: Application if WLDAU makes the potential discontinuous.
       ! A cutoff can be used if necessary to make the potential continuous
@@ -193,7 +193,6 @@ contains
           end do                   ! LLY
           ! -----------------------------------------------------------------------
           ! spherical/non-spherical
-
           if (ins==0) then
             do lm1 = 1, lmmaxd
               tmat0(lm1, lm1) = tmat(loflm(lm1))
@@ -202,14 +201,8 @@ contains
             call pnstmat(drdi, ek, icst, pz, qz, fz, sz, pns, tmat0, vins, irmin, ipan, ircut, nsra, cleb, icleb, iend, loflm, & ! Added IRMIN 1.7.2014  &
               tmat, lmaxd, idoldau, lopt, lmlo, lmhi, wldau(1,1,ispin), wldauav, cutoff, alpha0) ! LLY In goes diag. alpha, out comes full alpha
           end if
-
           ! -----------------------------------------------------------------------
-          ! =======================================================================
-          ! commented this out because compiling with debug options did not work
-          ! due to an erro in the interface to drvreltmat > talk to long,
-          ! philipp 20_08_2015
         else
-          ! STOP 'WARNING check DRVRELTMAT interface in code!!!'
           call drvreltmat(eryd, tmat0, vtrel, btrel, rmrel, drdirel, r2drdirel, zrel, jwsrel, solver, soctl, ctl, lmmaxd, lmaxd, irmd)
         end if
 
@@ -272,8 +265,8 @@ contains
 
 
       tmat0(:, :) = tmatll(:, :)
-      irec = ie + ielast*(ispin-1) + ielast*nspin*(i1-1)
       if (t_tgmat%tmat_to_file) then
+        irec = ie + ielast*(ispin-1) + ielast*nspin*(i1-1)
         write (69, rec=irec) tmat0
         ! human readable writeout if test option is hit
         if (test('fileverb')) then
@@ -281,10 +274,11 @@ contains
         end if
       else
 #ifdef CPP_MPI
-        irec = ie_num + ie_end*(ispin-1) + ie_end*nspin*(i1-t_mpi_c_grid%ioff_pt1(t_mpi_c_grid%myrank_ie)-1)
+        i11 = i1-t_mpi_c_grid%ioff_pt1(t_mpi_c_grid%myrank_ie)
 #else
-        irec = ie_num + ie_end*(ispin-1) + ie_end*nspin*(i1-1)
+        i11 = i1
 #endif
+        irec = ie_num + ie_end*(ispin-1) + ie_end*nspin*(i11-1)
         t_tgmat%tmat(:, :, irec) = tmat0
       end if
       if (lly/=0) then             ! LLY

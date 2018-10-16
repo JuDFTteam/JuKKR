@@ -1,69 +1,80 @@
+!-------------------------------------------------------------------------------
+!> Summary: Screening clusters around each atom
+!> Author: 
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!> Module providing clsgen_tb subroutine that is used to generate screening 
+!> (tight-binding) clusters around the atoms
+!-------------------------------------------------------------------------------
 module mod_clsgen_tb
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: clsgen_tb
 
 contains
 
 
-  ! ************************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates screening cluster of each atom
+  !> Author: 
+  !> Category: KKRhost, reference-system, geometry
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> This subroutine is used to create the clusters around each atom
+  !> (Based on clsgen99.f). Also the reference potential height and radius is
+  !> set (vref and rmtref).
+  !>
+  !> STRATEGY :
+  !> Calculate the cluster of each atom by the lattice
+  !> parameters avaliable. Sort the atoms in a unique way : big r, big z, big y
+  !> compare the positions with the previous clusters to see if there is
+  !> a difference. If not keep only previous clusters and make indexing if
+  !> a new cluster is found then check dimensions and continue for the new
+  !> atom.
+  !-------------------------------------------------------------------------------
   subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, nacls, atom, ezoa, nlbasis, nrbasis, nleft, nright, zperleft, zperight, tleft, tright, rmtref, &
     rmtrefat, vref, irefpot, nrefpot, rcls, rcut, rcutxy, alat, natyp, nclsd, nrd, naclsd, nrefd, nembd, linterface, nprinc)
     ! ************************************************************************
-    ! This subroutine is used to create the clusters around each atom
-    ! (Based on clsgen99.f). Also the reference potential height and radius is
-    ! set
-    ! (vref and rmtref).
-    ! STRATEGY :
-    ! Calculate the cluster of each atom by the lattice
-    ! parameters avaliable. Sort the atoms in a unique way :big r, big z, big y
-    ! compare the positions with the previous clusters to see if there is
-    ! a difference. If not keep only previous clusters and make indexing if
-    ! a new cluster is found then check dimensions and continue for the new
-    ! atom.
-
-    use :: mod_version_info
-    use :: mod_dsort
+    ! 
+    use :: mod_datatypes, only: dp
+    use :: mod_version_info, only: version_print_header
+    use :: mod_dsort, only: dsort
     implicit none
     ! .. arguments
-    integer :: naez                ! number of atoms in EZ
-    integer :: nemb                ! number of embedding postions
-    integer :: ncls                ! number of diff. clusters
-    integer :: nlr                 ! =NEMB in decimation, =0 in slab or bulk
-    integer :: nvirt               ! Number of virtual atoms
+    integer :: naez                !! number of atoms in EZ
+    integer :: nemb                !! number of embedding postions
+    integer :: ncls                !! number of diff. clusters
+    integer :: nlr                 !! =NEMB in decimation, =0 in slab or bulk
+    integer :: nvirt               !! Number of virtual atoms
     integer :: nclsd
     integer :: nrd
     integer :: naclsd
     integer :: nrefd
-    integer :: nprinc              ! Calculated number of layers in a
-    ! principal layer
+    integer :: nprinc              !! Calculated number of layers in a principal layer
     integer :: natyp
     integer :: nembd
-    real (kind=dp) :: alat         ! lattice constant A
+    real (kind=dp) :: alat         !! lattice constant A
     real (kind=dp) :: rcut, rcutxy
-    real (kind=dp) :: rbasis(3, naez+nembd) ! pos. of basis atoms in EZ
-    real (kind=dp) :: rcls(3, naclsd, nclsd) ! real space position of atom in
-    ! cluster
-    real (kind=dp) :: rr(3, 0:nrd) ! set of lattice vectors
-    real (kind=dp) :: zat(natyp)   ! nucleus charge
+    real (kind=dp) :: rbasis(3, naez+nembd) !! pos. of basis atoms in EZ
+    real (kind=dp) :: rcls(3, naclsd, nclsd) !! real space position of atom in cluster
+    real (kind=dp) :: rr(3, 0:nrd) !! set of lattice vectors
+    real (kind=dp) :: zat(natyp)   !! nucleus charge
     real (kind=dp) :: rmtref(nrefd)
     real (kind=dp) :: vref(nrefd)
 
     logical, intent (in) :: linterface
 
 
-    integer :: cls(naez+nembd)     ! type of cluster around atom
-    integer :: kaoez(natyp, naez+nembd) ! type of atom at position in EZ
-    integer :: nacls(nclsd)        ! number of atoms in cluster
-    integer :: atom(naclsd, naez+nembd) ! index to atom in elem/cell at site in
-    ! cluster
-    integer :: ezoa(naclsd, naez+nembd) ! index to bravais lattice  at site in
-    ! cluster
+    integer :: cls(naez+nembd)     !! type of cluster around atom
+    integer :: kaoez(natyp, naez+nembd) !! type of atom at position in EZ
+    integer :: nacls(nclsd)        !! number of atoms in cluster
+    integer :: atom(naclsd, naez+nembd) !! index to atom in elem/cell at site in cluster
+    integer :: ezoa(naclsd, naez+nembd) !! index to bravais lattice  at site in cluster
 
     ! .. locals
     ! IX,
     integer :: ilay, n1, ir, isite, jsite, iat1, na, number, maxnumber, pos, ia, in, ib, ii, jatom, icu, ic, iat, i1, icluster, nclsall
-    integer :: iatom(naclsd), iezoa(naclsd), isort(naclsd), icouplmat(naez, naez), irep(nclsd) ! representative atom of cluster
-    ! (inverse of CLS)
+    integer :: iatom(naclsd), iezoa(naclsd), isort(naclsd), icouplmat(naez, naez), irep(nclsd) ! representative atom of cluster (inverse of CLS)
     integer :: irefpot(naez+nembd), nrefpot
     real (kind=dp) :: rmtrefat(naez+nembd), rmtref1(naez+nembd)
     real (kind=dp) :: vrefat(naez+nembd), vref1(naez+nembd)
@@ -484,16 +495,25 @@ contains
   end subroutine clsgen_tb
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Compares two cluster for equivalence
+  !> Author: 
+  !> Category: KKRhost, geometry, reference-system
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> This function returns true if cluster ic1 is equal to new cluster
+  !> RCLS        coordinates of all (already found) clusters
+  !> IC1         First cluster index
+  !> N1          Number of atoms in IC1 cluster
+  !> rcls1       coordinates of new cluster
+  !> n2          number of atoms in ic2 cluster
+  !> ATOM:       atom-type at a certain position in a cluster
+  !> IAT1, IAT2: central atoms of 1st,2nd cluster
+  !> IREFPOT:    Type of reference potential
+  !-------------------------------------------------------------------------------
   logical function clustcomp_tb(rcls, irefpot, atom, iat1, ic1, n1, rcls1, n2, iat2, naclsd)
-    ! This function returns true if cluster ic1 is equal to new cluster
-    ! RCLS        coordinates of all (already found) clusters
-    ! IC1         First cluster index
-    ! N1          Number of atoms in IC1 cluster
-    ! rcls1       coordinates of new cluster
-    ! n2          number of atoms in ic2 cluster
-    ! ATOM:       atom-type at a certain position in a cluster
-    ! IAT1, IAT2: central atoms of 1st,2nd cluster
-    ! IREFPOT:    Type of reference potential
+    ! 
+    use :: mod_datatypes, only: dp
     implicit none
     integer :: naclsd
     real (kind=dp) :: rcls(3, naclsd, *), rcls1(3, naclsd)

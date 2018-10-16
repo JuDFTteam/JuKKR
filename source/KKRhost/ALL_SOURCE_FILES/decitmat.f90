@@ -2,29 +2,28 @@ module mod_decitmat
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Compute t-matrix from decipot file
+  !> Author: 
+  !> Category: KKRhost, single-site
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> A modified form of the CALCTMAT routine to deal with the host
+  !> t-matrices in case of decimation
+  !>
+  !> Non-spherical potential not implemented yet, neither LDA+U
+  !-------------------------------------------------------------------------------
   subroutine decitmat(eryd, zat, ipan, rr, dror, visp, ircut, rirc, krel, nsra, ins, tmatll, loflm, idoldau, lopt, wldauav, solver, soctl, ctl, zrel, vtrel, btrel, drdi, r2drdi, &
     ipand, irmd, lmaxd, lmaxdp1, lm2d, lmmaxd)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * A modified form of the CALCTMAT routine to deal with the host      *
-    ! * t-matrices in case of decimation                                   *
-    ! *                                                                    *
-    ! * Non-spherical potential not implemented yet, neither LDA+U         *
-    ! *                                                                    *
-    ! **********************************************************************
-    use :: mod_beshan
-    use :: mod_datatypes, only: dp
-    use :: mod_drvreltmat
-    use :: mod_regsol
-    use :: mod_wfmesh
-    use :: mod_cinit
-    implicit none
 
-    ! Parameters ..
-    real (kind=dp) :: cvlight
-    parameter (cvlight=274.0720442e0_dp)
-    complex (kind=dp) :: ci
-    parameter (ci=(0e0_dp,1e0_dp))
+    use :: mod_beshan, only: beshan
+    use :: mod_datatypes, only: dp
+    use :: mod_drvreltmat, only: drvreltmat
+    use :: mod_regsol, only: regsol
+    use :: mod_wfmesh, only: wfmesh
+    use :: mod_cinit, only: cinit
+    use :: mod_constants, only: ci, cvlight
+    implicit none
 
     ! Scalar arguments ..
     integer :: idoldau, ipan, krel, lopt, nsra, ins, zrel

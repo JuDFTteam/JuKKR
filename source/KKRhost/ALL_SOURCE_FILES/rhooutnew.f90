@@ -8,9 +8,9 @@ contains
   ! Fortran90
   ! -------------------------------------------------------------------------------
   subroutine rhooutnew(nsra, lmax, gmatll, ek, lmpot, df, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll, rllleft, sllleft, cden, cdenlm, cdenns, &
-    rho2nsc, corbital, gflle_part, rpan_intervall, ipan_intervall)
+    rho2nsc, corbital, gflle_part, rpan_intervall, ipan_intervall, nspin)
 
-    use :: constants
+    use :: mod_constants
     use :: mod_profiling
     use :: global_variables
     use :: mod_datatypes, only: dp
@@ -20,6 +20,7 @@ contains
     implicit none
 
     integer, intent (in) :: nsra
+    integer, intent (in) :: nspin
     integer, intent (in) :: lmax   !! Maximum l component in wave function
     ! expansion
     integer, intent (in) :: iend   !! Number of nonzero gaunt coefficients
@@ -59,14 +60,14 @@ contains
     complex (kind=dp), dimension (nsra*lmmaxso, lmmaxso, irmdnew), intent (in) :: sllleft
 
     ! .. Output variables
-    complex (kind=dp), dimension (irmdnew, 4), intent (out) :: cdenns
+    complex (kind=dp), dimension (irmdnew, nspin*(1+korbit)), intent (out) :: cdenns
     complex (kind=dp), dimension (lmmaxso, lmmaxso), intent (out) :: gflle_part
     ! lmlm-dos
-    complex (kind=dp), dimension (irmdnew, 0:lmax, 4), intent (out) :: cden
-    complex (kind=dp), dimension (irmdnew, lmmaxd/2, 4), intent (out) :: cdenlm
+    complex (kind=dp), dimension (irmdnew, 0:lmax, nspin*(1+korbit)), intent (out) :: cden
+    complex (kind=dp), dimension (irmdnew, lmmaxd/(1+korbit), nspin*(1+korbit)), intent (out) :: cdenlm
 
     ! .. In/Out variables
-    complex (kind=dp), dimension (irmdnew, lmpot, 4), intent (inout) :: rho2nsc
+    complex (kind=dp), dimension (irmdnew, lmpot, nspin*(1+korbit)), intent (out) :: rho2nsc
 
     ! .. Local variables
     integer :: lmsize
@@ -85,9 +86,9 @@ contains
     complex (kind=dp), dimension (:, :, :), allocatable :: wr
     complex (kind=dp), dimension (:, :, :), allocatable :: wr1 ! LDAU
     ! .. External routines
-    logical, external :: opt
+    logical, external :: opt, test
 
-    lmsize = lmmaxd/2
+    lmsize = lmmaxd/(1+korbit)
 
     allocate (wr(lmmaxso,lmmaxso,irmdnew), stat=i_stat)
     call memocc(i_stat, product(shape(wr))*kind(wr), 'WR', 'RHOOUTNEW')
@@ -106,14 +107,19 @@ contains
     pnsi = czero
 
     ! set LMSHIFT value which is need to construct CDEN
-    lmshift1(1) = 0
-    lmshift1(2) = lmsize
-    lmshift1(3) = 0
-    lmshift1(4) = lmsize
-    lmshift2(1) = 0
-    lmshift2(2) = lmsize
-    lmshift2(3) = lmsize
-    lmshift2(4) = 0
+    if (test('NOSOC   ')) then
+      lmshift1(:) = 0 
+      lmshift2(:) = 0 
+    else
+      lmshift1(1) = 0
+      lmshift1(2) = lmsize
+      lmshift1(3) = 0
+      lmshift1(4) = lmsize
+      lmshift2(1) = 0
+      lmshift2(2) = lmsize
+      lmshift2(3) = lmsize
+      lmshift2(4) = 0
+    end if
 
     ! for orbital moment
     if (corbital/=0) then
@@ -124,6 +130,7 @@ contains
     cden = czero
     cdenlm = czero
 
+    ! big component of Dirac spinor
     do ir = 1, irmdnew
       do lm1 = 1, lmmaxso
         do lm2 = 1, lmmaxso
@@ -142,6 +149,7 @@ contains
       end do
       call zgemm('N', 'T', lmmaxso, lmmaxso, lmmaxso, cone, pnsi, lmmaxso, qnsi, lmmaxso, czero, wr(1,1,ir), lmmaxso)
 
+      ! small component of Dirac spinor
       if (nsra==2) then
         do lm1 = 1, lmmaxso
           do lm2 = 1, lmmaxso
@@ -160,7 +168,7 @@ contains
           end do
         end do
         call zgemm('N', 'T', lmmaxso, lmmaxso, lmmaxso, cone, pnsi, lmmaxso, qnsi, lmmaxso, cone, wr(1,1,ir), lmmaxso)
-      end if
+      end if ! small component
 
       ! For orbital moment
       if (corbital/=0) then
@@ -182,14 +190,16 @@ contains
         end do
       end do
 
-      do jspin = 1, 4
+      do jspin = 1, nspin*(1+korbit)
         do lm1 = 1, lmsize
           do lm2 = 1, lm1 - 1
             wr(lm1+lmshift1(jspin), lm2+lmshift2(jspin), ir) = wr(lm1+lmshift1(jspin), lm2+lmshift2(jspin), ir) + wr(lm2+lmshift1(jspin), lm1+lmshift2(jspin), ir)
           end do
         end do
-      end do                       ! JSPIN
-    end do                         ! IR
+      end do ! JSPIN
+
+    end do ! IR
+
 
     ! IF lmdos or LDAU
     if (opt('lmlm-dos') .or. opt('LDA+U   ')) then ! lmlm-dos
@@ -224,6 +234,7 @@ contains
       end do
     end if                         ! OPT('lmlm-dos').OR.OPT('LDA+U   ')
 
+
     ! DO IR = 1,IRMDNEW
     ! DO JSPIN = 1,4
     ! DO LM1 = 1,lmsize
@@ -242,14 +253,14 @@ contains
       do m1 = -l1, l1
         lm1 = l1*(l1+1) + m1 + 1
         do ir = 1, irmdnew
-          do jspin = 1, 4
+          do jspin = 1, nspin*(1+korbit)
             cden(ir, l1, jspin) = cden(ir, l1, jspin) + wr(lm1+lmshift1(jspin), lm1+lmshift2(jspin), ir)
             cdenlm(ir, lm1, jspin) = wr(lm1+lmshift1(jspin), lm1+lmshift2(jspin), ir)
           end do                   ! JPSIN
         end do                     ! IR
       end do                       ! M1
 
-      do jspin = 1, 4
+      do jspin = 1, nspin*(1+korbit)
         do ir = 1, irmdnew
           rho2nsc(ir, 1, jspin) = rho2nsc(ir, 1, jspin) + c0ll*(cden(ir,l1,jspin)*df)
         end do                     ! IR
@@ -267,13 +278,12 @@ contains
     ! Then the non-spherical part
 
     cdenns = czero
-
     do j = 1, iend
       lm1 = icleb(j, 1)
       lm2 = icleb(j, 2)
       lm3 = icleb(j, 3)
       cltdf = df*cleb(j)
-      do jspin = 1, 4
+      do jspin = 1, nspin*(1+korbit)
         do ir = 1, irmdnew
           rho2nsc(ir, lm3, jspin) = rho2nsc(ir, lm3, jspin) + (cltdf*wr(lm1+lmshift1(jspin),lm2+lmshift2(jspin),ir))
         end do
@@ -286,6 +296,7 @@ contains
         end if
       end do                       ! JSPIN
     end do                         ! J
+
 
     i_all = -product(shape(wr))*kind(wr)
     deallocate (wr, stat=i_stat)

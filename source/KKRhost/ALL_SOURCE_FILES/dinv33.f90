@@ -1,36 +1,47 @@
 module mod_dinv33
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: dinv33
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Invert 3x3 matrix
+  !> Author: 
+  !> Category: KKRhost, numerical-tools
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Inverts 3X3 matrix
+  !> 
+  !> Inputs:
+  !>   matrix:input matrix
+  !>   iopt  :if 0, usual inverse
+  !>             1, transpose of inverse
+  !>             2, 2*pi*inverse
+  !>             3, 2*pi*transpose of inverse
+  !>
+  !> Outputs:
+  !>   invers:as modified according to iopt
+  !>   det   :determinant, (or det/2*pi if iopt=2,3)
+  !>
+  !> Remarks:
+  !>  To generate reciprocal lattice vectors, call dinv33(plat,3,plat)
+  !-------------------------------------------------------------------------------
   subroutine dinv33(matrix, iopt, invers, det)
-    ! - Inverts 3X3 matrix
-    ! ----------------------------------------------------------------------
-    ! i Inputs:
-    ! i   matrix:input matrix
-    ! i   iopt  :if 0, usual inverse
-    ! i             1, transpose of inverse
-    ! i             2, 2*pi*inverse
-    ! i             3, 2*pi*transpose of inverse
-    ! o Outputs:
-    ! o   invers:as modified according to iopt
-    ! o   det   :determinant, (or det/2*pi if iopt=2,3)
-    ! r Remarks:
-    ! r  To generate reciprocal lattice vectors, call dinv33(plat,3,plat)
-    ! ----------------------------------------------------------------------
-    use :: mod_cross
-    use :: mod_ddot1
-    use :: mod_dscal1
-    use :: mod_dswap1
+
+    use :: mod_datatypes, only: dp
+    use :: mod_cross, only: cross
+    use :: mod_ddot1, only: ddot1
+    use :: mod_dscal1, only: dscal1
+    use :: mod_dswap1, only: dswap1
+    use :: mod_constants, only: pi
     implicit none
-    ! Passed parameters:
+
     integer :: iopt
     real (kind=dp) :: matrix(3, 3), invers(3, 3), det
     ! Local parameters:
     integer :: i, j
-    real (kind=dp) :: twopi, pi
-    parameter (pi=3.141592653589793e0_dp)
+    real (kind=dp) :: twopi
     parameter (twopi=2.e0_dp*pi)
 
     call cross(matrix(1,2), matrix(1,3), invers(1,1))

@@ -1,15 +1,27 @@
 module mod_calcsph
 
+  private
+  public :: calcsph
+
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculate spherical part of SRATRICK
+  !> Author: 
+  !> Category: KKRhost, single-site
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Constructs potential matrices and calls rllsll routine to find spherical wavefunctions
+  !> starting from spherical Bessel and Hankel functions (see PhD D. Bauer)
+  !-------------------------------------------------------------------------------
   subroutine calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, zat, eryd, lmpotd, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, &
     tmat, alpha, use_sratrick)
 
-    use :: constants
-    use :: mod_profiling
+    use :: global_variables, only: korbit
+    use :: mod_constants, only: czero
     use :: mod_datatypes, only: dp
-    use :: mod_rllsll
-    use :: mod_vllmatsra
+    use :: mod_rllsll, only: rllsll
+    use :: mod_vllmatsra, only: vllmatsra
 
     implicit none
     ! construct wavefunctions for spherical potentials
@@ -20,10 +32,10 @@ contains
     complex (kind=dp) :: eryd, gmatprefactor
     real (kind=dp) :: rnew(nrmaxd), rpan_intervall(0:npan_tot)
     real (kind=dp) :: vins(irmdnew, lmpotd, nspin)
-    complex (kind=dp) :: hlk(1:4*(lmax+1), irmdnew)
-    complex (kind=dp) :: jlk(1:4*(lmax+1), irmdnew)
-    complex (kind=dp) :: hlk2(1:4*(lmax+1), irmdnew)
-    complex (kind=dp) :: jlk2(1:4*(lmax+1), irmdnew)
+    complex (kind=dp) :: hlk(1:nsra*(1+korbit)*(lmax+1), irmdnew)
+    complex (kind=dp) :: jlk(1:nsra*(1+korbit)*(lmax+1), irmdnew)
+    complex (kind=dp) :: hlk2(1:nsra*(1+korbit)*(lmax+1), irmdnew)
+    complex (kind=dp) :: jlk2(1:nsra*(1+korbit)*(lmax+1), irmdnew)
     integer :: jlk_index(2*lmmaxso)
 
     ! local
@@ -38,8 +50,8 @@ contains
     complex (kind=dp), allocatable :: hlknew(:, :), jlknew(:, :)
     complex (kind=dp), allocatable :: tmattemp(:, :)
     complex (kind=dp), allocatable :: alphatemp(:, :) ! LLY
-    complex (kind=dp) :: tmat(2*(lmax+1))
-    complex (kind=dp) :: alpha(2*(lmax+1)) ! LLY
+    complex (kind=dp) :: tmat(nspin*(lmax+1))
+    complex (kind=dp) :: alpha(nspin*(lmax+1)) ! LLY
 
     lmsize = 1
     if (nsra==2) then
@@ -49,6 +61,7 @@ contains
       lmsize2 = 1
       nvec = 1
     end if
+
     allocate (rlltemp(lmsize2,lmsize,irmdnew))
     allocate (slltemp(lmsize2,lmsize,irmdnew))
     allocate (hlktemp(nvec,irmdnew))
@@ -58,8 +71,8 @@ contains
     allocate (jlk_indextemp(lmsize2))
     allocate (tmattemp(lmsize,lmsize))
     allocate (alphatemp(lmsize,lmsize)) ! LLY
-    allocate (hlknew(nvec*nspin*(lmax+1),irmdnew))
-    allocate (jlknew(nvec*nspin*(lmax+1),irmdnew))
+    allocate (hlknew(nvec*2*(lmax+1),irmdnew))
+    allocate (jlknew(nvec*2*(lmax+1),irmdnew))
 
     do ivec = 1, nvec
       jlk_indextemp(ivec) = ivec
@@ -83,7 +96,7 @@ contains
     do ispin = 1, nspintemp
 
       lspin = (lmax+1)*(ispin-1)
-      lsra = (lmax+1)*nvec
+      lsra = (lmax+1)*nvec/(2-korbit) ! factor 1/(2-korbit) ensures correct matrix size for 'NOSOC' test option
       ! each value of l, the Lippmann-Schwinger equation is solved using
       ! the free-potential wavefunctions and potentials corresponding to l-value
       do lval = 0, lmax
@@ -129,7 +142,7 @@ contains
 
     lm1 = 1
     do ivec = 1, nvec
-      do i = 1, 2
+      do i = 1, nspin
         do l1 = 0, lmax
           do m1 = -l1, l1
             jlk_index(lm1) = l1 + (ivec-1)*nspintemp*(lmax+1) + (i-1)*(lmax+1) + 1
@@ -163,6 +176,7 @@ contains
         end do
       end do
     end if
+
     deallocate (rlltemp)
     deallocate (slltemp)
     deallocate (hlktemp)

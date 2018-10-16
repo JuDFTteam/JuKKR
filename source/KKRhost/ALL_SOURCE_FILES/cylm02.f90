@@ -1,25 +1,36 @@
 module mod_cylm02
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: cylm02
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Computes complex spherical Harmonics and their derivative 
+  !> Author: 
+  !> Category: KKRhost, special-functions 
+  !> Deprecated: True ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Preparation of cylm0(=ylm(ip,i)), cylmt1(=dylm/dtheta),
+  !> cylmt2(=d2ylm/dt2),
+  !> cylmf1, cylmf2 are for fai.
+  !> cylmtf=d2ylm/dfdt
+  !> i=1,2,....,(lmax+1)**2
+  !>
+  !> @warning
+  !> A hard coded loop dimension is used here (parameter `ijd`)
+  !> @endwarning
+  !-------------------------------------------------------------------------------
   subroutine cylm02(lmax, cosx, fai, lpot2p, lmmaxd, thet, ylm, dylmt1, dylmt2, dylmf1, dylmf2, dylmtf)
-    ! ------------------------------------------------------------------
-    ! preparation of cylm0(=ylm(ip,i)), cylmt1(=dylm/dtheta),
-    ! cylmt2(=d2ylm/dt2),
-    ! cylmf1, cylmf2 are for fai.
-    ! cylmtf=d2ylm/dfdt
-    ! i=1,2,....,(lmax+1)**2
-    ! ------------------------------------------------------------------
-    use :: mod_spher
+  
+    use :: mod_datatypes, only: dp
+    use :: mod_spher, only: spher
     use :: mod_shape_corr, only: triangle
-    use :: mod_trarea
+    use :: mod_trarea, only: trarea
     implicit none
 
     ! .. Parameters ..
-    integer :: ijd
-    parameter (ijd=434)
+    integer, parameter :: ijd=434 !! loop dimension
     ! ..
     ! .. Scalar Arguments ..
     integer :: lmax, lmmaxd, lpot2p

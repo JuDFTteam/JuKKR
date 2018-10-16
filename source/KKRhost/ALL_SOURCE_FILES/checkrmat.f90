@@ -1,18 +1,22 @@
 module mod_checkrmat
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: checkrmat
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Check rotation matrix and Euler angles for cinsistency
+  !> Author: 
+  !> Category: KKRhost, sanity-check
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Check whether the values of the cosinus and sinus found for the
+  !> Euler angles TET1, TET2, TET3 are consistent with the          
+  !> rotation matrix   RMAT
+  !-------------------------------------------------------------------------------
   function checkrmat(rmat, co1, si1, co2, si2, co3, si3, i, j)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *  check whether the values of the cosinus and sinus found for the *
-    ! *  Euler angles TET1, TET2, TET3 are consistent with the           *
-    ! *  rotation matrix   RMAT                                          *
-    ! *                                                                  *
-    ! ********************************************************************
-
+    use :: mod_datatypes, only: dp
     implicit none
 
     ! Dummy arguments

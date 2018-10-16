@@ -1,50 +1,55 @@
 module mod_ewald2d
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: ewald2d
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 2D Ewald summation 
+  !> Author: N. Papanikolaou
+  !> Category: KKRhost, geometry, special-functions
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Calculation of lattice sums for l .le. 2*lpot :                
+  !>
+  !>                  ylm( q(i) - q(j) + rm )                       
+  !>       sum      ===========================                     
+  !>                | q(i) - q(j) + rm |**(l+1)                     
+  !>
+  !>        - summed over all 2D lattice vectors rm  -              
+  !>
+  !> ylm       : real spherical harmic to given l,m                 
+  !>
+  !> The sum is done different in the plane (qi-qj)z = 0            
+  !> and out of the plane. In plane an Ewald procedure similar      
+  !> to the 3d is used and we perform 2 sums (real and reciprocal)  
+  !> the l= 2,4 m=0 terms are calculated with a different method    
+  !>
+  !> The l=0 term is calculated with a extra factror sqrt(4*pi) this
+  !> is for transparency reasons (so that the correction terms      
+  !> *r=0,g=0* can be followed in the program)                      
+  !> Literature : lm = (0,0), (1,0) terms :PRB 40, 12164 (1989)     
+  !>                                       PRB 49, 2721 (1994)      
+  !>                                       PRB 47, 16525 (1993)     
+  !>                                       Ziman , p.39-40          
+  !>     l=2,4 (m=0) terms are done with recursive diferentiation   
+  !>                                                v. 16.8.99      
+  !>     The l multipoles are treated using the expansion           
+  !>     for a complex plane wave.                                  
+  !>     eq.(33) , M. Weinert, J. Math Phys. 22, 2439 (1981)        
+  !>                                                                
+  !> Final version : 11.01.2000   (No direct sum needed everything  
+  !>                               is done with Ewald method)       
+  !> Programmed by N. Papanikolaou
+  !-------------------------------------------------------------------------------
   subroutine ewald2d(lpot, alat, vec1, vec2, iq1, iq2, rm2, nrmax, nshlr, nsr, gn2, ngmax, nshlg, nsg, sum2d, vol, lassld, lmxspd)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! *   calculation of lattice sums for l .le. 2*lpot :                  *
-    ! *                                                                    *
-    ! *                    ylm( q(i) - q(j) + rm )                         *
-    ! *         sum      ===========================                       *
-    ! *                  | q(i) - q(j) + rm |**(l+1)                       *
-    ! *                                                                    *
-    ! *          - summed over all 2D lattice vectors rm  -                *
-    ! *                                                                    *
-    ! *   ylm       : real spherical harmic to given l,m                   *
-    ! *                                                                    *
-    ! *   The sum is done different in the plane (qi-qj)z = 0              *
-    ! *   and out of the plane. In plane an Ewald procedure similar        *
-    ! *   to the 3d is used and we perform 2 sums (real and reciprocal)    *
-    ! *   the l= 2,4 m=0 terms are calculated with a different method      *
-    ! *                                                                    *
-    ! *   The l=0 term is calculated with a extra factror sqrt(4*pi) this  *
-    ! *   is for transparency reasons (so that the correction terms        *
-    ! *   *r=0,g=0* can be followed in the program)                        *
-    ! *   Literature : lm = (0,0), (1,0) terms :PRB 40, 12164 (1989)       *
-    ! *                                         PRB 49, 2721 (1994)        *
-    ! *                                         PRB 47, 16525 (1993)       *
-    ! *                                         Ziman , p.39-40            *
-    ! *       l=2,4 (m=0) terms are done with recursive diferentiation     *
-    ! *                                                  v. 16.8.99        *
-    ! *       The l multipoles are treated using the expansion             *
-    ! *       for a complex plane wave.                                    *
-    ! *       eq.(33) , M. Weinert, J. Math Phys. 22, 2439 (1981)          *
-    ! *                                                                    *
-    ! *   Final version : 11.01.2000   (No direct sum needed everything    *
-    ! *                                 is done with Ewald method)         *
-    ! *   Programmed by N. Papanikolaou                                    *
-    ! *                                                                    *
-    ! **********************************************************************
+    
     use :: mod_datatypes, only: dp
-    use :: mod_fplaneg
-    use :: mod_fplaner
-    use :: mod_gamfc
-    use :: mod_ymy
+    use :: mod_fplaneg, only: fplaneg
+    use :: mod_fplaner, only: fplaner
+    use :: mod_gamfc, only: gamfc
+    use :: mod_ymy, only: ymy
     implicit none
     ! ..
     ! .. Scalar arguments ..

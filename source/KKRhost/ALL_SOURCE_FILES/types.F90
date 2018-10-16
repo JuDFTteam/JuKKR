@@ -2,7 +2,7 @@ module mod_types
 
   use :: mod_datatypes
 
-  use :: constants, only: czero
+  use :: mod_constants, only: czero
 
   implicit none
 
@@ -55,7 +55,7 @@ module mod_types
   !> type holding some array dimensions needed independently of t_params
   type :: type_inc
 
-    integer :: nparams = 22        ! number of parameters in type_inc, excluding allocatable array KMESH
+    integer :: nparams = 23        ! number of parameters in type_inc, excluding allocatable array KMESH
     integer :: lmmaxd = -1
     integer :: nspin = -1
     integer :: ielast = -1
@@ -69,10 +69,11 @@ module mod_types
     integer :: mit_bry = 1
     integer :: nshell0 = -1
     integer :: nkmesh = -1
-    logical :: newsosol = .false.  ! use new solver for SOC
-    logical :: deci_out = .false.  ! use deci_out case
-    integer :: i_write = 0         ! switch to control if things are written out or not (verbosity levels 0,1,2)
-    integer :: i_time = 1          ! switch to control if timing files are written (verbosity levels 0,1,2)
+    logical :: newsosol = .false.  !! use new solver for SOC
+    logical :: nosoc = .false.     !! use new solver without SOC (test option 'NOSOC   ')
+    logical :: deci_out = .false.  !! use deci_out case
+    integer :: i_write = 0         !! switch to control if things are written out or not (verbosity levels 0,1,2)
+    integer :: i_time = 1          !! switch to control if timing files are written (verbosity levels 0,1,2)
     ! parameters needed for wavefunctions
     integer :: nsra = -1
     integer :: lmmaxso = -1
@@ -183,7 +184,7 @@ contains
     integer :: ierr, nspin
 
     nspin = t_inc%nspin
-    if (t_inc%newsosol) nspin = 1
+    if (t_inc%newsosol .and. .not.t_inc%nosoc) nspin = 1
 
     if (.not. allocated(t_tgmat%tmat)) then
       if (.not. t_tgmat%tmat_to_file) then
@@ -265,7 +266,7 @@ contains
     integer :: ierr, nspin
 
     nspin = t_inc%nspin
-    if (t_inc%newsosol) nspin = 1
+    if (t_inc%newsosol .and. .not.t_inc%nosoc) nspin = 1
 
 
     if (.not. allocated(t_cpa%dmatts)) then
@@ -504,20 +505,21 @@ contains
     call mpi_get_address(t_inc%nshell0, disp1(13), ierr)
     call mpi_get_address(t_inc%nkmesh, disp1(14), ierr)
     call mpi_get_address(t_inc%newsosol, disp1(15), ierr)
-    call mpi_get_address(t_inc%deci_out, disp1(16), ierr)
-    call mpi_get_address(t_inc%i_write, disp1(17), ierr)
-    call mpi_get_address(t_inc%i_time, disp1(18), ierr)
-    call mpi_get_address(t_inc%nsra, disp1(19), ierr)
-    call mpi_get_address(t_inc%lmmaxso, disp1(20), ierr)
-    call mpi_get_address(t_inc%irmdnew, disp1(21), ierr)
-    call mpi_get_address(t_inc%kvrel, disp1(22), ierr)
+    call mpi_get_address(t_inc%nosoc, disp1(16), ierr)
+    call mpi_get_address(t_inc%deci_out, disp1(17), ierr)
+    call mpi_get_address(t_inc%i_write, disp1(18), ierr)
+    call mpi_get_address(t_inc%i_time, disp1(19), ierr)
+    call mpi_get_address(t_inc%nsra, disp1(20), ierr)
+    call mpi_get_address(t_inc%lmmaxso, disp1(21), ierr)
+    call mpi_get_address(t_inc%irmdnew, disp1(22), ierr)
+    call mpi_get_address(t_inc%kvrel, disp1(23), ierr)
     base = disp1(1)
     disp1 = disp1 - base
 
-    blocklen1(1:22) = 1
+    blocklen1(1:23) = 1
 
-    etype1(1:22) = mpi_integer
-    etype1(15:16) = mpi_logical
+    etype1(1:23) = mpi_integer
+    etype1(15:17) = mpi_logical
 
     call mpi_type_create_struct(t_inc%nparams, blocklen1, disp1, etype1, mympitype1, ierr)
     if (ierr/=mpi_success) stop 'Problem in create_mpimask_t_inc'
@@ -629,7 +631,7 @@ contains
     integer :: ierr, nspin
 
     nspin = t_inc%nspin
-    if (t_inc%newsosol) nspin = 1  ! t_inc%NSPIN !1
+    if (t_inc%newsosol .and. .not.t_inc%nosoc) nspin = 1  ! t_inc%NSPIN !1
 
 
     if (.not. allocated(t_lloyd%dtmat)) then
@@ -807,7 +809,7 @@ contains
     integer :: ierr, iwork, nspin
 
     nspin = t_inc%nspin
-    if (t_inc%newsosol) nspin = 1
+    if (t_inc%newsosol .and. .not.t_inc%nosoc) nspin = 1
 
 
     ! communicate dtmatll
@@ -857,7 +859,7 @@ contains
     ! Gather tmat so that all processors the full matrix for their part of the energy contour
     if (t_mpi_c_grid%nranks_ie>1) then
       nspin = t_inc%nspin
-      if (t_inc%newsosol) nspin = 1
+      if (t_inc%newsosol .and. .not.t_inc%nosoc) nspin = 1
 
       ihelp = t_inc%lmmaxd**2*t_mpi_c_grid%ntot2*nspin ! *t_inc%NATYP/mytot
       recvcounts = ntot_pt*ihelp
@@ -915,10 +917,13 @@ contains
 
     integer :: ihelp
     integer :: recvcounts(0:nranks-1), displs(0:nranks-1)
-    integer :: ierr
+    integer :: ierr, nspin
+
+    nspin = t_inc%nspin
+    if (t_inc%newsosol .and. .not.t_inc%nosoc) nspin = 1
 
     ! Gather gmat so that all processors have the full matrix
-    ihelp = t_inc%lmmaxd*t_inc%lmmaxd*t_inc%nqdos ! *t_inc%IELAST*t_inc%NSPIN*t_inc%NATYP
+    ihelp = t_inc%lmmaxd*t_inc%lmmaxd*t_inc%nqdos*nspin ! *t_inc%IELAST*t_inc%NSPIN*t_inc%NATYP
     if (t_mpi_c_grid%dims(1)>1) then
       recvcounts = ntot_pt*ihelp
       displs = ioff_pt*ihelp

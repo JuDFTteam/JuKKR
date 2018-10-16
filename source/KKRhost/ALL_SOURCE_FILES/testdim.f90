@@ -2,6 +2,14 @@ module mod_testdim
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> 
+  !-------------------------------------------------------------------------------
   ! -------------------------------------------------------------------------------
   ! SUBROUTINE: TESTDIM
   !> @brief Testing the dimension of several arrays
@@ -95,8 +103,12 @@ contains
     end if
 
     if (opt('NEWSOSOL') .and. korbit==0) then
-      write (6, *) 'Using option NEWSOSOL, change KORBIT in the inputcard from', korbit, 'to 1'
-      stop_mark = 1
+      if (test('NOSOC   ')) then
+        write (6, *) 'Using NEWSOSOL for decoupled spin channels.'
+      else
+        write (6, *) 'Using option NEWSOSOL, change KORBIT in the inputcard from', korbit, 'to 1'
+        stop_mark = 1
+      end if
     end if
     ! ----------------------------------------------------------------------------
     ! OPT 'WIRE' is only useful with OPT 'full inv' or

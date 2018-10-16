@@ -1,24 +1,31 @@
 module mod_chebint
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: chebint
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Create matrices for Chebychev integration
+  !> Author: 
+  !> Category: KKRhost, 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> This subroutine calculates the matrices for the Chebyshev integration
+  !> as defined on page 141 and 142 of the article:
+  !> Integral Equation Method for the Continuous Spectrum Radial
+  !> Schroedinger Equation by R. A. Gonzales et al
+  !> in Journal of computational physics 134, 134-149 (1997)
+  !>
+  !> the matrix C is the discrete cosine transform matrix
+  !> the matrix C1 is the inverse of C
+  !> the matrix SL is the left spectral integration matrix
+  !> the matrix SR is the right spectral integration matrix
+  !> the matrix CSLC1 is the product of C, SL and C1
+  !> the matrix CSRC1 is the product of C, SR and C1
+  !-------------------------------------------------------------------------------
   subroutine chebint(cslc1, csrc1, slc1sum, c1, n)
-    ! ---------------------------------------------------------------------
-    ! this subroutine calculates the matrices for the Chebyshev integration
-    ! as defined on page 141 and 142 of the article:
-    ! Integral Equation Method for the Continuous Spectrum Radial
-    ! Schroedinger Equation by R. A. Gonzales et al
-    ! in Journal of computational physics 134, 134-149 (1997)
-
-    ! the matrix C is the discrete cosine transform matrix
-    ! the matrix C1 is the inverse of C
-    ! the matrix SL is the left spectral integration matrix
-    ! the matrix SR is the right spectral integration matrix
-    ! the matrix CSLC1 is the product of C, SL and C1
-    ! the matrix CSRC1 is the product of C, SR and C1
-    ! ---------------------------------------------------------------------
+    use :: mod_datatypes, only: dp
     implicit none
     ! .. Scalar Arguments ..
     integer, intent (in) :: n

@@ -1,34 +1,44 @@
 module mod_kloopz1
 
+  private
+  public :: kloopz1_qdos
+  
 contains
 
-  ! -------------------------------------------------------------------------------
-  ! SUBROUTINE: KLOOPZ1_QDOS
+  !-------------------------------------------------------------------------------
+  !> Summary: Driver for k-loop to compute structural Dyson equation
+  !> Author: 
+  !> Category: KKRhost, k-points, structural-greensfunction
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
   !> @note
+  !> - Internally works with the scattering path operator.
+  !> - Also includes things needed for CPA
   !> - Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
-  ! -------------------------------------------------------------------------------
+  !> @endnote
+  !-------------------------------------------------------------------------------
   subroutine kloopz1_qdos(eryd, gmatll, ins, alat, ie, igf, nshell, naez, nofks, volbz, bzkp, volcub, cls, nacls, naclsmax, ncls, rr, rbasis, ezoa, atom, rcls, icc, ginp, ideci, &
     lefttinvll, righttinvll, vacflag, nlbasis, nrbasis, factl, natomimp, nsymat, dsymll, ratom, rrot, nsh1, nsh2, ijtabsym, ijtabsh, icheck, invmod, refpot, trefll, tsst, msst, &
     cfctor, cfctorinv, crel, rc, rrel, srrel, irrel, nrrel, drotq, symunitary, kmrot, natyp, ncpa, icpa, itcpamax, cpatol, noq, iqat, itoq, conc, iprint, icpaflag, ispin, nspin, &
     tqdos, iqdosrun, &             ! qdos ruess
     dtrefll, dtmatll, dginp, lly_grtr, tracet, lly) ! LLY Lloyd
 
-    use :: mod_types, only: t_inc
-    use :: mod_mympi, only: myrank, master
-    use :: global_variables
-    use :: constants
-    use :: mod_profiling
     use :: mod_datatypes, only: dp
-    use :: mod_rotgll
-    use :: mod_mssinit
-    use :: mod_kkrmat01
-    use :: mod_gijdmat
-    use :: mod_cpamillsx
-    use :: mod_cmatstr
-    use :: mod_symetrmat
-    use :: mod_rotate
-    use :: mod_projtau
-    use :: mod_cinit
+    use :: mod_constants, only: czero, cone, nsymaxd
+    use :: global_variables, only: krel, kpoibz, nembd2, nsheld, nclsd, nofgij, naclsd, nprincd, lmmaxd, nrd, lmgf0d, nrefd, nembd1
+    use :: mod_types, only: t_inc
+    use :: mod_cinit, only: cinit
+    use :: mod_mympi, only: myrank, master
+    use :: mod_profiling, only: memocc
+    use :: mod_rotgll, only: rotgll
+    use :: mod_mssinit, only: mssinit
+    use :: mod_kkrmat01, only: kkrmat01
+    use :: mod_gijdmat, only: gijdmat
+    use :: mod_cpamillsx, only: cpamillsx
+    use :: mod_cmatstr, only: cmatstr
+    use :: mod_symetrmat, only: symetrmat
+    use :: mod_rotate, only: rotate
+    use :: mod_projtau, only: projtau
 
     implicit none
 
@@ -46,22 +56,22 @@ contains
     integer, intent (in) :: ncls   !! Number of reference clusters
     integer, intent (in) :: kmrot  !! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
     integer, intent (in) :: natyp  !! Number of kinds of atoms in unit cell
-    integer, intent (in) :: nofks
-    integer, intent (in) :: ideci
-    integer, intent (in) :: ispin
+    integer, intent (in) :: nofks  !! number of kpoints
+    integer, intent (in) :: ideci  !! use decimation?
+    integer, intent (in) :: ispin  !! spin index
     integer, intent (in) :: nspin  !! Counter for spin directions
-    integer, intent (in) :: nsymat
+    integer, intent (in) :: nsymat !! 
     integer, intent (in) :: invmod !! Inversion scheme
-    integer, intent (in) :: iprint
+    integer, intent (in) :: iprint !! flag for printout verbosity
     integer, intent (in) :: nlbasis !! Number of basis layers of left host (repeated units)
     integer, intent (in) :: nrbasis !! Number of basis layers of right host (repeated units)
     integer, intent (in) :: natomimp !! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-    integer, intent (in) :: naclsmax
+    integer, intent (in) :: naclsmax !! maximal number of atoms in screening cluster
     integer, intent (in) :: iqdosrun !! qdos ruess: counts qdos run
     real (kind=dp), intent (in) :: alat !! Lattice constant in a.u.
-    real (kind=dp), intent (in) :: volbz
+    real (kind=dp), intent (in) :: volbz !! Brillouin zone volume
     real (kind=dp), intent (in) :: cpatol !! Convergency tolerance for CPA-cycle
-    complex (kind=dp), intent (in) :: eryd
+    complex (kind=dp), intent (in) :: eryd !! energy in Ry
     complex (kind=dp), intent (in) :: cfctor
     complex (kind=dp), intent (in) :: cfctorinv
     ! .. Input arrays
@@ -85,7 +95,7 @@ contains
     real (kind=dp), dimension (natyp), intent (in) :: conc !! Concentration of a given atom
     real (kind=dp), dimension (kpoibz), intent (in) :: volcub
     real (kind=dp), dimension (3, 0:nrd), intent (in) :: rr !! Set of real space vectors (in a.u.)
-    real (kind=dp), dimension (3, kpoibz), intent (in) :: bzkp
+    real (kind=dp), dimension (3, kpoibz), intent (in) :: bzkp !! array of k-points in irreducable part of BZ
     real (kind=dp), dimension (3, nsheld), intent (in) :: ratom
     real (kind=dp), dimension (3, nembd2), intent (in) :: rbasis !! Position of atoms in the unit cell in units of bravais vectors
     real (kind=dp), dimension (3, naclsd, nclsd), intent (in) :: rcls !! Real space position of atom in cluster
@@ -99,8 +109,8 @@ contains
     complex (kind=dp), dimension (2, 2, lmmaxd), intent (in) :: srrel
     complex (kind=dp), dimension (lmmaxd, lmmaxd, naez), intent (in) :: tqdos ! qdos : Read-in inverse t-matrix
     complex (kind=dp), dimension (lmmaxd, lmmaxd, naez), intent (in) :: drotq !! Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
-    complex (kind=dp), dimension (lmmaxd, lmmaxd, nrefd), intent (in) :: trefll
-    complex (kind=dp), dimension (lmmaxd, lmmaxd, nsymaxd), intent (in) :: dsymll
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, nrefd), intent (in) :: trefll !! t-matrix of reference system
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, nsymaxd), intent (in) :: dsymll !! transformation matrix using lattice symmetries
     complex (kind=dp), dimension (lmmaxd, lmmaxd, nrefd), intent (in) :: dtrefll !! LLY Lloyd dtref/dE
     complex (kind=dp), dimension (lmmaxd, lmmaxd, naez), intent (in) :: dtmatll ! LLY  dt/dE (should be av.-tmatrix in CPA)
     complex (kind=dp), dimension (lmgf0d*naclsmax, lmgf0d, ncls), intent (in) :: ginp !! Cluster GF (ref syst.)
@@ -110,7 +120,7 @@ contains
     logical, dimension (2), intent (in) :: vacflag
     logical, dimension (nsymaxd), intent (in) :: symunitary !! unitary/antiunitary symmetry flag
     ! .. Output variables
-    integer, intent (out) :: icpaflag
+    integer, intent (out) :: icpaflag 
     ! .. In/Out variables
     integer, intent (inout) :: itcpamax !! Max. number of CPA iterations
     complex (kind=dp), intent (inout) :: tracet !! \f$Tr\left[ (t-tref)^{-1} \frac{d(t-tref)}{dE} \right]\f$

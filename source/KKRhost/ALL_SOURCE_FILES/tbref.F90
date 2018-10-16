@@ -15,7 +15,7 @@ contains
     use :: mpi
     use :: mod_mympi, only: find_dims_2d
 #endif
-    use :: constants
+    use :: mod_constants
     use :: mod_profiling
     use :: global_variables
     use :: mod_datatypes, only: dp

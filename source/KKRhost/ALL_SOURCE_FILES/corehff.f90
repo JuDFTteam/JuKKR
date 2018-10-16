@@ -1,23 +1,27 @@
 module mod_corehff
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: corehff
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculate rel. hyberfine fields of core state
+  !> Author: 
+  !> Category: KKRhost, core-electrons, physical-observables
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> CALCULATE THE RELATIVISTIC HYPERFINEFIELDS FOR THE
+  !>                CURRENT  CORE STATE S              
+  !>
+  !> THE WAVE FUNCTION  {G(K,S),F(K,S)}  IS NORMALIZED TO 1
+  !-------------------------------------------------------------------------------
   subroutine corehff(kap1, kap2, mj, s, nsol, bhf, gck, fck, rc, drdic, rnuc, nzero, nrc)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   CALCULATE THE RELATIVISTIC HYPERFINEFIELDS FOR THE             *
-    ! *                  CURRENT  CORE STATE S                           *
-    ! *                                                                  *
-    ! *   THE WAVE FUNCTION  {G(K,S),F(K,S)}  IS NORMALIZED TO 1         *
-    ! *                                                                  *
-    ! ********************************************************************
 
-    use :: mod_ylag
-    use :: mod_rint4pts
+    use :: mod_ylag, only: ylag
+    use :: mod_rint4pts, only: rint4pts
+    use :: mod_datatypes, only: dp
     implicit none
-
 
     ! PARAMETER definitions
     real (kind=dp), parameter :: eps = 1.0e-12_dp
@@ -26,7 +30,6 @@ contains
     ! CONVERSION FACTOR FOR HYPERFINE FIELDS FROM A.U. TO GAUSS
     ! ELECTRON CHARGE     IN ESU
     ! BOHR-RADIUS         IN CM
-
 
     parameter (e0=1.6021892e-19_dp*2.997930e+09_dp, a0=0.52917706e-08_dp, cautog=e0/(a0*a0))
 
@@ -42,7 +45,6 @@ contains
     ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     ! ANGULAR HYPERFINE MATRIX ELEMENTS   SEE E.G.  E.M.ROSE
     ! THE FACTOR  I  HAS BEEN OMITTED
-
     ame(1, 1) = 4.0e0_dp*kap1*mj/(4.0e0_dp*kap1*kap1-1.0e0_dp)
     if (nsol==2) then
       ame(2, 2) = 4.0e0_dp*kap2*mj/(4.0e0_dp*kap2*kap2-1.0e0_dp)

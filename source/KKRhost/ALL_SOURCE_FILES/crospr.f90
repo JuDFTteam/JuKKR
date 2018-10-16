@@ -1,15 +1,27 @@
 module mod_crospr
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: crospr
 
 contains
 
-  ! ************************************************************************
+
+  !-------------------------------------------------------------------------------
+  !> Summary: Computes cross product of vectors
+  !> Author: 
+  !> Category: KKRhost, undefined
+  !> Deprecated: True ! This needs to be set to True for deprecated subroutines
+  !>
+  !> CROSP COMPUTES THE CROSS PRODUCT OF X AND Y RETURNING
+  !> IT INTO Z.
+  !>
+  !> @note
+  !> Dublication of `cross` subroutine
+  !> @endnote
+  !-------------------------------------------------------------------------------
   subroutine crospr(x, y, z)
-    ! ************************************************************************
-    ! CROSP COMPUTES THE CROSS PRODUCT OF X AND Y RETURNING
-    ! IT INTO Z.
-    ! ------------------------------------------------------------------------
+
+    use :: mod_datatypes, only: dp
     implicit none
     real (kind=dp), intent (in) :: x(*)
     real (kind=dp), intent (in) :: y(*)

@@ -1,21 +1,29 @@
 module mod_csum
+  
   use :: mod_datatypes, only: dp
-  private :: dp
+  private
+  public :: csum
 
 contains
 
-  ! 19.10.95 *************************************************************
-  function csum(n, v, iv)
-    complex (kind=dp) :: csum
-    ! **********************************************************************
-    ! sum up the first N elements of the complex (kind=dp)
-    ! array V(*) with a stepwidth of IV
-    ! ----------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
+  !> Summary: Sums complex array elements with given length and stepwidth
+  !> Author: 
+  !> Date: 19.10.95
+  !> Category: KKRhost, undefined
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Sum up the first N elements of the complex
+  !> array V(*) with a stepwidth of IV
+  !-------------------------------------------------------------------------------
+  complex (kind=dp) function csum(n, v, iv)
+    use :: mod_constants, only: czero
+    implicit none
     ! .. Scalar Arguments ..
-    integer :: iv, n
+    integer, intent(in) :: iv, n
     ! ..
     ! .. Array Arguments ..
-    complex (kind=dp) :: v(*)
+    complex (kind=dp), intent(in) :: v(*)
     ! ..
     ! .. Local Scalars ..
     complex (kind=dp) :: vsum
@@ -30,7 +38,7 @@ contains
       itop = 1
     end if
 
-    vsum = (0e0_dp, 0e0_dp)
+    vsum = czero
     do i = ibot, itop, iv
       vsum = vsum + v(i)
     end do

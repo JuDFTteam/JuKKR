@@ -2,34 +2,38 @@ module mod_dirac_soc
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Solve radial Dirac equation scaling SOC
+  !> Author: 
+  !> Category: KKRhost, single-site, dirac
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> ROUTINE TO SOLVE THE SPIN-POLARISED RADIAL DIRAC EQUATIONS
+  !>
+  !>              scaling the SPIN-ORBIT-COUPLING
+  !>
+  !>  the outward integration is started by a power expansion
+  !>  and continued by ADAMS-BASHFORTH-MOULTON - pred./corr.-method
+  !>  NABM = 4(5) selects the 4(5)-point formula
+  !>
+  !>  the inward integration is started analytically
+  !>
+  !>  returns the wave functions up to the mesh point NMESH
+  !>  PR,QR and PI,QI  with   P=r*g and Q=r*c*f
+  !>  and    R/I standing for regular/irregular solution
+  !>
+  !> 19/12/94  HE
+  !> 28/06/95  HF: corrected init of inward integration
+  !> 21/01/98  HE  finite nucelus
+  !-------------------------------------------------------------------------------
   subroutine dirabmsoc(getirrsol, c, socscl, it, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, cg8, v, b, z, nucleus, r, drdi, dovr, nmesh, dxp, pr, qr, pi, qi, d_p, dq, nrmax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   ROUTINE TO SOLVE THE SPIN-POLARISED RADIAL DIRAC EQUATIONS     *
-    ! *                                                                  *
-    ! *               scaling the SPIN-ORBIT-COUPLING                    *
-    ! *                                                                  *
-    ! *   the outward integration is started by a power expansion        *
-    ! *   and continued by ADAMS-BASHFORTH-MOULTON - pred./corr.-method  *
-    ! *   NABM = 4(5) selects the 4(5)-point formula                     *
-    ! *                                                                  *
-    ! *   the inward integration is started analytically                 *
-    ! *                                                                  *
-    ! *   returns the wave functions up to the mesh point NMESH          *
-    ! *   PR,QR and PI,QI  with   P=r*g and Q=r*c*f                      *
-    ! *   and    R/I standing for regular/irregular solution             *
-    ! *                                                                  *
-    ! *  19/12/94  HE                                                    *
-    ! *  28/06/95  HF: corrected init of inward integration              *
-    ! *  21/01/98  HE  finite nucelus                                    *
-    ! ********************************************************************
 
+    use :: mod_datatypes, only: dp
     use :: mod_types, only: t_inc
-    use :: mod_datatypes
-    use :: mod_ylag
-    use :: mod_rinvgj
-    use :: mod_cjlz
-    use :: mod_cinit
+    use :: mod_ylag, only: ylag
+    use :: mod_rinvgj, only: rinvgj
+    use :: mod_cjlz, only: cjlz
+    use :: mod_cinit, only: cinit
     implicit none
 
     ! PARAMETER definitions

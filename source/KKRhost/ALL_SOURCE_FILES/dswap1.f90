@@ -4,21 +4,32 @@ module mod_dswap1
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Swap two vectors
+  !> Author: 
+  !> Category: KKRhost, numerical-tools
+  !> Deprecated: True ! This needs to be set to True for deprecated subroutines
+  !> 
+  !> @note
+  !> This routine is only used by dead parts of the core base
+  !> @endnote
+  !>
+  !> Interchanges two vectors
+  !> 
+  !> i Inputs:
+  !> i   n     :lenght of dx and dy
+  !> io  dx    :vector
+  !> i   incx  :incrementation for x
+  !> io  dy    :vector
+  !> i   incy  :incrementation for y
+  !> o Outputs:
+  !> io  dx    :vector
+  !> io  dy    :vector
+  !> r Remarks:
+  !> r Adapted from:  jack dongarra, linpack, 3/11/78.
+  !-------------------------------------------------------------------------------
   subroutine dswap1(n, dx, incx, dy, incy)
-    ! -Interchanges two vectors
-    ! ----------------------------------------------------------------------
-    ! i Inputs:
-    ! i   n     :lenght of dx and dy
-    ! io  dx    :vector
-    ! i   incx  :incrementation for x
-    ! io  dy    :vector
-    ! i   incy  :incrementation for y
-    ! o Outputs:
-    ! io  dx    :vector
-    ! io  dy    :vector
-    ! r Remarks:
-    ! r Adapted from:  jack dongarra, linpack, 3/11/78.
-    ! ----------------------------------------------------------------------
+
 
     implicit none
     ! Passed parameters:

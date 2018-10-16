@@ -1,26 +1,34 @@
 module mod_convol
 
+  private
+  public :: convol
+
 contains
 
-  ! ************************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Convolutes potentials with shape functions
+  !> Author: 
+  !> Category: KKRhost, shape-functions 
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Calculate convolution of potential with shapefunction.
+  !-------------------------------------------------------------------------------
   subroutine convol(imt1, irc1, icell, imaxsh, ilm_map, ifunm, lmpot, gsh, thetas, thesme, z, rfpi, r, vons, vspsmo, lmsp)
-    ! ************************************************************************
+
     use :: mod_datatypes, only: dp
-    use :: global_variables
+    use :: global_variables, only: irmd, irid, nfund, natypd, ngshd, lmpotd
     implicit none
-    ! ..
+
     ! .. Local Scalars ..
     real (kind=dp) :: rfpi, z
     integer :: icell, imaxsh, imt1, irc1, lmpot
-    ! ..
+
     ! .. Local Arrays ..
     real (kind=dp) :: gsh(*), r(*), thetas(irid, nfund, *), vons(irmd, *), thesme(irid, nfund, *), vspsmo(irmd)
     integer :: ifunm(natypd, *), ilm_map(ngshd, 3), lmsp(natypd, *)
-    ! ..
 
     real (kind=dp) :: zzor
     integer :: i, ifun, ir, irh, lm, lm1, lm2, lm3
-
 
     real (kind=dp) :: vstore(irid, lmpotd), vstsme(irid, lmpotd)
 
@@ -63,15 +71,16 @@ contains
       vspsmo(ir) = vons(ir, 1)/rfpi
     end do
     ! ************************************************************************
+
     do lm = 2, lmpot
       do ir = imt1 + 1, irc1
         irh = ir - imt1
         vons(ir, lm) = vstore(irh, lm)
       end do
     end do
-    ! .. Parameters ..
+
     return
-    ! set to 1 if NEWSOSOL under RUNOPT, otherwise 0
+
   end subroutine convol
 
 end module mod_convol

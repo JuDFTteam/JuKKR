@@ -2,25 +2,32 @@ module mod_errmsg
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Writes error message and strops code if severity level is too high
+  !> Author: 
+  !> Category: KKRhost, sanity-check
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Write error message to message error device
+  !> 
+  !> Inputs:
+  !>   messg : error message
+  !>   isev  : severity level
+  !> Remarks
+  !>   if severity level greater or equal than error tolerance
+  !>   program will stop.
+  !-------------------------------------------------------------------------------
   subroutine errmsg(messg, isev)
-    ! - Write error message to message error device
-    ! ----------------------------------------------------------------------
-    ! i Inputs:
-    ! i   messg :error message
-    ! i   isev  :severity level
-    ! r Remarks
-    ! r   if severity level greater or equal than error tolerance
-    ! r   program will stop.
-    ! ----------------------------------------------------------------------
+
     use :: mod_types, only: t_inc
     implicit none
-    ! Passed parameters:
+
     integer :: isev
     character (len=*) :: messg
     ! Local parameters:
     integer :: iline, iisev, ipos(0:20), l, nline, nunit
     character (len=14) :: c(1:4)
-    ! External calls:
+
     ! Intrinsic functions
     intrinsic :: iabs, max0, min0
 

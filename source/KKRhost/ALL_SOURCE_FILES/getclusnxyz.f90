@@ -1,33 +1,37 @@
 module mod_getclusnxyz
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: getclusnxyz
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Find integer boudaries (multiplied with lattice vectors) of spherical cluster
+  !> Author: 
+  !> Category: KKRhost, geometry, reference-system
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Given a spherical cluster of radius CLURAD it determines the three
+  !> integers N1,N2,N3 such that any vector
+  !>
+  !>   R_i = r_i + SUM_j  N_j * a_j
+  !>
+  !> with i = 1,NAEZ and a_j the primitive Bravais vectors, is inside 
+  !> the cluster. Subroutine also returns the CLURAD**2 value
+  !-------------------------------------------------------------------------------
   subroutine getclusnxyz(clurad, bravais, ndim, cluradsq, nbr)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * Given a spherical cluster of radius CLURAD it determines the three *
-    ! * integers N1,N2,N3 such that any vector                             *
-    ! *                                                                    *
-    ! *    R_i = r_i + SUM_j  N_j * a_j                                    *
-    ! *                                                                    *
-    ! *  with i = 1,NAEZ and a_j the primitive Bravais vectors, is inside  *
-    ! *  the cluster. Subroutine also returns the CLURAD**2 value          *
-    ! *                                                                    *
-    ! **********************************************************************
+
+    use :: mod_datatypes, only: dp
     implicit none
-    ! ..
-    ! ..  Arguments
+
     real (kind=dp) :: clurad, cluradsq
     real (kind=dp) :: bravais(3, 3)
     integer :: ndim, nbr(3)
-    ! ..
-    ! ..  Locals
+
     real (kind=dp) :: dr(3)
     integer :: i, j
-    ! ..
-    ! ..
+
+
     do i = 1, ndim
       dr(i) = 0e0_dp
       do j = 1, ndim

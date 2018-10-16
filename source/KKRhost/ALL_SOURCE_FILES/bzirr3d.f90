@@ -1,48 +1,56 @@
 module mod_bzirr3d
-  use :: mod_datatypes, only: dp
-  private :: dp
+
+  private
+  public :: bzirr3d
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: Arthur Ernst, Hubert Ebert, Voicu Popescu
+  !> Category: KKRhost, k-points
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Find irreducible BZ and create mesh in it.
+  !> Original version Arthur Ernst, Daresbury, 27/03/98
+  !>
+  !> fcc lattice bug corrected
+  !> modified 26/5/99, 2/06/99
+  !> Modified on 20.01.2000 To use the 2d inversion!
+  !> Modified Dec 2001 - Apr 2002 to deal with relativistic case, bugs
+  !> removed (full BZ integration gives now same results as
+  !> symetrised calculation)   HE/VP, Munich
+  !>
+  !> Input:
+  !> nkxyz : original k-mesh net in the 3 directions of the reciprocal
+  !> lattice vectors (not xyz directions).
+  !> recbv : reciprocal unit cell
+  !> (normalized: recbv(i,j)=G(i,j)*alat/(2*pi), i=x,y,z j=1,2,3)
+  !> if G is the "normal" rec. lattice vector.
+  !> bravais  : direct unit cell in a.u.
+  !> rsymat   : symmetry rotation matrices of real lattice
+  !> nsymat   : number of rotation matrices of real lattice
+  !> irr   : if .true. then irreducible BZ else take all BZ
+  !>
+  !> symunitary: in case of a FM REL calculation, indicates a unitary/
+  !> antiunitary symmetry operation
+  !>
+  !> Output:
+  !> nkp   : number of points in irreducible BZ
+  !> kp    : k-point mesh
+  !> wtkp  : weights for k-points
+  !> volbz  : volume of the BZ
+  !> Inside:
+  !> ibk   : Flag showing if the mesh point jx,jy,jz has already been
+  !> taken. Could also be a logical variable.
+  !-------------------------------------------------------------------------------
   subroutine bzirr3d(nkp, nkxyz, kpoibz, kp, recbv, bravais, wtkp, volbz, rsymat, nsymat, isymindex, symunitary, irr, krel, iprint)
-    ! ===========================================================================
-    ! info
-    ! info   find irreducible BZ and create mesh in it.
-    ! info           original version Arthur Ernst, Daresbury, 27/03/98
-    ! fcc lattice bug corrected
-    ! modified 26/5/99, 2/06/99
-    ! Modified on 20.01.2000 To use the 2d inversion!
-    ! Modified Dec 2001 - Apr 2002 to deal with relativistic case, bugs
-    ! removed (full BZ integration gives now same results as
-    ! symetrised calculation)   HE/VP, Munich
 
-    ! ===========================================================================
-    ! Input:
-    ! nkxyz : original k-mesh net in the 3 directions of the reciprocal
-    ! lattice vectors (not xyz directions).
-    ! recbv : reciprocal unit cell
-    ! (normalized: recbv(i,j)=G(i,j)*alat/(2*pi), i=x,y,z j=1,2,3)
-    ! if G is the "normal" rec. lattice vector.
-    ! bravais  : direct unit cell in a.u.
-    ! rsymat   : symmetry rotation matrices of real lattice
-    ! nsymat   : number of rotation matrices of real lattice
-    ! irr   : if .true. then irreducible BZ else take all BZ
-
-    ! symunitary: in case of a FM REL calculation, indicates a unitary/
-    ! antiunitary symmetry operation
-
-    ! Output:
-    ! nkp   : number of points in irreducible BZ
-    ! kp    : k-point mesh
-    ! wtkp  : weights for k-points
-    ! volbz  : volume of the BZ
-    ! Inside:
-    ! ibk   : Flag showing if the mesh point jx,jy,jz has already been
-    ! taken. Could also be a logical variable.
-    ! ==========================================================================
     use :: mod_ddet33
     use :: mod_rinvgj
+    use :: mod_datatypes, only: dp
     implicit none
+
     real (kind=dp), parameter :: eps = 1.0e-12_dp
     integer :: maxk1, maxk2, maxk3, nsymaxd
     parameter (maxk1=501, maxk2=501, maxk3=100, nsymaxd=48)
@@ -67,14 +75,12 @@ contains
     logical :: symunitary(nsymaxd)
     real (kind=dp) :: msign
 
-    real (kind=dp) :: ddot
-    external :: ddot
+    real (kind=dp), external :: ddot
 
     allocate (ibk(0:maxk1,0:maxk2,0:maxk3))
 
 
     ! heck if we are in surface mode
-
     lsurf = .false.
     if (abs(bravais(1,3))<eps .and. abs(bravais(2,3))<eps .and. abs(bravais(3,3))<eps) lsurf = .true.
 
@@ -94,7 +100,6 @@ contains
     ! -------------------
 
     ! Create small unit cell for the integration in the reciprocal space (gq),
-
     ! steps along the basis vectors
     do i = 1, 3
       do j = 1, 3
@@ -152,7 +157,6 @@ contains
     ! rotate the 3 step vectors   GQ  --  it should be possible
     ! to express the rotated vectors  B(j) in terms of the old ones
     ! B(i) = SUM(j) GQ(j) * n(j,i)  with integer coefficients n(j,i)
-
     ! ==========================================================================
     do is = 1, nsym
       if (iprint>2) write (1337, 100) is

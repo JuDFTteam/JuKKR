@@ -1,17 +1,22 @@
 module mod_cnlz
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: cnlz
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates von Neumann function
+  !> Author: 
+  !> Category: KKRhost, dirac, special-functions
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> von NEUMANN  - FUNCTION  N(L,Z)  FOR COMPLEX ARGUMENT  Z
+  !> see:  e.g. MERZBACHER EQ. (10.34) 
+  !-------------------------------------------------------------------------------
   function cnlz(l, z)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *     von NEUMANN  - FUNCTION  N(L,Z)  FOR COMPLEX ARGUMENT  Z     *
-    ! *                  see:  e.g. MERZBACHER EQ. (10.34)               *
-    ! *                                                                  *
-    ! ********************************************************************
-    use :: mod_cjlz
+    use :: mod_cjlz, only: cjlz
+    use :: mod_datatypes, only: dp
     implicit none
 
     ! PARAMETER definitions

@@ -1,38 +1,40 @@
 module mod_gamfc
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: gamfc
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Convergence function of Ewald sum
+  !> Author: 
+  !> Category: KKRhost, geometry, special-functions
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Calculation of convergence function
+  !>
+  !> glh = i(alpha,l)/r**(l+1)*sqrt(pi)
+  !>
+  !> with
+  !> alpha = r times the splitting paramter lamda
+  !> and
+  !> i(x,l) = erfc(x) + exp(-x*x)/sqrt(pi) *
+  !>
+  !> sum ( 2**i * x**(2i-1) / (2i-1)!! )
+  !> 1..i..l
+  !-------------------------------------------------------------------------------
   subroutine gamfc(alpha, glh, lmax, r)
-    ! ----------------------------------------------------------------------
 
-    ! calculation of convergence function
-
-    ! glh = i(alpha,l)/r**(l+1)*sqrt(pi)
-
-    ! with
-    ! alpha = r times the splitting paramter lamda
-    ! and
-    ! i(x,l) = erfc(x) + exp(-x*x)/sqrt(pi) *
-
-    ! sum ( 2**i * x**(2i-1) / (2i-1)!! )
-    ! 1..i..l
-
-    ! -----------------------------------------------------------------------
-    use :: mod_erfcex
+    use :: mod_datatypes, only: dp
+    use :: mod_erfcex, only: erfcex
     implicit none
-    ! .. scalar arguments ..
+
     real (kind=dp) :: alpha, r
     integer :: lmax
-    ! ..
-    ! .. array arguments ..
     real (kind=dp) :: glh(0:lmax)
-    ! ..
-    ! .. local scalars ..
     real (kind=dp) :: arg, facl, fex
     integer :: l
-    ! ..
+
     arg = alpha*alpha
     glh(0) = erfcex(alpha)
     facl = 2.0e0_dp*alpha

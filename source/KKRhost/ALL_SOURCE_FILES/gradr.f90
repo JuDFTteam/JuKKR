@@ -4,14 +4,20 @@ module mod_gradr
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Gradient of charde density for GGA functional
+  !> Author: T.Asada
+  !> Date: Feb. 1994
+  !> Category: KKRhost, xc-potential
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> @note Doubed in gradr from mod_gradr_d0?! @endnote
+  !>
+  !> Evaluates d(ro)/dr,d{d(ro)/dr}/dr.
+  !> drr=d(ro)/dr, ddrr=d(drr)/dr.
+  !-------------------------------------------------------------------------------
   subroutine gradr(nspin, ist1, mesh, dx, drdi, drdi2, ro, zta, drr, ddrr, drru, ddrru, rou, irmd)
-    ! -----------------------------------------------------------------
-    ! evaluates d(ro)/dr,d{d(ro)/dr}/dr.
-    ! drr=d(ro)/dr, ddrr=d(drr)/dr.
-    ! coded by T.Asada. Feb.1994.
-    ! -----------------------------------------------------------------
-    ! -----------------------------------------------------------------
-    ! ------------------------------------------------------------------
+
     implicit none
     ! .. Scalar Arguments ..
     real (kind=dp) :: dx
@@ -36,7 +42,6 @@ contains
 
     data ndvpt/5/
     data igd/1/
-    ! ..
 
     ! .....-----------------------------------------------------------------
 

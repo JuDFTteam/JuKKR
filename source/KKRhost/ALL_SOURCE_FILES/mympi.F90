@@ -446,7 +446,7 @@ contains
     integer, intent (in) :: mympi_comm
     real (kind=dp), intent (inout) :: rho2ns(irmd, lmpotd, natypd, 2), r2nef(irmd, lmpotd, natypd, 2), espv(0:lmaxd1, npotd), denef, denefat(natypd), &
       rhoorb(irmd*krel+(1-krel), natypd), muorb(0:lmaxd1+1, 3, natypd)
-    complex (kind=dp), intent (inout) :: den(0:lmaxd1, ielast, npotd, nqdos), denlm(lmmaxd, ielast, npotd, nqdos), denmatc(mmaxd, mmaxd, npotd), mvevi(natypd, 3, nmvecmax), &
+    complex (kind=dp), intent (inout) :: den(0:lmaxd1, ielast, npotd, nqdos), denlm(lmmaxd, ielast, nqdos, npotd), denmatc(mmaxd, mmaxd, npotd), mvevi(natypd, 3, nmvecmax), &
       mvevil(0:lmaxd, natypd, 3, nmvecmax), mvevief(natypd, 3, nmvecmax)
 
     integer :: idim, ierr          ! , myrank_comm
@@ -489,7 +489,7 @@ contains
     call zcopy(idim, work4c, 1, den, 1)
     deallocate (work4c)
 
-    allocate (work4c(ielast,lmmaxd,npotd,nqdos), stat=ierr)
+    allocate (work4c(ielast,lmmaxd,nqdos,npotd), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
     work4c = (0.d0, 0.d0)
     idim = ielast*(lmmaxd)*npotd*nqdos
@@ -571,16 +571,16 @@ contains
 #endif
 
 #ifdef CPP_MPI
-  subroutine mympi_main1c_comm_newsosol(irmdnew, lmpotd, lmaxd, lmaxd1, lmmaxd, lmmaxso, ielast, nqdos, den, denlm, gflle, rho2nsc, r2nefc, rho2int, espv, muorb, denorbmom, &
+  subroutine mympi_main1c_comm_newsosol(nspin, korbit, irmdnew, lmpotd, lmaxd, lmaxd1, lmmaxd, lmmaxso, ielast, nqdos, den, denlm, gflle, rho2nsc, r2nefc, rho2int, espv, muorb, denorbmom, &
     denorbmomsp, denorbmomlm, denorbmomns, mympi_comm)
 
     use :: mpi
     implicit none
-    integer, intent (in) :: irmdnew, lmpotd, lmaxd, lmaxd1, lmmaxd, lmmaxso, ielast, nqdos
+    integer, intent (in) :: nspin, korbit, irmdnew, lmpotd, lmaxd, lmaxd1, lmmaxd, lmmaxso, ielast, nqdos
     integer, intent (in) :: mympi_comm
-    complex (kind=dp), intent (inout) :: r2nefc(irmdnew, lmpotd, 4), rho2nsc(irmdnew, lmpotd, 4), den(0:lmaxd1, ielast, nqdos, 2), denlm(lmmaxd, ielast, nqdos, 2), rho2int(4), &
+    complex (kind=dp), intent (inout) :: r2nefc(irmdnew, lmpotd, nspin*(1+korbit)), rho2nsc(irmdnew, lmpotd, nspin*(1+korbit)), den(0:lmaxd1, ielast, nqdos, nspin), denlm(lmmaxd, ielast, nqdos, nspin), rho2int(nspin*(1+korbit)), &
       gflle(lmmaxso, lmmaxso, ielast, nqdos)
-    real (kind=dp), intent (inout) :: espv(0:lmaxd1, 2), muorb(0:lmaxd1+1, 3), denorbmom(3), denorbmomsp(2, 4), denorbmomlm(0:lmaxd, 3), denorbmomns(3)
+    real (kind=dp), intent (inout) :: espv(0:lmaxd1, 2), muorb(0:lmaxd1+1, 3), denorbmom(3), denorbmomsp(2, 3), denorbmomlm(0:lmaxd, 3), denorbmomns(3)
 
     integer :: ierr, idim
     real (kind=dp), allocatable :: work(:, :, :, :)
@@ -589,8 +589,8 @@ contains
 
     ! all with reduce instead of allreduce:
     ! complex (kind=dp) arrays
-    idim = irmdnew*lmpotd*4
-    allocate (workc(irmdnew,lmpotd,4,1), stat=ierr)
+    idim = irmdnew*lmpotd*nspin*(1+korbit)
+    allocate (workc(irmdnew,lmpotd,nspin*(1+korbit),1), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, r2nefc'
     workc = (0.d0, 0.d0)
     call mpi_reduce(r2nefc, workc(:,:,:,1), idim, mpi_double_complex, mpi_sum, master, mympi_comm, ierr)
@@ -598,8 +598,8 @@ contains
     call zcopy(idim, workc, 1, r2nefc, 1)
     deallocate (workc)
 
-    idim = irmdnew*lmpotd*4
-    allocate (workc(irmdnew,lmpotd,4,1), stat=ierr)
+    idim = irmdnew*lmpotd*nspin*(1+korbit)
+    allocate (workc(irmdnew,lmpotd,nspin*(1+korbit),1), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, rho2nsc'
     workc = (0.d0, 0.d0)
     call mpi_reduce(rho2nsc, workc, idim, mpi_double_complex, mpi_sum, master, mympi_comm, ierr)
@@ -607,8 +607,8 @@ contains
     call zcopy(idim, workc, 1, rho2nsc, 1)
     deallocate (workc)
 
-    idim = (lmaxd1+1)*ielast*2*nqdos
-    allocate (workc(0:lmaxd1,ielast,2,nqdos), stat=ierr)
+    idim = (lmaxd1+1)*ielast*nspin*nqdos
+    allocate (workc(0:lmaxd1,ielast,nspin,nqdos), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, den'
     workc = (0.d0, 0.d0)
     call mpi_reduce(den, workc, idim, mpi_double_complex, mpi_sum, master, mympi_comm, ierr)
@@ -616,8 +616,8 @@ contains
     call zcopy(idim, workc, 1, den, 1)
     deallocate (workc)
 
-    idim = lmmaxd*ielast*2*nqdos
-    allocate (workc(lmmaxd,ielast,2,nqdos), stat=ierr)
+    idim = lmmaxd*ielast*nspin*nqdos
+    allocate (workc(lmmaxd,ielast,nspin,nqdos), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, denlm'
     workc = (0.d0, 0.d0)
     call mpi_reduce(denlm, workc, idim, mpi_double_complex, mpi_sum, master, mympi_comm, ierr)
@@ -625,8 +625,8 @@ contains
     call zcopy(idim, workc, 1, denlm, 1)
     deallocate (workc)
 
-    idim = 4
-    allocate (workc(4,1,1,1), stat=ierr)
+    idim = nspin*(1+korbit)
+    allocate (workc(nspin*(1+korbit),1,1,1), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, rho2int'
     workc = (0.d0, 0.d0)
     call mpi_reduce(rho2int, workc(:,1,1,1), idim, mpi_double_complex, mpi_sum, master, mympi_comm, ierr)
@@ -668,8 +668,8 @@ contains
     call dcopy(idim, work, 1, denorbmom, 1)
     deallocate (work)
 
-    idim = 2*4
-    allocate (work(2,4,1,1))
+    idim = 2*3
+    allocate (work(2,3,1,1))
     work = 0.d0
     call mpi_reduce(denorbmomsp, work, idim, mpi_double_precision, mpi_sum, master, mympi_comm, ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for denorbmomsp'

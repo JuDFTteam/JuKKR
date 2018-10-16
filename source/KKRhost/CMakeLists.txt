@@ -36,6 +36,7 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
 
     # increase stacksize on mac
     if(CMAKE_SYSTEM_NAME MATCHES Darwin)
+        message("Adding stack size flags for Intel compiler on mac")
         set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -Wl,-stack_size,0x80000000,-stack_addr,0xf0000000")
     endif()
 
@@ -55,6 +56,7 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
 
     # for coverage report
     if(ENABLE_COV)
+        message("Set profiling flags for test coverage report")
         set(CMAKE_Fortran_FLAGS     "${CMAKE_Fortran_FLAGS} -prof-gen:srcpos")
     endif()
 
@@ -71,6 +73,7 @@ elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
     set(compver "gnu")
 
     # standard compiler flags
+    #set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -ffree-line-length-none -fdefault-real-8 -fimplicit-none")
     set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -lblas -llapack -ffree-line-length-none -fdefault-real-8 -fimplicit-none")
 
     # debug flags
@@ -81,11 +84,29 @@ elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
 
     # flags for code-coverage
     if(ENABLE_COV)
+        message("Set profiling flags for test coverage report")
         set(CMAKE_Fortran_FLAGS     "${CMAKE_Fortran_FLAGS} -fprofile-arcs -ftest-coverage -fPIC")
     endif()
 
     # disable MD5 sums for GNU compiler
     add_definitions(-DCPP_NOMD5)
+
+   # lapack lib on iff machines
+   #set(MKLROOT "/usr/local/intel/mkl")
+   #find_package(BLAS REQUIRED)
+   #message("Found BLAS version ${BLAS_VERSION}")
+   #find_package(LAPACK REQUIRED)
+   #message("Found LAPACK version ${LAPACK_VERSION}")
+
+   find_package(BLAS)
+   find_package(LAPACK)
+   if(LAPACK_FOUND AND BLAS_FOUND)
+      set(lapackblas_libraries ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+   endif()
+  
+
+   #set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -m64 -I${MKLROOT}/include -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_gf_lp64.a ${MKLROOT}/lib/intel64/libmkl_sequential.a ${MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread -lm -ldl")
+   #set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_gf_lp64.a ${MKLROOT}/lib/intel64/libmkl_sequential.a ${MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread -lm -ldl -m64 -I${MKLROOT}/include ")
 
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES NAG)
 
@@ -525,6 +546,7 @@ add_executable(
     ALL_SOURCE_FILES/ymy.f90
     )
 
+target_link_libraries(kkr.x ${lapackblas_libraries})
 
 if(ENABLE_BdG)
     # for wf testing (BdG)
@@ -592,7 +614,6 @@ if(ENABLE_BdG)
         ALL_SOURCE_FILES/splint_real.f90 
         ALL_SOURCE_FILES/calrmt.f90     
         ALL_SOURCE_FILES/clsgen_tb.f90   
-        ALL_SOURCE_FILES/clustcomp.f90 
         ALL_SOURCE_FILES/cmomsread.f90 
         ALL_SOURCE_FILES/crospr.f90 
         ALL_SOURCE_FILES/cross.f90 
@@ -720,7 +741,6 @@ if(ENABLE_BdG)
         ALL_SOURCE_FILES/trarea.f90
         ALL_SOURCE_FILES/tbref.F90 
         ALL_SOURCE_FILES/wfint.f90 
-        ALL_SOURCE_FILES/wfint0.f90 
         ALL_SOURCE_FILES/wftsca.f90 
         ALL_SOURCE_FILES/pnstmat.f90 
         ALL_SOURCE_FILES/vllns.f90 
@@ -735,4 +755,7 @@ if(ENABLE_BdG)
         ALL_SOURCE_FILES/cmatmul.f90 
         ALL_SOURCE_FILES/convol.f90
         )
+
+    target_link_libraries(kkr_BdG_radial.x ${lapackblas_libraries})
+
 endif()

@@ -115,7 +115,6 @@ contains
       end do                       ! Implicit integration over energies
 
 
-
       do ir = irmin + 1, irmax
         rho2ns(ir, 1) = rho2ns(ir, 1) + c0ll*aimag(cden(ir,l1)*df)
       end do

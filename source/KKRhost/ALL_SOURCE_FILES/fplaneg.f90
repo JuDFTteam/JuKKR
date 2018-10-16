@@ -1,31 +1,40 @@
 module mod_fplaneg
-  use :: mod_datatypes, only: dp
-  private :: dp
+  
+  private
+  public :: fplaneg
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Derivative of inverse-space contribution to Ewald sum
+  !> Author: 
+  !> Category: KKRhost, geometry
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> This sub calculates the derivatives of the inverse
+  !> space contribution to the Ewald sum
+  !>
+  !>
+  !>     l     (                                                      )
+  !>    d   pi*( exp(gz)*erfc(g/lam/lam + 2*z)*lam/2                  )  /
+  !>           (             +   exp(-gz)*erfc(g/lam/lam - 2*z)*lam/2 ) / (g Vol)
+  !>    ---    (                                                      )
+  !>      l
+  !>    dz
+  !>
+  !> And the limit z -> 0 is taken (lam is the lamda parameter
+  !-------------------------------------------------------------------------------
   subroutine fplaneg(lamda, g, pref, lmax, ga, vol)
-    ! **************************************************************************
-    ! This sub calculates the derivatives of the inverce
-    ! space contribution to the ewald sum
 
-
-    ! l     (                                                      )
-    ! d   pi*( exp(gz)*erfc(g/lam/lam + 2*z)*lam/2                  )  /
-    ! (             +   exp(-gz)*erfc(g/lam/lam - 2*z)*lam/2 ) / (g Vol)
-    ! ---    (                                                      )
-    ! l
-    ! dz
-
-    ! And the limit z -> 0 is taken (lam is the lamda parameter
-
-    ! *********************************************************************
+    use :: mod_datatypes, only: dp
+    use :: mod_constants, only: pi
     implicit none
+
+    real (kind=dp), parameter :: sqpi = sqrt(pi)
     integer :: lmax
     real (kind=dp) :: alpha, g(0:4), pref(0:lmax)
     integer :: l
-    real (kind=dp) :: lamda, er, ex, pi, ga, vol
-    real (kind=dp) :: sqpi
+    real (kind=dp) :: lamda, er, ex, ga, vol
 
     do l = 0, 4
       g(l) = 0.e0_dp
@@ -33,8 +42,7 @@ contains
     do l = 0, lmax
       pref(l) = 0.e0_dp
     end do
-    pi = 4.e0_dp*atan(1.e0_dp)
-    sqpi = sqrt(pi)
+
     alpha = ga/2.e0_dp/lamda
     er = erfc(alpha)
     ex = exp(-alpha*alpha)

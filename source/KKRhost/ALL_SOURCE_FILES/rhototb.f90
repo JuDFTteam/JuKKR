@@ -31,8 +31,8 @@ contains
   !> @note -Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to
   ! Fortran90
   ! -------------------------------------------------------------------------------
-  subroutine rhototb(ipf, natyp, naez, nspin, rho2ns, rhoc, rhoorb, z, drdi, irws, ircut, nfu, llmsp, thetas, ntcell, kshape, ipan, chrgnt, itc, nshell, noq, conc, kaoez, catom, &
-    irm, nemb, lmpot)
+  subroutine rhototb(ipf, natyp, naez, nspin, rho2ns, rhoc, rhoorb, z, drdi, irws, ircut, nfu, llmsp, &
+    thetas, ntcell, kshape, ipan, chrgnt, itc, nshell, noq, conc, kaoez, catom, irm, nemb, lmpot)
 
     use :: global_variables
     use :: mod_datatypes, only: dp
@@ -53,48 +53,22 @@ contains
     integer, intent (in) :: lmpot  !! (LPOT+1)**2
     integer, intent (in) :: kshape !! Exact treatment of WS cell
     ! .. Array Arguments ..
-    integer, dimension (naez), intent (in) :: noq !! Number of diff. atom types
-    ! located
-    integer, dimension (*), intent (in) :: nfu !! number of shape function
-    ! components in cell 'icell'
-    integer, dimension (*), intent (in) :: ipan !! Number of panels in
-    ! non-MT-region
+    integer, dimension (naez), intent (in) :: noq !! Number of diff. atom types located
+    integer, dimension (*), intent (in) :: nfu !! number of shape function components in cell 'icell'
+    integer, dimension (*), intent (in) :: ipan !! Number of panels in non-MT-region
     integer, dimension (*), intent (in) :: irws !! R point at WS radius
-    integer, dimension (0:nsheld), intent (in) :: nshell !! Index of
-    ! atoms/pairs per shell
-    ! (ij-pairs); nshell(0)
-    ! = number of shells
+    integer, dimension (0:nsheld), intent (in) :: nshell !! Index of atoms/pairs per shell (ij-pairs); nshell(0) = number of shells
     integer, dimension (*), intent (in) :: ntcell !! Index for WS cell
 
-    integer, dimension (0:ipand, *), intent (in) :: ircut !! R points of panel
-    ! borders
-    integer, dimension (natyp, *), intent (in) :: llmsp !! lm=(l,m) of
-    ! 'nfund'th nonvanishing
-    ! component of
-    ! non-spherical pot.
-    integer, dimension (natyp, naez+nemb), intent (in) :: kaoez !! Kind of atom
-    ! at site in
-    ! elem. cell
+    integer, dimension (0:ipand, *), intent (in) :: ircut !! R points of panel borders
+    integer, dimension (natyp, *), intent (in) :: llmsp !! lm=(l,m) of 'nfund'th nonvanishing component of non-spherical pot.
+    integer, dimension (natyp, naez+nemb), intent (in) :: kaoez !! Kind of atom at site in elem. cell
     real (kind=dp), dimension (*), intent (in) :: z
-    real (kind=dp), dimension (natyp), intent (in) :: conc !! Concentration of
-    ! a given atom
+    real (kind=dp), dimension (natyp), intent (in) :: conc !! Concentration of a given atom
     real (kind=dp), dimension (irm, *), intent (in) :: drdi !! Derivative dr/di
-    real (kind=dp), dimension (irm, *), intent (in) :: rhoc !! core charge
-    ! density
-    real (kind=dp), dimension (irm*krel+(1-krel), natyp), intent (in) :: rhoorb
-    !! Orbital density
-    real (kind=dp), dimension (irid, nfund, *), intent (in) :: thetas !! shape
-    ! function
-    ! THETA=0
-    ! outer
-    ! space
-    ! THETA =1
-    ! inside
-    ! WS cell
-    ! in
-    ! spherical
-    ! harmonics
-    ! expansion
+    real (kind=dp), dimension (irm, *), intent (in) :: rhoc !! core charge density
+    real (kind=dp), dimension (irm*krel+(1-krel), natyp), intent (in) :: rhoorb !! Orbital density
+    real (kind=dp), dimension (irid, nfund, *), intent (in) :: thetas !! shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
 
     ! .. In/Out variables
     real (kind=dp), dimension (irm, lmpot, natyp, *), intent (inout) :: rho2ns
@@ -103,7 +77,7 @@ contains
     real (kind=dp), dimension (natyp, 2*krel+(1-krel)*nspin), intent (out) :: catom
     ! .. Local variables
     integer :: i, i1, iatyp, icell, ifun, ipan1, ipotd, ipotu, irc1, irs1, ispin, lm, iqez, ioez
-    real (kind=dp) :: diff, factor, rfpi, sum, totsmom, totomom, sumo
+    real (kind=dp) :: diff, factor, rfpi, sum_spinmom, totsmom, totomom, sum_orbmom
     real (kind=dp), dimension (natyp) :: omom !! Orbital moment
     real (kind=dp), dimension (irm) :: rho
     real (kind=dp), dimension (naez, 2*krel+(1-krel)*nspin) :: csite
@@ -153,12 +127,12 @@ contains
           ! -------------------------------------------------------------------
           ! Convert core density
           ! -------------------------------------------------------------------
-          sum = (rhoc(i,ipotd)+rhoc(i,ipotu))*factor/rfpi
+          sum_spinmom = (rhoc(i,ipotd)+rhoc(i,ipotu))*factor/rfpi
           diff = (rhoc(i,ipotu)-rhoc(i,ipotd))/rfpi
           ! -------------------------------------------------------------------
           ! Add this to the lm=1 component of rho2ns
           ! -------------------------------------------------------------------
-          rho2ns(i, 1, iatyp, 1) = rho2ns(i, 1, iatyp, 1) + sum
+          rho2ns(i, 1, iatyp, 1) = rho2ns(i, 1, iatyp, 1) + sum_spinmom
           rho2ns(i, 1, iatyp, nspin) = rho2ns(i, 1, iatyp, nspin) + diff
         end do
         ! ----------------------------------------------------------------------
@@ -170,13 +144,13 @@ contains
             ! ----------------------------------------------------------------
             ! Integrate over wigner seitz sphere - no shape correction
             ! ----------------------------------------------------------------
-            call simp3(rho2ns(1,1,iatyp,ispin), sum, 1, irs1, drdi(1,iatyp))
+            call simp3(rho2ns(1,1,iatyp,ispin), sum_spinmom, 1, irs1, drdi(1,iatyp))
             ! ----------------------------------------------------------------
             ! The result has to be multiplied by sqrt(4 pi)
             ! (4 pi for integration over angle and 1/sqrt(4 pi) for
             ! the spherical harmonic y(l=0))
             ! ----------------------------------------------------------------
-            sum = sum*rfpi
+            sum_spinmom = sum_spinmom*rfpi
           else                     ! (KSHAPE.EQ.0)
             ! ----------------------------------------------------------------
             ! convolute charge density with shape function to get the
@@ -203,10 +177,10 @@ contains
             ! ----------------------------------------------------------------
             ! Integrate over circumscribed sphere
             ! ----------------------------------------------------------------
-            call simpk(rho, sum, ipan1, ircut(0,iatyp), drdi(1,iatyp))
+            call simpk(rho, sum_spinmom, ipan1, ircut(0,iatyp), drdi(1,iatyp))
           end if                   ! (KSHAPE.EQ.0)
 
-          catom(iatyp, ispin) = sum
+          catom(iatyp, ispin) = sum_spinmom
           csite(iqez, ispin) = csite(iqez, ispin) + catom(iatyp, ispin)*conc(iatyp)
 
           if (ispin/=1) then
@@ -214,26 +188,26 @@ contains
             ! Calculate orbital moment (ASA) and add it to the total
             ! ----------------------------------------------------------------
             if ((krel==1) .and. (kshape==0)) then
-              call simp3(rhoorb(1,iatyp), sumo, 1, irs1, drdi(1,iatyp))
-              sumo = sumo*rfpi
-              omom(iatyp) = sumo
+              call simp3(rhoorb(1,iatyp), sum_orbmom, 1, irs1, drdi(1,iatyp))
+              sum_orbmom = sum_orbmom*rfpi
+              omom(iatyp) = sum_orbmom
               muosite(iqez) = muosite(iqez) + omom(iatyp)*conc(iatyp)
             end if
 
             if (kshape/=0) then
-              write (ipf, fmt=110) sum
+              write (ipf, fmt=110) sum_spinmom
             else
-              write (ipf, fmt=130) sum
+              write (ipf, fmt=130) sum_spinmom
               if (krel==1) then
                 write (ipf, fmt=140) omom(iatyp)
-                write (ipf, fmt=150) sum + omom(iatyp)
+                write (ipf, fmt=150) sum_spinmom + omom(iatyp)
               end if
             end if
           else                     ! (ISPIN.NE.1)
             if (kshape/=0) then
-              write (ipf, fmt=100) iatyp, sum
+              write (ipf, fmt=100) iatyp, sum_spinmom
             else
-              write (ipf, fmt=120) iatyp, sum
+              write (ipf, fmt=120) iatyp, sum_spinmom
             end if
           end if                   ! (ISPIN.NE.1)
         end do                     ! ISPIN = 1,NSPIN
