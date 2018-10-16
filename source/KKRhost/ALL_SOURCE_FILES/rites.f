@@ -193,8 +193,8 @@ c
       close(IFILE)
 
  9000 FORMAT (7a4,6x,'  exc:',a124,3x,a10)
- 9010 FORMAT (3f12.8)
-! 9010 FORMAT (3F) !f12.8)
+! 9010 FORMAT (3f12.8)
+ 9010 FORMAT (3f20.15)
  9020 FORMAT (f10.5,/,f10.5,2f20.15)
  9030 FORMAT (i3,/,2d15.8,/,2i2)
  9040 FORMAT (i5,1p,d20.11)
