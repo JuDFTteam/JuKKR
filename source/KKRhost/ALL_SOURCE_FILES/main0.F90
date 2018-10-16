@@ -524,18 +524,19 @@ contains
     lmpotd = (lpot+1)**2
     lmmaxso = lmmaxd               ! lmmaxd already doubled in size! (KREL+1)*LMMAXD
 
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! Allocation calls
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !> @note Jonathan Chico: The main idea here is to allocate all the needed arrays so that the inc.p
-    !> file becomes irrelevant. In principle the philosophy would be to modularize
-    !> the code such that each module has its own global variables and allocation routine
-    !> e.g. a module called CPA_control could have defined all the needed CPA variables
-    !> as well as the allocation calls, this module would be used in the needed routines
-    !> and the arrays would only be allocated if a CPA calculation is actually performed
-    !> in the current way ALL arrays are allocated which could cause an unnecessary memory
-    !> consumption
-
+    !--------------------------------------------------------------------------------
+    !! @note Jonathan Chico: The main idea here is to allocate all the needed arrays so that the `inc.p`
+    !! file becomes irrelevant. In principle the philosophy would be to modularize
+    !! the code such that each module has its own global variables and allocation routine
+    !! e.g. a module called CPA_control could have defined all the needed CPA variables
+    !! as well as the allocation calls, this module would be used in the needed routines
+    !! and the arrays would only be allocated if a CPA calculation is actually performed
+    !! in the current way ALL arrays are allocated which could cause an unnecessary memory
+    !! consumption
+    !! @endnote
+    !--------------------------------------------------------------------------------
     ! Call to allocate the arrays associated with the potential
     call allocate_potential(1,irmd,natypd,npotd,ipand,nfund,lmxspd,lmpotd,irmind,   &
       nspotd,nfu,irc,ncore,irmin,lmsp,lmsp1,ircut,lcore,llmsp,ititle,fpradius,visp, &
@@ -571,13 +572,13 @@ contains
     call allocate_green(1,naezd,iemxd,ngshd,nsheld,lmpotd,nofgij,ish,jsh,kmesh,     &
       imaxsh,iqcalc,iofgij,jofgij,ijtabsh,ijtabsym,ijtabcalc,ijtabcalc_i,ilm_map,gsh)
 
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! End of allocation calls
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
 
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! Deal with the lattice
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
 
     call lattix99(linterface,alat,natyp,naez,conc,rws,bravais,recbv,volume0,rr,nrd, &
      natyp)
@@ -860,70 +861,73 @@ contains
           drdirel,r2drdirel,irshift,ipand,irmd,npotd,natyp)
       end if
     end if                         ! KREL+KORBIT.EQ.1
-    ! -------------------------------------------------------------------------
+    !--------------------------------------------------------------------------------
     ! set up energy contour
-    ! -------------------------------------------------------------------------
+    !--------------------------------------------------------------------------------
     idosemicore = 0
     if (opt('SEMICORE')) idosemicore = 1
 
     call epathtb(ez,dez,e2in,ielast,iesemicore,idosemicore,emin,emax,tk,npol,npnt1, &
       npnt2,npnt3,ebotsemi,emusemi,tksemi,npolsemi,n1semi,n2semi,n3semi,iemxd)
 
-    ! SUSC (BEGIN: modifications by Manuel and Benedikt)             ! susc
-    ! ! susc
-    if (opt('EMESH   ')) then      ! susc
-      ! write out the energy mesh and the corresponding                ! susc
-      ! weights to a file called 'emesh.scf'                           ! susc
-      write (*, '("main0: Runflag emesh is set.")') ! susc
-      write (*, '("       File emesh.scf will be written!")') ! susc
-      write (*, *) 'writing emesh.scf file...' ! susc
-      open (file='emesh.scf', unit=12111984, status='replace') ! susc
-      write (12111984, '(5x,i0)') ielast ! susc
-      do ie = 1, ielast            ! susc
-        write (12111984, '(4es16.8)') ez(ie), dez(ie) ! susc
-      end do                       ! susc
-      close (12111984)             ! susc
-      write (*, '("       Finished writing file emesh.scf.")') ! susc
-    end if                         ! susc
-    ! ! susc
-    ! ! susc
-    if (opt('KKRSUSC ')) then      ! susc
-      ! read in 'emesh.dat' with new energy mesh-points                ! susc
-      inquire (file='emesh.dat', exist=emeshfile) ! susc
-      write (*, '("main0: Runflag KKRSUSC is set.")') ! susc
-      if (emeshfile) then          ! susc
-        write (*, '("main0: File emesh.dat exists and will ")', advance='no') ! susc
-        write (*, '("be read in.")') ! susc
-        write (*, '("       Energy contour from inputcard ")', advance='no') ! susc
-        write (*, '("will be overwritten!")') ! susc
-        open (file='emesh.dat', unit=50) ! susc
-        read (50, *) ielast        ! susc
-        if (ielast>iemxd) stop 'ielast > iemxd!' ! susc
-        do ie = 1, ielast          ! susc
-          read (50, '(4es16.8)') ez(ie), dez(ie) ! susc
-          write (*, '(i8,4es16.8)') ie, ez(ie), dez(ie) ! susc
-        end do                     ! susc
-        close (50)                 ! susc
-        write (*, '("       Finished reading in file emesh.dat.")') ! susc
-      else                         ! susc
-        stop 'main0: Runflag KKRSUSC but cannot find file emesh.dat!' ! susc
-      end if                       ! susc
-    end if                         ! susc
-    ! ! susc
-    ! ! susc
-    ! still missing: check here whether scfsteps is > 1              ! susc
-    ! if scfsteps>1 --> option a) stop program here                ! susc
-    ! option b) set it to 1 and continue         ! susc
-    if (opt('KKRSUSC ') .and. scfsteps>1) then ! susc
-      write (*, '("main0: Runflag KKRSUSC is set ")') ! susc
-      write (*, '("but scfsteps = ",i0)') scfsteps ! susc
-      write (*, '("       Here we enforce scfsteps = 1")') ! susc
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! susc
-      scfsteps = 1                 ! susc
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! susc
-    end if                         ! susc
-    ! ! susc
-    ! SUSC (END:   modifications by Manuel and Benedikt)             ! susc
+    !--------------------------------------------------------------------------------
+    ! SUSC (BEGIN: modifications by Manuel and Benedikt)                              
+    !--------------------------------------------------------------------------------
+    !                                                                                 ! susc
+    if (opt('EMESH   ')) then                                                         ! susc
+      ! write out the energy mesh and the corresponding                               ! susc
+      ! weights to a file called 'emesh.scf'                                          ! susc
+      write (*, '("main0: Runflag emesh is set.")')                                   ! susc
+      write (*, '("       File emesh.scf will be written!")')                         ! susc
+      write (*, *) 'writing emesh.scf file...'                                        ! susc
+      open (file='emesh.scf', unit=12111984, status='replace')                        ! susc
+      write (12111984, '(5x,i0)') ielast                                              ! susc
+      do ie = 1, ielast                                                               ! susc
+        write (12111984, '(4es16.8)') ez(ie), dez(ie)                                 ! susc
+      end do                                                                          ! susc
+      close (12111984)                                                                ! susc
+      write (*, '("       Finished writing file emesh.scf.")')                        ! susc
+    end if                                                                            ! susc
+    !                                                                                 ! susc
+    !                                                                                 ! susc
+    if (opt('KKRSUSC ')) then                                                         ! susc
+      ! read in 'emesh.dat' with new energy mesh-points                               ! susc
+      inquire (file='emesh.dat', exist=emeshfile)                                     ! susc
+      write (*, '("main0: Runflag KKRSUSC is set.")')                                 ! susc
+      if (emeshfile) then                                                             ! susc
+        write (*, '("main0: File emesh.dat exists and will ")', advance='no')         ! susc
+        write (*, '("be read in.")')                                                  ! susc
+        write (*, '("       Energy contour from inputcard ")', advance='no')          ! susc
+        write (*, '("will be overwritten!")')                                         ! susc
+        open (file='emesh.dat', unit=50)                                              ! susc
+        read (50, *) ielast                                                           ! susc
+        if (ielast>iemxd) stop 'ielast > iemxd!'                                      ! susc
+        do ie = 1, ielast                                                             ! susc
+          read (50, '(4es16.8)') ez(ie), dez(ie)                                      ! susc
+          write (*, '(i8,4es16.8)') ie, ez(ie), dez(ie)                               ! susc
+        end do                                                                        ! susc
+        close (50)                                                                    ! susc
+        write (*, '("       Finished reading in file emesh.dat.")')                   ! susc
+      else                                                                            ! susc
+        stop 'main0: Runflag KKRSUSC but cannot find file emesh.dat!'                 ! susc
+      end if                                                                          ! susc
+    end if                                                                            ! susc
+    !                                                                                 ! susc
+    !                                                                                 ! susc
+    ! still missing: check here whether scfsteps is > 1                               ! susc
+    ! if scfsteps>1 --> option a) stop program here                                   ! susc
+    ! option b) set it to 1 and continue                                              ! susc
+    if (opt('KKRSUSC ') .and. scfsteps>1) then                                        ! susc
+      write (*, '("main0: Runflag KKRSUSC is set ")')                                 ! susc
+      write (*, '("but scfsteps = ",i0)') scfsteps                                    ! susc
+      write (*, '("       Here we enforce scfsteps = 1")')                            ! susc
+      !------------------------------------------------------------------------------ ! susc
+      scfsteps = 1                                                                    ! susc
+      !------------------------------------------------------------------------------ ! susc
+    end if                                                                            ! susc
+    !--------------------------------------------------------------------------------
+    ! SUSC (END:   modifications by Manuel and Benedikt)                              
+    !--------------------------------------------------------------------------------
 
     do ie = 1, ielast
       wez(ie) = -2.0_dp/pi*dez(ie)
@@ -1295,7 +1299,7 @@ contains
     integer, intent (in) :: irid
     integer, intent (in) :: ipand
     integer, intent (in) :: lmpot
-    integer, intent (in) :: npotd
+    integer, intent (in) :: npotd  !! (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
     integer, intent (in) :: natyp  !! Number of kinds of atoms in unit cell
     integer, intent (in) :: nspin  !! Counter for spin directions
     integer, intent (in) :: ngshd
@@ -1399,8 +1403,8 @@ contains
     nvirt = 0
     kvmad = 0
     itscf = 0
-    nsheld = 301                   ! Number of blocks of the GF matrix that need to be calculated (NATYPD + off-diagonals in case of impurity)
-    invmod = 2                     ! Corner band matrix inversion scheme
+    nsheld = 301   ! Number of blocks of the GF matrix that need to be calculated (NATYPD + off-diagonals in case of impurity)
+    invmod = 2     ! Corner band matrix inversion scheme
     ielast = 0
     ishift = 0
     kfrozn = 0
@@ -1425,10 +1429,10 @@ contains
 
     implicit none
 
-    krel = 0                       ! Switch for non- (or scalar-) relativistic/relativistic (Dirac) program (0/1). Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
-    kvrel = 1                      ! Scalar-relativistic calculation
-    korbit = 0                     ! No spin-orbit coupling
-    lnc = .true.                   ! Coupled equations in two spins (switches true if KREL=1 or KORBIT=1 or KNOCO=1)
+    krel = 0  ! Switch for non- (or scalar-) relativistic/relativistic (Dirac) program (0/1). Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
+    kvrel = 1      ! Scalar-relativistic calculation
+    korbit = 0     ! No spin-orbit coupling
+    lnc = .true.   ! Coupled equations in two spins (switches true if KREL=1 or KORBIT=1 or KNOCO=1)
 
   end subroutine init_relativistic_variables
 
@@ -1445,11 +1449,11 @@ contains
 
     implicit none
 
-    nclsd = 2                      ! NAEZD + NEMBD maximum number of different TB-clusters
-    naclsd = 500                   ! Maximum number of atoms in a TB-cluster
-    nofgij = 2                     ! NATOMIMPD*NATOMIMPD+1 probably the same variable than NOFGIJD
-    natomimp = 0                   ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-    natomimpd = 150                ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+    nclsd = 2        ! NAEZD + NEMBD maximum number of different TB-clusters
+    naclsd = 500     ! Maximum number of atoms in a TB-cluster
+    nofgij = 2       ! NATOMIMPD*NATOMIMPD+1 probably the same variable than NOFGIJD
+    natomimp = 0     ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+    natomimpd = 150  ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
     i25 = 'scoef                                   ' ! Default name of scoef file
 
   end subroutine init_cluster_variables

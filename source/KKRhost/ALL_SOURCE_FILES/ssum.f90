@@ -1,21 +1,29 @@
+!------------------------------------------------------------------------------------
+!> Summary: Sum up the first `N` elements of the `real (kind=dp)` array `V(*)` with a stepwidth of `IV`
+!> Author: 
+!> Sum up the first `N` elements of the `real (kind=dp)` array `V(*)` with a stepwidth of `IV`
+!------------------------------------------------------------------------------------
 module mod_ssum
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Sum up the first `N` elements of the `real (kind=dp)` array `V(*)` with a stepwidth of `IV`
+  !> Author: 
+  !> Category: numerical-tools, KKRhost
+  !> Deprecated: False 
+  !> Sum up the first `N` elements of the `real (kind=dp)` array `V(*)` with a stepwidth of `IV`
+  !-------------------------------------------------------------------------------
   function ssum(n, v, iv)
-    ! **********************************************************************
-    ! sum up the first N elements of the real (kind=dp)
-    ! array V(*) with a stepwidth of IV
-    ! ----------------------------------------------------------------------
+
     implicit none
     real (kind=dp) :: ssum
     ! .. Scalar Arguments ..
-    integer :: iv, n
-    ! ..
-    ! .. Array Arguments ..
-    real (kind=dp) :: v(*)
+    integer, intent(in) :: n  !! Number of elements to sum over
+    integer, intent(in) :: iv !! Stepwidth
+    real (kind=dp), dimension(*), intent(in) :: v !! Input vector
     ! ..
     ! .. Local Scalars ..
     real (kind=dp) :: vsum

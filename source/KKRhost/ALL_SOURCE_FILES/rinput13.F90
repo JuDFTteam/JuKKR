@@ -13,7 +13,7 @@ module rinput
 
 contains
 
-!-------------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   !> Summary: Routine to read the information from the input file
   !> Author: Bernd Zimmermann
   !> Category: input-output, KKRhost 

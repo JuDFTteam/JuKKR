@@ -1,23 +1,30 @@
+!------------------------------------------------------------------------------------
+!> Summary: Normalizes vectors
+!> Author: 
+!> Normalizes vectors
+!------------------------------------------------------------------------------------
 module mod_nrmliz
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Normalizes vectors
+  !> Author: 
+  !> Category: numerical-tools, KKRhost
+  !> Deprecated: False 
+  !> Normalizes vectors
+  !-------------------------------------------------------------------------------
   subroutine nrmliz(n, r, rn)
-    ! -  normalizes a vector
-    ! ----------------------------------------------------------------------
-    ! i Inputs
-    ! i   n     :number of vectors
-    ! i   r     :vector
-    ! o Outputs:
-    ! o   rn    :normalized vector
-    ! ----------------------------------------------------------------------
+
     implicit none
+
     real (kind=dp), parameter :: eps = 1e-14_dp
     ! Passed parameters:
-    integer :: n
-    real (kind=dp) :: r(3, *), rn(3, *)
+    integer, intent(in) :: n !! number of vectors
+    real (kind=dp), dimension(3,*), intent(in) :: r   !! Input vector
+    real (kind=dp), dimension(3,*), intent(out) :: rn !! Normalized vector
     ! Local parameters
     integer :: i
     real (kind=dp) :: d, d2

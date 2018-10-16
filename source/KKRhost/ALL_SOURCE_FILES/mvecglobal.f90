@@ -1,3 +1,14 @@
+!------------------------------------------------------------------------------------
+!> Summary: Transforms the magnetization to the cartesian global frame of reference 
+!> Author: 
+!>Transforms the magnetization to the cartesian global frame of reference, first
+!> by transforming from the local $$\pm z$$ coordinate system, to the local 
+!> cartesian coordinate system, and then to the gloabl reference frame.
+!------------------------------------------------------------------------------------
+!> @note This routine has been build up from the last part of the original
+!> Munich `CALCMVEC` routine
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_mvecglobal
   use :: mod_datatypes, only: dp
   private :: dp
@@ -7,7 +18,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Transforms the magnetization to the cartesian global frame of reference 
   !> Author: 
-  !> Category: TAGS for the code they must be written as TAG1, TAG2, ..., TAGN
+  !> Category: numerical-tools, physical-observables, KKRhost 
   !> Deprecated: False 
   !> Transforms the magnetization to the cartesian global frame of reference, first
   !> by transforming from the local $$\pm z$$ coordinate system, to the local 
@@ -36,19 +47,19 @@ contains
     integer :: lmaxdloc
     parameter (lmaxdloc=8)
 
-    ! Scalar Arguments
+    ! .. Input variables
     integer, intent(in) :: it !! Index of the current atom type
     integer, intent(in) :: iq !! Chemical type of the current atom
     integer, intent(in) :: lmaxd  !! Maximum l component in wave function expansion
     integer, intent(in) :: natyp  !! Number of kinds of atoms in unit cell
     integer, intent(in) :: natypd !! Number of kinds of atoms in unit cell
     integer, intent(in) :: nmvecmax !! 4
-    real (kind=dp), intent(in) :: qmphi !! \f$ \phi\f$ angle of the agnetization with respect to the z-axis
-    real (kind=dp), intent(in) :: qmtet !! \f$ \theta\f$ angle of the agnetization with respect to the z-axis
-
-    ! Array Arguments
-    complex (kind=dp) :: mvevi(natypd, 3, nmvecmax), mvevil(0:lmaxd, natypd, 3, nmvecmax)
-    complex (kind=dp) :: mvevief(natypd, 3, nmvecmax)
+    real (kind=dp), intent(in) :: qmphi !! $$ \phi $$ angle of the agnetization with respect to the z-axis
+    real (kind=dp), intent(in) :: qmtet !! $$ \theta $$ angle of the agnetization with respect to the z-axis
+    !.. In/Out variables
+    complex (kind=dp), dimension(natypd, 3, nmvecmax), intent(inout) :: mvevi
+    complex (kind=dp), dimension(natypd, 3, nmvecmax), intent(inout) :: mvevief
+    complex (kind=dp), dimension(0:lmaxd, natypd, 3, nmvecmax), intent(inout) :: mvevil
 
     ! Local Scalars
     integer :: icall, i, j, k, l, imv, nmvec
@@ -57,13 +68,19 @@ contains
     real (kind=dp) :: mv, mvx, mvxy, mvy, mvz, wsq2
 
     ! Local Arrays
-    complex (kind=dp) :: usc(3, 3), drot4(4, 4), w3x3(3, 3)
-    complex (kind=dp) :: mvg(3, nmvecmax), mvgef(3, nmvecmax)
-    complex (kind=dp) :: mvgl(0:lmaxd, 3, nmvecmax)
-    real (kind=dp) :: mrot(3, 3), fact(0:100)
-    real (kind=dp) :: mvglo(3, nmvecmax), mvglol(0:lmaxd, 3, nmvecmax)
-    real (kind=dp) :: mvphi(nmvecmax), mvtet(nmvecmax)
-    character (len=1) :: txtl(0:lmaxdloc)
+    complex (kind=dp), dimension(3,3) :: usc
+    complex (kind=dp), dimension(3,3) :: w3x3
+    complex (kind=dp), dimension(4,4) :: drot4
+    complex (kind=dp), dimension(3,nmvecmax) :: mvg
+    complex (kind=dp), dimension(3,nmvecmax) :: mvgef
+    complex (kind=dp), dimension(0:lmaxd, 3, nmvecmax) :: mvgl
+    real (kind=dp), dimension(nmvecmax) :: mvphi
+    real (kind=dp), dimension(nmvecmax) :: mvtet
+    real (kind=dp), dimension(0:100)    :: fact
+    real (kind=dp), dimension(3,3)          :: mrot
+    real (kind=dp), dimension(3, nmvecmax)  :: mvglo
+    real (kind=dp), dimension(0:lmaxd, 3, nmvecmax) :: mvglol
+    character (len=1), dimension(0:lmaxdloc) :: txtl
 
     ! Data Statements
     data icall/0/

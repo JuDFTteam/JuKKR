@@ -31,7 +31,7 @@ contains
   subroutine ymy(v1, v2, v3, r, ylm, lmax)
 
     use :: mod_rcstop
-    use :: contants, only : pi
+    use :: constants, only : pi
     implicit none
     ! .. Parameters ..
     real (kind=dp) :: szero

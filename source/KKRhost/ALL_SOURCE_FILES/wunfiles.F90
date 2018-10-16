@@ -3600,7 +3600,7 @@ contains
     logical :: lread, lcheckangles
     integer :: i1, i_stat
     real (kind=dp) :: th1, ph1
-
+    real (kind=dp), parameter :: eps = 1d-5
     ! if executed first in wunfiles theta is not allocated, thus read angles from file
     if (.not. allocated(t_params%theta)) then
 

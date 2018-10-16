@@ -30,8 +30,6 @@ contains
     ! ..
     ! .. Intrinsic Functions ..
     intrinsic :: real
-    ! ..
-
 
     ! ---> set up array efac : efac(lm) = sqrt(e)**l/(2l - 1)!!
 
@@ -44,7 +42,6 @@ contains
         efac(lm) = v1
       end do
     end do
-
 
     ! ---> get wfts of same magnitude by scaling with efac
 
@@ -69,7 +66,6 @@ contains
         end do
       end do
     end do
-
 
   end subroutine wftsca
 

@@ -1,24 +1,43 @@
+!------------------------------------------------------------------------------------
+!> Summary: Write charges and magnetic and orbital moments to file
+!> Author: 
+!> Write charges and magnetic and orbital moments to file. The output is l-decomposed
+!------------------------------------------------------------------------------------
 module mod_wrmoms
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  subroutine wrmoms(krel, natyp, nspin, texts, textl, textns, charge, muorb, lmaxd, lmaxd1)
+  !-------------------------------------------------------------------------------
+  !> Summary: Write charges and magnetic and orbital moments to file
+  !> Author: 
+  !> Category: physical-observables, KKRhost
+  !> Deprecated: False 
+  !> Write charges and magnetic and orbital moments to file. The output is l-decomposed
+  !-------------------------------------------------------------------------------
+  subroutine wrmoms(krel,natyp,nspin,texts,textl,textns,charge,muorb,lmaxd,lmaxd1)
 
     implicit none
 
     ! Dummy arguments
-    integer :: krel, lmaxd, lmaxd1, natyp, nspin
-    character (len=5) :: textns
-    real (kind=dp) :: charge(0:lmaxd1, natyp, 2)
-    character (len=4) :: textl(0:6)
-    character (len=7) :: texts(3)
+    integer, intent(in) :: krel !! Switch for non- (or scalar-) relativistic/relativistic (Dirac) program (0/1). Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
+    integer, intent(in) :: lmaxd  !! Maximum l component in wave function expansion
+    integer, intent(in) :: natyp  !! Number of kinds of atoms in unit cell
+    integer, intent(in) :: nspin  !! Counter for spin directions
+    integer, intent(in) :: lmaxd1 !! lmax+1
+    character (len=5), intent(in) :: textns
+    real (kind=dp), dimension(0:lmaxd1, natyp, 2), intent(in) :: charge
+    character (len=4), dimension(0:6), intent(in) :: textl
+    character (len=7), dimension(3), intent(in) :: texts
 
     ! Local variables
-    real (kind=dp) :: chtot(natyp), chval
-    real (kind=dp) :: muorb(0:lmaxd1+1, 3, natyp)
-    real (kind=dp) :: muspin(natyp, 0:lmaxd1+1), mutot(natyp), sumch(natyp, 2)
+    real (kind=dp) :: chval
+    real (kind=dp), dimension(natyp) :: mutot
+    real (kind=dp), dimension(natyp) :: chtot
+    real (kind=dp), dimension(natyp, 2) :: sumch
+    real (kind=dp), dimension(natyp, 0:lmaxd1+1) :: muspin
+    real (kind=dp), dimension(0:lmaxd1+1, 3, natyp) :: muorb
     character (len=80) :: fmt1, fmt2, fmt31, fmt32
     integer :: is, ispin, it, l, lf1, lf2
 

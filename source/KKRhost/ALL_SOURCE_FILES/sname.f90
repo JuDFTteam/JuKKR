@@ -1,21 +1,34 @@
+!------------------------------------------------------------------------------------
+!> Summary:
+!> Author: 
+!------------------------------------------------------------------------------------
 module mod_sname
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  ! ************************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: 
+  !> Author: 
+  !> Category: deprecated, KKRhost
+  !> Deprecated: True
+  !> 
+  !-------------------------------------------------------------------------------
   subroutine sname(name, new, band)
-    ! ************************************************************************
+
     use :: mod_length
+
     implicit none
     ! .. scalar arguments
-    integer :: band
-    character (len=40) :: name, new
+    integer, intent(in) :: band
+    character (len=40), intent(inout) :: new
+    character (len=40), intent(in) :: name
 
     ! .. locals
     integer :: i, l, lo
-    character (len=1) :: ch(50), poi
+    character (len=1) :: poi
+    character (len=1), dimension(50) :: ch
     character (len=10) :: s
     ! ------------------------------------------------------------------------
     poi = '.'

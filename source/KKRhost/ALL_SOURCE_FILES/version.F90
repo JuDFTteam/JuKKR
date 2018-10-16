@@ -1,3 +1,8 @@
+!------------------------------------------------------------------------------------
+!> Summary: Definitions of the compilation versions
+!> Author: 
+!> Definitions of the compilation versions 
+!------------------------------------------------------------------------------------
 module mod_version
 
 implicit none
