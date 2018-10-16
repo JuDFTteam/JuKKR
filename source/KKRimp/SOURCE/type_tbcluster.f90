@@ -1,20 +1,29 @@
+!-------------------------------------------------------------------------------
+!> Summary: Type holding screening (tight-binding) cluster information
+!> Author: 
+!> Category: KKRimp, reference-system
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!>
+!-------------------------------------------------------------------------------
 module type_tbcluster
-use nrtype
- TYPE                      ::      TBCLUSTER_TYPE
 
- INTEGER                   ::         NACLSD,              &    ! maximum number of atoms in a cluster
-                                      NCLSD                     ! maximum number of clusters
- INTEGER                   ::         NCLS                     ! number of clusters
- REAL(kind=DP),allocatable ::         RCLS(:,:,:) !(:,:,:NATOM)       ! real space position of atom in cluster
- INTEGER,allocatable       ::         CLS(:),  &!(NATOM),             &    ! sort of cluster around atom
-                                      NACLS(:), &!(NCLSD),        &    ! number of atoms in cluster
-                                      NACLSIMPMAX(:),&                   ! number of impurity atoms in cluster
-                                      ATOM(:,:), &!(NACLSD,NR)           ! ??????????
-                                      NACLSIMP(:)
- INTEGER,allocatable       ::         IATOM2INDEX(:,:), & !(NATOM,NCLSD), &
-                                      INDEX2IATOM(:,:), & !(NACLSD*LMAXD,NCLSD), &
-                                      NCLSGF(:) !(NCLSD) 
+  use nrtype, only: dp
 
- END TYPE TBCLUSTER_TYPE
+  type                      :: tbcluster_type
+
+  integer                   :: naclsd           !! maximum number of atoms in a cluster
+  integer                   :: nclsd            !! maximum number of clusters
+  integer                   :: ncls             !! number of clusters
+  real(kind=dp),allocatable :: rcls(:,:,:)      !! real space position of atom in cluster (:,:,:natom)
+  integer,allocatable       :: cls(:)           !! sort of cluster around atom (natom) 
+  integer,allocatable       :: nacls(:)         !! number of atoms in cluster(nclsd) 
+  integer,allocatable       :: naclsimpmax(:)   !! number of impurity atoms in cluster
+  integer,allocatable       :: atom(:,:)        !! (naclsd,nr)
+  integer,allocatable       :: naclsimp(:)      !!
+  integer,allocatable       :: iatom2index(:,:) !!(natom,nclsd)
+  integer,allocatable       :: index2iatom(:,:) !!(naclsd*lmaxd,nclsd)
+  integer,allocatable       :: nclsgf(:)        !!(nclsd) 
+
+  end type tbcluster_type
 
 end module type_tbcluster

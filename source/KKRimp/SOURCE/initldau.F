@@ -20,6 +20,9 @@ C
 C
 C PARAMETER definitions
 C
+#ifdef MPI
+      use mpi
+#endif
       USE NRTYPE
       USE TYPE_LDAU 
       USE TYPE_CELL
@@ -60,9 +63,6 @@ C
      &        ,L1,LF,LFMAX,LL,M1,M2,M3,M4,NSRA,IAT,ISPIN,IPOT,IPAN1
       INTEGER NINT,IERROR
 
-#ifdef MPI
-      include 'mpif.h'
-#endif
 
 !      EXTERNAL CGCRAC,GAUNTC1
 C

@@ -1,135 +1,138 @@
-      MODULE MOD_RWLDAUPOT
-      CONTAINS
+module mod_rwldaupot
+contains
 
-      SUBROUTINE RWLDAUPOT(LWRITE,IPOS,NATYP,NSPIN,LMAXD,IRMD,IRUNLDAU,LDAU)
-! Reads or writes the LDA+U arrays to the disk.
-!
-! LWRITE = .TRUE.  : write out
-! LWRITE = .FALSE. : read in
-!
-! IPOS = 1,2,3,4 : up to which position to read or write, in the order:
-!
-! IRUNLDAU,LOPT,UEFF,JEFF,EREFLDAU,NATYP
-! ----- 1 -----
-! WLDAU
-! ----- 2 -----
-! ULDAU
-! ----- 3 -----
-! PHI
-! ----- 4 -----
-      USE TYPE_LDAU 
-      use mod_version_info
-      implicit none
-! Input:
-      INTEGER                        :: IPOS,NATYP,NSPIN,LMAXD,IRMD
-      LOGICAL                        :: LWRITE
-! Input/Output:
-      TYPE(LDAU_TYPE),ALLOCATABLE    :: LDAU(:)  ! lda+u variables, intended dimension: (natyp) ! lda+u
-      INTEGER                        :: IRUNLDAU
-! Inside
-      CHARACTER*20                   :: TEXT,TEXT1
-      INTEGER                        :: IR,M1,M2,M3,M4,IS,I1,MMAXD,LMMAXD,NSPIND
- 
-      MMAXD = 2*LMAXD + 1
-      LMMAXD = (LMAXD + 1)**2
-      NSPIND = 2
+  !-------------------------------------------------------------------------------
+  !> Summary: Reads or writes the LDA+U arrays to the disk.
+  !> Author: 
+  !> Category: KKRimp, input-output
+  !> Deprecated: False ! this needs to be set to True for deprecated subroutines
+  !>
+  !> lwrite = .true.  : write out
+  !> lwrite = .false. : read in
+  !>
+  !> ipos = 1,2,3,4 : up to which position to read or write, in the order:
+  !>
+  !> irunldau,lopt,ueff,jeff,erefldau,natyp
+  !> ----- 1 -----
+  !> wldau
+  !> ----- 2 -----
+  !> uldau
+  !> ----- 3 -----
+  !> phi
+  !> ----- 4 -----
+  !-------------------------------------------------------------------------------
+  subroutine rwldaupot(lwrite,ipos,natyp,nspin,lmaxd,irmd,irunldau,ldau)
+    use type_ldau, only: ldau_type
+    use mod_version_info, only: version_print_header
+    implicit none
+    ! input:
+    integer                        :: ipos,natyp,nspin,lmaxd,irmd
+    logical                        :: lwrite
+    ! input/output:
+    type(ldau_type), allocatable   :: ldau(:)  ! lda+u variables, intended dimension: (natyp) ! lda+u
+    integer                        :: irunldau
+    ! inside
+    character*20                   :: text,text1
+    integer                        :: ir,m1,m2,m3,m4,is,i1,mmaxd,lmmaxd,nspind
 
-      OPEN (67,FILE='ldaupot',FORM='FORMATTED')
-      call version_print_header(67)
-      REWIND (67)
+    mmaxd = 2*lmaxd + 1
+    lmmaxd = (lmaxd + 1)**2
+    nspind = 2
 
-      IF (LWRITE) THEN
+    open (67,file='ldaupot',form='formatted')
+    call version_print_header(67)
+    rewind (67)
 
-          WRITE (67,*) IRUNLDAU,                                          &
-              (LDAU(I1)%LOPT,I1=1,NATYP),(LDAU(I1)%UEFF,I1=1,NATYP),      &
-              (LDAU(I1)%JEFF,I1=1,NATYP),(LDAU(I1)%EREFLDAU,I1=1,NATYP)   
+    if (lwrite) then
 
-          IF (IPOS.EQ.1) RETURN
+      write (67,*) irunldau, (ldau(i1)%lopt,i1=1,natyp),(ldau(i1)%ueff,i1=1,natyp), (ldau(i1)%jeff,i1=1,natyp),(ldau(i1)%erefldau,i1=1,natyp)   
 
-          WRITE (67,9010) 'WLDAU'
-          DO I1 = 1,NATYP
-             IF (LDAU(I1)%LOPT.GE.0) THEN
-             WRITE (67,9020) 'ATOM ', I1
-             WRITE (67,9000) (((LDAU(I1)%WLDAU(M1,M2,IS),M1=1,MMAXD),M2=1,MMAXD),IS=1,NSPIN)
-             ENDIF
-          ENDDO
+      if (ipos.eq.1) return
 
-          IF (IPOS.EQ.2) RETURN
+      write (67,9010) 'wldau'
+      do i1 = 1,natyp
+        if (ldau(i1)%lopt.ge.0) then
+          write (67,9020) 'atom ', i1
+          write (67,9000) (((ldau(i1)%wldau(m1,m2,is),m1=1,mmaxd),m2=1,mmaxd),is=1,nspin)
+        endif
+      enddo
 
-          WRITE (67,9010) 'ULDAU'
-          DO I1 = 1,NATYP
-             IF (LDAU(I1)%LOPT.GE.0) THEN
-                WRITE (67,9020) 'ATOM ', I1
-                WRITE (67,9000) ((((LDAU(I1)%ULDAU(M1,M2,M3,M4),M1=1,MMAXD),M2=1,MMAXD),M3=1,MMAXD),M4=1,MMAXD)
-             ENDIF
-          ENDDO
+      if (ipos.eq.2) return
 
-          IF (IPOS.EQ.3) RETURN
+      write (67,9010) 'uldau'
+      do i1 = 1,natyp
+        if (ldau(i1)%lopt.ge.0) then
+          write (67,9020) 'atom ', i1
+          write (67,9000) ((((ldau(i1)%uldau(m1,m2,m3,m4),m1=1,mmaxd),m2=1,mmaxd),m3=1,mmaxd),m4=1,mmaxd)
+        endif
+      enddo
 
-          WRITE (67,9010) 'PHI  '
-          DO I1 = 1,NATYP
-             IF (LDAU(I1)%LOPT.GE.0) THEN
-                WRITE (67,9020) 'ATOM ', I1
-                WRITE (67,9005) (LDAU(I1)%PHI(IR),IR=1,IRMD)
-             ENDIF
-          ENDDO
+      if (ipos.eq.3) return
 
-      ELSE  ! Read from file
-          READ (67,*) IRUNLDAU,                                         &
-              (LDAU(I1)%LOPT,I1=1,NATYP),(LDAU(I1)%UEFF,I1=1,NATYP),    &
-              (LDAU(I1)%JEFF,I1=1,NATYP),(LDAU(I1)%EREFLDAU,I1=1,NATYP) 
+      write (67,9010) 'phi  '
+      do i1 = 1,natyp
+        if (ldau(i1)%lopt.ge.0) then
+          write (67,9020) 'atom ', i1
+          write (67,9005) (ldau(i1)%phi(ir),ir=1,irmd)
+        endif
+      enddo
 
-! Allocate everything that is not allocated but should be:
-          DO I1 = 1,NATYP
-             IF (LDAU(I1)%LOPT.GE.0) THEN
-                IF (.NOT.ALLOCATED(LDAU(I1)%WLDAU)) ALLOCATE( LDAU(I1)%WLDAU(MMAXD,MMAXD,NSPIN) )
-                IF (.NOT.ALLOCATED(LDAU(I1)%ULDAU)) ALLOCATE( LDAU(I1)%ULDAU(MMAXD,MMAXD,MMAXD,MMAXD) )
-                IF (.NOT.ALLOCATED(LDAU(I1)%PHI))   ALLOCATE( LDAU(I1)%PHI(IRMD) )
-                IF (.NOT.ALLOCATED(LDAU(I1)%CUTOFF)) ALLOCATE( LDAU(I1)%CUTOFF(IRMD) )
-                IF (.NOT.ALLOCATED(LDAU(I1)%DENMATC)) ALLOCATE( LDAU(I1)%DENMATC(MMAXD,MMAXD,NSPIN) )
-             ENDIF
-          ENDDO
+    else  ! read from file
 
-          IF (IPOS.EQ.1) RETURN
+      read (67,*) irunldau, (ldau(i1)%lopt,i1=1,natyp),(ldau(i1)%ueff,i1=1,natyp), (ldau(i1)%jeff,i1=1,natyp),(ldau(i1)%erefldau,i1=1,natyp) 
 
-          READ (67,*) TEXT
-          DO I1 = 1,NATYP
-             IF (LDAU(I1)%LOPT.GE.0) THEN
-                READ (67,*) TEXT,TEXT1
-                READ (67,*) (((LDAU(I1)%WLDAU(M1,M2,IS),M1=1,MMAXD),M2=1,MMAXD),IS=1,NSPIN)
-             ENDIF
-          ENDDO
+      ! allocate everything that is not allocated but should be:
+      do i1 = 1,natyp
+        if (ldau(i1)%lopt.ge.0) then
+          if (.not.allocated(ldau(i1)%wldau)) allocate( ldau(i1)%wldau(mmaxd,mmaxd,nspin) )
+          if (.not.allocated(ldau(i1)%uldau)) allocate( ldau(i1)%uldau(mmaxd,mmaxd,mmaxd,mmaxd) )
+          if (.not.allocated(ldau(i1)%phi))   allocate( ldau(i1)%phi(irmd) )
+          if (.not.allocated(ldau(i1)%cutoff)) allocate( ldau(i1)%cutoff(irmd) )
+          if (.not.allocated(ldau(i1)%denmatc)) allocate( ldau(i1)%denmatc(mmaxd,mmaxd,nspin) )
+        endif
+      enddo
 
-          IF (IPOS.EQ.2) RETURN
+      if (ipos.eq.1) return
 
-          READ (67,*) TEXT
-          DO I1 = 1,NATYP
-             IF (LDAU(I1)%LOPT.GE.0) THEN
-                READ (67,*) TEXT,TEXT1
-                READ (67,*) ((((LDAU(I1)%ULDAU(M1,M2,M3,M4),M1=1,MMAXD),M2=1,MMAXD),M3=1,MMAXD),M4=1,MMAXD)
-             ENDIF
-          ENDDO
+      read (67,*) text
+      do i1 = 1,natyp
+        if (ldau(i1)%lopt.ge.0) then
+          read (67,*) text,text1
+          read (67,*) (((ldau(i1)%wldau(m1,m2,is),m1=1,mmaxd),m2=1,mmaxd),is=1,nspin)
+        endif
+      enddo
 
-          IF (IPOS.EQ.3) RETURN
+      if (ipos.eq.2) return
 
-          READ (67,*) TEXT
-          DO I1 = 1,NATYP
-             IF (LDAU(I1)%LOPT.GE.0) THEN
-                READ (67,*) TEXT,TEXT1
-                READ (67,9005) (LDAU(I1)%PHI(IR),IR=1,IRMD)
-             ENDIF
-          ENDDO
-      ENDIF
+      read (67,*) text
+      do i1 = 1,natyp
+        if (ldau(i1)%lopt.ge.0) then
+          read (67,*) text,text1
+          read (67,*) ((((ldau(i1)%uldau(m1,m2,m3,m4),m1=1,mmaxd),m2=1,mmaxd),m3=1,mmaxd),m4=1,mmaxd)
+        endif
+      enddo
 
-      CLOSE (67)
+      if (ipos.eq.3) return
 
- 9000 FORMAT (4D22.14)
- 9005 FORMAT (4E20.12)
- 9010 FORMAT (A5)
- 9020 FORMAT (A5,I5)
+      read (67,*) text
+      do i1 = 1,natyp
+        if (ldau(i1)%lopt.ge.0) then
+          read (67,*) text,text1
+          read (67,9005) (ldau(i1)%phi(ir),ir=1,irmd)
+        endif
+      enddo
 
-      RETURN
-      END SUBROUTINE RWLDAUPOT
+    endif
+
+    close (67)
+
+    9000 format (4d22.14)
+    9005 format (4e20.12)
+    9010 format (a5)
+    9020 format (a5,i5)
+
+    return
+  end subroutine rwldaupot
 
 
-      END MODULE MOD_RWLDAUPOT
+end module mod_rwldaupot
