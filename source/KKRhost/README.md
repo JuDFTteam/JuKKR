@@ -2,13 +2,13 @@
 
 ## Description
 
-Some short description ...
+The Korringa-Kohn-Rostoker (KKR) Greens function method is a highly accurate all-electron method to perform density functional theory calculations. The most important features of the Jülich KKR codes include the possibility to perform relativistic calculations, predict scattering effects, and treat finite-sized clusters or very large systems.
 
 ## Installation
 
 ### Dependencies
-- Fortran compiler
-- cmake
+- a Fortran compiler (tested with `gfortran` and `ifort` but `ifort` is recommended)
+- [cmake](https://cmake.org)
 
 ### Compiling the code
 
@@ -20,13 +20,15 @@ FC=<compiler-you-want-to-use> cmake -D<options> ..
 
 where with `FC` you coose the compiler, e.g. `FC=gfortran`, `FC=mpif90` (gfortran with MPI), `FC=ifort`, `FC=mpiifort`, ...
 
+In case cmake does not find the compiler you have chosen try wrapping the compiler like this (here for `mpiifort` as an example): `FC=$(which mpiifort)`
+
 List of default values for `-D<options>` (used if not specified):
 ```
- -DENABLE_MPI=ON
- -DENABLE_OMP=OFF
- -DENABLE_COV=OFF
- -DCMAKE_BUILD_TYPE=Release
- -DENABLE_BdG=OFF
+ -DENABLE_MPI=ON # use MPI parallelization by default
+ -DENABLE_OMP=OFF # OpenMP level of parallelization turned off
+ -DENABLE_COV=OFF # do not write coverage reports while running (slows code down)
+ -DCMAKE_BUILD_TYPE=Release # use release version (alternative: Debug)
+ -DENABLE_BdG=OFF # disable Bogoliubov-de-Gennes formalism
 ```
 
 ## Further reading
@@ -34,4 +36,5 @@ List of default values for `-D<options>` (used if not specified):
 - The code's [wiki page](https://iffwiki.fz-juelich.de/kkr/doku.php)
 
 - The [source code documentation](https://kkr.iffgit.fz-juelich.de/kkrjm/)
+
 

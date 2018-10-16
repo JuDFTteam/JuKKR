@@ -38,7 +38,7 @@ contains
     use :: mod_ioinput, only: ioinput
     use :: global_variables, only: linterface, korbit, krel, irmd, irnsd, nsheld, knosph, iemxd, nrd, knoco, kpoibz, ntrefd, natomimpd, &
       nprincd, ipand, nfund, irid, ngshd, nmaxd, ishld, wlength, naclsd, ntotd, ncleb, nspind, nspindd, npotd, lmmaxd, lmgf0d, &
-      lassld, nembd1, irmind, nofgij, ntperd, nsatypd, nspotd, lnc, lmxspd, naezd, lm2d, nclsd, mmaxd, ncleb
+      lassld, nembd1, irmind, nofgij, ntperd, nsatypd, nspotd, lnc, lmxspd, naezd, lm2d, nclsd, mmaxd, ncleb, kBdG
 
 
     implicit none
@@ -838,6 +838,21 @@ contains
     else
       write (111, *) 'Default KORBIT= ', korbit
     end if
+
+
+
+    ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
+    ! Readin Options for Bogoliubov-de-Gennes Formalism
+    ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
+    call ioinput('KBdG            ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) kBdG
+      write (111, *) 'KBdG= ', kBdG
+    else
+      write (111, *) 'Default KBdG= ', kBdG
+    end if
+    if (kBdG/=0 .and. .not. opt('useBdG  ')) call addopt('useBdG  ')
+    if (opt('useBdG  ') .and. kBdG/=1) kBdG = 1
 
 
     ! ----------------------------------------------------------------------------
