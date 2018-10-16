@@ -163,6 +163,15 @@ echo ""
 ./run_parallel.py -1003
 
 echo "###########################################"
+echo "run:intel:NOSOC_3_2:"
+echo ""
+cd ../
+if [[ ! -d tests/test_run03.2_hybrid_1_3 ]]; then
+  tests/tools/run_test_03_2.sh
+fi
+cd tests
+
+echo "###########################################"
 echo "run:intel:Jijs_SOC_4_1:"
 echo ""
 ./run_parallel.py -1004
