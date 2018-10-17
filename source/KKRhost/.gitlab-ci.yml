@@ -23,7 +23,7 @@ stages:
   - run_features
   - run_features_SOC
   - verify
-  - deploy:doc
+  - deploy
 
 ###############################################################################
 
@@ -534,23 +534,6 @@ run:intel:decimate_SOC_19_1:
 ###############################################################################
 
 ### 3. check outcome of the test runs ###
-verify:intel_codecov:
-  stage: verify
-  script:
-    - cd build && ls -ltr
-    - profmerge
-    - codecov -spi pgopti.spi -dpi pgopti.dpi
-    - tar -zcvf ../cov.tar.gz CODE_COVERAGE.HTML CodeCoverage
-    - rm -rf *.dyn CODE_COVERAGE.HTML CodeCoverage pgopti.spi pgopti.dpi
-  artifacts:
-    paths:
-      - cov.tar.gz
-    expire_in: 1 day
-  only: 
-    - schedules
-    - triggers
-    - web
-
 verify:intel:
   stage: verify
   script:
@@ -595,8 +578,8 @@ verify:intel:aiida:
 ###############################################################################
 # for Gitlab pages (online code documentation build with ford)
 
-pages:
-  stage: deploy:doc
+pages:doc:
+  stage: deploy
   image: ubuntu:latest
   allow_failure: true
   script:
@@ -611,3 +594,22 @@ pages:
     - schedules
     - triggers
     - web
+
+pages:codecov:
+  stage: deploy
+  allow_failure: true
+  script:
+    - cd build && ls -ltr
+    - profmerge
+    - codecov -spi pgopti.spi -dpi pgopti.dpi
+    - tar -zcvf ../cov.tar.gz CODE_COVERAGE.HTML CodeCoverage
+    - rm -rf *.dyn pgopti.spi pgopti.dpi
+    - mkdir ../public/ && mv CODE_COVERAGE.HTML CodeCoverage ../public/
+  artifacts:
+    paths:
+      - public
+  only: 
+    - schedules
+    - triggers
+    - web
+

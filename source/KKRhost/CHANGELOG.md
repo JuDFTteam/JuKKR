@@ -6,16 +6,16 @@ title: Changelog
 
 ## Conventions used for this changelog
 
- - keep it consice and human readable
+ - keep it concise and human readable
  - keep the *UNRELEASED* section up to date with the `develop` branch
- - create a new subsection for each version
+ - create a new subsection for each release version
  - each version should have the following information:
    - a release date in the format `YYYY-MM-DD`
-   - added new feature
-   - changed functionnality of existing features
-   - deprecated features (features that will be deleted in a future release)
-   - removed feature (previously marked deprecated)
-   - bug fixes
+   - a list of added new feature
+   - a list of changed functionnality of existing features
+   - a list of deprecated features (features that will be deleted in a future release)
+   - a list of removed feature (previously marked deprecated)
+   - a list of bug fixes
 
 ----
 
@@ -212,16 +212,16 @@ and Philipp's addition of qdos with SOC. All changes mentioned below are include
 
 ----
 
-## Old versions (before version control with `git`)
+## Old versions (before version control with *git*)
 
-### version (2015-03-10)
+### 2015-03-10
 
 Fixed a bug in rhovalnew.f that was causing erroneous results when calculating
 qdos.
 
 ----
 
-### version (2015-01-22)
+### 2015-01-22
 
 Again: 
 Fixed a bug in rinput13.f90 that did not allow the runopt XCPL to work
@@ -229,14 +229,14 @@ properly. (Was not working with NPOL=0)
 
 ----
 
-### version (2015-01-11)
+### 2015-01-11
 
 Fixed a bug in rinput13.f90 that did not allow the runopt XCPL to work
 properly.
 
 ----
 
-### version (2014-11-13)
+### 2014-11-13
 
 Fixed a bug that would not allow using the REFPOT information for the
 left/right region in 2D if ATOMINFO was used (the routine clsgen_tb was
@@ -247,7 +247,7 @@ the decimal point.
 
 ----
 
-### version (2014-11-6)
+### 2014-11-06
 
 inc.cls not needed any more.
 Parameters NCLSD, NACLSD transfered to inc.p, with default NACLSD = NAEZD + NEMBD
@@ -255,7 +255,7 @@ Cluster info found automatically.
 
 ----
 
-### version (2014-10-13)
+### 2014-10-13
 
 `IQAT(NAEZD,NATYPD)` is changed to `IQAT(NATYPD)` because only the `IQAT(1,*)` was
 ever used.
@@ -268,14 +268,14 @@ ICC and IGREENFUN are automatically set to 1 if `OPT('KKRFLEX ')` is used.
 
 ----
 
-### version (2014-07-25)
+### 2014-07-25
 
 Philipp's OMP parallelization is included. 
 Lloyd's formula is included for non-relativistic non-cpa calculations.
 
 ----
 
-### version (2013-09-27)
+### 2013-09-27
 
 rinput99 is changed to rinput13.
 - everything useless was thrown out
@@ -289,4 +289,3 @@ Keyword LAMBDA_XC (default=1.) is introduced to mix the magnetic part of the
 xc potential. LAMBDA_XC=0 corresponds to non-magn. calculation, LAMBDA_XC=1
 to magn. calculation, and 0<LAMBDA_XC<1 to suppression of moments.
 Result of xc-energy difference writter out as EXCDIFF.
-
