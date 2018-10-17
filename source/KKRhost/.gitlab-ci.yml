@@ -23,7 +23,8 @@ stages:
   - run_features
   - run_features_SOC
   - verify
-  - deploy
+  - deploy:codecov
+  - deploy:doc
 
 ###############################################################################
 
@@ -578,25 +579,8 @@ verify:intel:aiida:
 ###############################################################################
 # for Gitlab pages (online code documentation build with ford)
 
-pages:doc:
-  stage: deploy
-  image: ubuntu:latest
-  allow_failure: true
-  script:
-    - apt-get update && apt-get upgrade -y  && apt-get install -y python-pip && apt-get install -y graphviz
-    - pip install ford
-    - ford doc_ford.md
-    - mv doc/ public/
-  artifacts:
-    paths:
-      - public
-  only: 
-    - schedules
-    - triggers
-    - web
-
-pages:codecov:
-  stage: deploy
+codecov:
+  stage: deploy:codecov
   allow_failure: true
   script:
     - cd build && ls -ltr
@@ -604,7 +588,26 @@ pages:codecov:
     - codecov -spi pgopti.spi -dpi pgopti.dpi
     - tar -zcvf ../cov.tar.gz CODE_COVERAGE.HTML CodeCoverage
     - rm -rf *.dyn pgopti.spi pgopti.dpi
-    - mkdir ../public/ && mv CODE_COVERAGE.HTML CodeCoverage ../public/
+  artifacts:
+    paths:
+      - cov.tar.gz
+  only: 
+    - schedules
+    - triggers
+    - web
+
+
+pages:
+  stage: deploy:doc
+  image: ubuntu:latest
+  allow_failure: true
+  script:
+    - apt-get update && apt-get upgrade -y  && apt-get install -y python-pip && apt-get install -y graphviz
+    - pip install ford
+    - ford doc_ford.md
+    - mv doc/ public/
+    # add code coverage
+    - tar -zxvf cov.tar.gz && mv CODE_COVERAGE.HTML public/page/codecov/index.html && mv CodeCoverage public/page/codecov/CodeCoverage
   artifacts:
     paths:
       - public
@@ -612,4 +615,3 @@ pages:codecov:
     - schedules
     - triggers
     - web
-

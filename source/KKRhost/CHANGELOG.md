@@ -21,11 +21,12 @@ title: Changelog
 
 ## *UNRELEASED* (last updated: 2018-10-16)
 
-**Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release**
+**Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release.**
 
 Major code refactoring getting rid of the `inc.p` files which eliminates the need to recompile the code for different system sizes.
 
 ### Added
+- `README`, `CHANGELOG`, `CONTRIBUTING` files and better documentation
 - use cmake to auto-generate dependencies and makefile
 - use FORD for automatic source code documentation
 - readin of things for Bogoliubov-de-Gennes formalism
@@ -39,6 +40,7 @@ Major code refactoring getting rid of the `inc.p` files which eliminates the nee
 
 ### Deprecated
 - `inc.p` dependecy for array dimensions
+-  old versions of the source code (`*.f` and `*.F` files) moved to old_src subdirectory
 
 ### Removed
 - makefile (use cmake instead)
