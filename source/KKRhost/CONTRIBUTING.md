@@ -34,7 +34,7 @@ Also remember to update the *UNRELEASED* section of the changelog (given in the 
 Our code is (mostly) written in Fortran 90. Please keep to that standard and check your version of the code with multiple compilers. We try to optimize for readability:
 
   * We indent using two spaces.
-  * We ALWAYS put spaces after list items and method parameters (`(1, 2, 3)`, not `(1,2,3)`), and around operators (`x == 1`, not `x==1`).
+  * We ALWAYS put spaces after list items and method parameters (i.e. type `(1, 2, 3)`, not `(1,2,3)`), and around operators (`x + 1`, not `x+1`).
   * We list everything imported from a different module using `only` statements.
   * We clean our code up before publishing it and document it well using the [FORD syntax](https://github.com/Fortran-FOSS-Programmers/ford/wiki/Writing-Documentation).
 

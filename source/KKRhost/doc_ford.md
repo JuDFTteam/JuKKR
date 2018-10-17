@@ -20,9 +20,9 @@ display: public
 extra_filetypes: 1 #
 		 inc !
 		 mk #
-source: false
-search: false 
-graph: false 
+source: true
+search: true 
+graph: true 
 coloured_edges: true
 warn: false 
 dbg: true
