@@ -8,6 +8,8 @@ module global_variables
 
   implicit none
 
+  integer :: kBdG = 0              !! Switch between normal (noSOC or SOC) calculations and supermatrix calculations 
+                                   !! for Bogoliubov-de-Gennes formalism
   integer :: irid                  !! Shape functions parameters in non-spherical part
   integer :: krel = 0              !! Switch for non-relativistic/relativistic (0/1) program. 
                                    !! Attention: several other parameters depend explicitly on KREL,
@@ -75,6 +77,7 @@ module global_variables
 
   logical :: linterface = .false. !! use 2D or 3D mode
 
+
 end module global_variables
 
 
@@ -93,7 +96,7 @@ subroutine bcast_global_variables()
   use :: mod_mympi, only: master
   implicit none
 
-  integer :: n!! number of paramters that are broadcasted
+  integer :: n !! number of paramters that are broadcasted
   integer, allocatable :: blocklen1(:), etype1(:) !! blocklength of variuables in derived data type and list of MPI datatypes
   integer :: ierr !! error status
   integer :: mympitype1 !! derived data type for collective communication
@@ -101,7 +104,7 @@ subroutine bcast_global_variables()
   integer (kind=mpi_address_kind) :: base !! base address of first entry
 
 
-  n = 59
+  n = 60
   allocate (blocklen1(n), etype1(n), disp1(n), stat=ierr)
   if (ierr/=0) stop 'error allocating arrays in bcast_global_variables'
 
@@ -162,8 +165,9 @@ subroutine bcast_global_variables()
   call mpi_get_address(lpotd, disp1(55), ierr)
   call mpi_get_address(nchebd, disp1(56), ierr)
   call mpi_get_address(maxmshd, disp1(57), ierr)
-  call mpi_get_address(linterface, disp1(58), ierr)
-  call mpi_get_address(lnc, disp1(59), ierr)
+  call mpi_get_address(kBdG, disp1(58), ierr)
+  call mpi_get_address(linterface, disp1(59), ierr)
+  call mpi_get_address(lnc, disp1(60), ierr)
 
   ! find displacements of variables
   base = disp1(1)
