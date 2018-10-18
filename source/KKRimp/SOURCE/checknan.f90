@@ -1,3 +1,11 @@
+!-------------------------------------------------------------------------------
+!> Summary: Test whether a complex or real variable is NaN
+!> Author: 
+!-------------------------------------------------------------------------------
+!> @note
+!> If the variable is real this routine can be replace by the command `ISNAN`
+!> @endnote
+!-------------------------------------------------------------------------------
 module mod_checknan
 
       interface checknan
@@ -10,6 +18,12 @@ module mod_checknan
 
 contains
 
+!-------------------------------------------------------------------------------
+!> Summary: Test whether a complex variable is NaN
+!> Author: 
+!> Category: KKRimp, numerical-tools
+!> Deprecated: False
+!-------------------------------------------------------------------------------
 subroutine checknan_dim0_complex(array,ierror)
 implicit none
 !interface
@@ -20,6 +34,12 @@ ierror=0
   IF (dreal(array) .NE. dreal(array)) ierror=1
 end subroutine checknan_dim0_complex
 
+!-------------------------------------------------------------------------------
+!> Summary: Test whether a real variable is NaN
+!> Author: 
+!> Category: KKRimp, numerical-tools
+!> Deprecated: False
+!-------------------------------------------------------------------------------
 subroutine checknan_dim0_real(array,ierror)
 implicit none
 !interface
@@ -30,7 +50,12 @@ ierror=0
 end subroutine checknan_dim0_real
 
 
-
+!-------------------------------------------------------------------------------
+!> Summary: Test whether a complex 1-dim array is NaN
+!> Author: 
+!> Category: KKRimp, numerical-tools
+!> Deprecated: False
+!-------------------------------------------------------------------------------
 subroutine checknan_dim1_complex(array,ierror)
 implicit none
 !interface
@@ -46,6 +71,12 @@ do ival1= lbound(array,1),ubound(array,1)
 end do
 end subroutine checknan_dim1_complex
 
+!-------------------------------------------------------------------------------
+!> Summary: Test whether a real 1-dim array is NaN
+!> Author: 
+!> Category: KKRimp, numerical-tools
+!> Deprecated: False
+!-------------------------------------------------------------------------------
 subroutine checknan_dim1_real(array,ierror)
 implicit none
 !interface
@@ -61,6 +92,12 @@ end do
 end subroutine checknan_dim1_real
 
 
+!-------------------------------------------------------------------------------
+!> Summary: Test whether a complex 2-dim array is NaN
+!> Author: 
+!> Category: KKRimp, numerical-tools
+!> Deprecated: False
+!-------------------------------------------------------------------------------
 subroutine checknan_dim2_complex(array,ierror)
 implicit none
 !interface
@@ -78,6 +115,12 @@ do ival2= lbound(array,2),ubound(array,2)
 end do
 end subroutine checknan_dim2_complex
 
+!-------------------------------------------------------------------------------
+!> Summary: Test whether a real 2-dim array is NaN
+!> Author: 
+!> Category: KKRimp, numerical-tools
+!> Deprecated: False
+!-------------------------------------------------------------------------------
 subroutine checknan_dim2_real(array,ierror)
 implicit none
 !interface
@@ -94,6 +137,12 @@ do ival2= lbound(array,2),ubound(array,2)
 end do
 end subroutine checknan_dim2_real
 
+!-------------------------------------------------------------------------------
+!> Summary: Test whether a complex 3-dim array is NaN
+!> Author: 
+!> Category: KKRimp, numerical-tools
+!> Deprecated: False
+!-------------------------------------------------------------------------------
 subroutine checknan_dim3_complex(array,ierror)
 implicit none
 !interface
@@ -113,6 +162,12 @@ do ival3= lbound(array,3),ubound(array,3)
 end do
 end subroutine checknan_dim3_complex
 
+!-------------------------------------------------------------------------------
+!> Summary: Test whether a real 3-dim array is NaN
+!> Author: 
+!> Category: KKRimp, numerical-tools
+!> Deprecated: False
+!-------------------------------------------------------------------------------
 subroutine checknan_dim3_real(array,ierror)
 implicit none
 !interface
@@ -131,6 +186,12 @@ do ival3= lbound(array,3),ubound(array,3)
 end do
 end subroutine checknan_dim3_real
 
+!-------------------------------------------------------------------------------
+!> Summary: Test whether a complex 4-dim array is NaN
+!> Author: 
+!> Category: KKRimp, numerical-tools
+!> Deprecated: False
+!-------------------------------------------------------------------------------
 subroutine checknan_dim4_complex(array,ierror)
 implicit none
 !interface
@@ -152,6 +213,12 @@ do ival4= lbound(array,4),ubound(array,4)
 end do
 end subroutine checknan_dim4_complex
 
+!-------------------------------------------------------------------------------
+!> Summary: Test whether a real 4-dim array is NaN
+!> Author: 
+!> Category: KKRimp, numerical-tools
+!> Deprecated: False
+!-------------------------------------------------------------------------------
 subroutine checknan_dim4_real(array,ierror)
 implicit none
 !interface

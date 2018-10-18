@@ -1,13 +1,33 @@
+!-------------------------------------------------------------------------------
+!> Summary: Compares whether two clusters are equivalent
+!> Author: 
+!> Deprecated: True ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
+!> This function returns true if cluster number ic1 is equal to cluster ic2
+!> RCLS - clusters coordinates
+!> IC1  - First cluster
+!> N1   - Number of atoms in IC1 cluster
+!> IC2  - Second cluster
+!-------------------------------------------------------------------------------
+!> @note Module used only by the clsgenimp.f90 which seems to be deprecated 
+!> @endnote
+!-------------------------------------------------------------------------------
 MODULE MOD_CLUSTCOMP
 CONTAINS
+!-------------------------------------------------------------------------------
+!> Summary: Compares whether two clusters are equivalent
+!> Author: 
+!> Category: KKRimp, geometry, deprecated
+!> Deprecated: True
+!-------------------------------------------------------------------------------
+!> This function returns true if cluster number ic1 is equal to cluster ic2
+!> RCLS - clusters coordinates
+!> IC1  - First cluster
+!> N1   - Number of atoms in IC1 cluster
+!> IC2  - Second cluster
+!-------------------------------------------------------------------------------
       LOGICAL FUNCTION CLUSTCOMP(RCLS,RMT,ATOM,IATOM, &
                                  IC1,N1,RCLS1,N2,JATOM,NACLSD,NR,LMAXATOM)
-!  This function returns true if cluster number ic1
-!  is equal to cluster ic2
-!  RCLS        clusters coordinates
-!  IC1         First cluster
-!  N1          Number of atoms in IC1 cluster
-!  IC2         Second cluster
 !
 !     .. Scalar Arguments ..
       INTEGER IATOM,IC1,JATOM,N1,N2,NACLSD,NR

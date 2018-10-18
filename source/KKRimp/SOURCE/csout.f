@@ -1,34 +1,57 @@
+!-------------------------------------------------------------------------------
+!> Summary: Outward integration of multiple functions with ext. 3-point Simpson
+!> Author: B. Drittler
+!> Date: 1989
+!> 
+!> This subroutine does an outwards integration of \(l_{lmax}\)
+!> functions f with an extended 3-point-Simpson:
+!>
+!> \begin{equation}
+!> f_{int}\left(ll,i\right) = \int_{ir}^{ir_{max}}f\left(ll,i'\right)di'           
+!> \end{equation}
+!>
+!> The starting value for this integration at \(ir_{min}+1\) is determined by
+!> a 4 point lagrangian integration, coefficients given by
+!> m. abramowitz and i.a. stegun, handbook of mathematical functions,
+!> nbs applied mathematics series 55 (1968)
+!-------------------------------------------------------------------------------
+!> @warning In case of radial integration :
+!> the weights drdi have to be multiplied before calling this
+!> subroutine.
+!> @endwarning
+!>
+!> B. Drittler Mar. 1989
+!>
+!> Modified for functions with kinks - at each kink the integration
+!> is restarted
+!>
+!> @warning It is supposed that \(ir_{min} + 3\) is less than imt! 
+!> @endwarning
+!>
+!> B. Drittler july 1989
+!-------------------------------------------------------------------------------
       MODULE mod_csout
       CONTAINS
+!-------------------------------------------------------------------------------
+!> Summary: Outward integration of multiple functions with ext. 3-point Simpson
+!> Author: B. Drittler
+!> Date: 1989
+!> Category: KKRimp, radial-grid, numerical-tools
+!> Deprecated: False 
+!> 
+!> This subroutine does an outwards integration of $l_{lmax}$
+!> functions f with an extended 3-point-Simpson:
+!>
+!> \begin{equation}
+!> f_{int}\left(ll,i\right) = \int_{ir}^{ir_{max}}f\left(ll,i'\right)di'           
+!> \end{equation}
+!>
+!> The starting value for this integration at irmin+1 is determined by
+!> a 4 point lagrangian integration, coefficients given by
+!> m. abramowitz and i.a. stegun, handbook of mathematical functions,
+!> nbs applied mathematics series 55 (1968)
+!-------------------------------------------------------------------------------
       SUBROUTINE CSOUT(F,FINT,LMMSQD,IRMIND,IRMD,IPAN,IRCUT)
-c-----------------------------------------------------------------------
-c     this subroutine does an outwards integration of llmax
-c     functions f with an extended 3-point-simpson :
-c
-c
-c                                ir
-c                   fint(ll,i) = { f(ll,i') di'
-c                               irmin
-c
-c  the starting value for this integration at irmin+1 is determined by
-c    a 4 point lagrangian integration  , coefficients given by
-c    m. abramowitz and i.a. stegun, handbook of mathematical functions,
-c    nbs applied mathematics series 55 (1968)
-c
-c  attention in case of radial integration :
-c       the weights drdi have to be multiplied before calling this
-c       subroutine .
-c
-c                                     b. drittler mar. 1989
-c
-c    modified for functions with kinks - at each kink the integration
-c      is restarted
-c
-c    attention : it is supposed that irmin + 3 is less than imt !
-c
-c
-c                                     b. drittler july 1989
-c-----------------------------------------------------------------------
 C     .. Parameters ..
       DOUBLE PRECISION A1,A2
       PARAMETER (A1=1.D0/3.D0,A2=4.D0/3.D0)
