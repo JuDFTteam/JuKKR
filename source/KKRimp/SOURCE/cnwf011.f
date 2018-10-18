@@ -1,34 +1,41 @@
+!-------------------------------------------------------------------------------
+!> Summary: Computes the coefficients in the Chebychev expansion
+!> Author: 
+!> Deprecated: False 
+!-------------------------------------------------------------------------------
+!> see: p.80 in algorithms for the computation
+!> of mathematical functions, y.l.luke, academic press,london 1977
+!>
+!> Computes the coefficients in the chebychev expansion of 0f1(;c;z)
+!>
+!> Description of variables:
+!> cp  input  - parameter c in 0f1(;c;z)
+!> w   input  - this is a preselected scale factor such that \(0 \leq z/w \leq 1\)
+!> n   input  - two less than the number of coefficients to be generated
+!> c   output - a vector containing the n+2 Chebychev coefficients
+!> sum output - the sum of the coefficients
+!> all other variables are for internal use
+!-------------------------------------------------------------------------------
       MODULE MOD_CNWF011
       CONTAINS
+!-------------------------------------------------------------------------------
+!> Summary: Computes the coefficients in the Chebychev expansion of 0f1(;c;z)
+!> Author: 
+!> Date: 
+!> Category: KKRimp, special-functions, numerical-tools
+!> Deprecated: False 
+!-------------------------------------------------------------------------------
       SUBROUTINE CNWF011(CP,W,N,C,SUM)
-c   *****************************************************************
-c   *this subroutine computes the coefficients in the chebychev
-c   *expansion of 0f1(;c;z). p.80 in algorithms for the computation
-c   *of mathematical functions, y.l.luke, academic press,london 1977
-c   *
-c   *
-c   *description of variables
-c   *
-c   *cp    -input  - parameter c in 0f1(;c;z)
-c   *
-c   *w     -input  - this is a preselected scale factor such that
-c   *                0.le.(z/w).le.1
-c   *
-c   *n     -input  - two less than the number of coefficients to be
-c   *                generated
-c   *
-c   *c     -output - a vector containing the n+2 chebychev coefficients
-c   *
-c   *sum   -output - the sum of the coefficients
-c   *
-c   *all other variables are for internal use
+
 c**********************************************************************
 C     .. Scalar Arguments ..
-      REAL*8 CP,SUM,W
-      INTEGER N
+      REAL*8 CP             !! Parameter c in 0f1(;c;z)
+      REAL*8 SUM            !! Sum of the coefficients
+      REAL*8 W              !! Preselected scale factor such that \(0 \leq z/w \leq 1\)
+      INTEGER N             !! Two less than the number of coefficients to be generated
 C     ..
 C     .. Array Arguments ..
-      REAL*8 C(*)
+      REAL*8 C(*)           !! Vector containing the n+2 Chebychev coefficients
 C     ..
 C     .. Local Scalars ..
       REAL*8 A1,A2,A3,C1,DIVFAC,FOUR,ONE,P,RHO,START,TWO,X1,

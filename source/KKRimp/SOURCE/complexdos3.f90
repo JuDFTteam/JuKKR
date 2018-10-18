@@ -1,22 +1,34 @@
+!-------------------------------------------------------------------------------
+!> Summary: Interpolates the complex density of states to the real axes
+!> Author: B. Drittler 
+!> Date: Nov. 1987
+!-------------------------------------------------------------------------------
+!> Interpolates the complex density of states to the real axes
+!> does the same thing as complexdos3.f from the Juelich-Muenchen 
+!> source
+!> Principle of DOS here: Two-point contour integration
+!> for DOS in the middle of the two points. The input DOS
+!> and energy must be complex. Parameter \(\delta e\) should be
+!> of the order of magnitude of \(e_{im}\). 
+!>
+!>    
+!>      <-2*deltae->   _
+!>           /\        |     DOS=(n(1)+n(2))/2 + (n(1)-n(2))*eim/deltae
+!>          /  \       |
+!>        (1)  (2)   2*i*eim=2*i*pi*Kb*Tk
+!>        /      \     |
+!>       /        \    |
+!> ------------------------ (Real E axis)
+!-------------------------------------------------------------------------------
 module mod_complexdos3
-! Interpolates the complex density of states to the real axes
-! does the same thing as compexdos3.f from the Juelich-Muenchen 
-! source
-! Principle of DOS here: Two-point contour integration
-! for DOS in the middle of the two points. The input DOS
-! and energy must be complex. Parameter deltae should be
-! of the order of magnitude of eim. 
-!
-!    
-!      <-2*deltae->   _
-!           /\        |     DOS=(n(1)+n(2))/2 + (n(1)-n(2))*eim/deltae
-!          /  \       |
-!        (1)  (2)   2*i*eim=2*i*pi*Kb*Tk
-!        /      \     |
-!       /        \    |
-!------------------------ (Real E axis)
 contains
-
+!-------------------------------------------------------------------------------
+!> Summary: Interpolates the complex density of states to the real axes
+!> Author: B. Drittler 
+!> Date: Nov. 1987
+!> Category: KKRimp, physical-observables, input-output
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 subroutine complexdos3(lmax,iemax,iatom,ispin,nspin,dos,doslm,ez)
 use mod_version_info
 implicit none

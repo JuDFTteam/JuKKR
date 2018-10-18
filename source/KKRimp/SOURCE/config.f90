@@ -1,3 +1,10 @@
+!-------------------------------------------------------------------------------
+!> Summary: Read the information from config file
+!> Author: 
+!> Date: 
+!> 
+!> Read the information from config file
+!-------------------------------------------------------------------------------
 module mod_config
   use nrtype
 ! integer :: INS
@@ -21,6 +28,13 @@ module mod_config
 ! real(kind=DP),protected,save                             ::     fcm=2.0        ! cluster radius
 
 contains
+!-------------------------------------------------------------------------------
+!> Summary: Routine to read the information from the config file
+!> Author: 
+!> Date: 
+!> Category: KKRimp, input-output
+!> Deprecated: False 
+!-------------------------------------------------------------------------------
 
 subroutine config_read(config)
   use type_config

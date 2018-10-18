@@ -1,5 +1,22 @@
+!-------------------------------------------------------------------------------
+!> Summary: Initialize array elements to complex zero
+!> Author: 
+!> Deprecated: False 
+!-------------------------------------------------------------------------------
+!> Setting the first N values of a double complex array A to zero
+!>
+!> @note
+!> This routine could be easily replaced by: a(:n) = czero
+!> @endnote
+!-------------------------------------------------------------------------------
       MODULE mod_cinit
       CONTAINS
+!-------------------------------------------------------------------------------
+!> Summary: Initialize array elements to complex zero
+!> Author: 
+!> Category: KKRimp, numerical-tools 
+!> Deprecated: False 
+!-------------------------------------------------------------------------------
       SUBROUTINE CINIT(N,A)
         USE NRTYPE
         IMPLICIT NONE

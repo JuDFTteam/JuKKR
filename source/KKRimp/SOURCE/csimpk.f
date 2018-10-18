@@ -1,20 +1,40 @@
+!-------------------------------------------------------------------------------
+!> Summary: Integration of a complex function with extended 3-point-Simpson
+!> Author: 
+!> Date: 
+!-------------------------------------------------------------------------------
+!> This subroutine does an integration up to rcut of an
+!> complex function cf with an extended 3-point-simpson :
+!>
+!> \begin{equation}
+!> cf_{int} = \int_{0}^{r_{cut}} cf\left(r'\right) dr'
+!> \end{equation}
+!>
+!> Modified for functions with kinks: at each kink the integration is restarted.
+!-------------------------------------------------------------------------------
+!> @warning Input cf is destroyed!
+!> @endwarning
+!-------------------------------------------------------------------------------
       MODULE MOD_CSIMPK
       CONTAINS
+!-------------------------------------------------------------------------------
+!> Summary: Integration of a complex function with extended 3-point-Simpson
+!> Author: 
+!> Date: 
+!> Category: KKRimp, numerical-tools, radial-grid
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
+!> This subroutine does an integration up to rcut of an
+!> complex function cf with an extended 3-point-simpson :
+!>
+!> \begin{equation}
+!> cf_{int} = \int_{0}^{r_{cut}} cf\left(r'\right) dr'
+!> \end{equation}
+!>
+!> Modified for functions with kinks: at each kink the integration is restarted.
+!-------------------------------------------------------------------------------
+      MODULE MOD_CSIMPK
       SUBROUTINE CSIMPK(CF,CFINT,IPAN,IRCUT,DRDI)
-c-----------------------------------------------------------------------
-c     this subroutine does an integration up to rcut of an
-c     complex function cf with an extended 3-point-simpson :
-c
-c                             rcut
-c                      cfint = { cf(r') dr'
-c                              0
-c
-c     modified for functions with kinks - at each kink the
-c     integration is restarted .
-c
-c     attention : input cf is destroyed !
-c
-c-----------------------------------------------------------------------
 C     .. Scalar Arguments ..
       DOUBLE COMPLEX CFINT
       INTEGER IPAN

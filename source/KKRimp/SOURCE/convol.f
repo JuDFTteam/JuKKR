@@ -1,6 +1,20 @@
+!-------------------------------------------------------------------------------
+!> Summary: Convolutes potentials with shape functions
+!> Author:  
+!> 
+!> Calculate convolution of potential with shapefunction.
+!-------------------------------------------------------------------------------
       MODULE MOD_CONVOL
-!     driver routine for the convolution mod
       CONTAINS
+!-------------------------------------------------------------------------------
+!> Summary: Driver routine for the convolution mod
+!> Author:  
+!> Date: 
+!> Category: KKRimp, shape-functions, potential 
+!> Deprecated: False 
+!>
+!> Driver routine for the convolution mod
+!-------------------------------------------------------------------------------
       SUBROUTINE CONVOLDRV(nrmaxd,LMAXD,NSPIN,NATOM,LMAXATOM,cell,
      +                     gauntshape,shapefun,ZAT, vons)
       use type_cell
@@ -92,7 +106,15 @@
 
 
 
-c ************************************************************************
+!-------------------------------------------------------------------------------
+!> Summary: Convolutes potentials with shape functions 
+!> Author:  
+!> Date: 
+!> Category: KKRimp, shape-fucntions, potential
+!> Deprecated: False
+!> 
+!> Calculate convolution of potential with shapefunction.
+!-------------------------------------------------------------------------------
       SUBROUTINE CONVOL(IMT1,IRC1,IMAXSH,ILM,IFUNM,LMPOT,GSH,
      +                  THETAS,Z,RFPI,R,VONS,LMSP,IRID,NFUND,IRMD,NGSHD)
 c ************************************************************************

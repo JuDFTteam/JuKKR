@@ -1,14 +1,21 @@
+!-------------------------------------------------------------------------------
+!> Summary: Calculates core charge
+!> Author:
+!> Category: KKRimp, core-electrons
+!> Deprecated: False 
+!>
+!> Subroutine for core states
+!>
+!> lmxc = lmaxcore = (0,1,2,...), .e.g, 
+!> argon core   : lmxc = 1
+!> krypton core : lmxc = 2
+!> kfg = configuration of core, e.g., 
+!> argon core:   3300=3s,3p,0d
+!> krypton core: 4430=4s,4p,3d
+!> xenon core:   5540=5s,5p,4d
+!-------------------------------------------------------------------------------
       SUBROUTINE COREL(NSRA,IPR,IP,RHOC,V,ECORE,LCORE,NCORE,DRDI,Z,QC,
      +                   A,B,IS,NSPIN,NR,RMAX,IRMD)
-c-----------------------------------------------------------------------
-c     subroutine for core states
-c-----------------------------------------------------------------------
-c     lmxc = lmaxcore = (0,1,2,...), .e.g, argon core : lmxc = 1
-c                                        krypton core : lmxc = 2
-c     kfg = configuration of core, e.g., argon core: 3300=3s,3p,0d
-c                                      krypton core: 4430=4s,4p,3d
-c                                      xenon core: 5540=5s,5p,4d
-c-----------------------------------------------------------------------
 C     .. Parameters ..
       INTEGER NITMAX,IRNUMX
       PARAMETER (NITMAX=40,IRNUMX=10)
