@@ -36,6 +36,7 @@
       SUBROUTINE REGSOL(CVLIGHT,E,NSRA,DLOGDP,FZ,HAMF,MASS,PZ,DROR,R,
      +                  S,VM2Z,Z,IPAN,IRCUT,IDOLDAU,LOPT,WLDAUAV,CUTOFF,
      +                  IRMD,IPAND,LMAXATOM)
+      use :: nrtype, only: dp
       IMPLICIT NONE
 
 C     .. Scalar Arguments ..
