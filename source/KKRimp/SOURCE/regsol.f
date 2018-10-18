@@ -1,44 +1,64 @@
+      !------------------------------------------------------------------------------------
+      !> Summary: Calculates the regular solution of the schroedinger equation or in semi relativistic approximation for a spherically averaged potential and given energy
+      !> Author: B. Drittler
+      !> Calculates the regular solution of the schroedinger equation or in semi relativistic 
+      !> approximation for a spherically averaged potential and given energy.
+      !> To archieve greater presion the leading power \(r^s\) (in schroedinger case s = l,
+      !> in case of sra \(s = \sqrt{ (l^2+l-1) - \frac{4z^2}{c^2} } )\) is analytically separated
+      !> from the wavefunction.
+      !> The t-matrix has to be determined at the mt radius in case of a mt calculation 
+      !> or at the ws radius in case of a ws calculation. Therefore the logarithmic 
+      !> derivative is calculated at that point (`=ircut(ipan)` )
+      !------------------------------------------------------------------------------------
+      !> @note Ph. Mavropoulos March 2003 - Dec 2004, Munich/Juelich: LDA+U included
+      !> @endnote
+      !------------------------------------------------------------------------------------
       MODULE mod_regsol
       CONTAINS
+
+      !-------------------------------------------------------------------------------
+      !> Summary: Calculates the regular solution of the schroedinger equation or in semi relativistic approximation for a spherically averaged potential and given energy
+      !> Author: B. Drittler
+      !> Category: solver, lda+u, KKRimp, KKRhost
+      !> Deprecated: False 
+      !> Calculates the regular solution of the schroedinger equation or in semi relativistic 
+      !> approximation for a spherically averaged potential and given energy.
+      !> To archieve greater presion the leading power \(r^s\) (in schroedinger case s = l,
+      !> in case of sra \(s = \sqrt{ (l^2+l-1) - \frac{4z^2}{c^2} } )\) is analytically separated
+      !> from the wavefunction.
+      !> The t-matrix has to be determined at the mt radius in case of a mt calculation 
+      !> or at the ws radius in case of a ws calculation. Therefore the logarithmic 
+      !> derivative is calculated at that point (`=ircut(ipan)` )
+      !-------------------------------------------------------------------------------
+      !> @note Ph. Mavropoulos March 2003 - Dec 2004, Munich/Juelich: LDA+U included
+      !> @endnote
+      !-------------------------------------------------------------------------------
       SUBROUTINE REGSOL(CVLIGHT,E,NSRA,DLOGDP,FZ,HAMF,MASS,PZ,DROR,R,
      +                  S,VM2Z,Z,IPAN,IRCUT,IDOLDAU,LOPT,WLDAUAV,CUTOFF,
      +                  IRMD,IPAND,LMAXATOM)
       IMPLICIT NONE
-c-----------------------------------------------------------------------
-c  calculates the regular solution of the schroedinger equation or
-c    in semi relativistic approximation for a spherically averaged
-c    potential and given energy . to archieve greater presion the
-c    leading power r**s ( in schroedinger case s = l , in case of sra
-c    s = sqrt( (l*l+l-1) - 4*z*z/c/c ) ) is analytically separated
-c    from the wavefunction .
-c
-c  the t - matrix has to be determined at the mt radius in case of
-c    a mt calculation or at the ws radius in case of a ws calcu-
-c    lation . therefore the logarithmic derivative is calculated
-c    at that point (=ircut(ipan) )
-c
-c  the differential equation is solved with a 5 point adams - bashforth
-c    and adams - moulton predictor corrector method integrating
-c    outwards and extended for potentials with kinks
-c
-c                                               b.drittler   nov 1989
-c
-c  LDA+U included  March 2003 - Dec 2004, Munich/Juelich
-c                                               ph. mavropoulos
-c
-c-----------------------------------------------------------------------
+
 C     .. Scalar Arguments ..
       DOUBLE COMPLEX E
-      DOUBLE PRECISION CVLIGHT,Z,WLDAUAV
-      INTEGER IPAN,IPAND,IRMD,LMAXATOM,NSRA,IDOLDAU,LOPT
+      complex(kind=dp), intent(in) :: E
+      real(kind=dp), intent(in) :: CVLIGHT !!Speed of light
+      DOUBLE PRECISION Z
+      DOUBLE PRECISION WLDAUAV
+      INTEGER IPAN,IPAND,IRMD,LMAXATOM,IDOLDAU,LOPT
+      integer, intent(in) :: NSRA
 C     ..
 C     .. Array Arguments ..
-      DOUBLE COMPLEX DLOGDP(0:LMAXATOM),FZ(IRMD,0:LMAXATOM),
-     +               HAMF(IRMD,0:LMAXATOM),MASS(IRMD),
-     +               PZ(IRMD,0:LMAXATOM)
-      DOUBLE PRECISION DROR(IRMD),R(IRMD),S(0:LMAXATOM),VM2Z(IRMD)
-      DOUBLE PRECISION CUTOFF(IRMD)
-      INTEGER IRCUT(0:IPAND)
+      complex(kind=dp), intent(out) :: DLOGDP(0:LMAXATOM) !!logarithmic derivate of real wavefunction
+      complex(kind=dp), intent(out) :: FZ(IRMD,0:LMAXATOM) 
+      complex(kind=dp), intent(out) :: HAMF(IRMD,0:LMAXATOM)
+      complex(kind=dp), intent(out) :: MASS(IRMD)
+      complex(kind=dp), intent(out) :: PZ(IRMD,0:LMAXATOM)
+      complex(kind=dp), intent(in)  :: DROR(IRMD)
+      complex(kind=dp), intent(in)  :: R(IRMD)
+      complex(kind=dp), intent(in)  :: S(0:LMAXATOM)
+      complex(kind=dp), intent(in)  :: VM2Z(IRMD)
+      complex(kind=dp), intent(in)  :: CUTOFF(IRMD)
+      integer, intent(in)           :: IRCUT(0:IPAND)
 C     ..
 C     .. Local Scalars ..
       DOUBLE COMPLEX DFD0,DPD0,FIP0,FIP1,HAMF1,K1F,K1P,K2F,K2P,K3F,K3P,
