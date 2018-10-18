@@ -1,3 +1,8 @@
+!--------------------------------------------------------------------------------
+! Copyright (c) 2018 Forschungszentrum Juelich GmbH, Juelich, Germany
+! This file is part of KKRnano and available as free software under the conditions
+! of the MIT license as expressed in the LICENSE file in more detail.
+!--------------------------------------------------------------------------------
 module TruncationZone_mod
 !-------------------------------------------------------------------------------
 !> Summary: Set up modified index arrays for real space truncation.

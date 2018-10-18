@@ -1,8 +1,14 @@
+!--------------------------------------------------------------------------------
+! Copyright (c) 2018 Forschungszentrum Juelich GmbH, Juelich, Germany
+! This file is part of KKRnano and available as free software under the conditions
+! of the MIT license as expressed in the LICENSE file in more detail.
+!--------------------------------------------------------------------------------
+
 !!! main program KKRnano
 !-------------------------------------------------------------------------------
-!> Summary: massively parallel density functional theory code
-!>          for nanoscaled systems based on KKR where
-!>          KKR = Korringa-Kohn-Rostoker multiple scattering theory
+!> Summary: massively parallel density functional theory code KKRnano
+!>          for nanoscaled systems based on Korringa-Kohn-Rostoker 
+!>          multiple scattering theory
 !> Author: Marcel Bornemann, Paul F Baumeister, Elias Rabel, Alexander Thiess, 
 !>         Rudolf Zeller, Roman Kovacik, et al.
 !> Category: KKRnano
@@ -111,6 +117,10 @@ program KKRnano
     '    --check               Check input files for errors', &
     '    --convert             Converter to and from ASCII files', &
     '    --voronano            Produces Voronoi output necessary to start a calculation with KKRnano', &
+#ifdef BENCHMARK_tfQMR
+    '    --benchmark           Benchmarking of the tfQMR solver', &
+#endif
+    '    --version             Version and license information', &
     ''
     stop
   case ('--benchmark')
@@ -119,6 +129,11 @@ program KKRnano
 #else
     die_here('For benchmarking of the tfQMR solver, please compile with -D BENCHMARK_tfQMR')
 #endif
+  case ('--version')
+    write(*,'(A)') 'KKRnano', &
+    'Copyright (C) 2018 Forschungszentrum Juelich, Juelich, Germany', &
+    'This is free software (MIT license). Please see the LICENSE file for more detail.'
+    stop
   case default
     ! start the former kkr2.exe    
   endselect ! arg

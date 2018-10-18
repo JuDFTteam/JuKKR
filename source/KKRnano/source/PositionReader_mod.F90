@@ -1,3 +1,8 @@
+!--------------------------------------------------------------------------------
+! Copyright (c) 2018 Forschungszentrum Juelich GmbH, Juelich, Germany
+! This file is part of KKRnano and available as free software under the conditions
+! of the MIT license as expressed in the LICENSE file in more detail.
+!--------------------------------------------------------------------------------
 module PositionReader_mod
 !-------------------------------------------------------------------------------
 !> Summary: Reads .xyz files containg atomic coordinates that can also be viewed by e.g. jmol
