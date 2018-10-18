@@ -33,7 +33,6 @@
 !>
 !> Modified for functions with kinks: at each kink the integration is restarted.
 !-------------------------------------------------------------------------------
-      MODULE MOD_CSIMPK
       SUBROUTINE CSIMPK(CF,CFINT,IPAN,IRCUT,DRDI)
 C     .. Scalar Arguments ..
       DOUBLE COMPLEX CFINT
