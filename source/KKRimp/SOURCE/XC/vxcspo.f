@@ -1,23 +1,25 @@
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculate the spin-polarized exchange-correlation potential and the spin-polarized exchange-correlation energy .
+  !> Author: B. Drittler
+  !> Date: June 1987
+  !> Category: xc-potential, KKRimp
+  !> Deprecated: False 
+  !> Calculate the spin-polarized exchange-correlation potential and the 
+  !> spin-polarized exchange-correlation energy kxc=0 means : spin-polarized 
+  !> exchange-correlation potential U. Von Barth and l.hedin, J. Phys. C5,1629 (1972)
+  !> with parametrization of Moruzzi, Janak, Williams 
+  !>
+  !> kxc=1 means : spin-polarized exchange-correlation potential 
+  !> U. Von Barth and L. Hedin, J. Phys. C5,1629 (1972)
+  !> with parametrization of Von Barth, Hedin
+  !> 
+  !> use as input the density generated on an angular mesh (see subroutine `vxclm`).
+  !> `fpirho(.,1)` contains the charge density times \(4\pi\) and `fpirho(.,2)` 
+  !> the spin density times \(4 \pi\).
+  !> Then the ex.-cor. potential and the ex.-cor. energy on those mesh points is calculated .
+  !> the spin-down potential is stored in `vxc(.,1)`.
+  !-------------------------------------------------------------------------------
       SUBROUTINE VXCSPO(EXC,FPIRHO,VXC,KXC,IJEND,IJD)
-c-----------------------------------------------------------------------
-c     calculate the spin-polarized exchange-correlation potential
-c     and the spin-polarized exchange-correlation energy .
-c     kxc=0 means : spin-polarized exchange-correlation potential
-c                   u. von barth and l.hedin, j.phys.c5,1629 (1972)
-c                   with parametrization of moruzzi,janak,williams
-c     kxc=1 means : spin-polarized exchange-correlation potential
-c                   u. von barth and l.hedin, j.phys.c5,1629 (1972)
-c                   with parametrization of von barth,hedin
-c
-c     use as input the density generated on an angular mesh (see
-c     subroutine vxclm) . fpirho(.,1) contains the charge density
-c     times 4 pi and fpirho(.,2) the spin density times 4 pi .
-c     then the ex.-cor. potential and the ex.-cor. energy on those
-c     mesh points is calculated .
-c     the spin-down potential is stored in vxc(.,1) .
-c
-c                                  b.drittler    june 1987
-c-----------------------------------------------------------------------
 C     ..
 C     .. Scalar Arguments ..
       INTEGER IJEND,KXC,IJD

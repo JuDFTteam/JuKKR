@@ -1,7 +1,13 @@
+  !-------------------------------------------------------------------------------
+  !> Summary: evaluates derivatives with respect to r
+  !> Author: 
+  !> Category: xc-potential, numerical-tools, KKRimp
+  !> Deprecated: False 
+  !> evaluates \(d(ro)/dr\),\(d{d(ro)/dr}/dr\)
+  !------------------------------------------------------------------------------- 
       SUBROUTINE GRADR(NSPIN,IST1,MESH,DX,DRDI,DRDI2,RO,ZTA,DRR,DDRR,
      +                 DRRU,DDRRU,ROU,IRMD)
-C.....-----------------------------------------------------------------
-C     evaluates d(ro)/dr,d{d(ro)/dr}/dr.
+C.....-----------------------------------------------------------------.
 C     drr=d(ro)/dr, ddrr=d(drr)/dr.
 C     coded by T.Asada. Feb.1994.
 C.....-----------------------------------------------------------------

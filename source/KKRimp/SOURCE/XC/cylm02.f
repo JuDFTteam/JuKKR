@@ -1,12 +1,20 @@
+  !-------------------------------------------------------------------------------
+  !> Summary: Computes complex spherical Harmonics and their derivative 
+  !> Author: 
+  !> Category: xc-potential, special-functions , KKRimp
+  !> Deprecated: True 
+  !> Preparation of cylm0(=ylm(ip,i)), cylmt1(=dylm/dtheta),
+  !> cylmt2(=d2ylm/dt2),
+  !> cylmf1, cylmf2 are for fai.
+  !> cylmtf=d2ylm/dfdt
+  !> i=1,2,....,(lmax+1)**2
+  !>
+  !> @warning
+  !> A hard coded loop dimension is used here (parameter `ijd`)
+  !> @endwarning
+  !------------------------------------------------------------------------------- 
       SUBROUTINE CYLM02(LMAX,COSX,FAI,LPOT2P,LMMAXD,THET,YLM,DYLMT1,
      +                  DYLMT2,DYLMF1,DYLMF2,DYLMTF)
-c.....------------------------------------------------------------------
-c     preparation of cylm0(=ylm(ip,i)), cylmt1(=dylm/dtheta),
-c     cylmt2(=d2ylm/dt2),
-c     cylmf1, cylmf2 are for fai.
-c     cylmtf=d2ylm/dfdt
-c     i=1,2,....,(lmax+1)**2
-c.....------------------------------------------------------------------
 c
 C     .. Parameters ..
       INTEGER IJD

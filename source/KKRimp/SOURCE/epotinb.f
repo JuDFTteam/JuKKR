@@ -1,7 +1,65 @@
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates energy of the input potential
+  !> Author: B. Drittler
+  !>
+  !> Calculate the energy of the input potential: Int V(r) rho(r) d^3r
+  !> ---------------------------------------------------
       MODULE MOD_EPOTINB
         CONTAINS
-
-c 13.10.95 ***************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates energy of the input potential
+  !> Author: B. Drittler
+  !> Category: KKRimp, total-energy
+  !> Deprecated: False
+  !>
+  !> Energy of the input potential: Int V(r) rho(r) d^3r
+  !> ---------------------------------------------------
+  !>
+  !> Attention : energy zero ---> electro static zero
+  !>
+  !> Since input potential and single particle energies
+  !> are using muffin tin zero as zero the energy shift
+  !> is cancelled in the kinetic energy contribution!
+  !>
+  !>
+  !> Calculate the energy of the input potential
+  !> the energy for the representive atom i is given by
+  !>
+  !> rws
+  !> epotin(i) = - sqrt(4 pi) {  dr' vm2z(r',i)*rho2ns(r',1,i)
+  !> 0
+  !>
+  !> in case of non spherical input potential one has to add
+  !>
+  !> rirt
+  !> {  -  {  dr' vins(r',lm,i)rho2ns(r',lm,i)   }
+  !> rmin
+  !> (summed over lm)
+  !>
+  !> Remember : the non spherical part of the input potential is
+  !> different from zero only between r(irmin) and r(irt)
+  !>
+  !> (see notes by B. Drittler)
+  !>
+  !> Attention: vm2z is the spherically averaged input potential,
+  !> vins contains the non spherical contribution of the
+  !> potential and rho2ns(...,1) is the  real charge density
+  !> times r**2. vins and rho2ns are expanded into spherical
+  !> harmonics. (see deck rholm or rhons)
+  !>
+  !> Remember :  in case of shape corrections the contribution of
+  !> the nuclear potential - 2*Z/r has to be explicitly
+  !> taken into account between muffin tin sphere and
+  !> circum scribed sphere.
+  !> only within the muffin tin sphere this term is
+  !> analytically cancelled wtih the contribution of
+  !> the coulomb potential - see deck ecoulom
+  !>
+  !>
+  !> Modified for non spherical potential and shape corrections
+  !>
+  !> B Drittler   Oct. 1989
+  !-------------------------------------------------------------------------------
       SUBROUTINE EPOTINB(EPOTIN,NSPIN,NATOM,VM2Z,INS,
      +                   LMAXATOM,ZATOM,CELL,DENSITY,
      +                   IPAND, IRMD,LPOTD)
@@ -10,54 +68,7 @@ c 13.10.95 ***************************************************************
       USE MOD_SIMPK
       USE MOD_SIMP3
       IMPLICIT NONE
-c ************************************************************************
-c
-c     attention : energy zero ---> electro static zero
-c
-c                 since input potential and single particle energies
-c                 are using muffin tin zero as zero the energy shift
-c                 is cancelled in the kinetic energy contribution !
-c
-c
-c     calculate the energy of the input potential
-c     the energy for the representive atom i is given by
-c
-c                               rws
-c       epotin(i) = - sqrt(4 pi) {  dr' vm2z(r',i)*rho2ns(r',1,i)
-c                                0
-c
-c     in case of non spherical input potential one has to add
-c
-c                 rirt
-c            {  -  {  dr' vins(r',lm,i)rho2ns(r',lm,i)   }
-c                 rmin
-c                                        (summed over lm)
-c
-c     remember : the non spherical part of the input potential is
-c                different from zero only between r(irmin) and r(irt)
-c
-c             (see notes by b.drittler)
-c
-c     attention: vm2z is the spherically averaged input potential ,
-c                vins contains the non spherical contribution of the
-c                potential and rho2ns(...,1) is the  real charge density
-c                times r**2. vins and rho2ns are expanded into spherical
-c                harmonics . (see deck rholm or rhons)
-c
-c     remember :  in case of shape corrections  the contribution of
-c                 the nuclear potential - 2*Z/r has to be explicitly
-c                 taken into account between muffin tin sphere and
-c                 circum scribed sphere .
-c                 only within the muffin tin sphere this term is
-c                 analytically cancelled wtih the contribution of
-c                 the coulomb potential - see deck ecoulom
-c
-c
-c                 modified for non spherical potential and shape correc-
-c                  tions
-c
-c                               b.drittler   oct. 1989
-c-----------------------------------------------------------------------
+
 C     .. Parameters ..
 !       include 'inc.p'
 C     ..

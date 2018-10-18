@@ -1,11 +1,15 @@
+  !-------------------------------------------------------------------------------
+  !> Summary: Exchange-correlation potential and total energy for PW91 (GGA)
+  !> Author: 
+  !> Category: xc-potential, KKRimp
+  !> Deprecated: False 
+  !> Exchange-correlation potential in ry. also total-energy
+  !------------------------------------------------------------------------------- 
       SUBROUTINE GXCPT(IDSPR,RO,ZTA,AGR,AGRU,AGRD,G2R,G2RU,G2RD,GGGR,
      +                 GGGRU,GGGRD,GRGRU,GRGRD,GZGR,XCPTU,XCPTD,XCED,
      +                 VXLU,VXLD,VCLU,VCLD,XEDL,CEDL,VXGU,VXGD,VCGU,
      +                 VCGD,XEDG,CEDG)
 
-c.....-----------------------------------------------------------------
-c.....gxcp: exchange-correlation potential in ry. also total-energy.
-c.....-----------------------------------------------------------------
 c     common/cxcf/igl,igh,imj,ibh,ica,icg,ivn,ipw,ipg,ivg,ip9,igd,ixlf,
 c    &  iex,xlf
 c     common/ctrns7/hugeo,huges,hugef,dspr,rdspr,idspr

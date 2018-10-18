@@ -1,3 +1,9 @@
+!-------------------------------------------------------------------------------
+!> Summary: Computes Gaunt coefficients and spherical harmonics
+!> Author: 
+!> Defines the variable for the gaunt coefficient and 
+!> computes Gaunt coefficients and spherical harmonics
+!-------------------------------------------------------------------------------
 module mod_gauntharmonics
   use nrtype
   use mod_config, only: config_testflag
@@ -13,10 +19,13 @@ module mod_gauntharmonics
 !   type(HARMONICSTYPE),protected    :: harmonics
 
 contains
-!---------------------------------------------------------------------
-!-- SUBROUTINE : gauntharmonics_set  
-!--   sets calculates the gaunt coefficients and sph. harmonics
-!---------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates the gaunt coefficients and sph. harmonics
+  !> Author: 
+  !> Category: KKRimp, special-functions
+  !> Deprecated: False
+  !> Calculates the gaunt coefficients and sph. harmonics
+  !-------------------------------------------------------------------------------
 subroutine gauntharmonics_set()!,lmaxatom)
   implicit none
 !local variables
@@ -87,11 +96,6 @@ do lval = lmaxbounds(1), lmaxbounds(2)
 
 end do !lval
 
-
-
-
-
-
 !---------------------------------------------------------------------
 ! if a testflag is set write out the gaunt coefficient data
 !---------------------------------------------------------------------
@@ -140,9 +144,13 @@ end if
 
 end subroutine gauntharmonics_set
 
-!---------------------------------------------------------------------
-!-- SUBROUTINE : GAUNTHARMONICS_getlmaxbounds  
-!---------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
+  !> Summary: Get lmax bounds
+  !> Author: B. Drittler
+  !> Category: KKRimp
+  !> Deprecated: True
+  !>
+  !-------------------------------------------------------------------------------
 subroutine GAUNTHARMONICS_getlmaxbounds(lmaxatom,natom,lmaxbounds)
   implicit none
   integer, intent(in)       :: lmaxatom(natom)
@@ -158,43 +166,45 @@ end do !iatom
 end subroutine GAUNTHARMONICS_getlmaxbounds
 
 
-!---------------------------------------------------------------------
-!-- SUBROUTINE : GAUNTHARMONICS_GAUNT1  
-!---------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
+  !> Summary: Computes gaunt coefficients
+  !> Author: B. Drittler
+  !> Category: KKRimp, special-functions
+  !> Deprecated: False
+  !>
+  !> - fills the array cleb with the gaunt coeffients ,i.e.
+  !>   the integral of y(l1,m1)*y(l2,m2)*y(l3,m3)
+  !>   but only for lm2.le.lm1 and lm3>1
+  !> - calculate the pointer array jend  to project the indices
+  !>   array cleb with the same lm3,l1,l2 values - because of
+  !>   the special ordering of array cleb only the last index
+  !>   has to be determined.
+  !> (the parameter n has to be chosen that l1+l2+l3 .lt. 2*n)
+  !> using gaussian quadrature as given by
+  !> M. Abramowitz and I.A. Stegun, Handbook of Mathematical Functions,
+  !> NBS Applied Mathematics Series 55 (1968), pages 887 and 916
+  !> M. Weinert and E. Wimmer
+  !> Northwestern University March 1980
+  !>
+  !> An index array -icleb- is used to save storage place.
+  !> fills the array loflm which is used to determine the
+  !> l-value of a given lm-value.
+  !>
+  !> B. Drittler   November 1987
+  !>
+  !> modified gaunt coefficients are als calculated defined by
+  !> the integral of y(l1,m1)*y(l2,m2)*y(l3,m3)*i**(l2-l1+l3)
+  !>
+  !-------------------------------------------------------------------------------
+  !> @note
+  !> This subroutine has to be called only once!
+  !> @endnote
+  !> @warning
+  !> ncleb is an empirical factor - it has to be optimized
+  !> @endwarning
+  !-------------------------------------------------------------------------------
       SUBROUTINE GAUNTHARMONICS_GAUNT1(LMAX,LPOT,W,YR,CLEB,LOFLM,ICLEB,IEND,JEND, &
                        NCLEB,LMAXD,LMGF0D,LMPOTD)
-! ************************************************************************
-!
-!   - fills the array cleb with the gaunt coeffients ,i.e.
-!      the integral of y(l1,m1)*y(l2,m2)*y(l3,m3)
-!      but only for lm2.le.lm1 and lm3>1
-!   - calculate the pointer array jend  to project the indices
-!      array cleb with the same lm3,l1,l2 values - because of
-!      the special ordering of array cleb only the last index
-!      has to be determined .
-!     (the parameter n has to be chosen that l1+l2+l3 .lt. 2*n)
-!     using gaussian quadrature as given by
-!     m. abramowitz and i.a. stegun, handbook of mathematical functions,
-!     nbs applied mathematics series 55 (1968), pages 887 and 916
-!     m. weinert and e. wimmer
-!     northwestern university march 1980
-!
-!     an index array -icleb- is used to save storage place .
-!     fills the array loflm which is used to determine the
-!     l-value of a given lm-value .
-!     this subroutine has to be called only once !
-!
-!                               b.drittler   november 1987
-!
-!     modified gaunt coefficients are als calculated defined by
-!     the integral of y(l1,m1)*y(l2,m2)*y(l3,m3)*i**(l2-l1+l3)
-!-----------------------------------------------------------------------
-!
-!---> attention : ncleb is an empirical factor - it has to be optimized
-!
-!     .. Parameters ..
-!cccccccc      include 'inc.p'
-!
 ! *********************************************************************
 ! * For KREL = 1 (relativistic mode)                                  *
 ! *                                                                   *
@@ -380,29 +390,25 @@ end subroutine GAUNTHARMONICS_getlmaxbounds
 
 
 
-!---------------------------------------------------------------------
-!-- SUBROUTINE : GAUNTHARMONICS_GAUNT2  
-!---------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
+  !> Summary: Computes Gaunt coefficients
+  !> Author: M. Weinert, B. Drittler
+  !> Category: KKRimp, special-functions
+  !> Deprecated: False
+  !>
+  !> Sets up values needed for gaunt
+  !>        m. weinert  january 1982
+  !>
+  !> Changed for calculating with real spherical harmonics
+  !>                                 b.drittler  july 1987
+  !> 
+  !-------------------------------------------------------------------------------
       SUBROUTINE GAUNTHARMONICS_GAUNT2(W,YR,N)
-! ************************************************************************
-!     sets up values needed for gaunt
-!        m. weinert  january 1982
-!
-!     changed for calculating with real spherical harmonics
-!                                           b.drittler  july 1987
-!
-!     W(N)        integration weights on 4*LMAXD points in the intervall
-!                 (-1,0) (from routine GRULE)
-!
-!     YR(N,L,M)   spherical harmonics on 4*LMAXD points to angular 
-!                 momentum indices (l,m) scaled with a factor 
-!                 of RF=(4*pi)**(1/3)
-!
-!-----------------------------------------------------------------------
       IMPLICIT NONE
 !     .. Arguments
       INTEGER N
-      DOUBLE PRECISION W(*),YR(N,0:N,0:N)
+      DOUBLE PRECISION W(*)           !! integration weights on 4*LMAXD points in the interval (-1,0) (from routine GRULE)
+      DOUBLE PRECISION YR(N,0:N,0:N)  !! spherical harmonics on 4*LMAXD points to angular momentum indices (l,m) scaled with a factor of RF=(4*pi)**(1/3)
 !     ..
 !     .. Local Scalars ..
       DOUBLE PRECISION A,CD,CTH,FAC,FPI,RF,STH,T
@@ -467,26 +473,26 @@ end subroutine GAUNTHARMONICS_getlmaxbounds
 
 
 
-
-!---------------------------------------------------------------------
-!-- SUBROUTINE : GAUNTHARMONICS_GRULE  
-!---------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
+  !> Summary: Generates Gauss-Legendre points and weights
+  !> Author: P.J. Davis and P. Rabinowitz
+  !> Category: KKRimp, special-functions
+  !> Deprecated: False
+  !>
+  !>     determines the (n+1)/2 nonnegative points x(i) and
+  !>     the corresponding weights w(i) of the n-point
+  !>     gauss-legendre integration rule, normalized to the
+  !>     interval [-1,1]. the x(i) appear in descending order.
+  !>
+  !-------------------------------------------------------------------------------
+  !> @note
+  !> This routine is from 'methods of numerical integration', 
+  !> P.J. Davis and P. Rabinowitz, page 369.
+  !> @endnote
+  !-------------------------------------------------------------------------------
       SUBROUTINE GAUNTHARMONICS_GRULE(N,X,W)
 !
-!***********************************************************************
-!
-!     determines the (n+1)/2 nonnegative points x(i) and
-!     the corresponding weights w(i) of the n-point
-!     gauss-legendre integration rule, normalized to the
-!     interval [-1,1]. the x(i) appear in descending order.
-!
-!     this routine is from 'methods of numerical integration',
-!     p.j. davis and p. rabinowitz, page 369.
-!
-!***********************************************************************
-!
-!
-!     .. Scalar Arguments ..
+!!     .. Scalar Arguments ..
       INTEGER N
 !     ..
 !     .. Array Arguments ..
@@ -539,8 +545,6 @@ end subroutine GAUNTHARMONICS_getlmaxbounds
       END DO !I
       IF (M+M.GT.N) X(M) = 0.
       END SUBROUTINE GAUNTHARMONICS_GRULE
-
-
 
 
 end module mod_gauntharmonics

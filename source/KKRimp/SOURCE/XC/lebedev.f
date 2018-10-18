@@ -1,10 +1,12 @@
+  !-------------------------------------------------------------------------------
+  !> Summary: This subroutine includes the data from the old mesh-file lebedev
+  !> Author: M. Kosuth
+  !> Date: March 2004
+  !> Category: xc-potential, numerical-tools, KKRimp
+  !> Deprecated: False 
+  !> This subroutine includes the data from the old mesh-file lebedev
+  !------------------------------------------------------------------------------- 
       SUBROUTINE LEBEDEV(IJ,RIJ1,RIJ2,RIJ3,WIJ)
-C **********************************************************************
-C *                                                                    *
-C *   This subroutine includes the data from the old mesh-file lebedev *
-C *                   M. Kosuth, Munich, March 2004                    *
-C *                                                                    *
-C **********************************************************************
       IMPLICIT NONE
       INTEGER IJD
       PARAMETER (IJD=434)

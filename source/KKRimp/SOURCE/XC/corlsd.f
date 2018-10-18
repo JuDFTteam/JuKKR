@@ -1,13 +1,18 @@
+  !-------------------------------------------------------------------------------
+  !> Summary: Uniform gas contribution PW91
+  !> Author: 
+  !> Category: KKRimp, xc-potential
+  !> Deprecated: False
+  !>
+  !> Uniform-gas correlation of perdew and wang 1991
+  !> 
+  !> input: seitz radius (rs), relative spin polarization (zta)
+  !> output: correlation energy per electron (ec),
+  !> up- and down-spin potentials (vcup,vcdn),
+  !> derivatives of ec wrt rs (ecrs) &zta (eczta).
+  !> output: correlation contribution (alfc) to the spin stiffness 
+  !-------------------------------------------------------------------------------
       SUBROUTINE CORLSD(RS,ZTA,EC,VCUP,VCDN,ECRS,ECZTA,ALFC)
-c.....-----------------------------------------------------------------
-c     uniform-gas correlation of perdew and wang 1991
-c.....-----------------------------------------------------------------
-c     input: seitz radius (rs), relative spin polarization (zta)
-c     output: correlation energy per electron (ec),
-c             up- and down-spin potentials (vcup,vcdn),
-c             derivatives of ec wrt rs (ecrs) &zta (eczta).
-c     output: correlation contribution (alfc) to the spin stiffness
-c.....-----------------------------------------------------------------
 C     .. Scalar Arguments ..
       IMPLICIT NONE
 

@@ -1,22 +1,27 @@
+  !-------------------------------------------------------------------------------
+  !> Summary: Correlation of PW91
+  !> Author: 
+  !> Category: KKRimp, xc-potential
+  !> Deprecated: False
+  !>
+  !> gga91 correlation
+  !> 
+  !> Input
+  !>   rs: seitz radius
+  !>   zta: relative spin polarization
+  !>   t: abs(grad d)/(d*2.*ks*gz)
+  !>   uu: (grad d)*grad(abs(grad d))/(d**2 * (2*ks*gz)**3)
+  !>   vv: (laplacian d)/(d * (2*ks*gz)**2)
+  !>   ww: (grad d)*(gradzta)/(d * (2*ks*gz)**2
+  !> Output
+  !>   h: nonlocal part of correlation energy per electron
+  !>   dvcup,-dn: nonlocal parts of correlation potentials.
+  !>
+  !> with ks=sqrt(4*kf/pai), gz=[(1+zta)**(2/3)+(1-zta)**(2/3)]/2, &
+  !> kf=cbrt(3*pai**2*d).
+  !-------------------------------------------------------------------------------
       SUBROUTINE CPW91(FK,SK,GZ,EC,ECRS,ECZTA,RS,ZTA,T,UU,VV,WW,H,DVCUP,
      +                 DVCDN)
-c.....-----------------------------------------------------------------
-c     gga91 correlation
-c.....-----------------------------------------------------------------
-c     input
-c           rs: seitz radius
-c         zta: relative spin polarization
-c            t: abs(grad d)/(d*2.*ks*gz)
-c           uu: (grad d)*grad(abs(grad d))/(d**2 * (2*ks*gz)**3)
-c           vv: (laplacian d)/(d * (2*ks*gz)**2)
-c           ww: (grad d)*(gradzta)/(d * (2*ks*gz)**2
-c      output
-c                  h: nonlocal part of correlation energy per electron
-c          dvcup,-dn: nonlocal parts of correlation potentials.
-
-c      with ks=sqrt(4*kf/pai), gz=[(1+zta)**(2/3)+(1-zta)**(2/3)]/2, &
-c           kf=cbrt(3*pai**2*d).
-c.....-----------------------------------------------------------------
 C     .. Scalar Arguments ..
       DOUBLE PRECISION DVCDN,DVCUP,EC,ECRS,ECZTA,FK,GZ,H,RS,SK,T,UU,VV,
      +                 WW,ZTA

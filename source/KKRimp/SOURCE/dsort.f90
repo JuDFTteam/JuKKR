@@ -1,19 +1,26 @@
+!-------------------------------------------------------------------------------
+!> Summary: Sort double precision array returning sorted index array
+!> Author: P. Zahn
+!> Date: April 96
+!> Sort double precision array returning sorted index array
+!-------------------------------------------------------------------------------
 MODULE MOD_DSORT
 CONTAINS
 
-! ************************************************************************
+      !-------------------------------------------------------------------------------
+      !> Summary: Sort double precision array returning sorted index array
+      !> Author: P. Zahn
+      !> Date: April 96
+      !> Category: KKRimp, numerical-tools
+      !> Deprecated: False
+      !> Sort double precision array returning sorted index array
+      !-------------------------------------------------------------------------------
       SUBROUTINE DSORT (W,IND,IMAX,POS)
-! ************************************************************************
-!     p.zahn, april 96
-!     W   is the original array returned unchanged
-!     IND is an array that holds the new positions 
-!     max number of ellements to be sorted
-!     pos the position where the first element is found
-! ------------------------------------------------------------------------
       IMPLICIT NONE
-      INTEGER           :: IMAX,POS
-      DOUBLE PRECISION  :: W(:)
-      INTEGER           :: IND(:)
+      INTEGER           :: IMAX         !! Number of elements to be sorted
+      INTEGER           :: POS          !! Position where the first element is found
+      DOUBLE PRECISION  :: W(:)         !! Original array returned unchanged
+      INTEGER           :: IND(:)       !! Array that holds the new positions
 
       INTEGER           :: I,II,J,JJ,K
       INTEGER,PARAMETER :: BOUND =1.0D-12

@@ -1,17 +1,19 @@
+  !-------------------------------------------------------------------------------
+  !> Summary: Generate an angular mesh and spherical harmonics at those mesh points. For an angular integration the weights are generated .
+  !> Author: R. Zeller, Phivos Mavropoulos
+  !> Date: February 1996, July 2007
+  !> Category: special-functions, radial-mesh, KKRimp
+  !> Deprecated: False 
+  !> Generate an angular mesh and spherical harmonics at those
+  !> mesh points. For an angular integration the weights are generated  
+  !>
+  !> New call to subr. ylmderiv for accurate derivatives of
+  !> spherical harmonics.
+  !-------------------------------------------------------------------------------
       SUBROUTINE SPHERE_GGA(LMAX,YR,WTYR,RIJ,IJD,LMMAXD,THET,YLM,
      +                      DYLMT1,DYLMT2,DYLMF1,DYLMF2,DYLMTF)
       USE MOD_YMY
       IMPLICIT NONE
-c-----------------------------------------------------------------------
-c     generate an angular mesh and spherical harmonics at those
-c     mesh points. For an angular integration the weights are ge-
-c     rated .
-c
-c     R. Zeller      Feb. 1996
-c     New call to subr. ylmderiv for accurate derivatives of
-c     spherical harmonics.
-c     Phivos Mavropoulos, July 2007.
-c-----------------------------------------------------------------------
 
 C     .. Scalar Arguments ..
       INTEGER IJD,LMAX,LMMAXD
@@ -90,83 +92,86 @@ c
 
       END SUBROUTINE
 
-c-----------------------------------------------------------------------
+
+  !-------------------------------------------------------------------------------
+  !> Summary: Generate an angular mesh and spherical harmonics at those mesh points. For an angular integration the weights are generated .
+  !> Author: Ph.Mavropoulos
+  !> Date: July 2007
+  !> Category: special-functions, numerical-tools, KKRimp
+  !> Deprecated: False 
+  !> Calculate the 1st and 2nd derivatives of real spherical harmonics
+  !> with respect to theta, fi.
+  !>
+  !> Use recursion relations for the assoc. Legendre functions P[l,m] to generate
+  !> the derivatives. These are (taken from Abramowitz and Stegun, 
+  !> Handbook of Mathematical Functions, chapt. 8.):
+  !>
+  !> P[l,m+1] = (x**2-1)**(-1/2) ( (l-m)*x*P[l,m] - (l+m)*P[l-1,m] ) (8.5.1)
+  !>
+  !> (x**2-1)*dP[l,m]/dx = (l+m)*(l-m+1)*(x**2-1)**(1/2) P[l,m-1] - m*x*P[l,m]  (8.5.2)
+  !>
+  !> (x**2-1)*dP[l,m]/dx = l*x*P[l,m] - (l+m)*P[l-1,m]           (8.5.4)
+  !>
+  !> where x=cos(th), (x**2-1)**(1/2) = -sin(th), d/dth = -sin(th) d/dx.
+  !>
+  !> Adding (8.5.2)+(8.5.4) and using (8.5.1) results in:
+  !>
+  !> dP[l,m](cos(th)) / dth = (1/2) * ( -(l+m)*(l-m+1)*P[l,m-1] + P[l,m+1] )   (A)
+  !>
+  !>
+  !> It is implied that P[l,m]=0 if m>l or m<-l. Also, the term (x**2-1)**(1/2)
+  !> is ambiguous for real x, 0<x<1; here it is interpreted as 
+  !> (x**2-1)**(1/2)=-sin(th), but (x**2-1)**(-1/2)=+1/sin(th) (in 8.5.1), 
+  !> otherwise the result (A) (which is cross-checked and correct) does not follow.
+  !>
+  !> For the 2nd derivative apply (A) twice. Result:
+  !>
+  !> ddP[l,m](cos(th))/dth/dth = (1/4) * 
+  !>                         (    (l+m)*(l-m+1)*(l+m-1)*(l-m+2) * P[l,m-2] 
+  !>                           - ( (l-m)*(l+m+1)+(l+m)*(l-m+1) )* P[l,m]   
+  !>                           +                                  P[l,m+2]  )   (B)
+  !>
+  !> The fi-derivatives act on cos(fi),sin(fi) and are trivial.
+  !>
+  !> For the associated Legendre functions use the recursion formulas:
+  !>
+  !> (l-m+1)*P[l+1,m] = (2l+1)*cos(th)*P[l,m] - (l+m)*P[l-1,m]   (8.5.3)
+  !>
+  !> P[l+1,m] = P[l-1,m] - (2*l+1)*sin(th)*P[l,m-1]              (8.5.5)
+  !>
+  !> ( with x=cos(th) ).
+  !>
+  !> Recursion algorithm for the calculation of P[l,m] and calculation of Ylm 
+  !> taken over from subr. ymy of KKR program 
+  !> (implemented there by M. Weinert, B. Drittler).
+  !>
+  !> For m<0, use P[l,-m] = P[l,m] (l-m)!/(l+m)!     (C)
+  !>
+  !> Taking into account the lm-prefactors of the spherical harmonics, 
+  !> we construct and use the functions
+  !> 
+  !> Q[l,m] = sqrt((2*l+1)/(4*pi)) * sqrt((l-m)!/(l+m)!) * P[l,m]
+  !>
+  !> whence (A) and (B) become
+  !>
+  !> dQ[l,m]/dth = (1/2) *
+  !>     ( -sqrt((l+m)*(l-m+1))*Q[l,m-1] + sqrt((l+m+1)*(l-m))*Q[l,m+1] )   (A1)
+  !>
+  !> ddQ[l,m]/dth/dth = (1/4) *
+  !>     (       sqrt((l+m)*(l+m-1)*(l-m+1)*(l-m+2)) * Q[l,m-2]
+  !>         +   ((l-m)*(l+m+1)+(l+m)*(l-m+1))       * Q[l,m]
+  !>         +   sqrt((l-m)*(l-m-1)*(l+m+1)*(l+m+2)) * Q[l,m+2]      )      (A2)
+  !>
+  !>
+  !> Note on sign convension:
+  !>
+  !> For the needs of GGA PW91 as implemented here, ylm and derivatives
+  !> come with a different sign convention compared to the usual in the
+  !> program: sin(fi)**m --> (-1)**m * sin(fi)**m. Thus some signs change.
+  !-------------------------------------------------------------------------------
       subroutine derivylm(
      > v1,v2,v3,lmax,
      < Rabs,YLM,dYdth,dYdfi,d2Ydth2,d2Ydfi2,d2Ydthdfi)
-c Calculate the 1st and 2nd derivatives of real spherical harmonics
-c with respect to theta, fi.
-c
-c Use recursion relations for the assoc. Legendre functions P[l,m] to generate
-c the derivatives. These are (taken from Abramowitz and Stegun, 
-c Handbook of Mathematical Functions, chapt. 8.):
-c
-c P[l,m+1] = (x**2-1)**(-1/2) ( (l-m)*x*P[l,m] - (l+m)*P[l-1,m] ) (8.5.1)
-c
-c (x**2-1)*dP[l,m]/dx = (l+m)*(l-m+1)*(x**2-1)**(1/2) P[l,m-1] - m*x*P[l,m]  (8.5.2)
-c
-c (x**2-1)*dP[l,m]/dx = l*x*P[l,m] - (l+m)*P[l-1,m]           (8.5.4)
-c
-c where x=cos(th), (x**2-1)**(1/2) = -sin(th), d/dth = -sin(th) d/dx.
-c
-c Adding (8.5.2)+(8.5.4) and using (8.5.1) results in:
-c
-c dP[l,m](cos(th)) / dth = (1/2) * ( -(l+m)*(l-m+1)*P[l,m-1] + P[l,m+1] )   (A)
-c
-c
-c It is implied that P[l,m]=0 if m>l or m<-l. Also, the term (x**2-1)**(1/2)
-c is ambiguous for real x, 0<x<1; here it is interpreted as 
-c (x**2-1)**(1/2)=-sin(th), but (x**2-1)**(-1/2)=+1/sin(th) (in 8.5.1), 
-c otherwise the result (A) (which is cross-checked and correct) does not follow.
-c
-c For the 2nd derivative apply (A) twice. Result:
-c
-c ddP[l,m](cos(th))/dth/dth = (1/4) * 
-c                         (    (l+m)*(l-m+1)*(l+m-1)*(l-m+2) * P[l,m-2] 
-c                           - ( (l-m)*(l+m+1)+(l+m)*(l-m+1) )* P[l,m]   
-c                           +                                  P[l,m+2]  )   (B)
-c
-c The fi-derivatives act on cos(fi),sin(fi) and are trivial.
-c
-c For the associated Legendre functions use the recursion formulas:
-c
-c (l-m+1)*P[l+1,m] = (2l+1)*cos(th)*P[l,m] - (l+m)*P[l-1,m]   (8.5.3)
-c
-c P[l+1,m] = P[l-1,m] - (2*l+1)*sin(th)*P[l,m-1]              (8.5.5)
-c
-c ( with x=cos(th) ).
-c
-c Recursion algorithm for the calculation of P[l,m] and calculation of Ylm 
-c taken over from subr. ymy of KKR program 
-c (implemented there by M. Weinert, B. Drittler).
-c
-c For m<0, use P[l,-m] = P[l,m] (l-m)!/(l+m)!     (C)
-c
-c Taking into account the lm-prefactors of the spherical harmonics, 
-c we construct and use the functions
-c 
-c Q[l,m] = sqrt((2*l+1)/(4*pi)) * sqrt((l-m)!/(l+m)!) * P[l,m]
-c
-c whence (A) and (B) become
-c
-c dQ[l,m]/dth = (1/2) *
-c     ( -sqrt((l+m)*(l-m+1))*Q[l,m-1] + sqrt((l+m+1)*(l-m))*Q[l,m+1] )   (A1)
-c
-c ddQ[l,m]/dth/dth = (1/4) *
-c     (       sqrt((l+m)*(l+m-1)*(l-m+1)*(l-m+2)) * Q[l,m-2]
-c         +   ((l-m)*(l+m+1)+(l+m)*(l-m+1))       * Q[l,m]
-c         +   sqrt((l-m)*(l-m-1)*(l+m+1)*(l+m+2)) * Q[l,m+2]      )      (A2)
-c
-c
-c Note on sign convension:
-c
-c For the needs of GGA PW91 as implemented here, ylm and derivatives
-c come with a different sign convention compared to the usual in the
-c program: sin(fi)**m --> (-1)**m * sin(fi)**m. Thus some signs change.
-
-c
-c Ph.Mavropoulos, Juelich, July 2007
-c
       implicit none
 c Parameters:
       integer lmaxd,l4maxd

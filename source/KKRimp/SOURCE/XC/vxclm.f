@@ -1,44 +1,36 @@
+  !-------------------------------------------------------------------------------
+  !> Summary: Add the exchange-correlation-potential to the given potential and if total energies should be calculated (`kte=1`) the exchange-correlation-energies are calculated.
+  !> Author: B. Drittler
+  !> Date: June 1987
+  !> Category: xc-potential, KKRimp
+  !> Deprecated: False 
+  !> Add the exchange-correlation-potential to the given potential and if total 
+  !> energies should be calculated (`kte=1`) the exchange-correlation-energies are calculated.
+  !> Use as input the charge density times \(r^2\) (`rho2ns(...,1)`) and in the 
+  !> spin-polarized case (`nspin=2`) the spin density times \(r^2\) (`rho2ns(...,2)`) .
+  !> The density times \(4 \pi\) is generated at an angular mesh. tThe exchange-correlation 
+  !> potential and the exchange-correlation energy are calculated at those mesh 
+  !> points with a subroutine. In the paramagnetic case the _spin-density_ is set 
+  !> equal zero. After that the exchange-correlation potential and in the case of
+  !> total energies (kte=1) the exchange-correlation energy are expanded into spherical 
+  !> harmonics. The ex.-cor. potential is added to the given potential.
+  !> The expansion into spherical harmonics uses the orthogonality of these harmonics.
+  !> Therefore a gauss-legendre integration for \(\theta\) and a gauss-tschebyscheff 
+  !> integration for \(\phi\) is used .
+  !> All needed values for the angular mesh and angular integration are generate in 
+  !> the subroutine sphere. The ex.-cor. potential is extrapolated to the origin only
+  !> for the lm=1 value .
+  !-------------------------------------------------------------------------------
+  !> @note 
+  !> - Modified for shape functions B. Drittler oct. 1989
+  !> - Simplified and modified for Paragon X/PS R. Zeller Nov. 1993
+  !> - Cor error 23/6/1996
+  !> @endnote
+  !-------------------------------------------------------------------------------
       SUBROUTINE VXCLM(EXC,KTE,KXC,LMAX,NSPIN,IATYP,RHO2NS,V,R,DRDI,
      +                 IRWS,IRCUT,IPAN,KSHAPE,GSH,ILM,IMAXSH,
      +                 IFUNM,THETAS,YR,WTYR,IJEND,LMSP,
      +                 LMPOTD,LPOTD,LMXSPD,IRMD,NFUND,IRID,NGSHD,IPAND)
-
-c-----------------------------------------------------------------------
-cBauer:
-change so inc.p is not needed
-c-----------------------------------------------------------------------
-c     add the exchange-correlation-potential to the given potential
-c     and if total energies should be calculated (kte=1) the exchange-
-c     correlation-energies are calculated .
-c     use as input the charge density times r**2 (rho2ns(...,1)) and
-c     in the spin-polarized case (nspin=2) the spin density times r**2
-c     (rho2ns(...,2)) .
-c     the density times 4 pi is generated at an angular mesh .
-c     the exchange-correlation potential and the exchange-correlation
-c     energy are calculated at those mesh points with a subroutine .
-c     in the paramagnetic case the "spin-density" is set equal zero .
-c     after that the exchange-correlation potential and in the case of
-c     total energies (kte=1) the exchange-correlation energy are
-c     expanded into spherical harmonics .
-c     the ex.-cor. potential is added to the given potential .
-c     the expansion into spherical harmonics uses the orthogonality
-c     of these harmonics . - therefore a gauss-legendre integration
-c     for "theta" and a gauss-tschebyscheff integration for "phi"
-c     is used .
-c     all needed values for the angular mesh and angular integration
-c     are generate in the subroutine sphere .
-c
-c     the ex.-cor. potential is extrapolated to the origin only
-c     for the lm=1 value .
-c
-c                               b.drittler   june 1987
-c
-c     modified for shape functions
-c                                       b. drittler oct. 1989
-c     simplified and modified for Paragon X/PS
-c                                       R. Zeller Nov. 1993
-c                            cor error 23/6/1996
-c-----------------------------------------------------------------------
        USE MOD_SIMP3
        USE MOD_SIMPK
        IMPLICIT NONE

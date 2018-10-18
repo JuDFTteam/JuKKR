@@ -1,7 +1,13 @@
+  !-------------------------------------------------------------------------------
+  !> Summary: gradient of rl with rl defined by charge density=sum(rl*ylm)
+  !> Author: 
+  !> Category: xc-potential, KKRimp
+  !> Deprecated: False 
+  !> gradient of rl with rl defined by charge density=sum(rl*ylm)
+  !------------------------------------------------------------------------------- 
       SUBROUTINE GRADRL(NSPIN,MESH,L1MAX,DX,RHOL,RV,DRDI,IPAN,IPAND,
      +                  IRCUT,DRRL,DDRRL,DRRUL,DDRRUL,IRMD,LMPOTD)
 c.....------------------------------------------------------------------
-c     gradient of rl with rl defined by charge density=sum(rl*ylm).
 c     mesh,l1max: max of mesh and l+1.
 c     IRMD,LMPOTD: maxima of corresponding dimension parameters.
 c     drrl=d(rl)/dr, ddrrl=d(drrl)/dr, drrul=d(rl-up)/dr,

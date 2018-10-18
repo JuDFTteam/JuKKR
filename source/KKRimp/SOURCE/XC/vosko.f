@@ -1,18 +1,19 @@
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculate the spin-polarized exchange-correlation potential and the spin-polarized exchange-correlation energy from ceperley-alder ( parametrization of vosko, wilk and nusair ) ( m. manninen )
+  !> Author: B. Drittler
+  !> Date: June 1987
+  !> Category: xc-potential, KKRimp
+  !> Deprecated: False 
+  !> Calculate the spin-polarized exchange-correlation potential and the spin-polarized 
+  !> exchange-correlation energy from ceperley-alder 
+  !> ( parametrization of vosko, wilk and nusair ) ( m. manninen )
+  !> Use as input the density generated on an angular mesh (see subroutine `vxclm`). 
+  !> `fpirho(.,1)` contains the charge density times \(4\pi\) and `fpirho(.,2)` the 
+  !> spin density times \(4\pi\). Then the ex.-cor. potential and the ex.-cor. energy on those
+  !> mesh points is calculated .
+  !> The spin-down potential is stored in `vxc(.,1)`.
+  !-------------------------------------------------------------------------------
       SUBROUTINE VOSKO(EXC,FPIRHO,VXC,IJEND,IJD)
-c-----------------------------------------------------------------------
-c     calculate the spin-polarized exchange-correlation potential
-c     and the spin-polarized exchange-correlation energy from
-c     ceperley-alder ( parametrization of vosko, wilk and nusair )
-c                                            ( m. manninen )
-c     use as input the density generated on an angular mesh (see
-c     subroutine vxclm) . fpirho(.,1) contains the charge density
-c     times 4 pi and fpirho(.,2) the spin density times 4 pi .
-c     then the ex.-cor. potential and the ex.-cor. energy on those
-c     mesh points is calculated .
-c     the spin-down potential is stored in vxc(.,1) .
-c
-c                                  b.drittler    june 1987
-c-----------------------------------------------------------------------
 C     ..
 C     .. Scalar Arguments ..
       INTEGER IJEND,IJD

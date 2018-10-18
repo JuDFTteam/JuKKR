@@ -1,7 +1,15 @@
+  !-------------------------------------------------------------------------------
+  !> Summary: Setting the first `N` values of a `real (kind=dp)` array `A` to zero
+  !> Author: 
+  !> Category: numerical-tools, KKRimp
+  !> Deprecated: False
+  !> Setting the first `N` values of a `real (kind=dp)` array `A` to zero
+  !-------------------------------------------------------------------------------
+  !> @note
+  !> May be substituted by A(1:N) = 0.d0
+  !> @endnote
+  !-------------------------------------------------------------------------------
       SUBROUTINE RINIT(N,A)
-C **********************************************************************
-C * Setting the first N values of a double precision array A to zero   *
-C **********************************************************************
 C     ..
 C     .. Arguments ..
       INTEGER N

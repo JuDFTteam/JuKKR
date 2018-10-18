@@ -1,5 +1,21 @@
+      !-------------------------------------------------------------------------------
+      !> Summary: Calculates fore on nucleaus with Hellmann-Feynmann theorem
+      !> Author: 
+      !>
+      !> Calculates the force on nucleus m with Hellmann - Feynman theorem
+      !> from a given non spherical charge density at the nucleus site r
+      !-------------------------------------------------------------------------------
       MODULE MOD_FORCEH
       CONTAINS
+      !-------------------------------------------------------------------------------
+      !> Summary: Calculates fore on nucleaus with Hellmann-Feynmann theorem
+      !> Author: 
+      !> Category: KKRimp, physical-observables
+      !> Deprecated: False 
+      !>
+      !> Calculates the force on nucleus m with Hellmann - Feynman theorem
+      !> from a given non spherical charge density at the nucleus site r
+      !-------------------------------------------------------------------------------
       SUBROUTINE FORCEH(CMOM,FLMH,LMAX,LMPOTD,NSPIN,NATOM,
      +                  CELL,DENSITY,VPOT,
      +                  IRMD, ZATOM,INS) !,NCORE,IRWS,Z)
@@ -8,12 +24,6 @@
       USE MOD_SIMP3
 
         IMPLICIT NONE
-c-----------------------------------------------------------------------
-c     calculates the force on nucleus m with hellmann - feynman theorem
-c     from a given non spherical charge density at the nucleus site r
-c
- 
-c-----------------------------------------------------------------------
 C     .. Parameters ..
 !       include 'inc.p'
 !       INTEGER LMPOTD
