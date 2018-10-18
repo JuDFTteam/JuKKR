@@ -53,12 +53,12 @@ C     .. Array Arguments ..
       complex(kind=dp), intent(out) :: HAMF(IRMD,0:LMAXATOM)
       complex(kind=dp), intent(out) :: MASS(IRMD)
       complex(kind=dp), intent(out) :: PZ(IRMD,0:LMAXATOM)
-      complex(kind=dp), intent(in)  :: DROR(IRMD)
-      complex(kind=dp), intent(in)  :: R(IRMD)
-      complex(kind=dp), intent(in)  :: S(0:LMAXATOM)
-      complex(kind=dp), intent(in)  :: VM2Z(IRMD)
-      complex(kind=dp), intent(in)  :: CUTOFF(IRMD)
-      integer, intent(in)           :: IRCUT(0:IPAND)
+      real(kind=dp), intent(in) :: DROR(IRMD)
+      real(kind=dp), intent(in) :: R(IRMD)
+      real(kind=dp), intent(in) :: S(0:LMAXATOM)
+      real(kind=dp), intent(in) :: VM2Z(IRMD)
+      real(kind=dp), intent(in) :: CUTOFF(IRMD)
+      integer, intent(in) :: IRCUT(0:IPAND)
 C     ..
 C     .. Local Scalars ..
       DOUBLE COMPLEX DFD0,DPD0,FIP0,FIP1,HAMF1,K1F,K1P,K2F,K2P,K3F,K3P,
