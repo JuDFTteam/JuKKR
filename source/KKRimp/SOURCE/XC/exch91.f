@@ -15,7 +15,7 @@
         SUBROUTINE EXCH91(D,S,U,V,EXL,EXG,VXL,VXG)
 C     .. Scalar Arguments ..
       DOUBLE PRECISION D         !! Density
-      DOUBLE PRECISION D,EXG,EXL,S,U,V,VXG,VXL
+      DOUBLE PRECISION EXG,EXL,S,U,V,VXG,VXL
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION A,A1,A2,A3,A4,AX,B1,EX,F,FAC,FS,FSS,P0,P1,P10,
