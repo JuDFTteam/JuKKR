@@ -1,5 +1,12 @@
+!------------------------------------------------------------------------------------
+!> Summary: Wrapper for the definition of the MPI helper functions
+!> Author: 
+!> Wrapper for the definition of the MPI helper functions
+!------------------------------------------------------------------------------------
+!> @note ruess: taken from Pkkr_sidebranch2D_2014_12_16, created by Bernd Zimmermann
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_mympi
-  ! ruess: taken from Pkkr_sidebranch2D_2014_12_16, created by Bernd Zimmermann
 
   use :: mod_datatypes, only: dp
 
@@ -12,14 +19,21 @@ module mod_mympi
     check_communication_pattern
 #endif
 
-  integer, save :: myrank = -1
-  integer, save :: nranks = -1
-  integer, save :: master = -1
-  logical, save :: mpiatom = .false.
+  integer, save :: myrank   = -1
+  integer, save :: nranks   = -1
+  integer, save :: master   = -1
+  logical, save :: mpiatom  = .false.
   integer, save :: mpiadapt = -1
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Initialization of the MPI process
+  !> Author: 
+  !> Category: communication, KKRhost 
+  !> Deprecated: False
+  !> Initialization of the MPI process
+  !-------------------------------------------------------------------------------
   subroutine mympi_init()
 
 #ifdef CPP_MPI
@@ -41,15 +55,23 @@ contains
   end subroutine mympi_init
 
 #ifdef CPP_MPI
-  subroutine distribute_linear_on_tasks(nranks, myrank, master, ntot, ntot_pt, ioff_pt, output, fill_rest)
-    ! distributes 'ntot' points on 'nranks' tasks and returns the number of points per task, ntot_pT, and the offsets of the tasks, ioff_pT.
+  !-------------------------------------------------------------------------------
+  !> Summary: Distributes 'ntot' points on 'nranks' tasks and returns the number of points per task, `ntot_pT`, and the offsets of the tasks, `ioff_pT`.
+  !> Author: 
+  !> Category: communication, KKRhost 
+  !> Deprecated: False
+  !> Distributes 'ntot' points on 'nranks' tasks and returns the number of points 
+  !> per task, `ntot_pT`, and the offsets of the tasks, `ioff_pT`.
+  !-------------------------------------------------------------------------------
+  subroutine distribute_linear_on_tasks(nranks,myrank,master,ntot,ntot_pt,ioff_pt,  &
+    output,fill_rest)
 
     implicit none
 
     integer, intent (in) :: nranks, myrank, master, ntot
     logical, intent (in) :: output
     logical, intent (in), optional :: fill_rest
-    integer, intent (out) :: ntot_pt(0:nranks-1), ioff_pt(0:nranks-1)
+    integer, dimension(0:nranks-1), intent (out) :: ntot_pt, ioff_pt
 
     integer :: irest, irank
 
@@ -95,6 +117,13 @@ contains
 
 
 #ifdef CPP_MPI
+  !-------------------------------------------------------------------------------
+  !> Summary: Find dimensions to create cartesian communicator
+  !> Author: 
+  !> Category: communication, KKRhost 
+  !> Deprecated: False
+  !> Find dimensions to create cartesian communicator
+  !-------------------------------------------------------------------------------
   subroutine find_dims_2d(nranks, ntot1, ntot2, dims, mpiatom)
     ! find dimensions to create cartesian communicator
     ! input:  nranks, ntot1 is N_atom, ntot2 is N_E
@@ -104,7 +133,7 @@ contains
     implicit none
     integer, intent (in) :: nranks, ntot1, ntot2
     logical, intent (in) :: mpiatom
-    integer, intent (out) :: dims(2)
+    integer, dimension(2), intent (out) :: dims
     integer :: ierr
 
     if (.not. mpiatom) then
@@ -137,20 +166,33 @@ contains
 
 
 #ifdef CPP_MPI
-  subroutine create_newcomms_group_ie(master, nranks, myrank, nat, ne, nkmesh, kmesh, mympi_comm_ie, myrank_ie, nranks_ie, mympi_comm_at, myrank_at, nranks_at, myrank_atcomm, &
-    nranks_atcomm)
-    ! takes vector kmesh with mesh/timing information and finds number of rest procs that are devided in fractions given in ktake for optimal division of work
+  !-------------------------------------------------------------------------------
+  !> Summary: Takes vector `kmesh` with mesh/timing information and finds number of rest procs that are devided in fractions given in ktake for optimal division of work
+  !> Author: 
+  !> Category: communication, KKRhost 
+  !> Deprecated: False
+  !> Takes vector `kmesh` with mesh/timing information and finds number of rest 
+  !> procs that are devided in fractions given in ktake for optimal division of work
+  !-------------------------------------------------------------------------------
+  subroutine create_newcomms_group_ie(master,nranks,myrank,nat,ne,nkmesh,kmesh,     &
+    mympi_comm_ie,myrank_ie,nranks_ie,mympi_comm_at,myrank_at,nranks_at,            &
+    myrank_atcomm,nranks_atcomm)
 
     use :: mpi
     implicit none
 
     integer, intent (in) :: master, nranks, myrank, ne, nat, nkmesh
-    integer, intent (in) :: kmesh(nkmesh)
-    integer, intent (out) :: mympi_comm_ie, mympi_comm_at, nranks_atcomm, nranks_at, nranks_ie, myrank_ie, myrank_at, myrank_atcomm
+    integer, dimension(nkmesh), intent (in) :: kmesh
+    integer, intent (out) :: mympi_comm_ie, mympi_comm_at, nranks_atcomm, nranks_at
+    integer, intent (out) :: nranks_ie, myrank_ie, myrank_at, myrank_atcomm
 
-    integer :: rest, k(nkmesh-1), ktake(nkmesh), myg, ie, iat, ierr, ik, i1, i2, i3
-    real (kind=dp) :: f(nkmesh-1), q, qmin
-    integer, allocatable :: groups(:, :), mygroup(:)
+    integer :: rest,myg, ie, iat, ierr, ik, i1, i2, i3
+    integer, dimension(nkmesh-1)  :: k
+    integer, dimension(nkmesh)    :: ktake
+    real (kind=dp) :: q, qmin
+    real (kind=dp), dimension(nkmesh-1) :: f
+    integer, dimension(:), allocatable :: mygroup
+    integer, dimension(:,:), allocatable :: groups
     integer :: mympi_group_ie, mympi_group_world, mympi_comm_grid
 
     rest = 0
@@ -436,24 +478,59 @@ contains
 #endif
 
 #ifdef CPP_MPI
-  subroutine mympi_main1c_comm(irmd, lmpotd, natypd, lmaxd, lmaxd1, lmmaxd, npotd, ielast, mmaxd, idoldau, natyp, krel, lmomvec, nmvecmax, nqdos, rho2ns, r2nef, espv, den, denlm, &
-    denmatc, denef, denefat, rhoorb, muorb, mvevi, mvevil, mvevief, mympi_comm)
+  !-------------------------------------------------------------------------------
+  !> Summary: MPI communication for the `main1c` subroutine
+  !> Author: 
+  !> Category: communication, KKRhost 
+  !> Deprecated: False
+  !> MPI communication for the `main1c` subroutine
+  !-------------------------------------------------------------------------------
+  subroutine mympi_main1c_comm(irmd,lmpotd,natypd,lmaxd,lmaxd1,lmmaxd,npotd,ielast, &
+    mmaxd,idoldau,natyp,krel,lmomvec,nmvecmax,nqdos,rho2ns,r2nef,espv,den,denlm,    &
+    denmatc,denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief,mympi_comm)
 
     use :: mpi
     implicit none
-    integer, intent (in) :: irmd, lmpotd, natypd, lmaxd, lmmaxd, ielast, mmaxd, idoldau, natyp, krel, nmvecmax, npotd, lmaxd1, nqdos
-    logical, intent (in) :: lmomvec
-    integer, intent (in) :: mympi_comm
-    real (kind=dp), intent (inout) :: rho2ns(irmd, lmpotd, natypd, 2), r2nef(irmd, lmpotd, natypd, 2), espv(0:lmaxd1, npotd), denef, denefat(natypd), &
-      rhoorb(irmd*krel+(1-krel), natypd), muorb(0:lmaxd1+1, 3, natypd)
-    complex (kind=dp), intent (inout) :: den(0:lmaxd1, ielast, npotd, nqdos), denlm(lmmaxd, ielast, npotd, nqdos), denmatc(mmaxd, mmaxd, npotd), mvevi(natypd, 3, nmvecmax), &
-      mvevil(0:lmaxd, natypd, 3, nmvecmax), mvevief(natypd, 3, nmvecmax)
 
+    integer, intent (in) :: krel !! Switch for non- (or scalar-) relativistic/relativistic (Dirac) program (0/1). Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
+    integer, intent (in) :: irmd    !! Maximum number of radial points
+    integer, intent (in) :: npotd   !! (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
+    integer, intent (in) :: nqdos
+    integer, intent (in) :: natyp   !! Number of kinds of atoms in unit cell
+    integer, intent (in) :: mmaxd
+    integer, intent (in) :: lmaxd   !! Maximum l component in wave function expansion
+    integer, intent (in) :: lmpotd  !! (lpot+1)**2
+    integer, intent (in) :: natypd  !! Number of kinds of atoms in unit cell
+    integer, intent (in) :: lmmaxd  !! (KREL+KORBIT+1)*(LMAX+1)**2
+    integer, intent (in) :: ielast
+    integer, intent (in) :: lmaxd1
+    integer, intent (in) :: idoldau !! flag to perform LDA+U
+    logical, intent (in) :: lmomvec
+    integer, intent (in) :: nmvecmax
+    integer, intent (in) :: mympi_comm
+    ! .. In/Out variables
+    real (kind=dp), intent (inout) :: denef
+    real (kind=dp), dimension(natypd), intent (inout) :: denefat
+    real (kind=dp), dimension(0:lmaxd1, npotd), intent (inout)            :: espv
+    real (kind=dp), dimension(irmd*krel+(1-krel), natypd), intent (inout) :: rhoorb !! orbital density
+    real (kind=dp), dimension(0:lmaxd1+1, 3, natypd), intent (inout)  :: muorb    !! orbital magnetic moment
+    real (kind=dp), dimension(irmd, lmpotd, natypd, 2), intent (inout) :: r2nef   !! rho at FERMI energy
+    real (kind=dp), dimension(irmd, lmpotd, natypd, 2), intent (inout) :: rho2ns  !! radial density
+    complex (kind=dp), dimension(natypd, 3, nmvecmax), intent (inout) :: mvevi
+    complex (kind=dp), dimension(natypd, 3, nmvecmax), intent (inout) :: mvevief
+    complex (kind=dp), dimension(mmaxd, mmaxd, npotd), intent (inout) :: denmatc
+    complex (kind=dp), dimension(0:lmaxd1, ielast, npotd, nqdos), intent (inout)  :: den
+    complex (kind=dp), dimension(lmmaxd, ielast, npotd, nqdos), intent (inout)    :: denlm
+    complex (kind=dp), dimension(0:lmaxd, natypd, 3, nmvecmax), intent (inout)    :: mvevil
+    ! .. Local variables
     integer :: idim, ierr          ! , myrank_comm
     integer, parameter :: master = 0
-    real (kind=dp), allocatable :: work1(:), work2(:, :), work3(:, :, :), work4(:, :, :, :)
-    complex (kind=dp), allocatable :: work3c(:, :, :), work4c(:, :, :, :)
-
+    real (kind=dp), dimension(:), allocatable :: work1
+    real (kind=dp), dimension(:, :), allocatable :: work2
+    real (kind=dp), dimension(:, :, :), allocatable :: work3
+    real (kind=dp), dimension(:, :, :, :), allocatable :: work4
+    complex (kind=dp), dimension(:,:,:), allocatable :: work3c
+    complex (kind=dp), dimension(:,:,:,:), allocatable :: work4c
 
     allocate (work4(irmd,lmpotd,natypd,2), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
@@ -462,7 +539,6 @@ contains
     call mpi_allreduce(rho2ns, work4, idim, mpi_double_precision, mpi_sum, mympi_comm, ierr)
     call dcopy(idim, work4, 1, rho2ns, 1)
     deallocate (work4)
-
 
     allocate (work4(irmd,lmpotd,natypd,2), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
@@ -571,21 +647,47 @@ contains
 #endif
 
 #ifdef CPP_MPI
-  subroutine mympi_main1c_comm_newsosol(irmdnew, lmpotd, lmaxd, lmaxd1, lmmaxd, lmmaxso, ielast, nqdos, den, denlm, gflle, rho2nsc, r2nefc, rho2int, espv, muorb, denorbmom, &
-    denorbmomsp, denorbmomlm, denorbmomns, mympi_comm)
+  !-------------------------------------------------------------------------------
+  !> Summary: MPI communication for the new solver in the `main1c` subroutine 
+  !> Author: 
+  !> Category: communication, solver, KKRhost 
+  !> Deprecated: False
+  !> MPI communication for the new solver in the `main1c` subroutine 
+  !-------------------------------------------------------------------------------
+  subroutine mympi_main1c_comm_newsosol(irmdnew,lmpotd,lmaxd,lmaxd1,lmmaxd,lmmaxso, &
+    ielast,nqdos,den,denlm,gflle,rho2nsc,r2nefc,rho2int,espv,muorb,denorbmom,       &
+    denorbmomsp,denorbmomlm,denorbmomns,mympi_comm)
 
     use :: mpi
     implicit none
-    integer, intent (in) :: irmdnew, lmpotd, lmaxd, lmaxd1, lmmaxd, lmmaxso, ielast, nqdos
+    ! .. Input variables
+    integer, intent (in) :: nqdos
+    integer, intent (in) :: lmaxd   !! Maximum l component in wave function expansion
+    integer, intent (in) :: lmpotd  !! (lpot+1)**2
+    integer, intent (in) :: lmmaxd  !! (KREL+KORBIT+1)*(LMAX+1)**2
+    integer, intent (in) :: ielast
+    integer, intent (in) :: lmaxd1
+    integer, intent (in) :: irmdnew
+    integer, intent (in) :: lmmaxso !! lmmaxd
     integer, intent (in) :: mympi_comm
-    complex (kind=dp), intent (inout) :: r2nefc(irmdnew, lmpotd, 4), rho2nsc(irmdnew, lmpotd, 4), den(0:lmaxd1, ielast, nqdos, 2), denlm(lmmaxd, ielast, nqdos, 2), rho2int(4), &
-      gflle(lmmaxso, lmmaxso, ielast, nqdos)
-    real (kind=dp), intent (inout) :: espv(0:lmaxd1, 2), muorb(0:lmaxd1+1, 3), denorbmom(3), denorbmomsp(2, 4), denorbmomlm(0:lmaxd, 3), denorbmomns(3)
-
+    ! .. In/Out variables
+    complex (kind=dp), dimension(4), intent (inout) :: rho2int
+    complex (kind=dp), dimension(irmdnew, lmpotd, 4), intent (inout) :: r2nefc
+    complex (kind=dp), dimension(irmdnew, lmpotd, 4), intent (inout) :: rho2nsc
+    complex (kind=dp), dimension(0:lmaxd1, ielast, nqdos, 2), intent (inout) :: den
+    complex (kind=dp), dimension(lmmaxd, ielast, nqdos, 2), intent (inout) :: denlm
+    complex (kind=dp), dimension(lmmaxso, lmmaxso, ielast, nqdos), intent (inout) :: gflle
+    real (kind=dp), dimension(3), intent (inout) :: denorbmom
+    real (kind=dp), dimension(3), intent (inout) :: denorbmomns
+    real (kind=dp), dimension(2, 4), intent (inout) :: denorbmomsp
+    real (kind=dp), dimension(0:lmaxd1, 2), intent (inout) :: espv
+    real (kind=dp), dimension(0:lmaxd1+1, 3), intent (inout) :: muorb !! orbital magnetic moment
+    real (kind=dp), dimension(0:lmaxd, 3), intent (inout) :: denorbmomlm
+    
+    ! .. Local variables
     integer :: ierr, idim
-    real (kind=dp), allocatable :: work(:, :, :, :)
-    complex (kind=dp), allocatable :: workc(:, :, :, :)
-
+    real (kind=dp), dimension(:, :, :, :), allocatable :: work
+    complex (kind=dp), dimension(:, :, :, :), allocatable :: workc
 
     ! all with reduce instead of allreduce:
     ! complex (kind=dp) arrays
@@ -696,21 +798,47 @@ contains
 #endif
 
 #ifdef CPP_MPI
-  subroutine mympi_main1c_comm_newsosol2(lmaxd1, lmmaxd, ielast, nqdos, npotd, natypd, lmpotd, irmd, mmaxd, den, denlm, muorb, espv, r2nef, rho2ns, denefat, denef, denmatn, &
-    angles_new, mympi_comm)
+  !-------------------------------------------------------------------------------
+  !> Summary: MPI communication for the new solver in the `main1c` subroutine 
+  !> Author: 
+  !> Category: communication, solver, KKRhost 
+  !> Deprecated: False
+  !> MPI communication for the new solver in the `main1c` subroutine 
+  !-------------------------------------------------------------------------------
+  subroutine mympi_main1c_comm_newsosol2(lmaxd1,lmmaxd,ielast,nqdos,npotd,natypd,   &
+    lmpotd,irmd,mmaxd,den,denlm,muorb,espv,r2nef,rho2ns,denefat,denef,denmatn,      &
+    angles_new,mympi_comm)
 
     use :: mpi
     implicit none
-    integer, intent (in) :: lmaxd1, ielast, nqdos, npotd, natypd, lmpotd, irmd, lmmaxd, mmaxd
+
+
+    integer, intent (in) :: irmd    !! Maximum number of radial points
+    integer, intent (in) :: npotd   !! (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
+    integer, intent (in) :: nqdos
+    integer, intent (in) :: mmaxd
+    integer, intent (in) :: lmpotd  !! (lpot+1)**2
+    integer, intent (in) :: natypd  !! Number of kinds of atoms in unit cell
+    integer, intent (in) :: lmmaxd  !! (KREL+KORBIT+1)*(LMAX+1)**2
+    integer, intent (in) :: ielast
+    integer, intent (in) :: lmaxd1
     integer, intent (in) :: mympi_comm
-    complex (kind=dp), intent (inout) :: den(0:lmaxd1, ielast, nqdos, npotd), denlm(lmmaxd, ielast, nqdos, npotd), denmatn(mmaxd, mmaxd, 2, 2, natypd)
-    real (kind=dp), intent (inout) :: muorb(0:lmaxd1+1, 3, natypd), espv(0:lmaxd1, npotd), r2nef(irmd, lmpotd, natypd, 2), rho2ns(irmd, lmpotd, natypd, 2), denefat(natypd), denef, &
-      angles_new(natypd, 2)
+    ! .. In/Out variables
+    real (kind=dp), intent (inout) :: denef
+    complex (kind=dp), dimension(0:lmaxd1, ielast, nqdos, npotd), intent (inout) :: den
+    complex (kind=dp), dimension(lmmaxd, ielast, nqdos, npotd), intent (inout) :: denlm
+    complex (kind=dp), dimension(mmaxd, mmaxd, 2, 2, natypd), intent (inout) :: denmatn
+    real (kind=dp), dimension(natypd), intent (inout)     :: denefat
+    real (kind=dp), dimension(natypd, 2), intent (inout)  :: angles_new
+    real (kind=dp), dimension(0:lmaxd1, npotd), intent (inout) :: espv
+    real (kind=dp), dimension(0:lmaxd1+1, 3, natypd), intent (inout) :: muorb !! orbital magnetic moment
+    real (kind=dp), dimension(irmd, lmpotd, natypd, 2), intent (inout) :: r2nef
+    real (kind=dp), dimension(irmd, lmpotd, natypd, 2), intent (inout) :: rho2ns !! radial density
 
     integer :: ierr, idim
-    real (kind=dp), allocatable :: work(:, :, :, :)
-    complex (kind=dp), allocatable :: workc(:, :, :, :)
-    complex (kind=dp), allocatable :: workc1(:, :, :, :, :)
+    real (kind=dp), dimension(:,:,:,:), allocatable :: work
+    complex (kind=dp), dimension(:,:,:,:), allocatable :: workc
+    complex (kind=dp), dimension(:,:,:,:,:), allocatable :: workc1
 
     ! complex (kind=dp) arrays
     idim = (1+lmaxd1)*ielast*nqdos*npotd
@@ -809,7 +937,15 @@ contains
 
 
 #ifdef CPP_MPI
-  subroutine check_communication_pattern(mpiatom, mpiadapt, timings_1a, timings_1b, load_imbalance, nkmesh, kmesh_ie)
+  !-------------------------------------------------------------------------------
+  !> Summary: Subroutine to check if the MPI communication is working properly
+  !> Author: 
+  !> Category: communication, KKRhost 
+  !> Deprecated: False
+  !> Subroutine to check if the MPI communication is working properly
+  !-------------------------------------------------------------------------------
+  subroutine check_communication_pattern(mpiatom,mpiadapt,timings_1a,timings_1b,    &
+    load_imbalance,nkmesh,kmesh_ie)
 
     use :: mpi
 
@@ -817,21 +953,22 @@ contains
 
     integer, intent (inout) :: mpiadapt
     logical, intent (inout) :: mpiatom
-    real (kind=dp), intent (inout) :: timings_1a(:, :), timings_1b(:)
-    integer, intent (out) :: load_imbalance(:)
-    integer, intent (in) :: nkmesh, kmesh_ie(:)
+    real (kind=dp), dimension(:), intent (inout) :: timings_1b
+    real (kind=dp), dimension(:,:), intent (inout) :: timings_1a
+    integer, dimension(:), intent (out) :: load_imbalance
+    integer, intent (in) :: nkmesh
+    integer, dimension(:), intent (in) :: kmesh_ie
 
-    real (kind=dp), allocatable :: t_average(:), work(:, :)
-    integer, allocatable :: kmesh_n(:)
+    real (kind=dp), dimension(:), allocatable :: t_average
+    real (kind=dp), dimension(:,:), allocatable :: work
+    integer, dimension(:), allocatable :: kmesh_n
     integer :: nat, ne, ne_1b, ierr, ie, iat, ik, iwork
-
 
     ! find some dimensions
     nat = size(timings_1a(1,:))
     ne = size(timings_1a(:,1))
     ne_1b = size(timings_1b)
     if (ne/=ne_1b) stop '[check_communication_pattern] Error in shapes of timing arrays'
-
 
     ! communicate timing arrays
     ! timings_1a
@@ -851,7 +988,6 @@ contains
     deallocate (work, stat=ierr)
     if (ierr/=0) stop '[check_communication_pattern] error deallocating work'
 
-
     ! first find average over atoms of timings of 1a
     allocate (t_average(ne), stat=ierr)
     if (ierr/=0) stop '[check_communication_pattern] Error allocating t_average'
@@ -864,7 +1000,6 @@ contains
       ! if(myrank==master) write(1337,'(A,i9,2ES23.16)') '[check_communication_pattern]: ie, time for 1a and 1b', ie, timings_1b(ie),t_average(ie)
       ! if(myrank==master .and. t_inc%i_write) write(1337,'(A,i9,2ES23.16)') '[check_communication_pattern]: ie, time for 1a and 1b', ie, timings_1b(ie),t_average(ie)
     end do
-
 
     ! find how many different energy points have the same kmesh
     allocate (kmesh_n(nkmesh), stat=ierr)
@@ -885,12 +1020,9 @@ contains
     if (myrank==master) write (*, *) 'load_imbalance', load_imbalance
     ! if(myrank==master .and. t_inc%i_write) write(1337,'(A,i9,1000I9)') '[check_communication_pattern] load imbalance:', load_imbalance
 
-
     ! set MPIatom and MPIadapt accordingly
     ! ...rest_at, rest_e => which fits actual load imbalance better => set MPIatom and MPIadapt
     if (myrank==master) write (*, *) mpiatom, mpiadapt
-
-
 
     ! finally deallocate work arrays
     deallocate (t_average, kmesh_n, stat=ierr)
@@ -899,9 +1031,14 @@ contains
   end subroutine check_communication_pattern
 #endif
 
-
-  !! wrapper for work distribution over energies, also saves parallelization
-  !! information for later use in t_mpi_c_grid
+  !-------------------------------------------------------------------------------
+  !> Summary: Wrapper for work distribution over energies, also saves parallelization information for later use in `t_mpi_c_grid`
+  !> Author: 
+  !> Category: communication, KKRhost 
+  !> Deprecated: False
+  !> Wrapper for work distribution over energies, also saves parallelization
+  !> information for later use in `t_mpi_c_grid`
+  !-------------------------------------------------------------------------------
   subroutine distribute_work_energies(n_work, distribute_rest)
 
     use :: mod_types, only: t_mpi_c_grid
@@ -949,8 +1086,14 @@ contains
   end subroutine distribute_work_energies
 
 
-  !! wrapper for work distribution over atoms, also saves parallelization
-  !! information for later use in t_mpi_c_grid
+  !-------------------------------------------------------------------------------
+  !> Summary: wrapper for work distribution over atoms, also saves parallelization information for later use in `t_mpi_c_grid`
+  !> Author: 
+  !> Category: communication, KKRhost 
+  !> Deprecated: False
+  !> wrapper for work distribution over atoms, also saves parallelization
+  !> information for later use in `t_mpi_c_grid`
+  !-------------------------------------------------------------------------------
   subroutine distribute_work_atoms(n_work, i1_start, i1_end, distribute_rest)
 
     use :: mod_types, only: t_mpi_c_grid

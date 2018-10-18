@@ -1,27 +1,37 @@
+!------------------------------------------------------------------------------------
+!> Summary: This subroutine does an integration from `istart` to `iend` of the real function `f` with an extended 3-point-simpson
+!> Author: 
+!> This subroutine does an integration from `istart` to `iend` of the real 
+!> function `f` with an extended 3-point-simpson
+!> \begin{equation}
+!> f_{int}=\int_{ined}^{istart} f\left(r'\right)dr'
+!> \end{equation}
+!------------------------------------------------------------------------------------
 module mod_simp3
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  subroutine simp3(f, fint, istart, iend, drdi)
-    ! -----------------------------------------------------------------------
-    ! this subroutine does an integration from istart to iend of
-    ! the real function f with an extended 3-point-simpson :
-
-    ! r(istart)
-
-    ! fint = { f(r') dr'
-
-    ! r(iend)
-
-    ! -----------------------------------------------------------------------
-    ! .. Scalar Arguments ..
-    real (kind=dp) :: fint
-    integer :: iend, istart
-    ! ..
-    ! .. Array Arguments ..
-    real (kind=dp) :: drdi(*), f(*)
+  !-------------------------------------------------------------------------------
+  !> Summary: This subroutine does an integration from `istart` to `iend` of the real function `f` with an extended 3-point-simpson
+  !> Author: 
+  !> Category: numerical-tools, KKRhost 
+  !> Deprecated: False 
+  !> This subroutine does an integration from `istart` to `iend` of the real 
+  !> function `f` with an extended 3-point-simpson
+  !> \begin{equation}
+  !> f_{int}=\int_{ined}^{istart} f\left(r'\right)dr'
+  !> \end{equation}
+  !-------------------------------------------------------------------------------
+  subroutine simp3(f,fint,istart,iend,drdi)
+    ! .. Input variables
+    integer, intent(in) :: iend
+    integer, intent(in) :: istart
+    real (kind=dp), dimension(*), intent(in) :: f !! Function to integrate
+    real (kind=dp), dimension(*), intent(in) :: drdi !! Derivative dr/di
+    ! .. Output variables
+    real (kind=dp), intent(out) :: fint !! Integrated function
     ! ..
     ! .. Local Scalars ..
     real (kind=dp) :: a1, a2

@@ -1,83 +1,121 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculates the overlap integral of test function PHI with regular or irregular wavefunction 
+!> Author: Ph. Mavropoulos
+!> Calculates the overlap integral of test function PHI with regular or irregular
+!> wavefunction (PZ, QZ: spherical part of the large component, 
+!> PQNS: nonspherical part of the large component) for LDA+U. 
+!> The overlap is given out in array `RESULT`
+!>                                                                   
+!> In the inner region the non-spherical wavefunctions are approximated as: 
+!>                                                                   
+!>  * The regular one (ir < irmin = irws-irns) :
+!>  \begin{equation}
+!>   pns\left(ir,lm1,lm2\right) = pz\left(ir,l1\right) ar\left(lm1,lm2\right)
+!>  \end{equation}
+!> where \(pz\) is the regular wavefunction of the spherically symmetric
+!> part of the potential and \(ar\) the alpha matrix (see sub. regns)
+!>                                                                   
+!>  * The irregular one (ir < irmin) :
+!>  \begin{equation}
+!>   qns\left(ir,lm1,lm2\right) = pz\left(ir,l1\right) cr\left(lm1,lm2\right) + qz\left(ir,l1\right) * dr\left(lm1,lm2\right) 
+!>  \end{equation}
+!> where \(pz\) is the regular and \(qz\) is the irregular wavefunction of the 
+!> spherically symmetric part of the potential and \(cr\), \(dr\) the matrices 
+!> calculated at the point \(irmin\) (see sub. `irwns`)
+!>                                                                   
+!> The integrand is convoluted with the shape functions:
+!> \begin{equation}
+!> Result = \int \bar{phi_l} \sum_{L''L'''} R_L''L' Theta_L''' GAUNT_LL''L'''   
+!> \end{equation}
+!> Finally, the result should then be transformed to complex spherical harmonics basis! 
+!------------------------------------------------------------------------------------
+!> @note Here only large component is used, but was PHI normalised according to 
+!> large + small component? (qldau)
+!> @endnote
+!> @warning last index of pns,qns is not the spin index but sra index.
+!> @endwarning
+!------------------------------------------------------------------------------------
 module mod_overlap
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  subroutine overlap(result, phi, pz, qz, pqns, acr, dr, lirreg, ipan, ircut, drdi, irmin, lphi, ipand, lmaxd, lmmaxd, mmaxd, lmpotd, irmind, irmd)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * Calculates the overlap integral of test function PHI with regular  *
-    ! * or irregular wavefunction (PZ, QZ: spherical part of the large     *
-    ! * component, PQNS: nonspherical part of the large component) for     *
-    ! * LDA+U.                                                             *
-    ! *                                                                    *
-    ! * THETAS are the shape functions (needed only in case of cell        *
-    ! *        integration)                                                *
-    ! * LPHI is the angular momentum of PHI.                               *
-    ! * LIRREG is true if the irrregular wavefunction is to be used.       *
-    ! * The overlap is given out in array RESULT                           *
-    ! *                                                                    *
-    ! * In the inner region the non-spherical wavefunctions are            *
-    ! * approximated as:                                                   *
-    ! *                                                                    *
-    ! *  * the regular one (ir < irmin = irws-irns) :                      *
-    ! *                                                                    *
-    ! *          pns(ir,lm1,lm2) = pz(ir,l1) * ar(lm1,lm2)                 *
-    ! *                                                                    *
-    ! *   where pz is the regular wavefct of the spherically symmetric     *
-    ! *   part of the potential and ar the alpha matrix (see sub. regns)   *
-    ! *                                                                    *
-    ! *  * the irregular one (ir < irmin) :                                *
-    ! *                                                                    *
-    ! *          qns(ir,lm1,lm2) = pz(ir,l1) * cr(lm1,lm2)                 *
-    ! *                                + qz(ir,l1) * dr(lm1,lm2)           *
-    ! *                                                                    *
-    ! *   where pz is the regular and qz is the irregular                  *
-    ! *   wavefunction of the spherically symmetric part of the            *
-    ! *   potential and cr, dr the matrices calculated at the point irmin  *
-    ! *   (see sub. irwns)                                                 *
-    ! *                                                                    *
-    ! *  Attention: last index of pns,qns is not the spin index but        *
-    ! *             sra index.                                             *
-    ! *                                                                    *
-    ! *  The integrand is convoluted with the shape functions:             *
-    ! *  (commented out now)                                               *
-    ! *    Result = Int conjg(phi_l)                                       *
-    ! *                 sum_{L''L'''} R_L''L' Theta_L''' GAUNT_LL''L'''    *
-    ! *                                                                    *
-    ! *  Finally, the result should then be transformed to complex         *
-    ! *  spherical harmonics basis.                                        *
-    ! *                                                                    *
-    ! *  Querry: Here only large component is used, but was PHI normalised *
-    ! *  according to large + small component? (qldau)                     *
-    ! *                                                                    *
-    ! *                             ph. mavropoulos, juelich, 2002         *
-    ! *                                                                    *
-    ! **********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates the overlap integral of test function PHI with regular or irregular wavefunction 
+  !> Author: Ph. Mavropoulos
+  !> Category: lda+u, KKRhost
+  !> Deprecated: False 
+  !> Calculates the overlap integral of test function PHI with regular or irregular
+  !> wavefunction (PZ, QZ: spherical part of the large component, 
+  !> PQNS: nonspherical part of the large component) for LDA+U. 
+  !> The overlap is given out in array `RESULT`
+  !>                                                                   
+  !> In the inner region the non-spherical wavefunctions are approximated as: 
+  !>                                                                   
+  !>  * The regular one (ir < irmin = irws-irns) :                     
+  !>  \begin{equation}
+  !>   pns\left(ir,lm1,lm2\right) = pz\left(ir,l1\right) ar\left(lm1,lm2\right)
+  !>  \end{equation}
+  !> where \(pz\) is the regular wavefunction of the spherically symmetric
+  !> part of the potential and \(ar\) the alpha matrix (see sub. regns)
+  !>                                                                   
+  !>  * The irregular one (ir < irmin) :
+  !>  \begin{equation}
+  !>   qns\left(ir,lm1,lm2\right) = pz\left(ir,l1\right) cr\left(lm1,lm2\right) + qz\left(ir,l1\right) * dr\left(lm1,lm2\right) 
+  !>  \end{equation}
+  !> where \(pz\) is the regular and \(qz\) is the irregular wavefunction of the 
+  !> spherically symmetric part of the potential and \(cr\), \(dr\) the matrices 
+  !> calculated at the point \(irmin\) (see sub. `irwns`)
+  !>                                                                   
+  !> The integrand is convoluted with the shape functions:
+  !> \begin{equation}
+  !>    Result = \int \bar{phi_l} \sum_{L''L'''} R_L''L' Theta_L''' GAUNT_LL''L'''   
+  !> \end{equation}
+  !>  Finally, the result should then be transformed to complex spherical harmonics basis
+  !-------------------------------------------------------------------------------
+  !> @note Here only large component is used, but was PHI normalised according to 
+  !> large + small component? (qldau)
+  !> @endnote
+  !> @warning last index of pns,qns is not the spin index but sra index.
+  !> @endwarning
+  !-------------------------------------------------------------------------------
+  subroutine overlap(result,phi,pz,qz,pqns,acr,dr,lirreg,ipan,ircut,drdi,irmin,lphi,& 
+    ipand,lmaxd,lmmaxd,mmaxd,lmpotd,irmind,irmd)
+
     use :: mod_csimpk
     use :: mod_rinit
     use :: mod_cinit
     implicit none
     ! ..
     ! .. Scalar Arguments ..
-    integer :: ipand, lmaxd, lmmaxd, mmaxd, lmpotd, irmind, irmd
-    integer :: irmin, ipan, lphi   ! l-value for LDA+U
-    logical :: lirreg
-    ! ..
-    ! .. Array arguments ..
-    complex (kind=dp) :: phi(irmd), pz(irmd, 0:lmaxd), qz(irmd, 0:lmaxd)
-    complex (kind=dp) :: pqns(lmmaxd, lmmaxd, irmind:irmd, 2)
-    complex (kind=dp) :: acr(lmmaxd, lmmaxd), dr(lmmaxd, lmmaxd)
-    complex (kind=dp) :: result(mmaxd, mmaxd)
-    real (kind=dp) :: drdi(irmd)
-    integer :: ircut(0:ipand)
+    integer, intent(in) :: ipan   !! Number of panels in non-MT-region
+    integer, intent(in) :: lphi   !! Is the angular momentum of PHI. l-value for LDA+U
+    integer, intent(in) :: irmd   !! Maximum number of radial points
+    integer, intent(in) :: irmin  !! Max R for spherical treatment
+    integer, intent(in) :: ipand  !! Number of panels in non-spherical part
+    integer, intent(in) :: lmaxd  !! Maximum l component in wave function expansion
+    integer, intent(in) :: mmaxd
+    integer, intent(in) :: lmmaxd !! (KREL+KORBIT+1)*(LMAX+1)**2
+    integer, intent(in) :: lmpotd !! (lpot+1)**2
+    integer, intent(in) :: irmind !! irmd - irnsd
+    logical, intent(in) :: lirreg !! Is true if the irrregular wavefunction is to be used
+    integer, dimension(0:ipand), intent(in) :: ircut  !! r points of panel borders
+    real (kind=dp), dimension(irmd), intent(in) :: drdi !! Derivative dr/di
+    complex (kind=dp), dimension(irmd), intent(in) :: phi
+    complex (kind=dp), dimension(irmd, 0:lmaxd), intent(in) :: pz
+    complex (kind=dp), dimension(irmd, 0:lmaxd), intent(in) :: qz
+    complex (kind=dp), dimension(lmmaxd, lmmaxd), intent(in) :: dr
+    complex (kind=dp), dimension(lmmaxd, lmmaxd), intent(in) :: acr
+    complex (kind=dp), dimension(lmmaxd, lmmaxd, irmind:irmd, 2), intent(in) :: pqns
+    ! .. Output variables
+    complex (kind=dp), dimension(mmaxd, mmaxd), intent(out) :: result !! Overlap matrix
     ! ..
     ! .. Locals ..
     integer :: lphisq, mmax, irs1, irc1
     integer :: lm1, lm2, lm3, mm1, mm2, mm3, ir
-    real (kind=dp) :: gaunt(lmmaxd, lmmaxd, lmpotd)
-    complex (kind=dp) :: wint(irmd)
+    real (kind=dp), dimension(lmmaxd, lmmaxd, lmpotd) :: gaunt
+    complex (kind=dp), dimension(irmd) :: wint
     ! ..
     mmax = 2*lphi + 1
     lphisq = lphi*lphi

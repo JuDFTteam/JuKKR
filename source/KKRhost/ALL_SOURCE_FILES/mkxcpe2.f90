@@ -255,7 +255,7 @@ contains
   !> \begin{equation}
   !> a_x = -\frac{3}{4}\left(\frac{3}{\pi}\right)^{\frac{1}{3}}
   !> \end{equation}
-  !> where the $$e_x[PBE]$$ is given by 
+  !> where the \(e_x[PBE]\) is given by 
   !> \begin{equation}
   !> e_x[PBE] =e_x[unif]*F_x^{PBE}(s)
   !> \end{equation}
@@ -263,7 +263,7 @@ contains
   !> \begin{equation}
   !> F_x^{PBE}(s)=1+u_k-\frac{u_k}{1+u_l s^2}
   !> \end{equation}
-  !> with $$u_k$$ and $$u_l$$ being defined in Eq.13 of [a]
+  !> with \(u_k\) and \(u_l\) being defined in Eq.13 of [a]
   !> @note
   !> [a] J.P. Perdew, K. Burke, and M. Ernzerhof, Phys. Rev. Lett. 77, 3865 (1996).
   !> [b] J.P. Perdew and Y. Wang, Phys. Rev. B33, 8800 (1986); B40, 3399 (1989)(E).
@@ -299,8 +299,8 @@ contains
     ! Dummy arguments
     integer, intent(in) :: llda
     real (kind=dp), intent(in) :: rho !! density
-    real (kind=dp), intent(in) :: s !! $$\frac{\| \nabla \rho\|}{2K_F \rho} $$ with $$\K_F=\left(3 \pi^2 \rho\right)^\frac{1}{3}$$
-    real (kind=dp), intent(in) :: u !!$$\frac{\nabla^2 \rho}{\rho\left(2K_F\right)^2}$$
+    real (kind=dp), intent(in) :: s !! \(\frac{\| \nabla \rho\|}{2K_F \rho}\) with \(\K_F=\left(3 \pi^2 \rho\right)^\frac{1}{3}\)
+    real (kind=dp), intent(in) :: u !! \(\frac{\nabla^2 \rho}{\rho\left(2K_F\right)^2}\)
     real (kind=dp), intent(in) :: v
     real (kind=dp), intent(in) :: um
     real (kind=dp), intent(out) :: vx !! exchange potential
@@ -344,8 +344,7 @@ contains
   end subroutine excpbex
 
   !-------------------------------------------------------------------------------    
-  !> Summary: This subroutine evaluates the correlation energy per particle for PBE
-  !> xc-potential
+  !> Summary: This subroutine evaluates the correlation energy per particle for PBE xc-potential
   !> Author: K. Burke, E. Engel
   !> Category: xc-potential, potential, KKRhost
   !> Deprecated: False
@@ -377,20 +376,20 @@ contains
     real (kind=dp), parameter :: eta = 1.e-12_dp
 
     ! Dummy arguments
-    real (kind=dp), intent(in) :: rs !! Wigner-Seitz radius $$\left(\frac{3}{4\pi\left(\rho_{up}+\rho_{down}\right)}\right)^\frac{1}{3}$$
-    real (kind=dp), intent(in) :: t  !! $$\frac{\| \nabla D\|}{2S_K G D} $$
-    real (kind=dp), intent(in) :: uu !! $$\frac{\nabla D \nabla\|\nabla D \|}{\left(2S_K G\right)^3 D^2}$$
-    real (kind=dp), intent(in) :: vv !! $$ \frac{\nabla^2 D}{\left(2S_K G\right)^2 D}$$
-    real (kind=dp), intent(in) :: ww !! $$ \frac{\nabla D \nabla Z}{\left(2S_K G\right)^2 D}$$
-    real (kind=dp), intent(in) :: zeta !! $$Z=\frac{\rho_{up}-\rho_{down}}{\rho_{up}+\rho_{down}}$$ relative spin polarization
+    real (kind=dp), intent(in) :: rs !! Wigner-Seitz radius \(\left(\frac{3}{4\pi\left(\rho_{up}+\rho_{down}\right)}\right)^\frac{1}{3}\)
+    real (kind=dp), intent(in) :: t  !! \(\frac{\| \nabla D\|}{2S_K G D} \)
+    real (kind=dp), intent(in) :: uu !! \(\frac{\nabla D \nabla\|\nabla D \|}{\left(2S_K G\right)^3 D^2}\)
+    real (kind=dp), intent(in) :: vv !! \(\frac{\nabla^2 D}{\left(2S_K G\right)^2 D}\)
+    real (kind=dp), intent(in) :: ww !! \(\frac{\nabla D \nabla Z}{\left(2S_K G\right)^2 D}\)
+    real (kind=dp), intent(in) :: zeta !! \(Z=\frac{\rho_{up}-\rho_{down}}{\rho_{up}+\rho_{down}}\) relative spin polarization
     real (kind=dp), intent(in) :: bet !! coefficient in gradient expansion for correlation, [a](4).
     integer, intent(in) :: llda
     real (kind=dp), intent(out) :: ec !! correlation energy per particle
     real (kind=dp), intent(out) :: vcdn !! spin-up correlation potential
     real (kind=dp), intent(out) :: vcup !! spin-dn correlation potential
 
-    !! Local Feri momentum  $$F_K = \left(3\pi^2\left(\rho_{up}+\rho_{down}\right)\right)^\frac{1}{3}$$
-    !! Local screening momentum  $$S_K = \lef(\frac{4*F_K}{\pi}\right)^\frac{1}{2}$$
+    !! Local Feri momentum  \(F_K = \left(3\pi^2\left(\rho_{up}+\rho_{down}\right)\right)^\frac{1}{3}\)
+    !! Local screening momentum  \(S_K = \lef(\frac{4*F_K}{\pi}\right)^\frac{1}{2}\)
     ! Local variables
     real (kind=dp) :: alfm, alfrsm, b, b2, bec, bg, comm, ecrs, eczeta, ep, eprs, eu
     real (kind=dp) :: eurs, f, fac, fact0, fact1, fact2, fact3, fact5, fz, g, g3, g4
@@ -495,8 +494,7 @@ contains
   end subroutine excpbec
 
   !-------------------------------------------------------------------------------    
-  !> Summary: Slimmed down version of GCOR used in PW91 routines, to interpolate
-  !> LSD correlation energy
+  !> Summary: Slimmed down version of GCOR used in PW91 routines, to interpolate LSD correlation energy
   !> Author: K. Burke
   !> Category: xc-potential, potential, KKRhost
   !> Deprecated: False

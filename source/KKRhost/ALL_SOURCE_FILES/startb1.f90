@@ -1,15 +1,15 @@
 !------------------------------------------------------------------------------------
 !> Summary: Reads the input potentials
 !> Author: B. Drittler
-!> Reads the input potentials
-!> units :
+!> Reads the input potentials with units given by:
+!>
 !> - Rydbergs - units for energy
 !> - The lattice constant and all other lengths given in bohr units
-!> - The planck constant $$\frac{h}{2\pi}=1$$
-!> - The electron charge $$e=\sqrt{2}$$
-!> - The electron mass $$m=\frac{1}{2}$$
-!> - The speed of light $$c = \frac{2}{\alpha} = 274.0720442$$ with the
-!> fine structure constant $$\alpha$$
+!> - The planck constant \(\frac{h}{2\pi}=1\)
+!> - The electron charge \(e=\sqrt{2}\)
+!> - The electron mass \(m=\frac{1}{2}\)
+!> - The speed of light \(c = \frac{2}{\alpha} = 274.0720442\) with the
+!> fine structure constant \(\alpha\)
 !>
 !> In case of shape corrections this routine reads from unit 19 a suitable
 !> radial mesh 'xrn',its derivate 'drn' and the shape
@@ -36,15 +36,15 @@ contains
   !> Author: B. Drittler
   !> Category: ibput-output, potential, shape-functions, KKRhost 
   !> Deprecated: False 
-  !> Reads the input potentials
-  !> units :
+  !> Reads the input potentials with units given by:
+  !> 
   !> - Rydbergs - units for energy
   !> - The lattice constant and all other lengths given in bohr units
-  !> - The planck constant $$\frac{h}{2\pi}=1$$
-  !> - The electron charge $$e=\sqrt{2}$$
-  !> - The electron mass $$m=\frac{1}{2}$$
-  !> - The speed of light $$c = \frac{2}{\alpha} = 274.0720442$$ with the
-  !> fine structure constant $$\alpha$$
+  !> - The planck constant \(\frac{h}{2\pi}=1\)
+  !> - The electron charge \(e=\sqrt{2}\)
+  !> - The electron mass \(m=\frac{1}{2}\)
+  !> - The speed of light \(c = \frac{2}{\alpha} = 274.0720442\) with the
+  !> fine structure constant \(\alpha\)
   !>
   !> In case of shape corrections this routine reads from unit 19 a suitable
   !> radial mesh 'xrn',its derivate 'drn' and the shape

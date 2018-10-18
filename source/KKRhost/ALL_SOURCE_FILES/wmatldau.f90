@@ -1,9 +1,8 @@
 !------------------------------------------------------------------------------------
-!> Summary: Calculation of Coulomb interaction potential in LDA+U non-relativistic case
-!> otherwise matrices DENMAT and VLDAU must have double dimension 
+!> Summary: Calculation of Coulomb interaction potential in LDA+U non-relativistic case otherwise matrices `DENMAT` and `VLDAU` must have double dimension 
 !> Author: Ph. Mavropoulos, H. Ebert
-!> Uses the Coulomb matrix U (array ULDAU), the density matrix $$n$$
-!> (array DENMAT) and the occupation numbers dentot (total) and $$n_s$$ (array DENTOTS) (per spin).
+!> Uses the Coulomb matrix U (array `ULDAU`), the density matrix \(n\)
+!> (array `DENMAT`) and the occupation numbers dentot (total) and \(n_s\) (array `DENTOTS`) (per spin).
 !>
 !> It also contains a routine to write the entries for different potential entries
 !------------------------------------------------------------------------------------
@@ -17,14 +16,13 @@ module mod_wmatldau
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: Calculation of Coulomb interaction potential in LDA+U non-relativistic case
-  !> otherwise matrices DENMAT and VLDAU must have double dimension 
+  !> Summary: Calculation of Coulomb interaction potential in LDA+U non-relativistic case otherwise matrices DENMAT and VLDAU must have double dimension 
   !> Author: Ph. Mavropoulos, H. Ebert
   !> Category: total-energy, potential, lda+u, KKRhost  
   !> Deprecated: False 
-  !> Uses the Coulomb matrix U (array ULDAU), the density matrix $$n$$
-  !> (array DENMAT) and the occupation numbers dentot (total) and $$n_s$$ (array DENTOTS) (per spin).
-  !> The expression evaluated (array VLDAU) is
+  !> Uses the Coulomb matrix U (array `ULDAU`), the density matrix \(n\)
+  !> (array `DENMAT`) and the occupation numbers dentot (total) and \(n_s\) (array `DENTOTS`) (per spin).
+  !> The expression evaluated (array `VLDAU`) is
   !>
   !> $$V_{m1,s,m2,s'} = \delta_{ss'} \sum_{s^{''},m3,m4} U_{m1,m2,m3,m4}n_{m3,s'',m4,s^{''}} - \sum_{m3,m4} U_{m1,m4,m3,m2}n_{m3,s',m4,s}-\left[Ueff (dentot-1/2) -Jeff (n_s - 1/2)\right]\delta_{ss'}\delta_{m1,m2} $$
   !-------------------------------------------------------------------------------

@@ -23,8 +23,8 @@ contains
     implicit none
 
     ! .. Output variables
-    real (kind=dp), intent(out) :: rotmat(64, 3, 3) !! Rotation matrices
-    character (len=10), intent(out) :: rotname(64)  !! Name of the space group
+    real (kind=dp), dimension(64, 3, 3), intent(out) :: rotmat !! Rotation matrices
+    character (len=10), dimension(64), intent(out) :: rotname  !! Name of the space group
     ! .. Local variables
     integer :: i, j, i1, is
     real (kind=dp) :: rthree, half

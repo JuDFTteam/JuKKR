@@ -2,7 +2,7 @@
 !> Summary: Transforms the magnetization to the cartesian global frame of reference 
 !> Author: 
 !>Transforms the magnetization to the cartesian global frame of reference, first
-!> by transforming from the local $$\pm z$$ coordinate system, to the local 
+!> by transforming from the local \(\pm z\) coordinate system, to the local 
 !> cartesian coordinate system, and then to the gloabl reference frame.
 !------------------------------------------------------------------------------------
 !> @note This routine has been build up from the last part of the original
@@ -21,7 +21,7 @@ contains
   !> Category: numerical-tools, physical-observables, KKRhost 
   !> Deprecated: False 
   !> Transforms the magnetization to the cartesian global frame of reference, first
-  !> by transforming from the local $$\pm z$$ coordinate system, to the local 
+  !> by transforming from the local \(\pm z\) coordinate system, to the local 
   !> cartesian coordinate system, and then to the gloabl reference frame.
   !-------------------------------------------------------------------------------
   !> @note This routine has been build up from the last part of the original
@@ -30,14 +30,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine mvecglobal(it,iq,natyp,qmphi,qmtet,mvevi,mvevil,mvevief,natypd,lmaxd,  &
     nmvecmax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *  this routine has been build up from the last part of the        *
-    ! *  original Munich CALCMVEC routine.                               *
-    ! *  on exit, MVEVI,MVEVIL,MVEVIEF are in the CARTESIAN GLOBAL       *
-    ! *                                           frame of reference     *
-    ! *                                                                  *
-    ! ********************************************************************
+
     use :: mod_datatypes
     use :: mod_calcrotmat
     use :: constants, only : ci,czero,pi

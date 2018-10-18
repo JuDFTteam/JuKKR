@@ -1,7 +1,19 @@
+!------------------------------------------------------------------------------------
+!> Summary: Wrapper module for the calculation of the orbital moment 
+!> Author:
+!> Wrapper module for the calculation of the orbital moment 
+!------------------------------------------------------------------------------------
 module mod_orbitalmoment
 
 contains
 
+!-------------------------------------------------------------------------------
+  !> Summary: Calculation of the orbital moment
+  !> Author: 
+  !> Category: physical-observables, KKRhost
+  !> Deprecated: False 
+  !> Calculation of the orbital moment 
+  !-------------------------------------------------------------------------------
   subroutine calc_orbitalmoment(lmax, lmsize, loperator)
 
     use :: constants
@@ -9,7 +21,8 @@ contains
     use :: mod_datatypes, only: dp
 
     implicit none
-    integer, intent (in) :: lmax, lmsize
+    integer, intent (in) :: lmax    !! Maximum l component in wave function expansion
+    integer, intent (in) :: lmsize  !! (KREL+KORBIT+1)*(LMAX+1)**2
     complex (kind=dp), dimension (lmsize, lmsize, 3), intent (out) :: loperator
     integer, save :: first = 1
     integer :: lval
@@ -57,7 +70,13 @@ contains
     first = 0
   end subroutine calc_orbitalmoment
 
-
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculation of the contibution of a given orbital to the orbital moment 
+  !> Author: 
+  !> Category: physical-observables, KKRhost
+  !> Deprecated: False 
+  !> Calculation of the contibution of a given orbital to the orbital moment 
+  !-------------------------------------------------------------------------------
   subroutine calc_orbit_onel(lval, lorbit_onel)
 
     use :: constants

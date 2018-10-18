@@ -1,6 +1,5 @@
 !------------------------------------------------------------------------------------
-!> Summary: Calculate the madelung potentials and add these to the potential $$V$$
-!> (in he spin-polarized case for each spin-direction this is the same)
+!> Summary: Calculate the madelung potentials and add these to the potential \(V\) (in he spin-polarized case for each spin-direction this is the same)
 !> Author: B. Drittler
 !> It uses the structure dependent matrices `AVMAD` and `BVMAD` which
 !> are calculated once in the subroutine `MADELUNG3D()` and saved in
@@ -8,11 +7,14 @@
 !> The charge-moments are calculated in the subroutine `vintras`,
 !> therefore vintras has to be called first.
 !> The madelung-potential is expanded into spherical harmonics.
-!> The lm-term of the potential $$V$$ of the atom $$i$$ is given by
-!> $$ V(r,lm,i) = \sum_{i2}^{N} \sum_{l'm'} (-r)^l \left\{avmad(i,i2,lm,l'm')*cmom(i2,l'm') +bvmad(i,i2,lm)z(i2)\right\}$$
-!> where $$ N$$ is the number of atoms
+!> The lm-term of the potential \(V\) of the atom \(i\) is given by
+!> \begin{equation}
+!> V(r,lm,i) = \sum_{i2}^{N} \sum_{l'm'} (-r)^l \left\{avmad(i,i2,lm,l'm')cmom(i2,l'm') +bvmad(i,i2,lm)z(i2)\right\}
+!> \end{equation}
+!> where \(N\) is the number of atoms
 !------------------------------------------------------------------------------------
-!> @note 
+!> @note
+!>  
 !> - V. Popescu Feb. 2002: Adopted for the case of more atoms on the same site, 
 !> summation is done over the occupants of that site, the charge is weighted with 
 !> the appropriate concentration of the occupant
@@ -25,8 +27,7 @@ module mod_vmadelblk
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: Calculate the madelung potentials and add these to the potential $$V$$
-  !> (in he spin-polarized case for each spin-direction this is the same)
+  !> Summary: Calculate the madelung potentials and add these to the potential \(V\) (in he spin-polarized case for each spin-direction this is the same)
   !> Author: B. Drittler
   !> Category: electrostatics, potential, KKRhost
   !> Deprecated: False 
@@ -36,11 +37,14 @@ contains
   !> The charge-moments are calculated in the subroutine `vintras`,
   !> therefore vintras has to be called first.
   !> The madelung-potential is expanded into spherical harmonics.
-  !> The lm-term of the potential $$V$$ of the atom $$i$$ is given by
-  !> $$ V(r,lm,i) = \sum_{i2}^{N} \sum_{l'm'} (-r)^l \left\{avmad(i,i2,lm,l'm')*cmom(i2,l'm') +bvmad(i,i2,lm)z(i2)\right\}$$
-  !> where $$ N$$ is the number of atoms
+  !> The lm-term of the potential \(V\) of the atom \(i\) is given by
+  !> \begin{equation}
+  !> V(r,lm,i) = \sum_{i2}^{N} \sum_{l'm'} (-r)^l \left\{avmad(i,i2,lm,l'm')cmom(i2,l'm') +bvmad(i,i2,lm)z(i2)\right\}
+  !> \end{equation}
+  !> where \(N\) is the number of atoms
   !-------------------------------------------------------------------------------
   !> @note
+  !> 
   !> - V. Popescu Feb. 2002: Adopted for the case of more atoms on the same site, 
   !> summation is done over the occupants of that site, the charge is weighted with 
   !> the appropriate concentration of the occupant

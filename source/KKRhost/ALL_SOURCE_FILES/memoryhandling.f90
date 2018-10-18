@@ -1,13 +1,13 @@
 !------------------------------------------------------------------------------------
 !> Summary: Subroutine to handle allocation/deallocation of arrays
-!> Author: Jonathan Chico                   
+!> Author: Jonathan Chico 
 !> Module to handle the allocation of arrays to be later distributed it aims to bring 
 !> modularity to the memory management. Of this way it _should_ be easier to ensure
-!> that only arrays that are needed for a given task are allocated/deallocated                                                                                  
+!> that only arrays that are needed for a given task are allocated/deallocated
 !------------------------------------------------------------------------------------
 !> @todo The number of arrays in the misc section should be reduced, and they should
 !> be located in the appropriate routines
-!> @endtodo                                                                          
+!> @endtodo 
 !------------------------------------------------------------------------------------
 module memoryhandling
 
@@ -21,8 +21,7 @@ contains
 
 
   !-------------------------------------------------------------------------------  
-  !> Summary: subroutine handling the allocation/deallocation of arrays that
-  !> describe the unit cell.
+  !> Summary: subroutine handling the allocation/deallocation of arrays that describe the unit cell.
   !> Author: Jonathan Chico 
   !> Category: memory-management, profiling, geometry, KKRhost 
   !> Deprecated: False 
@@ -192,8 +191,7 @@ contains
   end subroutine allocate_cell
 
   !-------------------------------------------------------------------------------  
-  !> Summary: subroutine handling the allocation/deallocation of arrays that           
-  !> describe the left and right host for the calculation of slabs    
+  !> Summary: subroutine handling the allocation/deallocation of arrays that describe the left and right host for the calculation of slabs    
   !> Author: Jonathan Chico 
   !> Category: memory-management, profiling, geometry, KKRhost 
   !> Deprecated: False 
@@ -237,8 +235,7 @@ contains
   end subroutine allocate_semi_inf_host
 
   !-------------------------------------------------------------------------------  
-  !> Summary: subroutine handling the allocation/deallocation of arrays that           
-  !> describe the potential
+  !> Summary: subroutine handling the allocation/deallocation of arrays that describe the potential
   !> Author: Jonathan Chico 
   !> Category: memory-management, profiling, potential, KKRhost 
   !> Deprecated: False 
@@ -391,8 +388,7 @@ contains
   end subroutine allocate_potential
 
   !-------------------------------------------------------------------------------  
-  !> Summary: subroutine handling the allocation/deallocation of arrays that           
-  !> describe the CPA treatment 
+  !> Summary: subroutine handling the allocation/deallocation of arrays that describe the CPA treatment 
   !> Author: Jonathan Chico 
   !> Category: memory-management, profiling, coherent-potential-approx, KKRhost 
   !> Deprecated: False 
@@ -468,8 +464,7 @@ contains
   end subroutine allocate_cpa
 
   !-------------------------------------------------------------------------------  
-  !> Summary: subroutine handling the allocation/deallocation of arrays that           
-  !> describe the LDA+U approach 
+  !> Summary: subroutine handling the allocation/deallocation of arrays that describe the LDA+U approach 
   !> Author: Jonathan Chico 
   !> Category: memory-management, profiling, KKRhost 
   !> Deprecated: False 
@@ -531,8 +526,7 @@ contains
   end subroutine allocate_ldau
 
   !-------------------------------------------------------------------------------  
-  !> Summary: subroutine handling the allocation/deallocation of arrays that           
-  !> describe the potentials for the LDA+U approach 
+  !> Summary: subroutine handling the allocation/deallocation of arrays that describe the potentials for the LDA+U approach 
   !> Author: Jonathan Chico 
   !> Category: memory-management, profiling, potential, KKRhost 
   !> Deprecated: False 
@@ -599,8 +593,7 @@ contains
   end subroutine allocate_ldau_potential
 
   !-------------------------------------------------------------------------------  
-  !> Summary: subroutine handling the allocation/deallocation of arrays that           
-  !> describe the magnetization 
+  !> Summary: subroutine handling the allocation/deallocation of arrays that describe the magnetization 
   !> Author: Jonathan Chico 
   !> Category: memory-management, profiling, KKRhost 
   !> Deprecated: False 
@@ -672,8 +665,7 @@ contains
   end subroutine allocate_magnetization
 
   !-------------------------------------------------------------------------------  
-  !> Summary: subroutine handling the allocation/deallocation of arrays that           
-  !> describe the spin-orbit coupling (SOC) 
+  !> Summary: subroutine handling the allocation/deallocation of arrays that describe the spin-orbit coupling (SOC) 
   !> Author: Jonathan Chico 
   !> Category: memory-management, profiling, spin-orbit-coupling, KKRhost 
   !> Deprecated: False 
@@ -726,8 +718,7 @@ contains
   end subroutine allocate_soc
 
   !-------------------------------------------------------------------------------  
-  !> Summary: subroutine handling the allocation/deallocation of arrays that           
-  !> describe energies 
+  !> Summary: subroutine handling the allocation/deallocation of arrays that describe energies 
   !> Author: Jonathan Chico 
   !> Category: memory-management, profiling, total-energies, KKRhost 
   !> Deprecated: False 
@@ -780,8 +771,7 @@ contains
   end subroutine allocate_energies
 
   !-------------------------------------------------------------------------------  
-  !> Summary: subroutine handling the allocation/deallocation of arrays that           
-  !> describe relativistic corrections
+  !> Summary: subroutine handling the allocation/deallocation of arrays that describe relativistic corrections
   !> Author: Jonathan Chico 
   !> Category: memory-management, profiling, KKRhost 
   !> Deprecated: False 
@@ -919,8 +909,7 @@ contains
   end subroutine allocate_relativistic
 
   !-------------------------------------------------------------------------------  
-  !> Summary: subroutine handling the allocation/deallocation of arrays that           
-  !> describe relativistic transformations 
+  !> Summary: subroutine handling the allocation/deallocation of arrays that describe relativistic transformations 
   !> Author: Jonathan Chico 
   !> Category: memory-management, profiling, dirac, KKRhost 
   !> Deprecated: False 
@@ -1000,8 +989,7 @@ contains
   end subroutine allocate_rel_transformations
 
   !-------------------------------------------------------------------------------  
-  !> Summary: subroutine handling the allocation/deallocation of arrays that           
-  !> describe clusters 
+  !> Summary: subroutine handling the allocation/deallocation of arrays that describe clusters 
   !> Author: Jonathan Chico 
   !> Category: memory-management, profiling, geometry, KKRhost 
   !> Deprecated: False 
@@ -1154,8 +1142,7 @@ contains
   end subroutine allocate_clusters
 
   !-------------------------------------------------------------------------------  
-  !> Summary: subroutine handling the allocation/deallocation of arrays that           
-  !> describe the functions for the expansion of the Green function 
+  !> Summary: subroutine handling the allocation/deallocation of arrays that describe the functions for the expansion of the Green function 
   !> Author: Jonathan Chico 
   !> Category: memory-management, profiling, special-functions, KKRhost 
   !> Deprecated: False 
@@ -1244,8 +1231,7 @@ contains
   end subroutine allocate_expansion
 
   !-------------------------------------------------------------------------------  
-  !> Summary: subroutine handling the allocation/deallocation of arrays that           
-  !> describe the integration mesh 
+  !> Summary: subroutine handling the allocation/deallocation of arrays that describe the integration mesh 
   !> Author: Jonathan Chico 
   !> Category: memory-management, profiling, radial-grid, KKRhost 
   !> Deprecated: False 
@@ -1308,8 +1294,7 @@ contains
   end subroutine allocate_mesh
 
   !-------------------------------------------------------------------------------  
-  !> Summary: subroutine handling the allocation/deallocation of arrays that           
-  !> describe the panels 
+  !> Summary: subroutine handling the allocation/deallocation of arrays that describe the panels 
   !> Author: Jonathan Chico 
   !> Category: memory-management, profiling, radial-grid, KKRhost 
   !> Deprecated: False 
@@ -1571,8 +1556,7 @@ contains
   end subroutine allocate_misc
 
   !-------------------------------------------------------------------------------  
-  !> Summary: subroutine handling the allocation/deallocation of arrays handling 
-  !> the Green functions 
+  !> Summary: subroutine handling the allocation/deallocation of arrays handling the Green functions 
   !> Author: Jonathan Chico 
   !> Category: memory-management, profiling, KKRhost 
   !> Deprecated: False 

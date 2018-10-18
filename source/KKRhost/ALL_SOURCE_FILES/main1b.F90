@@ -1,8 +1,8 @@
 !------------------------------------------------------------------------------------
-!> Summary: Wrapper module for the calculation of Gmat
-!> Author: Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,       
+!> Summary: Wrapper module for the calculation of the structural Greens function `gmat`
+!> Author: Philipp Ruessmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,       
 !> and many others ... 
-!> Wrapper module for the calculation of Gmat 
+!> Wrapper module for the calculation of the structural Greens function `gmat` 
 !------------------------------------------------------------------------------------
 module mod_main1b
 
@@ -27,12 +27,12 @@ module mod_main1b
 contains
 
   !-------------------------------------------------------------------------------  
-  !> Summary: Main subroutine regarding the claculation of the gmat 
-  !> Author: Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,     
+  !> Summary: Main subroutine regarding the claculation of the structural Greens function `gmat`
+  !> Author: Philipp Ruessmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,     
   !> and many others ... 
   !> Category: structural-greensfunction, k-points, reference-system 
   !> Deprecated: False 
-  !> Main subroutine regarding the claculation of the structural Green's function
+  !> Main subroutine regarding the claculation of the structural Green's function `gmat`
   !-------------------------------------------------------------------------------  
   subroutine main1b()
 
@@ -57,17 +57,6 @@ contains
 
     implicit none
 
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ! For KREL = 1 (relativistic mode)
-
-    ! NPOTD = 2 * NATYP
-    ! LMMAXD = 2 * (LMAX+1)^2
-    ! NSPIND = 1
-    ! LMGF0D = (LMAX+1)^2 dimension of the reference system Green
-    ! function, set up in the spin-independent non-relativstic
-    ! (l,m_l)-representation
-
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! .. Local variables
     integer :: nspin1
     integer :: l
@@ -234,42 +223,41 @@ contains
     ! End of reading the variables
     ! -------------------------------------------------------------------------
 
-    ! -------------------------------------------------------------------------    !fswrt
-    ! open file to store the output for the (external) Fermi-surface program      !fswrt
-    ! this file is already partly filled with data by main0. More data            !fswrt
-    ! will be stored in                                                     !fswrt
-    ! -------------------------------------------------------------------------    !fswrt
-    if (opt('FERMIOUT') .and. myrank==master) then ! fswrt
-      open (6801, file='TBkkr_container.txt', form='formatted', position='append') ! fswrt
-    end if                         ! fswrt
-
-    ! -------------------------------------------------------------------------    !fswrt
-    ! open file for WRTGREEN option (writes green_host file for
-    ! GMATLL_GES creation in zulapi part) file is filled in ROTGLL called in kloopz
-    ! -------------------------------------------------------------------------    !fswrt
+    ! -------------------------------------------------------------------------       !fswrt
+    ! open file to store the output for the (external) Fermi-surface program          !fswrt
+    ! this file is already partly filled with data by main0. More data                !fswrt
+    ! will be stored in                                                               !fswrt
+    ! -------------------------------------------------------------------------       !fswrt
+    if (opt('FERMIOUT') .and. myrank==master) then                                    !fswrt
+      open (6801, file='TBkkr_container.txt', form='formatted', position='append')    !fswrt
+    end if                                                                            !fswrt
+    ! -------------------------------------------------------------------------       !fswrt
+    ! open file for WRTGREEN option (writes green_host file for                       !fswrt
+    ! GMATLL_GES creation in zulapi part) file is filled in ROTGLL called in kloopz   !fswrt
+    ! -------------------------------------------------------------------------       !fswrt
     if (opt('WRTGREEN') .and. myrank==master) then
       open (58, file='green_host', form='formatted')
     end if
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! If qdos option is used set IQDOSRUN so that in a first run the
     ! (t(E)-t_ref(E))^-1 matrix (tmat.qdos) and the gref matrix can be
     ! written out for one k point, in a second run these matrices are
     ! read in to continue the calculation with the k points specified by
     ! the user in the qvec.dat file
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    if (opt('qdos    ')) then      ! qdos ruess
-      iqdosrun = 0                 ! qdos ruess
-    else                           ! qdos ruess
-      iqdosrun = -1                ! qdos ruess
-    end if                         ! qdos ruess
-    ! Jump back here to continue with second run if qdos option is selected
-100 continue                       ! qdos ruess
-    ! Reset GMATLL for calculation in second run
-    if (iqdosrun==1) then          ! qdos ruess
-      do i1 = 1, nshell(0)         ! qdos ruess
-        gmatll(1:lmmaxd, 1:lmmaxd, i1) = czero ! qdos ruess
-      end do                       ! qdos ruess
-    end if                         ! qdos ruess
+    !--------------------------------------------------------------------------------
+    if (opt('qdos    ')) then                                                         ! qdos ruess
+      iqdosrun = 0                                                                    ! qdos ruess
+    else                                                                              ! qdos ruess
+      iqdosrun = -1                                                                   ! qdos ruess
+    end if                                                                            ! qdos ruess
+    ! Jump back here to continue with second run if qdos option is selected           ! qdos ruess
+100 continue                                                                          ! qdos ruess
+    ! Reset GMATLL for calculation in second run                                      ! qdos ruess
+    if (iqdosrun==1) then                                                             ! qdos ruess
+      do i1 = 1, nshell(0)                                                            ! qdos ruess
+        gmatll(1:lmmaxd, 1:lmmaxd, i1) = czero                                        ! qdos ruess
+      end do                                                                          ! qdos ruess
+    end if                                                                            ! qdos ruess
 
     if ((opt('qdos    ')) .and. (opt('deci-out'))) then
       stop 'ERROR: qdos and deci-out cannot be used simultaniously'
@@ -373,22 +361,24 @@ contains
         open (888, access='direct', recl=reclength, file='kkrflex_green', form='unformatted')
       end if
 
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! the following write-out has been disabled, because it was assumed to be    !no-green
-      ! obsolete with the implementation of the MPI-communicated arrays. If I am  !no-green
-      ! wrong and the write-out is needed in subsequent parts, construct a        !no-green
-      ! test-option around it so that it is only written out in this case.        !no-green
-      ! OPEN (88,ACCESS='direct',RECL=LRECGREEN,                               !no-green
-      ! &             FILE='green',FORM='unformatted')                              !no-green
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !------------------------------------------------------------------------------
+      ! the following write-out has been disabled, because it was assumed to be       !no-green
+      ! obsolete with the implementation of the MPI-communicated arrays. If I am      !no-green
+      ! wrong and the write-out is needed in subsequent parts, construct a            !no-green
+      ! test-option around it so that it is only written out in this case.            !no-green
+      ! OPEN (88,ACCESS='direct',RECL=LRECGREEN,                                      !no-green
+      ! &             FILE='green',FORM='unformatted')                                !no-green
+      !------------------------------------------------------------------------------
       irec = 1
 
       if ((opt('KKRFLEX '))) then
         if (myrank==master) then
-          write (888, rec=irec) ielast, nspin, natomimp, natomimp, lmmaxd, korbit, (ez(ie), ie=1, ielast), (wez(ie), ie=1, ielast)
+          write (888, rec=irec) ielast, nspin, natomimp, natomimp, lmmaxd, korbit,  &
+            (ez(ie), ie=1, ielast), (wez(ie), ie=1, ielast)
           if ((opt('GPLAIN  '))) then
             ! WRITE(8888,'(I5,50000F)') IELAST,NSPIN,NATOMIMP,NATOMIMP,&
-            write (8888, *) ielast, nspin, natomimp, natomimp, (lmax+1)**2, (ez(ie), ie=1, ielast), (wez(ie), ie=1, ielast)
+            write (8888, *) ielast, nspin, natomimp, natomimp, (lmax+1)**2, (ez(ie), &
+              ie=1, ielast), (wez(ie), ie=1, ielast)
           end if
         end if
 #ifdef CPP_MPI
@@ -418,12 +408,12 @@ contains
         read (67, *)(qvec(ix,iq), ix=1, 3) ! qdos ruess
       end do                       ! qdos ruess
       close (67)                   ! qdos ruess
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !------------------------------------------------------------------------------
       ! Prepare k-mesh information to be appropriate for qdos calculation.
       ! The idea is that subr. KLOOPZ1 is called for only one point at a time,
       ! with weight equal to the full BZ; in this way we avoid changing the
       ! calling list or the contents of kloopz1.
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !------------------------------------------------------------------------------
       kmesh(1:ielast) = 1          ! qdos ruess
       nofks(1) = 1                 ! qdos ruess
       volcub(1, 1) = volbz(1)      ! qdos ruess
@@ -615,16 +605,15 @@ contains
 
         end do                     ! i1 = 1,natyp
 
-
         if (t_lloyd%g0tr_to_file) then
           if (lly/=0 .and. ispin==1) read (682, fmt='(2E24.16)') lly_g0tr(ie) ! LLY
         else
           if (lly/=0 .and. ispin==1) lly_g0tr(ie) = t_lloyd%g0tr(ie_num) ! LLY
         end if
 
-        ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !----------------------------------------------------------------------------
         ! qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos
-        ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !----------------------------------------------------------------------------
         if (opt('readcpa ') .or. (opt('qdos    ') .and. (iqdosrun==1))) then ! qdos ruess: read in cpa t-matrix
           do isite = 1, naez       ! qdos ruess
             tqdos(:, :, isite) = czero ! qdos ruess
@@ -905,11 +894,11 @@ contains
     if (lcpaij .and. t_cpa%dmatproj_to_file) close (71)
 
     close (37)                     ! qdos ruess
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! Finished first qdos run. Now re-run the whole kkr1b program to
     ! calculate the GF for every energy (defined in inputcard) and
     ! kpoint (defined in qvec.dat)
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     iqdosrun = iqdosrun + 1        ! qdos ruess
     if (t_lloyd%dgref_to_file) close (681)
     if (t_lloyd%g0tr_to_file) close (682)

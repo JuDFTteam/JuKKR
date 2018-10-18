@@ -26,12 +26,8 @@ module mod_lngstring
     !> @endnote
     !-------------------------------------------------------------------------------
     integer function lngstring(string, lstrmax)
-      ! ********************************************************************
-      ! *                                                                  *
-      ! *  find position of last non-blank character in STRING(1:LSTRMAX)  *
-      ! *                                                                  *
-      ! ********************************************************************
-      implicit none
+
+    implicit none
   
       ! Dummy arguments
       integer, intent(in) :: lstrmax !! Maximum length of the string

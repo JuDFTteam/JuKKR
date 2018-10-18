@@ -1,7 +1,7 @@
 !-------------------------------------------------------------------------------
-!> Summary: Solve surface green's function: $$f(x)=ml\left(m0-x\right)^{\left(-1\right)*mr}$$
+!> Summary: Solve surface green's function: \(f(x)=ml\left(m0-x\right)^{\left(-1\right)*mr}\)
 !> Author: 
-!> Solve surface green's function: $$f(x)=ml\left(m0-x\right)^{\left(-1\right)*mr}$$
+!> Solve surface green's function: \(f(x)=ml\left(m0-x\right)^{\left(-1\right)*mr}\)
 !> method: decimation technique
 !> input:  ml,m0,mr - complex rectangular matrices
 !> output: x        - result, matrix of same type as before
@@ -14,11 +14,11 @@ module mod_surfgf
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: Solve surface green's function: $$f(x)=ml\left(m0-x\right)^{\left(-1\right)*mr}$$
+  !> Summary: Solve surface green's function: \(f(x)=ml\left(m0-x\right)^{\left(-1\right)*mr}\)
   !> Author: 
   !> Category: KKRhost, structural-greensfunction
   !> Deprecated: False 
-  !> Solve surface green's function: $$f(x)=ml\left(m0-x\right)^{\left(-1\right)*mr}$$
+  !> Solve surface green's function: \(f(x)=ml\left(m0-x\right)^{\left(-1\right)*mr}\)
   !> method: decimation technique
   !> input:  ml,m0,mr - complex rectangular matrices
   !> output: x        - result, matrix of same type as before
@@ -36,17 +36,6 @@ contains
 
     implicit none
 
-    ! -------------------------------------------------------------------------------
-    ! For KREL = 1 (relativistic mode)
-
-    ! NPOTD = 2 * NATYPD
-    ! LMMAXD = 2 * (LMAXD+1)^2
-    ! NSPIND = 1
-    ! LMGF0D = (LMAXD+1)^2 dimension of the reference system Green
-    ! function, set up in the spin-independent non-relativstic
-    ! (l,m_l)-representation
-
-    ! -------------------------------------------------------------------------------
     ! .. Input variables
     integer, intent (in) :: ndim
     integer, intent (in) :: ichck

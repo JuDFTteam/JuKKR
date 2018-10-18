@@ -1,40 +1,58 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculate the spin-polarized exchange-correlation potential
+!> Author: B. Drittler
+!> Calculate the spin-polarized exchange-correlation potential and the 
+!> spin-polarized exchange-correlation energy kxc=0 means : spin-polarized 
+!> exchange-correlation potential U. Von Barth and l.hedin, J. Phys. C5,1629 (1972)
+!> with parametrization of Moruzzi, Janak, Williams kxc=1 means : spin-polarized 
+!> exchange-correlation potential U. Von Barth and L. Hedin, J. Phys. C5,1629 (1972)
+!> with parametrization of Von Barth, Hedin
+!> use as input the density generated on an angular mesh (see subroutine `vxclm`).
+!> `fpirho(.,1)` contains the charge density times \(4\pi\) and `fpirho(.,2)` 
+!> the spin density times \(4 \pi\).
+!> Then the ex.-cor. potential and the ex.-cor. energy on those mesh points is calculated .
+!> the spin-down potential is stored in `vxc(.,1)`.
+!------------------------------------------------------------------------------------
 module mod_vxcspo
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculate the spin-polarized exchange-correlation potential and the spin-polarized exchange-correlation energy .
+  !> Author: B. Drittler
+  !> Category: xc-potential, KKRhost
+  !> Deprecated: False 
+  !> Calculate the spin-polarized exchange-correlation potential and the 
+  !> spin-polarized exchange-correlation energy kxc=0 means : spin-polarized 
+  !> exchange-correlation potential U. Von Barth and l.hedin, J. Phys. C5,1629 (1972)
+  !> with parametrization of Moruzzi, Janak, Williams kxc=1 means : spin-polarized 
+  !> exchange-correlation potential U. Von Barth and L. Hedin, J. Phys. C5,1629 (1972)
+  !> with parametrization of Von Barth, Hedin
+  !> use as input the density generated on an angular mesh (see subroutine `vxclm`).
+  !> `fpirho(.,1)` contains the charge density times \(4\pi\) and `fpirho(.,2)` 
+  !> the spin density times \(4 \pi\).
+  !> Then the ex.-cor. potential and the ex.-cor. energy on those mesh points is calculated .
+  !> the spin-down potential is stored in `vxc(.,1)`.
+  !-------------------------------------------------------------------------------
   subroutine vxcspo(exc, fpirho, vxc, kxc, ijend, ijd)
-    ! -----------------------------------------------------------------------
-    ! calculate the spin-polarized exchange-correlation potential
-    ! and the spin-polarized exchange-correlation energy .
-    ! kxc=0 means : spin-polarized exchange-correlation potential
-    ! u. von barth and l.hedin, j.phys.c5,1629 (1972)
-    ! with parametrization of moruzzi,janak,williams
-    ! kxc=1 means : spin-polarized exchange-correlation potential
-    ! u. von barth and l.hedin, j.phys.c5,1629 (1972)
-    ! with parametrization of von barth,hedin
 
-    ! use as input the density generated on an angular mesh (see
-    ! subroutine vxclm) . fpirho(.,1) contains the charge density
-    ! times 4 pi and fpirho(.,2) the spin density times 4 pi .
-    ! then the ex.-cor. potential and the ex.-cor. energy on those
-    ! mesh points is calculated .
-    ! the spin-down potential is stored in vxc(.,1) .
-
-    ! b.drittler    june 1987
-    ! -----------------------------------------------------------------------
-    ! ..
-    ! .. Scalar Arguments ..
-    integer :: ijend, kxc, ijd
-    ! ..
-    ! .. Array Arguments ..
-    real (kind=dp) :: exc(*), fpirho(ijd, 2), vxc(ijd, 2)
+    ! .. Input variables
+    integer, intent(in) :: kxc !! Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
+    integer, intent(in) :: ijd
+    integer, intent(in) :: ijend
+    ! .. Output variables
+    real (kind=dp), dimension(*), intent(out) :: exc !! xc-energy
+    real (kind=dp), dimension(ijd, 2), intent(out) :: vxc !! spin polarized xc-potential
+    ! .. In/Out variables
+    real (kind=dp), dimension(ijd, 2), intent(inout) :: fpirho !! spin resolved density
     ! ..
     ! .. Local Scalars ..
-    real (kind=dp) :: cex, cf, cfln, cfmjw, cfvbh, cp, cpln, cpmjw, cpvbh, d1, d2, dcfx, excfrs, excprs, exfrs, exprs, fac, ff, onthrd, rf, rfmjw, rfvbh, rp, rpmjw, rpvbh, rs, &
-      smag, te1b3, vxcc, x, xfac
     integer :: ij
+    real (kind=dp) :: cex, cf, cfln, cfmjw, cfvbh, cp, cpln, cpmjw, cpvbh, d1, d2
+    real (kind=dp) :: dcfx, excfrs, excprs, exfrs, exprs, fac, ff, onthrd, rf, rfmjw
+    real (kind=dp) :: rfvbh, rp, rpmjw, rpvbh, rs, smag, te1b3, vxcc, x, xfac
     ! ..
     ! .. Intrinsic Functions ..
     intrinsic :: abs, sign, log, max, min

@@ -1,10 +1,10 @@
 !-----------------------------------------------------------------------------------
 !> Summary: Wrapper module for the calculation of the DFT quantities for the JM-KKR package
-!> Author: Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,       
+!> Author: Philipp Ruessmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,       
 !> and many others ...
 !> The code uses the information obtained in the main0 module, this is
-!> mostly done via the get_params_2() call, that obtains parameters of the type
-!> t_params and passes them to local variables
+!> mostly done via the `get_params_2()` call, that obtains parameters of the type
+!> `t_params` and passes them to local variables
 !-----------------------------------------------------------------------------------
 module mod_main2
 
@@ -49,6 +49,7 @@ contains
   !> Category: potential, xc-potential, total-energy, KKRhost
   !> Deprecated: False 
   !> Calculates the potential from density, exc-potential, calculate total energy, ...
+  !-------------------------------------------------------------------------------
   !> @note JC: there seems to be an array called sum, this is dangerous as it 
   !> can get confuder by the FORTRAN intrinsic function sum(). The name should
   !> be changed.
@@ -91,8 +92,8 @@ contains
     real (kind=dp) :: rv
     real (kind=dp) :: mix
     real (kind=dp) :: sum
-    real (kind=dp) :: fpi        !! 4$$\pi$$
-    real (kind=dp) :: rfpi       !! $$\sqrt{4\pi}$$
+    real (kind=dp) :: fpi        !! 4\(\pi\)
+    real (kind=dp) :: rfpi       !! \(\sqrt{4\pi}\)
     real (kind=dp) :: efold
     real (kind=dp) :: efnew
     real (kind=dp) :: denef

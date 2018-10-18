@@ -1,23 +1,30 @@
+!------------------------------------------------------------------------------------
+!> Summary: Auxiliary function to calculate the single site t-matrix for LDA+U implementation 
+!> Author: Ph. Mavropoulos, H. Ebert, V. Popescu
+!> Auxiliary function to calculate the single site t-matrix for LDA+U implementation 
+!------------------------------------------------------------------------------------
 module mod_pnstmat
 
 contains
 
-  ! Added IRMIN 1.7.2014  &
-  subroutine pnstmat(drdi, ek, icst, pz, qz, fz, sz, pns, tmatll, vins, irmin, ipan, ircut, nsra, cleb, icleb, iend, loflm, tmat, lkonv, idoldau, lopt, lmlo, lmhi, wldau, wldauav, &
-    cutoff, alpha0)                ! LLY
-    ! *                                                                   *
-    ! *  LDA+U implementation     Mar. 2002-Dec.2004                      *
-    ! *                           ph.mavropoulos, h. ebert, v. popescu    *
-    ! *                                                                   *
-    ! *********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Auxiliary function to calculate the single site t-matrix for LDA+U implementation 
+  !> Author: Ph. Mavropoulos, H. Ebert, V. Popescu
+  !> Category: lda+u, single-site, KKRhost 
+  !> Deprecated: False 
+  !> Auxiliary function to calculate the single site t-matrix for LDA+U implementation 
+  !-------------------------------------------------------------------------------
+  subroutine pnstmat(drdi,ek,icst,pz,qz,fz,sz,pns,tmatll,vins,irmin,ipan,ircut,nsra,& 
+    cleb,icleb,iend,loflm,tmat,lkonv,idoldau,lopt,lmlo,lmhi,wldau,wldauav,cutoff,   &
+    alpha0)                ! LLY
+
     use :: mod_datatypes, only: dp
     use :: global_variables
     use :: mod_vllns
     use :: mod_wftsca
     use :: mod_regns
+    use :: constants, only: czero
     implicit none
-    complex (kind=dp) :: czero
-    parameter (czero=(0.e0_dp,0.e0_dp))
     ! LLY
     ! ..
     complex (kind=dp) :: ek
@@ -60,15 +67,10 @@ contains
     ! for the non-spherical wavefunction, while the average is
     ! used for the spherical wavefunction.
 
-
     ! -> First add wldau to all elements ...
-
-
     if (idoldau==1 .and. lopt>=0) then
       do ir = irmind, irmd
         ! ... and then subtract average from diag. elements
-
-
         do lm2 = lmlo, lmhi
           m2 = lm2 - lmlo + 1
           do lm1 = lmlo, lmhi
@@ -94,13 +96,13 @@ contains
 
     ! ---> determine the regular non sph. wavefunction
 
-    call wftsca(drdi, efac, pz, qz, fz, sz, nsra, pzlm, qzlm, pzekdr, qzekdr, ek, loflm, irmind, irmd, irmin, irmax, lmaxd, lmmaxd) ! Added IRMIN,IRMAX
+    call wftsca(drdi,efac,pz,qz,fz,sz,nsra,pzlm,qzlm,pzekdr,qzekdr,ek,loflm,irmind, &
+      irmd,irmin,irmax,lmaxd,lmmaxd) ! Added IRMIN,IRMAX
     ! 1.7.2014  &
 
-
-
-    call regns(ar, tmatll, efac, pns, vnspll, icst, ipan, ircut, pzlm, qzlm, pzekdr, qzekdr, ek, pns(1,1,irmind,1), cmat, pns(1,1,irmind,2), dmat, nsra, irmind, irmd, irmin, irmax, &
-      ipand, lmmaxd)
+    call regns(ar,tmatll,efac,pns,vnspll,icst,ipan,ircut,pzlm,qzlm,pzekdr,qzekdr,ek,& 
+      pns(1,1,irmind,1),cmat,pns(1,1,irmind,2),dmat,nsra,irmind,irmd,irmin,irmax,   &
+      ipand,lmmaxd)
     ! LLY non-spher. contribution to alpha matrix
     ! LLY Drittler PhD eq. 3.106
     do lm1 = 1, lmmkonv

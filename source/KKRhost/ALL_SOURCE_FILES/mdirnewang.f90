@@ -1,9 +1,9 @@
 !------------------------------------------------------------------------------------
 !> Summary: Calculates angles of the **local frame** with respect to the **global frame**
 !> Author: 
-!> After correcting `MVEVI` with the Fermi energy value `MVEVIEF` (outside        
+!> After correcting `MVEVI` with the Fermi energy value `MVEVIEF` (outside 
 !> this routine) it calculates the new angles of the **local frame** quantization 
-!> axis with respect to the **global frame**                                      
+!> axis with respect to the **global frame** 
 !------------------------------------------------------------------------------------
 module mod_mdirnewang
   use :: mod_datatypes, only: dp
@@ -12,29 +12,21 @@ module mod_mdirnewang
 
 contains
 
-   !-------------------------------------------------------------------------------  
-   !> Summary: Calculates angles of the **local frame** with respect to the **global frame**
-   !> Author:
-   !> Category: physical-observables, KKRhost 
-   !> Deprecated: False 
-   !> After correcting `MVEVI` with the Fermi energy value `MVEVIEF` (outside 
-   !> this routine) it calculates the new angles of the **local frame** quantization 
-   !> axis with respect to the **global frame**
-   !-------------------------------------------------------------------------------  
-   !> @note This routine has been build up from the last part of the original 
-   !> Munich `CALCMVEC()` routine.
-   !> @endnote                                                                       
-   !------------------------------------------------------------------------------- 
+  !-------------------------------------------------------------------------------  
+  !> Summary: Calculates angles of the **local frame** with respect to the **global frame**
+  !> Author:
+  !> Category: physical-observables, KKRhost 
+  !> Deprecated: False 
+  !> After correcting `MVEVI` with the Fermi energy value `MVEVIEF` (outside 
+  !> this routine) it calculates the new angles of the **local frame** quantization 
+  !> axis with respect to the **global frame**
+  !-------------------------------------------------------------------------------  
+  !> @note This routine has been build up from the last part of the original 
+  !> Munich `CALCMVEC()` routine.
+  !> @endnote                                                                       
+  !------------------------------------------------------------------------------- 
   subroutine mdirnewang(it,nmvec,mvevi,mvphi,mvtet,mvgam,natypd,lmaxd,nmvecmax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *  this routine has been build up from the last part of the        *
-    ! *  original Munich CALCMVEC routine.                               *
-    ! *  After correcting MVEVI with the Fermi energy value MVEVIEF      *
-    ! *  (outside this routine) it calculates the new angles of the      *
-    ! *  LOCAL FRAME quantisation axis with respect to the GLOBAL FRAME  *
-    ! *                                                                  *
-    ! ********************************************************************
+
     implicit none
 
     ! Parameter definitions

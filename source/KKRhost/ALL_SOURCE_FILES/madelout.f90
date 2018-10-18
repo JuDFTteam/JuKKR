@@ -2,8 +2,7 @@
 !> Summary: I/O of the Madelung coefficients
 !> Author:
 !> For a 2D/3D structures it reads the structure matrices from an unstructured file, and
-!> then writes them to a formatted file.
-!> matrices into a file.
+!> then writes them to a formatted file matrices into a file.
 !------------------------------------------------------------------------------------
 module mod_madelout
   use :: mod_datatypes, only: dp

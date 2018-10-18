@@ -1,15 +1,11 @@
 !------------------------------------------------------------------------------------
-!> Summary: Module responsible for storing the input variables and primary arrays
-!> so that they are distributed via MPI processes.
+!> Summary: Module responsible for storing the input variables and primary arrays so that they are distributed via MPI processes.
 !> Author: Philipp Ruessmann and many others ...
 !> Previously this routine wrote unformatted files to disk, so that they
 !> would be used by the different executables. Since the advent of the single
 !> executable mode, this routine creates a copy of most of the variables in the program
 !> as special `type` parameters. This are then used in the MPI communication, and
 !> in the rest of the variables used in the code.
-!> @note Jonatan Chico: 02.01.2018 Modifications to ensure compatibility for the removal of
-!> the inc.p file. Also added the memory profiling calls to the allocation/deallocation
-!> of the arrays. 
 !------------------------------------------------------------------------------------
 !> @note Jonatan Chico: 02.01.2018 Modifications to ensure compatibility for the removal of
 !> the inc.p file. Also added the memory profiling calls to the allocation/deallocation
@@ -192,8 +188,8 @@ module mod_wunfiles
     real (kind=dp), dimension (:), allocatable :: conc !! Concentration of a given atom
     real (kind=dp), dimension (:), allocatable :: theta
     real (kind=dp), dimension (:), allocatable :: volbz
-    real (kind=dp), dimension (:), allocatable :: qmtet !! \f$ \theta\f$ angle of the agnetization with respect to the z-axis
-    real (kind=dp), dimension (:), allocatable :: qmphi !! \f$ \phi\f$ angle of the agnetization with respect to the z-axis
+    real (kind=dp), dimension (:), allocatable :: qmtet !! \(\theta\) angle of the agnetization with respect to the z-axis
+    real (kind=dp), dimension (:), allocatable :: qmphi !! \(\phi\) angle of the agnetization with respect to the z-axis
     real (kind=dp), dimension (:), allocatable :: rmtref !! Muffin-tin radius of reference system
     real (kind=dp), dimension (:), allocatable :: rmtnew !! Adapted muffin-tin radius
     real (kind=dp), dimension (:), allocatable :: denefat
@@ -225,7 +221,7 @@ module mod_wunfiles
     real (kind=dp), dimension (:, :), allocatable :: qmphitab
     real (kind=dp), dimension (:, :), allocatable :: qmtettab
     real (kind=dp), dimension (:, :), allocatable :: qmgamtab
-    real (kind=dp), dimension (:, :), allocatable :: r2drdirel !! \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
+    real (kind=dp), dimension (:, :), allocatable :: r2drdirel !! \( r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\) (r**2 * drdi)
     real (kind=dp), dimension (:, :), allocatable :: rpan_intervall
 
     real (kind=dp), dimension (:, :, :), allocatable :: rcls !! Real space position of atom in cluster
@@ -313,8 +309,7 @@ module mod_wunfiles
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: This routine takes the read parameters from the `inputcard` and stores
-  !> them in the `t_params` type to be distributed via MPI
+  !> Summary: This routine takes the read parameters from the `inputcard` and stores them in the `t_params` type to be distributed via MPI
   !> Author: Philipp Rüssmann and many others ...
   !> Category: communication, input-output, KKRhost 
   !> Deprecated: False 
@@ -493,8 +488,8 @@ contains
     real (kind=dp), dimension (nref), intent (in) :: vref
     real (kind=dp), dimension (natyp), intent (in) :: ueff !! input U parameter for each atom
     real (kind=dp), dimension (natyp), intent (in) :: jeff !! input J parameter for each atom
-    real (kind=dp), dimension (naez), intent (in) :: qmtet !! \f$ \theta\f$ angle of the agnetization with respect to the z-axis
-    real (kind=dp), dimension (naez), intent (in) :: qmphi !! \f$ \phi\f$ angle of the agnetization with respect to the z-axis
+    real (kind=dp), dimension (naez), intent (in) :: qmtet !! \( \theta\) angle of the agnetization with respect to the z-axis
+    real (kind=dp), dimension (naez), intent (in) :: qmphi !! \( \phi\) angle of the agnetization with respect to the z-axis
     real (kind=dp), dimension (nref), intent (in) :: rmtref !! Muffin-tin radius of reference system
     real (kind=dp), dimension (natyp), intent (in) :: rmtnew !! Adapted muffin-tin radius
     real (kind=dp), dimension (natyp), intent (in) :: erefldau !! the energies of the projector's wave functions (REAL)
@@ -525,7 +520,7 @@ contains
     real (kind=dp), dimension (naez, 3), intent (in) :: qmgamtab
     real (kind=dp), dimension (3, natomimpd), intent (in) :: rclsimp
     real (kind=dp), dimension (lmpot, nembd1), intent (in) :: cmomhost !! Charge moments of each atom of the (left/right) host
-    ! real (kind=dp), dimension(IRM,NATYP), intent(in)             :: R2DRDIREL   !! \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
+    ! real (kind=dp), dimension(IRM,NATYP), intent(in)             :: R2DRDIREL   !! \( r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\) (r**2 * drdi)
     real (kind=dp), dimension (irm*krel+(1-krel), natyp), intent (in) :: r2drdirel
     real (kind=dp), dimension (0:ntotd, natyp), intent (in) :: rpan_intervall
     real (kind=dp), dimension (48, 3, nsheld), intent (in) :: rrot
@@ -1710,10 +1705,6 @@ contains
   end subroutine bcast_t_params_arrays
 #endif
 
-  ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: fill_t_params_scalars
-  !> @brief Set the values of the t_params scalars with the input values
-  !> @author Philipp Rüssmann
   !-------------------------------------------------------------------------------
   !> Summary: Set the values of the `t_params` scalars with the input values
   !> Author: Philipp Ruessmann 
@@ -2060,8 +2051,8 @@ contains
     real (kind=dp), dimension (natyp), intent (in) :: jeff !! input J parameter for each atom
     real (kind=dp), dimension (natyp), intent (in) :: conc !! Concentration of a given atom
     real (kind=dp), dimension (nref), intent (in) :: vref
-    real (kind=dp), dimension (naez), intent (in) :: qmtet !! \f$ \theta\f$ angle of the agnetization with respect to the z-axis
-    real (kind=dp), dimension (naez), intent (in) :: qmphi !! \f$ \phi\f$ angle of the agnetization with respect to the z-axis
+    real (kind=dp), dimension (naez), intent (in) :: qmtet !! \( \theta\) angle of the agnetization with respect to the z-axis
+    real (kind=dp), dimension (naez), intent (in) :: qmphi !! \( \phi\) angle of the agnetization with respect to the z-axis
     real (kind=dp), dimension (nref), intent (in) :: rmtref !! Muffin-tin radius of reference system
     real (kind=dp), dimension (natyp), intent (in) :: rmtnew !! Adapted muffin-tin radius
     real (kind=dp), dimension (natyp), intent (in) :: erefldau !! the energies of the projector's wave functions (REAL)
@@ -2093,7 +2084,7 @@ contains
     real (kind=dp), dimension (naez, 3), intent (in) :: qmtettab
     real (kind=dp), dimension (naez, 3), intent (in) :: qmgamtab
     real (kind=dp), dimension (lmpot, nembd1), intent (in) :: cmomhost !! Charge moments of each atom of the (left/right) host
-    ! real (kind=dp), dimension(IRM,NATYP), intent(in)             :: R2DRDIREL  !! \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
+    ! real (kind=dp), dimension(IRM,NATYP), intent(in)             :: R2DRDIREL  !! \( r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\) (r**2 * drdi)
     real (kind=dp), dimension (irm*krel+(1-krel), natyp), intent (in) :: r2drdirel
     real (kind=dp), dimension (0:ntotd, natyp), intent (in) :: rpan_intervall
 
@@ -2293,8 +2284,7 @@ contains
   end subroutine fill_t_params_arrays
 
   !-------------------------------------------------------------------------------
-  !> Summary: Set the values of the local variables according to the stored `t_params`
-  !> so that they can be passed between different control modules, specifically for `main1a`
+  !> Summary: Set the values of the local variables according to the stored `t_params` so that they can be passed between different control modules, specifically for `main1a`
   !> Author: Philipp Ruessmann 
   !> Category: communication, KKRhost 
   !> Deprecated: False 
@@ -2397,7 +2387,7 @@ contains
     real (kind=dp), dimension (irmd*krel+(1-krel), natypd), intent (inout) :: rmrel !! radial mesh
     real (kind=dp), dimension (krel*lmax+1, krel*natypd+(1-krel)), intent (inout) :: socscl
     real (kind=dp), dimension (irmd*krel+(1-krel), natypd), intent (inout) :: drdirel !! derivative of radial mesh
-    real (kind=dp), dimension (irmd*krel+(1-krel), natypd), intent (inout) :: r2drdirel !! \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
+    real (kind=dp), dimension (irmd*krel+(1-krel), natypd), intent (inout) :: r2drdirel !! \( r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\) (r**2 * drdi)
     real (kind=dp), dimension (0:ntotd, natypd), intent (inout) :: rpan_intervall
     real (kind=dp), dimension (3, naclsd, nclsd), intent (inout) :: rcls !! Real space position of atom in cluster
     real (kind=dp), dimension (irmind:irmd, lmpot, nspotd), intent (inout) :: vins !! Non-spherical part of the potential
@@ -2516,8 +2506,7 @@ contains
   end subroutine get_params_1a
 
   !-------------------------------------------------------------------------------
-  !> Summary: Set the values of the local variables according to the stored `t_params`
-  !> so that they can be passed between different control modules, specifically for `main1b`
+  !> Summary: Set the values of the local variables according to the stored `t_params` so that they can be passed between different control modules, specifically for `main1b`
   !> Author: Philipp Ruessmann 
   !> Category: communication, KKRhost 
   !> Deprecated: False 
@@ -2787,8 +2776,7 @@ contains
   end subroutine get_params_1b
 
   !-------------------------------------------------------------------------------
-  !> Summary: Set the values of the local variables according to the stored `t_params`
-  !> so that they can be passed between different control modules, specifically for `main1c`
+  !> Summary: Set the values of the local variables according to the stored `t_params` so that they can be passed between different control modules, specifically for `main1c`
   !> Author: Philipp Ruessmann 
   !> Category: communication, KKRhost 
   !> Deprecated: False 
@@ -2910,7 +2898,7 @@ contains
     real (kind=dp), dimension (20, npotd), intent (inout) :: ecore
     real (kind=dp), dimension (krel*lmaxd+1, krel*natypd+(1-krel)), intent (inout) :: socscl
     real (kind=dp), dimension (irmd*krel+(1-krel), natypd), intent (inout) :: drdirel
-    real (kind=dp), dimension (irmd*krel+(1-krel), natypd), intent (inout) :: r2drdirel !! $$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}$$ (r**2 * drdi)
+    real (kind=dp), dimension (irmd*krel+(1-krel), natypd), intent (inout) :: r2drdirel !! \( r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\) (r**2 * drdi)
     real (kind=dp), dimension (0:ntotd, natypd), intent (inout) :: rpan_intervall
     real (kind=dp), dimension (irmind:irmd, lmpotd, nspotd), intent (inout) :: vins
     real (kind=dp), dimension (irid, nfund, ncelld), intent (inout) :: thetas
@@ -3057,8 +3045,7 @@ contains
   end subroutine get_params_1c
 
   !-------------------------------------------------------------------------------
-  !> Summary: Set the values of the local variables according to the stored `t_params`
-  !> so that they can be passed between different control modules, specifically for `main2`
+  !> Summary: Set the values of the local variables according to the stored `t_params` so that they can be passed between different control modules, specifically for `main2`
   !> Author: Philipp Ruessmann 
   !> Category: communication, KKRhost 
   !> Deprecated: False 
@@ -3326,8 +3313,7 @@ contains
   end subroutine get_params_2
 
   !-------------------------------------------------------------------------------
-  !> Summary: Store the values of the local variables related to the energy mesh,
-  !> in the `t_params` data types
+  !> Summary: Store the values of the local variables related to the energy mesh, in the `t_params` data types
   !> Author: Philipp Ruessmann 
   !> Category: communication, KKRhost 
   !> Deprecated: False 
@@ -3385,8 +3371,7 @@ contains
   end subroutine save_emesh
 
   !-------------------------------------------------------------------------------
-  !> Summary: Store the values of the local variables related to the SCF parameters
-  !> in the `t_params` data types
+  !> Summary: Store the values of the local variables related to the SCF parameters in the `t_params` data types
   !> Author: Philipp Ruessmann 
   !> Category: communication, KKRhost 
   !> Deprecated: False 
@@ -3450,8 +3435,7 @@ contains
   end subroutine save_scfinfo
 
   !-------------------------------------------------------------------------------
-  !> Summary: Store the values of the local variables related to the electronic density
-  !> in the `t_params` data types
+  !> Summary: Store the values of the local variables related to the electronic density in the `t_params` data types
   !> Author: Philipp Ruessmann 
   !> Category: communication, physical-observables, KKRhost 
   !> Deprecated: False 
@@ -3512,8 +3496,7 @@ contains
   end subroutine save_density
 
   !-------------------------------------------------------------------------------
-  !> Summary: Set the values of the local variables related to the electronic density
-  !> in the `t_params` data types
+  !> Summary: Set the values of the local variables related to the electronic density in the `t_params` data types
   !> Author: Philipp Ruessmann 
   !> Category: communication, physical-observables, KKRhost 
   !> Deprecated: False 
@@ -3574,8 +3557,7 @@ contains
   end subroutine read_density
 
   !-------------------------------------------------------------------------------
-  !> Summary: Read the angles variables associated with the angles of magnetic
-  !> moments in a non-collinear calculation
+  !> Summary: Read the angles variables associated with the angles of magnetic moments in a non-collinear calculation
   !> Author: Philipp Ruessmann 
   !> Category: input-output, dirac, KKRhost 
   !> Deprecated: False 

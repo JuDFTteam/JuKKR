@@ -1,3 +1,8 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculate the reference system for the decimation case
+!> Author: 
+!> Calculate the reference system for the decimation case. 
+!------------------------------------------------------------------------------------
 module mod_tbref
 
 contains

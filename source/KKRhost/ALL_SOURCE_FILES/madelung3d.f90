@@ -16,8 +16,8 @@ contains
   !> Calculation of the Madelung potential coefficients for a 3D structure, the coefficients
   !> are then stored in an unformatted file.
   !-------------------------------------------------------------------------------
-  !> @note All positions must be scaled with ALAT to get them correct
-  !> The record index is simply (IQ1-1)*NAEZ + IQ2 for record (IQ1,IQ2)
+  !> @note All positions must be scaled with `ALAT` to get them correct
+  !> The record index is simply `(IQ1-1)*NAEZ + IQ2` for record `(IQ1,IQ2)`
   !> @endnote
   !> @todo This routine uses both naez and naezd which should be the same number, 
   !> one should replace this to eliminate redundant variables.
@@ -25,13 +25,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine madelung3d(lpot,yrg,wg,naez,alat,volume0,bravais,recbv,rbasis,rmax,    &
     gmax,naezd,lmxspd,lassld,lpotd, lmpotd,nmaxd,ishld,nembd,wlength)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * This subroutine calculates the Madelung potential coefficients     *
-    ! * in the 3D case and stores them in the DA-file abvmad.unformatted   *
-    ! * The record index is simply (IQ1-1)*NAEZ + IQ2 for record (IQ1,IQ2) *
-    ! *                                                                    *
-    ! **********************************************************************
+
     use :: mod_datatypes, only: dp
     use :: mod_madelgaunt
     use :: mod_madelcoef

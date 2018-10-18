@@ -10,13 +10,13 @@ module mod_madelgaunt
 contains
   !-------------------------------------------------------------------------------
   !> Summary: Calculation of the Gaunt coefficients
-  !> Author: Who wrote this subroutine
+  !> Author: 
   !> Category: electrostatics, KKRhost 
   !> Deprecated: False
   !> Calculation of the Gaunt coefficients
   !-------------------------------------------------------------------------------
-  !> @note Attention: Dimension NCLEBD appears sometimes as NCLEB1
-  !> an empirical factor - it has to be optimized. 
+  !> @note Attention: Dimension NCLEBD appears sometimes as `NCLEB1` an empirical 
+  !> factor - it has to be optimized. 
   !> 
   !> Jonathan Chico 21.09.2018: Unsure if previous note is still valid
   !> @endnote

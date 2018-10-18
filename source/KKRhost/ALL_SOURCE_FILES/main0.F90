@@ -1,19 +1,22 @@
-! -----------------------------------------------------------------------------------
+!------------------------------------------------------------------------------------
 !> Summary: Wrapper module for the reading and setup of the JM-KKR program
-!> Author: Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
+!> Author: Philipp Ruessmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
 !> and many others ...
-!> @todo JC: NATOMIMP and NATOMIMPD seem to be the same variable, however, right
+!> Wrapper module for the reading and setup of the JM-KKR program, it also calculates
+!> the electrostatic potential.
+!------------------------------------------------------------------------------------
+!> @todo JC: `NATOMIMP` and `NATOMIMPD` seem to be the same variable, however, right
 !> now find no way to eliminate one of them.
 !> @endtodo
-!> @todo JC: There seem to be several repeated variables doing the same, e.g. INS,
-!> KNOSPH, KWS and KSHAPE, all seem to dictate whether one has ASA or FP.
+!> @todo JC: There seem to be several repeated variables doing the same, e.g. `INS`,
+!> `KNOSPH`, `KWS` and `KSHAPE`, all seem to dictate whether one has ASA or FP.
 !> Maybe it would be good to consolidate and eliminate any unnecessary variables.
 !> @endtodo
-!> @todo JC: Several variables such as IRMD and IRNSD are actually determined in
-!> the startb1 subroutine, maybe change the allocations such that they are done
+!> @todo JC: Several variables such as `IRMD` and `IRNSD` are actually determined in
+!> the `startb1()` subroutine, maybe change the allocations such that they are done
 !> there instead
 !> @endtodo
-! -----------------------------------------------------------------------------------
+!------------------------------------------------------------------------------------
 #ifdef CPP_HYBRID
 #define CPP_OMPSTUFF
 #endif
@@ -84,7 +87,7 @@ module mod_main0
   integer :: kefg
   integer :: khyp
   integer :: kpre
-  integer :: nprinc
+  integer :: nprinc                !! Number of principal layers
   integer :: nsra
   integer :: lpot                  !! Maximum l component in potential expansion
   integer :: imix                  !! Type of mixing scheme used (0=straight, 4=Broyden 2nd, 5=Anderson)
@@ -168,12 +171,12 @@ module mod_main0
   real (kind=dp) :: ebotsemi       !! Bottom of semicore contour in Ryd
   real (kind=dp) :: fsemicore      !! Initial normalization factor for semicore states (approx. 1.)
   real (kind=dp) :: lambda_xc      !! Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
-  character (len=10) :: solver                               !! Type of solver
-  character (len=40) :: i12                               !! File identifiers
-  character (len=40) :: i13                               !! Potential file name
-  character (len=40) :: i19                               !! Shape function file name
-  character (len=40) :: i25                               !! Scoef file name
-  character (len=40) :: i40                               !! File identifiers
+  character (len=10) :: solver     !! Type of solver
+  character (len=40) :: i12        !! File identifiers
+  character (len=40) :: i13        !! Potential file name
+  character (len=40) :: i19        !! Shape function file name
+  character (len=40) :: i25        !! Scoef file name
+  character (len=40) :: i40        !! File identifiers
   logical :: lrhosym
   logical :: linipol               !! True: Initial spin polarization; false: no initial spin polarization
   logical :: lcartesian            !! True: Basis in cartesian coords; false: in internal coords
@@ -289,9 +292,9 @@ module mod_main0
   ! -------------------------------------------------------------------------
   ! Magnetisation angles -- description see RINPUT13
   ! -------------------------------------------------------------------------
-  integer :: kmrot                 !! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
-  real (kind=dp), dimension (:), allocatable :: qmtet !! \f$ \theta\f$ angle of the agnetization with respect to the z-axis
-  real (kind=dp), dimension (:), allocatable :: qmphi !! \f$ \phi\f$ angle of the agnetization with respect to the z-axis
+  integer :: kmrot !! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
+  real (kind=dp), dimension (:), allocatable :: qmtet !! $$ \theta $$ angle of the agnetization with respect to the z-axis
+  real (kind=dp), dimension (:), allocatable :: qmphi !! $$ \phi $$ angle of the agnetization with respect to the z-axis
   ! -------------------------------------------------------------------------
   ! CPA variables
   ! -------------------------------------------------------------------------
@@ -406,7 +409,9 @@ contains
   !> Author: Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
   !> and many others ...
   !> Category: input-output, initialization, geometry, k-points, electrostatics, KKRhost
-  !> Deprecated: False 
+  !> Deprecated: False
+  !> Main wrapper to handle input reading, allocation of arrays, and
+  !> preparation of all the necessary data structures for a calculation. 
   ! ----------------------------------------------------------------------------
   subroutine main0()
 
@@ -436,7 +441,7 @@ contains
     integer :: lrecabmad
     real (kind=dp) :: zattemp
     integer :: ierr
-    real (kind=dp), allocatable :: tmp_rr(:, :)
+    real (kind=dp), dimension(:,:), allocatable :: tmp_rr
     ! for OPERATOR option
     logical :: lexist, operator_imp
 
@@ -472,15 +477,14 @@ contains
     ! -------------------------------------------------------------------------
     ! End write version info
     ! -------------------------------------------------------------------------
-
-
     ! allocate and initialize default values
     call init_all_wrapper()
 
     ! -------------------------------------------------------------------------
     ! Reading of the inputcard, and allocation of several arrays
-    !> @note JC: have added reading calls for the parameters that used to be in
-    !> the inc.p and can now be modified via the inputcard directly
+    !! @note JC: have added reading calls for the parameters that used to be in
+    !! the `inc.p` and can now be modified via the `inputcard` directly
+    !! @endnote
     ! -------------------------------------------------------------------------
     call rinput13(kte,igf,kxc,lly,icc,ins,kws,ipe,ipf,ipfe,icst,imix,lpot,naez,nemb,&
       nref,ncls,npol,lmax,kcor,kefg,khyp,kpre,kvmad,lmmax,lmpot,ncheb,nleft,ifile,  &
@@ -673,7 +677,6 @@ contains
       nlayerd = nlayer
     end if
 
-
     ! Now the clusters, reference potentials and muffin-tin radii have been set.
     ! -------------------------------------------------------------------------
     ! Consistency check
@@ -707,7 +710,6 @@ contains
       ipan,thetas,ifunm,nfu,llmsp,lmsp,e2in,vbc,dror,rs,s,visp,rws,ecore,lcore,     &
       ncore,drdi,rmesh,zat,a,b,irws,1,lmpot,irmind,irmd,lmxspd,ipand,irid,irnsd,    &
       natyp,ncelld,nfund,nspotd,ivshift, npotd)
-
 
     ! find md5sums for potential and shapefunction
     call get_md5sums(ins, i13, i19)
@@ -1217,10 +1219,10 @@ contains
       rpan_intervall,ipan_intervall,nspindd,thetasnew,socscale,tolrdif,lly,deltae,  &
       rclsimp)
 
-    if (opt('FERMIOUT')) then      ! fswrt
+    if (opt('FERMIOUT')) then                                                         ! fswrt
       call write_tbkkr_files(lmax,nemb,ncls,natyp,naez,ielast,ins,alat,bravais,     & ! fswrt
         recbv,rbasis,cls,nacls,rcls,ezoa,atom,rr,nspin,nrd,korbit,nclsd,naclsd)       ! fswrt
-    end if                         ! fswrt
+    end if                                                                            ! fswrt
 
     if (opt('OPERATOR')) then
       ! check if impurity files are present (otherwise no imp.
@@ -1240,7 +1242,7 @@ contains
       ! fill array dimensions and allocate arrays in t_imp                            ! GREENIMP
       call init_params_t_imp(t_imp,ipand,natyp,irmd,irid,nfund,nspin,irmind,lmpot)    ! GREENIMP
       call init_t_imp(t_inc, t_imp)                                                   ! GREENIMP
-      ! GREENIMP
+                                                                                      ! GREENIMP
       ! next read impurity potential and shapefunction                                ! GREENIMP
       call readimppot(natomimp,ins,1337,0,0,2,nspin,lpot,t_imp%ipanimp,             & ! GREENIMP
         t_imp%thetasimp,t_imp%ircutimp,t_imp%irwsimp,khfeld,hfield,t_imp%vinsimp,   & ! GREENIMP
@@ -1249,12 +1251,12 @@ contains
     end if                                                                            ! GREENIMP
 
 
-    if (ishift==2) then                           ! fxf
-      open (67, file='vmtzero', form='formatted') ! fxf
-      write (67, 120) vbc(1)                      ! fxf
-      close (67)                                  ! fxf
-120   format (d20.12)                             ! fxf
-    end if                                        ! fxf
+    if (ishift==2) then                                                               ! fxf
+      open (67, file='vmtzero', form='formatted')                                     ! fxf
+      write (67, 120) vbc(1)                                                          ! fxf
+      close (67)                                                                      ! fxf
+120   format (d20.12)                                                                 ! fxf
+    end if                                                                            ! fxf
 
     ! Check for inputcard consistency in case of qdos option
     if (opt('qdos    ')) then
@@ -1290,24 +1292,23 @@ contains
     hfield, gsh, rmesh, thesme, thetas, visp, vins)
 
     use :: mod_datatypes
-
+    use :: constants, only: pi
     implicit none
 
-    ! Parameters:
-    ! Input
-    integer, intent (in) :: irm
-    integer, intent (in) :: irid
-    integer, intent (in) :: ipand
-    integer, intent (in) :: lmpot
-    integer, intent (in) :: npotd  !! (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
-    integer, intent (in) :: natyp  !! Number of kinds of atoms in unit cell
-    integer, intent (in) :: nspin  !! Counter for spin directions
-    integer, intent (in) :: ngshd
-    integer, intent (in) :: nfund
-    integer, intent (in) :: ncelld
-    integer, intent (in) :: irmind
+    ! .. Input variables
+    integer, intent (in) :: irm     !! Maximum number of radial points
+    integer, intent (in) :: irid    !! Shape functions parameters in non-spherical part
+    integer, intent (in) :: ipand   !! Number of panels in non-spherical part
+    integer, intent (in) :: lmpot   !! (LPOT+1)**2
+    integer, intent (in) :: npotd   !! (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
+    integer, intent (in) :: natyp   !! Number of kinds of atoms in unit cell
+    integer, intent (in) :: nspin   !! Counter for spin directions
+    integer, intent (in) :: ngshd   !! Shape functions parameters in non-spherical part
+    integer, intent (in) :: nfund   !! Shape functions parameters in non-spherical part
+    integer, intent (in) :: ncelld  !! Number of cells (shapes) in non-spherical part
+    integer, intent (in) :: irmind  !! irmd - irnsd
     integer, intent (in) :: lmxspd
-    integer, intent (in) :: kshape !! exact treatment of WS cell
+    integer, intent (in) :: kshape  !! exact treatment of WS cell
     integer, dimension (natyp), intent (in) :: irc !! r point for potential cutting
     integer, dimension (natyp), intent (in) :: irmin !! max r for spherical treatment
     integer, dimension (natyp), intent (in) :: inipol !! initial spin polarisation
@@ -1323,17 +1324,17 @@ contains
     real (kind=dp), dimension (irid, nfund, ncelld), intent (in) :: thesme
     real (kind=dp), dimension (irid, nfund, ncelld), intent (in) :: thetas !! shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
 
-    ! Input/Output:
+    ! .. In/Out variables
     real (kind=dp), dimension (irm, npotd), intent (inout) :: visp !! Spherical part of the potential
     real (kind=dp), dimension (irmind:irm, lmpot, nspotd), intent (inout) :: vins !! Non-spherical part of the potential
 
-    ! Inside
+    ! .. Local variables
     integer :: ispin, ih, ipot, ir, lm, imt1, irc1, irmin1
     real (kind=dp) :: rfpi, vshift
     real (kind=dp), dimension (irm) :: pshiftr
     real (kind=dp), dimension (irm, lmpot) :: pshiftlmr
 
-    rfpi = sqrt(16.0d0*atan(1.0d0))
+    rfpi = sqrt(4.0_dp*pi)
 
     do ih = 1, natyp
 
@@ -1359,14 +1360,11 @@ contains
             visp(ir, ipot) = visp(ir, ipot) + pshiftlmr(ir, 1)
           end do
         else                       ! Full-potential
-
           call convol(imt1,irc1,ntcell(ih),imaxsh(lmpot),ilm_map,ifunm,lmpot,gsh,   &
             thetas, thesme, 0.0_dp, rfpi, rmesh(1,ih), pshiftlmr, pshiftr, lmsp)
-
           do ir = 1, irc1
             visp(ir, ipot) = visp(ir, ipot) + pshiftlmr(ir, 1)
           end do
-
           do lm = 2, lmpot
             do ir = irmin1, irc1
               vins(ir, lm, ipot) = vins(ir, lm, ipot) + pshiftlmr(ir, lm)*rfpi
@@ -1378,323 +1376,312 @@ contains
 
   end subroutine bshift_ns
 
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   !> Summary: Set default values for misc variables for the calculation
   !> Author: Jonathan Chico
   !> Category: initialization, KKRhost 
   !> Deprecated: False 
-  !>  The idea behind this kind of routine is to separate the initialization
+  !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @date 22.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_misc_variables()
 
     implicit none
 
-    ipe = 0
-    ipf = 0
-    ipfe = 0
-    kcor = 0
-    kefg = 0
-    khyp = 0
-    kpre = 0
-    nsra = 1
-    iend = 1
-    nvirt = 0
-    kvmad = 0
-    itscf = 0
-    nsheld = 301   ! Number of blocks of the GF matrix that need to be calculated (NATYPD + off-diagonals in case of impurity)
-    invmod = 2     ! Corner band matrix inversion scheme
-    ielast = 0
-    ishift = 0
-    kfrozn = 0
-    nsymat = 0
-    nqcalc = 0
-    kforce = 0                     ! Calculation of the forces
-    para = .true.
+    ipe     = 0
+    ipf     = 0
+    ipfe    = 0
+    kcor    = 0
+    kefg    = 0
+    khyp    = 0
+    kpre    = 0
+    nsra    = 1
+    iend    = 1
+    nvirt   = 0
+    kvmad   = 0
+    itscf   = 0
+    nsheld  = 301   ! Number of blocks of the GF matrix that need to be calculated (NATYPD + off-diagonals in case of impurity)
+    invmod  = 2     ! Corner band matrix inversion scheme
+    ielast  = 0
+    ishift  = 0
+    kfrozn  = 0
+    nsymat  = 0
+    nqcalc  = 0
+    kforce  = 0     ! Calculation of the forces
+    para    = .true.
     lrhosym = .false.
 
   end subroutine init_misc_variables
 
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   !> Summary: set default values for the relativistic variables
   !> Author: Jonathan Chico
   !> Category: initialization, KKRhost 
   !> Deprecated: False 
   !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @date 26.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_relativistic_variables()
 
     implicit none
 
-    krel = 0  ! Switch for non- (or scalar-) relativistic/relativistic (Dirac) program (0/1). Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
-    kvrel = 1      ! Scalar-relativistic calculation
-    korbit = 0     ! No spin-orbit coupling
-    lnc = .true.   ! Coupled equations in two spins (switches true if KREL=1 or KORBIT=1 or KNOCO=1)
+    krel    = 0       ! Switch for non- (or scalar-) relativistic/relativistic (Dirac) program (0/1). Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
+    kvrel   = 1       ! Scalar-relativistic calculation
+    korbit  = 0       ! No spin-orbit coupling
+    lnc     = .true.  ! Coupled equations in two spins (switches true if KREL=1 or KORBIT=1 or KNOCO=1)
 
   end subroutine init_relativistic_variables
 
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   !> Summary: set default values for the cluster variables
   !> Author: Jonathan Chico
   !> Category: initialization, KKRhost 
   !> Deprecated: False 
   !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @date 26.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_cluster_variables()
 
     implicit none
 
-    nclsd = 2        ! NAEZD + NEMBD maximum number of different TB-clusters
-    naclsd = 500     ! Maximum number of atoms in a TB-cluster
-    nofgij = 2       ! NATOMIMPD*NATOMIMPD+1 probably the same variable than NOFGIJD
-    natomimp = 0     ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-    natomimpd = 150  ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-    i25 = 'scoef                                   ' ! Default name of scoef file
+    nclsd     = 2     ! NAEZD + NEMBD maximum number of different TB-clusters
+    naclsd    = 500   ! Maximum number of atoms in a TB-cluster
+    nofgij    = 2     ! NATOMIMPD*NATOMIMPD+1 probably the same variable than NOFGIJD
+    natomimp  = 0     ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+    natomimpd = 150   ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+    i25       = 'scoef                                   ' ! Default name of scoef file
 
   end subroutine init_cluster_variables
 
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   !> Summary: set default values for the I/O variables
   !> Author: Jonathan Chico
   !> Category: initialization, input-output, KKRhost 
   !> Deprecated: False 
   !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @date 26.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_io_variables()
 
     implicit none
 
-    igf = 0                        ! Not printing the Green functions
-    icc = 0                        ! Not printing the Green functions
-    wlength = 1                    ! Word length for direct access files, compiler dependent ifort/others (1/4)
+    igf     = 0   ! Not printing the Green functions
+    icc     = 0   ! Not printing the Green functions
+    wlength = 1   ! Word length for direct access files, compiler dependent ifort/others (1/4)
 #ifdef __GFORTRAN__
     wlength = 4
 #endif
-    i12 = '                                        '
-    i40 = '                                        '
+    i12     = '                                        '
+    i40     = '                                        '
 
   end subroutine init_io_variables
 
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   !> Summary: set default values for the unit cell variables
   !> Author: Jonathan Chico
   !> Category: initialization, KKRhost 
   !> Deprecated: False 
   !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @date 26.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_cell_variables()
 
     implicit none
 
-    naez = 1                       ! Number of atoms in the unit cell
-    nemb = 1                       ! Number of embedded atoms
-    ncls = 1                       ! Number of clusters
-    natyp = 1                      ! Number of kinds of atoms in the unit cell
-    nineq = 1
-    alat = 1.0d0                   ! Lattice constant in a.u.
-    abasis = 1.0d0                 ! Scaling factors for rbasis
-    bbasis = 1.0d0                 ! Scaling factors for rbasis
-    cbasis = 1.0d0                 ! Scaling factors for rbasis
-    alatnew = 1.0d0
-    volume0 = 1.0d0
-    lcartesian = .false.           ! True: Basis in cartesian coords; false: in internal coords
-    linterface = .false.           ! If True a matching with semi-inifinite surfaces must be performed
+    naez        = 1       ! Number of atoms in the unit cell
+    nemb        = 1       ! Number of embedded atoms
+    ncls        = 1       ! Number of clusters
+    natyp       = 1       ! Number of kinds of atoms in the unit cell
+    nineq       = 1
+    alat        = 1.0d0   ! Lattice constant in a.u.
+    abasis      = 1.0d0   ! Scaling factors for rbasis
+    bbasis      = 1.0d0   ! Scaling factors for rbasis
+    cbasis      = 1.0d0   ! Scaling factors for rbasis
+    alatnew     = 1.0d0
+    volume0     = 1.0d0
+    lcartesian  = .false. ! True: Basis in cartesian coords; false: in internal coords
+    linterface  = .false. ! If True a matching with semi-inifinite surfaces must be performed
 
   end subroutine init_cell_variables
 
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   !> Summary: set default values for the slab calculation variables
   !> Author: Jonathan Chico
   !> Category: initialization, KKRhost 
   !> Deprecated: False 
   !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @date 26.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_slab_variables()
 
     implicit none
 
-    nleft = 1
-    nright = 1
-    nlayer = 1                     ! Number of principal layer
-    nlbasis = 0                    ! Number of basis layers of left host (repeated units)
-    nrbasis = 0                    ! Number of basis layers of right host (repeated units)
-    nprincd = 1                    ! Number of principle layers, set to a number >= NRPINC in output of main0
-    nlayerd = 1                    ! (NAEZD/NPRINCD)
+    nleft   = 1
+    nright  = 1
+    nlayer  = 1 ! Number of principal layer
+    nlbasis = 0 ! Number of basis layers of left host (repeated units)
+    nrbasis = 0 ! Number of basis layers of right host (repeated units)
+    nprincd = 1 ! Number of principle layers, set to a number >= NRPINC in output of main0
+    nlayerd = 1 ! (NAEZD/NPRINCD)
 
   end subroutine init_slab_variables
 
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   !> Summary: set default values for the energy variables
   !> Author: Jonathan Chico
   !> Category: initialization, KKRhost 
   !> Deprecated: False 
   !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @date 26.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_energy_variables()
 
     implicit none
 
-    lly = 0                        ! No Lloyds formula
-    kte = 1                        ! Calculate the total energy
-    npol = 7                       ! Number of poles
-    iemxd = 101                    ! Dimension for energy-dependent arrays
-    npnt1 = 7                      ! Number of points in the energy contour
-    npnt2 = 7                      ! Number of points in the energy contour
-    npnt3 = 7                      ! Number of points in the energy contour
-    n1semi = 0                     ! Number of energy points for the semicore contour
-    n2semi = 0                     ! Number of energy points for the semicore contour
-    n3semi = 0                     ! Number of energy points for the semicore contour
-    ivshift = 0
-    npolsemi = 0
-    iesemicore = 0
+    lly         = 0        ! No Lloyds formula
+    kte         = 1        ! Calculate the total energy
+    npol        = 7        ! Number of poles
+    iemxd       = 101      ! Dimension for energy-dependent arrays
+    npnt1       = 7        ! Number of points in the energy contour
+    npnt2       = 7        ! Number of points in the energy contour
+    npnt3       = 7        ! Number of points in the energy contour
+    n1semi      = 0        ! Number of energy points for the semicore contour
+    n2semi      = 0        ! Number of energy points for the semicore contour
+    n3semi      = 0        ! Number of energy points for the semicore contour
+    ivshift     = 0
+    npolsemi    = 0
+    iesemicore  = 0
     idosemicore = 0
-    tk = 800.d0                    ! Temperature
-    fcm = 20.0d0
-    e2in = 0.0d0
-    emin = -0.30d0                 ! Energies needed in EMESHT
-    emax = 0.70d0                  ! Energies needed in EMESHT
-    efermi = 0.d0                  ! Setting the Fermi energy to zero
-    eshift = 0.d0
-    tksemi = 800.d0                ! Temperature for the semi-core contour
-    emusemi = 0.0d0
-    ebotsemi = -0.5d0
+    tk        = 800.d0      ! Temperature
+    fcm       = 20.0d0
+    e2in      = 0.0d0
+    emin      = -0.30d0     ! Energies needed in EMESHT
+    emax      = 0.70d0      ! Energies needed in EMESHT
+    efermi    = 0.d0        ! Setting the Fermi energy to zero
+    eshift    = 0.d0
+    tksemi    = 800.d0      ! Temperature for the semi-core contour
+    emusemi   = 0.0d0
+    ebotsemi  = -0.5d0
     fsemicore = 0.0d0
-    deltae = (1.d-5, 0.d0)
+    deltae    = (1.d-5, 0.d0)
 
   end subroutine init_energy_variables
 
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   !> Summary: set default values for the convergence and solver variables
   !> Author: Jonathan Chico
   !> Category: initialization, KKRhost 
   !> Deprecated: False 
   !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @date 26.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_convergence_variables()
 
     implicit none
 
-    imix = 0                       ! Straight mixing
-    ishld = 200000                 ! Paremeters for the Ewald summations
-    nmaxd = 2000000                ! Paremeters for the Ewald summations
-    ncheb = 10                     ! Number of Chebychev pannels for the new solver
-    itdbry = 10
-    ntrefd = 0                     ! Parameter in broyden subroutine MUST BE 0 for the host program
-    ntperd = 1                     ! Parameter in broyden subroutines
-    npan_eq = 30
-    npan_log = 30
-    scfsteps = 100                 ! Number of SCF steps
-    rmax = 7.0d0                   ! Ewald summation cutoff parameter for real space summation
-    gmax = 100.d0                  ! Ewald summation cutoff parameter for reciprocal space summation
-    r_log = 0.1d0
-    rcutz = 2.30d0                 ! Parameter for the screening cluster along the z-direction
-    rcutxy = 2.30d0                ! Parameter for the screening cluster along the x-y plane
-    qbound = 1.d-7                 ! Convergence parameter for the potential
-    mixing = 0.001d0               ! Magnitude of the mixing parameter
-    tolrdif = 1.0d0                ! Tolerance for r<tolrdif (a.u.) to handle vir. atoms
-    solver = 'BS        '          ! Set the BS-solver as default
+    imix      = 0             ! Straight mixing
+    ishld     = 200000        ! Paremeters for the Ewald summations
+    nmaxd     = 2000000       ! Paremeters for the Ewald summations
+    ncheb     = 10            ! Number of Chebychev pannels for the new solver
+    itdbry    = 10
+    ntrefd    = 0             ! Parameter in broyden subroutine MUST BE 0 for the host program
+    ntperd    = 1             ! Parameter in broyden subroutines
+    npan_eq   = 30
+    npan_log  = 30
+    scfsteps  = 100           ! Number of SCF steps
+    rmax      = 7.0d0         ! Ewald summation cutoff parameter for real space summation
+    gmax      = 100.d0        ! Ewald summation cutoff parameter for reciprocal space summation
+    r_log     = 0.1d0
+    rcutz     = 2.30d0        ! Parameter for the screening cluster along the z-direction
+    rcutxy    = 2.30d0        ! Parameter for the screening cluster along the x-y plane
+    qbound    = 1.d-7         ! Convergence parameter for the potential
+    mixing    = 0.001d0       ! Magnitude of the mixing parameter
+    tolrdif   = 1.0d0         ! Tolerance for r<tolrdif (a.u.) to handle vir. atoms
+    solver    = 'BS        '  ! Set the BS-solver as default
 
   end subroutine init_convergence_variables
 
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   !> Summary: set default values for the potential variables
   !> Author: Jonathan Chico
   !> Category: initialization, KKRhost 
   !> Deprecated: False 
   !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @date 26.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_potential_variables()
 
     implicit none
 
-    kws = 1                        ! FP/ASA potential ()
-    kxc = 2                        ! VWN potential
-    ins = 1                        ! FP/ASA calculation ()
-    icst = 2                       ! Number of Born approximation
-    irid = 350                     ! Shape functions parameters in non-spherical part
-    nref = 1                       ! Number of reference potentials
-    lpot = 3                       ! Maximum l for expansion of the potential
-    nfund = 289                    ! Shape functions parameters in non-spherical part
-    ngshd = 60000                  ! Shape functions parameters in non-spherical part
-    ipand = 50                     ! Number of panels in non-spherical part
-    ntotd = 80                     ! IPAND+30
-    ifile = 13                     ! File identifier of the potential file
-    lmpot = 16                     ! (LPOT+1)**2
-    insref = 0                     ! INS For reference potential
-    knosph = 1                     ! Switch for spherical/non-spherical(0/1) program. Same obs. as for KREL applies.
-    kshape = 2                     ! FP/ASA calculation (2/0)
-    ncelld = 1                     ! Number of cells (shapes) in non-spherical part
-    nspotd = 2                     ! Number of potentials for storing non-sph. potentials (2*KREL+(1-KREL)*NSPIND)*NSATYPD
-    nsatypd = 1                    ! (NATYPD-1)*KNOSPH+1
-    vconst = 0.d0                  ! Potential shift
-    lambda_xc = 1.0d0              ! Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
-    i13 = 'potential                               ' ! Default name of potential file
-    i19 = 'shapefun                                ' ! Default name of shapefunction file
+    kws       = 1     ! FP/ASA potential ()
+    kxc       = 2     ! VWN potential
+    ins       = 1     ! FP/ASA calculation ()
+    icst      = 2     ! Number of Born approximation
+    irid      = 350   ! Shape functions parameters in non-spherical part
+    nref      = 1     ! Number of reference potentials
+    lpot      = 3     ! Maximum l for expansion of the potential
+    nfund     = 289   ! Shape functions parameters in non-spherical part
+    ngshd     = 60000 ! Shape functions parameters in non-spherical part
+    ipand     = 50    ! Number of panels in non-spherical part
+    ntotd     = 80    ! IPAND+30
+    ifile     = 13    ! File identifier of the potential file
+    lmpot     = 16    ! (LPOT+1)**2
+    insref    = 0     ! INS For reference potential
+    knosph    = 1     ! Switch for spherical/non-spherical(0/1) program. Same obs. as for KREL applies.
+    kshape    = 2     ! FP/ASA calculation (2/0)
+    ncelld    = 1     ! Number of cells (shapes) in non-spherical part
+    nspotd    = 2     ! Number of potentials for storing non-sph. potentials (2*KREL+(1-KREL)*NSPIND)*NSATYPD
+    nsatypd   = 1     ! (NATYPD-1)*KNOSPH+1
+    vconst    = 0.d0  ! Potential shift
+    lambda_xc = 1.0d0 ! Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
+    i13       = 'potential                               ' ! Default name of potential file
+    i19       = 'shapefun                                ' ! Default name of shapefunction file
 
   end subroutine init_potential_variables
 
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   !> Summary: set default values for the angular momentum variables
   !> Author: Jonathan Chico
   !> Category: initialization, KKRhost 
   !> Deprecated: False 
   !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @date 26.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_angular_momentum_variables()
 
     implicit none
 
-    lmax = 3                       ! Maximum l for expansion
-    ncleb = 784                    ! (LMAX*2+1)**2 * (LMAX+1)**2
-    lmmax = 16                     ! (LMAX+1)**2
-    lmmaxd = 32                    ! (KREL+KORBIT+1)*(LMAX+1)**2
+    lmax    = 3   ! Maximum l for expansion
+    ncleb   = 784 ! (LMAX*2+1)**2 * (LMAX+1)**2
+    lmmax   = 16  ! (LMAX+1)**2
+    lmmaxd  = 32  ! (KREL+KORBIT+1)*(LMAX+1)**2
 
   end subroutine init_angular_momentum_variables
 
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   !> Summary: set default values for the magnetisation variables for the calculation
   !> Author: Jonathan Chico
   !> Category: initialization, KKRhost 
   !> Deprecated: False 
   !> the idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @date 22.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_magnetization_variables()
 
     implicit none
 
-    kmrot = 0                      ! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
-    knoco = 0                      ! Collinear calculation
-    nspin = 2                      ! Spin polarised calculation
-    nspind = 2                     ! KREL+(1-KREL)*(NSPIN+1)
-    khfeld = 0                     ! No external magnetic field
-    nspindd = 1                    ! NSPIND-KORBIT
-    hfield = 0.d0                  ! External magnetic field, for initial potential shift in spin polarised case
-    linipol = .false.              ! True: Initial spin polarization; false: no initial spin polarization
+    kmrot   = 0       ! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
+    knoco   = 0       ! Collinear calculation
+    nspin   = 2       ! Spin polarised calculation
+    nspind  = 2       ! KREL+(1-KREL)*(NSPIN+1)
+    khfeld  = 0       ! No external magnetic field
+    nspindd = 1       ! NSPIND-KORBIT
+    hfield  = 0.d0    ! External magnetic field, for initial potential shift in spin polarised case
+    linipol = .false. ! True: Initial spin polarization; false: no initial spin polarization
 
   end subroutine init_magnetization_variables
 
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   !> Summary: Set default values for the CPA variables for the calculation
   !> Author: Jonathan Chico
   !> Category: initialization, KKRhost 
@@ -1702,70 +1689,66 @@ contains
   !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
   !> @author Jonathan Chico
-  !> @date 22.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_cpa_variables()
 
     implicit none
 
-    ncpa = 0                       ! NCPA = 0/1 CPA flag
-    itcpamax = 0                   ! Max. number of CPA iterations
-    cpatol = 1d-4                  ! Convergency tolerance for CPA-cycle
+    ncpa      = 0     ! NCPA = 0/1 CPA flag
+    itcpamax  = 0     ! Max. number of CPA iterations
+    cpatol    = 1d-4  ! Convergency tolerance for CPA-cycle
 
   end subroutine init_cpa_variables
 
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   !> Summary: Set default values for the LDA+U variables for the calculation
   !> Author: Jonathan Chico
   !> Category: initialization, KKRhost 
   !> Deprecated: False 
   !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @date 22.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_ldau_variables()
 
     implicit none
 
-    ntldau = 0                     ! number of atoms on which LDA+U is applied
-    idoldau = 0                    ! flag to perform LDA+U
-    itrunldau = 0                  ! iteration index
-    kreadldau = 0                  ! LDA+U arrays available
+    ntldau    = 0 ! number of atoms on which LDA+U is applied
+    idoldau   = 0 ! flag to perform LDA+U
+    itrunldau = 0 ! iteration index
+    kreadldau = 0 ! LDA+U arrays available
 
   end subroutine init_ldau_variables
 
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   !> Summary: set default values for the mesh variables
   !> Author: Jonathan Chico
   !> Category: initialization, k-points, KKRhost 
   !> Deprecated: False 
   !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
-  !> @date 26.12.2017
-  ! -------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   subroutine init_mesh_variables()
 
     implicit none
 
-    nrd = 20000                    ! Number of real space
-    irmd = 900                     ! Number of radial mesh points in (0,...,RWS)
-    irnsd = 890                    ! Number of radial mesh points in (RMT,...,RWS)
-    kpoibz = 250000                ! Number of reciprocal space vectors
-    intervx = 0                    ! Number of intervals in x-direction for k-net in IB of the BZ
-    intervy = 0                    ! Number of intervals in y-direction for k-net in IB of the BZ
-    intervz = 0                    ! Number of intervals in z-direction for k-net in IB of the BZ
+    nrd     = 20000   ! Number of real space
+    irmd    = 900     ! Number of radial mesh points in (0,...,RWS)
+    irnsd   = 890     ! Number of radial mesh points in (RMT,...,RWS)
+    kpoibz  = 250000  ! Number of reciprocal space vectors
+    intervx = 0       ! Number of intervals in x-direction for k-net in IB of the BZ
+    intervy = 0       ! Number of intervals in y-direction for k-net in IB of the BZ
+    intervz = 0       ! Number of intervals in z-direction for k-net in IB of the BZ
     maxmesh = 1
 
   end subroutine init_mesh_variables
 
-
-  ! -------------------------------------------------------------------------
-  !> Summary: wrapper for initialization subroutines and allocation of test/opt arrays
+  !-------------------------------------------------------------------------------
+  !> Summary: Wrapper for initialization subroutines and allocation of test/opt arrays
   !> Author: Philipp Ruessmann
   !> Category: initialization, KKRhost 
-  !> Deprecated: False 
-  !> @date 22.08.2018
-  ! -------------------------------------------------------------------------
+  !> Deprecated: False
+  !> Wrapper for initialization subroutines and allocation of test/opt arrays 
+  !-------------------------------------------------------------------------------
   subroutine init_all_wrapper()
     use :: mod_wunfiles, only: t_params
     implicit none
@@ -1812,7 +1795,7 @@ contains
 
   !-------------------------------------------------------------------------------  
   !> Summary: Print the version info and header to the output file
-  !> Author: Philipp Ruessmann                  
+  !> Author: Philipp Ruessmann 
   !> Category: input-output, KKRhost 
   !> Deprecated: False 
   !> Print the version info and header to the output file

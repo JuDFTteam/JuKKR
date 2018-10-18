@@ -210,8 +210,8 @@ contains
     !! @endnote
     ! ----------------------------------------------------------------------------
     integer, intent (inout) :: kmrot !! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
-    real (kind=dp), dimension (:), allocatable, intent (out) :: qmtet !! $$\theta$$ angle of the magnetization with respect to the z-axis
-    real (kind=dp), dimension (:), allocatable, intent (out) :: qmphi !! $$\phi$$ angle of the magnetization with respect to the z-axis
+    real (kind=dp), dimension (:), allocatable, intent (out) :: qmtet !! \(\theta\) angle of the magnetization with respect to the z-axis
+    real (kind=dp), dimension (:), allocatable, intent (out) :: qmphi !! \(\phi\) angle of the magnetization with respect to the z-axis
     ! ---------------------------------------------------------------------------
     ! LDA+U
     integer, intent (inout) :: kreadldau !! LDA+U arrays available

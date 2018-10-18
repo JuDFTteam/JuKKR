@@ -5,7 +5,17 @@
 !#define pkkr
 !#define voro
 
-
+!------------------------------------------------------------------------------------
+!> Summary: Wrapper module for the generation of version and serial headers 
+!> Author: People who wrote it
+!> Wrapper module for the generation of version and serial headers. It helps to track
+!> what data was generated with which version of the code.
+!------------------------------------------------------------------------------------
+!> @note This module can be exported to the other KKR codes, to use them one just
+!> needs to comment out the correct pre-compilation flag defined as the begining of 
+!> the file.
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_version_info
 
   implicit none
@@ -34,10 +44,18 @@ module mod_version_info
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Take information from version file and create serial number with time stamp
+  !> Author: 
+  !> Category: input-output, sanity-check, version-control ,KKRhost 
+  !> Deprecated: False 
+  !> Take information from version file and create serial number with time stamp
+  !-------------------------------------------------------------------------------
   subroutine construct_serialnr
-    !! take information from version file and create serial number with time stamp
     use :: mod_version
+
     implicit none
+
     integer, dimension (8) :: values
     character (len=500) :: tmpname
     integer :: slength, ierr
@@ -57,9 +75,16 @@ contains
   end subroutine construct_serialnr
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: This is called after an open statement of a file that is written, prints header line
+  !> Author:
+  !> Category: input-output, sanity-check, version-control, KKRhost 
+  !> Deprecated: False 
+  !> This is called after an open statement of a file that is written, 
+  !> prints header line
+  !-------------------------------------------------------------------------------
   subroutine version_print_header(unit, addition, print_always)
-    !! this is called after an open statement of a file that is written
-    !! prints header line
+
     implicit none
     integer, intent (in) :: unit
     logical, optional, intent (in) :: print_always
@@ -88,7 +113,28 @@ contains
 
   end subroutine version_print_header
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Checks if a header with serial-number is in the first line
+  !> Author:
+  !> Category: input-output, sanity-check, version-control, KKRhost 
+  !> Deprecated: False 
+  !> This is called after an open statement of a file that is read
+  !> checks if a header with serial-number is in the first line
+  !> if not rewinds the file back to start
+  !-------------------------------------------------------------------------------
+  subroutine version_check_header(unit)
 
+    implicit none
+
+    integer, intent (in) :: unit
+    character (len=10) :: first_characters
+
+    read (unit, '(A)') first_characters
+    if (first_characters/='# serial: ') then
+      rewind (unit)
+    end if
+
+  end subroutine version_check_header
 
   ! subroutine version_potname(unit)
 
@@ -109,23 +155,5 @@ contains
 
 
   ! end subroutine version_shapename
-
-
-
-  subroutine version_check_header(unit)
-    ! this is called after an open statement of a file that is read
-    ! checks if a header with serial-number is in the first line
-    ! if not rewinds the file back to start
-    implicit none
-    integer, intent (in) :: unit
-    character (len=10) :: first_characters
-
-    read (unit, '(A)') first_characters
-    if (first_characters/='# serial: ') then
-      rewind (unit)
-    end if
-
-  end subroutine version_check_header
-
 
 end module mod_version_info

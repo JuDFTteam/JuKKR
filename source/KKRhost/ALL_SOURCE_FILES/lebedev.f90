@@ -13,14 +13,10 @@ contains
   !> Author: M. Kosuth
   !> Category: xc-potential, KKRhost 
   !> Deprecated: False 
+  !> This subroutine includes the data from the old mesh-file lebedev
   !------------------------------------------------------------------------------- 
   subroutine lebedev(ij, rij1, rij2, rij3, wij)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! *   This subroutine includes the data from the old mesh-file lebedev *
-    ! *                   M. Kosuth, Munich, March 2004                    *
-    ! *                                                                    *
-    ! **********************************************************************
+
     implicit none
     integer :: ijd
     parameter (ijd=434)

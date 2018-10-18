@@ -1,6 +1,6 @@
 ! -----------------------------------------------------------------------------------
 !> Summary: Main program for the JM-KKR
-!> Author: Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller, and many others ...
+!> Author: Philipp Ruessmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller, and many others ...
 !> The JM-KKR code is a Density Functional Theory software package,
 !> based on the Green function Korringa-Kohn-Rostocker approach.
 !> The package allows the calculation of 3D and 2D systems, as well as the

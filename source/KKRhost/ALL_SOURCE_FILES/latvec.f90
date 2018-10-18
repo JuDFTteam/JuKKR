@@ -16,16 +16,6 @@ contains
     !> Checks if a set of vectors are lattice vectors
     !-------------------------------------------------------------------------------
   logical function latvec(n, qlat, vec)
-    ! - Checks if a set of vectors are lattice vectors
-    ! ----------------------------------------------------------------------
-    ! i Inputs:
-    ! i   n     :number of vectors
-    ! i   qlat  :primitive translation vectors in reciprocal space
-    ! i   vec   :double-precision vector
-    ! o Outputs:
-    ! o   latvec:.true. if all vectors are lattice vectors
-    ! r Remarks:
-    ! ----------------------------------------------------------------------
     implicit none
     ! Passed parameters:
     integer, intent(in) :: n !! Number of vectors

@@ -1,20 +1,35 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculates the KKR matrix elements for the spin flux operator
+!> Author: Guillaume Géranton
+!> Calculates the KKR matrix elements for the spin flux operator, i.e.,
+!> \begin{equation}
+!> \int dr\left[R^\mu_{Ls} \right]^\dagger Q_s R^\mu_{L's'}
+!> \end{equation}
+!------------------------------------------------------------------------------------
+!> @note Details are in http://arxiv.org/pdf/1602.03417v1.pdf
+!> This subroutine was adapted from `NORMCOEFF_SO`.
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_normcoeff_so_spinflux
 
 contains
 
-  ! 05.10.10 ***************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates the KKR matrix elements for the spin flux operator
+  !> Author: Guillaume Géranton
+  !> Category: physical-observables, KKRhost
+  !> Deprecated: False 
+  !> Calculates the KKR matrix elements for the spin flux operator, i.e.,
+  !> \begin{equation}
+  !> \int dr\left[R^\mu_{Ls} \right]^\dagger Q_s R^\mu_{L's'}
+  !> \end{equation}
+  !-------------------------------------------------------------------------------
+  !> @note Details are in http://arxiv.org/pdf/1602.03417v1.pdf
+  !> This subroutine was adapted from `NORMCOEFF_SO`.
+  !> @endnote
+  !-------------------------------------------------------------------------------
   subroutine normcoeff_so_spinflux(natom, ircut, lmmax, pns, ksra, drdi, mode)
-    ! ************************************************************************
-    ! Calculates the KKR matrix elements for the spin flux operator, i.e.,
 
-    ! INT dr [R^{mu}_{Ls}]^dagger Q_s R^{mu}_{L's'}.
-
-    ! Details are in http://arxiv.org/pdf/1602.03417v1.pdf
-
-    ! This subroutine was adapted from NORMCOEFF_SO.
-
-    ! Guillaume Géranton, 2016
-    ! -----------------------------------------------------------------------
 #ifdef CPP_MPI
     use :: mpi
 #endif
@@ -26,43 +41,31 @@ contains
 #endif
     use :: mod_datatypes, only: dp
     use :: global_variables
+    use :: constants, only: czero
     implicit none
 
-    ! ..
-    ! .. Scalar Arguments ..
-    integer :: natom, mode, ksra
-    ! < lmsize without spin degree of freedom (in contrast to lmmaxd)
-    integer, intent (in) :: lmmax
-    ! ..
-    ! .. Array Arguments ..
-    complex (kind=dp) :: pns(nspind*lmmax, nspind*lmmax, irmd, 2, natom)
-    real (kind=dp) :: drdi(irmd, natypd)
-    integer :: ircut(0:ipand, natypd)
-    ! ..
+    ! .. Input variables
+    integer, intent(in) :: mode
+    integer, intent(in) :: ksra
+    integer, intent(in) :: natom
+    integer, intent (in) :: lmmax !! (LMAX+1)^2
+    integer, dimension(0:ipand, natypd), intent(in) :: ircut !! R points of panel borders
+    real (kind=dp), dimension(irmd, natypd), intent(in) :: drdi !! Derivative dr/di
+    complex (kind=dp), dimension(nspind*lmmax, nspind*lmmax, irmd, 2, natom), intent(in) :: pns
     ! .. Local Scalars ..
-    complex (kind=dp) :: czero
     integer :: lm1, lm2, lm1p, ir, i1, i1sp1, i1sp2, lmsp1, lmsp2, isigma, i2sp1, i2sp2, insra, nsra
     integer :: i2
     complex (kind=dp) :: delta1, delta2
     ! MPI stuff
     integer :: ierr, ihelp, i1_start, i1_end
-    ! ..
-    ! .. External Subroutines ..
-    external :: zgemm
-    ! ..
-    ! .. Intrinsic Functions ..
-    intrinsic :: datan, aimag, dsqrt
-    ! ..
-    ! .. Save statement ..
-    save :: czero
-    ! ..
     ! ..Local Arrays..
-    complex (kind=dp), allocatable :: spinflux(:, :, :, :), rll_12(:), dens(:, :, :, :, :, :, :), rll(:, :, :, :, :, :, :)
+    complex (kind=dp), dimension(:), allocatable :: rll_12
+    complex (kind=dp), dimension(:, :, :, :), allocatable :: spinflux
+    complex (kind=dp), dimension(:, :, :, :, :, :, :), allocatable :: dens
+    complex (kind=dp), dimension(:, :, :, :, :, :, :), allocatable :: rll
     ! MPI stuff
-    complex (kind=dp), allocatable :: work(:, :, :, :, :, :, :)
+    complex (kind=dp), dimension(:, :, :, :, :, :, :), allocatable :: work
     ! ..
-    ! .. Data statements ..
-    data czero/(0.0d0, 0.0d0)/
 
     if (t_inc%i_write>0) write (1337, *) 'KSRA', ksra
     if (ksra>=1) then              ! previously this was .GT. which is wrong for kvrel=1
@@ -84,7 +87,6 @@ contains
 
     rll = czero
     dens = czero
-
 
     ! determine MPI work division for loop over atoms
 #ifdef CPP_MPI
@@ -195,7 +197,8 @@ contains
               do i1sp2 = 1, 2
                 do lm1 = 1, lmmax
                   do lm2 = 1, lmmax
-                    spinflux((i1sp2-1)*lmmax+lm2, (i1sp1-1)*lmmax+lm1, i1, isigma) = -(0d0, 1d0)*(dens(lm2,lm1,2,i1sp2,1,i1sp1,i1)+dens(lm2,lm1,1,i1sp2,2,i1sp1,i1))/2
+                    spinflux((i1sp2-1)*lmmax+lm2, (i1sp1-1)*lmmax+lm1, i1, isigma)=&
+                    -(0d0, 1d0)*(dens(lm2,lm1,2,i1sp2,1,i1sp1,i1)+dens(lm2,lm1,1,i1sp2,2,i1sp1,i1))/2
                   end do           ! LM2
                 end do             ! LM1
               end do               ! I1SP2
@@ -207,8 +210,8 @@ contains
               do i1sp2 = 1, 2
                 do lm1 = 1, lmmax
                   do lm2 = 1, lmmax
-                    spinflux((i1sp2-1)*lmmax+lm2, (i1sp1-1)*lmmax+lm1, i1, isigma) = -(0d0, 1d0)*(-1)*(0d0, 1d0)*(dens(lm2,lm1,2,i1sp2,1,i1sp1,i1)-dens(lm2,lm1,1,i1sp2,2,i1sp1,i1)) &
-                      /2
+                    spinflux((i1sp2-1)*lmmax+lm2, (i1sp1-1)*lmmax+lm1, i1, isigma)= &
+                    -(0d0, 1d0)*(-1)*(0d0, 1d0)*(dens(lm2,lm1,2,i1sp2,1,i1sp1,i1)-dens(lm2,lm1,1,i1sp2,2,i1sp1,i1)) /2
                   end do           ! LM2
                 end do             ! LM1
               end do               ! I1SP2
@@ -257,9 +260,5 @@ contains
     deallocate (spinflux)
 
   end subroutine normcoeff_so_spinflux
-
-
-
-
 
 end module mod_normcoeff_so_spinflux

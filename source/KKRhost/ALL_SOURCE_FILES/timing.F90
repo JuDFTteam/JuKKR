@@ -1,3 +1,8 @@
+!------------------------------------------------------------------------------------
+!> Summary: Wrapper routine to handle the measurements of the different processes 
+!> Author: 
+!> Wrapper routine to handle the measurements of the different processes 
+!------------------------------------------------------------------------------------
 module mod_timing
 
   ! taken from impurity code of David Bauer
@@ -24,11 +29,18 @@ module mod_timing
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Initialize the printing of the timing information for each rank 
+  !> Author: 
+  !> Category: profiling, input-output, KKRhost 
+  !> Deprecated: False
+  !> Initialize the printing of the timing information for each rank 
+  !-------------------------------------------------------------------------------
   subroutine timing_init(my_rank)
     use :: mod_types, only: t_inc
     use :: mod_version_info
     implicit none
-    integer :: my_rank
+    integer, intent(in) :: my_rank
     character (len=3) :: ctemp
 
     if (init/=0) stop '[mod_timing] timing already initilized'
@@ -40,11 +52,19 @@ contains
     init = 1
   end subroutine timing_init
 
-
+  !-------------------------------------------------------------------------------
+  !> Summary: Start the measurement of a given process identified by `mykey2`  
+  !> Author: 
+  !> Category: profiling, KKRhost 
+  !> Deprecated: False
+  !> Start the measurement of a given process identified by `mykey2` 
+  !-------------------------------------------------------------------------------
   subroutine timing_start(mykey2)
     implicit none
+
+    character (len=*), intent(in) :: mykey2
+    ! .. Local variables
     integer :: ikey
-    character (len=*) :: mykey2
     character (len=nkeylen) :: mykey
 
 
@@ -66,11 +86,20 @@ contains
     call system_clock(count=start_time(ikey)) ! Start timing
   end subroutine timing_start
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Pause the timing of the process described by `mykey2` 
+  !> Author: 
+  !> Category: profiling, KKRhost 
+  !> Deprecated: False
+  !> Pause the timing of the process described by `mykey2` 
+  !-------------------------------------------------------------------------------
   subroutine timing_pause(mykey2)
     implicit none
+
+    character (len=*), intent(in) :: mykey2
+    ! .. Local variables
     integer :: stop_time
     integer :: ikey
-    character (len=*) :: mykey2
     character (len=nkeylen) :: mykey
     real (kind=dp) :: timing
     integer :: clock_rate
@@ -78,12 +107,8 @@ contains
     mykey = mykey2
     ikey = timing_findkey(mykey)
 
-
-
     call system_clock(count_rate=clock_rate) ! Find the rate
     call system_clock(count=stop_time) ! Stop timing
-
-
 
     timing = (stop_time-start_time(ikey))/real(clock_rate)
     interm_time(ikey) = interm_time(ikey) + timing
@@ -92,6 +117,13 @@ contains
 
   end subroutine timing_pause
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Stop the timing of the process described by `mykey2` 
+  !> Author: 
+  !> Category: profiling, KKRhost 
+  !> Deprecated: False
+  !> Stop the timing of the process described by `mykey2` 
+  !-------------------------------------------------------------------------------
   subroutine timing_stop(mykey2, save_out)
     use :: mod_types, only: t_inc
     implicit none
@@ -129,11 +161,17 @@ contains
 
   end subroutine timing_stop
 
-
+  !-------------------------------------------------------------------------------
+  !> Summary: Find if the current process in in my predefined timing keywords 
+  !> Author: 
+  !> Category: profiling, KKRhost 
+  !> Deprecated: False
+  !> Find if the current process in in my predefined timing keywords 
+  !-------------------------------------------------------------------------------
   integer function timing_findkey(char1, char2)
     implicit none
-    character (len=nkeylen) :: char1
-    character (len=*), optional :: char2
+    character (len=nkeylen) , intent(in):: char1
+    character (len=*), optional, intent(in) :: char2
     integer :: ival
 
     do ival = 1, nkeys
@@ -151,9 +189,18 @@ contains
     end if
   end function timing_findkey
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Set the keyword for the timing processes. 
+  !> Author: 
+  !> Category: profiling, KKRhost 
+  !> Deprecated: False
+  !> Set the keyword for the timing processes. Checks if the keyword has been defined
+  !> more than once, and if there is enough space in the option array for the present
+  !> keyword.
+  !-------------------------------------------------------------------------------
   integer function timing_setkey(char1)
     implicit none
-    character (len=nkeylen) :: char1
+    character (len=nkeylen), intent(in) :: char1
     integer :: ival, ifound
 
     ifound = 0
@@ -172,6 +219,14 @@ contains
     if (ifound==0) stop '[timing_setkey] not enough free spots to set timing values'
   end function timing_setkey
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Sets the key corresponding to the present keyword to blank, and resets its timing. 
+  !> Author: 
+  !> Category: profiling, KKRhost 
+  !> Deprecated: False
+  !> Sets the key corresponding to the present keyword to blank, and resets
+  !> its timing. 
+  !-------------------------------------------------------------------------------
   subroutine timing_delkey(char1)
     implicit none
     character (len=nkeylen) :: char1
@@ -187,10 +242,17 @@ contains
     stop '[timing_delkey] timing key not found'
   end subroutine timing_delkey
 
-
+  !-------------------------------------------------------------------------------
+  !> Summary: Helper routine that print 'message' with a time stamp to screen
+  !> Author: 
+  !> Category: profiling, input-output, KKRhost 
+  !> Deprecated: False
+  !> Helper routine that print 'message' with a time stamp to screen
+  !-------------------------------------------------------------------------------
   subroutine print_time_and_date(message)
-    ! helper routine that print 'message' with a time stamp to screen
+
     implicit none
+
     character (len=*), intent (in) :: message
     integer, dimension (8) :: values
 

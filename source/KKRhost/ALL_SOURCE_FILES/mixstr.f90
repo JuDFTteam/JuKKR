@@ -37,8 +37,8 @@ contains
     integer, intent(in) :: nstart !! First atom in the loop
     integer, intent(in) :: lsmear
     real (kind=dp), intent(in) :: fcm  !! Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
-    real (kind=dp), intent(in) :: fpi  !! 4 $$\pi$$
-    real (kind=dp), intent(in) :: rfpi !! $$\sqrt{4\pi}$$
+    real (kind=dp), intent(in) :: fpi  !! 4 \(\pi\)
+    real (kind=dp), intent(in) :: rfpi !! \(\sqrt{4\pi}\)
     real (kind=dp), intent(in) :: mixing !! Magnitude of the mixing parameter
     integer, dimension(natypd), intent(in) :: irc  !! R point for potential cutting
     integer, dimension(natypd), intent(in) :: irmin  !! Max R for spherical treatment

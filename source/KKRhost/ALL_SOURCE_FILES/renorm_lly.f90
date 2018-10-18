@@ -2,15 +2,22 @@ module mod_renorm_lly
 
 contains
 
-  ! LLY Lloyd  &
-  subroutine renorm_lly(cdos_lly, ielast, nspin, natyp, cden, lmaxp1, conc, iestart, ieend, wez, ircut, ipan, ez, zat, rho2ns, r2nef, denef, denefat, espv)
-    ! Renormalize the valence charge according to Lloyd's formula.
-    ! Find renormalization constant per energy, then renormalize
-    ! charge/atom/energy, then integrate over energies to find
-    ! the renormalized charge/atom. Use it to renormalize the density.
-    ! Phivos Mavropoulos, July 2014
+  !-------------------------------------------------------------------------------
+  !> Summary: Renormalize the valence charge according to Lloyd's formula.
+  !> Author: Phivos Mavropoulos
+  !> Category: physical-observables, KKRhost
+  !> Deprecated: False 
+  !> Renormalize the valence charge according to Lloyd's formula. 
+  !> Find renormalization constant per energy, then renormalize charge/atom/energy, 
+  !> then integrate over energies to find the renormalized charge/atom. 
+  !> Use it to renormalize the density.
+  !-------------------------------------------------------------------------------
+  subroutine renorm_lly(cdos_lly,ielast,nspin,natyp,cden,lmaxp1,conc,iestart,ieend, &
+    wez,ircut,ipan,ez,zat,rho2ns,r2nef,denef,denefat,espv)
+
     use :: mod_datatypes, only: dp
     use :: global_variables
+    use :: constants, only: czero,pi
     implicit none
     ! Concentration (for cpa)
     integer :: lmaxp1, natyp, nspin
@@ -45,23 +52,18 @@ contains
     ! charge/atom/spin
     complex (kind=dp) :: qlly(2), qstar(2)
     real (kind=dp) :: sum0(2), sum1(2)
-    complex (kind=dp) :: czero
-    real (kind=dp) :: pi
     logical, external :: opt
     ! Spin degeneracy, 2 if nspin=1, 1 if nspin=2
-
-    czero = (0.e0_dp, 0.e0_dp)
-    pi = 4.e0_dp*atan(1.e0_dp)
 
     spindegen = 3 - nspin          ! First find renormalization factor per
     ! energy and atomic charges
     ! Factor 1/pi included in Wez
-    cren(:, :) = 0e0_dp
-    renorm_at(:, :) = 1.e0_dp
-    charge_lly(:, :) = 0.e0_dp
-    charge(:, :) = 0.e0_dp
-    qlly(:) = czero
-    qstar(:) = czero
+    cren(:, :)        = 0e0_dp
+    renorm_at(:, :)   = 1.e0_dp
+    charge_lly(:, :)  = 0.e0_dp
+    charge(:, :)      = 0.e0_dp
+    qlly(:)           = czero
+    qstar(:)          = czero
     ! Complex charge
     ! I1=1,NATYP
     cdos_loc = czero

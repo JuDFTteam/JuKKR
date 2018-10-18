@@ -1,11 +1,11 @@
 !------------------------------------------------------------------------------------
 !> Summary: Wrapper module for the calculation of the density for the JM-KKR package
-!> Author: Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,        
+!> Author: Philipp Ruessmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,        
 !> and many others ...
 !> Wrapper module for the calculation of the density for the JM-KKR package.
 !> The code uses the information obtained in the main0 module, this is
-!> mostly done via the get_params_1c() call, that obtains parameters of the type
-!> t_params and passes them to local variables
+!> mostly done via the `get_params_1c()` call, that obtains parameters of the type
+!> `t_params` and passes them to local variables
 !------------------------------------------------------------------------------------
 module mod_main1c
 
@@ -858,9 +858,9 @@ contains
       ! ----------------------------------------------------------------------
       chrgsemicore = 0d0
       do i1 = 1, natyp
-        ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !----------------------------------------------------------------------------
         ! l/m_s/atom-resolved charges
-        ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !----------------------------------------------------------------------------
 
         do ispin = 1, nspinpot
           ipot = (i1-1)*nspinpot + ispin
@@ -878,9 +878,9 @@ contains
         end do
         eu(i1) = 0d0
         edc(i1) = 0d0
-        ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !----------------------------------------------------------------------------
         ! Orbital magnetic moments (array initialised to 0.0D0 in rhoval)
-        ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !----------------------------------------------------------------------------
         if (krel==1) then
           do ispin = 1, 3
             do l = 0, lmax + 1
@@ -955,9 +955,9 @@ contains
       ! ----------------------------------------------------------------------
       ! CORE STATES
       ! ----------------------------------------------------------------------
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !------------------------------------------------------------------------------
       ! RHO_core is calculated only if also RHO_valence was
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !------------------------------------------------------------------------------
       if (npol/=0) then
         if (t_inc%i_write>0) then
           write (1337, *)

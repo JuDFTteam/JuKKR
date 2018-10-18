@@ -1,7 +1,6 @@
 !------------------------------------------------------------------------------------
-!> Summary: Generates the lattice vectors of direct and reciprocal space from
-!> basic translation vectors for a 2D system
-!> Author: 
+!> Summary: Generates the lattice vectors of direct and reciprocal space from basic translation vectors for a 2D system
+!> Author: V. Popescu
 !> Generates the lattice vectors of direct and reciprocal space from
 !> basic translation vectors for a 2D system
 !------------------------------------------------------------------------------------
@@ -12,47 +11,22 @@ module mod_lattice2d
 
 contains
   !-------------------------------------------------------------------------------
-  !> Summary: Generates the lattice vectors of direct and reciprocal space from
-  !> basic translation vectors for a 2D system
-  !> Author: 
+  !> Summary: Generates the lattice vectors of direct and reciprocal space from basic translation vectors for a 2D system
+  !> Author: V. Popescu
   !> Category: geometry, k-points, electrostatics, KKRhost 
   !> Deprecated: False 
+  !> Generates the lattice vectors of direct and reciprocal space from basic 
+  !> translation vectors for a 2D system
   !-------------------------------------------------------------------------------
-  !> @note Popescu May 2004: The routine has been brought to a form which
-  ! is very similar to
-  !> LATTICE2D -- from which it has been originally derived. Dimension of arrays GN,RM
-  !> changed from (4,*) to (2,*), the 4th one it is used only locally (GNR/RMR)
-  !> -- only GN/RM(2,*) are actually needed in EWALD2D
-  !> Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90 
+  !> @note Popescu May 2004: The routine has been brought to a form which is very similar to
+  !> `LATTICE2D` -- from which it has been originally derived. Dimension of arrays GN,RM
+  !> changed from `(4,*)` to `(2,*)`, the 4th one it is used only locally (GNR/RMR)
+  !> -- only `GN/RM(2,*)` are actually needed in EWALD2D
   !> @endnote
   !------------------------------------------------------------------------------- 
   subroutine lattice2d(alat,bravais,recbv,ngmax,nrmax,nshlg,nshlr,nsg,nsr,gn,rm,    &
     rmax,gmax,iprint,nmaxd,ishld)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! *  generate lattice vectors of direct and reciprocal space from      *
-    ! *  basic translation vectors br                                      *
-    ! *                                                                    *
-    ! *  alat            : lattice constant                                *
-    ! *  br(i,j)         : i=x,y,z j= 1,2,3 bravais vectors                *
-    ! *                    *** in a.u. ****                                *
-    ! *  rmax            : maximum radius in real space        (input)     *
-    ! *  gmax            : maximum radius in reciprocal space  (input)     *
-    ! *  ngmax           : Number of reciprocal lattice vectors            *
-    ! *  gn(2,nmaxd)     : x,y,z   of reciprocal lattice vectors           *
-    ! *  nrmax           : Number of real lattice vectors                  *
-    ! *  rm(2,nmaxd)     : x,y,z  of real space vectors                    *
-    ! *  nshlg           : shells in reciprocal space                      *
-    ! *  nshlr           : shells in real space                            *
-    ! *  nsg,nsr         : integer arrays, number of atoms in each shell   *
-    ! *                                                                    *
-    ! *  The routine has been brought to a form which is very similar to   *
-    ! *  LATTICE2D -- from which it has been originally derived            *
-    ! *  Dimension of arrays GN,RM changed from (4,*) to (2,*), the 4th    *
-    ! *  one it is used only locally (GNR/RMR) -- only GN/RM(2,*) are      *
-    ! *  actually needed in EWALD2D                  v.popescu May 2004    *
-    ! *                                                                    *
-    ! **********************************************************************
+
     implicit none
     ! ..
     ! .. Input variables
@@ -138,9 +112,9 @@ contains
     numrh = numr/2 + 1
     numgh = numg/2 + 1
 
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! generate lattice vectors of real space
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
 
     write (1337, *) 'Real space...'
     nr = 0
@@ -219,11 +193,11 @@ contains
     nshlr = nsh
     if (nshlr<=1) stop 'lattice2d: ERROR: cut-off radius RMAX too small '
     write (1337, *) '...done.'
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
 
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! generate lattice vectors of real space
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
 
     write (1337, *) 'Reciprocal space...'
     ng = 0
@@ -307,18 +281,18 @@ contains
     if (nshlg<=1) stop 'lattice2dERROR: cut-off radius GMAX too small '
 
     write (1337, *) '...done.'
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! OUTPUT
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     write (1337, fmt=110)
     write (1337, fmt=120) 'Direct  lattice', nrmax, nshlr, rmr(nrmax)
     write (1337, fmt=120) 'Recipr. lattice', ngmax, nshlg, gnr(ngmax)
     write (1337, fmt=130)
 
     if (iprint<3) return
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! OUTPUT
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! ----------------------------------------------------------------------------
     k = 0
     write (1337, fmt=140) 'real-space'

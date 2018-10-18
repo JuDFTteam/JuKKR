@@ -1,3 +1,4 @@
+!#define test
 !------------------------------------------------------------------------------------
 !> Summary: Container for several routines regarding checksum verification 
 !> Author: Philipp Ruessmann
@@ -8,7 +9,6 @@
 !> @note  Uncomment the line `#define test` and compile with -D for testing
 !> @endnote
 !------------------------------------------------------------------------------------
-!#define test
 module mod_md5sums
 
   implicit none

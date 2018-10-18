@@ -22,43 +22,22 @@ contains
   !> inside the slab layer by layer, if a decimation run is performed also the left
   !> and right hosts consntats are written. 
   !-------------------------------------------------------------------------------
-  !> @note All positions must be scaled with ALAT to get them correct
-  !> The record index is: (IQ1-1)*NAEZ + IQ2 for (IQ1,IQ2) within the slab 
-  !> NAEZ*NAEZ + (IQ1-1)*NLEFT*NLBASIS for (IQ1,(IL,IBL)), IQ1 in 
-  !> + (IL-1)*NLEFT+IBL  slab, (IL,IBL) in the left NAEZ*NAEZ + NAEZ*NLEFT*NLBASIS
-  !> + (IQ1-1)*NRIGHT*NRBASIS for (IQ1,(IR,IBR)), IQ1 in + (IR-1)*NRIGHT+IBR slab, 
-  !> (IR,IBR) in the right
+  !> @note All positions must be scaled with `ALAT` to get them correct
+  !> The record index is: `(IQ1-1)*NAEZ + IQ2` for `(IQ1,IQ2)` within the slab 
+  !> `NAEZ*NAEZ + (IQ1-1)*NLEFT*NLBASIS` for `(IQ1,(IL,IBL))`, `IQ1` in 
+  !> `+ (IL-1)*NLEFT+IBL` slab, `(IL,IBL)` in the left `NAEZ*NAEZ + NAEZ*NLEFT*NLBASIS`
+  !> `+ (IQ1-1)*NRIGHT*NRBASIS` for `(IQ1,(IR,IBR))`, `IQ1` in `+ (IR-1)*NRIGHT+IBR` slab, 
+  !> `(IR,IBR)` in the right
   !> 
   !> Jonathan Chico: There seems to be an array called sum in this routine, this is the
-  !> same name than the FORTRAN instrinsic function called sum, hence it is recommendable
+  !> same name than the `FORTRAN` instrinsic function called `sum()`, hence it is recommendable
   !> that this name is changed.
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine madelung2d(lpot,yrg,wg,naez,alat,vol,bravais,recbv,rbasis,rmax,gmax,   &
     nlbasis,nleft,zperleft,tleft,nrbasis,nright,zperight,tright,lmxspd,lassld,      &
     lpotd,lmpotd,nmaxd,ishld,nembd1,wlength)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * This subroutine calculates the Madelung potential coefficients     *
-    ! * in the 2D case and stores them in the DA-file abmad.unformatted    *
-    ! * For each layer in the slab, the summation is split into three      *
-    ! * parts (see also VINTERFACE):                                       *
-    ! * within the slab, over the NLEFT*NLBASIS left host sites and over   *
-    ! * the NRIGHT*NRBASIS right host sites, the last two steps only in    *
-    ! * case of decimation run                                             *
-    ! *                                                                    *
-    ! * all positions must be scaled with ALAT to get them correct         *
-    ! * (done in EWALD2D)                                                  *
-    ! *                                                                    *
-    ! * The record index is:                                               *
-    ! *   (IQ1-1)*NAEZ + IQ2                 for (IQ1,IQ2) within the slab *
-    ! *   NAEZ*NAEZ + (IQ1-1)*NLEFT*NLBASIS  for (IQ1,(IL,IBL)), IQ1 in    *
-    ! *                  + (IL-1)*NLEFT+IBL  slab, (IL,IBL) in the left    *
-    ! *   NAEZ*NAEZ + NAEZ*NLEFT*NLBASIS                                   *
-    ! *             + (IQ1-1)*NRIGHT*NRBASIS for (IQ1,(IR,IBR)), IQ1 in    *
-    ! *             + (IR-1)*NRIGHT+IBR      slab, (IR,IBR) in the right   *
-    ! *                                                                    *
-    ! **********************************************************************
+
     use :: mod_madelgaunt
     use :: mod_madelcoef
     use :: mod_madelout, only: madel2out

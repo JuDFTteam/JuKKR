@@ -5,7 +5,6 @@
 !> Deprecated: False 
 !> Dummy version of `main1a` which is used to test the `tmat_newsolver`
 !-------------------------------------------------------------------------------
-! > this is dummy version of main1a
 subroutine main1a_dummy
   use :: mod_profiling
   use :: constants

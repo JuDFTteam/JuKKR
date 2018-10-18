@@ -1,21 +1,20 @@
 !------------------------------------------------------------------------------------
-!> Summary: Calculate the electron-intracell-potentials and the charge-moments 
-!> of given charge densities. ( For each spin-direction the potential is the
-!> same in the polarized case.)
+!> Summary: Calculate the electron-intracell-potentials and the charge-moments of given charge densities. ( For each spin-direction the potential is the same in the polarized case.)
 !> Author: B. Drittler
-!> Initialize the potential $$ V$$ with the electron-intracell-potentials
+!> Initialize the potential \(V\) with the electron-intracell-potentials
 !> the intracell-potential is expanded into spherical harmonics .
 !> the lm-term of the intracell-potential of the representive atom i is given by
-!>
-!> $$V\left(r,lm,i\right)=\frac{8\pi}{2l+1}\left(\int_{0}^{r}dr'\frac{r'^{l}}{r^{l+1}} rho2ns(r',lm,i,1) +\int_{r}^{r_{cut}}dr' \frac{r^l}{r'^{l+1}}rho2ns(r',lm,i,1) ) \right)$$
-!>
+!> \begin{equation}
+!> V\left(r,lm,i\right)=\frac{8\pi}{2l+1}\left(\int_{0}^{r}dr'\frac{r'^{l}}{r^{l+1}} rho2ns(r',lm,i,1) +\int_{r}^{r_{cut}}dr' \frac{r^l}{r'^{l+1}}rho2ns(r',lm,i,1) ) \right)
+!> \end{equation}
 !> the lm contribution of the charge moment of the representive atom i is given by
-!>
-!> $$ cmom\left(lm,i\right)=\int_{0}^{r_{cut}} dr'!r'^{l}rho2ns(r',lm,i,1)$$
-!>
-!> (see notes by b.drittler and u.klemradt) $$ r_{cut}$$ is muffin tin or
+!> \begin{equation}
+!> cmom\left(lm,i\right)=\int_{0}^{r_{cut}} dr'!r'^{l}rho2ns(r',lm,i,1)
+!> \end{equation}
+!> (see notes by b.drittler and u.klemradt) \(r_{cut}\) is muffin tin or
 !> Wigner-Seitz sphere radius, depending on kshape turned on or off
-!> @note Attention : $$ rho2ns(...,1)$$ is the real charge density times $$r^2$$
+!------------------------------------------------------------------------------------
+!> @note Attention : `rho2ns(...,1)` is the real charge density times \(r^2\)
 !> developed into spherical harmonics . (see deck rholm)
 !------------------------------------------------------------------------------------
 module mod_vintras
@@ -23,25 +22,23 @@ module mod_vintras
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: Calculate the electron-intracell-potentials and the charge-moments 
-  !> of given charge densities. ( For each spin-direction the potential is the
-  !> same in the polarized case.)
+  !> Summary: Calculate the electron-intracell-potentials and the charge-moments of given charge densities. (For each spin-direction the potential is the same in the polarized case.)
   !> Author: B. Drittler
   !> Category: potential, KKRhost
   !> Deprecated: False 
-  !> Initialize the potential $$ V$$ with the electron-intracell-potentials
+  !> Initialize the potential \(V\) with the electron-intracell-potentials
   !> the intracell-potential is expanded into spherical harmonics .
   !> the lm-term of the intracell-potential of the representive atom i is given by
-  !>
-  !> $$V\left(r,lm,i\right)=\frac{8\pi}{2l+1}\left(\int_{0}^{r}dr'\frac{r'^{l}}{r^{l+1}} rho2ns(r',lm,i,1) +\int_{r}^{r_{cut}}dr' \frac{r^l}{r'^{l+1}}rho2ns(r',lm,i,1) ) \right)$$
-  !>
+  !> \begin{equation}
+  !> V\left(r,lm,i\right)=\frac{8\pi}{2l+1}\left(\int_{0}^{r}dr'\frac{r'^{l}}{r^{l+1}} rho2ns(r',lm,i,1) +\int_{r}^{r_{cut}}dr' \frac{r^l}{r'^{l+1}}rho2ns(r',lm,i,1) ) \right)
+  !> \end{equation}
   !> the lm contribution of the charge moment of the representive atom i is given by
-  !>
-  !> $$ cmom\left(lm,i\right)=\int_{0}^{r_{cut}} dr'!r'^{l}rho2ns(r',lm,i,1)$$
-  !>
-  !> (see notes by b.drittler and u.klemradt) $$ r_{cut}$$ is muffin tin or
+  !> \begin{equation}
+  !> cmom\left(lm,i\right)=\int_{0}^{r_{cut}} dr'!r'^{l}rho2ns(r',lm,i,1)
+  !> \end{equation}
+  !> (see notes by b.drittler and u.klemradt) \(r_{cut}\) is muffin tin or
   !> Wigner-Seitz sphere radius, depending on kshape turned on or off
-  !> @note Attention : $$ rho2ns(...,1)$$ is the real charge density times $$r^2$$
+  !> @note Attention : `rho2ns(...,1)` is the real charge density times \(r^2\)
   !> developed into spherical harmonics . (see deck rholm)
   !-------------------------------------------------------------------------------
   subroutine vintras(cmom,cminst,lmax,nspin,nstart,nend,rho2ns,v,r,drdi,irws,ircut, &

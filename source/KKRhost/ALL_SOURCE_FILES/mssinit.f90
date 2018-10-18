@@ -1,7 +1,8 @@
 !------------------------------------------------------------------------------------
-!> Summary: Calculation of the $$\Delta t^{-1}$$ matrix in the global frame of reference
+!> Summary: Calculation of the \(\Delta t^{-1}\) matrix in the global frame of reference
 !> Author: 
-!> Calculation of the $$\Delta t^{-1}$$ matrix in the global frame of reference
+!> Calculation of the \(\Delta t^{-1}\) matrix in the global frame of reference
+!------------------------------------------------------------------------------------
 !> @note Jonathan Chico: This routine seems to make use of the variables `naezd` and `natypd`, these
 !> are unnecessary as they are duplicates of `natyp` and `naez`. These should be 
 !> unified.
@@ -12,11 +13,11 @@ module mod_mssinit
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: Calculation of the $$\Delta t^{-1}$$ matrix in the global frame of reference
+  !> Summary: Calculation of the \(\Delta t^{-1}\) matrix in the global frame of reference
   !> Author:
   !> Category: single-site, KKRhost
   !> Deprecated: False 
-  !> Calculation of the $$\Delta t^{-1}$$ matrix in the global frame of reference
+  !> Calculation of the \(\Delta t^{-1}\) matrix in the global frame of reference
   !-------------------------------------------------------------------------------
   !> @note Jonathan Chico: This routine seems to make use of the variables `naezd` and `natypd`, these
   !> are unnecessary as they are duplicates of `natyp` and `naez`. These should be 

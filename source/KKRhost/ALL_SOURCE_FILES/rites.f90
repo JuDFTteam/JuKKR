@@ -1,6 +1,5 @@
 !------------------------------------------------------------------------------------
-!> Summary: This subroutine stores in 'ifile' the necessary results (potentials etc.) 
-!> to start self-consistency iterations
+!> Summary: This subroutine stores in 'ifile' the necessary results (potentials etc.)  to start self-consistency iterations
 !> Author: 
 !> Modified for the full potential case - if ins .gt. 0 there is written a different 
 !> potential card if the sum of absolute values of an lm component of vins (non
@@ -16,8 +15,7 @@ module mod_rites
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: This subroutine stores in 'ifile' the necessary results (potentials etc.) 
-  !> to start self-consistency iterations
+  !> Summary: This subroutine stores in 'ifile' the necessary results (potentials etc.) to start self-consistency iterations
   !> Author: 
   !> Category: input-output, potential, KKRhost 
   !> Deprecated: False 

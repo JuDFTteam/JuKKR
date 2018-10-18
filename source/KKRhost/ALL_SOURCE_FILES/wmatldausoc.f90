@@ -1,6 +1,5 @@
 !------------------------------------------------------------------------------------
-!> Summary: Calculation of Coulomb interaction potential in LDA+U relativistic
-!> + SOC (new solver)
+!> Summary: Calculation of Coulomb interaction potential in LDA+U relativistic + SOC (new solver)
 !> Author: N. Long
 !> Calculation of Coulomb interaction potential in LDA+U relativistic
 !> + SOC (new solver)
@@ -12,8 +11,7 @@ module mod_wmatldausoc
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: Calculation of Coulomb interaction potential in LDA+U relativistic
-  !> + SOC (new solver)
+  !> Summary: Calculation of Coulomb interaction potential in LDA+U relativistic + SOC (new solver)
   !> Author: N. Long 
   !> Category: total-energy, potential, lda+u, spin-orbit-coupling, KKRhost 
   !> Deprecated: False 
@@ -27,22 +25,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine wmatldausoc(ntldau,itldau,nspin,denmatn,lopt,ueff,jeff,uldau,wldau,eu, &
     edc,mmaxd,natyp,nspind,lmax)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * Calculation of Coulomb interaction potential in LDA+U              *
-    ! * relativistic + SOC (new solver)                                    *
-    ! *                                                                    *
-    ! * The expression evaluated (array VLDAU) is                          *
-    ! *                                                                    *
-    ! *       V_{m1,s,m2,s'} =                                             *
-    ! * delta_{ss'} Sum_{s'',m3,m4} U_{m1,m2,m3,m4} n_{m3,s'',m4,s''}      *
-    ! * - Sum_{m3,m4} U_{m1,m4,m3,m2} n_{m3,s',m4,s}                       *
-    ! * - [Ueff (dentot-1/2) - Jeff (n_s - 1/2)] delta_{ss'} delta_{m1,m2} *
-    ! *                                                                    *
-    ! * details see H. Ebert at al., Sol. Stat. Comm. 127 (2003) 443       *
-    ! *                                                                    *
-    ! *                  n.long,  April 2016, Juelich                      *
-    ! **********************************************************************
+
     use :: constants
     use :: mod_datatypes
     use :: mod_rclm

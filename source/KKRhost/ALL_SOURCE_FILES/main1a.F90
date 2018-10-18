@@ -3,8 +3,8 @@
 !> Author: Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
 !> and many others ...
 !> The code uses the information obtained in the main0 module, this is
-!> mostly done via the get_params_1a() call, that obtains parameters of the type
-!> t_params and passes them to local variables
+!> mostly done via the `get_params_1a()` call, that obtains parameters of the type
+!> `t_params` and passes them to local variables
 !------------------------------------------------------------------------------------
 module mod_main1a
 

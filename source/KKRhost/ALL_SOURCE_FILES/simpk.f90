@@ -1,11 +1,10 @@
 !------------------------------------------------------------------------------------
-!> Summary: This subroutine does an integration up to $$ r_{cut}$$ of an real
-!> function $$f$$ with an extended 3-point-simpson 
+!> Summary: This subroutine does an integration up to \(r_{cut}\) of an real function \(f\) with an extended 3-point-simpson 
 !> Author: 
-!> The integration of the function$$ fint =\int_{0}^{r_{cut}} f\left(r'\right)dr'$$ has been modified
+!> The integration of the function $$ fint =\int_{0}^{r_{cut}} f\left(r'\right)dr'$$ has been modified
 !> for functions with kinks - at each kink the integration is restarted.
 !------------------------------------------------------------------------------------
-!> @warning Input $$f$$ is destroyed
+!> @warning Input \(f\) is destroyed
 !> @endwarning
 !------------------------------------------------------------------------------------
 module mod_simpk
@@ -13,15 +12,14 @@ module mod_simpk
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: This subroutine does an integration up to $$ r_{cut}$$ of an real
-  !> function $$f$$ with an extended 3-point-simpson 
+  !> Summary: This subroutine does an integration up to \(r_{cut}\) of an real function \(f\) with an extended 3-point-simpson 
   !> Author:
   !> Category: numerical-tools, KKRhost 
   !> Deprecated: False 
-  !> The integration of the function$$ fint =\int_{0}^{r_{cut}} f\left(r'\right)dr'$$ has been modified
+  !> The integration of the function $$ fint =\int_{0}^{r_{cut}} f\left(r'\right)dr'$$ has been modified
   !> for functions with kinks - at each kink the integration is restarted.
   !-------------------------------------------------------------------------------
-  !> @warning Input $$f$$ is destroyed 
+  !> @warning Input \(f\) is destroyed 
   !> @endwarning
   !-------------------------------------------------------------------------------
   subroutine simpk(f, fint, ipan, ircut, drdi)

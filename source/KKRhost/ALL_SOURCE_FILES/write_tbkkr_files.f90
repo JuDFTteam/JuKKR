@@ -1,6 +1,5 @@
 !------------------------------------------------------------------------------------
-!> Summary: Printing to file the TBKKR files, containing key information of the
-!> input parameters
+!> Summary: Printing to file the TBKKR files, containing key information of the input parameters
 !> Author:
 !> Printing to file the TBKKR files, containing key information of the input
 !> parameters
@@ -12,8 +11,7 @@ module mod_write_tbkkr_files
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: Printing to file the TBKKR files, containing key information of the
-  !> input parameters
+  !> Summary: Printing to file the TBKKR files, containing key information of the input parameters
   !> Author: 
   !> Category: input-output, KKRhost
   !> Deprecated: False 

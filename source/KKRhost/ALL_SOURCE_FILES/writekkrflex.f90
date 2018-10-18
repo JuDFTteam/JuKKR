@@ -4,9 +4,10 @@
 !> Subroutine dealing with the printing of the needed kkrflex files for the
 !> realization of an impurity calculation with the KKRimp software package.
 !> It specifically prints the following files:
-!> - kkrflex_tmat
-!> - kkrflex_intercell_ref
-!> - kkrflex_intercell_cmoms
+!>
+!> - `kkrflex_tmat`
+!> - `kkrflex_intercell_ref`
+!> - `kkrflex_intercell_cmoms`
 !------------------------------------------------------------------------------------
 module mod_writekkrflex
 
@@ -20,9 +21,10 @@ contains
   !> Subroutine dealing with the printing of the needed kkrflex files for the
   !> realization of an impurity calculation with the KKRimp software package.
   !> It specifically prints the following files:
-  !> - kkrflex_tmat
-  !> - kkrflex_intercell_ref
-  !> - kkrflex_intercell_cmoms
+  !> 
+  !> - `kkrflex_tmat`
+  !> - `kkrflex_intercell_ref`
+  !> - `kkrflex_intercell_cmoms`
   !-------------------------------------------------------------------------------
   subroutine writekkrflex(natomimp,nspin,ielast,lmpot,alat,natyp,kshape,vbc,atomimp,&
     hostimp,noq,zat,kaoez,conc,cmom,cminst,vinters,nemb,naez)

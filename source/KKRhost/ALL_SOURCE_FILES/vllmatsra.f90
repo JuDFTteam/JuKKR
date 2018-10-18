@@ -28,7 +28,7 @@ contains
     integer, intent (in) :: lmax   !! Maximum l component in wave function expansion
     integer, intent (in) :: nrmax  !! NTOTD*(NCHEBD+1)
     integer, intent (in) :: nrmaxd !! dimension for rmesh (maximum of nrmax values of all atoms)
-    integer, intent (in) :: lmsize !! $$(l_{max}+2)^2$$
+    integer, intent (in) :: lmsize !! \((l_{max}+2)^2\)
     integer, intent (in) :: lval_in !! l-value used in spherical calculation of calcpsh (lmsize=1)
     complex (kind=dp), intent (in) :: eryd !! energy (used in rel-mass factor)
     character (len=*), intent (in) :: cmode !! either 'Ref=0' or 'Ref=Vsph' which determines the used reference system (for calcsph trick or direct evaluation)

@@ -1,12 +1,19 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculation of the density for the new solver
+!> Author:
+!> Calculation of the density for the new solver
+!------------------------------------------------------------------------------------
 module mod_rhooutnew
 
 contains
 
-  ! -------------------------------------------------------------------------------
-  ! SUBROUTINE: RHOOUTNEW
-  !> @note -Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to
-  ! Fortran90
-  ! -------------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculation of the density for the new solver
+  !> Author: 
+  !> Category: physical-observables, KKRhost
+  !> Deprecated: False 
+  !> Calculation of the density for the new solver
+  !-------------------------------------------------------------------------------
   subroutine rhooutnew(nsra,lmax,gmatll,ek,lmpot,df,npan_tot,ncheb,cleb,icleb,iend, &
     irmdnew,thetasnew,ifunm,imt1,lmsp,rll,rllleft,sllleft,cden,cdenlm,cdenns,       &
     rho2nsc,corbital,gflle_part,rpan_intervall,ipan_intervall)
@@ -21,12 +28,10 @@ contains
     implicit none
 
     integer, intent (in) :: nsra
-    integer, intent (in) :: lmax   !! Maximum l component in wave function
-    ! expansion
+    integer, intent (in) :: lmax   !! Maximum l component in wave function expansion
     integer, intent (in) :: iend   !! Number of nonzero gaunt coefficients
     integer, intent (in) :: imt1
-    integer, intent (in) :: ncheb  !! Number of Chebychev pannels for the new
-    ! solver
+    integer, intent (in) :: ncheb  !! Number of Chebychev pannels for the new solver
     integer, intent (in) :: lmpot  !! (LPOT+1)**2
     integer, intent (in) :: irmdnew
     integer, intent (in) :: corbital
@@ -172,7 +177,9 @@ contains
       do jspin = 1, 4
         do lm1 = 1, lmsize
           do lm2 = 1, lm1 - 1
-            wr(lm1+lmshift1(jspin), lm2+lmshift2(jspin), ir) = wr(lm1+lmshift1(jspin), lm2+lmshift2(jspin), ir) + wr(lm2+lmshift1(jspin), lm1+lmshift2(jspin), ir)
+            wr(lm1+lmshift1(jspin), lm2+lmshift2(jspin), ir) =                      &
+              wr(lm1+lmshift1(jspin), lm2+lmshift2(jspin), ir) +                    &
+              wr(lm2+lmshift1(jspin), lm1+lmshift2(jspin), ir)
           end do
         end do
       end do                       ! JSPIN

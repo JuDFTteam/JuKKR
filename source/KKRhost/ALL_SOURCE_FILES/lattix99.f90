@@ -28,16 +28,7 @@ contains
     !-------------------------------------------------------------------------------
   subroutine lattix99(lsurf,alat,natyp,naez,conc,rws,bravais,recbv,volume0,rr,nrd,  &
     natypd)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * LATTIX99 generates the real space and reciprocal lattices.         *
-    ! * BRAVAIS(I,J) are basis vectors, with I=X,Y,Z and J=A,B,C..         *
-    ! * RECIPROCAL space vectors are in UNITS OF 2*PI/ALATC..              *
-    ! * RR are the direct space vectors                                    *
-    ! * NR+1 is the number of direct space vectors created                 *
-    ! * (structure dependent output).                                      *
-    ! *                                                                    *
-    ! **********************************************************************
+
     use :: mod_rrgen
     use :: mod_spatpr
     use :: mod_crospr

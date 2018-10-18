@@ -9,7 +9,7 @@ contains
   !-------------------------------------------------------------------------------  
   !> Summary: 
   !> Author: 
-  !> Category: deprecated 
+  !> Category: undefined, deprecated 
   !> Deprecated: True 
   !-------------------------------------------------------------------------------  
   integer function mapblock(ie, ie1, ne, iterstep, nodefirst, nodelast)

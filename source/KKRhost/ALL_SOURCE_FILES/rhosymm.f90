@@ -1,6 +1,5 @@
 !------------------------------------------------------------------------------------
-!> Summary: Symmetrize the charge densities and magnetic moments of atoms which
-!> are magnetic _antisymmetric_. (dependencies in `IXIPOL(*)`)
+!> Summary: Symmetrize the charge densities and magnetic moments of atoms which are magnetic _antisymmetric_. (dependencies in `IXIPOL(*)`)
 !> Author: P. Zahn 
 !> Symmetrize the charge densities and magnetic moments of atoms which are magnetic
 !> _antisymmetric_. (dependencies in `IXIPOL(*)`)
@@ -10,8 +9,7 @@ module mod_rhosymm
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: Symmetrize the charge densities and magnetic moments of atoms which
-  !> are magnetic _antisymmetric_. (dependencies in `IXIPOL(*)`)
+  !> Summary: Symmetrize the charge densities and magnetic moments of atoms which are magnetic _antisymmetric_. (dependencies in `IXIPOL(*)`)
   !> Author: P. Zahn 
   !> Category: physical-observables, KKRhost 
   !> Deprecated: False 

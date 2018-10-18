@@ -1,6 +1,5 @@
 !------------------------------------------------------------------------------------
-!> Summary: This is calculating the intra-atomic contibution of the potential
-!> in the case of an interface taking into account the bulk potential on the two sides.
+!> Summary: This is calculating the intra-atomic contibution of the potential in the case of an interface taking into account the bulk potential on the two sides.
 !> Author: 
 !> It uses the structure dependent matrices `AVMAD` which are calculated
 !> once in the subroutine `MADELUNG2D()` and saved in the DA-file `avmad.unformatted` ( May 2004)
@@ -21,8 +20,7 @@ module mod_vinterface
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: This is calculating the intra-atomic contibution of the potential
-  !> in the case of an interface taking into account the bulk potential on the two sides.
+  !> Summary: This is calculating the intra-atomic contibution of the potential in the case of an interface taking into account the bulk potential on the two sides.
   !> Author: 
   !> Category: potential, KKRhost 
   !> Deprecated: False 

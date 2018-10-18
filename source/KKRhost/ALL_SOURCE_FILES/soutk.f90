@@ -1,11 +1,11 @@
 !------------------------------------------------------------------------------------
 !> Summary: This subroutine does an outwards integration of a function with kinks
 !> Author: B. Drittler
-!> To integrate the function $$fint\left(r\right)=\int_{0}^{r}f\left(r'\right)dr' $$
+!> To integrate the function \(fint\left(r\right)=\int_{0}^{r}f\left(r'\right)dr' \)
 !> at each kink the integration is restarted the starting value for this integration is determined by
 !> a 4 point lagrangian integration, coefficients given by M. Abramowitz and I.A. Stegun,
 !> handbook of mathematical functions, and applied mathematics series 55 (1968).
-!> the weights $$drdi$$ have to be multiplied before calling this subroutine.
+!> the weights \(drdi\) have to be multiplied before calling this subroutine.
 !------------------------------------------------------------------------------------
 module mod_soutk
 
@@ -16,11 +16,11 @@ contains
   !> Author: B. Drittler
   !> Category: numerical-tools, KKRhost
   !> Deprecated: False 
-  !> To integrate the function $$fint\left(r\right)=\int_{0}^{r}f\left(r'\right)dr' $$
+  !> To integrate the function \(fint\left(r\right)=\int_{0}^{r}f\left(r'\right)dr' \)
   !> at each kink the integration is restarted the starting value for this integration is determined by
   !> a 4 point lagrangian integration, coefficients given by M. Abramowitz and I.A. Stegun,
   !> handbook of mathematical functions, and applied mathematics series 55 (1968).
-  !> the weights $$drdi$$ have to be multiplied before calling this subroutine.
+  !> the weights \(drdi\) have to be multiplied before calling this subroutine.
   !-------------------------------------------------------------------------------
   subroutine soutk(f, fint, ipan, ircut)
 
