@@ -1,19 +1,30 @@
+!------------------------------------------------------------------------------------
+!> Summary: Prepares shape corrections using gaussian quadrature
+!> Author: 
+!> Prepares shape corrections using gaussian quadrature as given by m. abramowitz 
+!> and i.a. stegun, handbook of mathematical functions and applied mathematics 
+!> series 55 (1968), pages 887 and 916.
+!------------------------------------------------------------------------------------
 module mod_shape_corr
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  subroutine shape_corr(lpot, natyp, gsh, ilm_map, imaxsh, lmsp, ntcell, w, yr, lassld, lmpotd, natypd, ngshd)
-    ! **********************************************************************
-    ! *  Prepares shape corrections using gaussian quadrature as given by  *
-    ! *  m. abramowitz and i.a. stegun, handbook of mathematical functions *
-    ! *  nbs applied mathematics series 55 (1968), pages 887 and 916       *
-    ! *                                                                    *
-    ! *  the parameter LASSLD has to be chosen such that                   *
-    ! *                        l1+l2+l3 .le. 2*LASSLD                      *
-    ! *                                                                    *
-    ! **********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Prepares shape corrections using gaussian quadrature
+  !> Author: 
+  !> Category: shape-functions, KKRhost
+  !> Deprecated: False 
+  !> Prepares shape corrections using gaussian quadrature as given by m. abramowitz 
+  !> and i.a. stegun, handbook of mathematical functions and applied mathematics 
+  !> series 55 (1968), pages 887 and 916.
+  !-------------------------------------------------------------------------------
+  !> @note The parameter `LASSLD` has to be chosen such that `l1+l2+l3 .le. 2*LASSLD`
+  !> @endnote
+  !-------------------------------------------------------------------------------
+  subroutine shape_corr(lpot,natyp,gsh,ilm_map,imaxsh,lmsp,ntcell,w,yr,lassld,      &
+    lmpotd,natypd,ngshd)
 
     use :: mod_rcstop
     use :: mod_trarea
@@ -64,12 +75,8 @@ contains
                 ! ----------------------------------------------------------------------
                 if (triangle(l1,l2,l3)) then
                   do m2 = -l2, l2
-
                     lm2 = l2*l2 + l2 + m2 + 1
-
-                    ! -> use the m-conditions for the gaunt coefficients not to
-                    ! be 0
-
+                    ! -> use the m-conditions for the gaunt coefficients not to be 0
                     m1s = sign(1, m1)
                     m2s = sign(1, m2)
                     m3s = sign(1, m3)
@@ -130,6 +137,13 @@ contains
 
   end subroutine shape_corr
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Function to check if the angular momentum allows for the gaunt coefficients to be corrected
+  !> Author: 
+  !> Category: numerical-tools, KKRhost
+  !> Deprecated: False 
+  !> Function to check if the angular momentum allows for the gaunt coefficients to be corrected 
+  !-------------------------------------------------------------------------------
   function triangle(l1, l2, l3)
     implicit none
     integer :: l1, l2, l3

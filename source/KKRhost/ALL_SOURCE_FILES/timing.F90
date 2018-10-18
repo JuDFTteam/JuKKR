@@ -26,7 +26,6 @@ module mod_timing
   integer :: ispaused(nkeys) = 0
   integer :: init = 0
 
-
 contains
 
   !-------------------------------------------------------------------------------

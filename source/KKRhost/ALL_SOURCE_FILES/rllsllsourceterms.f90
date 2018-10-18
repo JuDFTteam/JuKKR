@@ -1,17 +1,33 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculates the source terms for the right \(J\), \(H\) and the left solutions \(J2\), \(H2\)
+!> Author: 
+!> Calculates the source terms for the right \(J\), \(H\) and the left solutions \(J2\), \(H2\)
+!> for caculations in the following approaches:
+!>
+!> * non-relativistic
+!> * scalar-relativistic
+!> * full-relativistic
+!------------------------------------------------------------------------------------
 module mod_rllsllsourceterms
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  ! -------------------------------------------------------------------------------
-  !> @brief Calculates the source terms J,H and the left solution J2, H2 for:
-  !> - non-relativistic
-  !> - scalar-relativistic
-  !> - full-relativistic
-  !> calculations
-  ! -------------------------------------------------------------------------------
-  subroutine rllsllsourceterms(nsra, nvec, eryd, rmesh, nrmax, nrmaxd, lmax, lmsize, use_fullgmat, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor)
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates the source terms for the right \(J\), \(H\) and the left solutions \(J2\), \(H2\)
+  !> Author: 
+  !> Category: solver, single-site, KKRhost
+  !> Deprecated: False 
+  !> Calculates the source terms for the right \(J\), \(H\) and the left solutions \(J2\), \(H2\)
+  !> for caculations in the following approaches:
+  !>
+  !> * non-relativistic
+  !> * scalar-relativistic
+  !> * full-relativistic
+  !-------------------------------------------------------------------------------
+  subroutine rllsllsourceterms(nsra,nvec,eryd,rmesh,nrmax,nrmaxd,lmax,lmsize,       &
+    use_fullgmat,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor)
 
     use :: constants
     use :: mod_beshank

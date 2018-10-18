@@ -1,3 +1,11 @@
+!------------------------------------------------------------------------------------
+!> Summary: Renormalize the valence charge according to Lloyd's formula.
+!> Author: Phivos Mavropoulos
+!> Renormalize the valence charge according to Lloyd's formula. 
+!> Find renormalization constant per energy, then renormalize charge/atom/energy, 
+!> then integrate over energies to find the renormalized charge/atom. 
+!> Use it to renormalize the density.
+!------------------------------------------------------------------------------------
 module mod_renorm_lly
 
 contains

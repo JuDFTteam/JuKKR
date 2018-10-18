@@ -1,19 +1,53 @@
+!------------------------------------------------------------------------------------
+!> Summary: Wrapper for the calculation of the regular solutions
+!> Author: 
+!> Wrapper for the calculation of the regular solutions
+!------------------------------------------------------------------------------------
+!> @note preprocessor options: change this definition if used in host/impurity code
+!> this is commented out, since then the logical hostcode is not defined
+!> and thus `#indef hostcode` returns true and `#ifdef hostcode` false 
+!>
+!> * **Host code**: leave the line `#define hostcode` **uncommented**.
+!> * **Impurity code**: **comment** the line`#define hostcode`.
+!>
+!> This allows one to choose between interface for impurity and host code (different calling lists)
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_rll_global_solutions
 
 contains
 
-  ! preprocessor options:
-  ! change this definition if used in host/impurity code
-  ! this is commented out, since then the logical hostcode is not defined
-  ! and thus "#indef hostcode" returns true and "#ifdef hostcode" false
-#define hostcode ! this is commented out to use the impurity code interface
+#define hostcode 
 
-  ! choose between interface for impurity and host code (different calling lists)
 #ifndef hostcode
-  subroutine rll_global_solutions(rpanbound, rmesh, vll, rll, tllp, ncheb, npan, lmsize, lmsize2, nrmax, nvec, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, cmoderll, idotime)
+  !-------------------------------------------------------------------------------
+  !> Summary: Wrapper for the calculation of the regular solutions
+  !> Author: 
+  !> Category: solver, single-site, KKRhost
+  !> Deprecated: False 
+  !> Wrapper for the calculation of the regular solutions for the host code `KKRhost`
+  !-------------------------------------------------------------------------------
+  !> @note One can comment out the line `#define hostcode` to instead choose the
+  !> calculation of the regular solutions for the impuirty code.
+  !> @endnote
+  !-------------------------------------------------------------------------------
+  subroutine rll_global_solutions(rpanbound,rmesh,vll,rll,tllp,ncheb,npan,lmsize,   &
+    lmsize2,nrmax,nvec,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor,cmoderll,idotime)
 #else
-  subroutine rll_global_solutions(rpanbound, rmesh, vll, rll, tllp, ncheb, npan, lmsize, lmsize2, lbessel, nrmax, nvec, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, cmoderll, &
-    use_sratrick1, alphaget)     ! LLY
+  !-------------------------------------------------------------------------------
+  !> Summary: Wrapper for the calculation of the regular solutions
+  !> Author: 
+  !> Category: solver, single-site, KKRhost
+  !> Deprecated: False 
+  !> Wrapper for the calculation of the regular solutions for the impurity code `KKRimp`
+  !-------------------------------------------------------------------------------
+  !> @note One can uncomment out the line `#define hostcode` to instead choose the
+  !> calculation of the regular solutions for the host code.
+  !> @endnote
+  !-------------------------------------------------------------------------------
+  subroutine rll_global_solutions(rpanbound,rmesh,vll,rll,tllp,ncheb,npan,lmsize,   &
+    lmsize2,lbessel,nrmax,nvec,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor,cmoderll,  &
+    use_sratrick1,alphaget)     ! LLY
 #endif
     ! ************************************************************************
     ! for description see rllsll routine
@@ -199,8 +233,10 @@ contains
     do ipan = 1, npan
 
       drpan2 = (rpanbound(ipan)-rpanbound(ipan-1))/2.d0 ! *(b-a)/2 in eq. 5.53, 5.54
-      call rll_local_solutions(vll, tau(0,ipan), drpan2, cslc1, slc1sum, mrnvy(1,1,ipan), mrnvz(1,1,ipan), mrjvy(1,1,ipan), mrjvz(1,1,ipan), yrf(1,1,0,ipan), zrf(1,1,0,ipan), &
-        ncheb, ipan, lmsize, lmsize2, nrmax, nvec, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, cmoderll, lbessel, use_sratrick1)
+      call rll_local_solutions(vll,tau(0,ipan),drpan2,cslc1,slc1sum,mrnvy(1,1,ipan),& 
+        mrnvz(1,1,ipan),mrjvy(1,1,ipan),mrjvz(1,1,ipan),yrf(1,1,0,ipan),            &
+        zrf(1,1,0,ipan),ncheb,ipan,lmsize,lmsize2,nrmax,nvec,jlk_index,hlk,jlk,hlk2,& 
+        jlk2,gmatprefactor,cmoderll,lbessel,use_sratrick1)
 
     end do                       ! ipan
 #ifdef CPP_HYBRID
@@ -234,10 +270,14 @@ contains
     do ipan = 1, npan
       call zcopy(lmsize*lmsize, allp(1,1,ipan-1), 1, allp(1,1,ipan), 1)
       call zcopy(lmsize*lmsize, bllp(1,1,ipan-1), 1, bllp(1,1,ipan), 1)
-      call zgemm('n', 'n', lmsize, lmsize, lmsize, -cone, mrnvy(1,1,ipan), lmsize, allp(1,1,ipan-1), lmsize, cone, allp(1,1,ipan), lmsize)
-      call zgemm('n', 'n', lmsize, lmsize, lmsize, -cone, mrnvz(1,1,ipan), lmsize, bllp(1,1,ipan-1), lmsize, cone, allp(1,1,ipan), lmsize)
-      call zgemm('n', 'n', lmsize, lmsize, lmsize, cone, mrjvy(1,1,ipan), lmsize, allp(1,1,ipan-1), lmsize, cone, bllp(1,1,ipan), lmsize)
-      call zgemm('n', 'n', lmsize, lmsize, lmsize, cone, mrjvz(1,1,ipan), lmsize, bllp(1,1,ipan-1), lmsize, cone, bllp(1,1,ipan), lmsize)
+      call zgemm('n','n',lmsize,lmsize,lmsize,-cone,mrnvy(1,1,ipan),lmsize,         &
+        allp(1,1,ipan-1),lmsize,cone,allp(1,1,ipan),lmsize)
+      call zgemm('n','n',lmsize,lmsize,lmsize,-cone,mrnvz(1,1,ipan),lmsize,         &
+        bllp(1,1,ipan-1),lmsize,cone,allp(1,1,ipan),lmsize)
+      call zgemm('n','n',lmsize,lmsize,lmsize,cone,mrjvy(1,1,ipan),lmsize,          &
+        allp(1,1,ipan-1),lmsize,cone,bllp(1,1,ipan),lmsize)
+      call zgemm('n','n',lmsize,lmsize,lmsize,cone,mrjvz(1,1,ipan),lmsize,          &
+        bllp(1,1,ipan-1),lmsize,cone,bllp(1,1,ipan),lmsize)
     end do
 
     ! ***********************************************************************
@@ -246,8 +286,10 @@ contains
     do ipan = 1, npan
       do icheb = 0, ncheb
         mn = ipan*ncheb + ipan - icheb
-        call zgemm('n', 'n', lmsize2, lmsize, lmsize, cone, yrf(1,1,icheb,ipan), lmsize2, allp(1,1,ipan-1), lmsize, czero, ull(1,1,mn), lmsize2)
-        call zgemm('n', 'n', lmsize2, lmsize, lmsize, cone, zrf(1,1,icheb,ipan), lmsize2, bllp(1,1,ipan-1), lmsize, cone, ull(1,1,mn), lmsize2)
+        call zgemm('n','n',lmsize2,lmsize,lmsize,cone,yrf(1,1,icheb,ipan),lmsize2,  &
+          allp(1,1,ipan-1),lmsize,czero,ull(1,1,mn),lmsize2)
+        call zgemm('n','n',lmsize2,lmsize,lmsize,cone,zrf(1,1,icheb,ipan),lmsize2,  &
+          bllp(1,1,ipan-1),lmsize,cone,ull(1,1,mn),lmsize2)
       end do
     end do
 
@@ -270,12 +312,13 @@ contains
       end do                     ! LLY
     end do                       ! LLY
 #endif
-    ! calculation of the t-matrix
-    call zgemm('n', 'n', lmsize, lmsize, lmsize, cone/gmatprefactor, bllp(1,1,npan), & ! calc t-matrix tll = bll*alpha^-1
-      lmsize, allp(1,1,npan), lmsize, czero, tllp, lmsize)
+    ! calculation of the t-matrix ! calc t-matrix tll = bll*alpha^-1
+    call zgemm('n','n',lmsize,lmsize,lmsize,cone/gmatprefactor,bllp(1,1,npan),      & 
+      lmsize,allp(1,1,npan),lmsize,czero,tllp,lmsize)
 
     do nm = 1, nrmax
-      call zgemm('n', 'n', lmsize2, lmsize, lmsize, cone, ull(1,1,nm), lmsize2, allp(1,1,npan), lmsize, czero, rll(1,1,nm), lmsize2)
+      call zgemm('n','n',lmsize2,lmsize,lmsize,cone,ull(1,1,nm),lmsize2,            &
+        allp(1,1,npan),lmsize,czero,rll(1,1,nm),lmsize2)
     end do
 
     if (idotime==1) call timing_stop('endstuff')

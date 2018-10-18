@@ -1,23 +1,35 @@
+!------------------------------------------------------------------------------------
+!> Summary: Wrapper module for the handling of the wavefunctions
+!> Author: 
+!> Wrapper module for the handling of the wavefunctions
+!------------------------------------------------------------------------------------
 module mod_save_wavefun
 
   use :: mod_datatypes
 
   implicit none
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Definition of the variables used to store and handle the wavefunctions
+  !> Author: 
+  !> Category: solver, single-site, KKRhost
+  !> Deprecated: False 
+  !> Definition of the variables used to store and handle the wavefunctions
+  !-------------------------------------------------------------------------------
   type :: type_wavefunctions
 
-    integer :: nwfsavemax          ! number of wavefunctions (na*ne) that this rank has to store
-    integer :: maxmem_units        ! units of maxmem_number (1024=kbyte, 1024**2=Mbyte, 1024**3=Gbyte)
-    integer :: maxmem_number       ! maximal amount of memory available to store wavefunctions (maxmem_number*maxmem_units byte)
+    integer :: nwfsavemax          !! number of wavefunctions (na*ne) that this rank has to store
+    integer :: maxmem_units        !! units of maxmem_number (1024=kbyte, 1024**2=Mbyte, 1024**3=Gbyte)
+    integer :: maxmem_number       !! maximal amount of memory available to store wavefunctions (maxmem_number*maxmem_units byte)
     integer :: nth                 ! number of OpenMP tasks used without MPI (not the number of tasks in hybrid mode) in OpenMP mode only
 
     ! allocatable arrays
-    integer, allocatable :: isave_wavefun(:, :) ! 0 if (iat_myrank, ie_myrank) pair is not saved, 1...Nwfsavemax otherwise, for first, second, ... Nwfsavemax-th saved wavefunction on this rank; (Nat_myrank, Ne_myrank)
-    logical :: save_rll, save_sll, save_rllleft, save_sllleft ! logicals that say which wavefunctions are stored (used to reduce amount of memory that is used
-    complex (kind=dp), allocatable :: rll(:, :, :, :, :) ! regular right wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
-    complex (kind=dp), allocatable :: rllleft(:, :, :, :, :) ! regular left wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
-    complex (kind=dp), allocatable :: sll(:, :, :, :, :) ! iregular right wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
-    complex (kind=dp), allocatable :: sllleft(:, :, :, :, :) ! iregular left wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
+    integer, allocatable :: isave_wavefun(:, :) !! 0 if (iat_myrank, ie_myrank) pair is not saved, 1...Nwfsavemax otherwise, for first, second, ... Nwfsavemax-th saved wavefunction on this rank; (Nat_myrank, Ne_myrank)
+    logical :: save_rll, save_sll, save_rllleft, save_sllleft !! logicals that say which wavefunctions are stored (used to reduce amount of memory that is used
+    complex (kind=dp), allocatable :: rll(:, :, :, :, :) !! regular right wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
+    complex (kind=dp), allocatable :: rllleft(:, :, :, :, :) !! regular left wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
+    complex (kind=dp), allocatable :: sll(:, :, :, :, :) !! iregular right wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
+    complex (kind=dp), allocatable :: sllleft(:, :, :, :, :) !! iregular left wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
 
   end type type_wavefunctions
 
@@ -28,10 +40,15 @@ module mod_save_wavefun
 
 contains
 
-  ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+  !-------------------------------------------------------------------------------
+  !> Summary: Find how many wavefunctions can be stored and set `isave_wavefun` array to determine which wavefunctions are stored
+  !> Author: 
+  !> Category: input-output, memory-management, initialization, KKRhost
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !> Find how many wavefunctions can be stored and set `isave_wavefun` array to 
+  !> determine which wavefunctions are stored
+  !-------------------------------------------------------------------------------
   subroutine find_isave_wavefun(t_wavefunctions)
-    ! find how many wavefunctions can be stored and set isave_wavefun array to determine which wavefunctions are stored
 
 #ifdef CPP_OMP
     use :: omp_lib
@@ -55,7 +72,6 @@ contains
     logical :: firstrun
 
     character (len=200) :: message
-
 
     ! >>>>>>>  set some parameters  >>>>>>>!
     nth = 1
@@ -88,8 +104,6 @@ contains
       allocate (t_wavefunctions%isave_wavefun(nat,ne), stat=ierr)
       if (ierr/=0) stop '[find_isave_wavefun] Error allocating isave_wavefun'
       ! <<<<<<<  set some parameters  <<<<<<<!
-
-
       ! >>>>>>>  find numer of wavefunctions that can be stored and allocate store arrays  >>>>>>>!
       ! memory demand for one atom and one energy point in Mbyte
       delta_mem = real(t_inc%nsra*t_inc%lmmaxso*t_inc%lmmaxso*t_inc%irmdnew*nth*16, kind=dp)/(1024.0d0**2)
@@ -146,9 +160,7 @@ contains
           t_wavefunctions%save_sll, '; save rllleft:', t_wavefunctions%save_rllleft, '; save sllleft:', t_wavefunctions%save_sllleft
         write (1337, '(A)') trim(message)
         ! write(*, '(A)') trim(message)
-
       end if
-
       ! allocate store arrays in t_wavefunctions
       if (t_wavefunctions%nwfsavemax>0) then
         if (t_wavefunctions%save_rll) then
@@ -169,8 +181,6 @@ contains
         end if
       end if
       ! <<<<<<<  find numer of wavefunctions that can be stored and allocate store arrays  <<<<<<<!
-
-
       if (t_wavefunctions%nwfsavemax>0) then
         ! >>>>>>>  find priority of saving wavefunctions according to kmesh  >>>>>>>!
         ! kmesh( 1 : ne )
@@ -202,8 +212,6 @@ contains
           stop
         end if
         ! <<<<<<<  find priority of saving wavefunctions according to kmesh  <<<<<<<!
-
-
         ! >>>>>>>  set isave_wavefun array  >>>>>>>!
         t_wavefunctions%isave_wavefun(:, :) = 0
         nwfsave_count = t_wavefunctions%nwfsavemax
@@ -217,8 +225,6 @@ contains
           nwfsave_count = nwfsave_count - ne_myrank
         end do
         ! <<<<<<<  set isave_wavefun array  <<<<<<<!
-
-
         ! deallocate work arrays
         deallocate (mask, kmesh_priority, my_kmesh, stat=ierr)
         if (ierr/=0) stop '[find_isave_wavefun] Error dellocating arrays'
@@ -228,18 +234,23 @@ contains
 
   end subroutine find_isave_wavefun
 
-  ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-  subroutine save_wavefunc(t_wavefunctions, rll, rllleft, sll, sllleft, iat, ie, nsra, lmmaxso, irmdnew, ith)
-    ! saves wavefunction of atom iat and energypoint ie if enough memory is given
+  !-------------------------------------------------------------------------------
+  !> Summary: Saves wavefunction of atom iat and energypoint ie if enough memory is given
+  !> Author: 
+  !> Category: solver, single-site, KKRhost
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !> Saves wavefunction of atom iat and energypoint ie if enough memory is given
+  !-------------------------------------------------------------------------------
+  subroutine save_wavefunc(t_wavefunctions,rll,rllleft,sll,sllleft,iat,ie,nsra,     &
+    lmmaxso,irmdnew,ith)
 
     implicit none
     type (type_wavefunctions), intent (inout) :: t_wavefunctions
     integer, intent (in) :: iat, ie, nsra, lmmaxso, irmdnew, ith
-    complex (kind=dp), intent (in) :: rll(:, :, :, 0:), rllleft(:, :, :, 0:), sll(:, :, :, 0:), sllleft(:, :, :, 0:)
+    complex (kind=dp), intent (in) :: rll(:, :, :, 0:), rllleft(:, :, :, 0:)
+    complex (kind=dp), intent (in) :: sll(:, :, :, 0:), sllleft(:, :, :, 0:)
 
     integer :: isave
-
 
     isave = t_wavefunctions%isave_wavefun(iat, ie)
 
@@ -270,10 +281,15 @@ contains
 
   end subroutine save_wavefunc
 
-  ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-  subroutine read_wavefunc(t_wavefunctions, rll, rllleft, sll, sllleft, iat, ie, nsra, lmmaxso, irmdnew, ith, nth, read_in_rll, read_in_sll, read_in_rllleft, read_in_sllleft)
-    ! reads wavefunction of atom iat and energypoint ie if it was stored
+  !-------------------------------------------------------------------------------
+  !> Summary: Reads wavefunction of atom iat and energypoint ie if it was stored
+  !> Author: 
+  !> Category: solver, single-site, KKRhost
+  !> Deprecated: False 
+  !> Reads wavefunction of atom iat and energypoint ie if it was stored
+  !-------------------------------------------------------------------------------
+  subroutine read_wavefunc(t_wavefunctions,rll,rllleft,sll,sllleft,iat,ie,nsra,     &
+    lmmaxso,irmdnew,ith,nth,read_in_rll,read_in_sll,read_in_rllleft,read_in_sllleft)
 
     implicit none
     type (type_wavefunctions), intent (inout) :: t_wavefunctions
@@ -322,9 +338,14 @@ contains
 
   end subroutine read_wavefunc
 
-  ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 #ifdef CPP_MPI
+  !-------------------------------------------------------------------------------
+  !> Summary: Broadcast parameters for memory demand from master to all other ranks
+  !> Author: 
+  !> Category: communication, KKRhost
+  !> Deprecated: False 
+  !> Broadcast parameters for memory demand from master to all other ranks
+  !-------------------------------------------------------------------------------
   subroutine bcast_params_savewf(t_wavefunctions)
     ! broadcast parameters for memory demand from master to all other ranks
     use :: mpi
@@ -348,7 +369,5 @@ contains
 
   end subroutine bcast_params_savewf
 #endif
-
-
 
 end module mod_save_wavefun

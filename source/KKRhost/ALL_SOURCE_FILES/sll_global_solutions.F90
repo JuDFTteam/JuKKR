@@ -1,18 +1,52 @@
+!------------------------------------------------------------------------------------
+!> Summary: Wrapper for the calculation of the irregular solutions
+!> Author: 
+!> Wrapper for the calculation of the irregular solutions
+!------------------------------------------------------------------------------------
+!> @note preprocessor options: change this definition if used in host/impurity code
+!> this is commented out, since then the logical hostcode is not defined
+!> and thus `#indef hostcode` returns true and `#ifdef hostcode` false 
+!>
+!> * **Host code**: leave the line `#define hostcode` **uncommented**.
+!> * **Impurity code**: **comment** the line`#define hostcode`.
+!>
+!> This allows one to choose between interface for impurity and host code (different calling lists)
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_sll_global_solutions
 
 contains
 
-  ! preprocessor options:
-  ! change this definition if used in host/impurity code
-  ! this is commented out, since then the logical hostcode is not defined
-  ! and thus "#indef hostcode" returns true and "#ifdef hostcode" false
-#define hostcode ! this is commented out to use the impurity code interface
+#define hostcode 
 
-  ! choose between interface for impurity and host code (different calling lists)
 #ifndef hostcode
-  subroutine sll_global_solutions(rpanbound, rmesh, vll, sll, ncheb, npan, lmsize, lmsize2, nrmax, nvec, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, cmodesll, idotime)
+  !-------------------------------------------------------------------------------
+  !> Summary: Wrapper for the calculation of the irregular solutions
+  !> Author: 
+  !> Category: solver, single-site, KKRhost
+  !> Deprecated: False 
+  !> Wrapper for the calculation of the irregular solutions for the host code `KKRhost`
+  !-------------------------------------------------------------------------------
+  !> @note One can comment out the line `#define hostcode` to instead choose the
+  !> calculation of the irregular solutions for the impuirty code.
+  !> @endnote
+  !-------------------------------------------------------------------------------
+  subroutine sll_global_solutions(rpanbound,rmesh,vll,sll,ncheb,npan,lmsize,lmsize2,&
+    nrmax,nvec,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor,cmodesll,idotime)
 #else
-  subroutine sll_global_solutions(rpanbound, rmesh, vll, sll, ncheb, npan, lmsize, lmsize2, lbessel, nrmax, nvec, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, cmodesll, &
+  !-------------------------------------------------------------------------------
+  !> Summary: Wrapper for the calculation of the irregular solutions
+  !> Author: 
+  !> Category: solver, single-site, KKRhost
+  !> Deprecated: False 
+  !> Wrapper for the calculation of the irregular solutions for the impurity code `KKRimp`
+  !-------------------------------------------------------------------------------
+  !> @note One can uncomment out the line `#define hostcode` to instead choose the
+  !> calculation of the irregular solutions for the host code.
+  !> @endnote
+  !-------------------------------------------------------------------------------
+  subroutine sll_global_solutions(rpanbound,rmesh,vll,sll,ncheb,npan,lmsize,lmsize2,&
+    lbessel,nrmax, nvec,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor,cmodesll,         &
     use_sratrick1)               ! LLY
 #endif
     ! ************************************************************************
@@ -190,8 +224,10 @@ contains
     do ipan = 1, npan
 
       drpan2 = (rpanbound(ipan)-rpanbound(ipan-1))/2.d0 ! *(b-a)/2 in eq. 5.53, 5.54
-      call sll_local_solutions(vll, tau(0,ipan), drpan2, csrc1, slc1sum, mihvy(1,1,ipan), mihvz(1,1,ipan), mijvy(1,1,ipan), mijvz(1,1,ipan), yif(1,1,0,ipan), zif(1,1,0,ipan), &
-        ncheb, ipan, lmsize, lmsize2, nrmax, nvec, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, cmodesll, lbessel, use_sratrick1)
+      call sll_local_solutions(vll,tau(0,ipan),drpan2,csrc1, slc1sum,               &
+        mihvy(1,1,ipan),mihvz(1,1,ipan),mijvy(1,1,ipan),mijvz(1,1,ipan),            &
+        yif(1,1,0,ipan),zif(1,1,0,ipan),ncheb,ipan,lmsize,lmsize2,nrmax,nvec,       &
+        jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor,cmodesll,lbessel,use_sratrick1)
 
     end do                       ! ipan
 #ifdef CPP_HYBRID

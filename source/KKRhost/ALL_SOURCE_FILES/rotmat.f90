@@ -1,9 +1,20 @@
+!------------------------------------------------------------------------------------
+!> Summary: Converts rotation/rotoinversion matrix
+!> Author:
+!> Converts rotation/rotoinversion matrix `<-> (nrot,vecg,li)`
+!------------------------------------------------------------------------------------
 module mod_rotmat
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Converts rotation/rotoinversion matrix
+  !> Author: 
+  !> Category: numerical-tools, geometry, KKRhost
+  !> Deprecated: False 
+  !> Converts rotation/rotoinversion matrix `<-> (nrot,vecg,li)`
+  !-------------------------------------------------------------------------------
   subroutine rotmat(iopt, li, nrot, symopm, vecg)
-    ! - Converts rotation/rotoinversion matrix <-> (nrot,vecg,li)
     ! ----------------------------------------------------------------------
     ! i Inputs:
     ! i   iopt  := -1 to convert (nrot,vecg,li) in symopm

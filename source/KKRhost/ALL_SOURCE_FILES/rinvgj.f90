@@ -1,25 +1,32 @@
+!------------------------------------------------------------------------------------
+!> Summary: Invert a matrix \(A\) using the Gauss-Jordan algorithm.
+!> Author: 
+!> Invert a matrix \(A\) using the Gauss-Jordan algorithm. The 1- matrix is not 
+!> set up and use is made of its structure.
+!------------------------------------------------------------------------------------
 module mod_rinvgj
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Invert a matrix \(A\) using the Gauss-Jordan algorithm.
+  !> Author: 
+  !> Category: numerical-tools, KKRhost
+  !> Deprecated: False 
+  !> Invert a matrix \(A\) using the Gauss-Jordan algorithm. The 1- matrix is not 
+  !> set up and use is made of its structure.
+  !-------------------------------------------------------------------------------
   subroutine rinvgj(ainv, a, arraydim, n)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *                      AINV = A**(-1)                              *
-    ! *                                                                  *
-    ! *  invert A using the GAUSS-JORDAN - algorithm                     *
-    ! *  the 1- matrix is not set up and use is made of its structure    *
-    ! *                                                                  *
-    ! *                    REAL*8 VERSION                                *
-    ! *                                                                  *
-    ! ********************************************************************
+
     implicit none
 
     ! Dummy arguments
-    integer :: arraydim, n
-    real (kind=dp) :: a(arraydim, arraydim), ainv(arraydim, arraydim)
+    integer, intent(in) :: n !! Number of columns
+    integer, intent(in) :: arraydim !! Dimension of the array
+    real (kind=dp), dimension(arraydim, arraydim), intent(inout) :: a   !! Matrix to be inverted
+    real (kind=dp), dimension(arraydim, arraydim), intent(out) :: ainv  !! Inverted matrix
 
     ! Local variables
     integer :: icol, l, ll

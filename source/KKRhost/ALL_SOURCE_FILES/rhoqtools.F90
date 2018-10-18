@@ -16,7 +16,7 @@ contains
 
     integer, intent (in) :: nofks             !! number of points in irreducible BZ
     real (kind=dp), intent (in) :: volbz      !! volume of the BZ
-    integer, dimension(3) intent (in) :: nxyz !! original k-mesh net in the 3 directions of the reciprocal lattice vectors (not xyz directions)
+    integer, dimension(3), intent (in) :: nxyz !! original k-mesh net in the 3 directions of the reciprocal lattice vectors (not xyz directions)
     real (kind=dp), dimension(nofks), intent (in) :: volcub       !! Weight of the k-points
     real (kind=dp), dimension(3, nofks), intent (in)  :: bzkp     !! k-point mesh
     real (kind=dp), dimension(3, 3), intent (in)      :: recbv    !! Reciprocal basis vectors
