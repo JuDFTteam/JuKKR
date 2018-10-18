@@ -25,9 +25,9 @@ contains
   !> Lichtenstein et al. JMMM 67, 65 (1987)
   !-------------------------------------------------------------------------------
   !> @note 
-  !> Adopted for TB-KKR code from Munich SPR-KKR package Sep 2004
-  !>
-  !> For mpi-parallel version: moved energy loop from main1b into here. B. Zimmermann, Dez 2015
+  !> 
+  !> * Adopted for TB-KKR code from Munich SPR-KKR package Sep 2004
+  !> * For mpi-parallel version: moved energy loop from main1b into here. B. Zimmermann, Dez 2015
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine tbxccpljij(iftmat,ielast,ez,wez,nspin,ncpa,naez,natyp,noq,itoq,iqat,   &
@@ -90,7 +90,7 @@ contains
 #else
     complex (kind=dp), allocatable :: csum_store(:, :, :, :), csum_store2(:, :, :, :)
 #endif
-    complex (kind=dp) :: deltsst(lmmaxd, lmmaxd, natyp), 
+    complex (kind=dp) :: deltsst(lmmaxd, lmmaxd, natyp) 
     complex (kind=dp) :: dmatts(lmmaxd, lmmaxd, natyp, nspin)
     complex (kind=dp) :: dtilts(lmmaxd, lmmaxd, natyp, nspin), gmij(lmmaxd, lmmaxd)
     complex (kind=dp) :: gmji(lmmaxd, lmmaxd)

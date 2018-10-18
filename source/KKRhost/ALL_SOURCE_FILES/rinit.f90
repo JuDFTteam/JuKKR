@@ -3,6 +3,9 @@
 !> Author: 
 !> Setting the first `N` values of a `real (kind=dp)` array `A` to zero
 !------------------------------------------------------------------------------------
+!> @note Maybe it can be replaced by calls susch as `A(1:N)=0.0d0`
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_rinit
   use :: mod_datatypes, only: dp
   private :: dp
@@ -15,6 +18,9 @@ contains
   !> Category: numerical-tools, KKRhost
   !> Deprecated: False
   !> Setting the first `N` values of a `real (kind=dp)` array `A` to zero
+  !-------------------------------------------------------------------------------
+  !> @note Maybe it can be replaced by calls susch as `A(1:N)=0.0d0`
+  !> @endnote
   !-------------------------------------------------------------------------------
   subroutine rinit(n, a)
 

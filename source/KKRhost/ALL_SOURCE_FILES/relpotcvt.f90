@@ -17,8 +17,9 @@
 !>  (sometimes first two points) of `VM2Z ( = 0D0 )` are skipped.
 !> The relativistic routines require an **odd** number of radial points (Simpson integration routine)
 !------------------------------------------------------------------------------------
-!> @warning 
-!> * Because this routine is called only `IF KREL.EQ.0`, the number of spins in `VM2Z` is always 2
+!> @warning
+!> 
+!> * Because this routine is called only `IF KREL.EQ.0`, the number of spins in `VM2Z` is always 2.
 !> * So far, only `SPHERICAL` part implemented
 !> @endwarning
 !------------------------------------------------------------------------------------

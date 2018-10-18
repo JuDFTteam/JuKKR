@@ -1,12 +1,23 @@
+!------------------------------------------------------------------------------------
+!> Summary: Driver for the calculation of core state
+!> Author: 
+!> Driver for the calculation of core state
+!------------------------------------------------------------------------------------
 module mod_rhocore
 
 contains
 
-  subroutine rhocore(nsra, ispin, nspin, i1, drdi, r, visp, a, b, zat, ircut, rhoc, ecore, ncore, lcore, cscl, vtrel, btrel, rmrel, drdirel, r2drdirel, zrel, jwsrel, irshift, &
-    ecorerel, nkcore, kapcore)
-    ! ===================================================================
-    ! RELATIVISTIC TREATMENT OF CORE ELECTRONS   July/2002
-    ! SEE ROUTINE <DRVCORE> FOR A SHORT DESCRIPTION OF THE VARIABLES
+  !-------------------------------------------------------------------------------
+  !> Summary: Driver for the calculation of core state
+  !> Author: 
+  !> Category: core-electrons, KKRhost
+  !> Deprecated: False 
+  !> Driver for the calculation of core state
+  !-------------------------------------------------------------------------------
+  subroutine rhocore(nsra,ispin,nspin,i1,drdi,r,visp,a,b,zat,ircut,rhoc,ecore,ncore,& 
+    lcore,cscl,vtrel,btrel,rmrel,drdirel,r2drdirel,zrel,jwsrel,irshift,ecorerel,    &
+    nkcore,kapcore)
+
     use :: mod_datatypes, only: dp
     use :: global_variables
     use :: mod_corel
@@ -49,7 +60,8 @@ contains
     if (krel==0) then
       ! =======================================================================
 
-      call corel(nsra, ipr, i1, rhoc(1,ispin), visp, ecore, lcore, ncore, drdi, zat, qc1, a, b, ispin, nspin, nr, rmax, irmd)
+      call corel(nsra,ipr,i1,rhoc(1,ispin),visp,ecore,lcore,ncore,drdi,zat,qc1,a,b, &
+        ispin,nspin,nr,rmax,irmd)
       ! non/scalar-relativistic OR relativistic
       if (ipr/=0) write (1337, fmt=100) i1
       qc = qc + qc1
@@ -57,7 +69,8 @@ contains
       ! =======================================================================
     else
       ! *********************************************************************
-      call drvcore(ipr, i1, lcore, ncore, cscl, vtrel, btrel, rmrel, a, b, drdirel, r2drdirel, zrel, jwsrel, irshift, rhoc, ecorerel, nkcore, kapcore, ecore, lmaxd, irmd)
+      call drvcore(ipr,i1,lcore,ncore,cscl,vtrel,btrel,rmrel,a,b,drdirel,r2drdirel, &
+        zrel,jwsrel,irshift,rhoc,ecorerel,nkcore,kapcore,ecore,lmaxd,irmd)
     end if
     ! * For KREL = 1 (relativistic mode)                                  *
     ! *                                                                   *

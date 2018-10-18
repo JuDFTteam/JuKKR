@@ -3,17 +3,27 @@ module mod_rhoqtools
 
 contains
 
-  ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+  !-------------------------------------------------------------------------------
+  !> Summary: Write the k-mesh to file with its respective weights
+  !> Author: 
+  !> Category: input-output, k-points, KKRhost 
+  !> Deprecated: False 
+  !> Write the k-mesh to file with its respective weights
+  !-------------------------------------------------------------------------------
   subroutine rhoq_write_kmesh(nofks, nxyz, volbz, bzkp, volcub, recbv, bravais)
 
     implicit none
 
-    integer, intent (in) :: nofks, nxyz(3)
-    real (kind=dp), intent (in) :: volbz, bzkp(3, nofks), volcub(nofks), recbv(3, 3), bravais(3, 3)
-    ! local
-    integer :: ks, i
+    integer, intent (in) :: nofks             !! number of points in irreducible BZ
+    real (kind=dp), intent (in) :: volbz      !! volume of the BZ
+    integer, dimension(3) intent (in) :: nxyz !! original k-mesh net in the 3 directions of the reciprocal lattice vectors (not xyz directions)
+    real (kind=dp), dimension(nofks), intent (in) :: volcub       !! Weight of the k-points
+    real (kind=dp), dimension(3, nofks), intent (in)  :: bzkp     !! k-point mesh
+    real (kind=dp), dimension(3, 3), intent (in)      :: recbv    !! Reciprocal basis vectors
+    real (kind=dp), dimension(3, 3), intent (in)      :: bravais  !! Bravais lattice vectors
 
+    ! .. Local variables
+    integer :: ks, i
     ! write out kpoints
     open (8888, file='kpts.txt', form='formatted')
     write (8888, '(3I9)') nofks, nxyz(1), nxyz(2)
@@ -287,10 +297,9 @@ contains
 
     use :: mod_mympi, only: myrank, master
     use :: mod_datatypes
+    use :: constants, only: czero
 
     implicit none
-
-    complex (kind=dp), parameter :: czero = (0.0d0, 0.0d0)
 
     integer, intent (in) :: nofks, nshell, nsymat, nscoef, mu, lmmaxd, imin
     integer, intent (in) :: nsh1(nshell), nsh2(nshell), iatomimp(nscoef)
@@ -370,9 +379,15 @@ contains
 
   end subroutine rhoq_write_tau0
 
-  ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-  subroutine rhoq_save_rmesh(natyp, irmd, ipand, irmin, irws, ipan, rmesh, ntcell, ircut, r_log, npan_log, npan_eq)
+  !-------------------------------------------------------------------------------
+  !> Summary: Write the radial mesh information to file
+  !> Author: 
+  !> Category: radial-grid, input-output, KKRhost
+  !> Deprecated: False
+  !> Write the radial mesh information to file
+  !-------------------------------------------------------------------------------
+  subroutine rhoq_save_rmesh(natyp,irmd,ipand,irmin,irws,ipan,rmesh,ntcell,ircut,   &
+    r_log,npan_log,npan_eq)
 
     implicit none
 
@@ -401,12 +416,16 @@ contains
     write (9999, '(E22.15,2I9)') r_log, npan_log, npan_eq
     close (9999)
 
-
   end subroutine rhoq_save_rmesh
 
-  ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-  subroutine rhoq_save_refpot(ielast, i1, nref, natyp, refpot, wlength, lmmaxd, ie, trefll)
+  !-------------------------------------------------------------------------------
+  !> Summary: Save the reference potentials to an unformatted file
+  !> Author: 
+  !> Category: input-output, reference-system, KKRhost
+  !> Deprecated: False 
+  !> Save the reference potentials to an unformatted file
+  !-------------------------------------------------------------------------------
+  subroutine rhoq_save_refpot(ielast,i1,nref,natyp,refpot,wlength,lmmaxd,ie,trefll)
 
     implicit none
 
@@ -427,8 +446,5 @@ contains
     write (99992, rec=irec) trefll(:, :, i1)
 
   end subroutine rhoq_save_refpot
-
-
-  ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 end module mod_rhoqtools

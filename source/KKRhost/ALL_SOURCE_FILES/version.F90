@@ -1,7 +1,11 @@
 !------------------------------------------------------------------------------------
 !> Summary: Definitions of the compilation versions
 !> Author: 
+!> Category: version-control, deprecated, KKRhost
+!> Deprecated: True
 !> Definitions of the compilation versions 
+!------------------------------------------------------------------------------------
+!> @note Jonathan Chico: Maybe this is deprecated?
 !------------------------------------------------------------------------------------
 module mod_version
 
