@@ -100,28 +100,28 @@ c
   !> Category: special-functions, numerical-tools, KKRimp
   !> Deprecated: False 
   !> Calculate the 1st and 2nd derivatives of real spherical harmonics
-  !> with respect to theta, fi.
+  !> with respect to \(\theta\), \(\phi\).
   !>
   !> Use recursion relations for the assoc. Legendre functions P[l,m] to generate
   !> the derivatives. These are (taken from Abramowitz and Stegun, 
   !> Handbook of Mathematical Functions, chapt. 8.):
   !>
-  !> P[l,m+1] = (x**2-1)**(-1/2) ( (l-m)*x*P[l,m] - (l+m)*P[l-1,m] ) (8.5.1)
+  !> P[l,m+1] = (x^2-1)^(-1/2) ( (l-m)*x*P[l,m] - (l+m)*P[l-1,m] ) (8.5.1)
   !>
-  !> (x**2-1)*dP[l,m]/dx = (l+m)*(l-m+1)*(x**2-1)**(1/2) P[l,m-1] - m*x*P[l,m]  (8.5.2)
+  !> (x^2-1)*dP[l,m]/dx = (l+m)*(l-m+1)*(x^2-1)^(1/2) P[l,m-1] - m*x*P[l,m]  (8.5.2)
   !>
-  !> (x**2-1)*dP[l,m]/dx = l*x*P[l,m] - (l+m)*P[l-1,m]           (8.5.4)
+  !> (x^2-1)*dP[l,m]/dx = l*x*P[l,m] - (l+m)*P[l-1,m]           (8.5.4)
   !>
-  !> where x=cos(th), (x**2-1)**(1/2) = -sin(th), d/dth = -sin(th) d/dx.
+  !> where x=cos(th), (x^2-1)^(1/2) = -sin(th), d/dth = -sin(th) d/dx.
   !>
   !> Adding (8.5.2)+(8.5.4) and using (8.5.1) results in:
   !>
   !> dP[l,m](cos(th)) / dth = (1/2) * ( -(l+m)*(l-m+1)*P[l,m-1] + P[l,m+1] )   (A)
   !>
   !>
-  !> It is implied that P[l,m]=0 if m>l or m<-l. Also, the term (x**2-1)**(1/2)
+  !> It is implied that P[l,m]=0 if m>l or m<-l. Also, the term (x^2-1)^(1/2)
   !> is ambiguous for real x, 0<x<1; here it is interpreted as 
-  !> (x**2-1)**(1/2)=-sin(th), but (x**2-1)**(-1/2)=+1/sin(th) (in 8.5.1), 
+  !> (x^2-1)^(1/2)=-sin(th), but (x^2-1)^(-1/2)=+1/sin(th) (in 8.5.1), 
   !> otherwise the result (A) (which is cross-checked and correct) does not follow.
   !>
   !> For the 2nd derivative apply (A) twice. Result:
@@ -167,7 +167,7 @@ c
   !>
   !> For the needs of GGA PW91 as implemented here, ylm and derivatives
   !> come with a different sign convention compared to the usual in the
-  !> program: sin(fi)**m --> (-1)**m * sin(fi)**m. Thus some signs change.
+  !> program: \(\sin(\phi)^m \rightarrow (-1)^m \sin(\phi)^m\). Thus some signs change.
   !-------------------------------------------------------------------------------
       subroutine derivylm(
      > v1,v2,v3,lmax,
@@ -196,7 +196,7 @@ c Inside:
       parameter(tiny=1.d-20)  ! if th < tiny set th=0
       real*8 tt,aa,cd  ! factors in calcul. of Ylm
       integer ll,mm,ii   ! l and m indexes
-      integer lmmax      ! (lmax+1)**2, total number of spher. harmonics.
+      integer lmmax      ! (lmax+1)^2, total number of spher. harmonics.
       integer imm,ipm,lpm,lmm,lpmp1,lmmp1 ! i-m,i+m,l+m,l-m,l+m+1,l-m-1
 
       pi = 4.d0*datan(1.d0)

@@ -24,7 +24,7 @@
   !>
   !> vm2z is the coulomb potential of the atom without the nuclear
   !>         potential of the atom
-  !> rho2ns(...,1) is the real charge density times r**2
+  !> rho2ns(...,1) is the real charge density times \(r^2\)
   !>
   !> both developed into spherical harmonics. (see deck rholm)
   !>
@@ -33,13 +33,13 @@
   !> vmad ( ri ) is a generalized madelung potential
   !>
   !> \begin{equation}
-  !>  V_\text{mad} = \frac{1}{\sqrt{4\pi} vm2z(irws,1,is)- 2\sqrt{4\pi} \frac{cmom(1,ipot)}{rws}
+  !>  V_\text{mad} = \frac{1}{\sqrt{4\pi}} vm2z(irws,1,is)- 2\sqrt{4\pi} \frac{cmom(1,ipot)}{rws}
   !> \end{equation}
   !>
-  !>                                    ( <..> = spherical averaged )
+  !>( <..> = spherical averaged )
   !>
-  !>             modified for band structure code
-  !>                           B. Drittler   Jan. 1990
+  !>modified for band structure code
+  !>B. Drittler   Jan. 1990
   !-------------------------------------------------------------------------------
   !> @warning
   !> this subroutine has to be called before the exchange correlation potential 
