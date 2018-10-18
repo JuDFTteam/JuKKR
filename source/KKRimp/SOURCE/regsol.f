@@ -40,7 +40,6 @@
       IMPLICIT NONE
 
 C     .. Scalar Arguments ..
-      DOUBLE COMPLEX E
       complex(kind=dp), intent(in) :: E
       real(kind=dp), intent(in) :: CVLIGHT !!Speed of light
       DOUBLE PRECISION Z
