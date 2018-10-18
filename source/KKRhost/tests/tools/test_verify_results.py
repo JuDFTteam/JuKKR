@@ -243,6 +243,19 @@ class Test_features():
         #cmplist = [path00, path00+'/ref']
         #cmp_modes(cmplist, '', s_rms_bound=2.13*10**-1, max_s_charges_bound=10**-3)
 
+    def test_20_godfrin(self):
+        path00 = 'test_run20_hybrid_1_3'
+        # first check the two runs individually
+        path = path00+'/godfrinON/'
+        standard_verify(path) #, rms_threshold=9*10**-8, rms_threshold_end=9*10**-8)
+        path0 = path00+'/godfrinOFF/'
+        standard_verify(path0) #, rms_threshold=9*10**-8, rms_threshold_end=9*10**-8)
+        # then check if output is the same for the two runs
+        fname = 'output.000.txt'
+        num, text = read_file(path+fname)
+        num_ref, text_ref = read_file(path0+fname)
+        assert std(num-num_ref)<10**-14
+
 
 class Test_SOC():
     """
