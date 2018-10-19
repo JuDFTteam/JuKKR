@@ -1,9 +1,26 @@
+!------------------------------------------------------------------------------------
+!> Summary: Driver for the exchange-correlation potential and energy calculation
+!> Author: 
+!> Driver for the exchange-correlation potential and energy calculation. It wraps
+!> all the different exchange-correlation potentials and make sure to call the 
+!> appropriate subroutines depending on the type of exchange correlation potential
+!> indicated in the `inputcard`
+!------------------------------------------------------------------------------------
       MODULE MOD_VXCDRV
       CONTAINS
 !   call vxcdrv(energyparts%exc,config%kte,config%kxc,nspin,natom,density, & 
 !               vpot_out, cell,config%kshape,gauntshape, shapefun,lmaxd, & 
 !               (2*lmaxd), (2*lmaxd+1)**2, (4*lmaxd+1)**2, cell(1)%nrmaxd, lmaxatom)
-
+  !-------------------------------------------------------------------------------
+  !> Summary: Driver for the exchange-correlation potential and energy calculation
+  !> Author:
+  !> Category: xc-potential, KKRimpt
+  !> Deprecated: False 
+  !> Driver for the exchange-correlation potential and energy calculation. It wraps
+  !> all the different exchange-correlation potentials and make sure to call the 
+  !> appropriate subroutines depending on the type of exchange correlation potential
+  !> indicated in the `inputcard`
+  !-------------------------------------------------------------------------------
       SUBROUTINE VXCDRV(EXC,KTE,NSPIN,NATOM,DENSITY,VONS, &
                         CELL,KSHAPE,gauntshape,&
                         SHAPEFUN,LMAXD,LPOTD,LMPOTD,LMXSPD,nrmaxd,lmaxatom,ins)

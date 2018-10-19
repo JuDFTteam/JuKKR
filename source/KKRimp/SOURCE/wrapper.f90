@@ -1,5 +1,14 @@
-
-
+!------------------------------------------------------------------------------------
+!> Summary: Seems to be a module with a collection of mathematical auxiliary functions. 
+!> Author: 
+!> Category: numerical-tools, deprecated, KKRimp
+!> Deprecated: True
+!> Seems to be a module with a collection of mathematical auxiliary functions. 
+!------------------------------------------------------------------------------------
+!> @note Jonathan Chico: This module seems to not be used anywhere in the code. Thus
+!> no documentation will be done of its routines unless it is necessary.
+!> @endnote
+!------------------------------------------------------------------------------------
       module mod_wrapper
 
       interface blockmat

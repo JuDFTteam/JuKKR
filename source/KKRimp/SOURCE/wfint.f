@@ -1,15 +1,24 @@
+!------------------------------------------------------------------------------------
+!> Summary: Determines the integrands `CDER`, `DDER` or `ADER`, `BDER`
+!> Author: R. Zeller
+!> Determines the integrands `CDER`, `DDER` or `ADER`, `BDER` in the integral equations 
+!> for the non-spherical wavefunctions from the non-spherical contributions of the 
+!> potential `vinsPLL`.
+!------------------------------------------------------------------------------------
       MODULE mod_wfint
       CONTAINS
+  !-------------------------------------------------------------------------------
+  !> Summary: Determines the integrands `CDER`, `DDER` or `ADER`, `BDER`
+  !> Author: R. Zeller
+  !> Category: numerical-tools, single-site, KKRimp
+  !> Deprecated: False 
+  !> determines the integrands `CDER`, `DDER` or `ADER`, `BDER` in the integral equations 
+  !> for the non-spherical wavefunctions from the non-spherical contributions of the 
+  !> potential `vinsPLL`. 
+  !-------------------------------------------------------------------------------      
       SUBROUTINE WFINT(QNS,CDER,DDER,QZEKDR,PZEKDR,VNSPLL,NSRA,IRMIND,
      +                   IRMD,LMMAXD)
 c     Implicit None
-c-----------------------------------------------------------------------
-c      determines the integrands CDER, DDER or ADER, BDER in the
-c        integral equations for the non-spherical wavefunctions from
-c        the non-spherical contributions of the potential vinsPLL.
-c
-c      R. Zeller      Aug. 1994
-c-----------------------------------------------------------------------
 C     .. Scalar Arguments ..
       INTEGER IRMD,IRMIND,LMMAXD,NSRA
 C     ..

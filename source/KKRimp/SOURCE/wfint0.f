@@ -1,5 +1,23 @@
+!-------------------------------------------------------------------------------
+!> Summary: Determines the integrands `CDER`, `DDER` or `ADER`, `BDER`
+!> Author: R. Zeller
+!> Determines the integrands `CDER`, `DDER` or `ADER`, `BDER` in the integral equations 
+!> for the non-spherical wavefunctions from the non-spherical contributions of the 
+!> potential `vinsPLL`. (This subroutine is used in zeroth order Born approximation,
+!> otherwise subroutine WFINT must be used)
+!-------------------------------------------------------------------------------
       MODULE mod_wfint0
       CONTAINS
+  !-------------------------------------------------------------------------------
+  !> Summary: Determines the integrands `CDER`, `DDER` or `ADER`, `BDER`
+  !> Author: R. Zeller
+  !> Category: numerical-tools, single-site, KKRimp
+  !> Deprecated: False 
+  !> Determines the integrands `CDER`, `DDER` or `ADER`, `BDER` in the integral equations 
+  !> for the non-spherical wavefunctions from the non-spherical contributions of the 
+  !> potential `vinsPLL`. (This subroutine is used in zeroth order Born approximation,
+  !> otherwise subroutine WFINT must be used)
+  !-------------------------------------------------------------------------------      
       SUBROUTINE WFINT0(CDER,DDER,QZLM,QZEKDR,PZEKDR,VNSPLL,NSRA,
      +                    IRMIND,IRMD,LMMAXD)
       IMPLICIT NONE
