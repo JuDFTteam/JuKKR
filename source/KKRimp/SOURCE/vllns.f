@@ -1,5 +1,39 @@
+!------------------------------------------------------------------------------------
+!> Summary: Transformation of the wavefunctions for non spherical potentials.
+!> Author: B. Drittler
+!> To determine the non-spherical wavefunctions the potential has to be lm1 and lm2 dependent.
+!> the potential is stored only as lm dependent , therefore a transformation in the
+!> following way has to be done:
+!> \begin{equation}
+!> vnsll(r,lm1,lm2) = \sum_{lm3} \left\{  c(lm1,lm2,lm3) vins(r,lm3)\right\}
+!> \end{equation}
+!> where \(c(lm1,lm2,lm3)\) are the gaunt coeffients. (see notes by B. Drittler)
+!------------------------------------------------------------------------------------
+!> @note attention : The gaunt coeffients are stored in an index array only for lm1.gt.lm2
+!> (see subroutine gaunt)
+!> R. Zeller Sep. 2000: modified
+!> @endnote
+!------------------------------------------------------------------------------------
       MODULE mod_VLLNS
       CONTAINS
+  !-------------------------------------------------------------------------------
+  !> Summary: Transformation of the wavefunctions for non spherical potentials.
+  !> Author: B. Drittler
+  !> Category: special-functions, potential, KKRimp
+  !> Deprecated: False
+  !> To determine the non-spherical wavefunctions the potential has to be lm1 and lm2 dependent.
+  !> the potential is stored only as lm dependent , therefore a transformation in the
+  !> following way has to be done :
+  !> \begin{equation}
+  !> vnsll(r,lm1,lm2) = \sum_{lm3} \left\{  c(lm1,lm2,lm3) vins(r,lm3)\right\}
+  !> \end{equation}
+  !> where \(c(lm1,lm2,lm3)\) are the gaunt coeffients. (see notes by B. Drittler)
+  !-------------------------------------------------------------------------------
+  !> @note attention : The gaunt coeffients are stored in an index array only for lm1.gt.lm2
+  !> (see subroutine gaunt)
+  !> R. Zeller Sep. 2000: modified
+  !> @endnote
+  !-------------------------------------------------------------------------------      
       SUBROUTINE VLLNS(VNSPLL,VINS,CLEB,ICLEB,IEND,
      + NCLEB,LMAXATOM,LMMAXATOM,LMPOTATOM,IRMIND,IRMD )
       IMPLICIT NONE

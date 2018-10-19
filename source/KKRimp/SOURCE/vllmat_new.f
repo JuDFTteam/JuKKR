@@ -1,42 +1,46 @@
+!------------------------------------------------------------------------------------
+!> Summary: Construction of the potential making use of non-spherical wavefunctions
+!> Author: B. Drittler
+!> To determine the non-spherical wavefunctions the potential has to be \(lm1\) and \(lm2\)
+!> dependent. The potential is stored only as \(lm\) dependent, therefore a 
+!> transformation in the following way has to be done :
+!> \begin{equation}
+!> vnsll(r,lm1,lm2)  = \sum_{lm3} c(lm1,lm2,lm3) vins(r,lm3)
+!> \end{equation}
+!> where \(c(lm1,lm2,lm3)\) are the gaunt coeffients. (see notes by B. Drittler)
+!------------------------------------------------------------------------------------
+!> @note Modified by R. Zeller Sep. 2000
+!> @endnote
+!> @warning The gaunt coeffients are stored in an index array only for \(lm1>lm2\)
+!> (see subroutine `gaunt()`)
+!> @endwarning
+!------------------------------------------------------------------------------------
       MODULE mod_vllmat
       CONTAINS
+  !-------------------------------------------------------------------------------
+  !> Summary: Construction of the potential making use of non-spherical wavefunctions
+  !> Author: B. Drittler
+  !> Category: potential, KKRimp
+  !> Deprecated: False 
+  !> To determine the non-spherical wavefunctions the potential has to be \(lm1\) and \(lm2\)
+  !> dependent. The potential is stored only as \(lm\) dependent, therefore a 
+  !> transformation in the following way has to be done :
+  !> \begin{equation}
+  !> vnsll(r,lm1,lm2)  = \sum_{lm3} c(lm1,lm2,lm3) vins(r,lm3)
+  !> \end{equation}
+  !> where \(c(lm1,lm2,lm3)\) are the gaunt coeffients. (see notes by B. Drittler)
+  !-------------------------------------------------------------------------------
+  !> @note Modified by R. Zeller Sep. 2000
+  !> @endnote
+  !> @warning The gaunt coeffients are stored in an index array only for \(lm1>lm2\)
+  !> (see subroutine `gaunt()`)
+  !> @endwarning
+  !-------------------------------------------------------------------------------
       SUBROUTINE VLLMAT(VNSPLL,VINS,LMAXATOM,LMMAXATOM,LMPOTATOM,
      +                 IRMIND,IRMD,GAUNTCOEFF,ZATOM,RMESH,
      +                 VLLLMMAX,use_fullgmat,NSPIN,JSPIN,CMODE )
       USE TYPE_GAUNTCOEFF
       IMPLICIT NONE
-c-----------------------------------------------------------------------
-c     to determine the non - spherical wavefunctions the potential
-c         has to be lm1 and lm2 dependent . the potential is stored
-c         only as lm dependent , therefore a transformation in the
-c         following way has to be done :
-c
-c        vnsll(r,lm1,lm2)   =   {  c(lm1,lm2,lm3) *vins(r,lm3)  }
-c                                  (summed over lm3 at the right site )
-c        where c(lm1,lm2,lm3) are the gaunt coeffients .
-c
-c             (see notes by b.drittler)
-c
-c     attention : the gaunt coeffients are stored in an index array
-c                  only for lm1.gt.lm2
-c                 (see subroutine gaunt)
-c
-c                               b.drittler   july 1988
-c-----------------------------------------------------------------------
-c                          modified by R. Zeller Sep. 2000
-c-----------------------------------------------------------------------
-C     .. Parameters ..
-!       INCLUDE 'inc.p'
-C
-C *********************************************************************
-C * For KREL = 1 (relativistic mode)                                  *
-C *                                                                   *
-C *  NPOTD = 2 * NATYPD                                               *
-C *  LMMAXATOM = 2 * (LMAXATOM+1)^2                                         *
-C *  NSPIND = 1                                                       *
-C *                                                                   *
-C *********************************************************************
-C
       INTEGER LMAXATOM,LMMAXATOM,LMPOTATOM,IRMIND,IRMD 
       TYPE(GAUNTCOEFF_TYPE) GAUNTCOEFF
       INTEGER VLLLMMAX

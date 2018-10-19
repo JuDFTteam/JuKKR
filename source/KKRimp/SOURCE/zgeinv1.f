@@ -1,5 +1,17 @@
+!------------------------------------------------------------------------------------
+!> Summary: Inverts a general double complex matrix \(A\)
+!> Author: 
+!> Inverts a general double complex matrix \(A\)
+!------------------------------------------------------------------------------------
       MODULE mod_zgeinv1
       CONTAINS
+  !-------------------------------------------------------------------------------
+  !> Summary: Inverts a general double complex matrix \(A\)
+  !> Author: 
+  !> Category: numerical-tools, KKRimp
+  !> Deprecated: False 
+  !> Inverts a general double complex matrix \(A\)
+  !-------------------------------------------------------------------------------
       SUBROUTINE ZGEINV1(A,U,AUX,IPIV,DIM)
 c ************************************************************************
 C   - inverts a general double complex matrix A,

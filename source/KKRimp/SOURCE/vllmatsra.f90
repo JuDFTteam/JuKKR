@@ -1,16 +1,23 @@
+!------------------------------------------------------------------------------------
+!> Summary: Constructs potential including big/small components and with relativistic mass terms etc included
+!> Author: 
+!> Constructs potential including big/small components and with relativistic mass terms etc included
+!------------------------------------------------------------------------------------
 module mod_vllmatsra
 
 contains
-
+  !-------------------------------------------------------------------------------
+  !> Summary: Constructs potential including big/small components and with relativistic mass terms etc included
+  !> Author:
+  !> Category: potential, KKRimp
+  !> Deprecated: False 
+  !> Constructs potential including big/small components and with relativistic mass terms etc included
+  !> The potential for the SRA-equations are set up according to formula 4.107 of Bauer, PhD thesis
+  !> \begin{equation}
+  !> V= \begin{bmatrix} \left[\frac{1}{2M(r)}-\frac{1}{2M_0}\right]\frac{l(l+1)}{r^2}+V_{LL'}(r) & 0\\0 & 2M(r)-2M_0 \end{bmatrix}
+  !> \end{equation}
+  !-------------------------------------------------------------------------------
 subroutine vllmatsra(vll,rmesh,eryd,lmax,lval_in,cmode)
-!************************************************************************************
-! The potential for the SRA-equations are set up
-! according to formula 4.107 of Bauer, PhD thesis
-!
-!V = ( 1/2M = 1/2M_0 l(l+1)/r**2 + V_LL;     0     )
-!    (             0                       2M-2M_0 )
-!
-!************************************************************************************
 use mod_physic_params, only: cvlight
 use mod_mathtools, only: inverse
 implicit none

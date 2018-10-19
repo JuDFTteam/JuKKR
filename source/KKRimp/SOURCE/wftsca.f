@@ -1,5 +1,17 @@
+!------------------------------------------------------------------------------------
+!> Summary: Get wavefunctions of same magnitude by scaling with `efac` 
+!> Author: R. Zeller
+!> Get wavefunctions of same magnitude by scaling with `efac`
+!------------------------------------------------------------------------------------
       MODULE mod_WFTSCA
       CONTAINS
+  !-------------------------------------------------------------------------------
+  !> Summary: Get wavefunctions of same magnitude by scaling with `efac`
+  !> Author: R. Zeller
+  !> Category: numerical-tools, single-site, KKRhost
+  !> Deprecated: False 
+  !> Get wavefunctions of same magnitude by scaling with `efac`
+  !-------------------------------------------------------------------------------      
       SUBROUTINE WFTSCA(DRDI,EFAC,PZ,QZ,FZ,SZ,NSRA,PZLM,QZLM,PZEKDR,
      +                  QZEKDR,EK,LOFLM,IRMIND,IRMD,LMAXATOM,LMMAXATOM)
       IMPLICIT NONE

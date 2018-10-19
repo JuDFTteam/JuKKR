@@ -1,5 +1,17 @@
+!------------------------------------------------------------------------------------
+!> Summary: Creation of the radial mesh for the old-solver 
+!> Author: 
+!> Creation of the radial mesh for the old-solver 
+!------------------------------------------------------------------------------------
       MODULE mod_WFMESH
       CONTAINS
+  !-------------------------------------------------------------------------------
+  !> Summary: Creation of the radial mesh for the old-solver 
+  !> Author: 
+  !> Category: radial-mesh, KKRimp
+  !> Deprecated: False 
+  !> Creation of the radial mesh for the old-solver 
+  !-------------------------------------------------------------------------------      
       SUBROUTINE WFMESH(E,EK,CVLIGHT,NSRA,Z,R,S,RS,NRMAX,LMAXD)
         USE NRTYPE
         IMPLICIT NONE

@@ -1,7 +1,18 @@
+!------------------------------------------------------------------------------------
+!> Summary: Write charges and magnetic and orbital moments to file
+!> Author: 
+!> Write charges and magnetic and orbital moments to file. The output is l-decomposed
+!------------------------------------------------------------------------------------
       MODULE MOD_WRMOMS
 
       CONTAINS
-
+  !-------------------------------------------------------------------------------
+  !> Summary: Write charges and magnetic and orbital moments to file
+  !> Author: 
+  !> Category: physical-observables, KKRimp
+  !> Deprecated: False 
+  !> Write charges and magnetic and orbital moments to file. The output is l-decomposed
+  !-------------------------------------------------------------------------------
       SUBROUTINE WRMOMS(NATOM,NSPIN, &
                         density,LMAXD,LMAXD1,LMAXATOM)
 
