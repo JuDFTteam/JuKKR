@@ -1,20 +1,30 @@
+      !------------------------------------------------------------------------------------
+      !> Summary: Calculates test functions PHI for LDA+U
+      !> Author: Ph. Mavropoulos
+      !> Calculates test functions PHI for LDA+U. Only spherical part of the potential is used.
+      !> PHI are then normalised within Voronoi Circumscribing Sphere.
+      !> In SRA treatment, only large component is considered as important and normalised 
+      !> although small component is also calculated. `PHI` is here one-dimensional array 
+      !> -- `PHI(IRMD)` -- so the subroutine must be called for each atom seperately.
+      !------------------------------------------------------------------------------------
       MODULE MOD_PHICALC
       CONTAINS
 
+      !-------------------------------------------------------------------------------
+      !> Summary: Calculates test functions PHI for LDA+U
+      !> Author: Ph. Mavropoulos
+      !> Category: lda+u, KKRimp, KKRhost
+      !> Deprecated: False 
+      !> Calculates test functions PHI for LDA+U. Only spherical part of the potential is used.
+      !> PHI are then normalised within Voronoi Circumscribing Sphere.
+      !> In SRA treatment, only large component is considered as important and normalised 
+      !> although small component is also calculated. `PHI` is here one-dimensional array 
+      !> -- `PHI(IRMD)` -- so the subroutine must be called for each atom seperately.
+      !-------------------------------------------------------------------------------
       SUBROUTINE PHICALC(LPHI,PHI,VISP
      &     ,IPAN,IRCUT,R,DRDI,Z,EREFLDAU,IDOLDAU,WLDAUAV,CUTOFF
      &     ,IATOM,NSPIN,NSRA,LMAXD,IRMD)
-C **********************************************************
-C  Calculates test functions PHI for LDA+U.
-C  Only spherical part of the potential is used.
-C  PHI are then normalised within Voronoi Circumscribing Sphere.
-C  In sra treatment, only large component is considered as 
-C  important and normalised although small component is also 
-C  calculated.
-C
-C  PHI is here one-dim. array (PHI(IRMD)), so the subroutine 
-C  must be called for each atom seperately.
-C **********************************************************
+
       USE mod_regsol
       USE mod_simpk
       implicit none
