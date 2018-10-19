@@ -33,7 +33,7 @@ contains
     use :: mod_rotate
     use :: mod_cmatstr
     use :: mod_cinit
-    use :: constants, only : czero,cone
+    use :: mod_constants, only : czero,cone
     implicit none
 
     integer, intent(in) :: naez  !! Number of atoms in unit cell 

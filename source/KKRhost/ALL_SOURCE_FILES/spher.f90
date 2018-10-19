@@ -22,7 +22,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine spher(ylm, l, x)
 
-    use :: constants, only : pi
+    use :: mod_constants, only : pi
 
     
     ! .. Scalar Arguments ..

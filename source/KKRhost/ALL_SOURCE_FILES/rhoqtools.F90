@@ -352,7 +352,7 @@ contains
 
     use :: mod_mympi, only: myrank, master
     use :: mod_datatypes
-    use :: constants, only: czero
+    use :: mod_constants, only: czero
 
     implicit none
 

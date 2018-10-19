@@ -41,7 +41,7 @@ contains
 #endif
     use :: mod_datatypes, only: dp
     use :: global_variables
-    use :: constants, only: czero
+    use :: mod_constants, only: czero
     implicit none
 
     ! .. Input variables

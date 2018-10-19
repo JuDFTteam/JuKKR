@@ -3570,7 +3570,7 @@ contains
     use :: mod_types, only: t_inc
     use :: mod_mympi, only: myrank, master
     use :: mod_version_info
-    use :: constants, only: pi
+    use :: mod_constants, only: pi
 
     implicit none
 

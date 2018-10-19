@@ -18,7 +18,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine trarea(a, b, lmax)
 
-    use :: constants, only: ci
+    use :: mod_constants, only: ci
 
     ! .. Parameters ..
     real (kind=dp) :: rtwo

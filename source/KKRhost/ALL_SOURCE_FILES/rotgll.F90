@@ -49,7 +49,7 @@ contains
     use :: mod_datatypes, only: dp, sp
     use :: mod_changerep
     use :: mod_cmatstr
-    use :: constants, only: czero, cone
+    use :: mod_constants, only: czero, cone
 
     implicit none
     ! ..

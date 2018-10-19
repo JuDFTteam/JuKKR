@@ -44,7 +44,7 @@ contains
 
     use :: mod_getdmat
     use :: mod_rotate
-    use :: constants, only: cone,czero
+    use :: mod_constants, only: cone,czero
     implicit none
 
     ! PARAMETER definitions

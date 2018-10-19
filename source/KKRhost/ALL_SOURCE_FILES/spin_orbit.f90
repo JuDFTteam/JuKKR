@@ -26,7 +26,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine spin_orbit_one_l(lmax, l_s)
 
-    use :: constants, only: ci
+    use :: mod_constants, only: ci
     implicit none
 
     integer, intent (in) :: lmax

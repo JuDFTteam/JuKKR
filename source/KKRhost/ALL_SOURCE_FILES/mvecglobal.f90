@@ -33,7 +33,7 @@ contains
 
     use :: mod_datatypes
     use :: mod_calcrotmat
-    use :: constants, only : ci,czero,pi
+    use :: mod_constants, only : ci,czero,pi
     implicit none
 
     ! .. Parameter definitions

@@ -85,7 +85,7 @@ contains
     gmatprefactor,cmodesll,lbessel,use_sratrick1)
     
     use :: mod_datatypes, only: dp
-    use :: constants, only: cone,czero
+    use :: mod_constants, only: cone,czero
 
     implicit none
     integer :: ncheb               ! number of chebyshev nodes

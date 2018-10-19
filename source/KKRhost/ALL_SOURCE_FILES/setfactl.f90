@@ -19,7 +19,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine setfactl(factl, lmax, krel, lmmaxd)
     use :: mod_cinit
-    use :: constants, only: ci
+    use :: mod_constants, only: ci
     implicit none
     ! ..
     ! .. Arguments

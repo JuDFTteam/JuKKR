@@ -77,7 +77,7 @@ contains
     use :: mod_wfint
     use :: mod_cinit
     use :: mod_csinwd
-    use :: constants, only: cone,czero
+    use :: mod_constants, only: cone,czero
     implicit none
     ! .. Scalar Arguments ..
     complex (kind=dp) :: ek
@@ -336,7 +336,7 @@ contains
 
     use :: mod_datatypes, only: dp
     use :: mod_cinit
-    use :: constants, only: cone
+    use :: mod_constants, only: cone
 
     implicit none
 

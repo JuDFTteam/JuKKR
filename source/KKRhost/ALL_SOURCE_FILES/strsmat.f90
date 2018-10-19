@@ -29,7 +29,7 @@ contains
   subroutine strsmat(lmax, cgc, srrel, nrrel, irrel, nkmmax, nkmpmax)
 
     use :: mod_cinit
-    use :: constants, only: ci,cone,czero
+    use :: mod_constants, only: ci,cone,czero
     implicit none
 
     ! Dummy arguments

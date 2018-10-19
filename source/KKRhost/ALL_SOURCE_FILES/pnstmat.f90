@@ -23,7 +23,7 @@ contains
     use :: mod_vllns
     use :: mod_wftsca
     use :: mod_regns
-    use :: constants, only: czero
+    use :: mod_constants, only: czero
     implicit none
     ! LLY
     ! ..

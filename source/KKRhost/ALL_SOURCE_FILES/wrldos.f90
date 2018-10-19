@@ -27,7 +27,7 @@ contains
     nacls1,nspinpot,natyp,conc,ielast,intervx,intervy,intervz,dostot)
     use :: mod_version_info
     use :: mod_datatypes
-    use :: constants, only: pi, kb, ryd, czero
+    use :: mod_constants, only: pi, kb, ryd, czero
     implicit none
     ! ..
     ! .. Scalar Arguments ..

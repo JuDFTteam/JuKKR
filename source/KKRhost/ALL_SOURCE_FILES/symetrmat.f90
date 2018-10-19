@@ -36,7 +36,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine symetrmat(nsym,cpref,dsymll,symunitary,matq,iqs,matsym,lmmaxd,nsymaxd)
 
-    use :: constants, only: czero,cone
+    use :: mod_constants, only: czero,cone
     implicit none
     ! ..
     ! ..

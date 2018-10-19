@@ -82,7 +82,7 @@ contains
     use :: mod_rhoin
     use :: mod_rhoout
     use :: mod_csimpk
-    use :: constants, only: pi
+    use :: mod_constants, only: pi
     implicit none
     ! ..
     ! .. Scalar Arguments ..

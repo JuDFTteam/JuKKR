@@ -26,7 +26,7 @@ contains
     use :: mod_rintsimp
     use :: mod_ikapmue
     use :: mod_rinit
-    use :: constants, only: czero,pi
+    use :: mod_constants, only: czero,pi
     implicit none
 
     ! PARAMETER definitions

@@ -23,7 +23,7 @@ contains
     use :: global_variables
     use :: mod_simp3
     use :: mod_simpk
-    use :: constants, only : pi
+    use :: mod_constants, only : pi
     implicit none
     ! ..
     ! .. Input variables

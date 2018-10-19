@@ -21,7 +21,7 @@ contains
 
     use :: mod_spin_orbit, only: spin_orbit_one_l
     use :: mod_cinit
-    use :: constants, only: ci
+    use :: mod_constants, only: ci
     implicit none
 
     integer, intent (in) :: lmax, lmmaxd

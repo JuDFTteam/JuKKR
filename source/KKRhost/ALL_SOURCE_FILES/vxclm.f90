@@ -65,7 +65,7 @@ contains
     use :: mod_vxcspo
     use :: mod_simpk
     use :: mod_simp3
-    use :: constants, only: pi
+    use :: mod_constants, only: pi
     implicit none
     ! ..
     ! .. Scalar Arguments ..

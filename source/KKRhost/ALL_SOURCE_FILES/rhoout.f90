@@ -39,7 +39,7 @@ contains
 
     use :: mod_datatypes, only: dp
     use :: global_variables
-    use :: constants, only: czero,cone,pi
+    use :: mod_constants, only: czero,cone,pi
     implicit none
     ! lm-dos
     ! ..

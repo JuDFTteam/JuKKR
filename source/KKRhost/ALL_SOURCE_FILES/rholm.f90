@@ -114,7 +114,7 @@ contains
     use :: global_variables
     use :: mod_datatypes, only: dp
     use :: mod_csimpk
-    use :: constants, only: czero,pi
+    use :: mod_constants, only: czero,pi
     ! ..
     ! .. Local Scalars ..
     complex (kind=dp) :: df

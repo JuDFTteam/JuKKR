@@ -50,7 +50,7 @@ contains
     use :: mod_datatypes, only: dp
     use :: global_variables
     use :: mod_calc_rho_ll_ss
-    use :: constants, only: pi, czero
+    use :: mod_constants, only: pi, czero
 
     implicit none
 

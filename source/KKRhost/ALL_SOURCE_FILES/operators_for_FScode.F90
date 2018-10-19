@@ -39,7 +39,7 @@ contains
     use :: mod_normcoeff_so_spinflux
     use :: mod_normcoeff_so_torq
     use :: mod_rotatespinframe, only: rotatematrix
-    use :: constants, only: czero
+    use :: mod_constants, only: czero
 
     implicit none
 

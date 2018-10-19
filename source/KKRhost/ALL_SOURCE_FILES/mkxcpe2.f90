@@ -6,7 +6,7 @@
 !------------------------------------------------------------------------------------
 module mod_mkxcpe2
   use :: mod_datatypes, only: dp
-  use :: constants, only : pi
+  use :: mod_constants, only : pi
   private :: dp
 
 contains

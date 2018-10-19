@@ -43,7 +43,7 @@ contains
     use :: mod_datatypes, only: dp
     use :: global_variables
     use :: mod_calc_torq_ll_ss
-    use :: constants, only: czero
+    use :: mod_constants, only: czero
 
     implicit none
     real (kind=dp), parameter :: eps = 1.0d-12

@@ -86,7 +86,7 @@ contains
 
     use :: mod_datatypes, only: dp
     use :: mod_sll_local_solutions, only: svpart
-    use :: constants, only: cone,czero
+    use :: mod_constants, only: cone,czero
 
     implicit none
     integer :: ncheb               ! number of chebyshev nodes

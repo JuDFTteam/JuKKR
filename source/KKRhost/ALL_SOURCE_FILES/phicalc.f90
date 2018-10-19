@@ -28,7 +28,7 @@ contains
     use :: global_variables
     use :: mod_regsol
     use :: mod_simpk
-    use :: constants, only: cvlight, czero
+    use :: mod_constants, only: cvlight, czero
     implicit none
     real (kind=dp), parameter :: eps = 1.0d-12
     ! .. Input variables

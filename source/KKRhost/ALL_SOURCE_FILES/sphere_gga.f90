@@ -30,7 +30,7 @@ contains
     use :: mod_lebedev
     use :: mod_ymy
     use :: mod_rinit
-    use :: constants, only: pi
+    use :: mod_constants, only: pi
     implicit none
 
     ! .. Scalar Arguments ..
@@ -165,7 +165,7 @@ contains
 
     use :: mod_datatypes
     use :: mod_rinit
-    use :: constants, only: pi
+    use :: mod_constants, only: pi
     implicit none
     ! Parameters:
     integer :: lmaxd, l4maxd

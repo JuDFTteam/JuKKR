@@ -44,7 +44,7 @@ contains
     use :: mod_ddet33
     use :: mod_taustruct
     use :: mod_errortrap
-    use :: constants, only: ci,cone,czero,pi
+    use :: mod_constants, only: ci,cone,czero,pi
     implicit none
 
     ! Dummy arguments
