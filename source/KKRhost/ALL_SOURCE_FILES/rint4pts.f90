@@ -1,28 +1,35 @@
+!------------------------------------------------------------------------------------
+!> Summary: Perform an integral via a 4-point integration formula
+!> Author: 
+!> Perform an integral via a 4-point integration formula.
+!> \begin{equation}
+!> Z\left(i\right)=\int_{R=0}^{R\left(i\right)} Y\left(i'\right)di'
+!> \end{equation}
+!------------------------------------------------------------------------------------
 module mod_rint4pts
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Perform an integral via a 4-point integration formula
+  !> Author: 
+  !> Category: numerical-tools, dirac, KKRhost
+  !> Deprecated: False 
+  !> Perform an integral via a 4-point integration formula.
+  !> \begin{equation}
+  !> Z\left(i\right)=\int_{R=0}^{R\left(i\right)} Y\left(i'\right)di'
+  !> \end{equation}
+  !-------------------------------------------------------------------------------
   subroutine rint4pts(y, jtop, z)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *      perform the integral  Z(i)   =  INT   Y(i') di'             *
-    ! *                                    R=0..R(i)                     *
-    ! *                                                                  *
-    ! *      via a 4-point integration formula                           *
-    ! *                                                                  *
-    ! *      JTOP:     Y is tabulated form 1 .. JTOP                     *
-    ! *      Y(i):     function to be integrated                         *
-    ! *                                                                  *
-    ! *                       REAL    - VERSION                          *
-    ! *                                                                  *
-    ! ********************************************************************
+
     implicit none
 
     ! Dummy arguments
-    integer :: jtop
-    real (kind=dp) :: y(jtop), z(jtop)
+    integer, intent(in) :: jtop !! Y is tabulated from 1 to JTOP
+    real (kind=dp), dimension(jtop), intent(in) :: y  !! Function to be integrated
+    real (kind=dp), dimension(jtop), intent(out) :: z !! Integrated function
     ! Local variables
     integer :: i, ig, j, k, m, n1, n2
     real (kind=dp) :: q(5, 5), q5(5, 5), s, svn

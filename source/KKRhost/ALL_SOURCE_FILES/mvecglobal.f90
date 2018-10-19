@@ -1,56 +1,85 @@
+!------------------------------------------------------------------------------------
+!> Summary: Transforms the magnetization to the cartesian global frame of reference 
+!> Author: 
+!>Transforms the magnetization to the cartesian global frame of reference, first
+!> by transforming from the local \(\pm z\) coordinate system, to the local 
+!> cartesian coordinate system, and then to the gloabl reference frame.
+!------------------------------------------------------------------------------------
+!> @note This routine has been build up from the last part of the original
+!> Munich `CALCMVEC` routine
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_mvecglobal
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  subroutine mvecglobal(it, iq, natyp, qmphi, qmtet, mvevi, mvevil, mvevief, natypd, lmaxd, nmvecmax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *  this routine has been build up from the last part of the        *
-    ! *  original Munich CALCMVEC routine.                               *
-    ! *  on exit, MVEVI,MVEVIL,MVEVIEF are in the CARTESIAN GLOBAL       *
-    ! *                                           frame of reference     *
-    ! *                                                                  *
-    ! ********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Transforms the magnetization to the cartesian global frame of reference 
+  !> Author: 
+  !> Category: numerical-tools, physical-observables, KKRhost 
+  !> Deprecated: False 
+  !> Transforms the magnetization to the cartesian global frame of reference, first
+  !> by transforming from the local \(\pm z\) coordinate system, to the local 
+  !> cartesian coordinate system, and then to the gloabl reference frame.
+  !-------------------------------------------------------------------------------
+  !> @note This routine has been build up from the last part of the original
+  !> Munich `CALCMVEC` routine
+  !> @endnote
+  !-------------------------------------------------------------------------------
+  subroutine mvecglobal(it,iq,natyp,qmphi,qmtet,mvevi,mvevil,mvevief,natypd,lmaxd,  &
+    nmvecmax)
+
     use :: mod_datatypes
     use :: mod_calcrotmat
+    use :: constants, only : ci,czero,pi
     implicit none
 
-    ! Parameter definitions
+    ! .. Parameter definitions
     integer :: lmaxdloc
     parameter (lmaxdloc=8)
-    complex (kind=dp) :: ci, czero
-    parameter (ci=(0.0e0_dp,1.0e0_dp), czero=(0.0e0_dp,0.0e0_dp))
 
-    ! Scalar Arguments
-    integer :: it, iq, natyp, natypd, lmaxd, nmvecmax
-    real (kind=dp) :: qmphi, qmtet
-
-    ! Array Arguments
-    complex (kind=dp) :: mvevi(natypd, 3, nmvecmax), mvevil(0:lmaxd, natypd, 3, nmvecmax)
-    complex (kind=dp) :: mvevief(natypd, 3, nmvecmax)
+    ! .. Input variables
+    integer, intent(in) :: it !! Index of the current atom type
+    integer, intent(in) :: iq !! Chemical type of the current atom
+    integer, intent(in) :: lmaxd  !! Maximum l component in wave function expansion
+    integer, intent(in) :: natyp  !! Number of kinds of atoms in unit cell
+    integer, intent(in) :: natypd !! Number of kinds of atoms in unit cell
+    integer, intent(in) :: nmvecmax !! 4
+    real (kind=dp), intent(in) :: qmphi !! $$ \phi $$ angle of the agnetization with respect to the z-axis
+    real (kind=dp), intent(in) :: qmtet !! $$ \theta $$ angle of the agnetization with respect to the z-axis
+    !.. In/Out variables
+    complex (kind=dp), dimension(natypd, 3, nmvecmax), intent(inout) :: mvevi
+    complex (kind=dp), dimension(natypd, 3, nmvecmax), intent(inout) :: mvevief
+    complex (kind=dp), dimension(0:lmaxd, natypd, 3, nmvecmax), intent(inout) :: mvevil
 
     ! Local Scalars
     integer :: icall, i, j, k, l, imv, nmvec
     complex (kind=dp) :: cs
     complex (kind=dp) :: amin, apls
-    real (kind=dp) :: pi, mv, mvx, mvxy, mvy, mvz, wsq2
+    real (kind=dp) :: mv, mvx, mvxy, mvy, mvz, wsq2
 
     ! Local Arrays
-    complex (kind=dp) :: usc(3, 3), drot4(4, 4), w3x3(3, 3)
-    complex (kind=dp) :: mvg(3, nmvecmax), mvgef(3, nmvecmax)
-    complex (kind=dp) :: mvgl(0:lmaxd, 3, nmvecmax)
-    real (kind=dp) :: mrot(3, 3), fact(0:100)
-    real (kind=dp) :: mvglo(3, nmvecmax), mvglol(0:lmaxd, 3, nmvecmax)
-    real (kind=dp) :: mvphi(nmvecmax), mvtet(nmvecmax)
-    character (len=1) :: txtl(0:lmaxdloc)
+    complex (kind=dp), dimension(3,3) :: usc
+    complex (kind=dp), dimension(3,3) :: w3x3
+    complex (kind=dp), dimension(4,4) :: drot4
+    complex (kind=dp), dimension(3,nmvecmax) :: mvg
+    complex (kind=dp), dimension(3,nmvecmax) :: mvgef
+    complex (kind=dp), dimension(0:lmaxd, 3, nmvecmax) :: mvgl
+    real (kind=dp), dimension(nmvecmax) :: mvphi
+    real (kind=dp), dimension(nmvecmax) :: mvtet
+    real (kind=dp), dimension(0:100)    :: fact
+    real (kind=dp), dimension(3,3)          :: mrot
+    real (kind=dp), dimension(3, nmvecmax)  :: mvglo
+    real (kind=dp), dimension(0:lmaxd, 3, nmvecmax) :: mvglol
+    character (len=1), dimension(0:lmaxdloc) :: txtl
 
     ! Data Statements
     data icall/0/
 
     ! Save Statements
-    save :: icall, nmvec, usc, fact, txtl, pi
+    save :: icall, nmvec, usc, fact, txtl
 
     icall = icall + 1
     ! =======================================================================
@@ -79,7 +108,6 @@ contains
       write (1337, 110)
 
       nmvec = 2
-      pi = 4.e0_dp*atan(1.e0_dp)
 
       fact(0) = 1.0e0_dp
       do i = 1, 100
@@ -115,15 +143,12 @@ contains
     ! -----------------------------------------------------------------------
     ! create the rotation matrices  DROT4 for complex spherical harmonics
     ! -----------------------------------------------------------------------
-
     call calcrotmat(2, 1, qmphi, qmtet, 0.0e0_dp, drot4, fact, 4)
-
     ! -----------------------------------------------------------------------
     ! create the rotation matrix  MROT for vectors in cartesian coordinates
     ! NOTE:  U^+ D^T U gives the inverse of the real matrix  M
     ! for that reason  the transposed matrix is stored as  MROT(J,I)
     ! -----------------------------------------------------------------------
-
     do i = 1, 3
       do j = 1, 3
         cs = 0.0e0_dp
@@ -171,7 +196,7 @@ contains
       end do
       ! -----------------------------------------------------------------------
       ! transform from LOCAL cartesian coordinates (x,y,z)
-      ! to  GLOBAL cartesian coordinates
+      ! to GLOBAL cartesian coordinates
       ! -----------------------------------------------------------------------
       do i = 1, 3
         mvg(i, imv) = czero

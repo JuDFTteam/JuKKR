@@ -1,36 +1,46 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculation of lattice sums for \(l \leq 2l_{pot}\)
+!> Author: B. Drittler
+!> Calculation of lattice sums for \(l \leq 2l_{pot}\)
+!> \begin{equation}
+!> \sum_{rm} \frac{Y_{lm}\left(q(i)-q(j)-rm\right)}{\left| q(i)-q(j)-rm\right|^{l+1}}
+!> \end{equation}
+!> in the case of \(i = j\), \(rm = 0\) is omitted. Rhe ewald method is used to 
+!> perform the lattice summations the splitting parameter \(\lambda\) is set equal 
+!> \(\frac{\sqrt(\pi)}{a_{lat}}\) (\(a_{lat}\) is the lattice constant).
+!> If the contribution of the last shell of the direct and the reciprocal lattice 
+!> is greater than `1.0e-8` a message is written 
+!------------------------------------------------------------------------------------
+!> @note V. Popescu May 2004: Dimension of arrays GN,RM changed from `(4,*)` to 
+!> `(3,*)`, the 4th one not being used (see also `lattice3d`).
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_strmat
 
 contains
 
-  subroutine strmat(alat, lpot, naez, ngmax, nrmax, nsg, nsr, nshlg, nshlr, gn, rm, qi0, smat, vol, iprint, lassld, lmxspd, naezd)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! *  calculation of lattice sums for l .le. 2*lpot :                   *
-    ! *                                                                    *
-    ! *                   ylm( q(i) - q(j) - rm )                          *
-    ! *        sum      ===========================                        *
-    ! *                 | q(i) - q(j) - rm |**(l+1)                        *
-    ! *                                                                    *
-    ! *         - summed over all lattice vectors rm  -                    *
-    ! *                                                                    *
-    ! *  ylm       : real spherical harmic to given l,m                    *
-    ! *  q(i),q(j) : basis vectors of the unit cell                        *
-    ! *                                                                    *
-    ! *  in the case of i = j, rm = 0 is omitted.                          *
-    ! *                                                                    *
-    ! *  the ewald method is used to perform the lattice summations        *
-    ! *  the splitting parameter lamda is set equal sqrt(pi)/alat          *
-    ! *  (alat is the lattice constant) .                                  *
-    ! *                                                                    *
-    ! *  if the contribution of the last shell of the direct and the       *
-    ! *  reciprocal lattice is greater than 1.0e-8 a message is written    *
-    ! *                                                                    *
-    ! *                                    b.drittler may 1989             *
-    ! *                                                                    *
-    ! *  Dimension of arrays GN,RM changed from (4,*) to (3,*), the 4th    *
-    ! *  one not being used (see also lattice3d)     v.popescu May 2004    *
-    ! *                                                                    *
-    ! **********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculation of lattice sums for \(l \leq 2l_{pot}\)
+  !> Author: B. Drittler
+  !> Category: electrostatics, geomertry, k-points, KKRhost
+  !> Deprecated: False 
+  !> Calculation of lattice sums for \(l \leq 2l_{pot}\)
+  !> \begin{equation}
+  !> \sum_{rm} \frac{Y_{lm}\left(q(i)-q(j)-rm\right)}{\left| q(i)-q(j)-rm\right|^{l+1}}
+  !> \end{equation}
+  !> in the case of \(i = j\), \(rm = 0\) is omitted. Rhe ewald method is used to 
+  !> perform the lattice summations the splitting parameter \(\lambda\) is set equal 
+  !> \(\frac{\sqrt(\pi)}{a_{lat}}\) (\(a_{lat}\) is the lattice constant).
+  !> If the contribution of the last shell of the direct and the reciprocal lattice 
+  !> is greater than `1.0e-8` a message is written 
+  !-------------------------------------------------------------------------------
+  !> @note V. Popescu May 2004: Dimension of arrays GN,RM changed from `(4,*)` to 
+  !> `(3,*)`, the 4th one not being used (see also `lattice3d`).
+  !> @endnote
+  !-------------------------------------------------------------------------------
+  subroutine strmat(alat,lpot,naez,ngmax,nrmax,nsg,nsr,nshlg,nshlr,gn,rm,qi0,smat,  &
+    vol,iprint,lassld,lmxspd,naezd)
+
 #ifdef CPP_HYBRID
 #define CPP_OMPSTUFF
 #endif
@@ -63,7 +73,8 @@ contains
     ! ..
     ! .. Local scalars ..
     complex (kind=dp) :: bfac
-    real (kind=dp) :: alpha, beta, dq1, dq2, dq3, dqdotg, expbsq, fpi, g1, g2, g3, ga, lamda, r, r1, r2, r3, rfac, s
+    real (kind=dp) :: alpha, beta, dq1, dq2, dq3, dqdotg, expbsq, fpi, g1, g2, g3, ga
+    real (kind=dp) :: lamda, r, r1, r2, r3, rfac, s
     integer :: i, i1, i2, it, l, lm, lmx, lmxsp, lfmt, m, nge, ngs, nre, nrs, nstart
     character (len=80) :: fmt
     ! ..

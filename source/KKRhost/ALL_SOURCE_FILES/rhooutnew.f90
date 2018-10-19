@@ -1,12 +1,17 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculation of the density for the new solver
+!> Author:
+!> Calculation of the density for the new solver
+!------------------------------------------------------------------------------------
 module mod_rhooutnew
 
 contains
 
-  ! -------------------------------------------------------------------------------
-  ! SUBROUTINE: RHOOUTNEW
-  !> @note -Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to
-  ! Fortran90
-  ! -------------------------------------------------------------------------------
+  !> Summary: Calculation of the density for the new solver
+  !> Author: 
+  !> Category: physical-observables, KKRhost
+  !> Deprecated: False 
+  !> Calculation of the density for the new solver
   subroutine rhooutnew(nsra, lmax, gmatll, ek, lmpot, df, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll, rllleft, sllleft, cden, cdenlm, cdenns, &
     rho2nsc, corbital, gflle_part, rpan_intervall, ipan_intervall, nspin)
 
@@ -21,40 +26,24 @@ contains
 
     integer, intent (in) :: nsra
     integer, intent (in) :: nspin
-    integer, intent (in) :: lmax   !! Maximum l component in wave function
-    ! expansion
+    integer, intent (in) :: lmax   !! Maximum l component in wave function expansion
     integer, intent (in) :: iend   !! Number of nonzero gaunt coefficients
     integer, intent (in) :: imt1
-    integer, intent (in) :: ncheb  !! Number of Chebychev pannels for the new
-    ! solver
+    integer, intent (in) :: ncheb  !! Number of Chebychev pannels for the new solver
     integer, intent (in) :: lmpot  !! (LPOT+1)**2
     integer, intent (in) :: irmdnew
     integer, intent (in) :: corbital
     integer, intent (in) :: npan_tot
     complex (kind=dp), intent (in) :: ek
     complex (kind=dp), intent (in) :: df
-    integer, dimension (*), intent (in) :: lmsp !! 0,1 : non/-vanishing
-    ! lm=(l,m) component of
-    ! non-spherical potential
+    integer, dimension (*), intent (in) :: lmsp !! 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
     integer, dimension (*), intent (in) :: ifunm
     integer, dimension (0:ntotd), intent (in) :: ipan_intervall
     integer, dimension (ncleb, 4), intent (in) :: icleb !! Pointer array
-    real (kind=dp), dimension (*), intent (in) :: cleb !! GAUNT coefficients
-    ! (GAUNT)
+    real (kind=dp), dimension (*), intent (in) :: cleb !! GAUNT coefficients (GAUNT)
     real (kind=dp), dimension (0:ntotd), intent (in) :: rpan_intervall
     real (kind=dp), dimension (ntotd*(ncheb+1), nfund), intent (in) :: thetasnew
-    complex (kind=dp), dimension (lmmaxso, lmmaxso), intent (in) :: gmatll !!
-    ! GMATLL
-    ! =
-    ! diagonal
-    ! elements
-    ! of
-    ! the
-    ! G
-    ! matrix
-    ! (system)
-    ! Note that SLL is not needed for calculation of density, only needed for
-    ! calculation of Green function
+    complex (kind=dp), dimension (lmmaxso, lmmaxso), intent (in) :: gmatll !! GMATLL=diagonal elements of the G matrix (system) Note that SLL is not needed for calculation of density, only needed for calculation of Green function
     complex (kind=dp), dimension (nsra*lmmaxso, lmmaxso, irmdnew), intent (in) :: rll
     complex (kind=dp), dimension (nsra*lmmaxso, lmmaxso, irmdnew), intent (in) :: rllleft
     complex (kind=dp), dimension (nsra*lmmaxso, lmmaxso, irmdnew), intent (in) :: sllleft
@@ -193,7 +182,9 @@ contains
       do jspin = 1, nspin*(1+korbit)
         do lm1 = 1, lmsize
           do lm2 = 1, lm1 - 1
-            wr(lm1+lmshift1(jspin), lm2+lmshift2(jspin), ir) = wr(lm1+lmshift1(jspin), lm2+lmshift2(jspin), ir) + wr(lm2+lmshift1(jspin), lm1+lmshift2(jspin), ir)
+            wr(lm1+lmshift1(jspin), lm2+lmshift2(jspin), ir) =                      &
+              wr(lm1+lmshift1(jspin), lm2+lmshift2(jspin), ir) +                    &
+              wr(lm2+lmshift1(jspin), lm1+lmshift2(jspin), ir)
           end do
         end do
       end do ! JSPIN

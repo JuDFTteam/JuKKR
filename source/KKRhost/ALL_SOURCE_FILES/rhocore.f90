@@ -1,12 +1,23 @@
+!------------------------------------------------------------------------------------
+!> Summary: Driver for the calculation of core state
+!> Author: 
+!> Driver for the calculation of core state
+!------------------------------------------------------------------------------------
 module mod_rhocore
 
 contains
 
-  subroutine rhocore(nsra, ispin, nspin, i1, drdi, r, visp, a, b, zat, ircut, rhoc, ecore, ncore, lcore, cscl, vtrel, btrel, rmrel, drdirel, r2drdirel, zrel, jwsrel, irshift, &
-    ecorerel, nkcore, kapcore)
-    ! ===================================================================
-    ! RELATIVISTIC TREATMENT OF CORE ELECTRONS   July/2002
-    ! SEE ROUTINE <DRVCORE> FOR A SHORT DESCRIPTION OF THE VARIABLES
+  !-------------------------------------------------------------------------------
+  !> Summary: Driver for the calculation of core state
+  !> Author: 
+  !> Category: core-electrons, KKRhost
+  !> Deprecated: False 
+  !> Driver for the calculation of core state
+  !-------------------------------------------------------------------------------
+  subroutine rhocore(nsra,ispin,nspin,i1,drdi,r,visp,a,b,zat,ircut,rhoc,ecore,ncore,& 
+    lcore,cscl,vtrel,btrel,rmrel,drdirel,r2drdirel,zrel,jwsrel,irshift,ecorerel,    &
+    nkcore,kapcore)
+
     use :: mod_datatypes, only: dp
     use :: global_variables
     use :: mod_corel
@@ -40,7 +51,6 @@ contains
 
     ! =======================================================================
     ! non/scalar-relativistic OR relativistic
-
     ipr = 0
 
     if (ispin==1) qc = 0.0e0_dp

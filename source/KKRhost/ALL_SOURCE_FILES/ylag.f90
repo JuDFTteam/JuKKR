@@ -1,31 +1,45 @@
+!------------------------------------------------------------------------------------
+!> Summary: lagrangian interpolation
+!> Author: People who wrote it
+!> Lagrangian interpolation xi is interpolated entry into x-array n is the order 
+!> of lagrangran interpolation y is array from which ylag is obtained by interpolation
+!> ind is the min-i for x(i).gt.xi if ind=0,x-array will be searched imax is 
+!> max index of x-and y-arrays
+!------------------------------------------------------------------------------------
+!> @note 07/12/94  HE  arg. IEX removed
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_ylag
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: lagrangian interpolation
+  !> Author: 
+  !> Category: numerical-tools, KKRhost 
+  !> Deprecated: False 
+  !> Lagrangian interpolation xi is interpolated entry into x-array n is the order 
+  !> of lagrangran interpolation y is array from which ylag is obtained by interpolation
+  !> ind is the min-i for x(i).gt.xi if ind=0,x-array will be searched imax is 
+  !> max index of x-and y-arrays
+  !-------------------------------------------------------------------------------
+  !> @note 07/12/94  HE  arg. IEX removed
+  !> @endnote
+  !-------------------------------------------------------------------------------
   function ylag(xi, x, y, ind1, n1, imax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! * lagrangian interpolation                                         *
-    ! * xi is interpolated entry into x-array                            *
-    ! * n is the order of lagrangran interpolation                       *
-    ! * y is array from which ylag is obtained by interpolation          *
-    ! * ind is the min-i for x(i).gt.xi                                  *
-    ! * if ind=0,x-array will be searched                                *
-    ! * imax is max index of x-and y-arrays                              *
-    ! *                                                                  *
-    ! * 07/12/94  HE  arg. IEX removed                                   *
-    ! ********************************************************************
 
     implicit none
 
     real (kind=dp), parameter :: eps = 1.0e-12_dp
 
     ! Dummy arguments
-    integer :: imax, ind1, n1
-    real (kind=dp) :: xi
-    real (kind=dp) :: x(imax), y(imax)
+    integer, intent(in) :: n1
+    integer, intent(in) :: imax
+    integer, intent(in) :: ind1
+    real (kind=dp), intent(in) :: xi
+    real (kind=dp), dimension(imax), intent(in) :: x, y
     real (kind=dp) :: ylag
 
     ! Local variables

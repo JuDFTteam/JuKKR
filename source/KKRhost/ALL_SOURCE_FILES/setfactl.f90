@@ -1,16 +1,26 @@
+!------------------------------------------------------------------------------------
+!> Summary: Determination of the `factl` needed to match the Greens functions in the decimation method
+!> Author: People who wrote it
+!> Determination of the `factl` needed to match the Greens functions in the decimation method
+!------------------------------------------------------------------------------------
 module mod_setfactl
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Determination of the `factl` needed to match the Greens functions in the decimation method
+  !> Author:
+  !> Category: reference-system, structural-greensfunction, KKRhost
+  !> Deprecated: False 
+  !> Determination of the `factl` needed to match the Greens functions in the decimation 
+  !> method.
+  !-------------------------------------------------------------------------------
   subroutine setfactl(factl, lmax, krel, lmmaxd)
     use :: mod_cinit
+    use :: constants, only: ci
     implicit none
-    ! ..
-    ! .. Parameters
-    complex (kind=dp) :: ci
-    parameter (ci=(0e0_dp,1e0_dp))
     ! ..
     ! .. Arguments
     integer :: krel, lmax, lmmaxd

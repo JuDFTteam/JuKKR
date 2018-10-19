@@ -1,14 +1,24 @@
+!------------------------------------------------------------------------------------
+!> Summary: Self-consistent mixing of the spin angle specifying the **local** frame of reference
+!> Author: 
+!> Self-consistent mixing of the spin angle specifying the **local** frame of reference
+!------------------------------------------------------------------------------------
 module mod_scfiterang
 
 contains
 
-  subroutine scfiterang(itrscf, itoq, fact, mvphi, mvtet, mvgam, qmphi, qmtet, qmgam, nq, nk, erravang, nqmax, ntmax, nmvecmax, nkmmax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! * applied to mix the angles specifying                             *
-    ! * the local frame of reference                                     *
-    ! *                                                                  *
-    ! ********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Self-consistent mixing of the spin angle specifying the **local** frame of reference
+  !> Author:
+  !> Category: physical-observables, KKRhost
+  !> Deprecated: False 
+  !> Self-consistent mixing of the spin angle specifying the **local** frame of reference.
+  !> As the self-consistent process evolves the local spin directions are varied and a
+  !> new local frame of reference is found.
+  !-------------------------------------------------------------------------------
+  subroutine scfiterang(itrscf,itoq,fact,mvphi,mvtet,mvgam,qmphi,qmtet,qmgam,nq,nk, &
+    erravang,nqmax,ntmax,nmvecmax,nkmmax)
+
     use :: mod_wunfiles, only: t_params
     use :: mod_datatypes, only: dp
     use :: mod_calcrotmat

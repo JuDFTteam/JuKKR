@@ -1,3 +1,8 @@
+!------------------------------------------------------------------------------------
+!> Summary: Constructs potential including big/small components and with relativistic mass terms etc included
+!> Author: 
+!> Constructs potential including big/small components and with relativistic mass terms etc included
+!------------------------------------------------------------------------------------
 module mod_vllmatsra
   
   private
@@ -53,12 +58,12 @@ contains
     logical, external :: test
 
 
-    ! ************************************************************************************
+    ! *******************************************************************************
     ! calculate the index array to determine the L value of an LM index
     ! in case of spin-orbit coupling 2*(LMAX+1)**2 are used instead of
     ! (LMAX+1)**2
     ! the second half refers to the second spin and has the the same L value
-    ! ************************************************************************************
+    ! *******************************************************************************
     ilm = 0
 
     if (lmsize==1) then
@@ -95,16 +100,15 @@ contains
           mass = cone + (eryd-vll0(ival,ival,ir))/cvlight**2
           mass0 = cone + eryd/cvlight**2
 
-          ! ************************************************************************************
+          ! *************************************************************************
           ! Conventional potential matrix
-          ! ************************************************************************************
+          ! *************************************************************************
 
           vll(lmsize+ival, lmsize+ival, ir) = -vll0(ival, ival, ir)/cvlight**2 ! TEST 9/22/2011
           vll(ival, ival, ir) = vll(ival, ival, ir) + (1.0e0_dp/mass-1.0e0_dp/mass0)*lval*(lval+1)/rmesh(ir)**2
 
-          ! ************************************************************************************
+          ! *************************************************************************
           ! The pertubation matrix is changed in the following way
-
           ! from  / V11  V12 \   to    / V21  V22 \
           !       \ V21  V22 /         \-V11 -V12 /
           ! because of the convention used for the left solution

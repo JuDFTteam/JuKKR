@@ -1,10 +1,25 @@
+!------------------------------------------------------------------------------------
+!> Summary: PW91 exchange correlation functional
+!> Author: 
+!> Exchange correlation potential making use of GGA, the parametrization is given
+!> by the PW91 functional
+!------------------------------------------------------------------------------------
 module mod_mkxcpe
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  subroutine mkxcpe(nspin, ir, np, l1max, rv, rholm, vxcp, excp, thet, ylm, dylmt1, dylmt2, dylmf1, dylmf2, dylmtf, drrl, ddrrl, drrul, ddrrul, irmd, lmpotd)
+  !-------------------------------------------------------------------------------  
+  !> Summary: PW91 exchange correlation functional
+  !> Author: 
+  !> Category: xc-potential, potential, KKRhost 
+  !> Deprecated: False 
+  !> Exchange correlation potential making use of GGA, the parametrization is given
+  !> by the PW91 functional
+  !-------------------------------------------------------------------------------  
+  subroutine mkxcpe(nspin,ir,np,l1max,rv,rholm,vxcp,excp,thet,ylm,dylmt1,dylmt2,    &
+    dylmf1,dylmf2,dylmtf,drrl,ddrrl,drrul,ddrrul,irmd,lmpotd)
     use :: mod_gxcpt
     ! ..
     implicit none
@@ -12,25 +27,46 @@ contains
     real (kind=dp), parameter :: eps = 1.0e-12_dp
     integer :: ijd
     parameter (ijd=434)
-    ! ..
-    ! .. Scalar Arguments ..
-    real (kind=dp) :: rv
-    integer :: ir, irmd, l1max, lmpotd, np, nspin
-    ! ..
-    ! .. Array Arguments ..
-    real (kind=dp) :: ddrrl(irmd, lmpotd), ddrrul(irmd, lmpotd), drrl(irmd, lmpotd), drrul(irmd, lmpotd), dylmf1(ijd, lmpotd), dylmf2(ijd, lmpotd), dylmt1(ijd, lmpotd), &
-      dylmt2(ijd, lmpotd), dylmtf(ijd, lmpotd), excp(ijd), rholm(lmpotd, 2), thet(ijd), vxcp(ijd, 2), ylm(ijd, lmpotd)
+    ! .. Input variables
+    integer, intent(in) :: ir
+    integer, intent(in) :: np
+    integer, intent(in) :: irmd    !! Maximum number of radial points
+    integer, intent(in) :: l1max   !! lmax + 1
+    integer, intent(in) :: nspin   !! Counter for spin directions
+    integer, intent(in) :: lmpotd  !! (lpot+1)**2
+    real (kind=dp), intent(in) :: rv
+    real (kind=dp), dimension(ijd), intent(in) :: thet
+    real (kind=dp), dimension(ijd, lmpotd), intent(in)  :: ylm !! real spherical harmonic to a given l,m
+    real (kind=dp), dimension(irmd, lmpotd), intent(in) :: drrl
+    real (kind=dp), dimension(lmpotd, 2), intent(in)    :: rholm !! l,m decomposed charge density
+    real (kind=dp), dimension(irmd, lmpotd), intent(in) :: drrul
+    real (kind=dp), dimension(irmd, lmpotd), intent(in) :: ddrrl
+    real (kind=dp), dimension(irmd, lmpotd), intent(in) :: ddrrul
+    real (kind=dp), dimension(ijd, lmpotd), intent(in)  :: dylmf1
+    real (kind=dp), dimension(ijd, lmpotd), intent(in)  :: dylmf2
+    real (kind=dp), dimension(ijd, lmpotd), intent(in)  :: dylmt1
+    real (kind=dp), dimension(ijd, lmpotd), intent(in)  :: dylmt2
+    real (kind=dp), dimension(ijd, lmpotd), intent(in)  :: dylmtf
+    ! .. In/Out variables
+    real (kind=dp), dimension(ijd), intent(inout) :: excp !! XC-energy
+    real (kind=dp), dimension(ijd,2), intent(inout) :: vxcp !! XC-potential
     ! ..
     ! .. Local Scalars ..
-    real (kind=dp) :: agr, agrd, agru, cedg, cedl, chg, cosx, dagrf, dagrfd, dagrfu, dagrr, dagrrd, dagrru, dagrt, dagrtd, dagrtu, ddrr, ddrrd, ddrru, df1, df2, drr, drrd, drru, &
-      dt1, dt2, dtf, dzdfs, dzdr, dzdtr, etot0, etota0, g2r, g2rd, g2ru, gggr, gggrd, gggru, grf, grfd, grfu, grgrd, grgru, grr, grrd, grru, grt, grtd, grtu, gzgr, rdspr, ro, rod, &
-      rou, rv2, rv3, rvsin1, rvsin2, ry2, rylm, sint1, sint2, smag, spi, tant1, vcg1, vcg2, vcl1, vcl2, vtot1, vtot2, vtota1, vtota2, vxg1, vxg2, vxl1, vxl2, xedg, xedl, zta
+    real (kind=dp) :: agr, agrd, agru, cedg, cedl, chg, cosx, dagrf, dagrfd, dagrfu
+    real (kind=dp) :: dagrr, dagrrd, dagrru, dagrt, dagrtd, dagrtu, ddrr, ddrrd, zta 
+    real (kind=dp) :: ddrru, df1, df2, drr, drrd, drru, dt1, dt2, dtf, dzdfs, dzdr
+    real (kind=dp) :: dzdtr, etot0, etota0, g2r, g2rd, g2ru, gggr, gggrd, gggru, grf
+    real (kind=dp) :: grfd, grfu, grgrd, grgru, grr, grrd, grru, grt, grtd
+    real (kind=dp) :: grtu, gzgr, rdspr, ro, rod, rou, rv2, rv3, rvsin1, rvsin2, ry2
+    real (kind=dp) :: rylm, sint1, sint2, smag, spi, tant1, vcg1, vcg2, vcl1, vcl2
+    real (kind=dp) :: vtot1, vtot2, vtota1, vtota2, vxg1, vxg2, vxl1, vxl2, xedg, xedl
     integer :: idspr, im, ip, l1, ll, llmax, lm, lmax, nn, nn1
     ! ..
     ! .. Local Arrays ..
-    real (kind=dp) :: ddry(ijd), ddryd(ijd), ddryu(ijd), drdf(ijd), drdfd(ijd), drdfu(ijd), drdt(ijd), drdtd(ijd), drdtu(ijd), dry(ijd), dryd(ijd), dryu(ijd), rdf1(ijd), &
-      rdf1d(ijd), rdf1u(ijd), rdf2(ijd), rdf2d(ijd), rdf2u(ijd), rdt1(ijd), rdt1d(ijd), rdt1u(ijd), rdt2(ijd), rdt2d(ijd), rdt2u(ijd), rdtf(ijd), rdtfd(ijd), rdtfu(ijd), ry(ijd), &
-      ryd(ijd), ryu(ijd)
+    real (kind=dp), dimension(ijd) :: ddry, ddryd, ddryu, drdf, drdfd, drdfu, drdt
+    real (kind=dp), dimension(ijd) :: rdf1d, rdf1u, rdf2, rdf2d, rdf2u, rdt1, rdt1d 
+    real (kind=dp), dimension(ijd) :: rdt1u, rdt2, rdt2d, rdt2u, rdtf, rdtfd, rdtfu
+    real (kind=dp), dimension(ijd) :: ry,  drdtd, drdtu, dry, dryd, dryu, rdf1,ryd, ryu
     ! ..
     ! .. Data statements ..
     data rdspr/9.0e0_dp/
@@ -64,10 +100,6 @@ contains
     ! llmax2=(lmax2+1)**2
     ! lmax3=lmax*1
     ! llmax3=(lmax3+1)**2
-
-
-
-
 
     ! write(6,9030) (ii,drrs(ii,1),ddrrs(ii,1),drrus(ii,1),
     ! &               ddrrus(ii,1),ii=ir,ir)
@@ -234,7 +266,6 @@ contains
 
         dagrf = (dry(ip)*drdf(ip)*rv2+rdt1(ip)*rdtf(ip)+rdf1(ip)*rdf2(ip)/sint2)/(agr*rv3*sint1)
 
-
         dzdr = ((dryu(ip)-dryd(ip))*ry(ip)-(ryu(ip)-ryd(ip))*dry(ip))/ry2
 
         dzdtr = ((rdt1u(ip)-rdt1d(ip))*ry(ip)-(ryu(ip)-ryd(ip))*rdt1(ip))/ry2/rv
@@ -247,14 +278,12 @@ contains
 
         gzgr = dzdr*grr + dzdtr*grt + dzdfs*grf
 
-
         chg = ry(ip)
         spi = ryu(ip) - ryd(ip)
         chg = max(1.0e-12_dp, chg)
         smag = sign(1.0e0_dp, spi)
         spi = smag*min(chg-1.0e-12_dp, abs(spi))
         zta = spi/chg
-
 
         grru = dryu(ip)
         grtu = rdt1u(ip)/rv
@@ -268,14 +297,11 @@ contains
 
         dagrfu = (dryu(ip)*drdfu(ip)*rv2+rdt1u(ip)*rdtfu(ip)+rdf1u(ip)*rdf2u(ip)/sint2)/(agru*rv3*sint1)
 
-
-
         g2ru = ddryu(ip) + 2.e0_dp*dryu(ip)/rv + (rdt2u(ip)+rdt1u(ip)/tant1+rdf2u(ip)/sint2)/rv2
 
         gggru = grru*dagrru + grtu*dagrtu + grfu*dagrfu
 
         grgru = grr*grru + grt*grtu + grf*grfu
-
 
         grrd = dryd(ip)
         grtd = rdt1d(ip)/rv
@@ -289,25 +315,19 @@ contains
 
         dagrfd = (dryd(ip)*drdfd(ip)*rv2+rdt1d(ip)*rdtfd(ip)+rdf1d(ip)*rdf2d(ip)/sint2)/(agrd*rv3*sint1)
 
-
-
         g2rd = ddryd(ip) + 2.e0_dp*dryd(ip)/rv + (rdt2d(ip)+rdt1d(ip)/tant1+rdf2d(ip)/sint2)/rv2
 
         gggrd = grrd*dagrrd + grtd*dagrtd + grfd*dagrfd
 
         grgrd = grr*grrd + grt*grtd + grf*grfd
 
-
         idspr = 0
         if (rv>rdspr) idspr = 1
 
-
-
-
-
         ! for debug
-        call gxcpt(idspr, chg, zta, agr, agru, agrd, g2r, g2ru, g2rd, gggr, gggru, gggrd, grgru, grgrd, gzgr, vxcp(ip,2), vxcp(ip,1), excp(ip), vxl1, vxl2, vcl1, vcl2, xedl, cedl, &
-          vxg1, vxg2, vcg1, vcg2, xedg, cedg)
+        call gxcpt(idspr,chg,zta,agr,agru,agrd,g2r,g2ru,g2rd,gggr,gggru,gggrd,grgru,&
+          grgrd,gzgr,vxcp(ip,2),vxcp(ip,1),excp(ip),vxl1,vxl2,vcl1,vcl2,xedl,cedl,  &
+          vxg1,vxg2,vcg1,vcg2,xedg,cedg)
 
 
         ! if(ip.eq.202) then

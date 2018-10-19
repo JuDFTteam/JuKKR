@@ -1,13 +1,27 @@
+!------------------------------------------------------------------------------------
+!> Summary: Renormalize the valence charge according to Lloyd's formula.
+!> Author: Phivos Mavropoulos
+!> Renormalize the valence charge according to Lloyd's formula. 
+!> Find renormalization constant per energy, then renormalize charge/atom/energy, 
+!> then integrate over energies to find the renormalized charge/atom. 
+!> Use it to renormalize the density.
+!------------------------------------------------------------------------------------
 module mod_renorm_lly
 
 contains
 
-    !> Renormalize the valence charge according to Lloyd's formula.
-    !> Find renormalization constant per energy, then renormalize
-    !> charge/atom/energy, then integrate over energies to find
-    !> the renormalized charge/atom. Use it to renormalize the density.
-    !> Phivos Mavropoulos, July 2014
+  !-------------------------------------------------------------------------------
+  !> Summary: Renormalize the valence charge according to Lloyd's formula.
+  !> Author: Phivos Mavropoulos
+  !> Category: physical-observables, KKRhost
+  !> Deprecated: False 
+  !> Renormalize the valence charge according to Lloyd's formula. 
+  !> Find renormalization constant per energy, then renormalize charge/atom/energy, 
+  !> then integrate over energies to find the renormalized charge/atom. 
+  !> Use it to renormalize the density.
+  !-------------------------------------------------------------------------------
   subroutine renorm_lly(cdos_lly, ielast, nspin, natyp, cden, lmaxp1, conc, iestart, ieend, wez, ircut, ipan, ez, zat, rho2ns, r2nef, denef, denefat, espv)
+
     use :: mod_datatypes, only: dp
     use :: mod_constants, only: czero, pi
     use :: global_variables, only: ipand, natypd, lmaxd, npotd, iemxd, irmd, lmpotd, krel, nspind 

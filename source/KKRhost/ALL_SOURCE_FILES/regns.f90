@@ -1,62 +1,83 @@
+!------------------------------------------------------------------------------------
+!> Summary: Determines the regular non spherical wavefunctions, the alpha matrix and the t-matrix in the n-th. born approximation (n given by input parameter `icst`)
+!> Author: B. Drittler
+!> Determines the regular non spherical wavefunctions, the alpha matrix and the 
+!> t-matrix in the n-th. born approximation (n given by input parameter `icst`)
+!> Using the wave functions \(pz\) and \(qz\) (regular and irregular solution ) of the 
+!> spherically averaged potential, the regular wavefunction pns is determined by
+!> \begin{equation}
+!> pns(ir,lm1,lm2) = ar(ir,lm1,lm2)pz(ir,l1) + br(ir,lm1,lm2)qz(ir,l1)
+!> \end{equation}
+!> The matrices \(ar\) and \(br\) are determined by integral equations containing \(pns\)
+!> and only the non spherical contributions of the potential, stored in `vinspll`. 
+!> These integral equations are solved iteratively with born approximation up to given n.
+!> The original way of writing the cr and dr matrices in the equations above caused 
+!> numerical troubles. Therefore here are used rescaled \(ar\) and \(br\) matrices :
+!> \begin{equation}
+!> ar(ir,lm1,lm2) = \sqrt{e}^{l_1-l_2} ar(ir,lm1,lm2)\left(\frac{(2l_2-1)!!}{(2l_1-1)!!}\right)
+!> \end{equation}
+!> \begin{equation}
+!> br(ir,lm1,lm2) = \sqrt{e}^{-l_1-l_2} \frac{br(ir,lm1,lm2)}{((2l_1-1)!!(2l_2-1)!!)}
+!> \end{equation}
+!> For lloyd's formula is only the determinant of the alpha-matrix is needed which 
+!> is identical with the determinant of the rescaled \(ar\) - matrix at the innerst point .
+!> The non spherical t-matrix is the br matrix at `r(irc)` modified for the use of shape functions
+!> (see notes by B. Drittler)
+!------------------------------------------------------------------------------------
+!> @note 
+!> * Modified by R. Zeller Aug. 1994
+!> * Added Volterra equation by M. Ogura Jan. 2006
+!>    - `FRED`: true -> use fredholm equation. false -> volterra equation
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_regns
 
 contains
 
-  subroutine regns(ar, br, efac, pns, vnspll, icst, ipan, ircut, pzlm, qzlm, pzekdr, qzekdr, ek, ader, amat, bder, bmat, nsra, irmind, irmd, irmin, irmax, ipand, lmmaxd) ! Added IRMIN,IRMAX 1.7.2014
-    ! -----------------------------------------------------------------------
-    ! determines the regular non spherical wavefunctions , the
-    ! alpha matrix and the t - matrix in the n-th. born appro-
-    ! ximation ( n given by input parameter icst )
+  !-------------------------------------------------------------------------------
+  !> Summary: Determines the regular non spherical wavefunctions, the alpha matrix and the t-matrix in the n-th. born approximation (n given by input parameter `icst`)
+  !> Author: B. Drittler
+  !> Category: single-site, KKRhost 
+  !> Deprecated: False 
+  !> Determines the regular non spherical wavefunctions, the alpha matrix and the 
+  !> t-matrix in the n-th. born approximation (n given by input parameter `icst`)
+  !> Using the wave functions \(pz\) and \(qz\) (regular and irregular solution ) of the 
+  !> spherically averaged potential, the regular wavefunction pns is determined by
+  !> \begin{equation}
+  !> pns(ir,lm1,lm2) = ar(ir,lm1,lm2)pz(ir,l1) + br(ir,lm1,lm2)qz(ir,l1)
+  !> \end{equation}
+  !> The matrices \(ar\) and \(br\) are determined by integral equations containing \(pns\)
+  !> and only the non spherical contributions of the potential, stored in `vinspll`. 
+  !> These integral equations are solved iteratively with born approximation up to given n.
+  !> The original way of writing the cr and dr matrices in the equations above caused 
+  !> numerical troubles. Therefore here are used rescaled \(ar\) and \(br\) matrices :
+  !> \begin{equation}
+  !> ar(ir,lm1,lm2) = \sqrt{e}^{l_1-l_2} ar(ir,lm1,lm2)\left(\frac{(2l_2-1)!!}{(2l_1-1)!!}\right)
+  !> \end{equation}
+  !> \begin{equation}
+  !> br(ir,lm1,lm2) = \sqrt{e}^{-l_1-l_2} \frac{br(ir,lm1,lm2)}{((2l_1-1)!!(2l_2-1)!!)}
+  !> \end{equation}
+  !> For lloyd's formula is only the determinant of the alpha-matrix is needed which 
+  !> is identical with the determinant of the rescaled \(ar\) - matrix at the innerst point .
+  !> The non spherical t-matrix is the br matrix at `r(irc)` modified for the use of shape functions
+  !> (see notes by B. Drittler)
+  !-------------------------------------------------------------------------------
+  !> @note 
+  !> * Modified by R. Zeller Aug. 1994
+  !> * Added Volterra equation by M. Ogura Jan. 2006
+  !>    - `FRED`: true -> use fredholm equation. false -> volterra equation
+  !> @endnote
+  !-------------------------------------------------------------------------------
+  subroutine regns(ar,br,efac,pns,vnspll,icst,ipan,ircut,pzlm,qzlm,pzekdr,qzekdr,ek,&
+    ader,amat,bder,bmat,nsra,irmind,irmd,irmin,irmax,ipand,lmmaxd) ! Added IRMIN,IRMAX 1.7.2014
 
-
-    ! using the wave functions pz and qz ( regular and irregular
-    ! solution ) of the spherically averaged potential , the
-    ! regular wavefunction pns is determined by
-
-    ! pns(ir,lm1,lm2) = ar(ir,lm1,lm2)*pz(ir,l1)
-    ! + br(ir,lm1,lm2)*qz(ir,l1)
-
-    ! the matrices ar and br are determined by integral equations
-    ! containing pns and only the non spherical contributions of
-    ! the potential , stored in vinspll . these integral equations
-    ! are  solved iteratively with born approximation up to given n.
-
-    ! the original way of writing the cr and dr matrices in the equa-
-    ! tions above caused numerical troubles . therefore here are used
-    ! rescaled ar and br matrices :
-
-    ! ~
-    ! ar(ir,lm1,lm2) = sqrt(e)**(l1-l2)
-    ! * ar(ir,lm1,lm2)*((2*l2-1)!!/(2*l1-1)!!)
-
-    ! ~
-    ! br(ir,lm1,lm2) = sqrt(e)**(-l1-l2)
-    ! * br(ir,lm1,lm2)/((2*l1-1)!!*(2*l2-1)!!)
-
-    ! for lloyd's formular is only the determinant of the alpha -
-    ! matrix is needed which is identical with the determinant
-    ! of the rescaled ar - matrix at the innerst point .
-
-    ! the non spherical t - matrix is the br matrix at r(irc)
-
-    ! modified for the use of shape functions
-
-    ! (see notes by b.drittler)
-
-    ! b.drittler   mar.  1989
-    ! -----------------------------------------------------------------------
-    ! modified by R. Zeller      Aug. 1994
-    ! -----------------------------------------------------------------------
-    ! added Volterra equation by M. Ogura      Jan. 2006
-    ! FRED: true -> use fredholm equation
-    ! false -> volterra equation
-    ! -----------------------------------------------------------------------
     use :: mod_types, only: t_inc
     use :: mod_datatypes, only: dp
     use :: mod_csout
     use :: mod_wfint
     use :: mod_cinit
     use :: mod_csinwd
+    use :: constants, only: cone,czero
     implicit none
     ! .. Scalar Arguments ..
     complex (kind=dp) :: ek
@@ -78,15 +99,10 @@ contains
     complex (kind=dp) :: pns0(lmmaxd, lmmaxd, irmind:irmd, 2), pns1(lmmaxd, lmmaxd, irmind:irmd)
     integer :: ipiv(lmmaxd)
     ! ..
-    ! .. Parameters ..
-    complex (kind=dp) :: cone, czero
-    parameter (cone=(1.0d0,0.0d0), czero=(0.d0,0.d0))
-    ! ..
     logical :: fred
     data fred/.false./
     ! ..
     ! ..
-    ! write(*,*)ek
     irc1 = ircut(ipan)
     pns0(:, :, irmind:irmd, :) = czero
     pns1(:, :, irmind:irmd) = czero
@@ -303,26 +319,29 @@ contains
     end do
 
   end subroutine regns
-  ! ************************************************************************
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Inverts a general `complex(kind=dp)` matrix `A`
+  !> Author: 
+  !> Category: numerical-tools, KKRhost
+  !> Deprecated: False 
+  !> Inverts a general `complex(kind=dp)` matrix `A`
+  !> 
+  !> * The result is return in `U`
+  !> * Input matrix `A` is returned unchanged
+  !> * `AUX` is a auxiliary matrix
+  !> * `A`,`U` and `AUX` are of dimension `(DIM,DIM)`
+  !-------------------------------------------------------------------------------
   subroutine zgeinv1(a, u, aux, ipiv, dim)
-    ! ************************************************************************
-    ! - inverts a general complex (kind=dp) matrix A,
-    ! - the result is return in U,
-    ! - input matrix A is returned unchanged,
-    ! - AUX is a auxiliary matrix,
-    ! - A,U and AUX are of dimension (DIM,DIM),
-    ! ------------------------------------------------------------------------
+
     use :: mod_datatypes, only: dp
     use :: mod_cinit
+    use :: constants, only: cone
+
     implicit none
+
     integer :: dim, ipiv(*)
     complex (kind=dp) :: a(dim, *), aux(dim, *), u(dim, *)
-
-    ! .. PARAMETER
-
-    complex (kind=dp) :: cone
-    parameter (cone=(1.d0,0.d0))
 
     integer :: lm1, info
     ! ------------------------------------------------------------------------

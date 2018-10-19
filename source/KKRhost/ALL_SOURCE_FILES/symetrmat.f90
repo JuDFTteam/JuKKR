@@ -1,33 +1,44 @@
+!------------------------------------------------------------------------------------
+!> Summary: Symmetrising the t/G matrix (or their inverses)
+!> Author: V. Popescu
+!> Symmetrising the t/G matrix (or their inverses). 
+!> \begin{equation}
+!> MATSYM = CPREF  \sum_{i=1}^{nsym}  [ DLL(i) * MATQ(iqs(i)) * DLL(i)^T ]
+!> \end{equation}
+!> `IQS` - set outside the routine - has either the same value regardless of `i` 
+!> (e.g. in case of the single-site matrices or is taking on the value of `i` => `MATSYM`
+!> is a cummulative sum over `MATQ[1...nsym]` (e.g. in case of the BZ-integration of G)
+!------------------------------------------------------------------------------------
+!> @note `CPREF` = `1/NSYM`  or `1/VBZ`
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_symetrmat
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  subroutine symetrmat(nsym, cpref, dsymll, symunitary, matq, iqs, matsym, lmmaxd, nsymaxd)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! *  Symmetrising the t/G matrix (or their inverses):                  *
-    ! *                                                                    *
-    ! *                       nsym                                         *
-    ! *     MATSYM = CPREF *  SUM  [ DLL(i) * MATQ(iqs(i)) * DLL(i)^T ]    *
-    ! *                      i = 1                                         *
-    ! *                                                                    *
-    ! *  IQS - set outside the routine - has either the same value         *
-    ! *        regardless of i (e.g. in case of the single-site matrices)  *
-    ! *        or is taking on the value of i => MATSYM is a cummulative   *
-    ! *        sum over MATQ[1...nsym] (e.g. in case of the BZ-integration *
-    ! *        of G)                                                       *
-    ! *                                                                    *
-    ! * CPREF = 1/NSYM  or 1/VBZ                                           *
-    ! *                                                                    *
-    ! *                                    v.popescu, munich nov. 2004     *
-    ! **********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Symmetrising the t/G matrix (or their inverses)
+  !> Author: V. Popescu
+  !> Category: single-site, numerical-tools, k-points, KKRhost 
+  !> Deprecated: False 
+  !> Symmetrising the t/G matrix (or their inverses). 
+  !> \begin{equation}
+  !> MATSYM = CPREF  \sum_{i=1}^{nsym}  [ DLL(i) * MATQ(iqs(i)) * DLL(i)^T ]
+  !> \end{equation}
+  !> `IQS` - set outside the routine - has either the same value regardless of `i` 
+  !> (e.g. in case of the single-site matrices or is taking on the value of `i` => `MATSYM`
+  !> is a cummulative sum over `MATQ[1...nsym]` (e.g. in case of the BZ-integration of G)
+  !-------------------------------------------------------------------------------
+  !> @note `CPREF` = `1/NSYM`  or `1/VBZ`
+  !> @endnote
+  !-------------------------------------------------------------------------------
+  subroutine symetrmat(nsym,cpref,dsymll,symunitary,matq,iqs,matsym,lmmaxd,nsymaxd)
+
+    use :: constants, only: czero,cone
     implicit none
     ! ..
-    ! .. Parameters ..
-    complex (kind=dp) :: czero, cone
-    parameter (czero=(0e0_dp,0e0_dp), cone=(1e0_dp,0e0_dp))
     ! ..
     ! .. Arguments ..
     integer :: lmmaxd, nsym, nsymaxd

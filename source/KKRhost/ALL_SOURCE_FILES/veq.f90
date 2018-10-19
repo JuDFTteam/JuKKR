@@ -1,16 +1,35 @@
+!------------------------------------------------------------------------------------
+!> Summary: Sets two vectors to be equal
+!> Author: 
+!> Sets two vectors to be equal
+!------------------------------------------------------------------------------------
+!> @note Jonathan Chico: This seems unnecessary, it could be replace by a call like
+!> `b(:)=a(:)`
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_veq
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  ! ************************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Sets two vectors to be equal
+  !> Author: 
+  !> Category: numerical-tools, KKRhost
+  !> Deprecated: False
+  !> Sets two vectors to be equal
+  !-------------------------------------------------------------------------------
+  !> @note Jonathan Chico: This seems unnecessary, it could be replace by a call like
+  !> `b(:)=a(:)`
+  !> @endnote
+  !-------------------------------------------------------------------------------
   subroutine veq(a, b)
-    ! ************************************************************************
+
     implicit none
 
-    real (kind=dp) :: a(*)
-    real (kind=dp) :: b(*)
+    real (kind=dp), dimension(*), intent(in) :: a  !! Input vector
+    real (kind=dp), dimension(*), intent(out) :: b !! Output vector
 
     integer :: i
 

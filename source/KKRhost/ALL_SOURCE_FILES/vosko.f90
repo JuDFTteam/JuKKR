@@ -1,35 +1,52 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculate the spin-polarized exchange-correlation potential and the spin-polarized exchange-correlation energy from ceperley-alder ( parametrization of vosko, wilk and nusair ) ( m. manninen )
+!> Author: B. Drittler
+!> Calculate the spin-polarized exchange-correlation potential and the spin-polarized 
+!> exchange-correlation energy from ceperley-alder 
+!> ( parametrization of vosko, wilk and nusair ) ( m. manninen )
+!> Use as input the density generated on an angular mesh (see subroutine `vxclm`). 
+!> `fpirho(.,1)` contains the charge density times \(4\pi\) and `fpirho(.,2)` the 
+!> spin density times \(4\pi\). Then the ex.-cor. potential and the ex.-cor. energy on those
+!> mesh points is calculated .
+!> The spin-down potential is stored in `vxc(.,1)`.
+!------------------------------------------------------------------------------------
 module mod_vosko
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculate the spin-polarized exchange-correlation potential and the spin-polarized exchange-correlation energy from ceperley-alder ( parametrization of vosko, wilk and nusair ) ( m. manninen )
+  !> Author: B. Drittler
+  !> Category: xc-potential, KKRhost
+  !> Deprecated: False 
+  !> Calculate the spin-polarized exchange-correlation potential and the spin-polarized 
+  !> exchange-correlation energy from ceperley-alder 
+  !> ( parametrization of vosko, wilk and nusair ) ( m. manninen )
+  !> Use as input the density generated on an angular mesh (see subroutine `vxclm`). 
+  !> `fpirho(.,1)` contains the charge density times \(4\pi\) and `fpirho(.,2)` the 
+  !> spin density times \(4\pi\). Then the ex.-cor. potential and the ex.-cor. energy on those
+  !> mesh points is calculated .
+  !> The spin-down potential is stored in `vxc(.,1)`.
+  !-------------------------------------------------------------------------------
   subroutine vosko(exc, fpirho, vxc, ijend, ijd)
-    ! -----------------------------------------------------------------------
-    ! calculate the spin-polarized exchange-correlation potential
-    ! and the spin-polarized exchange-correlation energy from
-    ! ceperley-alder ( parametrization of vosko, wilk and nusair )
-    ! ( m. manninen )
-    ! use as input the density generated on an angular mesh (see
-    ! subroutine vxclm) . fpirho(.,1) contains the charge density
-    ! times 4 pi and fpirho(.,2) the spin density times 4 pi .
-    ! then the ex.-cor. potential and the ex.-cor. energy on those
-    ! mesh points is calculated .
-    ! the spin-down potential is stored in vxc(.,1) .
-
-    ! b.drittler    june 1987
-    ! -----------------------------------------------------------------------
     implicit none
     ! ..
     ! .. Scalar Arguments ..
-    integer :: ijend, ijd
+    integer, intent(in) :: ijd
+    integer, intent(in) :: ijend
     ! ..
     ! .. Array Arguments ..
-    real (kind=dp) :: exc(*), fpirho(ijd, 2), vxc(ijd, 2)
+    real (kind=dp), dimension(*) :: exc !! xc-energy
+    real (kind=dp), dimension(ijd, 2), intent(out) :: vxc   !! spin dependent xc-poteantial
+    real (kind=dp), dimension(ijd, 2), intent(inout) :: fpirho !! Charge and spin density times \(4\pi\)
     ! ..
     ! .. Local Scalars ..
-    real (kind=dp) :: af, ap, atnf, atnp, beta, bf, bp, cbrt1, cbrt2, cf, cf1, cf2, cf3, cp, cp1, cp2, cp3, dbeta, dfs, duc, duc1, duc2, ec, ecf, ecp, fs, onthrd, qf, qp, rs, s, &
-      s4, smag, tf1, tp1, uc0, uc1, uc10, uc2, uc20, ucf, ucp, x, xf0, xfx, xp0, xpx
+    real (kind=dp) :: af, ap, atnf, atnp, beta, bf, bp, cbrt1, cbrt2, cf
+    real (kind=dp) :: cf1, cf2, cf3, cp, cp1, cp2, cp3, dbeta, dfs, duc, duc1, duc2 
+    real (kind=dp) :: ec, ecf, ecp, fs, onthrd, qf, qp, rs, s, s4, smag, tf1, tp1
+    real (kind=dp) :: uc0, uc1, uc10, uc2, uc20, ucf, ucp, x, xf0, xfx, xp0, xpx
     integer :: ij
     ! ..
     ! .. Intrinsic Functions ..

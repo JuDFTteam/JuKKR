@@ -1,12 +1,21 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculate the reference system for the decimation case
+!> Author: 
+!> Calculate the reference system for the decimation case. 
+!------------------------------------------------------------------------------------
 module mod_tbref
 
 contains
 
-  ! -------------------------------------------------------------------------------
-  ! SUBROUTINE: TBREF
-  !> @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to Fortran90
-  ! -------------------------------------------------------------------------------
-  subroutine tbref(ez, ielast, alatc, vref, iend, lmax, ncls, nineq, nref, cleb, rcls, atom, cls, icleb, loflm, nacls, refpot, rmtref, tolrdif, tmpdir, itmpdir, iltmp, naez, lly)
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculate the reference system for the decimation case
+  !> Author: 
+  !> Category: reference-system, structural-greensfunction, single-site, KKRhost
+  !> Deprecated: False 
+  !> Calculate the reference system for the decimation case. 
+  !-------------------------------------------------------------------------------
+  subroutine tbref(ez,ielast,alatc,vref,iend,lmax,ncls,nineq,nref,cleb,rcls,atom,   &
+    cls,icleb,loflm,nacls,refpot,rmtref,tolrdif,tmpdir,itmpdir,iltmp,naez,lly)
 
     use :: mod_mympi, only: myrank, nranks, master, distribute_work_atoms
     use :: mod_types, only: t_tgmat, t_lloyd, t_inc
@@ -24,12 +33,7 @@ contains
     use :: mod_gll13, only: gll13
 
     implicit none
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ! LMGF0D = (LMAXD+1)^2 dimension of the reference system Green
-    ! function, set up in the spin-independent non-relativstic
-    ! (l,m_l)-representation
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ! ..
+
     ! .. Input variables
     integer, intent (in) :: lly    !! LLY <> 0 : alpply Lloyds formula
     integer, intent (in) :: iend
@@ -199,8 +203,9 @@ contains
           write (1337, fmt=*) 'CLUSTER ', icls, ' at ATOM ', ic
         end if
 
-        call gll13(eryd, cleb(1,2), icleb, loflm, iend, trefll, dtrefll, atom(1,ic), refpot, rcls(1,1,icls), nacls(icls), tolrdif, alatc, 0, ginp(1,1,icls), dginp_dum, naclsmax, &
-          lly_g0tr_dum, lly)
+        call gll13(eryd,cleb(1,2),icleb,loflm,iend,trefll,dtrefll,atom(1,ic),refpot,&
+          rcls(1,1,icls),nacls(icls),tolrdif,alatc,0,ginp(1,1,icls),dginp_dum,      &
+          naclsmax,lly_g0tr_dum,lly)
 
         ! copy from dummy variable to arrays
         if (lly/=0) then
@@ -218,7 +223,8 @@ contains
         allocate (work(naclsmax*lmgf0d,lmgf0d,ncls), stat=i_stat)
         call memocc(i_stat, product(shape(work))*kind(work), 'work', 'TBREF')
 
-        call mpi_allreduce(ginp, work, idim, mpi_double_complex, mpi_sum, t_mpi_c_grid%mympi_comm_ie, ierr)
+        call mpi_allreduce(ginp,work,idim,mpi_double_complex,mpi_sum,               &
+          t_mpi_c_grid%mympi_comm_ie,ierr)
         call zcopy(idim, work, 1, ginp, 1)
 
         i_all = -product(shape(work))*kind(work)
@@ -229,7 +235,8 @@ contains
           allocate (work(naclsmax*lmgf0d,lmgf0d,ncls), stat=i_stat)
           call memocc(i_stat, product(shape(work))*kind(work), 'work', 'TBREF')
 
-          call mpi_allreduce(dginp, work, idim, mpi_double_complex, mpi_sum, t_mpi_c_grid%mympi_comm_ie, ierr)
+          call mpi_allreduce(dginp,work,idim,mpi_double_complex,mpi_sum,            &
+            t_mpi_c_grid%mympi_comm_ie,ierr)
           call zcopy(idim, work, 1, dginp, 1)
           i_all = -product(shape(work))*kind(work)
           deallocate (work, stat=i_stat)
@@ -237,7 +244,8 @@ contains
           idim = ncls
           allocate (work(nclsd,1,1), stat=i_stat)
           call memocc(i_stat, product(shape(work))*kind(work), 'work', 'TBREF')
-          call mpi_allreduce(lly_g0tr(ie,:), work, idim, mpi_double_complex, mpi_sum, t_mpi_c_grid%mympi_comm_ie, ierr)
+          call mpi_allreduce(lly_g0tr(ie,:),work,idim,mpi_double_complex,mpi_sum,   &
+            t_mpi_c_grid%mympi_comm_ie,ierr)
           call zcopy(idim, work, 1, lly_g0tr(ie,:), 1)
           i_all = -product(shape(work))*kind(work)
           deallocate (work, stat=i_stat)

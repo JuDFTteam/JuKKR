@@ -1,16 +1,11 @@
-!-------------------------------------------------------------------------------
-!> Summary: Wrapper module for the calculation of the t-matrix for the JM-KKR package
-!> Author: 
-!> Deprecated: False ! This needs to be set to True for deprecated subroutines
-!>
+!------------------------------------------------------------------------------------
+!> Summary: Wrapper module for the calculation of the T-matrix for the JM-KKR package
+!> Author: Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
+!> and many others ...
 !> The code uses the information obtained in the main0 module, this is
-!> mostly done via the get_params_1a() call, that obtains parameters of the type
-!> t_params and passes them to local variables
-!>
-!> @note
-!> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
-!> @endnote
-!-------------------------------------------------------------------------------
+!> mostly done via the `get_params_1a()` call, that obtains parameters of the type
+!> `t_params` and passes them to local variables
+!------------------------------------------------------------------------------------
 module mod_main1a
 
   private
@@ -18,12 +13,13 @@ module mod_main1a
 
 contains
 
-
-  !-------------------------------------------------------------------------------
-  !> Summary: Main driver for single-site part of the calculation
-  !> Author: 
-  !> Category: KKRhost, single-site
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  ! ----------------------------------------------------------------------------
+  !> Summary: Main subroutine regarding the calculation of the t-matrix
+  !> Author: Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
+  !> and many others ...
+  !> Category: single-site, potential, KKRhost
+  !> Deprecated: False 
+  !> Main subroutine for the calculation of the t-matrix
   !>
   !> Calls routines that compute singe-site wavefunctions and t-matrices.
   !> Two modes are impleneted for old (Born-iteration) solver without SOC or
@@ -33,7 +29,7 @@ contains
   !> @note
   !> PR: The BdG solver will only be impleneted with the newsolver for the moment.
   !> @endnote
-  !-------------------------------------------------------------------------------
+  ! ----------------------------------------------------------------------------
   subroutine main1a()
 
 #ifdef CPP_MPI
@@ -121,10 +117,14 @@ contains
     ! the main0 module, now  instead of unformatted files take parameters from
     ! types defined in wunfiles.F90
     ! -------------------------------------------------------------------------
-    call get_params_1a(t_params, ipand, natypd, irmd, naclsd, ielast, nclsd, nrefd, ncleb, nembd, naezd, lm2d, nsra, ins, nspin, icst, ipan, ircut, lmax, ncls, nineq, idoldau, lly, &
-      krel, atom, cls, icleb, loflm, nacls, refpot, irws, iend, ez, vins, irmin, itmpdir, iltmp, alat, drdi, rmesh, zat, rcls, iemxd, visp, rmtref, vref, cleb, cscl, socscale, &
-      socscl, erefldau, ueff, jeff, solver, tmpdir, deltae, tolrdif, npan_log_at, npan_eq_at, ncheb, npan_tot, ipan_intervall, rpan_intervall, rnew, ntotd, nrmaxd, r_log, ntldau, &
-      itldau, lopt, vtrel, btrel, drdirel, r2drdirel, rmrel, irmind, lmpotd, nspotd, npotd, jwsrel, zrel, itscf, natomimpd, natomimp, atomimp, iqat, naez, natyp, nref)
+    call get_params_1a(t_params,ipand,natypd,irmd,naclsd,ielast,nclsd,nrefd,ncleb,  &
+      nembd,naezd,lm2d,nsra,ins,nspin,icst,ipan,ircut,lmax,ncls,nineq,idoldau,lly,  &
+      krel,atom,cls,icleb,loflm,nacls,refpot,irws,iend,ez,vins,irmin,itmpdir,iltmp, &
+      alat,drdi,rmesh,zat,rcls,iemxd,visp,rmtref,vref,cleb,cscl,socscale,socscl,    &
+      erefldau,ueff,jeff,solver,tmpdir,deltae,tolrdif,npan_log_at,npan_eq_at,ncheb, &
+      npan_tot,ipan_intervall,rpan_intervall,rnew,ntotd,nrmaxd,r_log,ntldau,itldau, &
+      lopt,vtrel,btrel,drdirel,r2drdirel,rmrel,irmind,lmpotd,nspotd,npotd,jwsrel,   &
+      zrel,itscf,natomimpd,natomimp,atomimp,iqat,naez,natyp,nref)
 
     if (test('Vspher  ')) vins(irmind:irmd, 2:lmpotd, 1:nspotd) = 0.d0
 
@@ -138,10 +138,10 @@ contains
       open (67, file='ldau.unformatted', form='unformatted')
       read (67) itrunldau, wldau, uldau, phildau
       close (67)
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! !---------------------------------------------------------------------
       ! Calculate Coulomb matrix ULDAU it calculates U matrix only once.
       ! Remove the next IF statement to have U calculated for each iteration anew.
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! !---------------------------------------------------------------------
 
       ! IF ( ITRUNLDAU.LE.0 ) THEN
       call initldau(nsra, ntldau, itldau, lopt, ueff, jeff, erefldau, visp, nspin, rmesh, drdi, zat, ipan, ircut, phildau, uldau)
@@ -197,19 +197,22 @@ contains
         do ispin = 1, nspin
           ipot = nspin*(i1-1) + ispin
 
-          call calctmat(icst, ins, ielast, nsra, ispin, nspin, i1, ez, drdi(1,i1), rmesh(1,i1), vins(irmind,1,knosph*ipot+(1- &
-            knosph)), visp(1,ipot), zat(i1), irmin(i1), ipan(i1), ircut(0,i1), cleb, loflm, icleb, iend, solver, socscl(1,krel*i1+(1-krel)), cscl(1,krel*i1+(1- &
-            krel)), vtrel(1,i1), btrel(1,i1), rmrel(1,i1), drdirel(1,i1), r2drdirel(1,i1), zrel(i1), jwsrel(i1), idoldau, lopt(i1), wldau(1,1,1,i1), lly, deltae) ! LLY
+          call calctmat(icst,ins,ielast,nsra,ispin,nspin,i1,ez,drdi(1,i1),          &
+            rmesh(1,i1),vins(irmind,1,knosph*ipot+(1-knosph)),visp(1,ipot),zat(i1), &
+            irmin(i1),ipan(i1),ircut(0,i1),cleb,loflm,icleb,iend,solver,            &
+            socscl(1,krel*i1+(1-krel)),cscl(1,krel*i1+(1-krel)),vtrel(1,i1),        &
+            btrel(1,i1),rmrel(1,i1),drdirel(1,i1),r2drdirel(1,i1),zrel(i1),         &
+            jwsrel(i1),idoldau,lopt(i1),wldau(1,1,1,i1),lly,deltae) ! LLY
 
         end do
       end do
 
     else ! opt('NEWSOSOL')
 
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! !---------------------------------------------------------------------
       ! For calculation of Jij-tensor: create array for additional t-matrices and
       ! set atom-dependent flags which indicate if t-matrix is needed
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! !---------------------------------------------------------------------
       call init_t_dtmatjij(t_inc, t_dtmatjij)
       if (opt('XCPL    ')) then
         call set_jijcalc_flags(t_dtmatjij, natyp, natomimpd, natomimp, atomimp, iqat)
@@ -219,8 +222,9 @@ contains
       call read_angles(t_params, natyp, theta, phi)
 
       ! Interpolate potential
-      call interpolate_poten(lpotd, irmd, irnsd, natyp, ipand, lmpotd, nspotd, ntotd, ntotd*(ncheb+1), nspin, rmesh, irmin, irws, ircut, vins, visp, npan_log_at, npan_eq_at, &
-        npan_tot, rnew, ipan_intervall, vinsnew)
+      call interpolate_poten(lpotd,irmd,irnsd,natyp,ipand,lmpotd,nspotd,ntotd,      &
+        ntotd*(ncheb+1),nspin,rmesh,irmin,irws,ircut,vins,visp,npan_log_at,         &
+        npan_eq_at,npan_tot,rnew,ipan_intervall,vinsnew)
 
       do i1 = i1_start, i1_end
         do ispin = 1, nspin/(1+korbit) ! run spin-loop only if 'NOSOC' test option is not used
@@ -269,7 +273,8 @@ contains
           ioff_all(ii) = t_mpi_c_grid%ioff_pt1(ii)
         end do
         mytot = t_mpi_c_grid%ntot_pt1(t_mpi_c_grid%myrank_ie)
-        call gather_tmat(t_inc, t_tgmat, t_mpi_c_grid, ntot_all, ioff_all, mytot, t_mpi_c_grid%mympi_comm_ie, t_mpi_c_grid%nranks_ie)
+        call gather_tmat(t_inc,t_tgmat,t_mpi_c_grid,ntot_all,ioff_all,mytot,        &
+          t_mpi_c_grid%mympi_comm_ie,t_mpi_c_grid%nranks_ie)
       end if
 
       if (lly/=0 .and. .not. t_lloyd%dtmat_to_file) then
@@ -279,7 +284,7 @@ contains
           t_lloyd%tralpha = czero
           t_lloyd%dtmat = czero
         end if
-        call gather_lly_dtmat(t_mpi_c_grid, t_lloyd, lmmaxd, t_mpi_c_grid%mympi_comm_ie)
+        call gather_lly_dtmat(t_mpi_c_grid,t_lloyd,lmmaxd,t_mpi_c_grid%mympi_comm_ie)
       end if
 
       ! -------------------------------------------------------------------------
@@ -299,7 +304,8 @@ contains
             allocate (work_jij(iwork,1,1,1), stat=i_stat)
             call memocc(i_stat, product(shape(work_jij))*kind(work_jij), 'work_jij', 'main1a')
 
-            call mpi_allreduce(t_dtmatjij(i1)%dtmat_xyz, work_jij, iwork, mpi_double_complex, mpi_sum, t_mpi_c_grid%mympi_comm_ie, ierr)
+            call mpi_allreduce(t_dtmatjij(i1)%dtmat_xyz,work_jij,iwork,             &
+              mpi_double_complex, mpi_sum, t_mpi_c_grid%mympi_comm_ie, ierr)
             if (ierr/=mpi_success) stop 'error communicating t_dtmatJij'
             call zcopy(iwork, work_jij, 1, t_dtmatjij(i1)%dtmat_xyz, 1)
             i_all = -product(shape(work_jij))*kind(work_jij)
@@ -323,7 +329,8 @@ contains
     call timing_start('main1a - tbref')
 #endif
     if (lrefsys) then
-      call tbref(ez, ielast, alat, vref, iend, lmax, ncls, nineq, nref, cleb, rcls, atom, cls, icleb, loflm, nacls, refpot, rmtref, tolrdif, tmpdir, itmpdir, iltmp, naez, lly) ! LLY Lloyd
+      call tbref(ez, ielast,alat,vref,iend,lmax,ncls,nineq,nref,cleb,rcls,atom,cls, &
+        icleb,loflm,nacls,refpot,rmtref,tolrdif,tmpdir,itmpdir,iltmp,naez,lly) ! LLY Lloyd
     end if
 #ifdef CPP_TIMING
     call timing_stop('main1a - tbref')
@@ -343,12 +350,14 @@ contains
 
 #ifdef CPP_BdG
   !-------------------------------------------------------------------------------
-  !> Summary: 
-  !> Author: 
-  !> Category: KKRhost, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !> Summary: Write out inputs for tmat_newsolver (BdG develop) 
+  !> Author: Philipp Ruessmann  
+  !> Deprecated: False 
+  !> Category: input-output, unit-test, KKRhost
   !>
-  !> 
+  !> @note JC: not sure how this exactly works bur variables do not seem to need 
+  !> declaration before being run. Maybe it is a good idea to add it.                    
+  !> @endnote                                                                       
   !-------------------------------------------------------------------------------
   subroutine BdG_write_tmatnewsolver_inputs(nranks, i1, i1_start, ielast, &
     nspin, lmax, nsra, iend, lmpotd, lly, deltae, idoldau, ncleb, &

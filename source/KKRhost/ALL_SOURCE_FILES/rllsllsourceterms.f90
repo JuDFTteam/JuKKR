@@ -1,3 +1,13 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculates the source terms for the right \(J\), \(H\) and the left solutions \(J2\), \(H2\)
+!> Author: 
+!> Calculates the source terms for the right \(J\), \(H\) and the left solutions \(J2\), \(H2\)
+!> for caculations in the following approaches:
+!>
+!> * non-relativistic
+!> * scalar-relativistic
+!> * full-relativistic
+!------------------------------------------------------------------------------------
 module mod_rllsllsourceterms
   
   private
@@ -6,23 +16,19 @@ module mod_rllsllsourceterms
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: Calculation of Bessel and Hankel source terms 
+  !> Summary: Calculates the source terms for the right \(J\), \(H\) and the left solutions \(J2\), \(H2\)
   !> Author: 
-  !> Category: KKRhost, sigle-site
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !> Category: solver, single-site, KKRhost
+  !> Deprecated: False 
+  !> Calculates the source terms for the right \(J\), \(H\) and the left solutions \(J2\), \(H2\)
+  !> for caculations in the following approaches:
   !>
-  !> Constructs potential matrix (2x2 for SOC) adding SOC potential with proper form 
-  !> of small-component in the case of a scalar-relativistic calculation.
-  !> Then creates source terms needed to solve Lippmann-Schwinger equations as described 
-  !> in the PhD thesis of David Bauer.
-  !>
-  !> Calculates the source terms J,H and the left solution J2, H2 for:
-  !> - non-relativistic
-  !> - scalar-relativistic
-  !> - full-relativistic
-  !> calculations
+  !> * non-relativistic
+  !> * scalar-relativistic
+  !> * full-relativistic
   !-------------------------------------------------------------------------------
   subroutine rllsllsourceterms(nsra, nvec, eryd, rmesh, nrmax, nrmaxd, lmax, lmsize, use_fullgmat, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor)
+
     use :: mod_datatypes, only: dp
     use :: mod_constants, only: cvlight, ci
     use :: mod_beshank, only: beshank, beshank_smallcomp

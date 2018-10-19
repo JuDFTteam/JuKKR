@@ -1,14 +1,11 @@
-! -------------------------------------------------------------------------------
-! MODULE: MOD_MAIN2
-!> @brief Wrapper module for the calculation of the DFT quantities for the JM-KKR package
-!> @details The code uses the information obtained in the main0 module, this is
-!> mostly done via the get_params_2() call, that obtains parameters of the type
-!> t_params and passes them to local variables
-!> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
+!-----------------------------------------------------------------------------------
+!> Summary: Wrapper module for the calculation of the DFT quantities for the JM-KKR package
+!> Author: Philipp Ruessmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,       
 !> and many others ...
-!! @note
-!> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
-! -------------------------------------------------------------------------------
+!> The code uses the information obtained in the main0 module, this is
+!> mostly done via the `get_params_2()` call, that obtains parameters of the type
+!> `t_params` and passes them to local variables
+!-----------------------------------------------------------------------------------
 module mod_main2
 
   use :: mod_profiling
@@ -45,13 +42,19 @@ module mod_main2
 
 contains
 
-  ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: main2
-  !> @brief Main wrapper routine dealing with the calculation of the DFT quantities
-  !> @details Calculates the potential from density, exc-potential, calculate total energy, ...
-  !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
+  !-------------------------------------------------------------------------------
+  !> Summary: Main wrapper routine dealing with the calculation of the DFT quantities
+  !> Author: Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
   !> and many others ...
-  ! ----------------------------------------------------------------------------
+  !> Category: potential, xc-potential, total-energy, KKRhost
+  !> Deprecated: False 
+  !> Calculates the potential from density, exc-potential, calculate total energy, ...
+  !-------------------------------------------------------------------------------
+  !> @note JC: there seems to be an array called sum, this is dangerous as it 
+  !> can get confuder by the FORTRAN intrinsic function sum(). The name should
+  !> be changed.
+  !> @endnote
+  !-------------------------------------------------------------------------------
   subroutine main2()
 
     use :: mod_types, only: t_inc
@@ -89,8 +92,8 @@ contains
     real (kind=dp) :: rv
     real (kind=dp) :: mix
     real (kind=dp) :: sum
-    real (kind=dp) :: fpi
-    real (kind=dp) :: rfpi
+    real (kind=dp) :: fpi        !! 4\(\pi\)
+    real (kind=dp) :: rfpi       !! \(\sqrt{4\pi}\)
     real (kind=dp) :: efold
     real (kind=dp) :: efnew
     real (kind=dp) :: denef
@@ -404,7 +407,8 @@ contains
       end do
 
       open (67, file='itermdir.unformatted', form='unformatted')
-      call scfiterang(itscf, itoq, fact, mvphi, mvtet, mvgam, qmphi, qmtet, qmgam, naez, nk, erravang, naez, natyp, nmvecmax, lmmaxd)
+      call scfiterang(itscf,itoq,fact,mvphi,mvtet,mvgam,qmphi,qmtet,qmgam,naez,nk,  &
+        erravang,naez,natyp,nmvecmax,lmmaxd)
       t_params%mvevi = mvevi
       t_params%mvevief = mvevief
     end if
@@ -416,7 +420,8 @@ contains
     ! POTENTIAL PART
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     if (lrhosym) then
-      call rhosymm(lmpot, nspin, 1, natyp, rho2ns, ixipol, irws, ircut, ipan, kshape, natyp, irmd)
+      call rhosymm(lmpot,nspin,1,natyp,rho2ns,ixipol,irws,ircut,ipan,kshape,natyp,  &
+        irmd)
     end if
 
     cminst(:, :) = 0.d0
@@ -504,11 +509,11 @@ contains
     ! -------------------------------------------------------------------------
     if ((kforce==1) .and. (krel/=1)) then
       if (ins==0) then
-        call forceh(cmom, flm, lpot, nspin, 1, natyp, rho2ns, vons, rmesh, drdi, irws, zat)
-        call force(flm, flmc, lpot, nspin, 1, natyp, rhoc, vons, rmesh, drdi, irws)
+        call forceh(cmom,flm,lpot,nspin,1,natyp,rho2ns,vons,rmesh,drdi,irws,zat)
+        call force(flm,flmc,lpot,nspin,1,natyp,rhoc,vons,rmesh,drdi,irws)
       else
-        call forceh(cmom, flm, lpot, nspin, 1, natyp, rho2ns, vons, rmesh, drdi, imt, zat)
-        call force(flm, flmc, lpot, nspin, 1, natyp, rhoc, vons, rmesh, drdi, imt)
+        call forceh(cmom,flm,lpot,nspin,1,natyp,rho2ns,vons,rmesh,drdi,imt,zat)
+        call force(flm,flmc,lpot,nspin,1,natyp,rhoc,vons,rmesh,drdi,imt)
       end if
     end if
     ! -------------------------------------------------------------------------
@@ -576,9 +581,9 @@ contains
     ! -------------------------------------------------------------------------
     if ((kforce==1) .and. (krel/=1)) then
       if (kshape==0) then
-        call forcxc(flm, flmc, lpot, nspin, 1, natyp, rhoc, vons, rmesh, alat, drdi, irws, 0)
+        call forcxc(flm,flmc,lpot,nspin,1,natyp,rhoc,vons,rmesh,alat,drdi,irws,0)
       else
-        call forcxc(flm, flmc, lpot, nspin, 1, natyp, rhoc, vons, rmesh, alat, drdi, imt, 0)
+        call forcxc(flm,flmc,lpot,nspin,1,natyp,rhoc,vons,rmesh,alat,drdi,imt,0)
       end if
     end if
     ! -------------------------------------------------------------------------
@@ -939,8 +944,11 @@ contains
 
 
   ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: POTENSHIFT
-  !> @brief Adds a constant (=VSHIFT) to the potentials of atoms
+  !> Summary: Adds a constant (=VSHIFT) to the potentials of atoms                   
+  !> Author:                                                                         
+  !> Category: potential, KKRhost                                                    
+  !> Deprecated: False                                                               
+  !> Adds a constant (=VSHIFT) to the potentials of atoms                            
   ! ----------------------------------------------------------------------------
   subroutine potenshift(visp, vins, natyp, nspin, ircut, irc, irmin, ntcell, imaxsh, &
     ilm_map, ifunm, lmsp, lmpot, gsh, thetas, thesme, rfpi, rmesh, kshape, vshift, &
@@ -998,7 +1006,8 @@ contains
             visp(ir, ipot) = visp(ir, ipot) + pshiftlmr(ir, 1)
           end do
         else                       ! Full-potential
-          call convol(imt1, irc1, ntcell(ih), imaxsh(lmpot), ilm_map, ifunm, lmpot, gsh, thetas, thesme, 0.0_dp, rfpi, rmesh(1,ih), pshiftlmr, pshiftr, lmsp)
+          call convol(imt1,irc1,ntcell(ih),imaxsh(lmpot),ilm_map,ifunm,lmpot,gsh,   &
+            thetas,thesme,0.0_dp,rfpi,rmesh(1,ih),pshiftlmr,pshiftr,lmsp)
 
           do ir = 1, irc1
             visp(ir, ipot) = visp(ir, ipot) + pshiftlmr(ir, 1)

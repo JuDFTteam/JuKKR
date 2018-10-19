@@ -1,13 +1,9 @@
-
-!-------------------------------------------------------------------------------
-!> Summary: Module concerning gmat
-!> Author: 
-!> Deprecated: False ! This needs to be set to True for deprecated subroutines
-!>
-!> @note
-!> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
-!> @endnote
-!-------------------------------------------------------------------------------
+!------------------------------------------------------------------------------------
+!> Summary: Wrapper module for the calculation of the structural Greens function `gmat`
+!> Author: Philipp Ruessmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,       
+!> and many others ... 
+!> Wrapper module for the calculation of the structural Greens function `gmat` 
+!------------------------------------------------------------------------------------
 module mod_main1b
 
   private
@@ -15,14 +11,14 @@ module mod_main1b
 
 contains
 
-  !-------------------------------------------------------------------------------
-  !> Summary: Main subroutine regarding the claculation of the gmat
-  !> Author: 
-  !> Category: KKRhost, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
-  !> 
-  !-------------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------  
+  !> Summary: Main subroutine regarding the claculation of the structural Greens function `gmat`
+  !> Author: Philipp Ruessmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,     
+  !> and many others ... 
+  !> Category: structural-greensfunction, k-points, reference-system 
+  !> Deprecated: False 
+  !> Main subroutine regarding the claculation of the structural Green's function `gmat`
+  !-------------------------------------------------------------------------------  
   subroutine main1b()
 
 #ifdef CPP_MPI
@@ -210,10 +206,14 @@ contains
     ! the main0 module, now  instead of unformatted files take parameters from
     ! types defined in wunfiles.F90
     ! -------------------------------------------------------------------------
-    call get_params_1b(t_params, natypd, naezd, natyp, naclsd, ielast, npol, nclsd, nrefd, nref, nembd, naez, nsra, ins, nspin, lmaxd, ncls, lly, krel, atom, cls, nacls, refpot, &
-      ez, itmpdir, iltmp, alat, rcls, iemxd, rmtref, vref, tmpdir, nsheld, nprincd, kpoibz, atomimp, natomimpd, icc, igf, nlbasis, nrbasis, ncpa, icpa, itcpamax, cpatol, nrd, &
-      ideci, rbasis, rr, ezoa, nshell, kmrot, kaoez, ish, jsh, nsh1, nsh2, noq, iqat, nofgij, natomimp, conc, kmesh, maxmesh, nsymat, nqcalc, ratom, rrot, drotq, ijtabcalc, &
-      ijtabcalc_i, ijtabsym, ijtabsh, iqcalc, dsymll, invmod, icheck, symunitary, rc, crel, rrel, srrel, nrrel, irrel, lefttinvll, righttinvll, vacflag, nofks, volbz, bzkp, volcub, &
+    call get_params_1b(t_params,natypd,naezd,natyp,naclsd,ielast,npol,nclsd,nrefd,  &
+      nref,nembd,naez,nsra,ins,nspin,lmaxd,ncls,lly,krel,atom,cls,nacls,refpot,     &
+      ez, itmpdir, iltmp, alat, rcls, iemxd, rmtref, vref, tmpdir, nsheld, nprincd, &
+      kpoibz,atomimp,natomimpd,icc,igf,nlbasis,nrbasis,ncpa,icpa,itcpamax,cpatol,   &
+      nrd,ideci,rbasis,rr,ezoa,nshell,kmrot,kaoez,ish,jsh,nsh1,nsh2,noq,iqat,       &
+      nofgij,natomimp,conc,kmesh,maxmesh,nsymat,nqcalc,ratom,rrot,drotq,ijtabcalc,  &
+      ijtabcalc_i,ijtabsym,ijtabsh,iqcalc,dsymll,invmod,icheck,symunitary,rc,crel,  &
+      rrel,srrel,nrrel,irrel,lefttinvll,righttinvll,vacflag,nofks,volbz,bzkp,volcub,&
       wez, nembd1, lmmaxd, nsymaxd, nspindd, maxmshd, rclsimp)
 
     if (test('rhoqtest')) then
@@ -226,42 +226,41 @@ contains
     ! End of reading the variables
     ! -------------------------------------------------------------------------
 
-    ! -------------------------------------------------------------------------    !fswrt
-    ! open file to store the output for the (external) Fermi-surface program      !fswrt
-    ! this file is already partly filled with data by main0. More data            !fswrt
-    ! will be stored in                                                     !fswrt
-    ! -------------------------------------------------------------------------    !fswrt
-    if (opt('FERMIOUT') .and. myrank==master) then ! fswrt
-      open (6801, file='TBkkr_container.txt', form='formatted', position='append') ! fswrt
-    end if                         ! fswrt
-
-    ! -------------------------------------------------------------------------    !fswrt
-    ! open file for WRTGREEN option (writes green_host file for
-    ! GMATLL_GES creation in zulapi part) file is filled in ROTGLL called in kloopz
-    ! -------------------------------------------------------------------------    !fswrt
+    ! -------------------------------------------------------------------------       !fswrt
+    ! open file to store the output for the (external) Fermi-surface program          !fswrt
+    ! this file is already partly filled with data by main0. More data                !fswrt
+    ! will be stored in                                                               !fswrt
+    ! -------------------------------------------------------------------------       !fswrt
+    if (opt('FERMIOUT') .and. myrank==master) then                                    !fswrt
+      open (6801, file='TBkkr_container.txt', form='formatted', position='append')    !fswrt
+    end if                                                                            !fswrt
+    ! -------------------------------------------------------------------------       !fswrt
+    ! open file for WRTGREEN option (writes green_host file for                       !fswrt
+    ! GMATLL_GES creation in zulapi part) file is filled in ROTGLL called in kloopz   !fswrt
+    ! -------------------------------------------------------------------------       !fswrt
     if (opt('WRTGREEN') .and. myrank==master) then
       open (58, file='green_host', form='formatted')
     end if
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! If qdos option is used set IQDOSRUN so that in a first run the
     ! (t(E)-t_ref(E))^-1 matrix (tmat.qdos) and the gref matrix can be
     ! written out for one k point, in a second run these matrices are
     ! read in to continue the calculation with the k points specified by
     ! the user in the qvec.dat file
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    if (opt('qdos    ')) then      ! qdos ruess
-      iqdosrun = 0                 ! qdos ruess
-    else                           ! qdos ruess
-      iqdosrun = -1                ! qdos ruess
-    end if                         ! qdos ruess
-    ! Jump back here to continue with second run if qdos option is selected
-100 continue                       ! qdos ruess
-    ! Reset GMATLL for calculation in second run
-    if (iqdosrun==1) then          ! qdos ruess
-      do i1 = 1, nshell(0)         ! qdos ruess
-        gmatll(1:lmmaxd, 1:lmmaxd, i1) = czero ! qdos ruess
-      end do                       ! qdos ruess
-    end if                         ! qdos ruess
+    !--------------------------------------------------------------------------------
+    if (opt('qdos    ')) then                                                         ! qdos ruess
+      iqdosrun = 0                                                                    ! qdos ruess
+    else                                                                              ! qdos ruess
+      iqdosrun = -1                                                                   ! qdos ruess
+    end if                                                                            ! qdos ruess
+    ! Jump back here to continue with second run if qdos option is selected           ! qdos ruess
+100 continue                                                                          ! qdos ruess
+    ! Reset GMATLL for calculation in second run                                      ! qdos ruess
+    if (iqdosrun==1) then                                                             ! qdos ruess
+      do i1 = 1, nshell(0)                                                            ! qdos ruess
+        gmatll(1:lmmaxd, 1:lmmaxd, i1) = czero                                        ! qdos ruess
+      end do                                                                          ! qdos ruess
+    end if                                                                            ! qdos ruess
 
     if ((opt('qdos    ')) .and. (opt('deci-out'))) then
       stop 'ERROR: qdos and deci-out cannot be used simultaniously'
@@ -365,22 +364,24 @@ contains
         open (888, access='direct', recl=reclength, file='kkrflex_green', form='unformatted')
       end if
 
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      ! the following write-out has been disabled, because it was assumed to be   !no-green
-      ! obsolete with the implementation of the MPI-communicated arrays. If I am  !no-green
-      ! wrong and the write-out is needed in subsequent parts, construct a        !no-green
-      ! test-option around it so that it is only written out in this case.        !no-green
-      ! OPEN (88,ACCESS='direct',RECL=LRECGREEN,                                  !no-green
-      ! &             FILE='green',FORM='unformatted')                            !no-green
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !------------------------------------------------------------------------------
+      ! the following write-out has been disabled, because it was assumed to be       !no-green
+      ! obsolete with the implementation of the MPI-communicated arrays. If I am      !no-green
+      ! wrong and the write-out is needed in subsequent parts, construct a            !no-green
+      ! test-option around it so that it is only written out in this case.            !no-green
+      ! OPEN (88,ACCESS='direct',RECL=LRECGREEN,                                      !no-green
+      ! &             FILE='green',FORM='unformatted')                                !no-green
+      !------------------------------------------------------------------------------
       irec = 1
 
       if ((opt('KKRFLEX '))) then
         if (myrank==master) then
-          write (888, rec=irec) ielast, nspin, natomimp, natomimp, lmmaxd, korbit, (ez(ie), ie=1, ielast), (wez(ie), ie=1, ielast)
+          write (888, rec=irec) ielast, nspin, natomimp, natomimp, lmmaxd, korbit,  &
+            (ez(ie), ie=1, ielast), (wez(ie), ie=1, ielast)
           if ((opt('GPLAIN  '))) then
             ! WRITE(8888,'(I5,50000F)') IELAST,NSPIN,NATOMIMP,NATOMIMP,&
-            write (8888, *) ielast, nspin, natomimp, natomimp, (lmax+1)**2, (ez(ie), ie=1, ielast), (wez(ie), ie=1, ielast)
+            write (8888, *) ielast, nspin, natomimp, natomimp, (lmax+1)**2, (ez(ie), &
+              ie=1, ielast), (wez(ie), ie=1, ielast)
           end if
         end if
 #ifdef CPP_MPI
@@ -520,7 +521,8 @@ contains
             end do
 
             if (test('rhoqtest')) then
-              call rhoq_save_refpot(ielast, i1, nref, natyp, refpot(1:natyp), wlength, lmmaxd, ie, trefll)
+              call rhoq_save_refpot(ielast,i1,nref,natyp,refpot(1:natyp),wlength,   &
+                lmmaxd,ie,trefll)
             end if                 ! rhoqtest
 
           end do                   ! I1
@@ -603,16 +605,15 @@ contains
 
         end do                     ! i1 = 1,natyp
 
-
         if (t_lloyd%g0tr_to_file) then
           if (lly/=0 .and. ispin==1) read (682, fmt='(2E24.16)') lly_g0tr(ie) ! LLY
         else
           if (lly/=0 .and. ispin==1) lly_g0tr(ie) = t_lloyd%g0tr(ie_num) ! LLY
         end if
 
-        ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !----------------------------------------------------------------------------
         ! qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos
-        ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !----------------------------------------------------------------------------
         if (opt('readcpa ') .or. (opt('qdos    ') .and. (iqdosrun==1))) then ! qdos ruess: read in cpa t-matrix
           do isite = 1, naez                                                 ! qdos ruess
             tqdos(:, :, isite) = czero                                       ! qdos ruess
@@ -647,12 +648,16 @@ contains
 #ifdef CPP_TIMING
           call timing_start('main1b - kloopz')
 #endif
-          call kloopz1_qdos(eryd, gmatll, ins, alat, ie, igf, nshell, naez, nofks(nmesh), volbz(nmesh), bzkp(1,1,nmesh), volcub(1,nmesh), cls, nacls, naclsmax, ncls, rr, rbasis, &
-            ezoa, atom, rcls, icc, ginp, ideci, lefttinvll(1,1,1,1,ie), righttinvll(1,1,1,1,ie), vacflag, nlbasis, nrbasis, factl, natomimp, nsymat, dsymll, ratom, rrot, nsh1, &
-            nsh2, ijtabsym, ijtabsh, icheck, invmod, refpot, trefll, tsst, msst, cfctor, cfctorinv, crel, rc, rrel, srrel, irrel, nrrel, drotq, symunitary, kmrot, natyp, ncpa, &
-            icpa, itcpamax, cpatol, noq, iqat, itoq, conc, iprint, icpaflag, ispin, nspindd, tqdos, iqdosrun, & ! qdos
-            dtrefll, dtmatll, dginp, lly_grtr(ie,ispin), & ! LLY Lloyd
-            tracet(ie,ispin), lly) ! LLY Lloyd
+          call kloopz1_qdos(eryd,gmatll,ins,alat,ie,igf,nshell,naez,nofks(nmesh),   &
+            volbz(nmesh),bzkp(1,1,nmesh),volcub(1,nmesh),cls,nacls,naclsmax,ncls,rr,&
+            rbasis,ezoa,atom,rcls,icc,ginp,ideci,lefttinvll(1,1,1,1,ie),            &
+            righttinvll(1,1,1,1,ie),vacflag,nlbasis,nrbasis,factl,natomimp,nsymat,  &
+            dsymll,ratom,rrot,nsh1,nsh2,ijtabsym,ijtabsh,icheck,invmod,refpot,      &
+            trefll,tsst,msst,cfctor,cfctorinv,crel,rc,rrel,srrel,irrel,nrrel,drotq, &
+            symunitary,kmrot,natyp,ncpa,icpa,itcpamax,cpatol,noq,iqat,itoq,conc,    &
+            iprint, icpaflag, ispin, nspindd, tqdos, iqdosrun,                      & ! qdos
+            dtrefll, dtmatll, dginp, lly_grtr(ie,ispin),                            & ! LLY Lloyd
+            tracet(ie,ispin), lly)                                                    ! LLY Lloyd
 
 #ifdef CPP_TIMING
           call timing_pause('main1b - kloopz')
@@ -868,11 +873,13 @@ contains
 #endif
       if (nqdos/=1) stop 'QDOS option not compatible with XCPL'
       if (.not. opt('NEWSOSOL')) then
-        call tbxccpljij(69, ielast, ez, wez, nspindd, ncpa, naez, natyp, noq, itoq, iqat, nshell, natomimp, atomimp, ratom, nofgij, nqcalc, iqcalc, ijtabcalc, ijtabsym, ijtabsh, &
-          ish, jsh, dsymll, iprint, natyp, nsheld, lmmaxd, npol)
+        call tbxccpljij(69,ielast,ez,wez,nspindd,ncpa,naez,natyp,noq,itoq,iqat,     &
+          nshell,natomimp,atomimp,ratom,nofgij,nqcalc,iqcalc,ijtabcalc,ijtabsym,    &
+          ijtabsh,ish, jsh, dsymll, iprint, natyp, nsheld, lmmaxd, npol)
       else                         ! .NOT.OPT('NEWSOSOL'))
-        call tbxccpljijdij(naez, natyp, lmmaxd, lmgf0d, natomimpd, iemxd, theta_at, phi_at, natomimp, atomimp, nofgij, iqat, rclsimp, ijtabcalc, ijtabcalc_i, ijtabsh, ijtabsym, &
-          ielast, ez, wez, npol, dsymll, noq, itoq, ncpa)
+        call tbxccpljijdij(naez,natyp,lmmaxd,lmgf0d,natomimpd,iemxd,theta_at,phi_at,&
+          natomimp,atomimp,nofgij,iqat,rclsimp,ijtabcalc,ijtabcalc_i,ijtabsh,       &
+          ijtabsym,ielast, ez, wez, npol, dsymll, noq, itoq, ncpa)
       end if
 #ifdef CPP_TIMING
       call timing_stop('main1b - tbxccpl')
@@ -886,11 +893,11 @@ contains
     if (lcpaij .and. t_cpa%dmatproj_to_file) close (71)
 
     close (37)                     ! qdos ruess
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! Finished first qdos run. Now re-run the whole kkr1b program to
     ! calculate the GF for every energy (defined in inputcard) and
     ! kpoint (defined in qvec.dat)
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     iqdosrun = iqdosrun + 1        ! qdos ruess
     if (t_lloyd%dgref_to_file) close (681)
     if (t_lloyd%g0tr_to_file) close (682)
@@ -964,11 +971,15 @@ contains
 
         ! find DTMTRX (written out for IELAST==1), parallelized with
         ! mpi over atoms
-        call tmatimp_newsolver(irmd, nsra-1, lmax, iend, irid, lpotd, natyp, ncleb, ipand, irnsd, nfund, t_imp%ihost, ntotd, nspin, lmpotd, ncheb, lmmaxd/(1+korbit), korbit, &
-          nspotd, ielast, irmind, t_params%npan_eq, t_params%npan_log, t_imp%natomimp, r_log, vins, visp, ipan, irmin, t_imp%hostimp(1:t_imp%natomimp), &
-          t_imp%ipanimp(1:t_imp%natomimp), t_imp%irwsimp(1:t_imp%natomimp), atomimp(1:t_imp%natomimp), t_imp%irminimp(1:t_imp%natomimp), icleb, ircut, &
-          t_imp%ircutimp(0:ipand,1:t_imp%natomimp), zat, t_imp%zimp(1:t_imp%natomimp), rmesh, cleb(1,1), t_imp%rimp(1:irmd,1:t_imp%natomimp), rclsimp, ez(ie), t_imp%vispimp, &
-          t_imp%vinsimp, dtmtrx, lmmaxso)
+        call tmatimp_newsolver(irmd,nsra-1,lmax,iend,irid,lpotd,natyp,ncleb,ipand,  &
+          irnsd,nfund,t_imp%ihost,ntotd,nspin,lmpotd,ncheb,lmmaxd/(1+korbit),korbit,&
+          nspotd,ielast,irmind,t_params%npan_eq,t_params%npan_log,t_imp%natomimp,   &
+          r_log, vins, visp, ipan, irmin, t_imp%hostimp(1:t_imp%natomimp),          &
+          t_imp%ipanimp(1:t_imp%natomimp), t_imp%irwsimp(1:t_imp%natomimp),         &
+          atomimp(1:t_imp%natomimp), t_imp%irminimp(1:t_imp%natomimp), icleb, ircut,&
+          t_imp%ircutimp(0:ipand,1:t_imp%natomimp),zat,t_imp%zimp(1:t_imp%natomimp),&
+          rmesh,cleb(1,1),t_imp%rimp(1:irmd,1:t_imp%natomimp),rclsimp,ez(ie),       &
+          t_imp%vispimp,t_imp%vinsimp, dtmtrx, lmmaxso)
 
         ! compute GMATLL_GES, on master rank only
         if (ielast==3 .and. myrank==master) then

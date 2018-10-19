@@ -1,26 +1,39 @@
+!------------------------------------------------------------------------------------
+!> Summary: Printing to file the `kkrflex_hoststructure` file
+!> Author:
+!> Printing to file the `kkrflex_hoststructure` file containing geometrical information
+!> of the host structure to be used by the KKRimp program
+!------------------------------------------------------------------------------------
 module mod_writehoststructure
 
 contains
-
+  !-------------------------------------------------------------------------------
+  !> Summary: Printing to file the `kkrflex_hoststructure` file
+  !> Author: 
+  !> Category: input-output, KKRhost
+  !> Deprecated: False 
+  !> Printing to file the `kkrflex_hoststructure` file containing geometrical information
+  !> of the host structure to be used by the KKRimp program
+  !-------------------------------------------------------------------------------
   subroutine writehoststructure(bravais, nrbasis, rbasis, naezd, nembd)
     use :: mod_version_info
     use :: mod_md5sums
     use :: mod_datatypes, only: dp
     use :: mod_ioinput
     implicit none
-    ! interface
-    real (kind=dp), intent (in) :: bravais(3, 3)
-    integer, intent (in) :: nrbasis
-    integer, intent (in) :: naezd
-    integer, intent (in) :: nembd
-    real (kind=dp), intent (in) :: rbasis(3, naezd+nembd)
+    ! .. Input variables
+    integer, intent (in) :: nrbasis !! Number of basis layers of right host (repeated units)
+    integer, intent (in) :: naezd !! Number of atoms in unit cell
+    integer, intent (in) :: nembd !! Number of 'embedding' positions
+    real (kind=dp), dimension(3,3), intent (in) :: bravais !! Bravais lattice vectors
+    real (kind=dp), dimension(3, naezd+nembd), intent (in) :: rbasis !! Position of atoms in the unit cell in units of bravais vectors
 
-    ! local
+    ! .. Local variables
     integer :: iatom
     real (kind=dp) :: wght
     character (len=256) :: uio
-    integer :: ier
-    integer :: itemp1(12), it
+    integer :: ier, it
+    integer, dimension(12) :: itemp1
 
     open (unit=3463453, file='kkrflex_hoststructure.dat')
     call version_print_header(3463453, '; '//md5sum_potential//'; '//md5sum_shapefun)
@@ -44,8 +57,6 @@ contains
     end do                         ! nbasis
 
     close (3463453)
-
-
 
   end subroutine writehoststructure
 

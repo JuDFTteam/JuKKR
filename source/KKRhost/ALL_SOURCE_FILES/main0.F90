@@ -1,3 +1,22 @@
+!------------------------------------------------------------------------------------
+!> Summary: Wrapper module for the reading and setup of the JM-KKR program
+!> Author: Philipp Ruessmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
+!> and many others ...
+!> Wrapper module for the reading and setup of the JM-KKR program, it also calculates
+!> the electrostatic potential.
+!------------------------------------------------------------------------------------
+!> @todo JC: `NATOMIMP` and `NATOMIMPD` seem to be the same variable, however, right
+!> now find no way to eliminate one of them.
+!> @endtodo
+!> @todo JC: There seem to be several repeated variables doing the same, e.g. `INS`,
+!> `KNOSPH`, `KWS` and `KSHAPE`, all seem to dictate whether one has ASA or FP.
+!> Maybe it would be good to consolidate and eliminate any unnecessary variables.
+!> @endtodo
+!> @todo JC: Several variables such as `IRMD` and `IRNSD` are actually determined in
+!> the `startb1()` subroutine, maybe change the allocations such that they are done
+!> there instead
+!> @endtodo
+!------------------------------------------------------------------------------------
 
 ! set CPP_OMPSTUFF if either HYBRID or OpenMP parallelization is chosen
 #ifdef CPP_HYBRID
@@ -169,7 +188,7 @@ module mod_main0
   real (kind=dp) :: tksemi         !! Temperature of semi-core contour
   real (kind=dp) :: tolrdif        !! For distance between scattering-centers smaller than [<TOLRDIF>], free GF is set to zero. Units are Bohr radii.
   real (kind=dp) :: alatnew
-  real (kind=dp) :: volume0
+  real (kind=dp) :: volume0        !! Unit cell volume
   real (kind=dp) :: emusemi        !! Top of semicore contour in Ryd.
   real (kind=dp) :: ebotsemi       !! Bottom of semicore contour in Ryd
   real (kind=dp) :: fsemicore      !! Initial normalization factor for semicore states (approx. 1.)
@@ -183,7 +202,6 @@ module mod_main0
   logical :: lrhosym
   logical :: linipol               !! True: Initial spin polarization; false: no initial spin polarization
   logical :: lcartesian            !! True: Basis in cartesian coords; false: in internal coords
-
   ! ..
   ! .. Arrays ..
   integer, dimension (nsymaxd) :: isymindex
@@ -297,8 +315,8 @@ module mod_main0
   ! Magnetisation angles -- description see RINPUT13
   ! -------------------------------------------------------------------------
   integer :: kmrot                                    !! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
-  real (kind=dp), dimension (:), allocatable :: qmtet !! \( \theta\) angle of the agnetization with respect to the z-axis
-  real (kind=dp), dimension (:), allocatable :: qmphi !! \( \phi\) angle of the agnetization with respect to the z-axis
+  real (kind=dp), dimension (:), allocatable :: qmtet !! \( \theta\) angle of the magnetization with respect to the z-axis
+  real (kind=dp), dimension (:), allocatable :: qmphi !! \( \phi\) angle of the magnetization with respect to the z-axis
   ! -------------------------------------------------------------------------
   ! CPA variables
   ! -------------------------------------------------------------------------
@@ -406,18 +424,16 @@ module mod_main0
 
 contains
 
-
-  !-------------------------------------------------------------------------------
+  ! ----------------------------------------------------------------------------
   !> Summary: Main wrapper to handle input reading, allocation of arrays, and
   !> preparation of all the necessary data structures for a calculation.
-  !> Author: 
-  !> Category: KKRhost, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
-  !> @note Jonathan Chico: Re-wrote the module from Fixed format Fortran to
-  !> fortran90 Free Form. Also performed modifications to get rid of the inc.p
-  !> file. 22.12.2017 @endnote
-  !-------------------------------------------------------------------------------
+  !> Author: Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
+  !> and many others ...
+  !> Category: input-output, initialization, geometry, k-points, electrostatics, KKRhost
+  !> Deprecated: False
+  !> Main wrapper to handle input reading, allocation of arrays, and
+  !> preparation of all the necessary data structures for a calculation. 
+  ! ----------------------------------------------------------------------------
   subroutine main0()
 
 #ifdef CPP_OMPSTUFF
@@ -485,12 +501,12 @@ contains
     integer :: lm
     integer :: ns
     integer :: isvatom, nvatom
-    integer :: i_stat
+    integer :: i_stat, i_all
     integer :: irec
     integer :: lrecabmad
     real (kind=dp) :: zattemp
     integer :: ierr
-    real (kind=dp), allocatable :: tmp_rr(:, :)
+    real (kind=dp), dimension(:,:), allocatable :: tmp_rr
     ! for OPERATOR option
     logical :: lexist, operator_imp
 
@@ -529,24 +545,27 @@ contains
     ! -------------------------------------------------------------------------
     ! End write version info
     ! -------------------------------------------------------------------------
-
-
     ! allocate and initialize default values
     call init_all_wrapper()
 
-
     ! -------------------------------------------------------------------------
     ! Reading of the inputcard, and allocation of several arrays
-    !> @note JC: have added reading calls for the parameters that used to be in
-    !> the inc.p and can now be modified via the inputcard directly
-    !> @endnote
+    !! @note JC: have added reading calls for the parameters that used to be in
+    !! the `inc.p` and can now be modified via the `inputcard` directly
+    !! @endnote
     ! -------------------------------------------------------------------------
-    call rinput13(kte, igf, kxc, lly, icc, ins, kws, ipe, ipf, ipfe, icst, imix, lpot, naez, nemb, nref, ncls, npol, lmax, kcor, kefg, khyp, kpre, kvmad, lmmax, lmpot, ncheb, &
-      nleft, ifile, kvrel, nspin, natyp, nineq, npnt1, npnt2, npnt3, kfrozn, ishift, n1semi, n2semi, n3semi, scfsteps, insref, kshape, itdbry, nright, kforce, ivshift, khfeld, &
-      nlbasis, nrbasis, intervx, intervy, intervz, npan_eq, npan_log, npolsemi, tk, fcm, emin, emax, rmax, gmax, alat, r_log, rcutz, rcutxy, eshift, qbound, hfield, mixing, abasis, &
-      bbasis, cbasis, vconst, tksemi, tolrdif, emusemi, ebotsemi, fsemicore, lambda_xc, deltae, lrhosym, linipol, lcartesian, imt, cls, lmxc, irns, irws, ntcell, refpot, inipol, &
-      ixipol, hostimp, kfg, vbc, zperleft, zperight, bravais, rmt, zat, rws, mtfac, rmtref, rmtnew, rmtrefat, fpradius, tleft, tright, rbasis, socscale, cscl, socscl, solver, i12, &
-      i13, i19, i25, i40, txc, drotq, ncpa, itcpamax, cpatol, noq, iqat, icpa, kaoez, conc, kmrot, qmtet, qmphi, kreadldau, lopt, ueff, jeff, erefldau)
+    call rinput13(kte,igf,kxc,lly,icc,ins,kws,ipe,ipf,ipfe,icst,imix,lpot,naez,nemb,&
+      nref,ncls,npol,lmax,kcor,kefg,khyp,kpre,kvmad,lmmax,lmpot,ncheb,nleft,ifile,  &
+      kvrel,nspin,natyp,nineq,npnt1,npnt2,npnt3,kfrozn,ishift,n1semi,n2semi,n3semi, &
+      scfsteps,insref,kshape,itdbry,nright,kforce,ivshift,khfeld,nlbasis,nrbasis,   &
+      intervx,intervy,intervz,npan_eq,npan_log,npolsemi,tk,fcm,emin,emax,rmax,gmax, &
+      alat,r_log,rcutz,rcutxy,eshift,qbound,hfield,mixing,abasis,bbasis,cbasis,     &
+      vconst,tksemi,tolrdif,emusemi,ebotsemi,fsemicore,lambda_xc,deltae,lrhosym,    &
+      linipol,lcartesian,imt,cls,lmxc,irns,irws,ntcell,refpot,inipol,ixipol,hostimp,&
+      kfg,vbc,zperleft,zperight,bravais,rmt,zat,rws,mtfac,rmtref,rmtnew,rmtrefat,   &
+      fpradius,tleft,tright,rbasis,socscale,cscl,socscl,solver,i12,i13,i19,i25,i40, &
+      txc,drotq,ncpa,itcpamax,cpatol,noq,iqat,icpa,kaoez,conc,kmrot,qmtet,qmphi,    &
+      kreadldau,lopt,ueff,jeff,erefldau)
 
     ! Some consistency checks
     if ((krel<0) .or. (krel>1)) stop ' set KREL=0/1 (non/fully) relativistic mode in the inputcard'
@@ -577,89 +596,133 @@ contains
     lmpotd = (lpot+1)**2
     lmmaxso = lmmaxd               ! lmmaxd already doubled in size! (KREL+1)*LMMAXD
 
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! Allocation calls
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !> @note Jonathan Chico: The main idea here is to allocate all the needed arrays so that the inc.p
-    !> file becomes irrelevant. In principle the philosophy would be to modularize
-    !> the code such that each module has its own global variables and allocation routine
-    !> e.g. a module called CPA_control could have defined all the needed CPA variables
-    !> as well as the allocation calls, this module would be used in the needed routines
-    !> and the arrays would only be allocated if a CPA calculation is actually performed
-    !> in the current way ALL arrays are allocated which could cause an unnecessary memory
-    !> consumption
-    !> @endnote
-
+    !--------------------------------------------------------------------------------
+    !! @note Jonathan Chico: The main idea here is to allocate all the needed arrays so that the `inc.p`
+    !! file becomes irrelevant. In principle the philosophy would be to modularize
+    !! the code such that each module has its own global variables and allocation routine
+    !! e.g. a module called CPA_control could have defined all the needed CPA variables
+    !! as well as the allocation calls, this module would be used in the needed routines
+    !! and the arrays would only be allocated if a CPA calculation is actually performed
+    !! in the current way ALL arrays are allocated which could cause an unnecessary memory
+    !! consumption
+    !! @endnote
+    !--------------------------------------------------------------------------------
     ! Call to allocate the arrays associated with the potential
-    call allocate_potential(1, irmd, natypd, npotd, ipand, nfund, lmxspd, lmpotd, irmind, nspotd, nfu, irc, ncore, irmin, lmsp, lmsp1, ircut, lcore, llmsp, ititle, fpradius, visp, &
+    call allocate_potential(1,irmd,natypd,npotd,ipand,nfund,lmxspd,lmpotd,irmind,   &
+      nspotd,nfu,irc,ncore,irmin,lmsp,lmsp1,ircut,lcore,llmsp,ititle,fpradius,visp, &
       ecore, vins)
     ! Call to allocate the arrays associated with the LDA+U potential
-    call allocate_ldau_potential(1, irmd, natypd, mmaxd, nspind, itldau, wldau, uldau, phildau)
+    call allocate_ldau_potential(1,irmd,natypd,mmaxd,nspind,itldau,wldau,uldau,     &
+      phildau)
     ! Call to allocate the arrays associated with the energy
     call allocate_energies(1, iemxd, ez, dez, wez)
     ! Call to allocate the arrays associated with the relativistic corrections
-    call allocate_relativistic(1, krel, irmd, naezd, natypd, zrel, jwsrel, irshift, vtrel, btrel, rmrel, drdirel, r2drdirel, qmgam, qmgamtab, qmphitab, qmtettab)
+    call allocate_relativistic(1,krel,irmd,naezd,natypd,zrel,jwsrel,irshift,vtrel,  &
+      btrel,rmrel,drdirel,r2drdirel,qmgam,qmgamtab,qmphitab,qmtettab)
     ! Call to allocate the arrays associated with the relativistic transformations
     call allocate_rel_transformations(1, lmmaxd, nrrel, irrel, rc, crel, rrel, srrel)
     ! Call to allocate the arrays associated with the clusters
-    call allocate_clusters(1, naezd, lmaxd, ncleb, nclsd, nembd1, nsheld, naclsd, lmpotd, natomimpd, nsh1, nsh2, nacls, nshell, atomimp, atom, ezoa, icleb, jend, ratom, rclsimp, &
+    call allocate_clusters(1,naezd,lmaxd,ncleb,nclsd,nembd1,nsheld,naclsd,lmpotd,   &
+      natomimpd,nsh1,nsh2,nacls,nshell,atomimp,atom,ezoa,icleb,jend,ratom, rclsimp, &
       cmomhost, rcls)
     ! Call to allocate the arrays associated with the expansion of the Green function
-    call allocate_expansion(1, lm2d, irid, nfund, ntotd, ncleb, lassld, ncelld, nchebd, loflm, wg, cleb, yrg, thetas, thetasnew)
+    call allocate_expansion(1,lm2d,irid,nfund,ntotd,ncleb,lassld,ncelld,nchebd,     &
+      loflm,wg,cleb,yrg,thetas,thetasnew)
     ! Call to allocate the arrays associated with the integration mesh
     call allocate_mesh(1, irmd, natypd, a, b, rmesh, drdi)
     ! Call to allocate the arrays associated with the pannels for the new solver
-    call allocate_pannels(1, natypd, ntotd, ipan, npan_tot, npan_eq_at, npan_log_at, ipan_intervall, rpan_intervall)
+    call allocate_pannels(1,natypd,ntotd,ipan,npan_tot,npan_eq_at,npan_log_at,      &
+      ipan_intervall, rpan_intervall)
     ! Call to allocate misc arrays
-    call allocate_misc(1, nrd, irmd, irid, lmaxd, naezd, natypd, nfund, nrefd, iemxd, ntotd, nsheld, lmmaxd, nembd1, nchebd, ncelld, lmxspd, nspindd, nsymaxd, nprincd, ifunm, &
-      ifunm1, icheck, vref, s, rr, dror, rnew, rs, rrot, thesme, dsymll, dsymll1, lefttinvll, righttinvll)
+    call allocate_misc(1,nrd,irmd,irid,lmaxd,naezd,natypd,nfund,nrefd,iemxd,ntotd,  &
+      nsheld,lmmaxd,nembd1,nchebd,ncelld,lmxspd,nspindd,nsymaxd,nprincd,ifunm,      &
+      ifunm1,icheck,vref,s,rr,dror,rnew,rs,rrot,thesme,dsymll,dsymll1,lefttinvll,   &
+      righttinvll)
     ! Call to allocate the arrays associated with the Green function
-    call allocate_green(1, naezd, iemxd, ngshd, nsheld, lmpotd, nofgij, ish, jsh, kmesh, imaxsh, iqcalc, iofgij, jofgij, ijtabsh, ijtabsym, ijtabcalc, ijtabcalc_i, ilm_map, gsh)
+    call allocate_green(1,naezd,iemxd,ngshd,nsheld,lmpotd,nofgij,ish,jsh,kmesh,     &
+      imaxsh,iqcalc,iofgij,jofgij,ijtabsh,ijtabsym,ijtabcalc,ijtabcalc_i,ilm_map,gsh)
 
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! End of allocation calls
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
 
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! Deal with the lattice
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
 
-    call lattix99(linterface, alat, natyp, naez, conc, rws, bravais, recbv, volume0, rr, nrd, natyp)
+    call lattix99(linterface,alat,natyp,naez,conc,rws,bravais,recbv,volume0,rr,nrd, &
+     natyp)
 
     ! rr has changed, fix allocation of array to new nrd size
-    allocate (tmp_rr(3,0:nrd), stat=ierr)
-    if (ierr/=0) stop 'error allocating tmp_rr in main0'
-    tmp_rr(:, :) = rr(1:3, 0:nrd)
-    deallocate (rr, stat=ierr)
-    if (ierr/=0) stop 'error deallocating rr in main0'
-    allocate (rr(3,0:nrd), stat=ierr)
-    if (ierr/=0) stop 'error reallocating rr in main0'
-    rr(:, :) = tmp_rr(:, :)
-    deallocate (tmp_rr, stat=ierr)
-    if (ierr/=0) stop 'error allocating tmp_rr in main0'
+    allocate(tmp_rr(3,0:nrd),stat=i_stat)
+    call memocc(i_stat, product(shape(tmp_rr))*kind(tmp_rr), 'tmp_rr', 'main0')
 
-    call scalevec(lcartesian, rbasis, abasis, bbasis, cbasis, nlbasis, nrbasis, nleft, nright, zperleft, zperight, tleft, tright, linterface, naez, nemb, bravais, kaoez, noq, naez, &
-      natyp, nemb)
+    tmp_rr(:, :) = rr(1:3, 0:nrd)
+
+    i_all = -product(shape(rr))*kind(rr)
+    deallocate (rr, stat=i_stat)
+    call memocc(i_stat, i_all, 'rr', 'main0')
+
+    allocate(rr(3,0:nrd),stat=i_stat)
+    call memocc(i_stat, product(shape(rr))*kind(rr), 'rr', 'main0')
+
+    rr(:, :) = tmp_rr(:, :)
+    
+    i_all = -product(shape(tmp_rr))*kind(tmp_rr)
+    deallocate (tmp_rr, stat=i_stat)
+    call memocc(i_stat, i_all, 'tmp_rr', 'main0')
+
+    call scalevec(lcartesian,rbasis,abasis,bbasis,cbasis,nlbasis,nrbasis,nleft,     &
+      nright,zperleft,zperight,tleft,tright,linterface,naez,nemb,bravais,kaoez,noq, &
+      naez,natyp,nemb)
     ! After SCALEVEC all basis positions are in cartesian coords.
 
     nvirt = 0
     if (opt('VIRATOMS')) then
       write (1337, *) 'Calling ADDVIRATOMS'
-      call addviratoms14(linterface, nvirt, naez, naez, natyp, nemb, nemb, rbasis, .true., bravais, ncls, nineq, refpot, kaoez, noq, nref, rmtrefat, i25)
+      call addviratoms14(linterface,nvirt,naez,naez,natyp,nemb,nemb,rbasis,.true.,  &
+        bravais,ncls,nineq,refpot,kaoez,noq,nref,rmtrefat,i25)
     end if
 
-    call clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, nacls, atom, ezoa, nlbasis, nrbasis, nleft, nright, zperleft, zperight, tleft, tright, rmtref, rmtrefat, &
-      vref, refpot, nref, rcls, rcutz, rcutxy, alat, natyp, nclsd, nrd, naclsd, nrefd, nembd, linterface, nprinc)
+    call clsgen_tb(naez,nemb,nvirt,rr,rbasis,kaoez,zat,cls,ncls,nacls,atom,ezoa,    &
+      nlbasis,nrbasis,nleft,nright,zperleft,zperight,tleft,tright,rmtref,rmtrefat,  &
+      vref,refpot,nref,rcls,rcutz,rcutxy,alat,natyp,nclsd,nrd,naclsd,nrefd,nembd,   &
+      linterface,nprinc)
     ! overwrite nrefd and change allocations accordingly
-    allocate (rmtref_temp(nrefd), vref_temp(nrefd))
+    ! Allocate temporary arrays
+    allocate(rmtref_temp(nrefd),stat=i_stat)
+    call memocc(i_stat, product(shape(rmtref_temp))*kind(rmtref_temp), 'rmtref_temp', 'main0')
+    allocate(vref_temp(nrefd),stat=i_stat)
+    call memocc(i_stat, product(shape(vref_temp))*kind(vref_temp), 'vref_temp', 'main0')
+
     rmtref_temp(:) = rmtref(:)
     vref_temp(:) = vref(:)
     nrefd = nref
-    deallocate (rmtref, vref)
-    allocate (rmtref(nrefd), vref(nrefd), stat=i_stat)
+    ! Deallocate arrays
+    i_all = -product(shape(rmtref))*kind(rmtref)
+    deallocate (rmtref, stat=i_stat)
+    call memocc(i_stat, i_all, 'rmtref', 'main0')
+    i_all = -product(shape(vref))*kind(vref)
+    deallocate (vref, stat=i_stat)
+    call memocc(i_stat, i_all, 'vref', 'main0')
+   
+    ! Allocate arrays
+    allocate(rmtref(nrefd),stat=i_stat)
+    call memocc(i_stat, product(shape(rmtref))*kind(rmtref), 'rmtref', 'main0')
+    allocate(vref(nrefd),stat=i_stat)
+    call memocc(i_stat, product(shape(vref))*kind(vref), 'vref', 'main0')
+
     rmtref(:) = rmtref_temp(1:nref)
     vref(:) = vref_temp(1:nref)
-    deallocate (rmtref_temp, vref_temp)
+    ! Deallocate temporary arrays
+    i_all = -product(shape(rmtref_temp))*kind(rmtref_temp)
+    deallocate (rmtref_temp, stat=i_stat)
+    call memocc(i_stat, i_all, 'rmtref_temp', 'main0')
+    i_all = -product(shape(vref_temp))*kind(vref_temp)
+    deallocate (vref_temp, stat=i_stat)
+    call memocc(i_stat, i_all, 'vref_temp', 'main0')
 
     ! overwrite nprincd if chosen too small
     if (nprincd<nprinc) then
@@ -671,15 +734,16 @@ contains
       ! update parameter that depend on nprincd
       ndim_slabinv = nprincd*lmmaxd
       ! change allocations of arrays that have nprincd
+      i_all = -product(shape(icheck))*kind(icheck)
       deallocate (icheck, stat=i_stat)
-      call memocc(i_stat, product(shape(icheck))*kind(icheck), 'ICHECK', 'main0')
+      call memocc(i_stat, i_all, 'icheck', 'main0')
+     
       allocate (icheck(naez/nprincd,naez/nprincd), stat=i_stat)
       call memocc(i_stat, product(shape(icheck))*kind(icheck), 'ICHECK', 'main0')
       icheck = 0
       ! do not forget to update nlayerd as well!
       nlayerd = nlayer
     end if
-
 
     ! Now the clusters, reference potentials and muffin-tin radii have been set.
     ! -------------------------------------------------------------------------
@@ -702,16 +766,18 @@ contains
     if (kvrel>=1) nsra = 2
     if (kvrel>=2) nsra = 3
 
-    call testdim(nspin, naez, nemb, natyp, ins, insref, nref, irns, nlayer, krel, nspind, nprincd, knosph, irnsd, korbit)
+    call testdim(nspin,naez,nemb,natyp,ins,insref,nref,irns,nlayer,krel,nspind,     &
+      nprincd,knosph,irnsd,korbit)
 
     if (ins>0) open (19, file=i19, status='old', form='formatted')
     if (ifile==13) open (ifile, file=i13, status='old', form='formatted')
     if (icc>0) open (25, file=i25, status='unknown', form='formatted')
 
-    call startb1(ifile, 1337, 1337, ipe, krel, kws, lmax, 1, natyp, alatnew, rmtnew, rmt, ititle, imt, irc, vconst, ins, irns, fpradius, nspin, vins, irmin, kshape, ntcell, ircut, &
-      ipan, thetas, ifunm, nfu, llmsp, lmsp, e2in, vbc, dror, rs, s, visp, rws, ecore, lcore, ncore, drdi, rmesh, zat, a, b, irws, 1, lmpot, irmind, irmd, lmxspd, ipand, irid, &
-      irnsd, natyp, ncelld, nfund, nspotd, ivshift, npotd)
-
+    call startb1(ifile,1337,1337,ipe,krel,kws,lmax,1,natyp,alatnew,rmtnew,rmt,      &
+      ititle,imt,irc,vconst,ins,irns,fpradius,nspin,vins,irmin,kshape,ntcell,ircut, &
+      ipan,thetas,ifunm,nfu,llmsp,lmsp,e2in,vbc,dror,rs,s,visp,rws,ecore,lcore,     &
+      ncore,drdi,rmesh,zat,a,b,irws,1,lmpot,irmind,irmd,lmxspd,ipand,irid,irnsd,    &
+      natyp,ncelld,nfund,nspotd,ivshift, npotd)
 
     ! find md5sums for potential and shapefunction
     call get_md5sums(ins, i13, i19)
@@ -721,7 +787,8 @@ contains
     end if
 
     if (test('rhoqtest')) then
-      call rhoq_save_rmesh(natyp, irm, ipand, irmin, irws, ipan, rmesh, ntcell, ircut, r_log, npan_log, npan_eq)
+      call rhoq_save_rmesh(natyp,irm,ipand,irmin,irws,ipan,rmesh,ntcell,ircut,r_log,&
+        npan_log,npan_eq)
 
       ! check consistency
       if (opt('GREENIMP') .or. opt('WRTGREEN')) then
@@ -778,8 +845,9 @@ contains
     ! -------------------------------------------------------------------------
     if (opt('GENPOT  ')) then
       rewind (3)
-      call generalpot(3, 1, natyp, nspin, zat, alat, rmt, rmtnew, rws, rmesh, drdi, visp, irws, a, b, ins, irns, lpot, vins, qbound, irc, kshape, e2in, vbc, ecore, lcore, ncore, &
-        lmpot, irmd, irmind)
+      call generalpot(3,1,natyp,nspin,zat,alat,rmt,rmtnew,rws,rmesh,drdi,visp,irws, &
+        a,b,ins,irns,lpot,vins,qbound,irc,kshape,e2in,vbc,ecore,lcore,ncore,lmpot,  &
+        irmd,irmind)
       close (3)
     end if
     ! -------------------------------------------------------------------------
@@ -788,8 +856,9 @@ contains
     ! from startb1 moved here
     if (khfeld==1) then
       ! ---> maybe apply a magnetic field
-      call bshift_ns(irmd, irid, ipand, lmpot, npotd, natyp, nspin, ngshd, nfund, ncelld, irmind, lmxspd, kshape, irc, irmin, inipol, ntcell, imaxsh, ilm_map, lmsp, ifunm, ircut, &
-        hfield, gsh, rmesh, thesme, thetas, visp, vins)
+      call bshift_ns(irmd,irid,ipand,lmpot,npotd,natyp,nspin,ngshd,nfund,ncelld,    &
+        irmind,lmxspd,kshape,irc,irmin,inipol,ntcell,imaxsh,ilm_map,lmsp,ifunm,     &
+        ircut,hfield,gsh,rmesh,thesme,thetas,visp,vins)
     end if
     if (test('vpotout ')) then     ! ruess
       open (unit=54633163, file='test_vpotout_bshift')
@@ -859,73 +928,78 @@ contains
       ! ----------------------------------------------------------------------
       if (krel==1) then
         ! call this only if relativisitic solver is used
-        call relpotcvt(1, visp, zat, rmesh, drdi, ircut, vtrel, btrel, zrel, rmrel, jwsrel, drdirel, r2drdirel, irshift, ipand, irmd, npotd, natyp)
+        call relpotcvt(1,visp,zat,rmesh,drdi,ircut,vtrel,btrel,zrel,rmrel,jwsrel,   &
+          drdirel,r2drdirel,irshift,ipand,irmd,npotd,natyp)
       end if
     !end if ! KREL+KORBIT.EQ.1
     end if ! KREL==1 .or. opt('NEWSOSOL)
     ! -------------------------------------------------------------------------
     ! set up energy contour
-    ! -------------------------------------------------------------------------
+    !--------------------------------------------------------------------------------
     idosemicore = 0
     if (opt('SEMICORE')) idosemicore = 1
 
-    call epathtb(ez, dez, e2in, ielast, iesemicore, idosemicore, emin, emax, tk, npol, npnt1, npnt2, npnt3, ebotsemi, emusemi, tksemi, npolsemi, n1semi, n2semi, n3semi, iemxd)
+    call epathtb(ez,dez,e2in,ielast,iesemicore,idosemicore,emin,emax,tk,npol,npnt1, &
+      npnt2,npnt3,ebotsemi,emusemi,tksemi,npolsemi,n1semi,n2semi,n3semi,iemxd)
 
-    ! SUSC (BEGIN: modifications by Manuel and Benedikt)             ! susc
-    ! ! susc
-    if (opt('EMESH   ')) then      ! susc
-      ! write out the energy mesh and the corresponding                ! susc
-      ! weights to a file called 'emesh.scf'                           ! susc
-      write (*, '("main0: Runflag emesh is set.")') ! susc
-      write (*, '("       File emesh.scf will be written!")') ! susc
-      write (*, *) 'writing emesh.scf file...' ! susc
-      open (file='emesh.scf', unit=12111984, status='replace') ! susc
-      write (12111984, '(5x,i0)') ielast ! susc
-      do ie = 1, ielast            ! susc
-        write (12111984, '(4es16.8)') ez(ie), dez(ie) ! susc
-      end do                       ! susc
-      close (12111984)             ! susc
-      write (*, '("       Finished writing file emesh.scf.")') ! susc
-    end if                         ! susc
-    ! ! susc
-    ! ! susc
-    if (opt('KKRSUSC ')) then      ! susc
-      ! read in 'emesh.dat' with new energy mesh-points                ! susc
-      inquire (file='emesh.dat', exist=emeshfile) ! susc
-      write (*, '("main0: Runflag KKRSUSC is set.")') ! susc
-      if (emeshfile) then          ! susc
-        write (*, '("main0: File emesh.dat exists and will ")', advance='no') ! susc
-        write (*, '("be read in.")') ! susc
-        write (*, '("       Energy contour from inputcard ")', advance='no') ! susc
-        write (*, '("will be overwritten!")') ! susc
-        open (file='emesh.dat', unit=50) ! susc
-        read (50, *) ielast        ! susc
-        if (ielast>iemxd) stop 'ielast > iemxd!' ! susc
-        do ie = 1, ielast          ! susc
-          read (50, '(4es16.8)') ez(ie), dez(ie) ! susc
-          write (*, '(i8,4es16.8)') ie, ez(ie), dez(ie) ! susc
-        end do                     ! susc
-        close (50)                 ! susc
-        write (*, '("       Finished reading in file emesh.dat.")') ! susc
-      else                         ! susc
-        stop 'main0: Runflag KKRSUSC but cannot find file emesh.dat!' ! susc
-      end if                       ! susc
-    end if                         ! susc
-    ! ! susc
-    ! ! susc
-    ! still missing: check here whether scfsteps is > 1              ! susc
-    ! if scfsteps>1 --> option a) stop program here                ! susc
-    ! option b) set it to 1 and continue         ! susc
-    if (opt('KKRSUSC ') .and. scfsteps>1) then ! susc
-      write (*, '("main0: Runflag KKRSUSC is set ")') ! susc
-      write (*, '("but scfsteps = ",i0)') scfsteps ! susc
-      write (*, '("       Here we enforce scfsteps = 1")') ! susc
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! susc
-      scfsteps = 1                 ! susc
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! susc
-    end if                         ! susc
-    ! ! susc
-    ! SUSC (END:   modifications by Manuel and Benedikt)             ! susc
+    !--------------------------------------------------------------------------------
+    ! SUSC (BEGIN: modifications by Manuel and Benedikt)                              
+    !--------------------------------------------------------------------------------
+    !                                                                                 ! susc
+    if (opt('EMESH   ')) then                                                         ! susc
+      ! write out the energy mesh and the corresponding                               ! susc
+      ! weights to a file called 'emesh.scf'                                          ! susc
+      write (*, '("main0: Runflag emesh is set.")')                                   ! susc
+      write (*, '("       File emesh.scf will be written!")')                         ! susc
+      write (*, *) 'writing emesh.scf file...'                                        ! susc
+      open (file='emesh.scf', unit=12111984, status='replace')                        ! susc
+      write (12111984, '(5x,i0)') ielast                                              ! susc
+      do ie = 1, ielast                                                               ! susc
+        write (12111984, '(4es16.8)') ez(ie), dez(ie)                                 ! susc
+      end do                                                                          ! susc
+      close (12111984)                                                                ! susc
+      write (*, '("       Finished writing file emesh.scf.")')                        ! susc
+    end if                                                                            ! susc
+    !                                                                                 ! susc
+    !                                                                                 ! susc
+    if (opt('KKRSUSC ')) then                                                         ! susc
+      ! read in 'emesh.dat' with new energy mesh-points                               ! susc
+      inquire (file='emesh.dat', exist=emeshfile)                                     ! susc
+      write (*, '("main0: Runflag KKRSUSC is set.")')                                 ! susc
+      if (emeshfile) then                                                             ! susc
+        write (*, '("main0: File emesh.dat exists and will ")', advance='no')         ! susc
+        write (*, '("be read in.")')                                                  ! susc
+        write (*, '("       Energy contour from inputcard ")', advance='no')          ! susc
+        write (*, '("will be overwritten!")')                                         ! susc
+        open (file='emesh.dat', unit=50)                                              ! susc
+        read (50, *) ielast                                                           ! susc
+        if (ielast>iemxd) stop 'ielast > iemxd!'                                      ! susc
+        do ie = 1, ielast                                                             ! susc
+          read (50, '(4es16.8)') ez(ie), dez(ie)                                      ! susc
+          write (*, '(i8,4es16.8)') ie, ez(ie), dez(ie)                               ! susc
+        end do                                                                        ! susc
+        close (50)                                                                    ! susc
+        write (*, '("       Finished reading in file emesh.dat.")')                   ! susc
+      else                                                                            ! susc
+        stop 'main0: Runflag KKRSUSC but cannot find file emesh.dat!'                 ! susc
+      end if                                                                          ! susc
+    end if                                                                            ! susc
+    !                                                                                 ! susc
+    !                                                                                 ! susc
+    ! still missing: check here whether scfsteps is > 1                               ! susc
+    ! if scfsteps>1 --> option a) stop program here                                   ! susc
+    ! option b) set it to 1 and continue                                              ! susc
+    if (opt('KKRSUSC ') .and. scfsteps>1) then                                        ! susc
+      write (*, '("main0: Runflag KKRSUSC is set ")')                                 ! susc
+      write (*, '("but scfsteps = ",i0)') scfsteps                                    ! susc
+      write (*, '("       Here we enforce scfsteps = 1")')                            ! susc
+      !------------------------------------------------------------------------------ ! susc
+      scfsteps = 1                                                                    ! susc
+      !------------------------------------------------------------------------------ ! susc
+    end if                                                                            ! susc
+    !--------------------------------------------------------------------------------
+    ! SUSC (END:   modifications by Manuel and Benedikt)                              
+    !--------------------------------------------------------------------------------
 
     do ie = 1, ielast
       wez(ie) = -2.0_dp/pi*dez(ie)
@@ -946,14 +1020,15 @@ contains
     if (krel==1) nspin = 1
 
     call gaunt2(wg, yrg, 4*lmax)
-    call gaunt(lmax, lpot, wg, yrg, cleb, loflm, icleb, iend, jend, ncleb, lmax, lmgf0d, lmpot)
+    call gaunt(lmax,lpot,wg,yrg,cleb,loflm,icleb,iend,jend,ncleb,lmax,lmgf0d,lmpot)
 
     ! -------------------------------------------------------------------------
     ! set up of GAUNT coefficients C(l,m;l',m';l'',m'') for all
     ! nonvanishing (l'',m'')-components of the shape functions THETAS
     ! -------------------------------------------------------------------------
     if (kshape/=0) then
-      call shape_corr(lpot, natyp, gsh, ilm_map, imaxsh, lmsp, ntcell, wg, yrg, lassld, lmpot, natyp, ngshd)
+      call shape_corr(lpot,natyp,gsh,ilm_map,imaxsh,lmsp,ntcell,wg,yrg,lassld,lmpot,&
+        natyp,ngshd)
     end if
     ! -------------------------------------------------------------------------
     ! calculate Madelung constants (needed only for SCF calculations)
@@ -973,19 +1048,21 @@ contains
         ! -------------------------------------------------------------------
         ! 2D case
         ! -------------------------------------------------------------------
-        call madelung2d(lpot, yrg, wg, naez, alat, volume0, bravais, recbv, rbasis, rmax, gmax, nlbasis, nleft, zperleft, tleft, nrbasis, nright, zperight, tright, lmxspd, lassld, &
-          lpot, lmpot, nmaxd, ishld, nembd1, wlength)
+        call madelung2d(lpot,yrg,wg,naez,alat,volume0,bravais,recbv,rbasis,rmax,    &
+          gmax,nlbasis,nleft,zperleft,tleft,nrbasis,nright,zperight,tright,lmxspd,  &
+          lassld,lpot,lmpot,nmaxd,ishld,nembd1,wlength)
         write (*, *) 'Exited MADELUNG2D'
       else
         ! -------------------------------------------------------------------
         ! 3D case
         ! -------------------------------------------------------------------
         if (linterface) then
-          call getbr3(nembd1, nlbasis, alat, tleft, nrbasis, tright, bravais, recbv, volume0)
+          call getbr3(nembd1,nlbasis,alat,tleft,nrbasis,tright,bravais,recbv,volume0)
         end if
 
         write (*, *) 'Calling MADELUNG3D'
-        call madelung3d(lpot, yrg, wg, naez, alat, volume0, bravais, recbv, rbasis, rmax, gmax, naez, lmxspd, lassld, lpot, lmpot, nmaxd, ishld, nemb, wlength)
+        call madelung3d(lpot,yrg,wg,naez,alat,volume0,bravais,recbv,rbasis,rmax,    &
+          gmax,naez,lmxspd,lassld,lpot,lmpot,nmaxd,ishld,nemb,wlength)
         write (*, *) 'Exited MADELUNG3D'
       end if
 
@@ -1013,7 +1090,8 @@ contains
     ! Set up I,J pairs for ICC = -1
     ! -------------------------------------------------------------------------
     if (icc<0) then
-      call setgijtab(linterface, icc, naez, iqat, rbasis, bravais, natomimp, atomimp, rclsimp, ijtabcalc, iofgij, jofgij, nqcalc, iqcalc, natomimpd, ijtabcalc_i)
+      call setgijtab(linterface,icc,naez,iqat,rbasis,bravais,natomimp,atomimp,      &
+        rclsimp,ijtabcalc,iofgij,jofgij,nqcalc,iqcalc,natomimpd,ijtabcalc_i)
     end if
 
     ! -------------------------------------------------------------------------
@@ -1021,9 +1099,11 @@ contains
     dsymll = (0d0, 0d0)
     dsymll1 = (0d0, 0d0)
 
-    call bzkint0(nshell, naez, natyp, noq, rbasis, kaoez, icc, bravais, recbv, atomimp, rsymat, isymindex, nsymat, i25, natomimp, nsh1, nsh2, rclsimp, ratom, ijtabsym, ijtabsh, &
-      ijtabcalc, iofgij, jofgij, nofgij, ish, jsh, rrot, dsymll1, para, qmtet, qmphi, symunitary, hostimp, intervx, intervy, intervz, ielast, ez, kmesh, maxmesh, maxmshd, nsymaxd, &
-      krel+korbit, lmax, lmmaxd, kpoibz, naez, natyp, natomimpd, nsheld, nemb)
+    call bzkint0(nshell,naez,natyp,noq,rbasis,kaoez,icc,bravais,recbv,atomimp,      &
+      rsymat,isymindex,nsymat,i25,natomimp,nsh1,nsh2,rclsimp,ratom,ijtabsym,ijtabsh,&
+      ijtabcalc,iofgij,jofgij,nofgij,ish,jsh,rrot,dsymll1,para,qmtet,qmphi,         &
+      symunitary,hostimp,intervx,intervy,intervz,ielast,ez,kmesh,maxmesh,maxmshd,   &
+      nsymaxd,krel+korbit,lmax,lmmaxd,kpoibz,naez,natyp,natomimpd,nsheld,nemb)
 
     ! -------------------------------------------------------------------------
 
@@ -1088,16 +1168,18 @@ contains
     ! end fivos
     ! -------------------------------------------------------------------------
 
-    call gfmask(linterface, icheck, icc, invmod, nsh1, nsh2, naez, nshell(0), naez, nprincd)
+    call gfmask(linterface,icheck,icc,invmod,nsh1,nsh2,naez,nshell(0),naez,nprincd)
     ! -------------------------------------------------------------------------
     ! set up transformation matrices between REL/NREL representations
     ! -------------------------------------------------------------------------
     if ((krel+korbit)==1) then
-      call drvbastrans(rc, crel, rrel, srrel, nrrel, irrel, lmax+1, lmmaxd, 2*(lmax+1), lmmaxd+2*(lmax+1), mmaxd, 2*(lmax+1)*mmaxd)
+      call drvbastrans(rc,crel,rrel,srrel,nrrel,irrel,lmax+1,lmmaxd,2*(lmax+1),     &
+        lmmaxd+2*(lmax+1),mmaxd,2*(lmax+1)*mmaxd)
     end if
     if (korbit==1) then
       do ns = 1, nsymat
-        call changerep(dsymll1(1,1,ns), 'REL>RLM', dsymll(1,1,ns), lmmaxd, lmmaxd, rc, crel, rrel, 'DSYMLL', 0)
+        call changerep(dsymll1(1,1,ns),'REL>RLM',dsymll(1,1,ns),lmmaxd,lmmaxd,rc,   &
+          crel,rrel,'DSYMLL',0)
       end do
       ! DSYMLL(:,:,:)=DSYMLL1(:,:,:)
     else
@@ -1118,23 +1200,29 @@ contains
       end do
 
       do i1 = 1, naez
-        call calcrotmat(mmaxd, (krel+korbit)*3, qmphi(i1), qmtet(i1), 0.0_dp, drotq(1,1,i1), fact, lmmaxd)
+        call calcrotmat(mmaxd,(krel+korbit)*3,qmphi(i1),qmtet(i1),0.0_dp,           &
+          drotq(1,1,i1),fact,lmmaxd)
       end do
     end if
     ! -------------------------------------------------------------------------
     ! Treat decimation I/O cases
     ! -------------------------------------------------------------------------
     if (opt('deci-pot')) then
-      call outpothost(alat, ins, krel+korbit, kmrot, nspin, naez, natyp, e2in, bravais, rbasis, qmtet, qmphi, noq, kaoez, iqat, zat, conc, ipan, ircut, solver, socscl, cscl, irws, &
-        rmtnew, rws, rmesh, drdi, visp, irshift, rmrel, drdirel, vtrel, btrel, lmax, natyp, naez, ipand, irmd)
+      call outpothost(alat,ins,krel+korbit,kmrot,nspin,naez,natyp,e2in,bravais,     &
+        rbasis,qmtet,qmphi,noq,kaoez,iqat,zat,conc,ipan,ircut,solver,socscl,cscl,   &
+        irws,rmtnew,rws,rmesh,drdi,visp,irshift,rmrel,drdirel,vtrel,btrel,lmax,     &
+        natyp,naez,ipand,irmd)
     end if
     if (opt('deci-out')) then
       if (nranks>1) stop 'ERROR: deci-out does not work with MPI!'
-      call outtmathost(alat, ins, krel+korbit, kmrot, nspin, naez, lmmax, bravais, rbasis, qmtet, qmphi, e2in, tk, npol, npnt1, npnt2, npnt3)
+      call outtmathost(alat,ins,krel+korbit,kmrot,nspin,naez,lmmax,bravais,rbasis,  &
+        qmtet,qmphi,e2in,tk,npol,npnt1,npnt2,npnt3)
     end if
     if (opt('DECIMATE')) then
-      call deciopt(alat, ins, krel+korbit, kvrel, kmrot, nspin, naez, lmmax, bravais, tk, npol, npnt1, npnt2, npnt3, ez, ielast, kaoez, lefttinvll, righttinvll, vacflag, nlbasis, &
-        nrbasis, cmomhost, vref, rmtref, nref, refpot(naez), lmax, lmgf0d, lmmaxd, lm2d, nembd1, iemxd, nspindd, lmpot, natyp, irmd, ipand)
+      call deciopt(alat,ins,krel+korbit,kvrel,kmrot,nspin,naez,lmmax,bravais,tk,    &
+        npol,npnt1,npnt2,npnt3,ez,ielast,kaoez,lefttinvll,righttinvll,vacflag,      &
+        nlbasis,nrbasis,cmomhost,vref,rmtref,nref,refpot(naez),lmax,lmgf0d,lmmaxd,  &
+        lm2d,nembd1,iemxd,nspindd,lmpot,natyp,irmd,ipand)
     end if
     ! -------------------------------------------------------------------------
 
@@ -1162,7 +1250,8 @@ contains
     ! -------------------------------------------------------------------------
 
     if (opt('LDA+U   ')) then
-      call startldau(itrunldau, idoldau, kreadldau, lopt, ueff, jeff, erefldau, natyp, nspin, wldau, uldau, phildau, irws, ntldau, itldau, irmd, natyp, nspind, mmaxd)
+      call startldau(itrunldau,idoldau,kreadldau,lopt,ueff,jeff,erefldau,natyp,     &
+        nspin,wldau,uldau,phildau,irws,ntldau,itldau,irmd,natyp,nspind,mmaxd)
     end if
     ! -------------------------------------------------------------------------
     ! LDA+U
@@ -1174,8 +1263,9 @@ contains
 
     ! new solver for full-potential, spin-orbit, initialise
     if (opt('NEWSOSOL')) then
-      call create_newmesh(natyp, irmd, ipand, irid, ntotd, nfund, ncheb, ntotd*(ncheb+1), nspin, rmesh, irmin, ipan, ircut, r_log, npan_log, npan_eq, npan_log_at, npan_eq_at, &
-        npan_tot, rnew, rpan_intervall, ipan_intervall, ncelld, ntcell, thetas, thetasnew)
+      call create_newmesh(natyp,irmd,ipand,irid,ntotd,nfund,ncheb,ntotd*(ncheb+1),  &
+        nspin,rmesh,irmin,ipan,ircut,r_log,npan_log,npan_eq,npan_log_at,npan_eq_at, &
+        npan_tot,rnew,rpan_intervall,ipan_intervall,ncelld,ntcell,thetas,thetasnew)
     end if
 
     call wunfiles(npol, npnt1, npnt2, npnt3, ielast, tk, emin, emax, ez, wez, efermi, npolsemi, n1semi, n2semi, n3semi, iesemicore, tksemi, ebotsemi, emusemi, fsemicore, vins, &
@@ -1209,26 +1299,25 @@ contains
       operator_imp = .false.
     end if
 
-    if (opt('GREENIMP') .or. operator_imp) then                        ! GREENIMP
-      ! fill array dimensions and allocate arrays in t_imp             ! GREENIMP
-      call init_params_t_imp(t_imp, ipand, natyp, irmd, irid, nfund, & ! GREENIMP
-        nspin, irmind, lmpot)                                          ! GREENIMP
-      call init_t_imp(t_inc, t_imp)                                    ! GREENIMP
-      ! next read impurity potential and shapefunction                 ! GREENIMP
-      call readimppot(natomimp, ins, 1337, 0, 0, 2, nspin, lpot, &     ! GREENIMP
-        t_imp%ipanimp, t_imp%thetasimp, t_imp%ircutimp &               ! GREENIMP
-        , t_imp%irwsimp, khfeld, hfield, t_imp%vinsimp, &              ! GREENIMP
-        t_imp%vispimp, t_imp%irminimp, &                               ! GREENIMP
-        t_imp%rimp, t_imp%zimp, irmd, irnsd, irid, nfund, ipand)       ! GREENIMP
-    end if                                                             ! GREENIMP
+    if (opt('GREENIMP') .or. operator_imp) then                                       ! GREENIMP
+      ! fill array dimensions and allocate arrays in t_imp                            ! GREENIMP
+      call init_params_t_imp(t_imp,ipand,natyp,irmd,irid,nfund,nspin,irmind,lmpot)    ! GREENIMP
+      call init_t_imp(t_inc, t_imp)                                                   ! GREENIMP
+                                                                                      ! GREENIMP
+      ! next read impurity potential and shapefunction                                ! GREENIMP
+      call readimppot(natomimp,ins,1337,0,0,2,nspin,lpot,t_imp%ipanimp,             & ! GREENIMP
+        t_imp%thetasimp,t_imp%ircutimp,t_imp%irwsimp,khfeld,hfield,t_imp%vinsimp,   & ! GREENIMP
+        t_imp%vispimp,t_imp%irminimp,t_imp%rimp,t_imp%zimp,irmd,irnsd,irid,nfund,   & ! GREENIMP
+        ipand)                                                                        ! GREENIMP
+    end if                                                                            ! GREENIMP
 
 
-    if (ishift==2) then                           ! fxf
-      open (67, file='vmtzero', form='formatted') ! fxf
-      write (67, 120) vbc(1)                      ! fxf
-      close (67)                                  ! fxf
-120   format (d20.12)                             ! fxf
-    end if                                        ! fxf
+    if (ishift==2) then                                                               ! fxf
+      open (67, file='vmtzero', form='formatted')                                     ! fxf
+      write (67, 120) vbc(1)                                                          ! fxf
+      close (67)                                                                      ! fxf
+120   format (d20.12)                                                                 ! fxf
+    end if                                                                            ! fxf
 
     ! Check for inputcard consistency in case of qdos option
     if (opt('qdos    ')) then
@@ -1252,38 +1341,35 @@ contains
 
   end subroutine main0
 
-
   !-------------------------------------------------------------------------------
   !> Summary: Adds a constant (=VSHIFT) to the potentials of atoms
-  !> Author: 
-  !> Category: KKRhost, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
-  !> Includes non-spherical part and convolution with shapefunctions
+  !> Author:
+  !> Category: potential, KKRhost
+  !> Deprecated: False 
+  !> Adds a constant (=VSHIFT) to the potentials of atoms
   !-------------------------------------------------------------------------------
-  subroutine bshift_ns(irm, irid, ipand, lmpot, npotd, natyp, nspin, ngshd, nfund, ncelld, irmind, lmxspd, kshape, irc, irmin, inipol, ntcell, imaxsh, ilm_map, lmsp, ifunm, ircut, &
+  subroutine bshift_ns(irm,irid,ipand,lmpot,npotd,natyp,nspin,ngshd,nfund,ncelld,   &
+    irmind,lmxspd,kshape,irc,irmin,inipol,ntcell,imaxsh,ilm_map,lmsp, ifunm, ircut, &
     hfield, gsh, rmesh, thesme, thetas, visp, vins)
 
-    use :: global_variables, only: nspotd
-    use :: mod_convol, only: convol
-    use :: mod_rinit, only: rinit
-    use :: mod_constants, only: pi
+    use :: mod_datatypes
+    use :: constants, only: pi
     implicit none
 
-    ! Input
-    integer, intent (in) :: irm
-    integer, intent (in) :: irid
-    integer, intent (in) :: ipand
-    integer, intent (in) :: lmpot
-    integer, intent (in) :: npotd
-    integer, intent (in) :: natyp  !! Number of kinds of atoms in unit cell
-    integer, intent (in) :: nspin  !! Counter for spin directions
-    integer, intent (in) :: ngshd
-    integer, intent (in) :: nfund
-    integer, intent (in) :: ncelld
-    integer, intent (in) :: irmind
+    ! .. Input variables
+    integer, intent (in) :: irm     !! Maximum number of radial points
+    integer, intent (in) :: irid    !! Shape functions parameters in non-spherical part
+    integer, intent (in) :: ipand   !! Number of panels in non-spherical part
+    integer, intent (in) :: lmpot   !! (LPOT+1)**2
+    integer, intent (in) :: npotd   !! (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
+    integer, intent (in) :: natyp   !! Number of kinds of atoms in unit cell
+    integer, intent (in) :: nspin   !! Counter for spin directions
+    integer, intent (in) :: ngshd   !! Shape functions parameters in non-spherical part
+    integer, intent (in) :: nfund   !! Shape functions parameters in non-spherical part
+    integer, intent (in) :: ncelld  !! Number of cells (shapes) in non-spherical part
+    integer, intent (in) :: irmind  !! irmd - irnsd
     integer, intent (in) :: lmxspd
-    integer, intent (in) :: kshape !! exact treatment of WS cell
+    integer, intent (in) :: kshape  !! exact treatment of WS cell
     integer, dimension (natyp), intent (in) :: irc !! r point for potential cutting
     integer, dimension (natyp), intent (in) :: irmin !! max r for spherical treatment
     integer, dimension (natyp), intent (in) :: inipol !! initial spin polarisation
@@ -1299,11 +1385,11 @@ contains
     real (kind=dp), dimension (irid, nfund, ncelld), intent (in) :: thesme
     real (kind=dp), dimension (irid, nfund, ncelld), intent (in) :: thetas !! shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
 
-    ! Input/Output:
+    ! .. In/Out variables
     real (kind=dp), dimension (irm, npotd), intent (inout) :: visp !! Spherical part of the potential
     real (kind=dp), dimension (irmind:irm, lmpot, nspotd), intent (inout) :: vins !! Non-spherical part of the potential
 
-    ! Inside
+    ! .. Local variables
     integer :: ispin, ih, ipot, ir, lm, imt1, irc1, irmin1
     real (kind=dp) :: vshift
     real (kind=dp), dimension (irm) :: pshiftr
@@ -1335,13 +1421,11 @@ contains
             visp(ir, ipot) = visp(ir, ipot) + pshiftlmr(ir, 1)
           end do
         else                       ! Full-potential
-
-          call convol(imt1, irc1, ntcell(ih), imaxsh(lmpot), ilm_map, ifunm, lmpot, gsh, thetas, thesme, 0.0_dp, rfpi, rmesh(1,ih), pshiftlmr, pshiftr, lmsp)
-
+          call convol(imt1,irc1,ntcell(ih),imaxsh(lmpot),ilm_map,ifunm,lmpot,gsh,   &
+            thetas, thesme, 0.0_dp, rfpi, rmesh(1,ih), pshiftlmr, pshiftr, lmsp)
           do ir = 1, irc1
             visp(ir, ipot) = visp(ir, ipot) + pshiftlmr(ir, 1)
           end do
-
           do lm = 2, lmpot
             do ir = irmin1, irc1
               vins(ir, lm, ipot) = vins(ir, lm, ipot) + pshiftlmr(ir, lm)*rfpi
@@ -1357,9 +1441,8 @@ contains
   !> Summary: Set default values for misc variables for the calculation
   !> Author: Jonathan Chico
   !> Date: 22.12.2017
-  !> Category: KKRhost, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
+  !> Category: initialization, KKRhost 
+  !> Deprecated: False 
   !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
   !-------------------------------------------------------------------------------
@@ -1368,27 +1451,27 @@ contains
     use :: global_variables, only: nsheld
     implicit none
 
-    ipe = 0
-    ipf = 0
-    ipfe = 0
-    kcor = 0
-    kefg = 0
-    khyp = 0
-    kpre = 0
-    nsra = 1
-    iend = 1
-    nvirt = 0
-    kvmad = 0
-    itscf = 0
-    nsheld = 301 !! Number of blocks of the GF matrix that need to be calculated (NATYPD + off-diagonals in case of impurity)
-    invmod = 2   !! Corner band matrix inversion scheme
-    ielast = 0
-    ishift = 0
-    kfrozn = 0
-    nsymat = 0
-    nqcalc = 0
-    kforce = 0   !! Calculation of the forces
-    para = .true.
+    ipe     = 0
+    ipf     = 0
+    ipfe    = 0
+    kcor    = 0
+    kefg    = 0
+    khyp    = 0
+    kpre    = 0
+    nsra    = 1
+    iend    = 1
+    nvirt   = 0
+    kvmad   = 0
+    itscf   = 0
+    nsheld  = 301   !! Number of blocks of the GF matrix that need to be calculated (NATYPD + off-diagonals in case of impurity)
+    invmod  = 2     !! Corner band matrix inversion scheme
+    ielast  = 0
+    ishift  = 0
+    kfrozn  = 0
+    nsymat  = 0
+    nqcalc  = 0
+    kforce  = 0     !! Calculation of the forces
+    para    = .true.
     lrhosym = .false.
 
   end subroutine init_misc_variables
@@ -1397,9 +1480,8 @@ contains
   !> Summary: set default values for the relativistic variables
   !> Author: Jonathan Chico
   !> Date: 26.12.2017
-  !> Category: KKRhost, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
+  !> Category: initialization, KKRhost 
+  !> Deprecated: False 
   !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
   !-------------------------------------------------------------------------------
@@ -1408,10 +1490,10 @@ contains
     use :: global_variables, only: krel, korbit, lnc
     implicit none
 
-    krel = 0                       ! Switch for non- (or scalar-) relativistic/relativistic (Dirac) program (0/1). Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
-    kvrel = 1                      ! Scalar-relativistic calculation
-    korbit = 0                     ! No spin-orbit coupling
-    lnc = .true.                   ! Coupled equations in two spins (switches true if KREL=1 or KORBIT=1 or KNOCO=1)
+    krel    = 0       ! Switch for non- (or scalar-) relativistic/relativistic (Dirac) program (0/1). Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
+    kvrel   = 1       ! Scalar-relativistic calculation
+    korbit  = 0       ! No spin-orbit coupling
+    lnc     = .true.  ! Coupled equations in two spins (switches true if KREL=1 or KORBIT=1 or KNOCO=1)
 
   end subroutine init_relativistic_variables
 
@@ -1419,9 +1501,8 @@ contains
   !> Summary: set default values for the cluster variables
   !> Author: Jonathan Chico
   !> Date: 26.12.2017
-  !> Category: KKRhost, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
+  !> Category: initialization, KKRhost 
+  !> Deprecated: False 
   !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
   !-------------------------------------------------------------------------------
@@ -1430,12 +1511,12 @@ contains
     use :: global_variables, only: nofgij, nclsd, naclsd, natomimpd
     implicit none
 
-    nclsd = 2                      ! NAEZD + NEMBD maximum number of different TB-clusters
-    naclsd = 500                   ! Maximum number of atoms in a TB-cluster
-    nofgij = 2                     ! NATOMIMPD*NATOMIMPD+1 probably the same variable than NOFGIJD
-    natomimp = 0                   ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-    natomimpd = 150                ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-    i25 = 'scoef                                   ' ! Default name of scoef file
+    nclsd     = 2     ! NAEZD + NEMBD maximum number of different TB-clusters
+    naclsd    = 500   ! Maximum number of atoms in a TB-cluster
+    nofgij    = 2     ! NATOMIMPD*NATOMIMPD+1 probably the same variable than NOFGIJD
+    natomimp  = 0     ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+    natomimpd = 150   ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+    i25       = 'scoef                                   ' ! Default name of scoef file
 
   end subroutine init_cluster_variables
 
@@ -1443,9 +1524,8 @@ contains
   !> Summary: set default values for the I/O variables
   !> Author: Jonathan Chico
   !> Date: 26.12.2017
-  !> Category: KKRhost, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
+  !> Category: initialization, input-output, KKRhost 
+  !> Deprecated: False 
   !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
   !-------------------------------------------------------------------------------
@@ -1454,14 +1534,14 @@ contains
     use :: global_variables, only: wlength
     implicit none
 
-    igf = 0                        ! Not printing the Green functions
-    icc = 0                        ! Not printing the Green functions
-    wlength = 1                    ! Word length for direct access files, compiler dependent ifort/others (1/4)
+    igf     = 0   ! Not printing the Green functions
+    icc     = 0   ! Not printing the Green functions
+    wlength = 1   ! Word length for direct access files, compiler dependent ifort/others (1/4)
 #ifdef __GFORTRAN__
     wlength = 4
 #endif
-    i12 = '                                        '
-    i40 = '                                        '
+    i12     = '                                        '
+    i40     = '                                        '
 
   end subroutine init_io_variables
 
@@ -1469,9 +1549,8 @@ contains
   !> Summary: set default values for the unit cell variables
   !> Author: Jonathan Chico
   !> Date: 26.12.2017
-  !> Category: KKRhost, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
+  !> Category: initialization, KKRhost 
+  !> Deprecated: False 
   !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
   !-------------------------------------------------------------------------------
@@ -1480,19 +1559,19 @@ contains
     use :: global_variables, only: linterface
     implicit none
 
-    naez = 1                       ! Number of atoms in the unit cell
-    nemb = 1                       ! Number of embedded atoms
-    ncls = 1                       ! Number of clusters
-    natyp = 1                      ! Number of kinds of atoms in the unit cell
-    nineq = 1
-    alat = 1.0d0                   ! Lattice constant in a.u.
-    abasis = 1.0d0                 ! Scaling factors for rbasis
-    bbasis = 1.0d0                 ! Scaling factors for rbasis
-    cbasis = 1.0d0                 ! Scaling factors for rbasis
-    alatnew = 1.0d0
-    volume0 = 1.0d0
-    lcartesian = .false.           ! True: Basis in cartesian coords; false: in internal coords
-    linterface = .false.           ! If True a matching with semi-inifinite surfaces must be performed
+    naez        = 1       ! Number of atoms in the unit cell
+    nemb        = 1       ! Number of embedded atoms
+    ncls        = 1       ! Number of clusters
+    natyp       = 1       ! Number of kinds of atoms in the unit cell
+    nineq       = 1
+    alat        = 1.0d0   ! Lattice constant in a.u.
+    abasis      = 1.0d0   ! Scaling factors for rbasis
+    bbasis      = 1.0d0   ! Scaling factors for rbasis
+    cbasis      = 1.0d0   ! Scaling factors for rbasis
+    alatnew     = 1.0d0
+    volume0     = 1.0d0
+    lcartesian  = .false. ! True: Basis in cartesian coords; false: in internal coords
+    linterface  = .false. ! If True a matching with semi-inifinite surfaces must be performed
 
   end subroutine init_cell_variables
 
@@ -1500,9 +1579,8 @@ contains
   !> Summary: set default values for the slab calculation variables
   !> Author: Jonathan Chico
   !> Date: 26.12.2017
-  !> Category: KKRhost, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
+  !> Category: initialization, KKRhost 
+  !> Deprecated: False 
   !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
   !-------------------------------------------------------------------------------
@@ -1511,13 +1589,13 @@ contains
     use :: global_variables, only: nprincd, nlayerd
     implicit none
 
-    nleft = 1
-    nright = 1
-    nlayer = 1                     ! Number of principal layer
-    nlbasis = 0                    ! Number of basis layers of left host (repeated units)
-    nrbasis = 0                    ! Number of basis layers of right host (repeated units)
-    nprincd = 1                    ! Number of principle layers, set to a number >= NRPINC in output of main0
-    nlayerd = 1                    ! (NAEZD/NPRINCD)
+    nleft   = 1
+    nright  = 1
+    nlayer  = 1 ! Number of principal layer
+    nlbasis = 0 ! Number of basis layers of left host (repeated units)
+    nrbasis = 0 ! Number of basis layers of right host (repeated units)
+    nprincd = 1 ! Number of principle layers, set to a number >= NRPINC in output of main0
+    nlayerd = 1 ! (NAEZD/NPRINCD)
 
   end subroutine init_slab_variables
 
@@ -1525,9 +1603,8 @@ contains
   !> Summary: set default values for the energy variables
   !> Author: Jonathan Chico
   !> Date: 26.12.2017
-  !> Category: KKRhost, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
+  !> Category: initialization, KKRhost 
+  !> Deprecated: False 
   !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
   !-------------------------------------------------------------------------------
@@ -1536,32 +1613,32 @@ contains
     use :: global_variables, only: iemxd
     implicit none
 
-    lly = 0                        ! No Lloyds formula
-    kte = 1                        ! Calculate the total energy
-    npol = 7                       ! Number of poles
-    iemxd = 101                    ! Dimension for energy-dependent arrays
-    npnt1 = 7                      ! Number of points in the energy contour
-    npnt2 = 7                      ! Number of points in the energy contour
-    npnt3 = 7                      ! Number of points in the energy contour
-    n1semi = 0                     ! Number of energy points for the semicore contour
-    n2semi = 0                     ! Number of energy points for the semicore contour
-    n3semi = 0                     ! Number of energy points for the semicore contour
-    ivshift = 0
-    npolsemi = 0
-    iesemicore = 0
+    lly         = 0        ! No Lloyds formula
+    kte         = 1        ! Calculate the total energy
+    npol        = 7        ! Number of poles
+    iemxd       = 101      ! Dimension for energy-dependent arrays
+    npnt1       = 7        ! Number of points in the energy contour
+    npnt2       = 7        ! Number of points in the energy contour
+    npnt3       = 7        ! Number of points in the energy contour
+    n1semi      = 0        ! Number of energy points for the semicore contour
+    n2semi      = 0        ! Number of energy points for the semicore contour
+    n3semi      = 0        ! Number of energy points for the semicore contour
+    ivshift     = 0
+    npolsemi    = 0
+    iesemicore  = 0
     idosemicore = 0
-    tk = 800.d0                    ! Temperature
-    fcm = 20.0d0
-    e2in = 0.0d0
-    emin = -0.30d0                 ! Energies needed in EMESHT
-    emax = 0.70d0                  ! Energies needed in EMESHT
-    efermi = 0.d0                  ! Setting the Fermi energy to zero
-    eshift = 0.d0
-    tksemi = 800.d0                ! Temperature for the semi-core contour
-    emusemi = 0.0d0
-    ebotsemi = -0.5d0
+    tk        = 800.d0      ! Temperature
+    fcm       = 20.0d0
+    e2in      = 0.0d0
+    emin      = -0.30d0     ! Energies needed in EMESHT
+    emax      = 0.70d0      ! Energies needed in EMESHT
+    efermi    = 0.d0        ! Setting the Fermi energy to zero
+    eshift    = 0.d0
+    tksemi    = 800.d0      ! Temperature for the semi-core contour
+    emusemi   = 0.0d0
+    ebotsemi  = -0.5d0
     fsemicore = 0.0d0
-    deltae = (1.d-5, 0.d0)
+    deltae    = (1.d-5, 0.d0)
 
   end subroutine init_energy_variables
 
@@ -1569,9 +1646,8 @@ contains
   !> Summary: set default values for the convergence and solver variables
   !> Author: Jonathan Chico
   !> Date: 26.12.2017
-  !> Category: KKRhost, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
+  !> Category: initialization, KKRhost 
+  !> Deprecated: False 
   !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
   !-------------------------------------------------------------------------------
@@ -1580,25 +1656,25 @@ contains
     use :: global_variables, only: ishld, nmaxd, ntrefd, ntperd
     implicit none
 
-    imix = 0                       ! Straight mixing
-    ishld = 200000                 ! Paremeters for the Ewald summations
-    nmaxd = 2000000                ! Paremeters for the Ewald summations
-    ncheb = 10                     ! Number of Chebychev pannels for the new solver
-    itdbry = 10
-    ntrefd = 0                     ! Parameter in broyden subroutine MUST BE 0 for the host program
-    ntperd = 1                     ! Parameter in broyden subroutines
-    npan_eq = 30
-    npan_log = 30
-    scfsteps = 100                 ! Number of SCF steps
-    rmax = 7.0d0                   ! Ewald summation cutoff parameter for real space summation
-    gmax = 100.d0                  ! Ewald summation cutoff parameter for reciprocal space summation
-    r_log = 0.1d0
-    rcutz = 2.30d0                 ! Parameter for the screening cluster along the z-direction
-    rcutxy = 2.30d0                ! Parameter for the screening cluster along the x-y plane
-    qbound = 1.d-7                 ! Convergence parameter for the potential
-    mixing = 0.001d0               ! Magnitude of the mixing parameter
-    tolrdif = 1.0d0                ! Tolerance for r<tolrdif (a.u.) to handle vir. atoms
-    solver = 'BS        '          ! Set the BS-solver as default
+    imix      = 0             ! Straight mixing
+    ishld     = 200000        ! Paremeters for the Ewald summations
+    nmaxd     = 2000000       ! Paremeters for the Ewald summations
+    ncheb     = 10            ! Number of Chebychev pannels for the new solver
+    itdbry    = 10
+    ntrefd    = 0             ! Parameter in broyden subroutine MUST BE 0 for the host program
+    ntperd    = 1             ! Parameter in broyden subroutines
+    npan_eq   = 30
+    npan_log  = 30
+    scfsteps  = 100           ! Number of SCF steps
+    rmax      = 7.0d0         ! Ewald summation cutoff parameter for real space summation
+    gmax      = 100.d0        ! Ewald summation cutoff parameter for reciprocal space summation
+    r_log     = 0.1d0
+    rcutz     = 2.30d0        ! Parameter for the screening cluster along the z-direction
+    rcutxy    = 2.30d0        ! Parameter for the screening cluster along the x-y plane
+    qbound    = 1.d-7         ! Convergence parameter for the potential
+    mixing    = 0.001d0       ! Magnitude of the mixing parameter
+    tolrdif   = 1.0d0         ! Tolerance for r<tolrdif (a.u.) to handle vir. atoms
+    solver    = 'BS        '  ! Set the BS-solver as default
 
   end subroutine init_convergence_variables
 
@@ -1606,9 +1682,8 @@ contains
   !> Summary: set default values for the potential variables
   !> Author: Jonathan Chico
   !> Date: 26.12.2017
-  !> Category: KKRhost, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
+  !> Category: initialization, KKRhost 
+  !> Deprecated: False 
   !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
   !-------------------------------------------------------------------------------
@@ -1617,29 +1692,29 @@ contains
     use :: global_variables, only: irid, nfund, ngshd, ipand, ntotd, knosph, ncelld, nspotd, nsatypd
     implicit none
 
-    kws = 1                        ! FP/ASA potential ()
-    kxc = 2                        ! VWN potential
-    ins = 1                        ! FP/ASA calculation ()
-    icst = 2                       ! Number of Born approximation
-    irid = 350                     ! Shape functions parameters in non-spherical part
-    nref = 1                       ! Number of reference potentials
-    lpot = 3                       ! Maximum l for expansion of the potential
-    nfund = 289                    ! Shape functions parameters in non-spherical part
-    ngshd = 60000                  ! Shape functions parameters in non-spherical part
-    ipand = 50                     ! Number of panels in non-spherical part
-    ntotd = 80                     ! IPAND+30
-    ifile = 13                     ! File identifier of the potential file
-    lmpot = 16                     ! (LPOT+1)**2
-    insref = 0                     ! INS For reference potential
-    knosph = 1                     ! Switch for spherical/non-spherical(0/1) program. Same obs. as for KREL applies.
-    kshape = 2                     ! FP/ASA calculation (2/0)
-    ncelld = 1                     ! Number of cells (shapes) in non-spherical part
-    nspotd = 2                     ! Number of potentials for storing non-sph. potentials (2*KREL+(1-KREL)*NSPIND)*NSATYPD
-    nsatypd = 1                    ! (NATYPD-1)*KNOSPH+1
-    vconst = 0.d0                  ! Potential shift
-    lambda_xc = 1.0d0              ! Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
-    i13 = 'potential                               ' ! Default name of potential file
-    i19 = 'shapefun                                ' ! Default name of shapefunction file
+    kws       = 1     ! FP/ASA potential ()
+    kxc       = 2     ! VWN potential
+    ins       = 1     ! FP/ASA calculation ()
+    icst      = 2     ! Number of Born approximation
+    irid      = 350   ! Shape functions parameters in non-spherical part
+    nref      = 1     ! Number of reference potentials
+    lpot      = 3     ! Maximum l for expansion of the potential
+    nfund     = 289   ! Shape functions parameters in non-spherical part
+    ngshd     = 60000 ! Shape functions parameters in non-spherical part
+    ipand     = 50    ! Number of panels in non-spherical part
+    ntotd     = 80    ! IPAND+30
+    ifile     = 13    ! File identifier of the potential file
+    lmpot     = 16    ! (LPOT+1)**2
+    insref    = 0     ! INS For reference potential
+    knosph    = 1     ! Switch for spherical/non-spherical(0/1) program. Same obs. as for KREL applies.
+    kshape    = 2     ! FP/ASA calculation (2/0)
+    ncelld    = 1     ! Number of cells (shapes) in non-spherical part
+    nspotd    = 2     ! Number of potentials for storing non-sph. potentials (2*KREL+(1-KREL)*NSPIND)*NSATYPD
+    nsatypd   = 1     ! (NATYPD-1)*KNOSPH+1
+    vconst    = 0.d0  ! Potential shift
+    lambda_xc = 1.0d0 ! Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
+    i13       = 'potential                               ' ! Default name of potential file
+    i19       = 'shapefun                                ' ! Default name of shapefunction file
 
   end subroutine init_potential_variables
 
@@ -1647,9 +1722,8 @@ contains
   !> Summary: set default values for the angular momentum variables
   !> Author: Jonathan Chico
   !> Date: 26.12.2017
-  !> Category: KKRhost, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
+  !> Category: initialization, KKRhost 
+  !> Deprecated: False 
   !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
   !-------------------------------------------------------------------------------
@@ -1658,10 +1732,10 @@ contains
     use :: global_variables, only: ncleb, lmmaxd
     implicit none
 
-    lmax = 3                       ! Maximum l for expansion
-    ncleb = 784                    ! (LMAX*2+1)**2 * (LMAX+1)**2
-    lmmax = 16                     ! (LMAX+1)**2
-    lmmaxd = 32                    ! (KREL+KORBIT+1)*(LMAX+1)**2
+    lmax    = 3   ! Maximum l for expansion
+    ncleb   = 784 ! (LMAX*2+1)**2 * (LMAX+1)**2
+    lmmax   = 16  ! (LMAX+1)**2
+    lmmaxd  = 32  ! (KREL+KORBIT+1)*(LMAX+1)**2
 
   end subroutine init_angular_momentum_variables
 
@@ -1669,9 +1743,8 @@ contains
   !> Summary: set default values for the magnetisation variables for the calculation
   !> Author: Jonathan Chico
   !> Date: 22.12.2017
-  !> Category: KKRhost, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
+  !> Category: initialization, KKRhost 
+  !> Deprecated: False 
   !> the idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
   !-------------------------------------------------------------------------------
@@ -1680,14 +1753,14 @@ contains
     use :: global_variables, only: knoco, nspind, nspindd
     implicit none
 
-    kmrot = 0                      ! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
-    knoco = 0                      ! Collinear calculation
-    nspin = 2                      ! Spin polarised calculation
-    nspind = 2                     ! KREL+(1-KREL)*(NSPIN+1)
-    khfeld = 0                     ! No external magnetic field
-    nspindd = 1                    ! NSPIND-KORBIT
-    hfield = 0.d0                  ! External magnetic field, for initial potential shift in spin polarised case
-    linipol = .false.              ! True: Initial spin polarization; false: no initial spin polarization
+    kmrot   = 0       ! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
+    knoco   = 0       ! Collinear calculation
+    nspin   = 2       ! Spin polarised calculation
+    nspind  = 2       ! KREL+(1-KREL)*(NSPIN+1)
+    khfeld  = 0       ! No external magnetic field
+    nspindd = 1       ! NSPIND-KORBIT
+    hfield  = 0.d0    ! External magnetic field, for initial potential shift in spin polarised case
+    linipol = .false. ! True: Initial spin polarization; false: no initial spin polarization
 
   end subroutine init_magnetization_variables
 
@@ -1695,7 +1768,7 @@ contains
   !> Summary: Set default values for the CPA variables for the calculation
   !> Author: Jonathan Chico
   !> Date: 22.12.2017
-  !> Category: KKRhost, 
+  !> Category: initialization, KKRhost 
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
   !> The idea behind this kind of routine is to separate the initialization
@@ -1705,9 +1778,9 @@ contains
 
     implicit none
 
-    ncpa = 0                       ! NCPA = 0/1 CPA flag
-    itcpamax = 0                   ! Max. number of CPA iterations
-    cpatol = 1d-4                  ! Convergency tolerance for CPA-cycle
+    ncpa      = 0     ! NCPA = 0/1 CPA flag
+    itcpamax  = 0     ! Max. number of CPA iterations
+    cpatol    = 1d-4  ! Convergency tolerance for CPA-cycle
 
   end subroutine init_cpa_variables
 
@@ -1715,9 +1788,8 @@ contains
   !> Summary: Set default values for the LDA+U variables for the calculation
   !> Author: Jonathan Chico
   !> Date: 22.12.2017
-  !> Category: KKRhost, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
+  !> Category: initialization, KKRhost 
+  !> Deprecated: False 
   !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
   !-------------------------------------------------------------------------------
@@ -1725,10 +1797,10 @@ contains
 
     implicit none
 
-    ntldau = 0                     ! number of atoms on which LDA+U is applied
-    idoldau = 0                    ! flag to perform LDA+U
-    itrunldau = 0                  ! iteration index
-    kreadldau = 0                  ! LDA+U arrays available
+    ntldau    = 0 ! number of atoms on which LDA+U is applied
+    idoldau   = 0 ! flag to perform LDA+U
+    itrunldau = 0 ! iteration index
+    kreadldau = 0 ! LDA+U arrays available
 
   end subroutine init_ldau_variables
 
@@ -1736,9 +1808,8 @@ contains
   !> Summary: set default values for the mesh variables
   !> Author: Jonathan Chico
   !> Date: 26.12.2017
-  !> Category: KKRhost, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
+  !> Category: initialization, k-points, KKRhost 
+  !> Deprecated: False 
   !> The idea behind this kind of routine is to separate the initialization
   !> of variables such that one can use this to modularize the code
   !-------------------------------------------------------------------------------
@@ -1747,13 +1818,13 @@ contains
     use :: global_variables, only: nrd, irmd, irnsd, kpoibz
     implicit none
 
-    nrd = 20000                    ! Number of real space
-    irmd = 900                     ! Number of radial mesh points in (0,...,RWS)
-    irnsd = 890                    ! Number of radial mesh points in (RMT,...,RWS)
-    kpoibz = 250000                ! Number of reciprocal space vectors
-    intervx = 0                    ! Number of intervals in x-direction for k-net in IB of the BZ
-    intervy = 0                    ! Number of intervals in y-direction for k-net in IB of the BZ
-    intervz = 0                    ! Number of intervals in z-direction for k-net in IB of the BZ
+    nrd     = 20000   ! Number of real space
+    irmd    = 900     ! Number of radial mesh points in (0,...,RWS)
+    irnsd   = 890     ! Number of radial mesh points in (RMT,...,RWS)
+    kpoibz  = 250000  ! Number of reciprocal space vectors
+    intervx = 0       ! Number of intervals in x-direction for k-net in IB of the BZ
+    intervy = 0       ! Number of intervals in y-direction for k-net in IB of the BZ
+    intervz = 0       ! Number of intervals in z-direction for k-net in IB of the BZ
     maxmesh = 1
 
   end subroutine init_mesh_variables
@@ -1761,11 +1832,10 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Wrapper for initialization subroutines and allocation of test/opt arrays
-  !> Author: Philipp Rüßmann
-  !> Date: 22.08.2018
-  !> Category: KKRhost, initialization
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
+  !> Author: Philipp Ruessmann
+  !> Category: initialization, KKRhost 
+  !> Deprecated: False
+  !> Wrapper for initialization subroutines and allocation of test/opt arrays 
   !-------------------------------------------------------------------------------
   subroutine init_all_wrapper()
     use :: mod_wunfiles, only: t_params
@@ -1813,21 +1883,21 @@ contains
   end subroutine init_all_wrapper
 
 
-  !-------------------------------------------------------------------------------
-  !> Summary: Prints Version info
-  !> Author: Philipp Rüßmann
-  !> Category: KKRhost, version-control
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
-  !-------------------------------------------------------------------------------
-  subroutine print_versionserial(iunit, version1, version2, version3, version4, serialnr)
+  !-------------------------------------------------------------------------------  
+  !> Summary: Print the version info and header to the output file
+  !> Author: Philipp Ruessmann 
+  !> Category: input-output, KKRhost 
+  !> Deprecated: False 
+  !> Print the version info and header to the output file
+  !-------------------------------------------------------------------------------  
+  subroutine print_versionserial(iunit,version1,version2,version3,version4,serialnr)
     implicit none
-    integer, intent (in) :: iunit
-    character (len=*), intent (in) :: version1
-    character (len=*), intent (in) :: version2
-    character (len=*), intent (in) :: version3
-    character (len=*), intent (in) :: version4
-    character (len=*), intent (in) :: serialnr
+    integer, intent (in) :: iunit !! Unit identifier for the output file
+    character (len=*), intent (in) :: version1  !! Version of the code
+    character (len=*), intent (in) :: version2  !! Compilation option
+    character (len=*), intent (in) :: version3  !! Compilation option
+    character (len=*), intent (in) :: version4  !! Compilation option
+    character (len=*), intent (in) :: serialnr  !! File serial number
 
     write (iunit, '(1A)') '     Screened Korringa-Kohn-Rostoker Electronic Structure Code'
     write (iunit, '(1A)') '                      for Bulk and Interfaces'

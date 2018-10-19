@@ -1,11 +1,24 @@
+!------------------------------------------------------------------------------------
+!> Summary: Transforms all the basis positions into the cartesian reference system
+!> Author: 
+!> Transforms all the basis positions into the cartesian reference system
+!------------------------------------------------------------------------------------
 module mod_scalevec
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  subroutine scalevec(lcartesian, rbasis, abasis, bbasis, cbasis, nlbasis, nrbasis, nleft, nright, zperleft, zperight, tleft, tright, linterface, naez, nemb, bravais, kaoez, noq, &
-    naezd, natypd, nembd)
+  !-------------------------------------------------------------------------------
+  !> Summary: Transforms all the basis positions into the cartesian reference system
+  !> Author: 
+  !> Category: geometry, KKRhost
+  !> Deprecated: False
+  !> Transforms all the basis positions into the cartesian reference system
+  !-------------------------------------------------------------------------------
+  subroutine scalevec(lcartesian,rbasis,abasis,bbasis,cbasis,nlbasis,nrbasis,nleft, &
+    nright,zperleft,zperight,tleft,tright,linterface,naez,nemb,bravais,kaoez,noq,   &
+    naezd,natypd,nembd)
 
     implicit none
     real (kind=dp), parameter :: eps = 1e-14_dp

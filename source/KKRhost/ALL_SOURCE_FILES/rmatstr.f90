@@ -1,9 +1,21 @@
+!------------------------------------------------------------------------------------
+!> Summary: Writes structure of `real(kind=dp)` \(N\times N\) matrix \(A\)
+!> Author:
+!> Writes structure of `real(kind=dp)` \(N\times N\) matrix \(A\)
+!------------------------------------------------------------------------------------
 module mod_rmatstr
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Writes structure of `real(kind=dp)` \(N\times N\) matrix \(A\)
+  !> Author: 
+  !> Category: numerical-tools, KKRhost
+  !> Deprecated: False 
+  !> Writes structure of `real(kind=dp)` \(N\times N\) matrix \(A\)
+  !-------------------------------------------------------------------------------
   subroutine rmatstr(str, lstr, a, n, m, mlin, mcol, tolp, nfil)
     ! ********************************************************************
     ! *                                                                  *

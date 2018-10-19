@@ -1,16 +1,12 @@
-!-------------------------------------------------------------------------------
+!------------------------------------------------------------------------------------
 !> Summary: Wrapper module for the calculation of the density for the JM-KKR package
-!> Author: 
-!> Deprecated: False ! This needs to be set to True for deprecated subroutines
-!>
+!> Author: Philipp Ruessmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,        
+!> and many others ...
+!> Wrapper module for the calculation of the density for the JM-KKR package.
 !> The code uses the information obtained in the main0 module, this is
-!> mostly done via the get_params_1c() call, that obtains parameters of the type
-!> t_params and passes them to local variables
-!>
-!> @note
-!> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
-!> @endnote
-!-------------------------------------------------------------------------------
+!> mostly done via the `get_params_1c()` call, that obtains parameters of the type
+!> `t_params` and passes them to local variables
+!------------------------------------------------------------------------------------
 module mod_main1c
 
   private
@@ -18,14 +14,14 @@ module mod_main1c
 
 contains
 
-  !-------------------------------------------------------------------------------
+  !------------------------------------------------------------------------------- 
   !> Summary: Main subroutine regarding the calculation of the electronic density
-  !> Author: 
-  !> Category: KKRhost, 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
-  !> 
-  !-------------------------------------------------------------------------------
+  !> Author: Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
+  !> and many others ...
+  !> Category: communication, physical-observables, KKRhost 
+  !> Deprecated: False 
+  !> Main subroutine regarding the calculation of the electronic density
+  !------------------------------------------------------------------------------- 
   subroutine main1c()
 
 #ifdef CPP_MPI
@@ -215,11 +211,16 @@ contains
     ! the main0 module, now  instead of unformatted files take parameters from
     ! types defined in wunfiles.F90
     ! -------------------------------------------------------------------------
-    call get_params_1c(t_params, krel, naezd, natypd, ncleb, lm2d, ncheb, ipand, lmpotd, lmaxd, lmxspd, nfund, npotd, ntotd, mmaxd, iemxd, irmd, nsra, ins, nspin, nacls1, icst, &
-      kmrot, iqat, idoldau, irws, ipan, ircut, iend, icleb, loflm, jend, ifunm1, lmsp1, nfu, llmsp, lcore, ncore, ntcell, irmin, ititle, intervx, intervy, intervz, lly, itmpdir, &
-      iltmp, npan_eq_at, ipan_intervall, npan_log_at, npan_tot, ntldau, lopt, itldau, ielast, iesemicore, npol, irshift, jwsrel, zrel, itrunldau, qmtet, qmphi, conc, alat, zat, &
-      drdi, rmesh, a, b, cleb, thetas, socscale, rpan_intervall, cscl, rnew, socscl, thetasnew, efermi, erefldau, ueff, jeff, emin, emax, tk, vins, visp, ecore, drdirel, r2drdirel, &
-      rmrel, vtrel, btrel, wldau, uldau, ez, wez, phildau, tmpdir, solver, nspind, nspotd, irmind, lmaxd1, ncelld, irid, r_log, naez, natyp, lmax)
+    call get_params_1c(t_params,krel,naezd,natypd,ncleb,lm2d,ncheb,ipand,lmpotd,    &
+      lmaxd,lmxspd,nfund,npotd,ntotd,mmaxd,iemxd,irmd,nsra,ins,nspin, nacls1, icst, &
+      kmrot,iqat,idoldau,irws,ipan,ircut,iend,icleb,loflm,jend,ifunm1,lmsp1,nfu,    &
+      llmsp,lcore,ncore,ntcell,irmin,ititle,intervx,intervy,intervz,lly,itmpdir,    &
+      iltmp,npan_eq_at,ipan_intervall,npan_log_at,npan_tot,ntldau,lopt,itldau,      &
+      ielast,iesemicore,npol,irshift,jwsrel,zrel,itrunldau,qmtet,qmphi,conc,alat,   &
+      zat,drdi,rmesh,a,b,cleb,thetas,socscale,rpan_intervall,cscl,rnew,socscl,      &
+      thetasnew,efermi,erefldau,ueff,jeff,emin,emax,tk,vins,visp,ecore,drdirel,     &
+      r2drdirel,rmrel,vtrel,btrel,wldau,uldau,ez,wez,phildau,tmpdir,solver,nspind,  &
+      nspotd, irmind, lmaxd1, ncelld, irid, r_log, naez, natyp, lmax)
 
     ! -------------------------------------------------------------------------
     ! End read in variables
@@ -411,7 +412,7 @@ contains
       else
         nranks_local = 1
       end if
-      call distribute_linear_on_tasks(nranks_local, t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at, master, ntot1, ntot_pt, ioff_pt, .true., .true.)
+      call distribute_linear_on_tasks(nranks_local,t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at, master, ntot1, ntot_pt, ioff_pt, .true., .true.)
       if (t_mpi_c_grid%nranks_ie<=t_mpi_c_grid%dims(1)) then
         i1_start = ioff_pt(t_mpi_c_grid%myrank_ie) + 1
         i1_end = ioff_pt(t_mpi_c_grid%myrank_ie) + ntot_pt(t_mpi_c_grid%myrank_ie)
@@ -745,9 +746,9 @@ contains
       ! ----------------------------------------------------------------------
       chrgsemicore = 0_dp
       do i1 = 1, natyp
-        ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !----------------------------------------------------------------------------
         ! l/m_s/atom-resolved charges
-        ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !----------------------------------------------------------------------------
 
         do ispin = 1, nspinpot
           ipot = (i1-1)*nspinpot + ispin
@@ -765,9 +766,9 @@ contains
         end do
         eu(i1) = 0_dp
         edc(i1) = 0_dp
-        ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        ! Orbital magnetic moments (array initialised to 0.0_dp in rhoval)
-        ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !----------------------------------------------------------------------------
+        ! Orbital magnetic moments (array initialised to 0.0D0 in rhoval)
+        !----------------------------------------------------------------------------
         if (krel==1) then
           do ispin = 1, 3
             do l = 0, lmax + 1
@@ -793,9 +794,11 @@ contains
         ! Construct LDA+U interaction matrix for next iteration
         ! -------------------------------------------------------------------
         if (.not. opt('NEWSOSOL')) then
-          call wmatldau(ntldau, itldau, nspinpot, denmatc, lopt, ueff, jeff, uldau, wldau, eu, edc, mmaxd, npotd, natyp, nspin, lmax)
+          call wmatldau(ntldau,itldau,nspinpot,denmatc,lopt,ueff,jeff,uldau,wldau,  &
+            eu,edc,mmaxd,npotd,natyp,nspin,lmax)
         else
-          call wmatldausoc(ntldau, itldau, nspinpot, denmatn, lopt, ueff, jeff, uldau, wldau, eu, edc, mmaxd, natyp, nspin, lmax)
+          call wmatldausoc(ntldau,itldau,nspinpot,denmatn,lopt,ueff,jeff,uldau,     &
+            wldau,eu,edc,mmaxd,natyp,nspin,lmax)
         end if
         ! -> Mix old and new LDA+U interaction matrices
         call mixldau(mmaxd, nspind, natyp, natyp, nspin, lopt, wldauold, wldau)
@@ -809,7 +812,8 @@ contains
         ! -------------------------------------------------------------------
         ! Write full lda+u information in ascii file ldaupot_new
         ! -------------------------------------------------------------------
-        call wrldaupot(itrunldau, lopt, ueff, jeff, erefldau, natyp, wldau, uldau, phildau, irmd, natyp, nspind, mmaxd, irws)
+        call wrldaupot(itrunldau,lopt,ueff,jeff,erefldau,natyp,wldau,uldau,phildau, &
+          irmd,natyp,nspind,mmaxd,irws)
       end if
 
       ! -------------------------------------------------------------------
@@ -825,7 +829,8 @@ contains
       if ((krel==1) .and. lmomvec) then
         do i1 = 1, natyp
           iq = iqat(i1)
-          call mvecglobal(i1, iq, natyp, qmphi(iq), qmtet(iq), mvevi, mvevil, mvevief, natyp, lmax, nmvecmax)
+          call mvecglobal(i1,iq,natyp,qmphi(iq),qmtet(iq),mvevi,mvevil,mvevief,     &
+            natyp,lmax,nmvecmax)
         end do
       end if
 
@@ -833,7 +838,8 @@ contains
       ! write out DOS files
       ! ----------------------------------------------------------------------
       if (npol==0 .or. test('DOS     ')) then
-        call wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, emin, emax, alat, tk, nacls1, nspinpot, natyp, conc, ielast, intervx, intervy, intervz, dostot)
+        call wrldos(den,ez,wez,lmaxd1,iemxd,npotd,ititle,efermi,emin,emax,alat,tk,  &
+          nacls1,nspinpot,natyp,conc,ielast,intervx,intervy,intervz,dostot)
       end if
 
       ! ----------------------------------------------------------------------
@@ -867,8 +873,9 @@ contains
       ! ----------------------------------------------------------------------
       ! Store density information in derived data type t_params to be used in main2
       ! ----------------------------------------------------------------------
-      call save_density(t_params, rho2ns, r2nef, rhoc, denef, denefat, espv, ecore, idoldau, lopt, eu, edc, chrgsemicore, rhoorb, ecorerel, nkcore, kapcore, krel, natyp, npotd, &
-        irmd, lmpotd, lmaxd1)
+      call save_density(t_params,rho2ns,r2nef,rhoc,denef,denefat,espv,ecore,idoldau,&
+        lopt,eu,edc,chrgsemicore,rhoorb,ecorerel,nkcore,kapcore,krel,natyp,npotd,   &
+        irmd,lmpotd,lmaxd1)
 
       if (test('den-asci')) then
         open (67, file='densitydn.ascii', form='formatted')

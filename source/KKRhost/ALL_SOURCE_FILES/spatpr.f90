@@ -1,21 +1,29 @@
+!------------------------------------------------------------------------------------
+!> Summary: Computes the triple product between three vectors to calculate a volume
+!> Author:
+!> Computes the triple product between three vectors to calculate a volume
+!------------------------------------------------------------------------------------
 module mod_spatpr
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  ! ************************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Computes the triple product between three vectors to calculate a volume
+  !> Author: 
+  !> Category: numerical-tools, KKRhost
+  !> Deprecated: False 
+  !> Computes the triple product between three vectors to calculate a volume
+  !-------------------------------------------------------------------------------
   subroutine spatpr(a, b, c, v)
-    ! ************************************************************************
-    ! SPATPR COMPUTES THE SPATIAL PRODUCT OF THREE VECTORS A,B AND C
-    ! RETURNING IT INTO V: V=AXB.C.
-    ! ------------------------------------------------------------------------
 
+    implicit none
 
-    real (kind=dp), intent (in) :: a(*)
-    real (kind=dp), intent (in) :: b(*)
-    real (kind=dp), intent (in) :: c(*)
-    real (kind=dp), intent (out) :: v
+    real (kind=dp), dimension(*), intent (in) :: a !! Input vector
+    real (kind=dp), dimension(*), intent (in) :: b !! Input vector
+    real (kind=dp), dimension(*), intent (in) :: c !! Input vector
+    real (kind=dp), intent (out) :: v !! volumne
 
     v = 0.0e0_dp
     v = v + c(1)*(a(2)*b(3)-a(3)*b(2))

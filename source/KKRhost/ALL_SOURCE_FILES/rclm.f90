@@ -1,52 +1,87 @@
+!------------------------------------------------------------------------------------
+!> Summary: Transform matrix to spherical harmonics representation.
+!> Author: Ph. Mavropoulos
+!> Transform matrix to spherical harmonics representation.
+!>
+!> * (KEY=1) From real to complex spherical harmonics basis
+!> * (KEY=1) From complex to real spherical harmonics basis
+!>
+!> Transformation matrix is \(A\): \(Y_{real} = A  Y_{cmplx} \)
+!> \begin{equation}
+!> A= 
+!> \begin{bmatrix} I\frac{i}{\sqrt{2}} & 0 & -J\frac{i}{\sqrt{2}} \\ 0 & 1 & 0 \\ J\frac{1}{\sqrt{2}} & 0 & I\frac{1}{\sqrt{2}}\end{bmatrix}
+!>\end{equation}
+!> (of dimension \(2l+1\)), where \(I\) is the \(l\times l\) unit matrix,
+!> \(J\) is the \(l\times l\) antidiagonal unit matrix 
+!> \begin{equation}
+!> J =
+!> \begin{bmatrix} 0 & 0 & 1 \\ 0 & 1 & 0 \\ 1 & 0 & 0 \end{bmatrix}
+!> \( A_{mm'} = \int Y_{lm} Y^{c *}_{lm'} d\Omega\)
+!> \end{equation}
+!> Transformation rule: Complex --> Real (VC --> VR)
+!> \begin{equation}
+!> VR_{mm'} = \sum_{m1,m2} A_{m,m1} VC_{m1,m2} A^*_{m'm2} 
+!> \end{equation}
+!> with
+!> \begin{equation}
+!> VC_{m1,m2} = \int Y^{c *}_{m2} V Y^{c}_{m1} 
+!> \end{equation}
+!> LDIM corresponds to the dimension of the array `VMAT` as `VMAT(2*LDIM+1,2*LDIM+1)`.
+!> LL is the angular momentum l, corresponding to the part of `VMAT` used -- `VMAT(2*LL+1,2*LL+1)` 
+!> Result returns in again in `VMAT` (original `VMAT` is destroyed) 
+!------------------------------------------------------------------------------------
+!> @warning Original `VMAT` is destroyed.
+!> @endwarning
+!------------------------------------------------------------------------------------
 module mod_rclm
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Transform matrix to spherical harmonics representation.
+  !> Author: Ph. Mavropoulos
+  !> Category: special-functions, lda+u, numerical-tools, KKRhost
+  !> Deprecated: False 
+  !> Transform matrix to spherical harmonics representation.
+  !>
+  !> * (KEY=1) From real to complex spherical harmonics basis
+  !> * (KEY=1) From complex to real spherical harmonics basis
+  !>
+  !> Transformation matrix is \(A\): \(Y_{real} = A  Y_{cmplx} \)
+  !> \begin{equation}
+  !> A= 
+  !> \begin{bmatrix} I\frac{i}{\sqrt{2}} & 0 & -J\frac{i}{\sqrt{2}} \\ 0 & 1 & 0 \\ J\frac{1}{\sqrt{2}} & 0 & I\frac{1}{\sqrt{2}}\end{bmatrix}
+  !>\end{equation}
+  !> (of dimension \(2l+1\)), where \(I\) is the \(l\times l\) unit matrix,
+  !> \(J\) is the \(l\times l\) antidiagonal unit matrix 
+  !> \begin{equation}
+  !> J =
+  !> \begin{bmatrix} 0 & 0 & 1 \\ 0 & 1 & 0 \\ 1 & 0 & 0 \end{bmatrix}
+  !> \end{equation}
+  !> \( A_{mm'} = \int Y_{lm} Y^{c *}_{lm'} d\Omega\)
+  !> Transformation rule: Complex --> Real (VC --> VR)
+  !> \begin{equation}
+  !> VR_{mm'} = \sum_{m1,m2} A_{m,m1} VC_{m1,m2} A^*_{m'm2} 
+  !> \end{equation}
+  !> with
+  !> \begin{equation}
+  !> VC_{m1,m2} = \int Y^{c *}_{m2} V Y^{c}_{m1} 
+  !> \end{equation}
+  !> LDIM corresponds to the dimension of the array `VMAT` as `VMAT(2*LDIM+1,2*LDIM+1)`.
+  !> LL is the angular momentum l, corresponding to the part of `VMAT` used -- `VMAT(2*LL+1,2*LL+1)` 
+  !> Result returns in again in `VMAT` (original `VMAT` is destroyed) 
+  !-------------------------------------------------------------------------------
+  !> @warning Original `VMAT` is destroyed.
+  !> @endwarning
+  !-------------------------------------------------------------------------------
   subroutine rclm(key, ll, ldim, vmat)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * Transform complex matrix VMAT:                                     *
-    ! * - From real to complex spherical harmonics basis (KEY=1)           *
-    ! * - From complex to real spherical harmonics basis (KEY=2)           *
-    ! *                                                                    *
-    ! * Transformation matrix is A: Yreal = A * Ycmplx                     *
-    ! *                                                                    *
-    ! *       || I*i/sqrt(2)     0      J*(-i)/sqrt(2)  ||                 *
-    ! *   A = ||      0          1            0         ||                 *
-    ! *       || J*1/sqrt(2)     0      I*1/sqrt(2)     ||                 *
-    ! *                                                                    *
-    ! * (of dimension (2l+1)), where I is the l*l unit matrix,             *
-    ! * J is the l*l antidiagonal unit matrix                              *
-    ! *                                                                    *
-    ! *     || 0 0 1 ||                                                    *
-    ! * J = || 0 1 0 ||                                                    *
-    ! *     || 1 0 0 ||                                                    *
-    ! *                                                                    *
-    ! * A_{mm'} = Int Y_{lm} Y^{c *}_{lm'} d\Omega                         *
-    ! *                                                                    *
-    ! * Transformation rule:                                               *
-    ! * Complex --> Real (VC --> VR) :                                     *
-    ! *                                                                    *
-    ! * VR_{mm'} = Sum_{m1,m2} A_{m,m1} VC_{m1,m2} A^*_{m'm2}              *
-    ! * with VC_{m1,m2} = Int Y^{c *}_{m2} V Y^{c}_{m1}                    *
-    ! *                                                                    *
-    ! * LDIM corresponds to the dimension of the array VMAT as             *
-    ! * VMAT(2*LDIM+1,2*LDIM+1).                                           *
-    ! * LL is the angular momentum l, corresponding to the part            *
-    ! *    of VMAT used -- VMAT(2*LL+1,2*LL+1)                             *
-    ! *                                                                    *
-    ! * Result returns in again in VMAT (original VMAT is destroyed).      *
-    ! *                                                                    *
-    ! *                                ph. mavropoulos, juelich 2004       *
-    ! **********************************************************************
+
     use :: mod_cinit
+    use :: constants, only: cone,ci,czero
     implicit none
     real (kind=dp), parameter :: eps = 1.0e-12_dp
-    ! ..
-    complex (kind=dp) :: cone, ci, czero
-    parameter (cone=(1e0_dp,0e0_dp), ci=(0e0_dp,1e0_dp), czero=(0e0_dp,0e0_dp))
     ! ..
     integer :: ldim, key, ll
     complex (kind=dp) :: vmat(2*ldim+1, 2*ldim+1)

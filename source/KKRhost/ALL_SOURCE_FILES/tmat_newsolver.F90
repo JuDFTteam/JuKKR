@@ -1,3 +1,8 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculation of the t-matrix for the new solver
+!> Author: 
+!> Calculation of the t-matrix for the new solver
+!------------------------------------------------------------------------------------
 module mod_tmatnewsolver
 
   implicit none
@@ -5,11 +10,10 @@ module mod_tmatnewsolver
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: Calculation of the t-matrix using the NEWSOSOL
+  !> Summary: Calculation of the t-matrix for the new solver
   !> Author: 
-  !> Category: KKRhost, sigle-site
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
+  !> Category: solver, single-site, KKRhost
+  !> Deprecated: False 
   !> Constructs potential matrix (2x2 for SOC) adding SOC potential with proper form 
   !> of small-component in the case of a scalar-relativistic calculation.
   !> Then creates source terms needed to solve Lippmann-Schwinger equations as described 
@@ -351,9 +355,11 @@ contains
 
         if (nsra==2) then
           if (use_sratrick==0) then
-            call vllmatsra(vnspll1(:,:,:,ith), vnspll(:,:,:,ith), rnew, lmmaxso, irmdnew, nrmaxd, eryd, lmax, 0, 'Ref=0')
+            call vllmatsra(vnspll1(:,:,:,ith),vnspll(:,:,:,ith),rnew,lmmaxso,       &
+              irmdnew,nrmaxd,eryd,lmax,0,'Ref=0')
           else if (use_sratrick==1) then
-            call vllmatsra(vnspll1(:,:,:,ith), vnspll(:,:,:,ith), rnew, lmmaxso, irmdnew, nrmaxd, eryd, lmax, 0, 'Ref=Vsph')
+            call vllmatsra(vnspll1(:,:,:,ith),vnspll(:,:,:,ith),rnew,lmmaxso,       &
+              irmdnew,nrmaxd,eryd,lmax,0,'Ref=Vsph')
           end if
         else
           vnspll(:, :, :, ith) = vnspll1(:, :, :, ith)
@@ -554,7 +560,8 @@ contains
         alpha0 = czero             ! LLY
         aux = czero                ! LLY
         call zgeinv1(alphall, alpha0, aux, ipiv, lmmaxso)
-        call zgemm('N', 'N', lmmaxso, lmmaxso, lmmaxso, cone, alpha0, lmmaxso, dalphall, lmmaxso, czero, aux, lmmaxso) ! LLY
+        call zgemm('N','N',lmmaxso,lmmaxso,lmmaxso,cone,alpha0,lmmaxso,dalphall,    &
+          lmmaxso,czero,aux,lmmaxso) ! LLY
         ! Trace of AUX
         tralpha = czero            ! LLY
         do lm1 = 1, lmmaxso
@@ -570,24 +577,28 @@ contains
       end if
 
       ! Calculate additional t-matrices for Jij-tensor calculation
-      if (t_dtmatjij_at%calculate .or. (t_wavefunctions%isave_wavefun(i1,ie)>0 .and. (t_wavefunctions%save_rllleft .or. t_wavefunctions%save_sllleft)) .or. ((test('rhoqtest') .and. &
-        ie==2) .and. (i1==mu0))) then ! rhoqtest
+      if (t_dtmatjij_at%calculate .or. (t_wavefunctions%isave_wavefun(i1,ie)>0 .and.&
+         (t_wavefunctions%save_rllleft .or. t_wavefunctions%save_sllleft)) .or.     &
+         ((test('rhoqtest') .and. ie==2) .and. (i1==mu0))) then ! rhoqtest
         ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         ! Calculate the left-hand side solution this needs to be done for the
         ! calculation of t-matrices for Jij tensor or if wavefunctions should be saved
         ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         ! Contruct the spin-orbit coupling hamiltonian and add to potential
-        call spinorbit_ham(lmax, lmsize, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpot, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
-          vnspll0(:,:,:), vnspll1(:,:,:,ith), 'transpose')
+        call spinorbit_ham(lmax,lmsize,vins,rnew,eryd,zat,cvlight,socscale,nspin,   &
+          lmpot,theta,phi,ipan_intervall,rpan_intervall,npan_tot,ncheb,irmdnew,     &
+          nrmaxd,vnspll0(:,:,:),vnspll1(:,:,:,ith),'transpose')
 
         ! Extend matrix for the SRA treatment
         vnspll(:, :, :, ith) = czero
         if (nsra==2) then
           if (use_sratrick==0) then
-            call vllmatsra(vnspll1(:,:,:,ith), vnspll(:,:,:,ith), rnew, lmmaxso, irmdnew, nrmaxd, eryd, lmax, 0, 'Ref=0')
+            call vllmatsra(vnspll1(:,:,:,ith),vnspll(:,:,:,ith),rnew,lmmaxso,       &
+              irmdnew,nrmaxd,eryd,lmax,0,'Ref=0')
           else if (use_sratrick==1) then
-            call vllmatsra(vnspll1(:,:,:,ith), vnspll(:,:,:,ith), rnew, lmmaxso, irmdnew, nrmaxd, eryd, lmax, 0, 'Ref=Vsph')
+            call vllmatsra(vnspll1(:,:,:,ith),vnspll(:,:,:,ith),rnew,lmmaxso,       &
+              irmdnew,nrmaxd,eryd,lmax,0,'Ref=Vsph')
           end if
         else
           vnspll(:, :, :, ith) = vnspll1(:, :, :, ith)
@@ -647,8 +658,7 @@ contains
 
           open (9999, file='host.txt')
           write (9999, *) t_params%rbasis(1:3, 1:t_params%natyp)
-          write (9999, *) t_params%rcls(1:3, 1:t_params%nclsd, 1:t_params%nclsd), t_params%rr(1:3, 0:t_params%nr), t_params%atom(1:t_params%nclsd, 1:t_params%naez+t_params%nembd1-1 &
-            )
+          write (9999, *) t_params%rcls(1:3, 1:t_params%nclsd, 1:t_params%nclsd),t_params%rr(1:3, 0:t_params%nr),t_params%atom(1:t_params%nclsd,1:t_params%naez+t_params%nembd1-1)
           write (9999, *) t_params%cls(1:t_params%naez+t_params%nembd1-1), t_params%ezoa(1:t_params%nclsd, 1:t_params%naez+t_params%nembd1-1), t_params%nacls(1:t_params%nclsd)
           close (9999)
 
@@ -669,21 +679,23 @@ contains
 #endif
         end if                     ! test('rhoqtest')
 
-        ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !----------------------------------------------------------------------------
         ! Calculate the left-hand side solution
-        ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !----------------------------------------------------------------------------
 
       end if                       ! t_dtmatJij_at%calculate .or. t_wavefunctions%Nwfsavemax>0
 
       ! save_wavefuncions
       if (t_wavefunctions%nwfsavemax>0) then
         ! here all four (left, right, regular and irregular) are stored, the memory demand cound be reduced by a factor 2 if only the right solution would be computed here and saved and the left solution would be calculated later in main1c
-        call save_wavefunc(t_wavefunctions, rll, rllleft, sll, sllleft, i1, ie, nsra, lmmaxso, irmdnew, ith)
+        call save_wavefunc(t_wavefunctions,rll,rllleft,sll,sllleft,i1,ie,nsra,      &
+          lmmaxso,irmdnew,ith)
       end if
 
       if (t_dtmatjij_at%calculate) then
-        call calc_dtmatjij(lmsize, lmmaxso, lmpot, ntotd, nrmaxd, nsra, irmdnew, nspin, vins, rllleft(:,:,:,ith), rll(:,:,:,ith), rpan_intervall, ipan_intervall, npan_tot, ncheb, &
-          cleb, icleb, iend, ncleb, rnew, t_dtmatjij_at%dtmat_xyz(:,:,:,ie_num))
+        call calc_dtmatjij(lmsize,lmmaxso,lmpot,ntotd,nrmaxd,nsra,irmdnew,nspin,    &
+          vins,rllleft(:,:,:,ith),rll(:,:,:,ith),rpan_intervall,ipan_intervall,     &
+          npan_tot,ncheb,cleb,icleb,iend,ncleb,rnew,t_dtmatjij_at%dtmat_xyz(:,:,:,ie_num))
 
       end if                       ! t_dtmatJij_at%calculate
 
@@ -773,19 +785,21 @@ contains
     ! finished kpts status bar
 
     ! deallocate arrays
-    call allocate_locals_tmat_newsolver(-1, irmdnew, lmpot, nspin, vins, aux, ipiv, tmat0, tmatll, alpha0, dtmatll, alphall, dalphall, jlk_index, nsra, lmmaxso, nth, lmax, vnspll, &
-      vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
+    call allocate_locals_tmat_newsolver(-1,irmdnew,lmpot,nspin,vins,aux,ipiv,tmat0, &
+      tmatll,alpha0,dtmatll,alphall,dalphall,jlk_index,nsra,lmmaxso,nth,lmax,vnspll,&
+      vnspll0,vnspll1,hlk,jlk,hlk2,jlk2,tmatsph,rll,sll,rllleft,sllleft)
 
   end subroutine tmat_newsolver
 
 
   !-------------------------------------------------------------------------------
-  !> Summary: Allocation and initialization of work arrays of tmat_newsolver
-  !> Author: P. Rüßmann
-  !> Category: KKRhost, single-site, initialization, profiling
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
-  !> Also takes care of deallocation if `allocmode/=1`
+  !> Summary: Wrapper routine for the allocation/deallocation of the arrays for the t-matrix
+  !> calculation 
+  !> Author: Philipp Ruessmann
+  !> Category: solver, single-site, memory-management, KKRhost
+  !> Deprecated: False 
+  !> Wrapper routine for the allocation/deallocation of the arrays for the t-matrix
+  !> calculation.
   !-------------------------------------------------------------------------------
   subroutine allocate_locals_tmat_newsolver(allocmode, irmdnew, lmpot, nspin, vins, aux, ipiv, tmat0, tmatll, alpha0, dtmatll, alphall, dalphall, jlk_index, nsra, lmmaxso, nth, &
     lmax, vnspll, vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)

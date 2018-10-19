@@ -1,15 +1,31 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculation of the Madelung potential coefficients for a 3D structure 
+!> Author:
+!> Calculation of the Madelung potential coefficients for a 3D structure, the coefficients
+!> are then stored in an unformatted file.
+!------------------------------------------------------------------------------------
 module mod_madelung3d
 
 contains
 
-  subroutine madelung3d(lpot, yrg, wg, naez, alat, volume0, bravais, recbv, rbasis, rmax, gmax, naezd, lmxspd, lassld, lpotd, lmpotd, nmaxd, ishld, nembd, wlength)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * This subroutine calculates the Madelung potential coefficients     *
-    ! * in the 3D case and stores them in the DA-file abvmad.unformatted   *
-    ! * The record index is simply (IQ1-1)*NAEZ + IQ2 for record (IQ1,IQ2) *
-    ! *                                                                    *
-    ! **********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculation of the Madelung potential coefficients for a 3D structure 
+  !> Author: 
+  !> Category: electrostatics, KKRhost, geometry 
+  !> Deprecated: False 
+  !> Calculation of the Madelung potential coefficients for a 3D structure, the coefficients
+  !> are then stored in an unformatted file.
+  !-------------------------------------------------------------------------------
+  !> @note All positions must be scaled with `ALAT` to get them correct
+  !> The record index is simply `(IQ1-1)*NAEZ + IQ2` for record `(IQ1,IQ2)`
+  !> @endnote
+  !> @todo This routine uses both naez and naezd which should be the same number, 
+  !> one should replace this to eliminate redundant variables.
+  !> @endtodo
+  !-------------------------------------------------------------------------------
+  subroutine madelung3d(lpot,yrg,wg,naez,alat,volume0,bravais,recbv,rbasis,rmax,    &
+    gmax,naezd,lmxspd,lassld,lpotd, lmpotd,nmaxd,ishld,nembd,wlength)
+
     use :: mod_datatypes, only: dp
     use :: mod_madelgaunt
     use :: mod_madelcoef
@@ -20,14 +36,28 @@ contains
     implicit none
     ! ..
     ! .. Scalar Arguments ..
-    integer :: lpot, naez, wlength
-    integer :: naezd, lmxspd, lassld, lpotd, lmpotd, nmaxd, ishld, nembd
-    real (kind=dp) :: alat, volume0, rmax, gmax
+    integer, intent(in) :: lpot     !! Maximum l component in potential expansion
+    integer, intent(in) :: naez     !! Number of atoms in unit cell
+    integer, intent(in) :: naezd    !! Number of atoms in unit cell
+    integer, intent(in) :: nmaxd    !! Paremeters for the Ewald summations
+    integer, intent(in) :: ishld    !! Paremeters for the Ewald summations
+    integer, intent(in) :: lpotd    !! Maximum l component in potential expansion
+    integer, intent(in) :: lassld   !! 4*lmax
+    integer, intent(in) :: lmpotd   !! (lpot+1)**2
+    integer, intent(in) :: lmxspd   !! (2*lpot+1)**2
+    integer, intent(in) :: nembd    !! Number of 'embedding' positions
+    integer, intent(in) :: wlength  !! Word length for direct access files, compiler dependent ifort/others (1/4)
+    real (kind=dp), intent(in) :: alat  !! Lattice constant in a.u.
+    real (kind=dp), intent(inout) :: rmax  !! Ewald summation cutoff parameter for real space summation
+    real (kind=dp), intent(inout) :: gmax  !! Ewald summation cutoff parameter for reciprocal space summation
+    real (kind=dp), intent(in) :: volume0
     ! ..
     ! .. Array Arguments ..
-    real (kind=dp) :: yrg(lassld, 0:lassld, 0:lassld), wg(lassld)
-    real (kind=dp) :: bravais(3, 3), recbv(3, 3)
-    real (kind=dp) :: rbasis(3, naezd+nembd)
+    real (kind=dp), dimension(lassld), intent(in) :: wg !! Integr. weights for Legendre polynomials
+    real (kind=dp), dimension(lassld, 0:lassld, 0:lassld), intent(in) :: yrg  !! Spherical harmonics (GAUNT2)
+    real (kind=dp), dimension(3,3), intent(in) :: recbv   !! Reciprocal basis vectors
+    real (kind=dp), dimension(3,3), intent(in) :: bravais !! Bravais lattice vectors
+    real (kind=dp), dimension(3,naezd+nembd), intent(in) :: rbasis  !! Position of atoms in the unit cell in units of bravais vectors
     ! ..
     ! .. Local Scalars ..
     integer :: iend, iprint, iq1, iq2, nclebd
@@ -36,13 +66,14 @@ contains
     ! ..
     ! .. Local Arrays ..
     ! .. Attention: Dimension LMXSPD*LMPOTD appears sometimes as NCLEB1
-    real (kind=dp) :: avmad(lmpotd, lmpotd), bvmad(lmpotd)
-    real (kind=dp) :: cleb(lmxspd*lmpotd)
-    real (kind=dp) :: madelsmat(lmxspd, naezd, naezd)
-    real (kind=dp) :: smat1(6, 6), smat2(6, 6)
-    real (kind=dp) :: gn(3, nmaxd), rm(3, nmaxd)
-    integer :: icleb(lmxspd*lmpotd, 3)
-    integer :: nsg(ishld), nsr(ishld)
+    integer, dimension(ishld)                       :: nsg, nsr
+    integer, dimension(lmxspd*lmpotd, 3)            :: icleb
+    real (kind=dp), dimension(lmpotd)               :: bvmad
+    real (kind=dp), dimension(lmxspd*lmpotd)        :: cleb
+    real (kind=dp), dimension(lmpotd, lmpotd)       :: avmad
+    real (kind=dp), dimension(6,6)                  :: smat1, smat2
+    real (kind=dp), dimension(3,nmaxd)              :: gn, rm
+    real (kind=dp), dimension(lmxspd, naezd, naezd) :: madelsmat
     ! ......................................................................
     iprint = 0
     nclebd = lmxspd*lmpotd
@@ -55,9 +86,11 @@ contains
     ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
     ! ======================================================================
-    call lattice3d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, nsr, gn, rm, rmax, gmax, iprint, nmaxd, ishld)
+    call lattice3d(alat,bravais,recbv,ngmax,nrmax,nshlg,nshlr,nsg,nsr,gn,rm,rmax,   &
+      gmax,iprint,nmaxd,ishld)
 
-    call strmat(alat, lpot, naez, ngmax, nrmax, nsg, nsr, nshlg, nshlr, gn, rm, rbasis, madelsmat, volume0, iprint, lassld, lmxspd, naezd)
+    call strmat(alat,lpot,naez,ngmax,nrmax,nsg,nsr,nshlg,nshlr,gn,rm,rbasis,        &
+      madelsmat,volume0,iprint,lassld,lmxspd,naezd)
     ! ======================================================================
 
     lrecabmad = wlength*2*lmpotd*lmpotd + wlength*2*lmpotd
@@ -73,7 +106,8 @@ contains
 
     do iq1 = 1, naez
       do iq2 = 1, naez
-        call madelcoef(.false., lpot, avmad, bvmad, madelsmat(1,iq1,iq2), cleb, icleb, iend, lpotd, lmpotd, lmxspd, nclebd)
+        call madelcoef(.false.,lpot,avmad,bvmad,madelsmat(1,iq1,iq2),cleb,icleb,    &
+          iend,lpotd,lmpotd,lmxspd,nclebd)
 
         irec = iq2 + naez*(iq1-1)
         write (69, rec=irec) avmad, bvmad

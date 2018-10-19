@@ -1,33 +1,44 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculates the regular solution of the schroedinger equation or in semi relativistic approximation for a spherically averaged potential and given energy
+!> Author: B. Drittler
+!> Calculates the regular solution of the schroedinger equation or in semi relativistic 
+!> approximation for a spherically averaged potential and given energy.
+!> To archieve greater presion the leading power \(r^s\) (in schroedinger case s = l,
+!> in case of sra \(s = \sqrt{ (l^2+l-1) - \frac{4z^2}{c^2} } )\) is analytically separated
+!> from the wavefunction.
+!> The t-matrix has to be determined at the mt radius in case of a mt calculation 
+!> or at the ws radius in case of a ws calculation. Therefore the logarithmic 
+!> derivative is calculated at that point (`=ircut(ipan)` )
+!------------------------------------------------------------------------------------
+!> @note Ph. Mavropoulos March 2003 - Dec 2004, Munich/Juelich: LDA+U included
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_regsol
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  subroutine regsol(cvlight, e, nsra, dlogdp, fz, hamf, mass, pz, dror, r, s, vm2z, z, ipan, ircut, idoldau, lopt, wldauav, cutoff, irmd, ipand, lmaxd)
-    ! -----------------------------------------------------------------------
-    ! calculates the regular solution of the schroedinger equation or
-    ! in semi relativistic approximation for a spherically averaged
-    ! potential and given energy . to archieve greater presion the
-    ! leading power r**s ( in schroedinger case s = l , in case of sra
-    ! s = sqrt( (l*l+l-1) - 4*z*z/c/c ) ) is analytically separated
-    ! from the wavefunction .
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates the regular solution of the schroedinger equation or in semi relativistic approximation for a spherically averaged potential and given energy
+  !> Author: B. Drittler
+  !> Category: solver, lda+u, KKRhost
+  !> Deprecated: False 
+  !> Calculates the regular solution of the schroedinger equation or in semi relativistic 
+  !> approximation for a spherically averaged potential and given energy.
+  !> To archieve greater presion the leading power \(r^s\) (in schroedinger case s = l,
+  !> in case of sra \(s = \sqrt{ (l^2+l-1) - \frac{4z^2}{c^2} } )\) is analytically separated
+  !> from the wavefunction.
+  !> The t-matrix has to be determined at the mt radius in case of a mt calculation 
+  !> or at the ws radius in case of a ws calculation. Therefore the logarithmic 
+  !> derivative is calculated at that point (`=ircut(ipan)` )
+  !-------------------------------------------------------------------------------
+  !> @note Ph. Mavropoulos March 2003 - Dec 2004, Munich/Juelich: LDA+U included
+  !> @endnote
+  !-------------------------------------------------------------------------------
+  subroutine regsol(cvlight,e,nsra,dlogdp,fz,hamf,mass,pz,dror,r,s,vm2z,z,ipan,     &
+    ircut,idoldau,lopt,wldauav,cutoff,irmd,ipand,lmaxd)
 
-    ! the t - matrix has to be determined at the mt radius in case of
-    ! a mt calculation or at the ws radius in case of a ws calcu-
-    ! lation . therefore the logarithmic derivative is calculated
-    ! at that point (=ircut(ipan) )
-
-    ! the differential equation is solved with a 5 point adams - bashforth
-    ! and adams - moulton predictor corrector method integrating
-    ! outwards and extended for potentials with kinks
-
-    ! b.drittler   nov 1989
-
-    ! LDA+U included  March 2003 - Dec 2004, Munich/Juelich
-    ! ph. mavropoulos
-
-    ! -----------------------------------------------------------------------
     use :: mod_datatypes
     implicit none
     ! .. Scalar Arguments ..
@@ -36,13 +47,15 @@ contains
     integer :: ipan, ipand, irmd, lmaxd, nsra, idoldau, lopt
     ! ..
     ! .. Array Arguments ..
-    complex (kind=dp) :: dlogdp(0:lmaxd), fz(irmd, 0:lmaxd), hamf(irmd, 0:lmaxd), mass(irmd), pz(irmd, 0:lmaxd)
+    complex (kind=dp) :: dlogdp(0:lmaxd), fz(irmd, 0:lmaxd), hamf(irmd, 0:lmaxd)
+    complex (kind=dp) :: mass(irmd), pz(irmd, 0:lmaxd)
     real (kind=dp) :: dror(irmd), r(irmd), s(0:lmaxd), vm2z(irmd)
     real (kind=dp) :: cutoff(irmd)
     integer :: ircut(0:ipand)
     ! ..
     ! .. Local Scalars ..
-    complex (kind=dp) :: dfd0, dpd0, fip0, fip1, hamf1, k1f, k1p, k2f, k2p, k3f, k3p, k4f, k4p, mass1, pip0, pip1, vme, vmefac, vmetr1
+    complex (kind=dp) :: dfd0, dpd0, fip0, fip1, hamf1, k1f, k1p, k2f, k2p, k3f, k3p
+    complex (kind=dp) :: k4f, k4p, mass1, pip0, pip1, vme, vmefac, vmetr1
     real (kind=dp) :: dror1, drsm1, drsp1, s1, sm1, sp1, srafac
     integer :: ip, ir, irc, ire, irs, irsp1, j, k, l
     ! ..
@@ -76,8 +89,6 @@ contains
       end do
     end do
 
-
-
     ! ======================================================================
     ! LDA+U
 
@@ -110,16 +121,11 @@ contains
       sp1 = s1 + 1.0e0_dp
 
       ! ---> loop over the number of kinks
-
       do ip = 1, ipan
-
         if (ip==1) then
           irs = 2
           ire = ircut(1)
-
-
           ! ---> initial values
-
           vme = vm2z(2) - e
           vmefac = 1.0e0_dp - vme*srafac*srafac
           if (nsra==2 .and. z>0.0e0_dp) then
@@ -130,10 +136,7 @@ contains
               a(j) = (0.0e0_dp, 0.e0_dp)
               b(j) = (0.0e0_dp, 0.e0_dp)
             end do
-
           else
-
-
             a(0) = 0.0e0_dp
             b(0) = real(l, kind=dp)/vmefac
             a(1) = 1.0e0_dp
@@ -141,13 +144,9 @@ contains
               a(j) = (vme*vmefac*a(j-2)-2.0e0_dp*z*a(j-1))/real((j-1)*(j+2*l), kind=dp)
               b(j-1) = real(l+j-1, kind=dp)*a(j)/vmefac
             end do
-
           end if
-
           k = -4
-
           ! ---> power series near origin
-
           do ir = 2, 6
             pip0 = a(3)
             dpd0 = 3.0e0_dp*a(3)
@@ -159,19 +158,14 @@ contains
               fip0 = b(j) + fip0*r(ir)
               dfd0 = real(j, kind=dp)*b(j) + dfd0*r(ir)
             end do
-
             pz(ir, l) = pip0
             fz(ir, l) = fip0
             dpdi(k) = dpd0*dror(ir)
             dfdi(k) = dfd0*dror(ir)
-
             k = k + 1
           end do
-
         else
-
           ! ---> runge kutta step to restart algorithm
-
           irs = ircut(ip-1) + 1
           ire = ircut(ip)
           irsp1 = irs + 1
@@ -181,17 +175,17 @@ contains
           drsm1 = dror(irs)*sm1
           dpdi(-4) = mass(irs)*fip0 - drsm1*pip0
           dfdi(-4) = hamf(irs, l)*pip0 - drsp1*fip0
-
           ! ---> first step - 4 point runge kutta with interpolation
-
           k1p = dpdi(-4)
           k1f = dfdi(-4)
-
-          dror1 = (3.0e0_dp*dror(irs+3)-15.0e0_dp*dror(irs+2)+45.0e0_dp*dror(irsp1)+15.0e0_dp*dror(irs))/48.0e0_dp
+          dror1 = (3.0e0_dp*dror(irs+3)-15.0e0_dp*dror(irs+2)+45.0e0_dp*dror(irsp1)+&
+            15.0e0_dp*dror(irs))/48.0e0_dp
           drsp1 = dror1*sp1
           drsm1 = dror1*sm1
-          mass1 = (3.0e0_dp*mass(irs+3)-15.0e0_dp*mass(irs+2)+45.0e0_dp*mass(irsp1)+15.0e0_dp*mass(irs))/48.0e0_dp
-          hamf1 = (3.0e0_dp*hamf(irs+3,l)-15.0e0_dp*hamf(irs+2,l)+45.0e0_dp*hamf(irsp1,l)+15.0e0_dp*hamf(irs,l))/48.0e0_dp
+          mass1 = (3.0e0_dp*mass(irs+3)-15.0e0_dp*mass(irs+2)+45.0e0_dp*mass(irsp1)+&
+            15.0e0_dp*mass(irs))/48.0e0_dp
+          hamf1 = (3.0e0_dp*hamf(irs+3,l)-15.0e0_dp*hamf(irs+2,l)+                  &
+            45.0e0_dp*hamf(irsp1,l)+15.0e0_dp*hamf(irs,l))/48.0e0_dp
           k2p = mass1*(fip0+0.5e0_dp*k1f) - drsm1*(pip0+0.5e0_dp*k1p)
           k2f = hamf1*(pip0+0.5e0_dp*k1p) - drsp1*(fip0+0.5e0_dp*k1f)
           k3p = mass1*(fip0+0.5e0_dp*k2f) - drsm1*(pip0+0.5e0_dp*k2p)
@@ -210,9 +204,7 @@ contains
           dfdi(-3) = hamf(irsp1, l)*pip0 - drsp1*fip0
 
           k = -2
-
           ! ---> 4 point runge kutta with h = i+2 - i
-
           do ir = irs + 2, irs + 4
             pip0 = pz(ir-2, l)
             fip0 = fz(ir-2, l)
@@ -238,15 +230,14 @@ contains
             k = k + 1
           end do
         end if
-
         do ir = irs + 5, ire
           drsp1 = dror(ir)*sp1
           drsm1 = dror(ir)*sm1
-
           ! ---> predictor : 5 point adams - bashforth
-
-          pip1 = pip0 + (1901.0e0_dp*dpdi(0)-2774.0e0_dp*dpdi(-1)+2616.0e0_dp*dpdi(-2)-1274.0e0_dp*dpdi(-3)+251.0e0_dp*dpdi(-4))/720.0e0_dp
-          fip1 = fip0 + (1901.0e0_dp*dfdi(0)-2774.0e0_dp*dfdi(-1)+2616.0e0_dp*dfdi(-2)-1274.0e0_dp*dfdi(-3)+251.0e0_dp*dfdi(-4))/720.0e0_dp
+          pip1 = pip0 + (1901.0e0_dp*dpdi(0)-2774.0e0_dp*dpdi(-1)+                  &
+            2616.0e0_dp*dpdi(-2)-1274.0e0_dp*dpdi(-3)+251.0e0_dp*dpdi(-4))/720.0e0_dp
+          fip1 = fip0 + (1901.0e0_dp*dfdi(0)-2774.0e0_dp*dfdi(-1)+                  &
+            2616.0e0_dp*dfdi(-2)-1274.0e0_dp*dfdi(-3)+251.0e0_dp*dfdi(-4))/720.0e0_dp
 
           dpdi(-4) = dpdi(-3)
           dpdi(-3) = dpdi(-2)
@@ -259,34 +250,27 @@ contains
 
           dpdi(0) = mass(ir)*fip1 - drsm1*pip1
           dfdi(0) = hamf(ir, l)*pip1 - drsp1*fip1
-
           ! ---> corrector : 5 point adams - moulton
-
-          pip0 = pip0 + (251.0e0_dp*dpdi(0)+646.0e0_dp*dpdi(-1)-264.0e0_dp*dpdi(-2)+106.0e0_dp*dpdi(-3)-19.0e0_dp*dpdi(-4))/720.0e0_dp
-          fip0 = fip0 + (251.0e0_dp*dfdi(0)+646.0e0_dp*dfdi(-1)-264.0e0_dp*dfdi(-2)+106.0e0_dp*dfdi(-3)-19.0e0_dp*dfdi(-4))/720.0e0_dp
+          pip0 = pip0 + (251.0e0_dp*dpdi(0)+646.0e0_dp*dpdi(-1)                     &
+            -264.0e0_dp*dpdi(-2)+106.0e0_dp*dpdi(-3)-19.0e0_dp*dpdi(-4))/720.0e0_dp
+          fip0 = fip0 + (251.0e0_dp*dfdi(0)+646.0e0_dp*dfdi(-1)                     &
+            -264.0e0_dp*dfdi(-2)+106.0e0_dp*dfdi(-3)-19.0e0_dp*dfdi(-4))/720.0e0_dp
 
           pz(ir, l) = pip0
           fz(ir, l) = fip0
           dpdi(0) = mass(ir)*fip0 - drsm1*pip0
           dfdi(0) = hamf(ir, l)*pip0 - drsp1*fip0
         end do
-
         ! ---> remember that the r - mesh contains the kinks two times
         ! store the values of pz and fz to restart the algorithm
-
         if (ip/=ipan) then
           pz(ire+1, l) = pip0
           fz(ire+1, l) = fip0
         end if
-
       end do
-
-
       ! ---> logarithmic derivate of real wavefunction ( r**s *pz / r)
-
       dlogdp(l) = (dpdi(0)/(pip0*dror(irc))+sm1)/r(irc)
     end do
-
 
   end subroutine regsol
 

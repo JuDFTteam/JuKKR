@@ -1,19 +1,32 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculates angles of the **local frame** with respect to the **global frame**
+!> Author: 
+!> After correcting `MVEVI` with the Fermi energy value `MVEVIEF` (outside 
+!> this routine) it calculates the new angles of the **local frame** quantization 
+!> axis with respect to the **global frame** 
+!------------------------------------------------------------------------------------
 module mod_mdirnewang
   use :: mod_datatypes, only: dp
+  use :: constants, only : pi
   private :: dp
 
 contains
 
-  subroutine mdirnewang(it, nmvec, mvevi, mvphi, mvtet, mvgam, natypd, lmaxd, nmvecmax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *  this routine has been build up from the last part of the        *
-    ! *  original Munich CALCMVEC routine.                               *
-    ! *  After correcting MVEVI with the Fermi energy value MVEVIEF      *
-    ! *  (outside this routine) it calculates the new angles of the      *
-    ! *  LOCAL FRAME quantisation axis with respect to the GLOBAL FRAME  *
-    ! *                                                                  *
-    ! ********************************************************************
+  !-------------------------------------------------------------------------------  
+  !> Summary: Calculates angles of the **local frame** with respect to the **global frame**
+  !> Author:
+  !> Category: physical-observables, KKRhost 
+  !> Deprecated: False 
+  !> After correcting `MVEVI` with the Fermi energy value `MVEVIEF` (outside 
+  !> this routine) it calculates the new angles of the **local frame** quantization 
+  !> axis with respect to the **global frame**
+  !-------------------------------------------------------------------------------  
+  !> @note This routine has been build up from the last part of the original 
+  !> Munich `CALCMVEC()` routine.
+  !> @endnote                                                                       
+  !------------------------------------------------------------------------------- 
+  subroutine mdirnewang(it,nmvec,mvevi,mvphi,mvtet,mvgam,natypd,lmaxd,nmvecmax)
+
     implicit none
 
     ! Parameter definitions
@@ -21,18 +34,24 @@ contains
     parameter (lmaxdloc=8)
 
     ! Scalar Arguments
-    integer :: it, nmvec, natypd, lmaxd, nmvecmax
+    integer, intent(in) :: it     !! Current atom type
+    integer, intent(in) :: nmvec 
+    integer, intent(in) :: natypd !! Number of kinds of atoms in unit cell
+    integer, intent(in) :: lmaxd  !! Maximum l component in wave function expansion
+    integer, intent(in) :: nmvecmax
 
     ! Array Arguments
-    complex (kind=dp) :: mvevi(natypd, 3, nmvecmax)
-    real (kind=dp) :: mvphi(natypd, nmvecmax), mvtet(natypd, nmvecmax), mvgam(natypd, nmvecmax)
+    complex (kind=dp), dimension(natypd, 3, nmvecmax), intent(in) :: mvevi
+    real (kind=dp), dimension(natypd,nmvecmax), intent(out) :: mvphi
+    real (kind=dp), dimension(natypd,nmvecmax), intent(out) :: mvtet
+    real (kind=dp), dimension(natypd,nmvecmax), intent(out) :: mvgam
 
     ! Local Scalars
-    real (kind=dp) :: mv, mvx, mvxy, mvy, mvz, pi
+    real (kind=dp) :: mv, mvx, mvxy, mvy, mvz
     integer :: i, imv, icall
 
     ! Local Arrays
-    real (kind=dp) :: mvglo(3, nmvecmax)
+    real (kind=dp), dimension(3,nmvecmax) :: mvglo
 
     ! Intrinsic Functions
     intrinsic :: abs, atan
@@ -41,7 +60,7 @@ contains
     data icall/0/
 
     ! Save Statements
-    save :: icall, pi
+    save :: icall
 
     icall = icall + 1
     ! =======================================================================
@@ -53,8 +72,6 @@ contains
         write (6, *) ' in the < MVECGLOBAL > routine.'
         stop ' < TBKKR2 > '
       end if
-
-      pi = 4.e0_dp*atan(1.e0_dp)
 
     end if
     ! =======================================================================

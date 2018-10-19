@@ -1,22 +1,46 @@
+!------------------------------------------------------------------------------------
+!> Summary: This routine returns an array `y2(1:n)` of length `n` which contains the second derivatives of the interpolating function at the tabulated points `xi`.
+!> Author: 
+!> Given arrays `x(1:n)` and `y(1:n)` containing a tabulated function, i.e., 
+!> \(y(i) = f(xi)\), with \(x1<x2<\cdots<xN\) , and given values `yp1` and `ypn`
+!> for the 1st derivative of the interpolating function at points
+!> 1 and `n`, respectively, this routine returns an array `y2(1:n)` of
+!> length `n` which contains the second derivatives of the interpolating
+!> function at the tabulated points `xi`.
+!> If `yp1` and/or `ypn` are equal to `1.e30` or larger, the routine is
+!> signaled to set the corresponding boundary condition for a natural
+!> spline, with zero second derivative on that boundary.
+!> Parameter: `NMAX` is the largest anticipated value of `n`.
+!------------------------------------------------------------------------------------
+!> @note Taken from "Numerical Recipes in Fortran 77", W.H.Press et al.
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_spline_real
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  ! ***********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: This routine returns an array `y2(1:n)` of length `n` which contains the second derivatives of the interpolating function at the tabulated points `xi`.
+  !> Author: 
+  !> Category: numerical-tools, KKRhost
+  !> Deprecated: False
+  !> Given arrays `x(1:n)` and `y(1:n)` containing a tabulated function, i.e., 
+  !> \(y(i) = f(xi)\), with \(x1<x2<\cdots<xN\) , and given values `yp1` and `ypn`
+  !> for the 1st derivative of the interpolating function at points
+  !> 1 and `n`, respectively, this routine returns an array `y2(1:n)` of
+  !> length `n` which contains the second derivatives of the interpolating
+  !> function at the tabulated points `xi`.
+  !> If `yp1` and/or `ypn` are equal to `1.e30` or larger, the routine is
+  !> signaled to set the corresponding boundary condition for a natural
+  !> spline, with zero second derivative on that boundary.
+  !> Parameter: `NMAX` is the largest anticipated value of `n`.
+  !-------------------------------------------------------------------------------
+  !> @note Taken from "Numerical Recipes in Fortran 77", W.H.Press et al.
+  !> @endnote
+  !-------------------------------------------------------------------------------
   subroutine spline_real(nmax, x, y, n, yp1, ypn, y2)
-    ! Given arrays x(1:n) and  y(1:n) containing a tabulated function,
-    ! i.e., y i = f(xi), with x1<x2<...<xN , and given values yp1 and ypn
-    ! for the 1rst derivative of the interpolating function at points
-    ! 1 and n, respectively, this routine returns an array y2(1:n) of
-    ! length n which contains the second derivatives of the interpolating
-    ! function at the tabulated points xi.
-    ! If yp1 and/or ypn are equal to 1.e30 or larger, the routine is
-    ! signaled to set the corresponding boundary condition for a natural
-    ! spline, with zero second derivative on that boundary.
-    ! Parameter: NMAX is the largest anticipated value of n.
-    ! Taken from "Numerical Recipes in Fortran 77", W.H.Press et al.
     implicit none
     integer :: n, nmax
     real (kind=dp) :: yp1, ypn, x(nmax), y(nmax), y2(nmax)

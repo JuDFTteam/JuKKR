@@ -1,32 +1,63 @@
+!------------------------------------------------------------------------------------
+!> Summary: Write density of states to file
+!> Author: People who wrote it
+!> Write density of states to file. Both complex DOS and the real part of the DOS
+!> are printed to file in an l-decomposed fashion.
+!------------------------------------------------------------------------------------
 module mod_wrldos
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
-
-  subroutine wrldos(den, ez, wez, lmaxd1, iemxd, npotd, ititle, efermi, e1, e2, alatc, tk, nacls1, nspinpot, natyp, conc, ielast, intervx, intervy, intervz, dostot)
+ 
+  !-------------------------------------------------------------------------------
+  !> Summary: Write density of states to file
+  !> Author: 
+  !> Category: physical-observables, KKRhost 
+  !> Deprecated: False 
+  !> Write density of states to file. Both complex DOS and the real part of the DOS
+  !> are printed to file in an l-decomposed fashion.
+  !-------------------------------------------------------------------------------
+  !> @note Jonathan Chico: It might be a good idea to improve the headers and to set
+  !> printing flags so that the types of files that one wants to plot are actually plotted,
+  !> e.g. the complex DOS is printed if one passes a certain flag in the `inputcard`
+  !> @endnote
+  !-------------------------------------------------------------------------------
+  subroutine wrldos(den,ez,wez,lmaxd1,iemxd,npotd,ititle,efermi,e1,e2,alatc,tk,     &
+    nacls1,nspinpot,natyp,conc,ielast,intervx,intervy,intervz,dostot)
     use :: mod_version_info
     use :: mod_datatypes
+    use :: constants, only: pi, kb, ryd, czero
     implicit none
-    ! .. Parameters ..
-    real (kind=dp) :: kb
-    parameter (kb=0.6333659e-5_dp)
     ! ..
     ! .. Scalar Arguments ..
-    real (kind=dp) :: alatc, e1, e2, efermi, tk
-    integer :: ielast, iemxd, intervx, intervy, intervz, lmaxd1, nacls1, natyp, npotd
-    ! ===== uses spin-up and down also in the REL mode (KREL=1)
-    integer :: nspinpot
-    ! ..
-    ! .. Array Arguments ..
-    complex (kind=dp) :: den(0:lmaxd1, ielast, npotd), ez(iemxd), wez(iemxd)
-    real (kind=dp) :: dostot(0:lmaxd1, 2), conc(*) ! CONC(NATYPD)
-    integer :: ititle(20, npotd)
+    integer, intent(in) :: natyp    !! Number of kinds of atoms in unit cell
+    integer, intent(in) :: npotd    !! (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
+    integer, intent(in) :: iemxd    !! Dimension for energy-dependent arrays
+    integer, intent(in) :: lmaxd1   !! lmax+1
+    integer, intent(in) :: nacls1
+    integer, intent(in) :: ielast
+    integer, intent(in) :: intervx  !! Number of intervals in x-direction for k-net in IB of the BZ
+    integer, intent(in) :: intervy  !! Number of intervals in y-direction for k-net in IB of the BZ
+    integer, intent(in) :: intervz  !! Number of intervals in z-direction for k-net in IB of the BZ
+    integer, intent(in) :: nspinpot !! krel*2 + (1-krel)*nspin
+    real (kind=dp), intent(in) :: e1      !! Lower value (in Ryd) for the energy contour
+    real (kind=dp), intent(in) :: e2      !! Maximum value (in Ryd) for the DOS calculation Controls also [NPT2] in some cases
+    real (kind=dp), intent(in) :: tk      !! Temperature
+    real (kind=dp), intent(in) :: alatc   !! Lattice constant in a.u.
+    real (kind=dp), intent(in) :: efermi  !! Fermi energy
+    integer, dimension(20, npotd), intent(in) :: ititle
+    real (kind=dp), dimension(*), intent(in)  :: conc !! Concentration of a given atom
+    complex (kind=dp), dimension(iemxd), intent(in) :: ez
+    complex (kind=dp), dimension(iemxd), intent(in) :: wez
+    complex (kind=dp), dimension(0:lmaxd1, ielast, npotd), intent(in) :: den
+    ! .. In/Out variables
+    real (kind=dp), dimension(0:lmaxd1, 2), intent(inout) :: dostot
     ! ..
     ! .. Local Scalars ..
-    complex (kind=dp) :: doscmplx
-    real (kind=dp) :: dos, dossgn, efctor, pi
     integer :: i1, ia, ie, ipot, ispin, l
+    real (kind=dp) :: dos, dossgn, efctor
+    complex (kind=dp) :: doscmplx
     character (len=8) :: dosfl0
     character (len=11) :: dosfl
     ! ..
@@ -34,10 +65,9 @@ contains
     logical :: test
     external :: test
     ! ..
-    pi = 4.0e0_dp*atan(1.0e0_dp)
     dosfl0 = 'dos.atom'
     efctor = 1.0e0_dp
-    if (test('EV      ')) efctor = 13.6058e0_dp
+    if (test('EV      ')) efctor = ryd
     do ispin = 1, nspinpot
       do l = 0, lmaxd1
         dostot(l, ispin) = 0.0e0_dp
@@ -73,7 +103,9 @@ contains
       close (48)
     end do
 
+    !--------------------------------------------------------------------------------
     ! Write complex DOS in unit 49:
+    !--------------------------------------------------------------------------------
     open (49, file='complex.dos', form='formatted')
     call version_print_header(49)
     write (49, *) natyp*nspinpot
@@ -92,7 +124,7 @@ contains
         write (49, fmt=140) efermi
         write (49, fmt=150) tk, pi*kb*tk, alatc, intervx, intervy, intervz, nacls1
         do ie = 1, ielast
-          doscmplx = cmplx(0.0e0_dp, 0.e0_dp, kind=dp)
+          doscmplx = czero
           do l = 0, lmaxd1
             doscmplx = doscmplx - 2.0e0_dp*den(l, ie, ipot)/pi/real(nspinpot, kind=dp)
           end do
@@ -103,12 +135,14 @@ contains
     end do
     close (49)
 
+    !--------------------------------------------------------------------------------
     ! Write total DOS summed over atoms and spins(complex)
+    !--------------------------------------------------------------------------------
     open (49, file='total_cmplx.dos', form='formatted')
     call version_print_header(49)
     write (49, fmt='(4A16)') '# Real(E)', '  Im(E)', ' Re(DEN)', ' Im(DEN)'
     do ie = 1, ielast
-      doscmplx = cmplx(0.0e0_dp, 0.e0_dp, kind=dp)
+      doscmplx = czero 
       do i1 = 1, natyp
         do ispin = 1, nspinpot
           ipot = nspinpot*(i1-1) + ispin

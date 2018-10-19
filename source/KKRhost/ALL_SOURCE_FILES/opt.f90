@@ -1,4 +1,15 @@
-! ***********************************************************************
+!-------------------------------------------------------------------------------
+!> Summary: Check if a string is contained in the `opt` array
+!> Author: 
+!> Category: undefined, KKRhost
+!> Deprecated: False 
+!> Check if a string is contained in the `opt` array
+!-------------------------------------------------------------------------------
+!> @note Jonathan Chico: This function is not contained in a module, it should be 
+!> included in a tool like module where auxiliary functions and subrotuines are 
+!> located.
+!> @endnote
+!-------------------------------------------------------------------------------
 logical function opt(string)
   ! ***********************************************************************
 

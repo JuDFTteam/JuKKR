@@ -1,34 +1,62 @@
+!------------------------------------------------------------------------------------
+!> Summary: Driving routine to convert the TB-KKR potential from the non-relativistic representation, to the relativistic one
+!> Author: B. Popescu
+!> A Driving routine to convert the TB-KKR potential from the non-relativistic 
+!> representation `VM2Z(IRMD,NPOTD)`, with `IPOTD` the combined index for `ATOM` 
+!> and `SPIN` to the relativistic one.
+!> \begin{equation}
+!> V_{TREL}=\frac{V_{up}+V_{down}}{2}
+!> \end{equation}
+!> \begin{equation}
+!> B_{TREL}=\frac{V_{up}-V_{down}}{2}
+!> \end{equation}
+!>  Additionally, for compatibility with the relativistic routines included in the 
+!> package, `VTREL` includes the Coulomb term, and the auxiliary arrays `ZREL`, 
+!> `RMREL`, `JWSREL`, `DRDI`, `R2DRDI` and `IRSHIFT` are created. 
+!> `IRSHIFT(NATYPD)` accounts for the shift in the radial mesh, since the first point
+!>  (sometimes first two points) of `VM2Z ( = 0D0 )` are skipped.
+!> The relativistic routines require an **odd** number of radial points (Simpson integration routine)
+!------------------------------------------------------------------------------------
+!> @warning
+!> 
+!> * Because this routine is called only `IF KREL.EQ.0`, the number of spins in `VM2Z` is always 2.
+!> * So far, only `SPHERICAL` part implemented
+!> @endwarning
+!------------------------------------------------------------------------------------
 module mod_relpotcvt
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  subroutine relpotcvt(icall, vm2z, zin, rin, drdiin, ircut, vtrel, btrel, zrel, rmrel, jwsrel, drdirel, r2drdirel, irshift, ipand, irmd, npotd, natypd)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! * driving routine to convert the TB-KKR potential from the non-    *
-    ! * relativistic representation VM2Z(IRMD,NPOTD), with IPOTD the     *
-    ! * combined index for ATOM and SPIN to the relativistic one         *
-    ! *      VTREL =  (VUP+VDN)/2.0D0                                    *
-    ! *      BTREL =  (VUP-VDN)/2.0D0                                    *
-    ! *                                                                  *
-    ! * IMPORTANT 1:  because this routine is called only IF KREL.EQ.0,  *
-    ! *               the number of spins in VM2Z is always 2!           *
-    ! * IMPORTANT 2:  so far, only SPHERICAL part implemented            *
-    ! *                                                                  *
-    ! * Additionally, for compatibility with the relativistic routines   *
-    ! * included in the package, VTREL includes the Coulomb term, and    *
-    ! * the auxiliary arrays                                             *
-    ! *      ZREL, RMREL, JWSREL, DRDI, R2DRDI and IRSHIFT               *
-    ! * are created. IRSHIFT(NATYPD) accounts for the shift in the       *
-    ! * radial mesh, since the first point (sometimes first two points)  *
-    ! * of VM2Z ( = 0D0 ) are skipped. The relativistic routines require *
-    ! * an ODD number of radial points (Simpson integration routine)     *
-    ! *                                                                  *
-    ! * v.popescu, munich, may 2004                                      *
-    ! *                                                                  *
-    ! ********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Driving routine to convert the TB-KKR potential from the non-relativistic representation, to the relativistic one
+  !> Author: B. Popescu
+  !> Category: potential, dirac, KKRhost 
+  !> Deprecated: False
+  !> Driving routine to convert the TB-KKR potential from the non-relativistic 
+  !> representation `VM2Z(IRMD,NPOTD)`, with `IPOTD` the combined index for `ATOM` 
+  !> and `SPIN` to the relativistic one.
+  !> \begin{equation}
+  !> V_{TREL}=\frac{V_{up}+V_{down}}{2}
+  !> \end{equation}
+  !> \begin{equation}
+  !> B_{TREL}=\frac{V_{up}-V_{down}}{2}
+  !> \end{equation}
+  !>  Additionally, for compatibility with the relativistic routines included in the 
+  !> package, `VTREL` includes the Coulomb term, and the auxiliary arrays `ZREL`, 
+  !> `RMREL`, `JWSREL`, `DRDI`, `R2DRDI` and `IRSHIFT` are created. 
+  !> `IRSHIFT(NATYPD)` accounts for the shift in the radial mesh, since the first point
+  !>  (sometimes first two points) of `VM2Z ( = 0D0 )` are skipped.
+  !> The relativistic routines require an **odd** number of radial points (Simpson integration routine)
+  !-------------------------------------------------------------------------------
+  !> @warning 
+  !> * Because this routine is called only `IF KREL.EQ.0`, the number of spins in `VM2Z` is always 2
+  !> * So far, only `SPHERICAL` part implemented
+  !> @endwarning
+  !-------------------------------------------------------------------------------
+  subroutine relpotcvt(icall,vm2z,zin,rin,drdiin,ircut,vtrel,btrel,zrel,rmrel,      &
+    jwsrel,drdirel,r2drdirel,irshift,ipand,irmd,npotd,natypd)
 
     use :: mod_rinit
     implicit none

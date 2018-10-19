@@ -1,18 +1,25 @@
+!------------------------------------------------------------------------------------
+!> Summary: Generates a number of real space vectors to construct the clusters representing the local surrounding of the atoms
+!> Author: 
+!> Generates a number of real space vectors to construct the clusters representing 
+!> the local surrounding of the atoms
+!------------------------------------------------------------------------------------
 module mod_rrgen
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  ! 02.08.95 *************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Generates a number of real space vectors to construct the clusters representing the local surrounding of the atoms
+  !> Author: 
+  !> Category: geometry, input-output, KKRhost
+  !> Deprecated: False 
+  !> Generates a number of real space vectors to construct the clusters representing 
+  !> the local surrounding of the atoms
+  !-------------------------------------------------------------------------------
   subroutine rrgen(bv1, lsurf, rr, nrd)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * generates a number of real space vectors to construct the          *
-    ! * clusters representing the local surrounding of the atoms in        *
-    ! * routine CLSGEN99                                                   *
-    ! *                                                                    *
-    ! **********************************************************************
+
     use :: mod_vmul
     use :: mod_vadd
     use :: mod_veq

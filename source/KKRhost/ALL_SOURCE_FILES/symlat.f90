@@ -1,21 +1,42 @@
+!------------------------------------------------------------------------------------
+!> Summary: Supplies the point symmetry operations of the lattice
+!> Author: 
+!> Supplies the point symmetry operations of the lattice.
+!> `symlat` analyzes the primitive translations of the bravais lattice in order to 
+!> supply the symmetry operations of the lattice.
+!> It gives the number `nsymop` of allowed operations as well as these operations themselves.
+!> * Inputs:
+!>    - `platcp`: lattice vectors of most compact primitive unit cell
+!> * Outputs:
+!>    - `nsymop`: number of allowed symmetry operations
+!>    - `symopm`: symmetry operation matrix
+!------------------------------------------------------------------------------------
+!> @note Jonathan Chico: Seems to not be called anywhere
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_symlat
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Supplies the point symmetry operations of the lattice
+  !> Author: 
+  !> Category: geometry, deprecated, KKRhost
+  !> Deprecated: True
+  !> Supplies the point symmetry operations of the lattice.
+  !> `symlat` analyzes the primitive translations of the bravais lattice in order to 
+  !> supply the symmetry operations of the lattice.
+  !> It gives the number `nsymop` of allowed operations as well as these operations themselves.
+  !> * Inputs:
+  !>    - `platcp`: lattice vectors of most compact primitive unit cell
+  !> * Outputs:
+  !>    - `nsymop`: number of allowed symmetry operations
+  !>    - `symopm`: symmetry operation matrix
+  !-------------------------------------------------------------------------------
+  !> @note Jonathan Chico: Seems to not be called anywhere
+  !> @endnote
+  !-------------------------------------------------------------------------------
   subroutine symlat(nsymop, platcp, symopm)
-    ! - Supplies the point symmetry operations of the lattice
-    ! ----------------------------------------------------------------------
-    ! i Inputs:
-    ! i   platcp:lattice vectors of most compact primitive unit cell
-    ! o Outputs:
-    ! o   nsymop:number of allowed symmetry operations
-    ! o   symopm:symmetry operation matrix
-    ! r Remarks:
-    ! r   symlat analyzes the primitive translations of the bravais
-    ! r   lattice in order to supply the symmetry operations of the lattice.
-    ! r   It gives the number nsymop of allowed operations as well as
-    ! r   these operations themselves.
-    ! ----------------------------------------------------------------------
 
     use :: mod_datatypes, only: dp
     use :: mod_dinv33

@@ -1,24 +1,39 @@
+!------------------------------------------------------------------------------------
+!> Summary: Simpson integration for a real integrand
+!> Author: 
+!> Simpson integration for a real integrand, \(f_x\) from 1 to `jtop` in an
+!> equidistant mesh.
+!> \begin{equation}
+!> int =\left[F_1 + 4F_2 + 2F_3 + .... + 4F_{N-1} + F_N \right]
+!> \end{equation}
+!> for odd \(N\).
+!------------------------------------------------------------------------------------
 module mod_rintsimp
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Simpson integration for a real integrand
+  !> Author: 
+  !> Category: numerical-tools, KKRhost
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !> Simpson integration for a real integrand, \(f_x\) from 1 to `jtop` in an
+  !> equidistant mesh.
+  !> \begin{equation}
+  !> int =\left[F_1 + 4F_2 + 2F_3 + .... + 4F_{N-1} + F_N \right]
+  !> \end{equation}
+  !> for odd \(N\).
+  !-------------------------------------------------------------------------------
   subroutine rintsimp(fx, jtop, cint)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *  SIMPSON - INTERGRATION FOR  REAL   INTEGRAND  FX FROM 1 TO JTOP *
-    ! *  AND EQUIDISTANT MESH    I                                       *
-    ! *   INT = [ F1 + 4*F2 + 2*F3 + .... + 4F(N-1) + FN ]/3     N:ODD   *
-    ! *                                                                  *
-    ! ********************************************************************
 
     implicit none
 
     ! Dummy arguments
-    real (kind=dp) :: cint
-    integer :: jtop
-    real (kind=dp) :: fx(jtop)
+    integer, intent(in) :: jtop !! Number of entries in the equidistant grid defining the integrand
+    real (kind=dp), dimension(jtop), intent(in) :: fx !! Integrand
+    real (kind=dp), intent(out) :: cint !! Integrated function
 
     ! Local variables
     integer :: i

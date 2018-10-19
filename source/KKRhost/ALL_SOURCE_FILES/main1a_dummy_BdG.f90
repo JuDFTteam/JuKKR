@@ -1,4 +1,10 @@
-! > this is dummy version of main1a
+!-------------------------------------------------------------------------------
+!> Summary: Dummy version of `main1a` which is used to test the `tmat_newsolver`
+!> Author: Philipp Ruessmann
+!> Category: unit-test, KKRhost 
+!> Deprecated: False 
+!> Dummy version of `main1a` which is used to test the `tmat_newsolver`
+!-------------------------------------------------------------------------------
 subroutine main1a_dummy
   use :: mod_profiling
   use :: mod_constants

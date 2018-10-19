@@ -1,15 +1,24 @@
+!------------------------------------------------------------------------------------
+!> Summary: Reads in LDA+U arrays from formatted file `ldaupot`
+!> Author: 
+!> Reads in LDA+U arrays from formatted file `ldaupot`
+!------------------------------------------------------------------------------------
 module mod_startldau
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  subroutine startldau(itrunldau, idoldau, kreadldau, lopt, ueff, jeff, erefldau, natyp, nspin, wldau, uldau, phildau, irws, ntldau, itldau, irmd, natypd, nspind, mmaxd)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * Reads in LDA+U arrays from formatted file 'ldaupot'                *
-    ! *                                                                    *
-    ! **********************************************************************
+   !-------------------------------------------------------------------------------
+   !> Summary: Reads in LDA+U arrays from formatted file `ldaupot`
+   !> Author:
+   !> Category: lda+u, input-output, initialization, KKRhost
+   !> Deprecated: False 
+   !> Reads in LDA+U arrays from formatted file `ldaupot`
+   !-------------------------------------------------------------------------------
+  subroutine startldau(itrunldau,idoldau,kreadldau,lopt,ueff,jeff,erefldau,natyp,   &
+    nspin,wldau,uldau,phildau,irws,ntldau,itldau,irmd,natypd,nspind,mmaxd)
+
     use :: mod_readldaupot
     use :: mod_rinit
     use :: mod_cinit
@@ -23,17 +32,12 @@ contains
     real (kind=dp) :: ueff(natypd), jeff(natypd), erefldau(natypd)
     real (kind=dp) :: wldau(mmaxd, mmaxd, nspind, natypd)
     real (kind=dp) :: uldau(mmaxd, mmaxd, mmaxd, mmaxd, natypd)
-    ! real (kind=dp), allocatable :: ULDAU(:,:,:,:,:)
     complex (kind=dp) :: phildau(irmd, natypd)
     ! ..
     ! .. Locals ..
     integer :: i1, im1, im3, is, it, ll
     ! ..
     ! ----------------------------------------------------------------------
-
-
-    ! ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
-
     itrunldau = 0
     idoldau = 1
     ntldau = 0
@@ -56,14 +60,13 @@ contains
     write (1337, 120)
     write (1337, *)
     ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
-
     ! -> read in LDA+U from file if available (KREADLDAU=1)
-
     call rinit(mmaxd*mmaxd*nspind*natypd, wldau)
     call cinit(irmd*natypd, phildau)
     if (kreadldau==1) then
       write (1337, 140)
-      call readldaupot(itrunldau, lopt, ueff, jeff, erefldau, natyp, wldau, uldau, phildau, irws, ntldau, itldau, irmd, natypd, nspind, mmaxd)
+      call readldaupot(itrunldau,lopt,ueff,jeff,erefldau,natyp,wldau,uldau,phildau, &
+        irws,ntldau,itldau,irmd,natypd,nspind,mmaxd)
     else
       write (1337, 150)
     end if

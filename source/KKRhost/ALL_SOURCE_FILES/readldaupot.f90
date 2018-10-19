@@ -1,15 +1,23 @@
+!------------------------------------------------------------------------------------
+!> Summary: Reads in LDA+U arrays from formatted file `ldaupot`
+!> Author: 
+!> Reads in LDA+U arrays from formatted file `ldaupot`
+!------------------------------------------------------------------------------------
 module mod_readldaupot
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  subroutine readldaupot(itrunldau, lopt, ueff, jeff, erefldau, natyp, wldau, uldau, phildau, irws, ntldau, itldau, irmd, natypd, nspind, mmaxd)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! * Reads in LDA+U arrays from formatted file 'ldaupot'                *
-    ! *                                                                    *
-    ! **********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Reads in LDA+U arrays from formatted file `ldaupot`
+  !> Author: 
+  !> Category: lda+u, input-output, KKRhost
+  !> Deprecated: False
+  !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+  !-------------------------------------------------------------------------------
+  subroutine readldaupot(itrunldau,lopt,ueff,jeff,erefldau,natyp,wldau,uldau,       &
+    phildau,irws,ntldau,itldau,irmd,natypd,nspind,mmaxd)
 
     use :: mod_version_info
     implicit none
@@ -31,9 +39,6 @@ contains
     integer :: loptldau(natypd)
     real (kind=dp) :: ueff0, jeff0, eref0
     ! ======================================================================
-
-
-    ! ALLOCATE( ULDAU(MMAXD,MMAXD,MMAXD,MMAXD,NATYPD) )
 
     open (67, file='ldaupot', form='FORMATTED', status='OLD', iostat=ios)
     call version_check_header(67)

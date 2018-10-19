@@ -1,36 +1,55 @@
+!------------------------------------------------------------------------------------
+!> Summary: Add core and valence density expanded in spherical harmonics (convention see subroutine rholm )
+!> Author: B. Drittler
+!> In the paramagnetic case (nspin=1) the core valence charge times
+!> \(r^2\) is added to the valence charge density times \(r^2\)
+!> then only rho2ns(irmd,lmxtsq,natypd,1) is used .
+!> In the spin-polarized case (nspin=2) the spin-splitted core
+!> charge density times \(r^2\) is converted into core charge
+!> density times \(r^2\) and core spin density times \(r^2\).
+!> then these parts are added to corresponding parts of
+!> the valence densities times \(r^2\), that are `rho2ns(...,1)`
+!> which contains the charge density and `rho2ns(...,2)` which
+!> contains in that case the spin density .
+!> (see notes by b.drittler)
+!------------------------------------------------------------------------------------
+!> @note -V. Popescu March 2002: Total orbital moment within the WS sphere is
+!> also calculated in the relativistic case; orbital density is normalised in the
+!> same way as the charge density.
+!> @endnote
+!> @warning The core density is spherically averaged and multiplied by \(4\pi\)
+!> therefore the core density is only added to l=0 part.
+!> @endwarning
+!------------------------------------------------------------------------------------
 module mod_rhototb
 
 contains
 
-  ! -------------------------------------------------------------------------------
-  !> @brief add core and valence density expanded in spherical harmonics
-  !>         ( convention see subroutine rholm )
-  !> @details In the paramagnetic case (nspin=1) the core valence charge times
-  !> r**2 is added to the valence charge density times r**2
-  !> then only rho2ns(irmd,lmxtsq,natypd,1) is used .
+  !-------------------------------------------------------------------------------
+  !> Summary: Add core and valence density expanded in spherical harmonics (convention see subroutine rholm )
+  !> Author: B. Drittler
+  !> Category: core-electrons, physical-observables, KKRhost
+  !> Deprecated: False 
+  !> In the paramagnetic case (nspin=1) the core valence charge times
+  !> \(r^2\) is added to the valence charge density times \(r^2\)
+  !> then only `rho2ns(irmd,lmxtsq,natypd,1)` is used .
   !> In the spin-polarized case (nspin=2) the spin-splitted core
-  !> charge density times r**2 is converted into core charge
-  !> density times r**2 and core spin density times r**2 .
+  !> charge density times \(r^2\) is converted into core charge
+  !> density times \(r^2\) and core spin density times \(r^2\).
   !> then these parts are added to corresponding parts of
-  !> the valence densities times r**2 , that are rho2ns(...,1)
-  !> which contains the charge density  and rho2ns(...,2) which
+  !> the valence densities times \(r^2\), that are `rho2ns(...,1)`
+  !> which contains the charge density and `rho2ns(...,2)` which
   !> contains in that case the spin density .
   !> (see notes by b.drittler)
-  !>
-  !> Attention : the core density is spherically averaged and multiplied by 4
-  ! pi.
-  !> therefore the core density is only added to l=0 part .
-
-  !> @author B. Drittler
-  !> @date   Nov. 1989
-
+  !-------------------------------------------------------------------------------
   !> @note -V. Popescu March 2002: Total orbital moment within the WS sphere is
-  ! also calculated
-  !> in the relativistic case; orbital density is normalised in the
+  !> also calculated in the relativistic case; orbital density is normalised in the
   !> same way as the charge density.
-  !> @note -Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to
-  ! Fortran90
-  ! -------------------------------------------------------------------------------
+  !> @endnote
+  !> @warning The core density is spherically averaged and multiplied by \(4\pi\)
+  !> therefore the core density is only added to l=0 part.
+  !> @endwarning
+  !-------------------------------------------------------------------------------
   subroutine rhototb(ipf, natyp, naez, nspin, rho2ns, rhoc, rhoorb, z, drdi, irws, ircut, nfu, llmsp, &
     thetas, ntcell, kshape, ipan, chrgnt, itc, nshell, noq, conc, kaoez, catom, irm, nemb, lmpot)
 

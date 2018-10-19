@@ -1,7 +1,17 @@
+!------------------------------------------------------------------------------------
+!> Summary: 
+!> Author:
+!------------------------------------------------------------------------------------
 module mod_mapblock
 
 contains
 
+  !-------------------------------------------------------------------------------  
+  !> Summary: 
+  !> Author: 
+  !> Category: undefined, deprecated 
+  !> Deprecated: True 
+  !-------------------------------------------------------------------------------  
   integer function mapblock(ie, ie1, ne, iterstep, nodefirst, nodelast)
     ! **********************************************************************
     ! *                                                                    *
@@ -16,7 +26,7 @@ contains
 
     ! Locals ..
     integer :: inc, ip, ipp, iproc, je, ke
-    integer :: iesort(ne), iproce(ne)
+    integer, dimension(ne) :: iesort, iproce
     ! ......................................................................
     ipp = iterstep                 ! dummy use of argument iterstep
     do je = ie1, ne

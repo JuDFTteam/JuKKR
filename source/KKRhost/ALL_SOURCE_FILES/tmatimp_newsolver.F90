@@ -1,21 +1,34 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculate and write down impurity t-matrix and delta matrix first calculate t-matrix for the host corresponding to imp. cluster
+!> Author: N. H. Long
+!> Calculate and write down impurity t-matrix and delta matrix
+!> first calculate t-matrix for the host corresponding to imp. cluster
+!------------------------------------------------------------------------------------
+!> @note - Adapted to new routines (mainly changed interfaces) to work in KKRcode
+!> also added MPI parallelization. Philipp Rüssmann, Juelich, 09.2017
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_tmatimp_newsolver
 
 contains
 
-  ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: TMATIMP_NEWSOLVER
-  !> @brief Calculate and write down impurity tmatrix and delta matrix
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculate and write down impurity t-matrix and delta matrix first calculate t-matrix for the host corresponding to imp. cluster
+  !> Author: N. H. Long
+  !> Category: solver, single-site, KKRhost 
+  !> Deprecated: False 
+  !> Calculate and write down impurity t-matrix and delta matrix
   !> first calculate t-matrix for the host corresponding to imp. cluster
-  !> @author N. H. Long
-  !> @date 05.2013, Juelich
-  !> @note
-  !> - Adapted to new routines (mainly changed interfaces) to work in KKRcode
+  !-------------------------------------------------------------------------------
+  !> @note - Adapted to new routines (mainly changed interfaces) to work in KKRcode
   !> also added MPI parallelization. Philipp Rüssmann, Juelich, 09.2017
-  !> - Jonathan Chico Feb. 2018: Removed inc.p dependencies and rewrote to Fortran90
-  ! ----------------------------------------------------------------------------
-  subroutine tmatimp_newsolver(irm, ksra, lmax, iend, irid, lpot, natyp, ncleb, ipand, irnsd, nfund, ihost, ntotd, nspin, lmpot, ncheb, lmmaxd, korbit, nspotd, ielast, irmind, &
-    npan_eq, npan_log, natomimp, r_log, vins, vm2z, ipan, irmin, hostimp, ipanimp, irwsimp, atomimp, irminimp, icleb, ircut, ircutimp, zat, zimp, rmesh, cleb, rimp, rclsimp, eryd, &
-    vm2zimp, vinsimp, dtmtrx, lmmaxso)
+  !> @endnote
+  !-------------------------------------------------------------------------------
+  subroutine tmatimp_newsolver(irm,ksra,lmax,iend,irid,lpot,natyp,ncleb,ipand,irnsd,&
+    nfund,ihost,ntotd,nspin,lmpot,ncheb,lmmaxd,korbit,nspotd,ielast,irmind,npan_eq, &
+    npan_log,natomimp,r_log,vins,vm2z,ipan,irmin,hostimp,ipanimp,irwsimp,atomimp,   &
+    irminimp,icleb,ircut,ircutimp,zat,zimp,rmesh,cleb,rimp,rclsimp,eryd,vm2zimp,    &
+    vinsimp,dtmtrx,lmmaxso)
 
 #ifdef CPP_MPI
     use :: mpi
@@ -200,11 +213,11 @@ contains
 
     ! set start/end of parallel atom loops
     if (t_inc%i_write>0) write (1337, *) 'Parallelization host atoms:'
-    call distribute_linear_on_tasks(nranks, myrank, master, ihost, ntot_pt, ioff_pt, .true.)
+    call distribute_linear_on_tasks(nranks,myrank,master,ihost,ntot_pt,ioff_pt,.true.)
     i1_start = ioff_pt(myrank) + 1
     i1_end = ioff_pt(myrank) + ntot_pt(myrank)
     if (t_inc%i_write>0) write (1337, *) 'Parallelization imp. atoms:'
-    call distribute_linear_on_tasks(nranks, myrank, master, natomimp, ntot_pt, ioff_pt, .true.)
+    call distribute_linear_on_tasks(nranks,myrank,master,natomimp,ntot_pt,ioff_pt,.true.)
     i1_start_imp = ioff_pt(myrank) + 1
     i1_end_imp = ioff_pt(myrank) + ntot_pt(myrank)
 #else
@@ -216,9 +229,9 @@ contains
 
     if (opt('GREENIMP')) then
 
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !------------------------------------------------------------------------------
       ! START calculate tmat and radial wavefunctions of host atoms
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !------------------------------------------------------------------------------
 
       ! create new mesh before loop starts
       ! data for the new mesh
@@ -243,12 +256,16 @@ contains
       allocate (vinsnew(irmdnewd,lmpot,nspotd), stat=i_stat) ! NSPIND*max(NATYP,NATOMIMP)))
       call memocc(i_stat, product(shape(vinsnew))*kind(vinsnew), 'VINSNEW', 'tmatimp_newsolver')
 
-      call create_newmesh(natyp, irm, ipand, irid, ntotd, nfund, ncheb, irmdnewd, nspin, rmesh(:,:), irmin(:), ipan(:), ircut(0:ipand,:), r_log, npan_log, npan_eq, npan_log_at(:), &
-        npan_eq_at(:), npan_tot(:), rnew(:,:), rpan_intervall(0:ntotd,:), ipan_intervall(0:ntotd,:), 1)
+      call create_newmesh(natyp,irm,ipand,irid,ntotd,nfund,ncheb,irmdnewd,nspin,    &
+        rmesh(:,:),irmin(:),ipan(:),ircut(0:ipand,:),r_log,npan_log,npan_eq,        &
+        npan_log_at(:),npan_eq_at(:),npan_tot(:),rnew(:,:),                         &
+        rpan_intervall(0:ntotd,:),ipan_intervall(0:ntotd,:),1)
 
       ! in second step interpolate potential (gain atom by atom with NATYPD==1)
-      call interpolate_poten(lpot, irm, irnsd, natyp, ipand, lmpot, nspotd, ntotd, irmdnewd, nspin, rmesh(:,:), irmin(:), t_params%irws(:), ircut(0:ipand,:), &
-        vins(irmind:irm,1:lmpot,:), vm2z(:,:), npan_log_at(:), npan_eq_at(:), npan_tot(:), rnew(:,:), ipan_intervall(0:ntotd,:), vinsnew)
+      call interpolate_poten(lpot,irm,irnsd,natyp,ipand,lmpot,nspotd,ntotd,irmdnewd,&
+        nspin,rmesh(:,:),irmin(:),t_params%irws(:),ircut(0:ipand,:),                &
+        vins(irmind:irm,1:lmpot,:),vm2z(:,:),npan_log_at(:),npan_eq_at(:),          &
+        npan_tot(:),rnew(:,:),ipan_intervall(0:ntotd,:),vinsnew)
 
       ! calculate tmat and radial wavefunctions of host atoms
       ! parallelized with MPI over atoms
@@ -277,19 +294,24 @@ contains
         call memocc(i_stat, product(shape(vnspll1))*kind(vnspll1), 'VNSPLL1', 'tmatimp_newsolver')
         vnspll1 = czero
 
-        call vllmat(1, irmdnew(i1), irmdnew(i1), lmmaxd, lmmaxso, vnspll0, vinsnew(1:irmdnew(i1),1:lmpot,ipot:ipot+nspin-1), lmpot, cleb, icleb, iend, nspin, zat(i1), &
-          rnew(1:irmdnew(i1),i1), use_sratrick, ncleb)
+        call vllmat(1,irmdnew(i1),irmdnew(i1),lmmaxd,lmmaxso,vnspll0,               &
+          vinsnew(1:irmdnew(i1),1:lmpot,ipot:ipot+nspin-1),lmpot,cleb,icleb,iend,   &
+          nspin,zat(i1),rnew(1:irmdnew(i1),i1),use_sratrick,ncleb)
         ! contruct the spin-orbit coupling hamiltonian and add to potential
-        call spinorbit_ham(lmax, lmmaxd, vinsnew(1:irmdnew(i1),1:lmpot,ipot:ipot+nspin-1), rnew(1:irmdnew(i1),i1), eryd, zat(i1), cvlight, t_params%socscale(i1), nspin, lmpot, &
-          theta, phi, ipan_intervall(0:ntotd,i1), rpan_intervall(0:ntotd,i1), npan_tot(i1), ncheb, irmdnew(i1), irmdnew(i1), vnspll0, vnspll1, '1')
+        call spinorbit_ham(lmax,lmmaxd,vinsnew(1:irmdnew(i1),1:lmpot,ipot:ipot+nspin-1),&
+          rnew(1:irmdnew(i1),i1),eryd,zat(i1),cvlight,t_params%socscale(i1),nspin,  &
+          lmpot,theta,phi,ipan_intervall(0:ntotd,i1),rpan_intervall(0:ntotd,i1),    &
+          npan_tot(i1),ncheb,irmdnew(i1),irmdnew(i1),vnspll0,vnspll1,'1')
         ! extend matrix for the SRA treatment
         if (nsra==2) then
           allocate (vnspll(2*lmmaxso,2*lmmaxso,irmdnew(i1)), stat=i_stat)
           call memocc(i_stat, product(shape(vnspll))*kind(vnspll), 'VNSPLL', 'tmatimp_newsolver')
           if (use_sratrick==0) then
-            call vllmatsra(vnspll1, vnspll, rnew(1:irmdnew(i1),i1), lmmaxso, irmdnew(i1), irmdnew(i1), eryd, lmax, 0, 'Ref=0')
+            call vllmatsra(vnspll1,vnspll,rnew(1:irmdnew(i1),i1),lmmaxso,           &
+              irmdnew(i1),irmdnew(i1),eryd,lmax,0,'Ref=0')
           else if (use_sratrick==1) then
-            call vllmatsra(vnspll1, vnspll, rnew(1:irmdnew(i1),i1), lmmaxso, irmdnew(i1), irmdnew(i1), eryd, lmax, 0, 'Ref=Vsph')
+            call vllmatsra(vnspll1,vnspll,rnew(1:irmdnew(i1),i1),lmmaxso,           &
+              irmdnew(i1),irmdnew(i1),eryd,lmax,0,'Ref=Vsph')
           end if
         else
           allocate (vnspll(lmmaxso,lmmaxso,irmdnew(i1)), stat=i_stat)
@@ -312,12 +334,16 @@ contains
         hlk2 = czero
         jlk2 = czero
         gmatprefactor = czero
-        call rllsllsourceterms(nsra, nvec, eryd, rnew(1:irmdnew(i1),i1), irmdnew(i1), irmdnew(i1), lmax, lmmaxso, 1, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor)
+        call rllsllsourceterms(nsra,nvec,eryd,rnew(1:irmdnew(i1),i1),irmdnew(i1),   &
+          irmdnew(i1),lmax,lmmaxso,1,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor)
 
         ! using spherical potential as reference
         if (use_sratrick==1) then
-          call calcsph(nsra, irmdnew(i1), irmdnew(i1), lmax, nspin, zat(i1), eryd, lmpot, lmmaxso, rnew(1:irmdnew(i1),i1), vinsnew(1:irmdnew(i1),1:lmpot,ipot:ipot+nspin-1), ncheb, &
-            npan_tot(i1), rpan_intervall(0:ntotd,i1), jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, tmatsph, dummy_alpha, use_sratrick)
+          call calcsph(nsra,irmdnew(i1),irmdnew(i1),lmax,nspin,zat(i1),eryd,lmpot,  &
+            lmmaxso,rnew(1:irmdnew(i1),i1),                                         &
+            vinsnew(1:irmdnew(i1),1:lmpot,ipot:ipot+nspin-1),ncheb,npan_tot(i1),    &
+            rpan_intervall(0:ntotd,i1),jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor,   &
+            tmatsph,dummy_alpha,use_sratrick)
         end if
 
         ! calculate the tmat and wavefunctions
@@ -329,8 +355,10 @@ contains
         sll = czero
 
         ! right solutions
-        call rllsll(rpan_intervall(0:ntotd,i1), rnew(1:irmdnew(i1),i1), vnspll, rll, sll, tmatll(:,:,i2), ncheb, npan_tot(i1), lmmaxso, nvec*lmmaxso, 4*(lmax+1), irmdnew(i1), nsra, &
-          jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, '1', '1', '0', use_sratrick, dummy_alphaget)
+        call rllsll(rpan_intervall(0:ntotd,i1),rnew(1:irmdnew(i1),i1),vnspll,rll,   &
+          sll,tmatll(:,:,i2),ncheb,npan_tot(i1),lmmaxso,nvec*lmmaxso,4*(lmax+1),    &
+          irmdnew(i1),nsra,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor,'1','1','0',   &
+          use_sratrick,dummy_alphaget)
         if (nsra==2) then
           do ir = 1, irmdnew(i1)
             do lm1 = 1, lmmaxso
@@ -364,12 +392,15 @@ contains
         ! set up the non-spherical ll' matrix for potential VLL'
         vnspll0 = czero
         vnspll1 = czero
-        call vllmat(1, irmdnew(i1), irmdnew(i1), lmmaxd, lmmaxso, vnspll0, vinsnew(1:irmdnew(i1),1:lmpot,ipot:ipot+nspin-1), lmpot, cleb, icleb, iend, nspin, zat(i1), &
-          rnew(1:irmdnew(i1),i1), 0, ncleb)
+        call vllmat(1,irmdnew(i1),irmdnew(i1),lmmaxd,lmmaxso,vnspll0,               &
+          vinsnew(1:irmdnew(i1),1:lmpot,ipot:ipot+nspin-1),lmpot,cleb,icleb,iend,   &
+          nspin,zat(i1),rnew(1:irmdnew(i1),i1),0,ncleb)
 
         ! contruct the spin-orbit coupling hamiltonian and add to potential
-        call spinorbit_ham(lmax, lmmaxd, vinsnew(1:irmdnew(i1),1:lmpot,ipot:ipot+nspin-1), rnew(1:irmdnew(i1),i1), eryd, zat(i1), cvlight, t_params%socscale(i1), nspin, lmpot, &
-          theta, phi, ipan_intervall(0:ntotd,i1), rpan_intervall(0:ntotd,i1), npan_tot(i1), ncheb, irmdnew(i1), irmdnew(i1), vnspll0, vnspll1, '1')
+        call spinorbit_ham(lmax,lmmaxd,vinsnew(1:irmdnew(i1),1:lmpot,ipot:ipot+nspin-1),&
+          rnew(1:irmdnew(i1),i1),eryd, zat(i1),cvlight,t_params%socscale(i1),nspin, &
+          lmpot,theta,phi,ipan_intervall(0:ntotd,i1),rpan_intervall(0:ntotd,i1),    &
+          npan_tot(i1),ncheb,irmdnew(i1),irmdnew(i1),vnspll0,vnspll1,'1')
 
         ! save potential for a host
         do ir = 1, irmdnew(i1)
@@ -425,7 +456,7 @@ contains
       deallocate (ipan_intervall, stat=i_stat)
       call memocc(i_stat, i_all, 'IPAN_INTERVALL', 'tmatimp_newsolver')
 
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !------------------------------------------------------------------------------
 
 #ifdef CPP_MPI
       ! collect results and write out only on master
@@ -436,7 +467,7 @@ contains
       call memocc(i_stat, product(shape(temp2))*kind(temp2), 'temp2', 'tmatimp_newsolver')
       temp2 = czero
 
-      call mpi_allreduce(rllhost, temp2, i1, mpi_double_complex, mpi_sum, mpi_comm_world, ierr)
+      call mpi_allreduce(rllhost,temp2,i1,mpi_double_complex,mpi_sum,mpi_comm_world,ierr)
       if (ierr/=0) stop 'Error in MPI_Allreduce for RLLHOST in tmatimp'
       rllhost = temp2
       ! Deallocation of temp2 for RLLHOST
@@ -450,7 +481,7 @@ contains
       call memocc(i_stat, product(shape(temp2))*kind(temp2), 'temp2', 'tmatimp_newsolver')
       temp2 = czero
 
-      call mpi_allreduce(vnshost, temp2, i1, mpi_double_complex, mpi_sum, mpi_comm_world, ierr)
+      call mpi_allreduce(vnshost,temp2,i1,mpi_double_complex,mpi_sum,mpi_comm_world,ierr)
       if (ierr/=0) stop 'Error in MPI_Allreduce for VNSHOST in tmatimp'
       vnshost = temp2
       ! Deallocation of temp2 for RLLHOST
@@ -463,7 +494,7 @@ contains
       allocate (temp(lmmaxso,lmmaxso,natomimp), stat=i_stat)
       call memocc(i_stat, product(shape(temp))*kind(temp), 'temp', 'tmatimp_newsolver')
       temp = czero
-      call mpi_allreduce(tmatll, temp, i1, mpi_double_complex, mpi_sum, mpi_comm_world, ierr)
+      call mpi_allreduce(tmatll,temp,i1,mpi_double_complex,mpi_sum,mpi_comm_world,ierr)
       if (ierr/=0) stop 'Error in MPI_Allreduce for TMATLL in tmatimp'
       tmatll = temp
       ! Deallocation of temp for TMATLL
@@ -488,9 +519,9 @@ contains
       deallocate (irmdnew, stat=i_stat)
       call memocc(i_stat, i_all, 'irmdnew', 'tmatimp_newsolver')
 
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !------------------------------------------------------------------------------
       ! END  calculate tmat and radial wavefunctions of host atoms
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !------------------------------------------------------------------------------
 
     else if (myrank==master) then
 
@@ -498,9 +529,9 @@ contains
 
     end if                         ! (OPT('GREENIMP'))
 
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! START calculate tmat and radial wavefunctions of impurity atoms
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
 
     ! create new mesh before loop starts
     ! data for the new mesh
@@ -529,14 +560,19 @@ contains
     tmatllimp = czero
     tmatsph = czero
 
-    call create_newmesh(natomimp, irm, ipand, irid, ntotd, nfund, ncheb, irmdnewd, nspin, rimp(:,1:natomimp), irminimp(1:natomimp), ipanimp(1:natomimp), &
-      ircutimp(0:ipand,1:natomimp), r_log, npan_log, npan_eq, npan_log_at(1:natomimp), npan_eq_at(1:natomimp), npan_tot(1:natomimp), rnew(1:irmdnewd,1:natomimp), &
-      rpan_intervall(0:ntotd,1:natomimp), ipan_intervall(0:ntotd,1:natomimp), 1)
+    call create_newmesh(natomimp,irm,ipand,irid,ntotd,nfund,ncheb,irmdnewd,nspin,   &
+      rimp(:,1:natomimp),irminimp(1:natomimp),ipanimp(1:natomimp),                  &
+      ircutimp(0:ipand,1:natomimp),r_log,npan_log,npan_eq,npan_log_at(1:natomimp),  &
+      npan_eq_at(1:natomimp),npan_tot(1:natomimp),rnew(1:irmdnewd,1:natomimp),      &
+      rpan_intervall(0:ntotd,1:natomimp),ipan_intervall(0:ntotd,1:natomimp),1)
 
     ! In second step interpolate potential
-    call interpolate_poten(lpot, irm, irnsd, natomimp, ipand, lmpot, nspotd, ntotd, irmdnewd, nspin, rimp(:,1:natomimp), irminimp(1:natomimp), irwsimp(1:natomimp), &
-      ircutimp(0:ipand,1:natomimp), vinsimp(irmind:irm,1:lmpot,1:natomimp), vm2zimp(1:irm,1:natomimp), npan_log_at(1:natomimp), npan_eq_at(1:natomimp), npan_tot(1:natomimp), &
-      rnew(1:irmdnewd,1:natomimp), ipan_intervall(0:ntotd,1:natomimp), vinsnew)
+    call interpolate_poten(lpot,irm,irnsd,natomimp,ipand,lmpot,nspotd,ntotd,        &
+      irmdnewd,nspin,rimp(:,1:natomimp),irminimp(1:natomimp),irwsimp(1:natomimp),   &
+      ircutimp(0:ipand,1:natomimp),vinsimp(irmind:irm,1:lmpot,1:natomimp),          &
+      vm2zimp(1:irm,1:natomimp),npan_log_at(1:natomimp),npan_eq_at(1:natomimp),     &
+      npan_tot(1:natomimp),rnew(1:irmdnewd,1:natomimp),                             &
+      ipan_intervall(0:ntotd,1:natomimp),vinsnew)
 
     ! now start loop over atoms
     do i1 = i1_start_imp, i1_end_imp
@@ -563,21 +599,26 @@ contains
       call memocc(i_stat, product(shape(vnspll1))*kind(vnspll1), 'VNSPLL1', 'tmatimp_newsolver')
       vnspll1 = czero
 
-      call vllmat(1, irmdnew(i1), irmdnew(i1), lmmaxd, lmmaxso, vnspll0, vinsnew(1:irmdnew(i1),1:lmpot,ipot:ipot+nspin-1), lmpot, cleb, icleb, iend, nspin, zimp(i1), &
-        rnew(1:irmdnew(i1),i1), use_sratrick, ncleb)
+      call vllmat(1,irmdnew(i1),irmdnew(i1),lmmaxd,lmmaxso,vnspll0,                 &
+        vinsnew(1:irmdnew(i1),1:lmpot,ipot:ipot+nspin-1),lmpot,cleb,icleb,iend,     &
+        nspin,zimp(i1),rnew(1:irmdnew(i1),i1),use_sratrick,ncleb)
 
       ! Contruct the spin-orbit coupling hamiltonian and add to potential
-      call spinorbit_ham(lmax, lmmaxd, vinsnew(1:irmdnew(i1),1:lmpot,ipot:ipot+nspin-1), rnew(1:irmdnew(i1),i1), eryd, zimp(i1), cvlight, t_params%socscale(i1), nspin, lmpot, &
-        theta, phi, ipan_intervall(0:ntotd,i1), rpan_intervall(0:ntotd,i1), npan_tot(i1), ncheb, irmdnew(i1), irmdnew(i1), vnspll0, vnspll1, '1')
+      call spinorbit_ham(lmax,lmmaxd,vinsnew(1:irmdnew(i1),1:lmpot,ipot:ipot+nspin-1),&
+        rnew(1:irmdnew(i1),i1),eryd,zimp(i1),cvlight,t_params%socscale(i1),nspin,   &
+        lmpot,theta,phi,ipan_intervall(0:ntotd,i1),rpan_intervall(0:ntotd,i1),      &
+        npan_tot(i1),ncheb,irmdnew(i1),irmdnew(i1),vnspll0,vnspll1,'1')
 
       ! extend matrix for the SRA treatment
       if (nsra==2) then
         allocate (vnspll(2*lmmaxso,2*lmmaxso,irmdnew(i1)), stat=i_stat)
         call memocc(i_stat, product(shape(vnspll))*kind(vnspll), 'VNSPLL', 'tmatimp_newsolver')
         if (use_sratrick==0) then
-          call vllmatsra(vnspll1, vnspll, rnew(1:irmdnew(i1),i1), lmmaxso, irmdnew(i1), irmdnew(i1), eryd, lmax, 0, 'Ref=0')
+          call vllmatsra(vnspll1,vnspll,rnew(1:irmdnew(i1),i1),lmmaxso,irmdnew(i1), &
+            irmdnew(i1),eryd,lmax,0,'Ref=0')
         else if (use_sratrick==1) then
-          call vllmatsra(vnspll1, vnspll, rnew(1:irmdnew(i1),i1), lmmaxso, irmdnew(i1), irmdnew(i1), eryd, lmax, 0, 'Ref=Vsph')
+          call vllmatsra(vnspll1,vnspll,rnew(1:irmdnew(i1),i1),lmmaxso,irmdnew(i1), &
+            irmdnew(i1),eryd,lmax,0,'Ref=Vsph')
         end if
       else
         allocate (vnspll(lmmaxso,lmmaxso,irmdnew(i1)), stat=i_stat)
@@ -600,11 +641,15 @@ contains
       hlk2 = czero
       jlk2 = czero
       gmatprefactor = czero
-      call rllsllsourceterms(nsra, nvec, eryd, rnew(1:irmdnew(i1),i1), irmdnew(i1), irmdnew(i1), lmax, lmmaxso, 1, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor)
+      call rllsllsourceterms(nsra,nvec,eryd,rnew(1:irmdnew(i1),i1),irmdnew(i1),     &
+        irmdnew(i1),lmax,lmmaxso,1,jlk_index,hlk, jlk,hlk2,jlk2,gmatprefactor)
       ! using spherical potential as reference
       if (use_sratrick==1) then
-        call calcsph(nsra, irmdnew(i1), irmdnew(i1), lmax, nspin, zimp(i1), eryd, lmpot, lmmaxso, rnew(1:irmdnew(i1),i1), vinsnew(1:irmdnew(i1),1:lmpot,ipot:ipot+nspin-1), ncheb, &
-          npan_tot(i1), rpan_intervall(0:ntotd,i1), jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, tmatsph, dummy_alpha, use_sratrick)
+        call calcsph(nsra,irmdnew(i1),irmdnew(i1),lmax,nspin,zimp(i1),eryd,lmpot,   &
+          lmmaxso,rnew(1:irmdnew(i1),i1),                                           &
+          vinsnew(1:irmdnew(i1),1:lmpot,ipot:ipot+nspin-1),ncheb,npan_tot(i1),      &
+          rpan_intervall(0:ntotd,i1),jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor,     &
+          tmatsph,dummy_alpha,use_sratrick)
       end if
 
       ! calculate the tmat and wavefunctions
@@ -616,8 +661,10 @@ contains
       sll = czero
 
       ! Right solutions
-      call rllsll(rpan_intervall(0:ntotd,i1), rnew(1:irmdnew(i1),i1), vnspll, rll, sll, tmatllimp(:,:,i1), ncheb, npan_tot(i1), lmmaxso, nvec*lmmaxso, 4*(lmax+1), irmdnew(i1), &
-        nsra, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, '1', '1', '0', use_sratrick, dummy_alphaget)
+      call rllsll(rpan_intervall(0:ntotd,i1),rnew(1:irmdnew(i1),i1),vnspll,rll,sll, &
+        tmatllimp(:,:,i1),ncheb,npan_tot(i1),lmmaxso,nvec*lmmaxso,4*(lmax+1),       &
+        irmdnew(i1),nsra,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor,'1','1','0',     &
+        use_sratrick,dummy_alphaget)
       if (nsra==2) then
         do ir = 1, irmdnew(i1)
           do lm1 = 1, lmmaxso
@@ -647,13 +694,16 @@ contains
       ! create SRA potential for impurity
       ! set up the non-spherical ll' matrix for potential VLL'
       vnspll0 = czero
-      call vllmat(1, irmdnew(i1), irmdnew(i1), lmmaxd, lmmaxso, vnspll0, vinsnew(1:irmdnew(i1),1:lmpot,ipot:ipot+nspin-1), lmpot, cleb, icleb, iend, nspin, zimp(i1), &
-        rnew(1:irmdnew(i1),i1), 0, ncleb)
+      call vllmat(1,irmdnew(i1),irmdnew(i1),lmmaxd,lmmaxso,vnspll0,                 &
+        vinsnew(1:irmdnew(i1),1:lmpot,ipot:ipot+nspin-1),lmpot,cleb,icleb,iend,     &
+        nspin,zimp(i1),rnew(1:irmdnew(i1),i1),0,ncleb)
       ! +             ZIMP(I1),RNEW(:,I1),USE_SRATRICK)
 
       ! contruct the spin-orbit coupling hamiltonian and add to potential
-      call spinorbit_ham(lmax, lmmaxd, vinsnew(1:irmdnew(i1),1:lmpot,ipot:ipot+nspin-1), rnew(1:irmdnew(i1),i1), eryd, zimp(i1), cvlight, t_params%socscale(i1), nspin, lmpot, &
-        theta, phi, ipan_intervall(0:ntotd,i1), rpan_intervall(0:ntotd,i1), npan_tot(i1), ncheb, irmdnew(i1), irmdnew(i1), vnspll0, vnspll1, '1')
+      call spinorbit_ham(lmax,lmmaxd,vinsnew(1:irmdnew(i1),1:lmpot,ipot:ipot+nspin-1),&
+        rnew(1:irmdnew(i1),i1),eryd,zimp(i1),cvlight,t_params%socscale(i1),nspin,   &
+        lmpot,theta,phi,ipan_intervall(0:ntotd,i1),rpan_intervall(0:ntotd,i1),      &
+        npan_tot(i1),ncheb,irmdnew(i1),irmdnew(i1),vnspll0,vnspll1,'1')
       do ir = 1, irmdnew(i1)
         do lm1 = 1, lmmaxso
           do lm2 = 1, lmmaxso
@@ -719,8 +769,10 @@ contains
             end do                 ! LM2
           end do                   ! LM1
 
-          call zgemm('N', 'N', lmmaxso, lmmaxso, lmmaxso, cone, vllimp, lmmaxso, radialimp, lmmaxso, czero, deltav, lmmaxso)
-          call zgemm('C', 'N', lmmaxso, lmmaxso, lmmaxso, cone, radialhost, lmmaxso, deltav, lmmaxso, czero, deltabg(:,:,ir), lmmaxso)
+          call zgemm('N','N',lmmaxso,lmmaxso,lmmaxso,cone,vllimp,lmmaxso,radialimp, &
+            lmmaxso,czero,deltav,lmmaxso)
+          call zgemm('C','N',lmmaxso,lmmaxso,lmmaxso,cone,radialhost,lmmaxso,deltav,&
+            lmmaxso,czero,deltabg(:,:,ir),lmmaxso)
 
           ! small component for SRA stored in DELTASM
           if (nsra==2) then
@@ -739,8 +791,10 @@ contains
                 vllimp(lm1, lm2) = vnsimp(lm1+lmmaxso, lm2+lmmaxso, ir)
               end do
             end do
-            call zgemm('N', 'N', lmmaxso, lmmaxso, lmmaxso, cone, vllimp, lmmaxso, radialimp, lmmaxso, czero, deltav, lmmaxso)
-            call zgemm('C', 'N', lmmaxso, lmmaxso, lmmaxso, cone, radialhost, lmmaxso, deltav, lmmaxso, czero, deltasm(:,:,ir), lmmaxso)
+            call zgemm('N','N',lmmaxso,lmmaxso,lmmaxso,cone,vllimp,lmmaxso,         &
+              radialimp,lmmaxso,czero,deltav,lmmaxso)
+            call zgemm('C','N',lmmaxso,lmmaxso,lmmaxso,cone,radialhost,lmmaxso,     &
+              deltav,lmmaxso,czero,deltasm(:,:,ir),lmmaxso)
 
             ! sum up big and small component stored in DELTABG
             do lm1 = 1, lmmaxso
@@ -758,7 +812,9 @@ contains
             do ir = 1, irmdnew(i1)
               deltatmp(ir) = deltabg(lm1, lm2, ir)
             end do
-            call intcheb_cell(deltatmp, deltamtr(lm1,lm2,i1), rpan_intervall(0:ntotd,i1), ipan_intervall(0:ntotd,i1), npan_tot(i1), ncheb, irmdnew(i1))
+            call intcheb_cell(deltatmp,deltamtr(lm1,lm2,i1),                        &
+              rpan_intervall(0:ntotd,i1),ipan_intervall(0:ntotd,i1),npan_tot(i1),   &
+              ncheb,irmdnew(i1))
           end do
         end do
 
@@ -829,9 +885,9 @@ contains
     deallocate (ipan_intervall, stat=i_stat)
     call memocc(i_stat, i_all, 'IPAN_INTERVALL', 'tmatimp_newsolver')
 
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! END calculate tmat and radial wavefunctions of impurity atoms
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
 
     ! final writeout only on master
 #ifdef CPP_MPI

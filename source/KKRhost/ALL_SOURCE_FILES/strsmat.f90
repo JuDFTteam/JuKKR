@@ -1,26 +1,36 @@
+!------------------------------------------------------------------------------------
+!> Summary: Initialize transformation matrix that takes matrices from relativistic to real spherical harmonics representation.
+!> Author: 
+!> Initialize transformation matrix that takes matrices from relativistic to real 
+!> spherical harmonics representation. Only the non-zero elements of the matrix are
+!> stored.
+!------------------------------------------------------------------------------------
+!> @note 25/10/95 HE: proper convention of trans. matrix introduced
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_strsmat
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Initialize transformation matrix that takes matrices from relativistic to real spherical harmonics representation.
+  !> Author: 
+  !> Category: dirac, numerical-tools, KKRhost
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !> Initialize transformation matrix that takes matrices from relativistic to real 
+  !> spherical harmonics representation. Only the non-zero elements of the matrix are
+  !> stored.
+  !-------------------------------------------------------------------------------
+  !> @note 25/10/95 HE: proper convention of trans. matrix introduced
+  !> @endnote
+  !-------------------------------------------------------------------------------
   subroutine strsmat(lmax, cgc, srrel, nrrel, irrel, nkmmax, nkmpmax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *    INITIALIZE TRANSFORMATION MATRIX THAT TAKES MATRICES FROM     *
-    ! *    RELATIVISTIC  TO  REAL SPERICAL HARM.  REPRESENTATION         *
-    ! *                                                                  *
-    ! *    ONLY THE NON-0 ELEMENTS OF THE MATRIX ARE STORED              *
-    ! *                                                                  *
-    ! * 25/10/95  HE  proper convention of trans. matrix introduced      *
-    ! ********************************************************************
 
     use :: mod_cinit
+    use :: constants, only: ci,cone,czero
     implicit none
-
-    ! PARAMETER definitions
-    complex (kind=dp) :: ci, c1, c0
-    parameter (ci=(0.0e0_dp,1.0e0_dp), c1=(1.0e0_dp,0.0e0_dp), c0=(0.0e0_dp,0.0e0_dp))
 
     ! Dummy arguments
     integer :: lmax, nkmmax, nkmpmax
@@ -97,8 +107,8 @@ contains
           rc(j+nlm, i+nlm) = w
         end if
         if (m==0) then
-          rc(i, i) = c1
-          rc(i+nlm, i+nlm) = c1
+          rc(i, i) = cone
+          rc(i+nlm, i+nlm) = cone
         end if
         if (m>0) then
           rc(i, i) = w*(-1.0e0_dp)**m
@@ -113,7 +123,7 @@ contains
     ! RREL  transforms from   REAL (L,M,S)  to  (KAP,MUE) - representation
     ! |LAM> = sum[LR] |LR> * RREL(LR,LAM)
     ! ----------------------------------------------------------------------
-    call zgemm('N', 'N', nkm, nkm, nkm, c1, rc, nkmmax, crel, nkmmax, c0, rrel, nkmmax)
+    call zgemm('N', 'N', nkm, nkm, nkm, cone, rc, nkmmax, crel, nkmmax, czero, rrel, nkmmax)
 
     ! ---------------------------------------------------
     ! store the elements of  RREL
