@@ -1,7 +1,28 @@
+!------------------------------------------------------------------------------------
+!> Summary: 
+!> Author: 
+!> 
+!------------------------------------------------------------------------------------
       MODULE MOD_MIXBROYDEN
       INTEGER ::  MIT=1
        CONTAINS
 ! c*********************************************************************
+   !-------------------------------------------------------------------------------
+   !> Summary: Broyden mixing wrapper subroutine
+   !> Author: 
+   !> Category: KKRimp, potential
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !> 
+   !-------------------------------------------------------------------------------
+   !> @note Notes on the code
+   !> @endnote
+   !> @todo things that must be checked
+   !> @endtodo
+   !> @warning Important precautions
+   !> @endwarning
+   !> @bug If nasty things are found
+   !> @endbug
+   !-------------------------------------------------------------------------------
       SUBROUTINE MIXBROYDEN(VPOT,VPOT_OUT,INS,MIXFAC,NSPIN,CELL,LMAXATOM, &
                         NATOM,ITDBRY,IMIX,LMPOTD,IRMD)
 ! c*********************************************************************
@@ -55,36 +76,50 @@
 
   
 ! c*********************************************************************
+   !-------------------------------------------------------------------------------
+   !> Summary: Broyden mixing of the potential
+   !> Author: S. Bluegel May 1987, Jul 1989; B. Drittler Aug 1988
+   !> Category: KKRimp, potential
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !> 
+   !>   imix :
+   !>     3      broyden's            f i r s t  m e t h o d
+   !>     4      broyden's          s e c o n d  m e t h o d
+   !>     5      anderson's     g e n e r a l i z e d   m e t h o d
+   !>
+   !>   implemented here according to notes of s.b.
+   !>   broyden's iteration scheme following the papers of :
+   !>   srivastava, j. phys. , 17 (1984) , pp l317
+   !>   c.g. broyden in math.comput., 19 , pp 577, 1965
+   !>   c.g. broyden in ibid, 21 ,pp 368 ,1967
+   !>   the method has been generalized to include a metric.the
+   !>   definition of the necessary inner products are similar to the
+   !>   discription given in the notes of m.weinert.the algorithm
+   !>   discribed in the paper srivastava  has been simplified
+   !>   ( see notes of s.b.)
+   !>   the files ui,vi are stored on high speed ssd memory.
+   !>   broyden's update treats charge and spin on the same footing
+   !>                s. bluegel , kfa , may 1987
+   !>   the anderson method (d.g. anderson, j. acm 12, 547 (1964)) has
+   !>   been generalized and reformulated as an improvement of broyden's
+   !>   second method. successive linesearch is replaced by successive
+   !>   search on hyperplanes. ( see notes of s.b. )
+   !>                s. bluegel , issp , july 1989
+   !>
+   !>   modified for non spherical potential
+   !>                  b. drittler , aug. 1988
+   !-------------------------------------------------------------------------------
+   !> @note Notes on the code
+   !> @endnote
+   !> @todo things that must be checked
+   !> @endtodo
+   !> @warning Important precautions
+   !> @endwarning
+   !> @bug If nasty things are found
+   !> @endbug
+   !-------------------------------------------------------------------------------
       SUBROUTINE MIXBROYDEN_START(VPOT,VPOT_OUT,INS,MIXFAC,NSPIN,CELL,LMAXATOM, &
                         NATOM,ITDBRY,IMIX,NTIRD,LMPOTD,IRMD,iobroy)
-! c*********************************************************************
-! c     imix :
-! c       3      broyden's            f i r s t  m e t h o d
-! c       4      broyden's          s e c o n d  m e t h o d
-! c       5      anderson's     g e n e r a l i z e d   m e t h o d
-! c
-! c     implemented here according to notes of s.b.
-! c     broyden's iteration scheme following the papers of :
-! c     srivastava, j. phys. , 17 (1984) , pp l317
-! c     c.g. broyden in math.comput., 19 , pp 577, 1965
-! c     c.g. broyden in ibid, 21 ,pp 368 ,1967
-! c     the method has been generalized to include a metric.the
-! c     definition of the necessary inner products are similar to the
-! c     discription given in the notes of m.weinert.the algorithm
-! c     discribed in the paper srivastava  has been simplified
-! c     ( see notes of s.b.)
-! c     the files ui,vi are stored on high speed ssd memory.
-! c     broyden's update treats charge and spin on the same footing
-! c                  s. bluegel , kfa , may 1987
-! c     the anderson method (d.g. anderson, j. acm 12, 547 (1964)) has
-! c     been generalized and reformulated as an improvement of broyden's
-! c     second method. successive linesearch is replaced by successive
-! c     search on hyperplanes. ( see notes of s.b. )
-! c                  s. bluegel , issp , july 1989
-! c
-! c     modified for non spherical potential
-! c                  b. drittler , aug. 1988
-! c*********************************************************************
 ! C     .. Parameters ..
       USE TYPE_CELL
       IMPLICIT NONE
@@ -418,31 +453,46 @@ allocate(FM1(NTIRD),G(NTIRD),SM(NTIRD),SM1(NTIRD),VI3(NTIRD),UI2(NTIRD),UI3(NTIR
 
 
 
+   !-------------------------------------------------------------------------------
+   !> Summary: Broyden mixing of the potential
+   !> Author: S. Bluegel 1987; D. Bauer
+   !> Category: KKRimp, potential
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !> 
+   !> @Bauer
+   !> rewriten for KKRFLEX impurity calculatuions
+   !> this is a combination of brysh1 and brysh2 routines using variable
+   !> mode. If mode is '>' Y will be copied in X
+   !> mode. If mode is '<' X will be copied in Y
+   !> c*********************************************************************
+   !> old brysh1:
+   !> c*********************************************************************
+   !> c     shifts the density or potential of all mt-cell into one single
+   !> c     vector and projects out the coulomb part only.
+   !> c                                    s. bluegel , kfa , 1987
+   !> c
+   !> c ------------------------------------------------------------------------
+   !> old brysh2:
+   !> c*********************************************************************
+   !> c     maps the density or potential back from one single vector into
+   !> c     the proper bins of each single mt-cell . the magnetization
+   !> c     density is also added in.
+   !> c                                    s. bluegel , kfa , 1987
+   !> c
+   !-------------------------------------------------------------------------------
+   !> @note Notes on the code
+   !> @endnote
+   !> @todo things that must be checked
+   !> @endtodo
+   !> @warning Important precautions
+   !> @endwarning
+   !> @bug If nasty things are found
+   !> @endbug
+   !-------------------------------------------------------------------------------
       SUBROUTINE MIXBROYDEN_SHIFT(Y,mode,X,INS,CELL, &
                         NATYP,NSPIN,IMAP,LMAXATOM,LMPOTD,IRMD,NTIRD)
 
 ! c*********************************************************************
-! @Bauer
-! rewriten for KKRFLEX impurity calculatuions
-! this is a combination of brysh1 and brysh2 routines using variable
-! mode. If mode is '>' Y will be copied in X
-! mode. If mode is '<' X will be copied in Y
-! c*********************************************************************
-! old brysh1:
-! c*********************************************************************
-! c     shifts the density or potential of all mt-cell into one single
-! c     vector and projects out the coulomb part only.
-! c                                    s. bluegel , kfa , 1987
-! c
-! c ------------------------------------------------------------------------
-! old brysh2:
-! c*********************************************************************
-! c     maps the density or potential back from one single vector into
-! c     the proper bins of each single mt-cell . the magnetization
-! c     density is also added in.
-! c                                    s. bluegel , kfa , 1987
-! c
-! c ------------------------------------------------------------------------
       USE TYPE_CELL
       IMPLICIT NONE
       DOUBLE PRECISION Y(NTIRD)

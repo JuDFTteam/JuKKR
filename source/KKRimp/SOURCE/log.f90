@@ -1,6 +1,12 @@
 module mod_log
 contains
-subroutine log_write(string1)
+   !-------------------------------------------------------------------------------
+   !> Summary: Logs date and time
+   !> Author: 
+   !> Category: KKRimp, input-output
+   !>
+   !-------------------------------------------------------------------------------
+ subroutine log_write(string1)
  implicit none
         character(len=*)     :: string1
         character(len=22)    :: prefix

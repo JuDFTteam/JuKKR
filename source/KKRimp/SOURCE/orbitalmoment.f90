@@ -1,7 +1,37 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculates orbital moment
+!> Author: 
+!> 
+!------------------------------------------------------------------------------------
+!> @note Notes on the code
+!> @endnote
+!> @todo things that must be checked
+!> @endtodo
+!> @warning Important precautions
+!> @endwarning
+!> @bug If nasty things are found
+!> @endbug
+!------------------------------------------------------------------------------------
 module mod_orbitalmoment
 
 contains
 
+   !-------------------------------------------------------------------------------
+   !> Summary: Calculates orbital moment
+   !> Author: 
+   !> Category: KKRimp, physical-observables
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !> 
+   !-------------------------------------------------------------------------------
+   !> @note Notes on the code
+   !> @endnote
+   !> @todo things that must be checked
+   !> @endtodo
+   !> @warning Important precautions
+   !> @endwarning
+   !> @bug If nasty things are found
+   !> @endbug
+   !-------------------------------------------------------------------------------
 subroutine calc_orbitalmoment(lmax,Loperator)
 use mod_version_info
 implicit none
@@ -77,6 +107,22 @@ end subroutine calc_orbitalmoment
 
 
 
+   !-------------------------------------------------------------------------------
+   !> Summary: Calculates orbital moment
+   !> Author: 
+   !> Category: KKRimp, physical-observables
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !> 
+   !-------------------------------------------------------------------------------
+   !> @note Notes on the code
+   !> @endnote
+   !> @todo things that must be checked
+   !> @endtodo
+   !> @warning Important precautions
+   !> @endwarning
+   !> @bug If nasty things are found
+   !> @endbug
+   !-------------------------------------------------------------------------------
 subroutine calc_orbit_onel(lval,Lorbit_onel)
 implicit none
 !interface

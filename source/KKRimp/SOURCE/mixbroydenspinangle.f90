@@ -1,8 +1,29 @@
+!------------------------------------------------------------------------------------
+!> Summary:
+!> Author:
+!>
+!------------------------------------------------------------------------------------
 MODULE mod_mixbroydenspin
 
 contains
 
 !====================================================================================================================
+   !-------------------------------------------------------------------------------
+   !> Summary: Broyden mixing: spin
+   !> Author:
+   !> Category: KKRimp, potential
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !>
+   !-------------------------------------------------------------------------------
+   !> @note Notes on the code
+   !> @endnote
+   !> @todo things that must be checked
+   !> @endtodo
+   !> @warning Important precautions
+   !> @endwarning
+   !> @bug If nasty things are found
+   !> @endbug
+   !-------------------------------------------------------------------------------
        subroutine mixbroydenspin (natom,density,max_iter,iter) 
 use type_density
 implicit none
@@ -122,6 +143,22 @@ end subroutine mixbroydenspin
 
 
 
+   !-------------------------------------------------------------------------------
+   !> Summary: Broyden mixing
+   !> Author:
+   !> Category: KKRimp, potential
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !>
+   !-------------------------------------------------------------------------------
+   !> @note Notes on the code
+   !> @endnote
+   !> @todo things that must be checked
+   !> @endtodo
+   !> @warning Important precautions
+   !> @endwarning
+   !> @bug If nasty things are found
+   !> @endbug
+   !-------------------------------------------------------------------------------
        subroutine broyden (vector, vlen, alpha, rms, iter,  &
                          n_init,mbroylen,mvlen) 
 
@@ -624,6 +661,22 @@ end subroutine mixbroydenspin
 
 !     ==================================================================
 
+   !-------------------------------------------------------------------------------
+   !> Summary: Broyden mixing
+   !> Author:
+   !> Category: KKRimp, potential
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !>
+   !-------------------------------------------------------------------------------
+   !> @note Notes on the code
+   !> @endnote
+   !> @todo things that must be checked
+   !> @endtodo
+   !> @warning Important precautions
+   !> @endwarning
+   !> @bug If nasty things are found
+   !> @endbug
+   !-------------------------------------------------------------------------------
       subroutine broy_sav(fins,fots,vector,itscf,istore,ivsiz,mivsiz) 
 
 !     ==================================================================

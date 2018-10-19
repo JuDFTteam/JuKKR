@@ -2,20 +2,34 @@
 
       CONTAINS
 
+   !-------------------------------------------------------------------------------
+   !> Summary: Calculates the transformation matrix for shifted position Green function
+   !> Author: 
+   !> Category: KKRimp, geometry
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !> 
+   !> This subroutine calculates the transformation matrix Ull'(E) 
+   !> for the Green's function in the shifted position. According  
+   !> N. Stefanou et al PRB 36 6372 (1987) eq.(6).                 
+   !> Lmax is the maximum l cutoff for the matrix Ull':=JMAT       
+   !> Since the Gaunt coefficients are used, subroutines gaunt and 
+   !> Gaunt2 have to be called first to set up the common block    
+   !> GAUNTC.                                                      
+   !-------------------------------------------------------------------------------
+   !> @note Notes on the code
+   !> @endnote
+   !> @todo things that must be checked
+   !> @endtodo
+   !> @warning Important precautions
+   !> @endwarning
+   !> @bug If nasty things are found
+   !> @endbug
+   !-------------------------------------------------------------------------------
       SUBROUTINE JMTRX(X1,X2,X3,E,LMAX,JMAT,LCALL)
       use mod_gauntharmonics, only: gauntcoeff
       use mod_ymy
       use mod_bessel1
       implicit none
-! C ****************************************************************
-! C * This subroutine calculates the transformation matrix Ull'(E) *
-! C * for the Green's function in the shifted position. According  *
-! C * N. Stefanou et al PRB 36 6372 (1987) eq.(6).                 *
-! C * Lmax is the maximum l cutoff for the matrix Ull':=JMAT       *
-! C * Since the Gaunt coefficients are used, subroutines gaunt and *
-! C * Gaunt2 have to be called first to set up the common block    *
-! C * GAUNTC.                                                      *
-! C ****************************************************************
 ! C
 ! C     .. Parameters ..
 ! c
