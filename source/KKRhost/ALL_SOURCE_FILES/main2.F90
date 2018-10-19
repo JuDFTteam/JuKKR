@@ -39,8 +39,8 @@ contains
       icc, ishift, ixipol, kforce, ifunm, lmsp, imt, irc, irmin, irws, llmsp, ititle, nfu, hostimp, ilm_map, imaxsh, &
       ielast, npol, npnt1, npnt2, npnt3, itscf, scfsteps, iesemicore, kaoez, iqat, noq, npolsemi, n1semi, n2semi, n3semi, &
       zrel, jwsrel, irshift, mixing, lambda_xc, a, b, thetas, drdi, rmesh, zat, rmt, rmtnew, rws, emin, emax, tk, alat, &
-      cmomhost, conc, gsh, ebotsemi, emusemi, tksemi, vins, visp, rmrel, drdirel, vbc, r2drdirel, ecore, ez, wez, txc, &
-      lly, lrhosym, idoldau, lopt, nshell, nemb, fsemicore, qmgam, fact, qmphi, qmtet, ipf, idosemicore, thesme, dez, vtrel, btrel
+      cmomhost, conc, gsh, ebotsemi, emusemi, tksemi, vins, visp, rmrel, drdirel, vbc, r2drdirel, ecore, ez, wez, txc, lly, &
+      lrhosym, idoldau, lopt, nshell, nemb, fsemicore, qmgam, fact, qmphi, qmtet, ipf, idosemicore, thesme, dez, vtrel, btrel
     use :: mod_types, only: t_inc
     use :: mod_wunfiles, only: t_params, get_params_2, read_density, save_emesh, save_scfinfo
     use :: mod_profiling, only: memocc

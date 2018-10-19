@@ -19,7 +19,7 @@ contains
   subroutine wftsca(drdi,efac,pz,qz,fz,sz,nsra,pzlm,qzlm,pzekdr,qzekdr,ek,loflm,    &
     irmind,irmd,irmin,irmax,lmaxd,lmmaxd)
 
-    use :: constants, only: cone
+    use :: mod_constants, only: cone
 
     implicit none
     ! .. Input variables
