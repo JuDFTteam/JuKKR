@@ -647,6 +647,21 @@ contains
 #ifdef CPP_TIMING
           call timing_start('main1b - kloopz')
 #endif
+         write(111,*)ERYD,GMATLL,INS,ALAT,IE,IGF,NSHELL,NAEZ
+         write(112,*)NOFKS(NMESH),VOLBZ(NMESH),BZKP(1,1,NMESH)
+         write(113,*)VOLCUB(1,NMESH),CLS,NACLS,NACLSMAX,NCLS,RR
+         write(114,*)RBASIS,EZOA,ATOM,RCLS,ICC,GINP,IDECI
+         write(115,*)LEFTTINVLL(1,1,1,1,IE),RIGHTTINVLL(1,1,1,1,IE)
+         write(116,*)VACFLAG,NLBASIS,NRBASIS,FACTL,NATOMIMP,NSYMAT
+         write(117,*)DSYMLL,RATOM,RROT,NSH1,NSH2,IJTABSYM,IJTABSH
+         write(118,*)ICHECK,INVMOD,REFPOT,TREFLL,TSST,MSST,CFCTOR  
+         write(119,*)CFCTORINV,CREL,RC,RREL,SRREL,IRREL,NRREL,DROTQ
+         write(120,*)SYMUNITARY,KMROT,NATYP,NCPA,ICPA,ITCPAMAX
+         write(121,*)CPATOL,NOQ,IQAT,ITOQ,CONC,IPRINT,ICPAFLAG
+         write(122,*)ISPIN,NSPINDD
+         write(123,*)TQDOS,IQDOSRUN                         ! qdos
+         write(124,*)DTREFLL,DTMATLL,DGINP,LLY_GRTR(IE,ISPIN)
+         write(125,*) TRACET(IE,ISPIN),LLY
           call kloopz1_qdos(eryd, gmatll, ins, alat, ie, igf, nshell, naez, nofks(nmesh), volbz(nmesh), bzkp(1,1,nmesh), volcub(1,nmesh), cls, nacls, naclsmax, ncls, rr, rbasis, &
             ezoa, atom, rcls, icc, ginp, ideci, lefttinvll(1,1,1,1,ie), righttinvll(1,1,1,1,ie), vacflag, nlbasis, nrbasis, factl, natomimp, nsymat, dsymll, ratom, rrot, nsh1, &
             nsh2, ijtabsym, ijtabsh, icheck, invmod, refpot, trefll, tsst, msst, cfctor, cfctorinv, crel, rc, rrel, srrel, irrel, nrrel, drotq, symunitary, kmrot, natyp, ncpa, &
