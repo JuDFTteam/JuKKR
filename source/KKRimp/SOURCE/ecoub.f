@@ -1,56 +1,63 @@
+      !-------------------------------------------------------------------------------
+      !> Summary: Coulomb hartree energy
+      !> Author: B. Drittler
+      !> Calculate the electrostatic potential-energies without the
+      !> electron-nuclear interaction in the cell itself.
+      !-------------------------------------------------------------------------------
       MODULE MOD_ECOUB
         CONTAINS
-c 13.10.95 ***************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Coulomb hartree energy
+  !> Author: B. Drittler
+  !> Category: KKRimp, total-energy, electrostatics
+  !> Deprecated: False
+  !>
+  !> Attention : energy zero ---> electro static zero
+  !>
+  !> Calculate the electrostatic potential-energies without the
+  !> electron-nuclear interaction in the cell itself.
+  !> the energy of the representive atom i is given by
+  !> \begin{equation}
+  !>  E_\text{cou}(i) =  \frac{1}{2} \int_{0}^{r_c}\sum_{l,m} dr' { vm2z(r',l,m,i)*rho2ns(r',l,m,i,1) } -  z(i) * V_\text{mad} (r_i)                                 
+  !> \end{equation}
+  !>         (see notes by B. Drittler)
+  !>
+  !> vm2z is the coulomb potential of the atom without the nuclear
+  !>         potential of the atom
+  !> rho2ns(...,1) is the real charge density times \(r^2\)
+  !>
+  !> both developed into spherical harmonics. (see deck rholm)
+  !>
+  !> z is the nuclear charge of the atom
+  !>
+  !> vmad ( ri ) is a generalized madelung potential
+  !>
+  !> \begin{equation}
+  !>  V_\text{mad} = \frac{1}{\sqrt{4\pi}} vm2z(irws,1,is)- 2\sqrt{4\pi} \frac{cmom(1,ipot)}{rws}
+  !> \end{equation}
+  !>
+  !>( <..> = spherical averaged )
+  !>
+  !>modified for band structure code
+  !>B. Drittler   Jan. 1990
+  !-------------------------------------------------------------------------------
+  !> @warning
+  !> this subroutine has to be called before the exchange correlation potential 
+  !> is added to the potential vm2. The energy calculated here is splitted into
+  !> l-dependent parts to see the l -convergency.
+  !> @endwarning
+  !>
+  !> @warning 
+  !> in case of shape corrections the contribution of the coulomb potential 
+  !> the of the nucleus is analytically cancelled only in the muffin tin sphere
+  !> in the interstial region it has to be taken into account ! see deck epotins
+  !> @endwarning
+  !-------------------------------------------------------------------------------
       SUBROUTINE ECOUB(CMOM,CMOM_INTERST,ECOU,CELL,DENSITY,SHAPEFUN,
      +                 GAUNTSHAPE,
      +                 LMAXATOM,LMAXD,NSPIN,
      +                 NATOM,VM2Z,ZATOM,INS,IRMD,LMPOTD,LPOTD)
-c ************************************************************************
-c
-c     attention : energy zero ---> electro static zero
-c
-c     calculate the electrostatic potential-energies without the
-c     electron-nuclear interaction in the cell itself .
-c     the energy of the representive atom i is given by
-c
-c                          rc
-c      ecou(i) =  1/2 (  {  s dr' vm2z(r',lm,i)*rho2ns(r',lm,i,1) }
-c                           0
-c
-c                                       -  z(i) * vmad ( ri )     )
-c
-c
-c                                         ( {..} = summed over lm )
-c             (see notes by b.drittler)
-c     vm2z is the coulomb potential of the atom without the nuclear
-c             potential of the atom
-c     rho2ns(...,1) is the real charge density times r**2
-c
-c      both developed into spherical harmonics . (see deck rholm)
-c
-c     z    is the nuclear charge of the atom
-c
-c     vmad ( ri ) is a generalized madelung potential
-c                 = 1/sqrt(4 pi) * vm2z(irws,1,is)
-c                         - sqrt(4 pi) * 2 * cmom(1,ipot) / rws
-c
-c                                        ( <..> = spherical averaged )
-c
-c     attention : this subroutine has to be called before the
-c                 exchange correlation potential is added to
-c                 the potential vm2z .
-c                 the energy calculated here is splitted into
-c                 l-dependent parts to see the l -convergency .
-c
-c     attention : in case of shape corrections the contribution of
-c                 the coulomb potential the of the nucleus is
-c                 analytically cancelled only in the muffin tin sphere
-c                 in the interstial region it has to be taken into
-c                 account ! see deck epotins
-c
-c                 modified for band structure code
-c                               b.drittler   jan. 1990
-c-----------------------------------------------------------------------
+
 C     .. Parameters ..
 !       include 'inc.p'
 C     ..

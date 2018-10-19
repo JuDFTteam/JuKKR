@@ -1,16 +1,21 @@
-      SUBROUTINE EXCH91(D,S,U,V,EXL,EXG,VXL,VXG)
-c.....-----------------------------------------------------------------
-c     gga91 exchange for a spin-unpolarized electronic system
-c.....-----------------------------------------------------------------
-c     input d: density
-c           s:  abs(grad d)/(2*kf*d)
-c           u:  (grad d)*grad(abs(grad d))/(d**2 * (2*kf)**3)
-c           v: (laplacian d)/(d*(2*kf)**2)
-c     output:  exchange energy (ex) and potential (vx) in ry.
-c       kf=cbrt(3*pai**2*d).
-c.....-----------------------------------------------------------------
+  !-------------------------------------------------------------------------------
+  !> Summary: Exchange part of PW91 GGA
+  !> Author: 
+  !> Category: xc-potential, KKRimp
+  !> Deprecated: False 
+  !> gga91 exchange for a spin-unpolarized electronic system
+  !> 
+  !> input d: density
+  !> s:  abs(grad d)/(2*kf*d)
+  !> u:  (grad d)*grad(abs(grad d))/(d**2 * (2*kf)**3)
+  !> v: (laplacian d)/(d*(2*kf)**2)
+  !> output:  exchange energy (ex) and potential (vx) in ry.
+  !> kf=cbrt(3*pai**2*d).
+  !------------------------------------------------------------------------------- 
+        SUBROUTINE EXCH91(D,S,U,V,EXL,EXG,VXL,VXG)
 C     .. Scalar Arguments ..
-      DOUBLE PRECISION D,EXG,EXL,S,U,V,VXG,VXL
+      DOUBLE PRECISION D         !! Density
+      DOUBLE PRECISION EXG,EXL,S,U,V,VXG,VXL
 C     ..
 C     .. Local Scalars ..
       DOUBLE PRECISION A,A1,A2,A3,A4,AX,B1,EX,F,FAC,FS,FSS,P0,P1,P10,

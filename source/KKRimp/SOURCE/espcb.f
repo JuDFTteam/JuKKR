@@ -1,24 +1,34 @@
-c 13.10.95 ***************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Collects single-particle core energy
+  !> Author: B. Drittler
+  !>
+  !> Calculate the core contribution of the single particle energies
+  !> l and spin dependent.
+  !-------------------------------------------------------------------------------
       MODULE MOD_ESPCB
         CONTAINS
+  !-------------------------------------------------------------------------------
+  !> Summary: Collects single-particle core energy
+  !> Author: B. Drittler
+  !> Category: KKRimp, total-energy
+  !> Deprecated: False
+  !>
+  !> Attention : energy zero ---> electro static zero
+  !>
+  !> Since input potential and single particle energies
+  !> are using muffin tin zero as zero the energy shift
+  !> is cancelled in the kinetic energy contribution!
+  !>
+  !> Calculate the core contribution of the single particle energies
+  !> l and spin dependent.
+  !> Attention : here are the results of the subroutine corel (stored
+  !> in the common block core) used.
+  !> (see notes by B. Drittler)
+  !>
+  !> modified for bandstructure code
+  !> B. Drittler   Jan 1990
+  !-------------------------------------------------------------------------------
       SUBROUTINE ESPCB(ESPC,NSPIN,NATOM,corestate)
-c ************************************************************************
-c
-c     attention : energy zero ---> electro static zero
-c
-c                 since input potential and single particle energies
-c                 are using muffin tin zero as zero the energy shift
-c                 is cancelled in the kinetic energy contribution !
-c
-c     calculate the core contribution of the single particle energies
-c     l and spin dependent .
-c     attention : here are the results of the subroutine corel (stored
-c                 in the common block core) used .
-c                                        (see notes by b.drittler)
-c
-c                 modified for bandstructure code
-c                               b.drittler   jan 1990
-c-----------------------------------------------------------------------
 C     .. Parameters ..
 !       include 'inc.p'
 C

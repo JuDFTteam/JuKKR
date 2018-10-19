@@ -1,13 +1,13 @@
-c **********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Generate an angular mesh and spherical harmonics at those mesh points. For an angular integration the weights are generated .
+  !> Author: R. Zeller
+  !> Date: February 1996
+  !> Category: special-functions, radial-mesh, KKRimp
+  !> Deprecated: False 
+  !> Generate an angular mesh and spherical harmonics at those
+  !> mesh points. For an angular integration the weights are generated  
+  !-------------------------------------------------------------------------------
       SUBROUTINE SPHERE_NOGGA(LMAX,YR,WTYR,RIJ,IJD)
-c **********************************************************************
-c-----------------------------------------------------------------------
-c     generate an angular mesh and spherical harmonics at those
-c     mesh points. For an angular integration the weights are ge-
-c     rated .
-c
-c     R. Zeller      Feb. 1996
-c-----------------------------------------------------------------------
 C     ..
 C     .. Scalar Arguments ..
       USE MOD_YMY

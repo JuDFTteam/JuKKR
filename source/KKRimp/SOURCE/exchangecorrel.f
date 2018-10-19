@@ -1,3 +1,8 @@
+!-------------------------------------------------------------------------------
+!> Summary: Module for the exchange correlation potentials
+!> Author: 
+!> This module gathers the different exchange correlation potentials
+!-------------------------------------------------------------------------------
         MODULE MOD_EXCHANGECORRELATION
         CONTAINS    
 !           include 'XC/vxcdrvnew.f90'
@@ -22,3 +27,5 @@
           include 'XC/vxcspo.f'  
           include 'XC/rinit.f'
         END MODULE MOD_EXCHANGECORRELATION 
+
+

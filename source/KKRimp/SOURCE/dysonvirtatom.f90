@@ -1,22 +1,38 @@
+!-------------------------------------------------------------------------------
+!> Summary: Dyson equation for the virtual atom
+!> Author: 
+!> this is part of the 'u-transformation' (see PhD David Bauer) 
+!> which can be used to shift positions of impurity atoms with respect 
+!> to their original position. It is intended for relaxations of impurities 
+!-------------------------------------------------------------------------------
 module mod_dysonvirtatom
 contains
 
+!-------------------------------------------------------------------------------
+!> Summary: Dyson equation for the virtual atom
+!> Author: 
+!> Category: KKRimp, geometry, structural-greensfunction
+!> Deprecated: False
+!> this is part of the 'u-transformation' (see PhD David Bauer) 
+!> which can be used to shift positions of impurity atoms with respect 
+!> to their original position. It is intended for relaxations of impurities 
+!-------------------------------------------------------------------------------
 subroutine dysonvirtatom(natom,ntotatom,lmsizehost,gmathost,tmat,killatom, &
                          isvatom,lmaxatom,gmatimp,nlmhostnew,lattice_relax,NSOC)
 use mod_mathtools
 use mod_config, only: config_testflag
   implicit none
 !interface
-integer,intent( in)              :: natom      ! Number of atoms in impurity cluster, excl. "killed atoms"
-integer,intent( in)              :: ntotatom   ! Number of host sites where GF is read in, incl. "killed atoms"
-integer,intent( in)              :: lmsizehost ! Host lm-max * NSOC (see below for NSOC)
+integer,intent( in)              :: natom      !! Number of atoms in impurity cluster, excl. "killed atoms"
+integer,intent( in)              :: ntotatom   !! Number of host sites where GF is read in, incl. "killed atoms"
+integer,intent( in)              :: lmsizehost !! Host lm-max * NSOC (see below for NSOC)
 double complex,intent( in)       :: gmathost(ntotatom*lmsizehost, ntotatom*lmsizehost)
 double complex,intent( in)       :: tmat(lmsizehost,lmsizehost,ntotatom)
 integer,intent( in)              :: killatom(ntotatom)
 integer,intent( in)              :: isvatom(ntotatom)
-integer,intent( in)              :: lmaxatom(ntotatom) ! lmax to be used for specific atom
+integer,intent( in)              :: lmaxatom(ntotatom) !! lmax to be used for specific atom
 integer,intent( in)              :: lattice_relax
-integer,intent( in)              :: NSOC ! =2 if host-GF is 2x2 in spin space; =1 otherwise
+integer,intent( in)              :: NSOC         !! =2 if host-GF is 2x2 in spin space; =1 otherwise
 double complex,intent(out),allocatable  :: gmatimp(:,:)
 
 !local
@@ -201,7 +217,18 @@ end subroutine dysonvirtatom
 
 
 
-
+  !-------------------------------------------------------------------------------
+  !> Summary: Matrix multiplication
+  !> Author: 
+  !> Category: KKRimp, numerical-tools
+  !> Deprecated: False
+  !>
+  !> Check dimensions of the two matrices and multiply them
+  !-------------------------------------------------------------------------------
+  !> @note
+  !> Maybe it can be substituted just by the matriz multiplication (matmul).
+  !> @endnote
+  !-------------------------------------------------------------------------------
       subroutine matmat_dcdc(mat1,mat2,matout)
       implicit none
       double complex, intent(in) :: mat1(:,:),mat2(:,:)
@@ -216,4 +243,4 @@ end subroutine dysonvirtatom
 
 
 
-end module !mod_dysonvirtatom
+end module mod_dysonvirtatom

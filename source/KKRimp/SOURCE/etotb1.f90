@@ -1,21 +1,32 @@
+!-------------------------------------------------------------------------------
+!> Summary: Collects total energy of cluster
+!> Author: B. Drittler, P. Zahn, V. Popescu
+!>
+!> Calculate the total energy of the cluster.
+!-------------------------------------------------------------------------------
 MODULE MOD_ETOTB1
   CONTAINS
-
+  !-------------------------------------------------------------------------------
+  !> Summary: Collects total energy of cluster
+  !> Author: B. Drittler, P. Zahn, V. Popescu
+  !> Category: KKRimp, total-energy
+  !> Deprecated: False
+  !>
+  !> Calculate the total energy of the cluster.
+  !> gather all energy-parts which are calculated in different
+  !> subroutines .
+  !> since the program uses group theory only shell-indices
+  !> are used instead of atom-indices .
+  !>
+  !> B. Drittler   May 1987
+  !>
+  !> modified for supercells with nshell(i) atoms of type i in the
+  !> unit cell
+  !> P. Zahn       Oct. 95
+  !>
+  !> adopted for more atoms per site (CPA) V. Popescu Feb. 02
+  !-------------------------------------------------------------------------------
   SUBROUTINE ETOTB1(EFERMI,LMAXATOM,ENERGYPARTS,CORESTATE,NSPIN,NATOM,LPOTD)
-    !     calculate the total energy of the cluster .
-    !     gather all energy-parts which are calculated in different
-    !     subroutines .
-    !     since the program uses group theory only shell-indices
-    !     are used instead of atom-indices .
-    !
-    !                               b.drittler   may 1987
-    !
-    !     modified for supercells with nshell(i) atoms of type i in the
-    !     unit cell
-    !                               p.zahn       oct. 95
-    !
-    !     adopted for more atoms per site (CPA) v.popescu feb. 02
-    !-----------------------------------------------------------------------
     USE TYPE_ENERGYPARTS
     USE TYPE_CORESTATE
     IMPLICIT NONE

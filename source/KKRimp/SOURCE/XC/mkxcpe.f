@@ -1,3 +1,11 @@
+  !-------------------------------------------------------------------------------  
+  !> Summary: PW91 exchange correlation functional
+  !> Author: 
+  !> Category: xc-potential, potential, KKRimp 
+  !> Deprecated: False 
+  !> Exchange correlation potential making use of GGA, the parametrization is given
+  !> by the PW91 functional
+  !-------------------------------------------------------------------------------  
       SUBROUTINE MKXCPE(NSPIN,IR,NP,L1MAX,RV,RHOLM,VXCP,EXCP,THET,YLM,
      +                  DYLMT1,DYLMT2,DYLMF1,DYLMF2,DYLMTF,DRRL,DDRRL,
      +                  DRRUL,DDRRUL,IRMD,LMPOTD)

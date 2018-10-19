@@ -1,5 +1,11 @@
+  !-------------------------------------------------------------------------------
+  !> Summary: From complex to real (differenciated spherical harmonics)
+  !> Author: 
+  !> Category: special-functions, numerical-tools, KKRimp
+  !> Deprecated: True 
+  !> From complex to real (differenciated spherical harmonics)
+  !-------------------------------------------------------------------------------
       SUBROUTINE TRAREA(A,B,LMAX)
-c     from complex to real  (differenciated spherical harmonics)
 c
 C     .. Parameters ..
       DOUBLE PRECISION RTWO

@@ -1,9 +1,13 @@
+  !-------------------------------------------------------------------------------
+  !> Summary: Spherical harmonics except the factor \(\exp{i m \phi}\)
+  !> Author: 
+  !> Category: special-functions, numerical-tools, KKRimp
+  !> Deprecated: True 
+  !> Spherical harmonics except the factor \(\exp{i m \phi}\)
+  !> \(m=-l\) to \(l\) , for given \(l\).
+  !> \(x=cos(\theta)\)
+  !-------------------------------------------------------------------------------
       SUBROUTINE SPHER(YLM,L,X)
-c
-c      spherical harmonics except the facter exp(i*m*phi)
-c
-c      m=-l to l , for given l.
-c      x=cos(theta)
 C     .. Scalar Arguments ..
       DOUBLE PRECISION X
       INTEGER L

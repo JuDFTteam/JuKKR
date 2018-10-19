@@ -1,5 +1,25 @@
+!-------------------------------------------------------------------------------
+!> Summary: Main energy loop of the program
+!> Author: 
+!> 
+!> for all energies in the energy loop:
+!>  -  t-matrix is calculated
+!>  -  dyson equation is solved
+!>  -  density is calculated
+!-------------------------------------------------------------------------------
 module mod_energyloop
   contains
+!-------------------------------------------------------------------------------
+!> Summary: Main energy loop of the program
+!> Author: 
+!> Category: KKRimp, physical-observables, communication (mpi), input-output
+!> Deprecated: False
+!> 
+!> for all energies in the energy loop:
+!>  -  t-matrix is calculated
+!>  -  dyson equation is solved
+!>  -  density is calculated
+!-------------------------------------------------------------------------------
 subroutine energyloop(my_rank,mpi_size,ITSCF,cell, vpot, shapefun,zatom,natom,nspin,lmaxatom, &
                       lmaxd,density,ielast,ez,wez,config,gmat,gmatonsite,tmat,energyparts, &
                       ldau)                                                                         ! lda+u

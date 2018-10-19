@@ -1,19 +1,34 @@
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates force on nucleus with core correction (xc-contribution)
+  !> Author: 
+  !>
+  !> Calculates the force on nucleus m
+  !> from a given non spherical charge density at the nucleus site r
+  !> with core correction(exchange contribution)
+  !-------------------------------------------------------------------------------
       MODULE MOD_FORCXC
       CONTAINS
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates force on nucleus with core correction (xc-contribution)
+  !> Author: 
+  !> Category: KKRimp, physical-observables, xc-potential
+  !> Deprecated: False
+  !>
+  !> Calculates the force on nucleus m
+  !> from a given non spherical charge density at the nucleus site r
+  !> with core correction(exchange contribution)
+  !>
+  !> @warning
+  !> BEWARE!!! RM commented away!!! -->Dipole Tensor is useless
+  !> @endwarning
+  !-------------------------------------------------------------------------------
       SUBROUTINE FORCXC(FLM,FLMC,LMAX,NSPIN,NATOM,VPOT,DENSITY,CELL,ALAT,LMPOTD,IRMD,INS)
       USE TYPE_DENSITY
       USE TYPE_CELL
       USE MOD_SIMP3     
       IMPLICIT NONE
-! c>>>>>BEWARE!!! RM commented away!!! -->Dipole Tensor is useless      
 ! c     SUBROUTINE FORCXC(FLM,FLMC,LMAX,NSPIN,NSTART,NEND,RHOC,V,R,ALAT,
 ! c    +                  RM,NSHELL,DRDI,IRWS,NATREF)
-! c-----------------------------------------------------------------------
-! c     calculates the force on nucleus m
-! c     from a given non spherical charge density at the nucleus site r
-! c     with core correction(exchange contribution)
-!  
-! c-----------------------------------------------------------------------
 ! C     .. Parameters ..
 !       include 'inc.p'
       INTEGER LMPOTD,IRMD,INS

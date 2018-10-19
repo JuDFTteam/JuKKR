@@ -1,17 +1,29 @@
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates force on nucleus with core contribution (Coulomb contribution)
+  !> Author: 
+  !>
+  !> Calculates the force on nucleus m
+  !> from a given non spherical charge density at the nucleus site r
+  !> with core correction (coulomb contribution)
+  !-------------------------------------------------------------------------------
       MODULE MOD_FORCE
       CONTAINS
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates force on nucleus with core contribution (Coulomb contribution)
+  !> Author: 
+  !> Category: KKRimp, physical-observables
+  !> Deprecated: False
+  !>
+  !> Calculates the force on nucleus m
+  !> from a given non spherical charge density at the nucleus site r
+  !> with core correction (coulomb contribution)
+  !-------------------------------------------------------------------------------
       SUBROUTINE FORCE(FLM,FLMC,LMAX,NSPIN,NATOM,VPOT,DENSITY,CELL, &
                        IRMD,LMPOTD,INS)
       USE MOD_SIMP3
       USE TYPE_DENSITY
       USE TYPE_CELL
       IMPLICIT NONE
-!-----------------------------------------------------------------------
-!c     calculates the force on nucleus m
-!c     from a given non spherical charge density at the nucleus site r
-!c     with core correction (coulomb contribution)
- 
-!c-----------------------------------------------------------------------
 !C     .. Parameters ..
 !       include 'inc.p'
 !       INTEGER LMPOTD
