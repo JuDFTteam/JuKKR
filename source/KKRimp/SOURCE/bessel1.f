@@ -1,59 +1,89 @@
+!------------------------------------------------------------------------------------
+!> Summary: Module handling spherical bessel, hankel and neumann functions
+!> Author:
+!> This version is used by the routine that constructs the transformations for shifted positions
+!------------------------------------------------------------------------------------
+!> @note Notes on the code
+!> @endnote
+!> @todo things that must be checked
+!> @endtodo
+!> @warning Important precautions
+!> @endwarning
+!> @bug If nasty things are found
+!> @endbug
+!------------------------------------------------------------------------------------
       MODULE MOD_BESSEL1
+
       CONTAINS
+
+!-------------------------------------------------------------------------------
+!> Summary: Spherical bessel, hankel and neumann functions up to order lmax
+!> Author:
+!> Category: special-functions, single-site, KKRimp
+!> Deprecated: False 
+!> calculates spherical bessel, hankel and neumann functions
+!>  this subroutine computes the spherical bessel functions of
+!>   first ,second and third kind using a  chebychev expansion
+!>   given by y.l.luke ,algorithms for the computation of
+!>   mathematical functions, academic press,london 1977
+!>  
+!> 
+!>   using subroutine cnwf01
+!>  
+!>  
+!>  description of variables
+!>  
+!>  arg   -input  - argument of the bessel functions
+!>  
+!>  lmax  -input  - max. order of the bessel functions
+!>                  (limited up to 25 in that version)
+!>  
+!>  lj    -input  - logical : if lj is true the spherical bessel
+!>                  functions of the first kind are calculated
+!>                  up to lmax
+!>  
+!>  ly    -input  - logical : if ly is true the spherical bessel
+!>                  functions of the second kind are calculated
+!>                  up to lmax
+!>  
+!>  lh    -input  - logical : if lh is true the spherical bessel
+!>                  functions of the third kind are calculated
+!>                  up to lmax
+!>  
+!>  lcall -input  - logical : if lh is false the chebychev coefficients
+!>                  are calculated - this part has to be called once
+!>  
+!>  
+!>  bj    -output - an array containing the bessel functions of the
+!>                  first kind up to lmax if lj is true . remember ,
+!>                  that bj(1) contains the function of l=0 and so on.
+!>  
+!> y     -output - an array containing the bessel functions of the
+!>                 second kind up to lmax if ly is true . remember ,
+!>                 that y(1) contains the function of l=0 and so on.
+!> 
+!> h     -output - an array containing the bessel functions of the
+!>                 third kind up to lmax if lh is true . remember ,
+!>                 that h(1) contains the function of l=0 and so on.
+!> 
+!> 
+!> 
+!> all other variables are for internal use
+!-------------------------------------------------------------------------------
+!> @note Notes on the code
+!> @endnote
+!> @todo things that must be checked
+!> @endtodo
+!> @warning Important precautions
+!>         attention : contrary to abramowitz and stegun the bessel
+!>                     functions of third kind ( hankel functions)
+!>                     are definied as:
+!>                             h(l) = y(l) - i * bj(l)
+!> @endwarning
+!> @bug If nasty things are found
+!> @endbug
+!-------------------------------------------------------------------------------
       SUBROUTINE BESSEL1(BJ,Y,H,ARG,LMX,LMAX,LJ,LY,LH,LCALL)
-c   *****************************************************************
-c   *this subroutine computes the spherical bessel functions of
-c   * first ,second and third kind using a  chebychev expansion
-c   * given by y.l.luke ,algorithms for the computation of
-c   * mathematical functions, academic press,london 1977
-c   *
-c   *
-c   * using subroutine cnwf01
-c   *
-c   *
-c   *description of variables
-c   *
-c   *arg   -input  - argument of the bessel functions
-c   *
-c   *lmax  -input  - max. order of the bessel functions
-c   *                (limited up to 25 in that version)
-c   *
-c   *lj    -input  - logical : if lj is true the spherical bessel
-c   *                functions of the first kind are calculated
-c   *                up to lmax
-c   *
-c   *ly    -input  - logical : if ly is true the spherical bessel
-c   *                functions of the second kind are calculated
-c   *                up to lmax
-c   *
-c   *lh    -input  - logical : if lh is true the spherical bessel
-c   *                functions of the third kind are calculated
-c   *                up to lmax
-c   *
-c   *lcall -input  - logical : if lh is false the chebychev coefficients
-c   *                are calculated - this part has to be called once
-c   *
-c   *
-c   *bj    -output - an array containing the bessel functions of the
-c   *                first kind up to lmax if lj is true . remember ,
-c   *                that bj(1) contains the function of l=0 and so on.
-c   *
-c   *y     -output - an array containing the bessel functions of the
-c   *                second kind up to lmax if ly is true . remember ,
-c   *                that y(1) contains the function of l=0 and so on.
-c   *
-c   *h     -output - an array containing the bessel functions of the
-c   *                third kind up to lmax if lh is true . remember ,
-c   *                that h(1) contains the function of l=0 and so on.
-c   *
-c   *        attention : contrary to abramowitz and stegun the bessel
-c   *                    functions of third kind ( hankel functions)
-c   *                    are definied as:
-c   *                            h(l) = y(l) - i * bj(l)
-c   *
-c   *
-c   *all other variables are for internal use
-c**********************************************************************
 C     .. Parameters ..
       USE MOD_CNWF011
       IMPLICIT NONE
