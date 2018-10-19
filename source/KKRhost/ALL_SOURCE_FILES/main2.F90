@@ -8,37 +8,10 @@
 !-----------------------------------------------------------------------------------
 module mod_main2
 
-  use :: mod_profiling
-  use :: mod_constants
-  use :: global_variables
+
   use :: mod_datatypes, only: dp
-
-  use :: mod_brydbm
-  use :: mod_convol
-  use :: mod_ecoub
-  use :: mod_epathtb
-  use :: mod_epotinb
-  use :: mod_espcb
-  use :: mod_etotb1
-  use :: mod_force
-  use :: mod_forceh
-  use :: mod_forcxc
-  use :: mod_mtzero
-  use :: mod_mdirnewang
-  use :: mod_mixstr
-  use :: mod_rhosymm
-  use :: mod_relpotcvt
-  use :: mod_rhototb
-  use :: mod_vmadelblk
-  use :: mod_vintras
-  use :: mod_vinterface
-  use :: mod_scfiterang
-  use :: mod_rites
-  use :: mod_writekkrflex
-  use :: mod_vxcdrv
-  use :: mod_rinit
-
-  implicit none
+  private
+  public :: main2
 
 contains
 
@@ -57,14 +30,44 @@ contains
   !-------------------------------------------------------------------------------
   subroutine main2()
 
+    use :: mod_constants, only: pi
+    use :: global_variables, only: krel, ipand, npotd, natomimpd, lmxspd, iemxd, nspotd, irid, ngshd, linterface, &
+      nfund, ncelld, irmd, nembd1, nembd, irmind, lmmaxd, wlength, natypd, naezd, lmpotd, lpotd, lmaxd, nspind, nspotd, &
+      ipand, ngshd, irid, nfund, ncelld
+    use :: mod_main0, only: lcore, ncore, ircut, ipan, ntcell, lpot, nlbasis, nrbasis, nright, nleft, natomimp, atomimp, &
+      natyp, naez, lly, lmpot, nsra, ins, nspin, lmax, imix, qbound, fcm, itdbry, irns, kpre, kshape, kte, kvmad, kxc, &
+      icc, ishift, ixipol, kforce, ifunm, lmsp, imt, irc, irmin, irws, llmsp, ititle, nfu, hostimp, ilm_map, imaxsh, &
+      ielast, npol, npnt1, npnt2, npnt3, itscf, scfsteps, iesemicore, kaoez, iqat, noq, npolsemi, n1semi, n2semi, n3semi, &
+      zrel, jwsrel, irshift, mixing, lambda_xc, a, b, thetas, drdi, rmesh, zat, rmt, rmtnew, rws, emin, emax, tk, alat, &
+      cmomhost, conc, gsh, ebotsemi, emusemi, tksemi, vins, visp, rmrel, drdirel, vbc, r2drdirel, ecore, ez, wez, txc, &
+      lly, lrhosym, idoldau, lopt, nshell, nemb, fsemicore, qmgam, fact, qmphi, qmtet, ipf, idosemicore, thesme, dez, vtrel, btrel
     use :: mod_types, only: t_inc
-    use :: mod_wunfiles
-#ifdef CPP_TIMING
-    use :: mod_timing
-#endif
-    use :: mod_version_info
-
-    use :: mod_main0
+    use :: mod_wunfiles, only: t_params, get_params_2, read_density, save_emesh, save_scfinfo
+    use :: mod_profiling, only: memocc
+    use :: mod_brydbm, only: brydbm
+    use :: mod_ecoub, only: ecoub
+    use :: mod_epathtb, only: epathtb
+    use :: mod_epotinb, only: epotinb
+    use :: mod_espcb, only: espcb
+    use :: mod_etotb1, only: etotb1
+    use :: mod_force, only: force
+    use :: mod_forceh, only: forceh
+    use :: mod_forcxc, only: forcxc
+    use :: mod_mtzero, only: mtzero
+    use :: mod_mdirnewang, only: mdirnewang
+    use :: mod_mixstr, only: mixstr
+    use :: mod_rhosymm, only: rhosymm
+    use :: mod_relpotcvt, only: relpotcvt
+    use :: mod_rhototb, only: rhototb
+    use :: mod_vmadelblk, only: vmadelblk
+    use :: mod_vintras, only: vintras
+    use :: mod_vinterface, only: vinterface
+    use :: mod_scfiterang, only: scfiterang
+    use :: mod_rites, only: rites
+    use :: mod_writekkrflex, only: writekkrflex
+    use :: mod_vxcdrv, only: vxcdrv
+    use :: mod_rinit, only: rinit 
+    use :: mod_convol, only: convol
 
     implicit none
 
@@ -954,6 +957,9 @@ contains
     ilm_map, ifunm, lmsp, lmpot, gsh, thetas, thesme, rfpi, rmesh, kshape, vshift, &
     irmd, npotd, irmind, lmxspd)
 
+    use :: global_variables, only: nspotd, ipand, ngshd, irid, nfund, ncelld
+    use :: mod_rinit, only: rinit 
+    use :: mod_convol, only: convol
     implicit none
 
     ! .. Input variables

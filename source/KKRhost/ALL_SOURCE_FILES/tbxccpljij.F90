@@ -30,9 +30,8 @@ contains
   !> * For mpi-parallel version: moved energy loop from main1b into here. B. Zimmermann, Dez 2015
   !> @endnote
   !-------------------------------------------------------------------------------
-  subroutine tbxccpljij(iftmat,ielast,ez,wez,nspin,ncpa,naez,natyp,noq,itoq,iqat,   &
-    nshell,natomimp,atomimp,ratom,nofgij,nqcalc,iqcalc,ijtabcalc,ijtabsym,ijtabsh,  &
-    ish,jsh,dsymll,iprint,natypd,nsheld,lmmaxd,npol)
+  subroutine tbxccpljij(iftmat, ielast, ez, wez, nspin, ncpa, naez, natyp, noq, itoq, iqat, nshell, natomimp, atomimp, ratom, nofgij, nqcalc, iqcalc, ijtabcalc, ijtabsym, ijtabsh, &
+    ish, jsh, dsymll, iprint, natypd, nsheld, lmmaxd, npol)
 
 #ifdef CPP_MPI
     use :: mpi
@@ -46,7 +45,7 @@ contains
     use :: mod_initabjij
     use :: mod_cmatstr
     use :: mod_rotatespinframe, only: rotatematrix
-    use :: constants, only: pi, cone, czero
+    use :: mod_constants, only: pi, cone, czero
 
     implicit none
     ! .
@@ -67,7 +66,7 @@ contains
     ! .
     ! . Local scalars
     integer :: i1, ia, ifgmat, ifmcpa, iq, irec, ispin, isym, it, j1, ja, jq, jt, l1
-    integer :: lm1, lm2, lstr, ns, nseff, nshcalc, nsmax, ntcalc, ie, ie_end, ie_num
+    integer :: lm1, lm2, lstr, ns, nseff, nshcalc, nsmax, ntcalc, ie, ie_start, ie_end, ie_num
 #ifdef CPP_MPI
     integer :: ierr
 #endif

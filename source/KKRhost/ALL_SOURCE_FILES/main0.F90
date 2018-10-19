@@ -610,39 +610,30 @@ contains
     !! @endnote
     !--------------------------------------------------------------------------------
     ! Call to allocate the arrays associated with the potential
-    call allocate_potential(1,irmd,natypd,npotd,ipand,nfund,lmxspd,lmpotd,irmind,   &
-      nspotd,nfu,irc,ncore,irmin,lmsp,lmsp1,ircut,lcore,llmsp,ititle,fpradius,visp, &
+    call allocate_potential(1, irmd, natypd, npotd, ipand, nfund, lmxspd, lmpotd, irmind, nspotd, nfu, irc, ncore, irmin, lmsp, lmsp1, ircut, lcore, llmsp, ititle, fpradius, visp, &
       ecore, vins)
     ! Call to allocate the arrays associated with the LDA+U potential
-    call allocate_ldau_potential(1,irmd,natypd,mmaxd,nspind,itldau,wldau,uldau,     &
-      phildau)
+    call allocate_ldau_potential(1, irmd, natypd, mmaxd, nspind, itldau, wldau, uldau, phildau)
     ! Call to allocate the arrays associated with the energy
     call allocate_energies(1, iemxd, ez, dez, wez)
     ! Call to allocate the arrays associated with the relativistic corrections
-    call allocate_relativistic(1,krel,irmd,naezd,natypd,zrel,jwsrel,irshift,vtrel,  &
-      btrel,rmrel,drdirel,r2drdirel,qmgam,qmgamtab,qmphitab,qmtettab)
+    call allocate_relativistic(1, krel, irmd, naezd, natypd, zrel, jwsrel, irshift, vtrel, btrel, rmrel, drdirel, r2drdirel, qmgam, qmgamtab, qmphitab, qmtettab)
     ! Call to allocate the arrays associated with the relativistic transformations
     call allocate_rel_transformations(1, lmmaxd, nrrel, irrel, rc, crel, rrel, srrel)
     ! Call to allocate the arrays associated with the clusters
-    call allocate_clusters(1,naezd,lmaxd,ncleb,nclsd,nembd1,nsheld,naclsd,lmpotd,   &
-      natomimpd,nsh1,nsh2,nacls,nshell,atomimp,atom,ezoa,icleb,jend,ratom, rclsimp, &
+    call allocate_clusters(1, naezd, lmaxd, ncleb, nclsd, nembd1, nsheld, naclsd, lmpotd, natomimpd, nsh1, nsh2, nacls, nshell, atomimp, atom, ezoa, icleb, jend, ratom, rclsimp, &
       cmomhost, rcls)
     ! Call to allocate the arrays associated with the expansion of the Green function
-    call allocate_expansion(1,lm2d,irid,nfund,ntotd,ncleb,lassld,ncelld,nchebd,     &
-      loflm,wg,cleb,yrg,thetas,thetasnew)
+    call allocate_expansion(1, lm2d, irid, nfund, ntotd, ncleb, lassld, ncelld, nchebd, loflm, wg, cleb, yrg, thetas, thetasnew)
     ! Call to allocate the arrays associated with the integration mesh
     call allocate_mesh(1, irmd, natypd, a, b, rmesh, drdi)
     ! Call to allocate the arrays associated with the pannels for the new solver
-    call allocate_pannels(1,natypd,ntotd,ipan,npan_tot,npan_eq_at,npan_log_at,      &
-      ipan_intervall, rpan_intervall)
+    call allocate_pannels(1, natypd, ntotd, ipan, npan_tot, npan_eq_at, npan_log_at, ipan_intervall, rpan_intervall)
     ! Call to allocate misc arrays
-    call allocate_misc(1,nrd,irmd,irid,lmaxd,naezd,natypd,nfund,nrefd,iemxd,ntotd,  &
-      nsheld,lmmaxd,nembd1,nchebd,ncelld,lmxspd,nspindd,nsymaxd,nprincd,ifunm,      &
-      ifunm1,icheck,vref,s,rr,dror,rnew,rs,rrot,thesme,dsymll,dsymll1,lefttinvll,   &
-      righttinvll)
+    call allocate_misc(1, nrd, irmd, irid, lmaxd, naezd, natypd, nfund, nrefd, iemxd, ntotd, nsheld, lmmaxd, nembd1, nchebd, ncelld, lmxspd, nspindd, nsymaxd, nprincd, ifunm, &
+      ifunm1, icheck, vref, s, rr, dror, rnew, rs, rrot, thesme, dsymll, dsymll1, lefttinvll, righttinvll)
     ! Call to allocate the arrays associated with the Green function
-    call allocate_green(1,naezd,iemxd,ngshd,nsheld,lmpotd,nofgij,ish,jsh,kmesh,     &
-      imaxsh,iqcalc,iofgij,jofgij,ijtabsh,ijtabsym,ijtabcalc,ijtabcalc_i,ilm_map,gsh)
+    call allocate_green(1, naezd, iemxd, ngshd, nsheld, lmpotd, nofgij, ish, jsh, kmesh, imaxsh, iqcalc, iofgij, jofgij, ijtabsh, ijtabsym, ijtabcalc, ijtabcalc_i, ilm_map, gsh)
 
     !--------------------------------------------------------------------------------
     ! End of allocation calls
@@ -1352,8 +1343,11 @@ contains
     irmind,lmxspd,kshape,irc,irmin,inipol,ntcell,imaxsh,ilm_map,lmsp, ifunm, ircut, &
     hfield, gsh, rmesh, thesme, thetas, visp, vins)
 
-    use :: mod_datatypes
-    use :: constants, only: pi
+    use :: mod_datatypes, only: dp
+    use :: global_variables, only: nspotd
+    use :: mod_convol, only: convol
+    use :: mod_rinit, only: rinit
+    use :: mod_constants, only: pi
     implicit none
 
     ! .. Input variables
