@@ -1,23 +1,33 @@
+!------------------------------------------------------------------------------------
+!> Summary: From complex to real (differenciated spherical harmonics)
+!> Author: 
+!> From complex to real (differenciated spherical harmonics)
+!------------------------------------------------------------------------------------
 module mod_trarea
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: From complex to real (differenciated spherical harmonics)
+  !> Author: 
+  !> Category: special-functions, numerical-tools, KKRhost
+  !> Deprecated: False 
+  !> From complex to real (differenciated spherical harmonics)
+  !-------------------------------------------------------------------------------
   subroutine trarea(a, b, lmax)
-    ! from complex to real  (differenciated spherical harmonics)
+
+    use :: mod_constants, only: ci
 
     ! .. Parameters ..
     real (kind=dp) :: rtwo
-    complex (kind=dp) :: ci
-    parameter (rtwo=1.414213562373e0_dp, ci=(0.e0_dp,1.e0_dp))
-    ! ..
-    ! .. Scalar Arguments ..
-    integer :: lmax
-    ! ..
-    ! .. Array Arguments ..
-    complex (kind=dp) :: a(*)
-    real (kind=dp) :: b(*)
+    parameter (rtwo=1.414213562373e0_dp)
+    ! .. Input variables
+    integer, intent(in) :: lmax !! Maximum l component in wave function expansion
+    complex (kind=dp), dimension(*), intent(in) :: a !! Input complex spherical harmonics
+    ! .. Output variables
+    real (kind=dp), dimension(*), intent(out) :: b  !! Output real derivative of an spherical harmonic
     ! ..
     ! .. Local Scalars ..
     real (kind=dp) :: sgm

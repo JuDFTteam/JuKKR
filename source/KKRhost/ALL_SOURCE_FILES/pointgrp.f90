@@ -1,21 +1,33 @@
+!------------------------------------------------------------------------------------
+!> Summary: This subroutine defines the rotation matrices for all the 32 point groups
+!> Author: 
+!> This subroutine defines the rotation matrices for all the 32 point groups and names them after
+!> J.F. Cornwell (Group Theory??) second edition Appendix D, p 324-325
+!------------------------------------------------------------------------------------
 module mod_pointgrp
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: This subroutine defines the rotation matrices for all the 32 point groups
+  !> Author: 
+  !> Category: numerical-tools, KKRhost
+  !> Deprecated: False 
+  !> This subroutine defines the rotation matrices for all the 32 point groups and names them after
+  !> J.F. Cornwell (Group Theory??) second edition Appendix D, p 324-325
+  !-------------------------------------------------------------------------------
   subroutine pointgrp(rotmat, rotname)
-    ! **********************************************
-    ! This subroutine defines the rotation matrices for
-    ! all the 32 point groups and names them after
-    ! J.F. Cornwell (Group Theory??) second edition
-    ! Appendix D, p 324-325
-    ! *********************************************
+
     implicit none
+
+    ! .. Output variables
+    real (kind=dp), dimension(64, 3, 3), intent(out) :: rotmat !! Rotation matrices
+    character (len=10), dimension(64), intent(out) :: rotname  !! Name of the space group
+    ! .. Local variables
     integer :: i, j, i1, is
-    real (kind=dp) :: rotmat(64, 3, 3)
     real (kind=dp) :: rthree, half
-    character (len=10) :: rotname(64)
 
     rthree = sqrt(3.e0_dp)/2.e0_dp
     half = 0.5e0_dp

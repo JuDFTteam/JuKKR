@@ -1,24 +1,46 @@
+!------------------------------------------------------------------------------------
+!> Summary: Writes out the header of the t-matrices decimation file
+!> Author: 
+!> Writes out the header of the t-matrices decimation file
+!------------------------------------------------------------------------------------
 module mod_outtmathost
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  subroutine outtmathost(alat, ins, krel, kmrot, nspin, naez, lmmax, bravais, rbasis, qmtet, qmphi, e2in, tk, npol, npnt1, npnt2, npnt3)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! *  Writes out the header of the t-matrices decimation file           *
-    ! *                                                                    *
-    ! **********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Writes out the header of the t-matrices decimation file
+  !> Author: 
+  !> Category: input-output, single-site, KKRhost
+  !> Deprecated: False
+  !> Writes out the header of the t-matrices decimation file
+  !-------------------------------------------------------------------------------
+  subroutine outtmathost(alat,ins,krel,kmrot,nspin,naez,lmmax,bravais,rbasis,qmtet, &
+    qmphi,e2in,tk,npol,npnt1,npnt2,npnt3)
+
     use :: mod_version_info
     implicit none
     ! ..
-    ! .. Arguments ..
-    integer :: ins, krel, kmrot, nspin, naez, lmmax, npol, npnt1, npnt2, npnt3
-    real (kind=dp) :: alat, e2in, tk
-    real (kind=dp) :: bravais(3, 3), rbasis(3, *), qmtet(*), qmphi(*)
-    ! ..
-    ! .. Locals ..
+    ! .. Input variables
+    integer, intent(in) :: ins    !! 0 (MT), 1(ASA), 2(Full Potential)
+    integer, intent(in) :: krel   !! Switch for non- (or scalar-) relativistic/relativistic (Dirac) program (0/1). Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
+    integer, intent(in) :: naez   !! Number of atoms in unit cell
+    integer, intent(in) :: npol   !! Number of Matsubara Poles (EMESHT)
+    integer, intent(in) :: kmrot  !! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
+    integer, intent(in) :: nspin  !! Counter for spin directions
+    integer, intent(in) :: lmmax  !! Maximum l component in wave function expansion
+    integer, intent(in) :: npnt1  !! number of E points (EMESHT) for the contour integration
+    integer, intent(in) :: npnt2  !! number of E points (EMESHT) for the contour integration
+    integer, intent(in) :: npnt3  !! number of E points (EMESHT) for the contour integration
+    real (kind=dp), intent(in) :: tk    !! Temperature
+    real (kind=dp), intent(in) :: alat  !! Lattice constant in a.u.
+    real (kind=dp), intent(in) :: e2in
+    real (kind=dp), dimension(*), intent(in) :: qmtet !! $$ \theta $$ angle of the agnetization with respect to the z-axis
+    real (kind=dp), dimension(*), intent(in) :: qmphi !! $$ \phi $$ angle of the agnetization with respect to the z-axis
+    real (kind=dp), dimension(3,*), intent(in) :: rbasis  !! Position of atoms in the unit cell in units of bravais vectors
+    real (kind=dp), dimension(3,3), intent(in) :: bravais !! Bravais lattice vectors
+    ! .. Local variables
     integer :: i, ih
     ! ----------------------------------------------------------------------
     write (1337, '(5X,A,/)') '< DECIOPT > : writing header of decimation file'

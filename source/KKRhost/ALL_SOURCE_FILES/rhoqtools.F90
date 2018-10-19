@@ -1,17 +1,40 @@
+!-------------------------------------------------------------------------------
+!> Summary: This module contains everything needed in the host code to prepare a 
+!> quasiparticle interference (QPI) simulation. 
+!> Author: Philipp Ruessmann
+!> Deprecated: False 
+!> For details on the quasiparticle interference technique and it's implementation
+!> see chapter 4 of the PhD thesis of Philipp Ruessmann which is available here:
+!> http://epflicht.ulb.uni-bonn.de/urn/urn:nbn:de:hbz:5:2-162838
+!-------------------------------------------------------------------------------
 module mod_rhoqtools
+
   use :: mod_datatypes, only: dp
+  private 
+  public :: rhoq_save_refpot, rhoq_save_rmesh, rhoq_write_kmesh, rhoq_find_kmask, rhoq_saveg, rhoq_write_tau0, rhoq_read_mu0_scoef
 
 contains
 
-  ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Write the k-mesh to file for the use in the QPI-tool
+  !> Author: Philipp Ruessmann
+  !> Category: input-output, k-points, KKRhost 
+  !> Deprecated: False 
+  !> Write the k-mesh to file with its respective weights
+  !-------------------------------------------------------------------------------
   subroutine rhoq_write_kmesh(nofks, nxyz, volbz, bzkp, volcub, recbv, bravais)
 
     implicit none
 
-    integer, intent (in) :: nofks, nxyz(3)
-    real (kind=dp), intent (in) :: volbz, bzkp(3, nofks), volcub(nofks), recbv(3, 3), bravais(3, 3)
-    ! local
+    integer, intent (in) :: nofks              !! number of points in irreducible BZ
+    real (kind=dp), intent (in) :: volbz       !! volume of the BZ
+    integer, dimension(3), intent (in) :: nxyz !! original k-mesh net in the 3 directions of the reciprocal lattice vectors (not xyz directions)
+    real (kind=dp), dimension(nofks), intent (in) :: volcub       !! Weight of the k-points
+    real (kind=dp), dimension(3, nofks), intent (in)  :: bzkp     !! k-point mesh
+    real (kind=dp), dimension(3, 3), intent (in)      :: recbv    !! Reciprocal basis vectors
+    real (kind=dp), dimension(3, 3), intent (in)      :: bravais  !! Bravais lattice vectors
+    ! .. Local variables
     integer :: ks, i
 
     ! write out kpoints
@@ -26,8 +49,16 @@ contains
 
   end subroutine rhoq_write_kmesh
 
-  ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Read information about scanning position of the QPI-tool
+  !> Author: Philipp Ruessmann
+  !> Category: input-output, KKRhost
+  !> Deprecated: False
+  !> Reads in information about scanning layers from file 'mu0' and distributes
+  !> the information over the MPI ranks
+  !> @note Should be redone in the future so that the information is created automatically and not read in from a file. @endnote
+  !-------------------------------------------------------------------------------
   subroutine rhoq_read_mu0_scoef(iatomimp, mu, nscoef, imin)
 
 #ifdef CPP_MPI
@@ -36,12 +67,14 @@ contains
     use :: mod_mympi, only: myrank, master
     implicit none
 
-    integer, intent (out) :: mu, nscoef, imin
-    integer, allocatable, intent (inout) :: iatomimp(:)
+    integer, intent (out) :: mu     !! scannning position (mu0 in PhD Ruessmann)
+    integer, intent (out) :: nscoef !! number of layers in the impurity cluster
+    integer, intent (out) :: imin   !! smalles layer index of impurity cluster
+    integer, allocatable, intent (inout) :: iatomimp(:) !! layer indices
     ! local
-    integer :: i1
+    integer :: i1 !! counter for atoms in impurity cluster
 #ifdef CPP_MPI
-    integer :: ierr
+    integer :: ierr !! exit status of MPI calls
 #endif
 
     ! read in mu0
@@ -75,8 +108,19 @@ contains
 
   end subroutine rhoq_read_mu0_scoef
 
-  ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Find mask of necessary k-points for the QPI-tool
+  !> Author: Philipp Ruessmann
+  !> Category: k-points, input-output, KKRhost
+  !> Deprecated: False
+  !> Read `kpts.txt` file and `kmask_info.txt` file on master and from there determine if
+  !> some k-points can be thrown out. The input of the `kmask_info.txt` file determines the behavior of this routine:
+  !>   * file not present: take all k-points
+  !>   * 1 in first line (determines mode): ring-like region around R0=(kx,ky) [in line 2] with inner and outer radii being R1 and R2 [lines 3 and 4]
+  !>   * 2 in first line: take box defined by kx_min, kx_max, ky_min, ky_max (each given in a new line)
+  !>   * 3 in first line: read predefined mask (1/0) values need to be given for all k-points, each in a new line
+  !-------------------------------------------------------------------------------
   subroutine rhoq_find_kmask(nofks, k_end, bzkp, kmask, rhoq_kmask)
 
 #ifdef CPP_MPI
@@ -87,11 +131,11 @@ contains
 
     implicit none
 
-    integer, intent (in) :: nofks
-    integer, intent (out) :: k_end
-    integer, allocatable, intent (out) :: kmask(:)
-    real (kind=dp), intent (in) :: bzkp(3, nofks)
-    real (kind=dp), allocatable, intent (out) :: rhoq_kmask(:, :)
+    integer, intent (in) :: nofks  !! number of k-points
+    integer, intent (out) :: k_end !! number of k-points after filtering
+    integer, allocatable, intent (out) :: kmask(:) !! kmask array labelling points (either inside or outside of masked region)
+    real (kind=dp), intent (in) :: bzkp(3, nofks) !! k-points array
+    real (kind=dp), allocatable, intent (out) :: rhoq_kmask(:, :) !! output array holding kpoints and indices in reduced region only
     ! local
     integer :: i, j, kpt, kmask_mode, k_start
     logical :: kmask_info
@@ -228,8 +272,14 @@ contains
 
   end subroutine rhoq_find_kmask
 
-  ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Save k-dependent GF to file for the QPI-tool
+  !> Author: Philipp Ruessmann
+  !> Category: input-output, k-points, structural-greensfunction, KKRhost
+  !> Deprecated: False
+  !> Write out G_ij as well as G_ji 
+  !-------------------------------------------------------------------------------
   subroutine rhoq_saveg(nscoef, rhoq_kmask, kpt, k_end, kp, i, j, mu, imin, iatomimp, lmmaxd, g)
 
 #ifdef CPP_HYBRID
@@ -238,10 +288,18 @@ contains
 
     implicit none
 
-    integer, intent (in) :: i, j, mu, imin, lmmaxd, nscoef, k_end, kpt
-    integer, intent (in) :: iatomimp(nscoef)
-    real (kind=dp), intent (in) :: rhoq_kmask(5, k_end), kp(3)
-    complex (kind=dp), intent (in) :: g(lmmaxd, lmmaxd)
+    integer, intent (in) :: i !! atom index i
+    integer, intent (in) :: j !! atom index j
+    integer, intent (in) :: mu !! scanning position (mu0)
+    integer, intent (in) :: imin !! minimal layer index 
+    integer, intent (in) :: lmmaxd !! lmsize of GF matrices
+    integer, intent (in) :: nscoef !! number of layers in imp. cluster
+    integer, intent (in) :: k_end !! number of kpoints to be stored
+    integer, intent (in) :: kpt !! kpoint index
+    integer, intent (in) :: iatomimp(nscoef) !! layer indices of imp. cluster
+    real (kind=dp), intent (in) :: rhoq_kmask(5, k_end) !! mask and mapping array of reduced k-point set
+    real (kind=dp), intent (in) :: kp(3) !! kpoint
+    complex (kind=dp), intent (in) :: g(lmmaxd, lmmaxd) !! structural GF (of pair i,j, and k-point)
     ! local
     integer :: ix, jx, lm1, irec
 
@@ -281,16 +339,22 @@ contains
 
   end subroutine rhoq_saveg
 
-  ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Write out scattering path operator to fort.990099 and fort 998888 files for the QPI-tool
+  !> Author: Philipp Ruessmann
+  !> Category: input-output, k-points, structural-greensfunction, KKRhost
+  !> Deprecated: False
+  !> Reads in stored structural GF from file and converts to human redable files
+  !> @note Can be removed in a later version. @endnote
+  !-------------------------------------------------------------------------------
   subroutine rhoq_write_tau0(nofks, nshell, nsh1, nsh2, nsymat, nscoef, mu, iatomimp, kmask, lmmaxd, bzkp, imin)
 
     use :: mod_mympi, only: myrank, master
     use :: mod_datatypes
+    use :: mod_constants, only: czero
 
     implicit none
-
-    complex (kind=dp), parameter :: czero = (0.0d0, 0.0d0)
 
     integer, intent (in) :: nofks, nshell, nsymat, nscoef, mu, lmmaxd, imin
     integer, intent (in) :: nsh1(nshell), nsh2(nshell), iatomimp(nscoef)
@@ -370,9 +434,15 @@ contains
 
   end subroutine rhoq_write_tau0
 
-  ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-  subroutine rhoq_save_rmesh(natyp, irmd, ipand, irmin, irws, ipan, rmesh, ntcell, ircut, r_log, npan_log, npan_eq)
+  !-------------------------------------------------------------------------------
+  !> Summary: Write the radial mesh information to file for QPI-tool
+  !> Author: Philipp Ruessmann
+  !> Category: radial-grid, input-output, KKRhost
+  !> Deprecated: False
+  !> Read in scanning position and write out information for the radial mesh to file
+  !-------------------------------------------------------------------------------
+  subroutine rhoq_save_rmesh(natyp,irmd,ipand,irmin,irws,ipan,rmesh,ntcell,ircut,   &
+    r_log,npan_log,npan_eq)
 
     implicit none
 
@@ -401,12 +471,16 @@ contains
     write (9999, '(E22.15,2I9)') r_log, npan_log, npan_eq
     close (9999)
 
-
   end subroutine rhoq_save_rmesh
 
-  ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-  subroutine rhoq_save_refpot(ielast, i1, nref, natyp, refpot, wlength, lmmaxd, ie, trefll)
+  !-------------------------------------------------------------------------------
+  !> Summary: Save the reference potentials to an unformatted filefor the QPI-tool
+  !> Author: Philipp Ruessmann
+  !> Category: input-output, reference-system, KKRhost
+  !> Deprecated: False
+  !> Save the reference potentials to an unformatted file called refinfo
+  !-------------------------------------------------------------------------------
+  subroutine rhoq_save_refpot(ielast,i1,nref,natyp,refpot,wlength,lmmaxd,ie,trefll)
 
     implicit none
 
@@ -427,8 +501,5 @@ contains
     write (99992, rec=irec) trefll(:, :, i1)
 
   end subroutine rhoq_save_refpot
-
-
-  ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 end module mod_rhoqtools

@@ -69,7 +69,7 @@ module global_variables
   integer :: lmpotd
   integer :: ntotd
   integer :: nrmaxd
-  integer :: lmmaxso
+  integer :: lmmaxso   !! (KREL+KORBIT+1)*(LMAX+1)**2
   integer :: lpotd
   integer :: nchebd
 

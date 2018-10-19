@@ -1,10 +1,27 @@
+!------------------------------------------------------------------------------------
+!> Summary: Wrapper for the calculation of the elements of the Greens function \(G_{ij}\)
+!> Author: 
+!> rapper for the calculation of the elements of the Greens function \(G_{ij}\)
+!> will calculate the pairs depending on wheter one wishes to calculate the conductivity
+!> of the pair-wise Heisenberg exchange interactions.
+!------------------------------------------------------------------------------------
 module mod_setgijtab
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  subroutine setgijtab(linterface, icc, naez, iqat, rbasis, bravais, natomimp, atomimp, rclsimp, ijtabcalc, iofgij, jofgij, nqcalc, iqcalc, natomimpd, ijtabcalc_i)
+  !-------------------------------------------------------------------------------
+  !> Summary: Wrapper for the calculation of the elements of the Greens function \(G_{ij}\)
+  !> Author: 
+  !> Category: input-output, reference-system, structural-greensfunction, KKRhost
+  !> Deprecated: False 
+  !> Wrapper for the calculation of the elements of the Greens function \(G_{ij}\)
+  !> will calculate the pairs depending on wheter one wishes to calculate the conductivity
+  !> of the pair-wise Heisenberg exchange interactions.
+  !-------------------------------------------------------------------------------
+  subroutine setgijtab(linterface,icc,naez,iqat,rbasis,bravais,natomimp,atomimp,    &
+    rclsimp,ijtabcalc,iofgij,jofgij,nqcalc,iqcalc,natomimpd,ijtabcalc_i)
     ! **********************************************************************
     ! * Task-specific settings of Gij elements that need to be calculated  *
     ! * Subroutine (called for ICC=-1) sets up the arrays                  *

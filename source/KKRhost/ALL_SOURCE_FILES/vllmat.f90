@@ -1,3 +1,8 @@
+!------------------------------------------------------------------------------------
+!> Summary: Expresses the potential in the Chebychev mesh and (l,m,s)-space 
+!> Author: 
+!> Expresses the potential in the Chebychev mesh and (l,m,s)-space 
+!------------------------------------------------------------------------------------
 module mod_vllmat
   use :: mod_datatypes, only: dp
   private :: dp

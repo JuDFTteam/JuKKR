@@ -1,23 +1,43 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculates the norm of the wavefunctions with full potential and spin orbit coupling.
+!> Author:
+!> Calculates the norm of the wavefunctions with full potential and
+!> spin orbit coupling. This is needed for the normalization of the
+!> coefficients c_Lks.
+!------------------------------------------------------------------------------------
+!> @note 
+!> Added mode (can be 0/1) to determine if operator is written out using
+!> host/impurity wavefunctions. In case of mode==1 the index array
+!> `t_imp%atomimp` is used to determine which position in the host
+!> corresponds to each impurity poisition (i.e. layer index)
+!> @endnote
+!> @warning The gaunt coeffients are stored in index array (see subroutine gaunt)
+!> @endwarning
+!------------------------------------------------------------------------------------
 module mod_normcoeff_so
 
 contains
 
-  subroutine normcoeff_so(natom, ircut, lmmax, pns, thetas, ntcell, ifunm, ipan, lmsp, ksra, cleb, icleb, iend, drdi, irws, nspoh, mode)
-    ! ************************************************************************
-
-    ! calculates the norm of the wavefunctions with full potential and
-    ! spin orbit coupling. this is needed for the normalization of the
-    ! coefficients c_Lks .
-
-    ! attention : the gaunt coeffients are stored in index array
-    ! (see subroutine gaunt)
-
-    ! Added mode (can be 0/1) to determine if operator is written out using
-    ! host/impurity wavefunctions. In case of mode==1 the index array
-    ! t_imp%atomimp is used to determine which position in the host
-    ! corresponds to each impurity poisition (i.e. layer index)
-
-    ! -----------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates the norm of the wavefunctions with full potential and spin orbit coupling.
+  !> Author: 
+  !> Category: spin-orbit-coupling, KKRhost
+  !> Deprecated: False 
+  !> Calculates the norm of the wavefunctions with full potential and
+  !> spin orbit coupling. This is needed for the normalization of the
+  !> coefficients c_Lks.
+  !-------------------------------------------------------------------------------
+  !> @note
+  !> Added mode (can be 0/1) to determine if operator is written out using
+  !> host/impurity wavefunctions. In case of mode==1 the index array
+  !> `t_imp%atomimp` is used to determine which position in the host
+  !> corresponds to each impurity poisition (i.e. layer index)
+  !> @endnote
+  !> @warning The gaunt coeffients are stored in index array (see subroutine gaunt)
+  !> @endwarning
+  !-------------------------------------------------------------------------------
+  subroutine normcoeff_so(natom,ircut,lmmax,pns,thetas,ntcell,ifunm,ipan,lmsp,ksra, &
+    cleb,icleb,iend,drdi,irws,nspoh,mode)
 #ifdef CPP_MPI
     use :: mpi
 #endif
@@ -30,44 +50,40 @@ contains
     use :: mod_datatypes, only: dp
     use :: global_variables
     use :: mod_calc_rho_ll_ss
+    use :: mod_constants, only: pi, czero
 
     implicit none
 
-    ! .. Parameters ..
-    integer :: nspod
-    ! ..
-    ! .. Scalar Arguments ..
-    integer :: natom, mode, iend, ksra, irws(*)
-    ! < lmsize without spin degree of freedom (in contrast to lmmaxd)
-    integer, intent (in) :: lmmax
-    ! ..
-    ! .. Array Arguments ..
-    complex (kind=dp) :: pns(nspind*lmmax, nspind*lmmax, irmd, 2, natom) ! non-sph. eigen states of single pot
-    real (kind=dp) :: cleb(*), thetas(irid, nfund, *), drdi(irmd, natypd) ! derivative dr/di
-    integer :: icleb(ncleb, 4), ifunm(natypd, lmpotd), lmsp(natypd, *), ircut(0:ipand, natypd), ipan(natypd), ntcell(*)
-    ! ..
+    integer, intent(in) :: iend
+    integer, intent(in) :: mode
+    integer, intent(in) :: ksra
+    integer, intent(in) :: natom
+    integer, intent (in) :: lmmax !! (LMAX+1)^2
+    integer, dimension(*), intent(in) :: irws   !! R point at WS radius
+    integer, dimension(*), intent(in) :: ntcell !! Index for WS cell
+    integer, dimension(natypd), intent(in) :: ipan  !! Number of panels in non-MT-region
+    integer, dimension(natypd, *), intent(in)       :: lmsp !! 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
+    integer, dimension(0:ipand, natypd), intent(in) :: ircut !! R points of panel borders
+    integer, dimension(ncleb, 4), intent(in)        :: icleb !! Pointer array
+    integer, dimension(natypd, lmpotd), intent(in)  :: ifunm
+    real (kind=dp), dimension(*), intent(in) :: cleb  !! GAUNT coefficients (GAUNT)
+    real (kind=dp), dimension(irmd, natypd), intent(in) :: drdi !! Derivative dr/di
+    real (kind=dp), dimension(irid, nfund, *), intent(in) :: thetas
+    complex (kind=dp), dimension(nspind*lmmax, nspind*lmmax, irmd, 2, natom), intent(in) :: pns
     ! .. Local Scalars ..
-    complex (kind=dp) :: czero, norm
-    real (kind=dp) :: pi
-    integer :: ir, lm1, lm2, lm1p, lm2p, i1, i1sp1, i1sp2, lmsp1, lmsp2, i2sp1, i2sp2, insra, nsra, nspoh, isigma, i2
+    complex (kind=dp) :: norm
+    integer :: nspod
+    integer :: ir, lm1, lm2, lm1p, lm2p, i1, i1sp1, i1sp2, lmsp1, lmsp2, i2sp1 
+    integer :: i2sp2, insra, nsra, nspoh, isigma, i2
     ! MPI stuff
     integer :: ierr, ihelp, i1_start, i1_end
-    ! .. External Subroutines ..
-    external :: zgemm
-    ! ..
-    ! .. Intrinsic Functions ..
-    intrinsic :: datan, aimag, sqrt
     ! ..Local Arrays..
-    complex (kind=dp), allocatable :: dens(:, :, :, :, :, :, :)
-    complex (kind=dp), allocatable :: rll_12(:, :, :), rll(:, :, :, :, :, :, :), rhod(:, :, :, :)
+    complex (kind=dp), dimension(:, :, :), allocatable :: rll_12
+    complex (kind=dp), dimension(:, :, :, :), allocatable :: rhod
+    complex (kind=dp), dimension(:, :, :, :, :, :, :), allocatable :: rll
+    complex (kind=dp), dimension(:, :, :, :, :, :, :), allocatable :: dens
     ! MPI stuff
-    complex (kind=dp), allocatable :: work(:, :, :, :, :, :, :)
-    ! ..
-    ! .. Data statements ..
-    data czero/(0.0d0, 0.0d0)/
-    ! ..
-
-    pi = 4.d0*datan(1.d0)
+    complex (kind=dp), dimension(:, :, :, :, :, :, :), allocatable :: work
 
     nspod = 1 + korbit
 
@@ -89,7 +105,6 @@ contains
 
     rll = czero
     dens = czero
-
 
     ! determine MPI work division for loop over atoms
 #ifdef CPP_MPI
@@ -113,62 +128,50 @@ contains
 
       do insra = 1, nsra
         do ir = 1, irmd
-
           do i1sp1 = 1, nspoh
             do i1sp2 = 1, nspoh
               do lm1 = 1, lmmax
                 lmsp1 = (i1sp1-1)*lmmax + lm1
                 do lm2 = 1, lmmax
                   lmsp2 = (i1sp2-1)*lmmax + lm2
-                  rll(ir, lm2, lm1, i1sp2, i1sp1, insra, i1) = pns(lmsp2, lmsp1, ir, insra, i1)
+                  rll(ir, lm2, lm1, i1sp2, i1sp1, insra, i1) =                      &
+                    pns(lmsp2, lmsp1, ir, insra, i1)
                 end do             ! LM1=1,LMMAX
               end do               ! LM1=1,LMMAX
             end do                 ! ISP1=1,2
           end do                   ! ISP1=1,2
-
         end do                     ! IR
       end do                       ! INSRA
-
-
       ! set up the array R*_L1L2 R_L3L4
       do i1sp1 = 1, nspoh
         do i1sp2 = 1, nspoh
           do i2sp1 = 1, nspoh
             do i2sp2 = 1, nspoh
-
               do lm1 = 1, lmmax
                 do lm2 = 1, lmmax
-
                   do insra = 1, nsra
-
                     rll_12 = czero
-
                     do lm1p = 1, lmmax
                       do lm2p = 1, lmmax
-
                         do ir = 1, irmd
-
-                          rll_12(ir, lm1p, lm2p) = conjg(rll(ir,lm1p,lm1,i1sp1,i1sp2,insra,i1))*rll(ir, lm2p, lm2, i2sp1, i2sp2, insra, i1)
+                          rll_12(ir, lm1p, lm2p) =                                  &
+                            conjg(rll(ir,lm1p,lm1,i1sp1,i1sp2,insra,i1))*           &
+                            rll(ir, lm2p, lm2, i2sp1, i2sp2, insra, i1)
                         end do     ! IR
-
                       end do       ! LM2P
                     end do         ! LM1P
-
-
-                    call calc_rho_ll_ss(lmmax, rll_12, ircut(0:ipand,i2), ipan(i2), ntcell(i2), thetas, cleb, icleb, iend, ifunm, lmsp, irws(i2), drdi(:,i2), norm)
-
-                    dens(lm1, lm2, i1sp1, i1sp2, i2sp1, i2sp2, i1) = dens(lm1, lm2, i1sp1, i1sp2, i2sp1, i2sp2, i1) + norm
+                    call calc_rho_ll_ss(lmmax, rll_12, ircut(0:ipand,i2), ipan(i2), &
+                      ntcell(i2), thetas, cleb, icleb, iend, ifunm, lmsp, irws(i2), &
+                      drdi(:,i2), norm)
+                    dens(lm1, lm2, i1sp1, i1sp2, i2sp1, i2sp2, i1) =                &
+                      dens(lm1, lm2, i1sp1, i1sp2, i2sp1, i2sp2, i1)+ norm
                   end do           ! NSRA
-
                 end do             ! LM2
               end do               ! LM1
-
             end do                 ! I2SP2
           end do                   ! I2SP1
-
         end do                     ! I1SP2
       end do                       ! I1SP1
-
     end do                         ! I1
     deallocate (rll)
     deallocate (rll_12)
@@ -185,11 +188,8 @@ contains
     if (ierr/=0) stop 'Error deallocating work for MPI comm of DENS in normcoeff_SO'
 #endif
 
-
     if (myrank==master) then       ! do last part and writeout only on master
-
       write (*, *) 'collect terms and writeout'
-
       ! calculate rho
       allocate (rhod(lmmaxso,lmmaxso,natom,4))
       if (nspoh/=1) then
@@ -200,7 +200,9 @@ contains
                 do i1sp2 = 1, nspod
                   do lm1 = 1, lmmax
                     do lm2 = 1, lmmax
-                      rhod((i1sp2-1)*lmmax+lm2, (i1sp1-1)*lmmax+lm1, i1, isigma) = dens(lm2, lm1, 1, i1sp2, 1, i1sp1, i1) + dens(lm2, lm1, 2, i1sp2, 2, i1sp1, i1)
+                      rhod((i1sp2-1)*lmmax+lm2, (i1sp1-1)*lmmax+lm1, i1, isigma) =  &
+                        dens(lm2, lm1, 1, i1sp2, 1, i1sp1, i1) +                    &
+                        dens(lm2, lm1, 2, i1sp2, 2, i1sp1, i1)
                     end do
                   end do
                 end do
@@ -210,7 +212,9 @@ contains
                 do i1sp2 = 1, nspod
                   do lm1 = 1, lmmax
                     do lm2 = 1, lmmax
-                      rhod((i1sp2-1)*lmmax+lm2, (i1sp1-1)*lmmax+lm1, i1, isigma) = dens(lm2, lm1, 2, i1sp2, 1, i1sp1, i1) + dens(lm2, lm1, 1, i1sp2, 2, i1sp1, i1)
+                      rhod((i1sp2-1)*lmmax+lm2, (i1sp1-1)*lmmax+lm1, i1, isigma) =  &
+                        dens(lm2, lm1, 2, i1sp2, 1, i1sp1, i1) +                    &
+                        dens(lm2, lm1, 1, i1sp2, 2, i1sp1, i1)
                     end do
                   end do
                 end do
@@ -220,7 +224,9 @@ contains
                 do i1sp2 = 1, nspod
                   do lm1 = 1, lmmax
                     do lm2 = 1, lmmax
-                      rhod((i1sp2-1)*lmmax+lm2, (i1sp1-1)*lmmax+lm1, i1, isigma) = -(0d0, 1d0)*(dens(lm2,lm1,2,i1sp2,1,i1sp1,i1)-dens(lm2,lm1,1,i1sp2,2,i1sp1,i1))
+                      rhod((i1sp2-1)*lmmax+lm2, (i1sp1-1)*lmmax+lm1, i1, isigma) =  &
+                        -(0d0, 1d0)*(dens(lm2,lm1,2,i1sp2,1,i1sp1,i1)               &
+                        -dens(lm2,lm1,1,i1sp2,2,i1sp1,i1))
                     end do
                   end do
                 end do
@@ -230,7 +236,9 @@ contains
                 do i1sp2 = 1, nspod
                   do lm1 = 1, lmmax
                     do lm2 = 1, lmmax
-                      rhod((i1sp2-1)*lmmax+lm2, (i1sp1-1)*lmmax+lm1, i1, isigma) = -dens(lm2, lm1, 1, i1sp2, 1, i1sp1, i1) + dens(lm2, lm1, 2, i1sp2, 2, i1sp1, i1)
+                      rhod((i1sp2-1)*lmmax+lm2, (i1sp1-1)*lmmax+lm1, i1, isigma) =  &
+                        -dens(lm2, lm1, 1, i1sp2, 1, i1sp1, i1) +                   &
+                        dens(lm2, lm1, 2, i1sp2, 2, i1sp1, i1)
                     end do
                   end do
                 end do
@@ -255,14 +263,11 @@ contains
           end do
         end do
         close (12)
-
       end if                       ! NSPOH!=1
       deallocate (dens)
       deallocate (rhod)
-
     end if                         ! (myrank==master)
 
   end subroutine normcoeff_so
-
 
 end module mod_normcoeff_so

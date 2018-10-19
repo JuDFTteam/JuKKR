@@ -1,38 +1,57 @@
+!------------------------------------------------------------------------------------
+!> Summary: SIt calculates all the elements of the Green Function of the impurity cluster
+!> Author: 
+!> It calculates all the elements of the Green Function of the impurity cluster
+!> using the GF calculated for the representative pairs. The representative pair 
+!> and the symmetry operation `D` are given through the arrays `IJTABSH` and `IJTABSYM` 
+!> set up in `SHELLGEN2K()`
+!> \begin{equation}
+!> G^{nm,n'm'}_{L,L'}(E)=\sum_{L_1,L_2} D_{L,L_1}^T G_{L_1,L_2}^{nm,n'm'}(E) D_{L_2,L'}
+!> \end{equation}
+!> where
+!> \begin{equation}
+!> DR^n_m=R^n_m
+!> \end{equation}
+!> and
+!> \begin{equation}
+!> DR^{n'}_m=R^{n'}_m
+!> \end{equation}
+!------------------------------------------------------------------------------------
 module mod_rotgll
 
 contains
 
-  subroutine rotgll(gmatll, natomimp, ijtabsym, ijtabsh, dsymll, symunitary, igf, rc, crel, rrel, krel, lmmaxd, irec)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! *   it calculates all the elements of the Green Function of          *
-    ! *   the impurity cluster using the GF calculated for the             *
-    ! *   representative pairs.                                            *
-    ! *   the representative pair and the symmetry operation D are given   *
-    ! *   through the arrays IJTABSH and IJTABSYM set up in < SHELLGEN2K > *
-    ! *                                                                    *
-    ! *     _ _                                                            *
-    ! *     n n'                      n n'                                 *
-    ! *     m m'               T      m m'                                 *
-    ! *    G    (E) = SUM    D     * G    (E) * D                          *
-    ! *     L L'      L1 L2   L L1    L1L2      L2 L'                      *
-    ! *                                                                    *
-    ! *                   _                 _                              *
-    ! *              n    n            n'   n'                             *
-    ! *   where   D R  = R     and  D R  = R                               *
-    ! *              m    m            m    m                              *
-    ! *                                                                    *
-    ! **********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: It calculates all the elements of the Green Function of the impurity cluster
+  !> Author: 
+  !> Category: TAGS for the code they must be written as TAG1, TAG2, ..., TAGN
+  !> Deprecated: False
+  !> It calculates all the elements of the Green Function of the impurity cluster
+  !> using the GF calculated for the representative pairs. The representative pair 
+  !> and the symmetry operation `D` are given through the arrays `IJTABSH` and `IJTABSYM` 
+  !> set up in `SHELLGEN2K()`
+  !> \begin{equation}
+  !> G^{nm,n'm'}_{L,L'}(E)=\sum_{L_1,L_2} D_{L,L_1}^T G_{L_1,L_2}^{nm,n'm'}(E) D_{L_2,L'}
+  !> \end{equation}
+  !> where
+  !> \begin{equation}
+  !> DR^n_m=R^n_m
+  !> \end{equation}
+  !> and
+  !> \begin{equation}
+  !> DR^{n'}_m=R^{n'}_m
+  !> \end{equation}
+  !-------------------------------------------------------------------------------
+  subroutine rotgll(gmatll,natomimp,ijtabsym,ijtabsh,dsymll,symunitary,igf,rc,crel, &
+    rrel,krel,lmmaxd,irec)
+
     use :: mod_mympi, only: myrank, master
     use :: mod_datatypes, only: dp, sp
     use :: mod_changerep
     use :: mod_cmatstr
+    use :: mod_constants, only: czero, cone
 
     implicit none
-    ! ..
-    ! .. Parameter definitions
-    complex (kind=dp) :: czero, cone
-    parameter (czero=(0.0d0,0.0d0), cone=(1.d0,0.d0))
     ! ..
     ! .. Scalar arguments
     integer :: ngclus, lmmaxd, irec

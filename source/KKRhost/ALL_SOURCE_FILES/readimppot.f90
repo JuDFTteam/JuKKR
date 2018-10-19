@@ -1,19 +1,35 @@
+!------------------------------------------------------------------------------------
+!> Summary: Reads the potential and shape functions of impurity
+!> Author: N. H. Long
+!> Reads the potential and shape functions of impurity
+!------------------------------------------------------------------------------------
+!> @note Jonathan Chico: There is an array called `scale` used in this routine,
+!> this is the same name than the `FORTRAN` intrinsic function `scale()`. It
+!> might be a good idea to change this name.
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_readimppot
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  ! -------------------------------------------------------------------------------
-  ! SUBROUTINE: READIMPPOT
-  !> @brief Reads the potential and shapefun of inpurity
-  ! -------------------------------------------------------------------------------
-  subroutine readimppot(natomimp, ins, ipf, ipfe, ipe, kws, nspin, lpot, ipanimp, thetasimp, ircutimp, irwsimp, khfeld, hfield, vinsimp, vm2zimp, irminimp, rimp, zimp, irmd, irnsd, &
-    irid, nfund, ipand)
-    ! ************************************************************************
-    ! read in impurity potential
-    ! n.h.long, May 2013
-    ! -----------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
+  !> Summary: Reads the potential and shape functions of impurity
+  !> Author: N. H. Long
+  !> Category: input-output, shape-functions, potential, KKRhost
+  !> Deprecated: False 
+  !> Reads the potential and shape functions of impurity
+  !-------------------------------------------------------------------------------
+  !> @note Jonathan Chico: There is an array called `scale` used in this routine,
+  !> this is the same name than the `FORTRAN` intrinsic function `scale()`. It
+  !> might be a good idea to change this name.
+  !> @endnote
+  !-------------------------------------------------------------------------------
+  subroutine readimppot(natomimp,ins,ipf,ipfe,ipe,kws,nspin,lpot,ipanimp,thetasimp, &
+    ircutimp,irwsimp,khfeld,hfield,vinsimp,vm2zimp,irminimp,rimp,zimp,irmd,irnsd,   &
+    irid,nfund,ipand)
+
     use :: mod_calrmt
     use :: mod_potcut
     implicit none

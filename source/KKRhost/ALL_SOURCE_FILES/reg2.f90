@@ -1,10 +1,29 @@
+!------------------------------------------------------------------------------------
+!> Summary: The subroutine `REG2` calculates the coefficients of a equalization polynomial of the 2nd degree after the discrete error square method of Gauss
+!> Author:  Guido Dubois
+!> The subroutine `REG2` calculates the coefficients of a equalization polynomial of 
+!> the 2nd degree after the discrete error square method of Gauss
+!------------------------------------------------------------------------------------
+!> @note This module seems to be used nowhere
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_reg2
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  ! ************************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: The subroutine `REG2` calculates the coefficients of a equalization polynomial of the 2nd degree after the discrete error square method of Gauss
+  !> Author: Guido Dubois
+  !> Category: numerical-tools, deprecated, KKRhost 
+  !> Deprecated: True
+  !> The subroutine `REG2` calculates the coefficients of a equalization polynomial of 
+  !> the 2nd degree after the discrete error square method of Gauss
+  !-------------------------------------------------------------------------------
+  !> @note This module seems to be used nowhere
+  !> @endnote
+  !-------------------------------------------------------------------------------
   subroutine reg2(m, x, f, w, c, xm, fm)
     ! *****************************************************************
     ! *

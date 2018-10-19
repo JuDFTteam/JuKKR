@@ -1,28 +1,48 @@
+!------------------------------------------------------------------------------------
+!> Summary: Get wavefunctions of same magnitude by scaling with `efac` 
+!> Author: R. Zeller
+!> Get wavefunctions of same magnitude by scaling with `efac`
+!------------------------------------------------------------------------------------
 module mod_wftsca
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  ! Added IRMIN,IRMAX 1.7.2014  &
-  subroutine wftsca(drdi, efac, pz, qz, fz, sz, nsra, pzlm, qzlm, pzekdr, qzekdr, ek, loflm, irmind, irmd, irmin, irmax, lmaxd, lmmaxd)
-    ! -----------------------------------------------------------------------
-    ! R. Zeller      Oct. 1993
-    ! -----------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
+  !> Summary: Get wavefunctions of same magnitude by scaling with `efac`
+  !> Author: R. Zeller
+  !> Category: numerical-tools, single-site, KKRhost
+  !> Deprecated: False 
+  !> Get wavefunctions of same magnitude by scaling with `efac`
+  !-------------------------------------------------------------------------------
+  subroutine wftsca(drdi,efac,pz,qz,fz,sz,nsra,pzlm,qzlm,pzekdr,qzekdr,ek,loflm,    &
+    irmind,irmd,irmin,irmax,lmaxd,lmmaxd)
+
+    use :: mod_constants, only: cone
+
     implicit none
-    ! .. Parameters ..
-    complex (kind=dp) :: cone
-    parameter (cone=(1.e0_dp,0.e0_dp))
-    ! ..
-    ! .. Scalar Arguments ..
-    complex (kind=dp) :: ek
-    integer :: irmd, irmind, lmaxd, lmmaxd, nsra, irmin, irmax
-    ! ..
-    ! .. Array Arguments ..
-    complex (kind=dp) :: efac(lmmaxd), fz(irmd, 0:lmaxd), pz(irmd, 0:lmaxd), pzekdr(lmmaxd, irmind:irmd, 2), pzlm(lmmaxd, irmind:irmd, 2), qz(irmd, 0:lmaxd), &
-      qzekdr(lmmaxd, irmind:irmd, 2), qzlm(lmmaxd, irmind:irmd, 2), sz(irmd, 0:lmaxd)
-    real (kind=dp) :: drdi(*)
-    integer :: loflm(*)
+    ! .. Input variables
+    integer, intent(in) :: irmd !! Maximum number of radial points
+    integer, intent(in) :: nsra
+    integer, intent(in) :: irmin !! Max R for spherical treatment
+    integer, intent(in) :: irmax
+    integer, intent(in) :: lmaxd  !! Maximum l component in wave function expansion
+    integer, intent(in) :: irmind !! irmd - irnsd
+    integer, intent(in) :: lmmaxd !! (KREL+KORBIT+1)*(LMAX+1)**2
+    complex (kind=dp), intent(in) :: ek
+    integer, dimension(*), intent(in) :: loflm !! l of lm=(l,m) (GAUNT)
+    real (kind=dp), dimension(*), intent(in) :: drdi  !! Derivative dr/di
+    complex (kind=dp), dimension(irmd, 0:lmaxd), intent(in) :: fz
+    complex (kind=dp), dimension(irmd, 0:lmaxd), intent(in) :: pz
+    complex (kind=dp), dimension(irmd, 0:lmaxd), intent(in) :: sz
+    complex (kind=dp), dimension(irmd, 0:lmaxd), intent(in) :: qz
+    ! .. Output variables
+    complex (kind=dp), dimension(lmmaxd), intent(out) :: efac !! efac(lm) = sqrt(e)**l/(2l - 1)
+    complex (kind=dp), dimension(lmmaxd, irmind:irmd, 2), intent(out) :: pzlm
+    complex (kind=dp), dimension(lmmaxd, irmind:irmd, 2), intent(out) :: qzlm
+    complex (kind=dp), dimension(lmmaxd, irmind:irmd, 2), intent(out) :: qzekdr
+    complex (kind=dp), dimension(lmmaxd, irmind:irmd, 2), intent(out) :: pzekdr
     ! ..
     ! .. Local Scalars ..
     complex (kind=dp) :: efac1, v1
@@ -30,8 +50,6 @@ contains
     ! ..
     ! .. Intrinsic Functions ..
     intrinsic :: real
-    ! ..
-
 
     ! ---> set up array efac : efac(lm) = sqrt(e)**l/(2l - 1)!!
 
@@ -44,7 +62,6 @@ contains
         efac(lm) = v1
       end do
     end do
-
 
     ! ---> get wfts of same magnitude by scaling with efac
 
@@ -69,7 +86,6 @@ contains
         end do
       end do
     end do
-
 
   end subroutine wftsca
 

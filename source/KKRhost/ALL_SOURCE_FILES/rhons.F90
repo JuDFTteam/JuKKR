@@ -1,56 +1,88 @@
+!------------------------------------------------------------------------------------
+!> Summary: The charge density is developed in spherical harmonics
+!> Author: B. Drittler
+!> The charge density is developed in spherical harmonics
+!> \begin{eqaution}
+!> \rho(r) = \sum_{lm} \rho(lm,r) Y(r,lm) }
+!> \end{equation}
+!> \begin{eqaution}
+!> \rho(lm,r) = \int \rho(r) * Y(r,lm) 
+!> \end{equation}
+!> in the case of spin-polarization :
+!> the spin density is developed in spherical harmonics :
+!> \begin{eqaution}
+!> sden(r) = \sum_{lm}{ sden(lm,r) Y(r,lm) }
+!> \end{equation}
+!> \begin{eqaution}
+!> sden(lm,r) = \int sden(r) T(r,lm)
+!> \end{equation}
+!> \(n(r,e)\) is developed in
+!> \begin{eqaution}
+!> n(r,e) = Y(r,l'm') n(l'm',lm,r,e) Y(r,lm)
+!> \end{equation}
+!> Therefore a faltung of `n(l'm',lm,r,e)` with the gaunt coeffients
+!> has to be used to calculate the lm-contribution of the charge density.
+!> Calculate the valence density of states , in the spin-polarized case spin dependent.
+!> recognize that the density of states is always complex also in the case of 
+!> _real-energy-integation_ (`ief>0`) since in that case the energy integration 
+!> is done _parallel_ to the real energy axis but *not on the real energy axis*.
+!> In the last energy-spin loop the l-contribution of the valence charge is calculated.
+!------------------------------------------------------------------------------------
+!> @note B. Drittler July 1989: Modified for the use of shape functions
+!> @endnote
+!> @warning `irmin + 3` has to be less than `imt` if shape functions are used.
+!> @endwarning
+!------------------------------------------------------------------------------------
 module mod_rhons
 
 contains
 
-  subroutine rhons(den, df, drdi, gmat, ek, rho2ns, ipan, ircut, irmin, & ! Added IRMIN 1.7.2014  &
-    thetas, ifunm, lmsp, nsra, qns, pns, ar, cr, pz, fz, qz, sz, cleb, icleb, jend, iend, ekl, denlm, gflle_part)
-    ! -----------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
+  !> Summary: The charge density is developed in spherical harmonics
+  !> Author: B. Drittler
+  !> Category: physical-observables, KKRhost
+  !> Deprecated: False
+  !> The charge density is developed in spherical harmonics
+  !> \begin{eqaution}
+  !> \rho(r) = \sum_{lm} \rho(lm,r) Y(r,lm) }
+  !> \end{equation}
+  !> \begin{eqaution}
+  !> \rho(lm,r) = \int \rho(r) * Y(r,lm) 
+  !> \end{equation}
+  !> in the case of spin-polarization :
+  !> the spin density is developed in spherical harmonics :
+  !> \begin{eqaution}
+  !> sden(r) = \sum_{lm}{ sden(lm,r) Y(r,lm) }
+  !> \end{equation}
+  !> \begin{eqaution}
+  !> sden(lm,r) = \int sden(r) T(r,lm)
+  !> \end{equation}
+  !> \(n(r,e)\) is developed in
+  !> \begin{eqaution}
+  !> n(r,e) = Y(r,l'm') n(l'm',lm,r,e) Y(r,lm)
+  !> \end{equation}
+  !> Therefore a faltung of `n(l'm',lm,r,e)` with the gaunt coeffients
+  !> has to be used to calculate the lm-contribution of the charge density.
+  !> Calculate the valence density of states , in the spin-polarized case spin dependent.
+  !> recognize that the density of states is always complex also in the case of 
+  !> _real-energy-integation_ (`ief>0`) since in that case the energy integration 
+  !> is done _parallel_ to the real energy axis but *not on the real energy axis*.
+  !> In the last energy-spin loop the l-contribution of the valence charge is calculated.
+  !-------------------------------------------------------------------------------
+  !> @note B. Drittler July 1989: Modified for the use of shape functions
+  !> @endnote
+  !> @warning `irmin + 3` has to be less than `imt` if shape functions are used.
+  !> @endwarning
+  !-------------------------------------------------------------------------------
+  subroutine rhons(den,df,drdi,gmat,ek,rho2ns,ipan,ircut,irmin,thetas,ifunm,lmsp,   &
+    nsra,qns,pns,ar,cr,pz,fz,qz,sz,cleb,icleb,jend,iend,ekl,denlm,gflle_part)
 
-    ! the charge density is developed in spherical harmonics :
-
-    ! rho(r) =   { rho(lm,r) * y(r,lm) }       (summed over lm)
-
-    ! rho(lm,r) =   { do rho(r) * y(r,lm)         (integrated over
-    ! unit sphere)
-    ! in the case of spin-polarization :
-    ! the spin density is developed in spherical harmonics :
-
-    ! sden(r) =   { sden(lm,r) * y(r,lm) }      (summed over lm)
-
-    ! sden(lm,r) =   { do sden(r) * y(r,lm)        (integrated over
-    ! unit sphere)
-    ! n(r,e) is developed in
-
-    ! n(r,e) = { y(r,l'm') * n(l'm',lm,r,e) * y(r,lm) }
-
-    ! therefore a faltung of n(l'm',lm,r,e) with the gaunt coeffients
-    ! has to be used to calculate the lm-contribution of the charge
-    ! density .
-
-
-    ! calculate the valence density of states , in the spin-polarized
-    ! case spin dependent .
-    ! recognize that the density of states is always complex also in
-    ! the case of "real-energy-integation" (ief>0) since in that case
-    ! the energy integration is done parallel to the real energy axis
-    ! but not on the real energy axis .
-    ! in the last energy-spin loop the l-contribution of the valence
-    ! charge is calculated .
-
-    ! b.drittler   aug. 1988
-
-    ! modified for the use of shape functions
-
-    ! attention : irmin + 3 has to be less then imt
-    ! if shape functions are used
-
-    ! b.drittler   july 1989
-    ! -----------------------------------------------------------------------
     use :: mod_datatypes
     use :: global_variables
     use :: mod_rhoin
     use :: mod_rhoout
     use :: mod_csimpk
+    use :: mod_constants, only: pi
     implicit none
     ! ..
     ! .. Scalar Arguments ..
@@ -77,10 +109,6 @@ contains
     ! .. External Functions ..
     logical :: opt                 ! qdos
     external :: opt                ! qdos
-    ! ..
-    real (kind=dp) :: pi
-
-    pi = 4.d0*datan(1.d0)
 
     ! ---> set up efac(lm) = sqrt(e))**l/(2l - 1)!!
 

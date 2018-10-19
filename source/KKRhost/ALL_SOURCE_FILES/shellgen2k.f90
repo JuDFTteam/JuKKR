@@ -1,12 +1,26 @@
+!------------------------------------------------------------------------------------
+!> Summary: Determines the number of different atomic pairs in a cluster by symmetry considerations
+!> Author: 
+!> Determines the number of different atomic pairs in a cluster by symmetry considerations
+!> assigning a "shell" pointer (used to set up the GF matrix), to each representative pair.
+!------------------------------------------------------------------------------------
 module mod_shellgen2k
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  ! 23.2.2000/ 27.9.2004 *************************************************
-  subroutine shellgen2k(icc, natom, rcls, atom, nofgij, iofgij, jofgij, nrot, rsymat, isymindex, rotname, nshell, ratom, nsh1, nsh2, ish, jsh, ijtabsym, ijtabsh, ijtabcalc, iprint, &
-    nsheld)
+  !-------------------------------------------------------------------------------
+  !> Summary: Determines the number of different atomic pairs in a cluster by symmetry considerations
+  !> Author:
+  !> Category: geometry, input-output, KKRhost
+  !> Deprecated: False 
+  !> Determines the number of different atomic pairs in a cluster by symmetry considerations
+  !> assigning a "shell" pointer (used to set up the GF matrix), to each representative pair.
+  !-------------------------------------------------------------------------------
+  subroutine shellgen2k(icc,natom,rcls,atom,nofgij,iofgij,jofgij,nrot,rsymat,       &
+    isymindex,rotname,nshell,ratom,nsh1,nsh2,ish,jsh,ijtabsym,ijtabsh,ijtabcalc,    &
+    iprint,nsheld)
     ! **********************************************************************
     ! *    Determines the number of different atomic pairs in a cluster by *
     ! * symmetry considerations, assigning a "shell" pointer (used to set  *
@@ -48,7 +62,8 @@ contains
     integer :: icc, nofgij, natom, nrot, iprint, nsheld
     ! ..
     ! .. Array arguments
-    integer :: atom(*), isymindex(*), ijtabsym(*), ijtabsh(*), ijtabcalc(*)
+    integer, dimension(*), intent(in) :: ijtabcalc !! Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
+    integer :: atom(*), isymindex(*), ijtabsym(*), ijtabsh(*)
     integer :: nshell(0:nsheld), nsh1(*), nsh2(*)
     integer :: ish(nsheld, *), jsh(nsheld, *)
     integer :: iofgij(*), jofgij(*)
@@ -91,7 +106,6 @@ contains
     allocate (ratomi(3,nshell0), stat=ns)
     if (ns/=0) stop '   < shellgen2k > allocate RATOMI array'
     ! ======================================================================
-
     ! --> initialise number of shells found for this cluster, setup the
     ! working arrays NSH1I,NSH2I,NSHELLI,RATOMI and set the number of
     ! new found shells (NSNEW) to zero
@@ -133,10 +147,8 @@ contains
             rj(ii) = rsymat(isym, ii, 1)*rcls(1, j) + rsymat(isym, ii, 2)*rcls(2, j) + rsymat(isym, ii, 3)*rcls(3, j)
           end do
           ! ----------------------------------------------------------------------
-
           ! --> search for an equivalent pair within the already generated
           ! shells (1..NSHELL(0)+NSNEW)
-
           ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
           ns = 0
           do while ((.not. lfound) .and. (ns<nsgen))
@@ -304,13 +316,18 @@ contains
 160 format (13x, 30('-'), /)
   end subroutine shellgen2k        ! SUBROUTINE SHELLGEN
 
-  ! **********************************************************************
-
+  !-------------------------------------------------------------------------------
+  !> Summary: Print the pointer indicating if a block of the Greens function has to be calculated
+  !> Author: 
+  !> Category: geometry, input-output, KKRhost
+  !> Deprecated: False 
+  !> Print the pointer indicating if a block of the Greens function has to be calculated
+  !-------------------------------------------------------------------------------
   subroutine printijtab(natom, ijtab)
     implicit none
     ! ..
-    integer :: natom
-    integer :: ijtab(*)
+    integer, intent(in) :: natom !! Number of atoms in the cluster
+    integer, dimension(*), intent(in) :: ijtab !! Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
     ! ..
     integer :: i, j, ij
     integer :: lgmax

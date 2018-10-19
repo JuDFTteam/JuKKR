@@ -1,34 +1,45 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculates the charge density from `r(irmin)` to `r(irc)` in case of a non spherical input potential
+!> Author: B. Drittler
+!> Calculates the charge density from `r(irmin)` to `r(irc)` in case of a non 
+!> spherical input potential.
+!> Fills the array cden for the complex density of states 
+!------------------------------------------------------------------------------------
+!> @warning The gaunt coeffients are stored in an index array (see subroutine `gaunt`)
+!> the structure part of the greens-function (`gmat`) is symmetric in its lm-indices,
+!> therefore only one half of the matrix is calculated in the subroutine for the 
+!> back-symmetrisation. The gaunt coeffients are symmetric too (since the are calculated for
+!> real spherical harmonics). That is why the `lm2`-loop only goes up to `lm1` and the summands are
+!> multiplied by a factor of 2 in the case of `lm1` not equal to `lm2`.
+!> @endwarning
+!------------------------------------------------------------------------------------
 module mod_rhoout
 
 contains
 
-  ! Added IRMIN,IRMAX 1.7.2014
-  subroutine rhoout(cden, df, gmat, ek, pns, qns, rho2ns, thetas, ifunm, ipan1, imt1, irmin, irmax, lmsp, cdenns, nsra, cleb, icleb, iend, cdenlm, cwr) ! lm-dos
-    ! -----------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates the charge density from `r(irmin)` to `r(irc)` in case of a non spherical input potential
+  !> Author: B. Drittler
+  !> Category: physical-observables, KKRhost
+  !> Deprecated: False 
+  !> Calculates the charge density from `r(irmin)` to `r(irc)` in case of a non 
+  !> spherical input potential.
+  !> Fills the array cden for the complex density of states 
+  !-------------------------------------------------------------------------------
+  !> @warning The gaunt coeffients are stored in an index array (see subroutine `gaunt`)
+  !> the structure part of the greens-function (`gmat`) is symmetric in its lm-indices,
+  !> therefore only one half of the matrix is calculated in the subroutine for the 
+  !> back-symmetrisation. The gaunt coeffients are symmetric too (since the are calculated for
+  !> real spherical harmonics). That is why the `lm2`-loop only goes up to `lm1` and the summands are
+  !> multiplied by a factor of 2 in the case of `lm1` not equal to `lm2`.
+  !> @endwarning
+  !-------------------------------------------------------------------------------
+  subroutine rhoout(cden,df,gmat,ek,pns,qns,rho2ns,thetas,ifunm,ipan1,imt1,irmin,   &
+    irmax,lmsp,cdenns,nsra,cleb,icleb,iend,cdenlm,cwr) ! lm-dos
 
-    ! calculates the charge density from r(irmin) to r(irc)
-    ! in case of a non spherical input potential .
-
-    ! fills the array cden for the complex density of states
-
-    ! attention : the gaunt coeffients are stored in index array
-    ! (see subroutine gaunt)
-
-    ! the structured part of the greens-function (gmat) is symmetric in
-    ! its lm-indices , therefore only one half of the matrix is
-    ! calculated in the subroutine for the back-symmetrisation .
-    ! the gaunt coeffients are symmetric too (since the are calculated
-    ! using the real spherical harmonics) . that is why the lm2- and
-    ! the lm02- loops are only only going up to lm1 or lm01 and the
-    ! summands are multiplied by a factor of 2 in the case of lm1 .ne.
-    ! lm2 or lm01 .ne. lm02 .
-
-    ! (see notes by b.drittler)
-
-    ! b.drittler   aug. 1988
-    ! -----------------------------------------------------------------------
     use :: mod_datatypes, only: dp
     use :: global_variables
+    use :: mod_constants, only: czero,cone,pi
     implicit none
     ! lm-dos
     ! ..
@@ -41,20 +52,17 @@ contains
     real (kind=dp) :: cleb(*), rho2ns(irmd, lmpotd), thetas(irid, nfund)
     integer :: icleb(ncleb, 4), ifunm(*), lmsp(*)
     ! ..
-    complex (kind=dp) :: cltdf, cone, czero
+    complex (kind=dp) :: cltdf 
     real (kind=dp) :: c0ll
     integer :: i, ifun, ir, j, l1, lm1, lm2, lm3, m1
     ! ..
     complex (kind=dp) :: wr(lmmaxd, lmmaxd, irmind:irmd), wr2(lmmaxd, lmmaxd, irmind:irmd)
     ! ..
-
-    data czero/(0.0e0_dp, 0.0e0_dp)/
-    data cone/(1.0e0_dp, 0.0e0_dp)/
     logical :: opt
 
     ! ---> initialize array for complex charge density
 
-    c0ll = 1.0e0_dp/sqrt(16.0e0_dp*atan(1.0e0_dp))
+    c0ll = 1.0e0_dp/sqrt(4.0e0_dp*pi)
     ! ------------------------------------------------------------------
 
     ! ---> set up array ek*qns(lm1,lm2) + { gmat(lm3,lm2)*pns(lm1,lm3) }
@@ -136,31 +144,25 @@ contains
               end if
             end do                 ! L1
           end do
-
         end do
       end if
-
     end do                         ! ---> calculate the non spherically
     ! symmetric contribution
 
     if (ipan1>1) then
       cdenns(1:irmd) = 0.0e0_dp
     end if
-
     do j = 1, iend
       lm1 = icleb(j, 1)
       lm2 = icleb(j, 2)
       lm3 = icleb(j, 3)
       cltdf = df*cleb(j)
       ! IF (IPAN1.GT.1) THEN
-
-
       do ir = irmin + 1, irmax
         rho2ns(ir, lm3) = rho2ns(ir, lm3) + aimag(cltdf*wr(lm1,lm2,ir))
       end do
 
       if (ipan1>1 .and. lmsp(lm3)>0) then
-
         ifun = ifunm(lm3)
         do i = imt1 + 1, irmax
           cdenns(i) = cdenns(i) + cleb(j)*wr(lm1, lm2, i)*thetas(i-imt1, ifun)
@@ -169,7 +171,6 @@ contains
       end if
       ! lm-dos
     end do
-    ! -----------------------------------------------------------------------
 
   end subroutine rhoout
 

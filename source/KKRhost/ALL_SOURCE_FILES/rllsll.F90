@@ -1,14 +1,22 @@
-! preprocessor options:
-! change this definition if used in host/impurity code
-! this is commented out, since then the logical hostcode is not defined
-! and thus "#indef hostcode" returns true and "#ifdef hostcode" false
-#define hostcode ! this is commented out to use the impurity code interface
-
-! the following optinos need the hostcode interface
+#define hostcode
 ! #define test_run
-! write out files for test runs
 ! #define test_prep
 
+!------------------------------------------------------------------------------------
+!> Summary: Wrapper module for the calculation of the regular and irregular solutions 
+!> Author: 
+!> Wrapper module for the calculation of the regular and irregular solutions 
+!------------------------------------------------------------------------------------
+!> @note preprocessor options: change this definition if used in host/impurity code
+!> this is commented out, since then the logical hostcode is not defined
+!> and thus `#indef hostcode` returns true and `#ifdef hostcode` false 
+!>
+!> * **Host code**: leave the line `#define hostcode` **uncommented**.
+!> * **Impurity code**: **comment** the line`#define hostcode`.
+!> * **test_runs**: **uncomment** the line `#define test_run` to prepare for test
+!> * **test_prep**: **uncomment** the line `#define test_prep` to write out the solutions to file
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_rllsll
 
   private
@@ -112,12 +120,118 @@ contains
   !> implemented which should lead to an additional speed-up. @endnote
   !-------------------------------------------------------------------------------
 #ifndef hostcode
-  subroutine rllsll(rpanbound, rmesh, vll, rll, sll, tllp, ncheb, npan, lmsize, lmsize2, nrmax, nvec, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, cmoderll, cmodesll, cmodetest, &
-    idotime)
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculation of the regular and irregular solutions for the host code
+  !> Author: 
+  !> Category: solver, single-site, KKRhost
+  !> Deprecated: False 
+  !> Calculation o radial wave functions by the integral equation method of
+  !> Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
+  !> which has been extended for KKR using non-sperical potentials.
+  !> Further information can be found in David Bauer,
+  !> [Development of a relativistic full-potential first-principles multiple scattering
+  !> Green function method applied to complex magnetic textures of nano structures
+  !> at surfaces](http://darwin.bth.rwth-aachen.de/opus3/volltexte/2014/4925/), PhD Thesis, 2014
+  !>
+  !> This routine solves the following two equations:
+  !> \begin{equation}
+  !> ULL(r) = J(r) - PRE J(r) \int_0^r\left( dr' r'^2 H2(r') op(V(r')) ULL(r') \right) +PRE H(r) \int_0^r\left( dr' r'^2 J2(r') op(V(r')) ULL(r') \right)
+  !> \end{equation}
+  !> \begin{equation}
+  !> SLL(r) = H(r) - PRE H(r) \int_0^r\left( dr' r'^2 H2(r') * op(V(r')) * RLL(r') \right)+ PRE J(r) \int_0^r\left( dr' r'^2 H2(r') op(V(r')) SLL(r') \right)
+  !> \end{equation}
+  !> where the integral \(\int_0^r()\) runs from 0 to \(r\)
+  !> *
+  !> Green function prefacor \(PRE=GMATPREFACTOR\) (scalar value) tipically \(\kappa\) 
+  !> for non-relativistic and \(M_0\) \(\kappa\) for SRA
+  !> 
+  !> The discretization of the Lippmann-Schwinger equation results in a matrix
+  !> equation which is solved in this routine. Further information is given
+  !> in section 5.2.3, page 90 of Bauer, PhD
+  !> Source terms :
+  !> right solution:  \(J\), \(H\) `(nvec*lmsize,lmsize)` or `(lmsize,nvec*lmsize)`
+  !> left solution:  \(J2\), \(H2\) `(lmsize,nvec*lmsize)` or `(nvec*lmsize,lmsize)`
+  !> Example:
+  !> The source term \(J\) is for `LMSIZE=3` and `NVEC=2` given by:
+  !> \begin{equation}
+  !> J=
+  !> \begin{bmatrix} jlk(jlk_index(1)) & 0 & 0 \\ 0 & jlk(jlk_index(2)) & 0 \\0 & 0 & jlk(jlk_index(3)) \\ jlk(jlk_index(4)) & 0 & 0 \\0 & jlk(jlk_index(5)) & 0 \\0 & 0 & jlk(jlk_index(6)) \end{bmatrix}
+  !> \end{equation}
+  !> first 3 rows are for the large and the last 3 rows for the small component
+  !> 
+  !> Operator \(op()\) can be chosen to be a unity or a transpose operation
+  !> The unity operation is used to calculate the right solution
+  !> The transpose operation is used to calculate the left solutionf the regular and irregular solutions
+  !-------------------------------------------------------------------------------
+  !> @note One can comment out the line `#define hostcode` to instead choose the
+  !> calculation of the regular solutions for the impuirty code.
+  !> @endnote
+  !-------------------------------------------------------------------------------
+  subroutine rllsll(rpanbound,rmesh,vll,rll,sll,tllp,ncheb,npan,lmsize,lmsize2,     &
+    nrmax,nvec,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor,cmoderll,cmodesll,         &
+    cmodetest,idotime)
 #else
-  subroutine rllsll(rpanbound, rmesh, vll, rll, sll, tllp, ncheb, npan, lmsize, lmsize2, lbessel, nrmax, nvec, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, cmoderll, cmodesll, &
-    cmodetest, use_sratrick1, alphaget) ! LLY
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculation of the regular and irregular solutions for the impurity code
+  !> Author: 
+  !> Category: solver, single-site, KKRhost
+  !> Deprecated: False 
+  !> Calculation o radial wave functions by the integral equation method of
+  !> Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
+  !> which has been extended for KKR using non-sperical potentials.
+  !> Further information can be found in David Bauer,
+  !> [Development of a relativistic full-potential first-principles multiple scattering
+  !> Green function method applied to complex magnetic textures of nano structures
+  !> at surfaces](http://darwin.bth.rwth-aachen.de/opus3/volltexte/2014/4925/), PhD Thesis, 2014
+  !>
+  !> This routine solves the following two equations:
+  !> \begin{equation}
+  !> ULL(r) = J(r) - PRE J(r) \int_0^r\left( dr' r'^2 H2(r') op(V(r')) ULL(r') \right) +PRE H(r) \int_0^r\left( dr' r'^2 J2(r') op(V(r')) ULL(r') \right)
+  !> \end{equation}
+  !> \begin{equation}
+  !> SLL(r) = H(r) - PRE H(r) \int_0^r\left( dr' r'^2 H2(r') * op(V(r')) * RLL(r') \right)+ PRE J(r) \int_0^r\left( dr' r'^2 H2(r') op(V(r')) SLL(r') \right)
+  !> \end{equation}
+  !> where the integral \(\int_0^r()\) runs from 0 to \(r\)
+  !> *
+  !> Green function prefacor \(PRE=GMATPREFACTOR\) (scalar value) tipically \(\kappa\) 
+  !> for non-relativistic and \(M_0\) \(\kappa\) for SRA
+  !> 
+  !> The discretization of the Lippmann-Schwinger equation results in a matrix
+  !> equation which is solved in this routine. Further information is given
+  !> in section 5.2.3, page 90 of Bauer, PhD
+  !> Source terms :
+  !> right solution:  \(J\), \(H\) `(nvec*lmsize,lmsize)` or `(lmsize,nvec*lmsize)`
+  !> left solution:  \(J2\), \(H2\) `(lmsize,nvec*lmsize)` or `(nvec*lmsize,lmsize)`
+  !> Example:
+  !> The source term \(J\) is for `LMSIZE=3` and `NVEC=2` given by:
+  !> \begin{equation}
+  !> J=
+  !> \begin{bmatrix} jlk(jlk_index(1)) & 0 & 0 \\ 0 & jlk(jlk_index(2)) & 0 \\0 & 0 & jlk(jlk_index(3)) \\ jlk(jlk_index(4)) & 0 & 0 \\0 & jlk(jlk_index(5)) & 0 \\0 & 0 & jlk(jlk_index(6)) \end{bmatrix}
+  !> \end{equation}
+  !> first 3 rows are for the large and the last 3 rows for the small component
+  !> 
+  !> Operator \(op()\) can be chosen to be a unity or a transpose operation
+  !> The unity operation is used to calculate the right solution
+  !> The transpose operation is used to calculate the left solutionf the regular and irregular solutions
+  !-------------------------------------------------------------------------------
+  !> @note OOne can uncomment out the line `#define hostcode` to instead choose the
+  !> calculation of the regular solutions for the host code.
+  !> @endnote
+  !-------------------------------------------------------------------------------
+  subroutine rllsll(rpanbound,rmesh,vll,rll,sll,tllp,ncheb,npan,lmsize,lmsize2,     &
+    lbessel,nrmax,nvec,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor,cmoderll,cmodesll, &
+    cmodetest,use_sratrick1,alphaget) ! LLY
 #endif
+      ! RMESH      - radial mesh
+      ! RPANBOUND  - panel bounds RPANBOUND(0) left  panel border of panel 1
+      ! RPANBOUND(1) right panel border of panel 1
+      ! NCHEB      - highes chebyshev polynomial
+      ! number of points per panel = NCHEB + 1
+      ! NPAN       - number of panels
+      ! LMSIZE     - number of colums for the source matrix J etc...
+      ! LMSIZE2    - number of rows   for the source matrix J etc...
+      ! NRMAX      - total number of radial points (NPAN*(NCHEB+1))
+      ! NVEC       - number of LMSIZE*LMSIZE blocks in J (LMSIZE2=NVEC*LMSIZE)
 #ifndef hostcode
     use :: mod_beshank           ! calculates bessel and hankel func.
     use :: mod_chebint           ! chebyshev integration routines
@@ -796,15 +910,62 @@ contains
 
 #ifdef hostcode
   !-------------------------------------------------------------------------------
-  !> Summary: Wrapper for matrix inversion with LAPACK calls `zgetrf` and `zgetri`
+  !> Summary: Helper routine here only for host since `mod_rllsllutils` does not exsist in the host code
   !> Author: 
-  !> Category: KKRhost, single-site, solver, numerical-tools
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
-  !> Define this routine here only for host since mod_rllsllutils does not exsist in host code
+  !> Category: solver, sanity-check, KKRhost
+  !> Deprecated: False 
+  !> Helper routine here only for host since `mod_rllsllutils` does not exsist in the host code
   !-------------------------------------------------------------------------------
   subroutine inverse(nmat, mat)
     use :: mod_datatypes, only: dp
+    implicit none
+    ! interface
+    integer :: nmat
+    complex (kind=dp) :: mat(nmat, nmat)
+    complex (kind=dp) :: work(nmat, nmat)
+    ! local
+    integer :: ipiv(nmat)
+    integer :: info
+
+    call zgetrf(nmat, nmat, mat, nmat, ipiv, info)
+    if (info/=0) stop '[inverse] error INFO'
+    call zgetri(nmat, mat, nmat, ipiv, work, nmat*nmat, info)
+    if (info/=0) stop '[inverse] error INFO'
+  end subroutine inverse
+#endif
+
+  ! subroutine iterativesol (NCHEB,LMSIZE2,LMSIZE,MMAT,BMAT)
+  ! implicit none
+  ! integer, intent(in) :: NCHEB
+  ! integer, intent(in) :: LMSIZE,LMSIZE2
+  ! complex (kind=dp) :: MMAT(0:NCHEB,LMSIZE2,0:NCHEB,LMSIZE2)
+  ! complex (kind=dp) :: BMAT(0:NCHEB,LMSIZE2,LMSIZE)
+  ! complex (kind=dp) :: XMAT(0:NCHEB,LMSIZE2,LMSIZE)
+  ! !########################################################
+  ! ! solves the system of linear equations
+  ! ! MMAT*XMAT = BMAT
+  ! !########################################################
+
+  ! NPLM = (NCHEB+1)*LMSIZE2
+  ! CALL ZGEMM('N','N',NPLM,LMSIZE,NPLM,CONE,SRV, &
+  ! NPLM,ZILL,NPLM,CZERO,OUT,NPLM)
+
+  ! end subroutine iterativesol
+
+#ifdef test_run
+  !-------------------------------------------------------------------------------
+  !> Summary: Routine for the testing of the regular and irregular solutions
+  !> Author: 
+  !> Category: unit-tests, solver, KKRhost
+  !> Deprecated: False 
+  !> Routine for the testing of the regular and irregular solutions
+  !-------------------------------------------------------------------------------
+  program test_rllsll
+
+    use :: mod_timing
+    use :: mod_constants
+    use :: mod_datatypes, only :: dp
+
     implicit none
     ! interface
     integer :: nmat
@@ -970,14 +1131,16 @@ end program test_rllsll
 
 #ifdef test_prep
 !-------------------------------------------------------------------------------
-!> Summary: Writeout test input for rllsll module
+!> Summary: Helper routine to write the regular and irregular solutions to file
+!> Author: 
 !> Author: P. Rüßmann
-!> Category: KKRhost, solver, single-site, unit-test
-!> Deprecated: False ! This needs to be set to True for deprecated subroutines
-!>
+!> Category: input-output, solver, KKRhost, single-site, unit-test
+!> Deprecated: False 
+!>  Helper routine to write the regular and irregular solutions to file
 !-------------------------------------------------------------------------------
-subroutine write_rllsll_test_input(ncheb, npan, lmsize, nvec, nrmax, lbessel, use_sratrick1, gmatprefactor, cmoderll, cmodesll, cmodetest, hlk, jlk, hlk2, jlk2, jlk_index, &
-  rpanbound, rmesh, sll, rll, tllp, vll, alphaget)
+subroutine write_rllsll_test_input(ncheb,npan,lmsize,nvec,nrmax,lbessel,          &
+  use_sratrick1,gmatprefactor,cmoderll,cmodesll,cmodetest,hlk,jlk,hlk2,jlk2,      &
+  jlk_index,rpanbound,rmesh,sll,rll,tllp,vll,alphaget)
 
   use :: mod_datatypes, only :: dp
   implicit none

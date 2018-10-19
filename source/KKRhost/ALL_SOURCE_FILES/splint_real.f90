@@ -1,22 +1,44 @@
+!------------------------------------------------------------------------------------
+!> Summary: This routine returns a cubic-spline interpolated value `y` and the derivative `yderiv`.
+!> Author: 
+!> Given the arrays `xa(1:n)` and `ya(1:n)` of length `n`, which tabulate a
+!> function (with the xai's in order), and given the array `y2a(1:n)`, which
+!> is the output from spline above, and given a value of `x`, this routine
+!> returns a cubic-spline interpolated value `y` and the derivative `yderiv`.
+!> We will nd the right place in the table by means of bisection.
+!> This is optimal if sequential calls to this routine are at random
+!> values of `x`. If sequential calls are in order, and closely
+!> spaced, one would do better to store previous values of
+!> `klo` and `khi` and test if they remain appropriate on the next call.
+!------------------------------------------------------------------------------------
+!> @note Taken from "Numerical Recipes in Fortran 77", W.H.Press et al.
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_splint_real
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  ! ***********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: This routine returns a cubic-spline interpolated value `y` and the derivative `yderiv`.
+  !> Author: 
+  !> Category: numerical-tools, KKRhost
+  !> Deprecated: False 
+  !> Given the arrays `xa(1:n)` and `ya(1:n)` of length `n`, which tabulate a
+  !> function (with the xai's in order), and given the array `y2a(1:n)`, which
+  !> is the output from spline above, and given a value of `x`, this routine
+  !> returns a cubic-spline interpolated value `y` and the derivative `yderiv`.
+  !> We will nd the right place in the table by means of bisection.
+  !> This is optimal if sequential calls to this routine are at random
+  !> values of `x`. If sequential calls are in order, and closely
+  !> spaced, one would do better to store previous values of
+  !> `klo` and `khi` and test if they remain appropriate on the next call.
+  !-------------------------------------------------------------------------------
+  !> @note Taken from "Numerical Recipes in Fortran 77", W.H.Press et al.
+  !> @endnote
+  !-------------------------------------------------------------------------------
   subroutine splint_real(xa, ya, y2a, n, x, y, yderiv)
-    ! Given the arrays xa(1:n) and ya(1:n) of length n, which tabulate a
-    ! function (with the xai's in order), and given the array y2a(1:n), which
-    ! is the output from spline above, and given a value of x, this routine
-    ! returns a cubic-spline interpolated value y and the derivative yderiv.
-    ! Taken from "Numerical Recipes in Fortran 77", W.H.Press et al.
-    ! We will  nd the right place in the table by means of bisection.
-    ! This is optimal if sequential calls to this routine are at random
-    ! values of x. If sequential calls are in order, and closely
-    ! spaced, one would do better to store previous values of
-    ! klo and khi and test if they remain appropriate on the
-    ! next call.
     implicit none
     real (kind=dp), parameter :: eps = 1e-14_dp
     integer :: n

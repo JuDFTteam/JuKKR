@@ -1,15 +1,23 @@
+!------------------------------------------------------------------------------------
+!> Summary: Find the structure of the site-diagonal TAU - matrices  TAUQ
+!> Author: 
+!> Find the structure of the site-diagonal TAU - matrices  TAUQ
+!------------------------------------------------------------------------------------
 module mod_taustruct
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Find the structure of the site-diagonal TAU - matrices  TAUQ
+  !> Author: 
+  !> Category: single-site, k-points, KKRhost
+  !> Deprecated: False 
+  !> Find the structure of the site-diagonal TAU - matrices  TAUQ
+  !-------------------------------------------------------------------------------
   subroutine taustruct(drot, nsym, symunitary, nkm, nq, nqmax, nkmmax, iprint, irel)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   find the structure of the site-diagonal TAU - matrices  TAUQ   *
-    ! *                                                                  *
-    ! ********************************************************************
+
     use :: mod_datatypes
     use :: mod_cmatstr
     use :: mod_cinit

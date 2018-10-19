@@ -1,20 +1,33 @@
+!------------------------------------------------------------------------------------
+!> Summary: Subroutine dealing with the printing of the needed kkrflex files
+!> Author: 
+!> Subroutine dealing with the printing of the needed kkrflex files for the
+!> realization of an impurity calculation with the KKRimp software package.
+!> It specifically prints the following files:
+!>
+!> - `kkrflex_tmat`
+!> - `kkrflex_intercell_ref`
+!> - `kkrflex_intercell_cmoms`
+!------------------------------------------------------------------------------------
 module mod_writekkrflex
 
 contains
 
-  ! -------------------------------------------------------------------------------
-  ! SUBROUTINE: writekkrflex
-  ! @brief Subroutine dealing with the printing of the needed kkrflex files
-  !for the
-  !> realization of an impurity calculation with the KKRFLEX software package.
-  !> @details It specifically prints the following files:
-  !> - kkrflex_tmat
-  !> - kkrflex_intercell_ref
-  !> - kkrflex_intercell_cmoms
-  !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to
-  ! Fortran90
-  ! -------------------------------------------------------------------------------
-  subroutine writekkrflex(natomimp, nspin, ielast, lmpot, alat, natyp, kshape, vbc, atomimp, hostimp, noq, zat, kaoez, conc, cmom, cminst, vinters, nemb, naez)
+  !-------------------------------------------------------------------------------
+  !> Summary: Subroutine dealing with the printing of the needed kkrflex files
+  !> Author: 
+  !> Category: input-output, KKRhost
+  !> Deprecated: False 
+  !> Subroutine dealing with the printing of the needed kkrflex files for the
+  !> realization of an impurity calculation with the KKRimp software package.
+  !> It specifically prints the following files:
+  !> 
+  !> - `kkrflex_tmat`
+  !> - `kkrflex_intercell_ref`
+  !> - `kkrflex_intercell_cmoms`
+  !-------------------------------------------------------------------------------
+  subroutine writekkrflex(natomimp,nspin,ielast,lmpot,alat,natyp,kshape,vbc,atomimp,&
+    hostimp,noq,zat,kaoez,conc,cmom,cminst,vinters,nemb,naez)
 
     use :: mod_types, only: t_tgmat
     use :: mod_wunfiles, only: t_params, read_angles
@@ -27,28 +40,22 @@ contains
     implicit none
 
     ! .. Input variables
-    integer, intent (in) :: nemb   ! < Number of 'embedding' positions
-    integer, intent (in) :: naez   ! < Number of atoms in unit cell
-    integer, intent (in) :: lmpot  ! < (LPOT+1)**2
-    integer, intent (in) :: nspin  ! < Counter for spin directions
-    integer, intent (in) :: natyp  ! < Number of kinds of atoms in unit cell
-    integer, intent (in) :: kshape ! < Exact treatment of WS cell
+    integer, intent (in) :: nemb   !! Number of 'embedding' positions
+    integer, intent (in) :: naez   !! Number of atoms in unit cell
+    integer, intent (in) :: lmpot  !! (LPOT+1)**2
+    integer, intent (in) :: nspin  !! Counter for spin directions
+    integer, intent (in) :: natyp  !! Number of kinds of atoms in unit cell
+    integer, intent (in) :: kshape !! Exact treatment of WS cell
     integer, intent (in) :: ielast
-    integer, intent (in) :: natomimp ! < Size of the cluster for
-    ! impurity-calculation output of GF should
-    ! be 1, if you don't do such a calculation
-    real (kind=dp), intent (in) :: alat ! < Lattice constant in a.u.
-    integer, dimension (naez), intent (in) :: noq ! < Number of diff. atom types
-    ! located
+    integer, intent (in) :: natomimp !! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+    real (kind=dp), intent (in) :: alat !! Lattice constant in a.u.
+    integer, dimension (naez), intent (in) :: noq !! Number of diff. atom types located
     integer, dimension (natomimp), intent (in) :: atomimp
     integer, dimension (0:natyp), intent (in) :: hostimp
-    integer, dimension (natyp, naez+nemb), intent (in) :: kaoez ! < Kind of atom
-    ! at site in
-    ! elem. cell
-    real (kind=dp), dimension (2), intent (in) :: vbc ! < Potential constants
-    real (kind=dp), dimension (natyp), intent (in) :: zat ! < Nuclear charge
-    real (kind=dp), dimension (natyp), intent (in) :: conc ! < Concentration of
-    ! a given atom
+    integer, dimension (natyp, naez+nemb), intent (in) :: kaoez !! Kind of atom at site in elem. cell
+    real (kind=dp), dimension (2), intent (in) :: vbc !! Potential constants
+    real (kind=dp), dimension (natyp), intent (in) :: zat !! Nuclear charge
+    real (kind=dp), dimension (natyp), intent (in) :: conc !! Concentration of a given atom
     real (kind=dp), dimension (lmpot, natyp), intent (in) :: cmom
     real (kind=dp), dimension (lmpot, natyp), intent (in) :: cminst
     real (kind=dp), dimension (lmpot, naez), intent (in) :: vinters

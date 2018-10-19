@@ -1,3 +1,9 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculates the site-off diagonal XC-coupling parameters \(J_{ij}\)
+!> Author: 
+!> Calculates the site-off diagonal XC-coupling parameters \(J_{ij}\). According to
+!> Lichtenstein et al. JMMM 67, 65 (1987)
+!------------------------------------------------------------------------------------
 module mod_tbxccpljij
 
   use :: mod_datatypes
@@ -10,19 +16,22 @@ module mod_tbxccpljij
 contains
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates the site-off diagonal XC-coupling parameters \(J_{ij}\)
+  !> Author: 
+  !> Category: physical-observables, KKRhost
+  !> Deprecated: False 
+  !> Calculates the site-off diagonal XC-coupling parameters \(J_{ij}\). According to
+  !> Lichtenstein et al. JMMM 67, 65 (1987)
+  !-------------------------------------------------------------------------------
+  !> @note 
+  !> 
+  !> * Adopted for TB-KKR code from Munich SPR-KKR package Sep 2004
+  !> * For mpi-parallel version: moved energy loop from main1b into here. B. Zimmermann, Dez 2015
+  !> @endnote
+  !-------------------------------------------------------------------------------
   subroutine tbxccpljij(iftmat, ielast, ez, wez, nspin, ncpa, naez, natyp, noq, itoq, iqat, nshell, natomimp, atomimp, ratom, nofgij, nqcalc, iqcalc, ijtabcalc, ijtabsym, ijtabsh, &
     ish, jsh, dsymll, iprint, natypd, nsheld, lmmaxd, npol)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *  calculates the site-off diagonal  XC-coupling parameters  J_ij  *
-    ! *  according to  Lichtenstein et al. JMMM 67, 65 (1987)            *
-    ! *                                                                  *
-    ! *  adopted for TB-KKR code from Munich SPR-KKR package Sep 2004    *
-    ! *                                                                  *
-    ! *  for mpi-parallel version: moved energy loop from main1b into    *
-    ! *   here.                                B. Zimmermann, Dez 2015   *
-    ! *                                                                  *
-    ! ********************************************************************
 
 #ifdef CPP_MPI
     use :: mpi
@@ -36,27 +45,28 @@ contains
     use :: mod_initabjij
     use :: mod_cmatstr
     use :: mod_rotatespinframe, only: rotatematrix
+    use :: mod_constants, only: pi, cone, czero
 
     implicit none
     ! .
     ! . Parameters
-    complex (kind=dp) :: cone, czero
-    parameter (cone=(1d0,0d0))
-    parameter (czero=(0d0,0d0))
     integer :: nijmax
     parameter (nijmax=200)
     ! .
     ! . Scalar arguments
-    integer :: ielast, nspin, iftmat, iprint, lmmaxd, naez, natomimp, natyp, natypd, ncpa, nofgij, nqcalc, nsheld, npol
+    integer :: ielast, nspin, iftmat, iprint, lmmaxd, naez, natomimp, natyp, natypd
+    integer :: ncpa, nofgij, nqcalc, nsheld, npol
     complex (kind=dp) :: ez(*), wez(*)
     ! .
     ! . Array arguments
-    integer :: atomimp(*), ijtabcalc(*), ijtabsh(*), ijtabsym(*), iqat(*), iqcalc(*), ish(nsheld, *), itoq(natypd, *), jsh(nsheld, *), noq(*), nshell(0:nsheld)
+    integer :: atomimp(*), ijtabcalc(*), ijtabsh(*), ijtabsym(*), iqat(*), iqcalc(*)
+    integer :: ish(nsheld, *), itoq(natypd, *), jsh(nsheld, *), noq(*), nshell(0:nsheld)
     complex (kind=dp) :: dsymll(lmmaxd, lmmaxd, *)
     real (kind=dp) :: ratom(3, *)
     ! .
     ! . Local scalars
-    integer :: i1, ia, ifgmat, ifmcpa, iq, irec, ispin, isym, it, j1, ja, jq, jt, l1, lm1, lm2, lstr, ns, nseff, nshcalc, nsmax, ntcalc, ie, ie_start, ie_end, ie_num
+    integer :: i1, ia, ifgmat, ifmcpa, iq, irec, ispin, isym, it, j1, ja, jq, jt, l1
+    integer :: lm1, lm2, lstr, ns, nseff, nshcalc, nsmax, ntcalc, ie, ie_start, ie_end, ie_num
 #ifdef CPP_MPI
     integer :: ierr
 #endif
@@ -79,9 +89,13 @@ contains
 #else
     complex (kind=dp), allocatable :: csum_store(:, :, :, :), csum_store2(:, :, :, :)
 #endif
-    complex (kind=dp) :: deltsst(lmmaxd, lmmaxd, natyp), dmatts(lmmaxd, lmmaxd, natyp, nspin), dtilts(lmmaxd, lmmaxd, natyp, nspin), gmij(lmmaxd, lmmaxd), gmji(lmmaxd, lmmaxd), &
-      gs(lmmaxd, lmmaxd, nspin), tsst(lmmaxd, lmmaxd, natyp, 2), w1(lmmaxd, lmmaxd), w2(lmmaxd, lmmaxd), w3(lmmaxd, lmmaxd)
-    real (kind=dp) :: rsh(nsheld), pi
+    complex (kind=dp) :: deltsst(lmmaxd, lmmaxd, natyp) 
+    complex (kind=dp) :: dmatts(lmmaxd, lmmaxd, natyp, nspin)
+    complex (kind=dp) :: dtilts(lmmaxd, lmmaxd, natyp, nspin), gmij(lmmaxd, lmmaxd)
+    complex (kind=dp) :: gmji(lmmaxd, lmmaxd)
+    complex (kind=dp) :: gs(lmmaxd, lmmaxd, nspin), tsst(lmmaxd, lmmaxd, natyp, 2)
+    complex (kind=dp) :: w1(lmmaxd, lmmaxd), w2(lmmaxd, lmmaxd), w3(lmmaxd, lmmaxd)
+    real (kind=dp) :: rsh(nsheld)
     integer :: jtaux(natyp)
     ! ..
     ! .. Intrinsic Functions ..
@@ -100,7 +114,6 @@ contains
     ! ..
     ! .. Data statement
     data jfbas/'Jij.atom'/
-    data pi/3.14159265358979312d0/
     ! ..
     ! IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
     ! ==>                   -- initialisation step --                    <==
@@ -346,12 +359,12 @@ contains
         ! ***************************************************** loop over shells
         do ns = nsmax + 1, nshell(0)
 
-          ! ======================================================================
+          ! ----------------------------------------------------------------------
 
           ! ==>  get the off-diagonal Green function matrix Gij(UP) and Gji(DOWN)
           ! using the appropiate rotation (similar to ROTGLL routine)
           ! step one: read in GS for the representative shell
-          ! ======================================================================
+          ! ----------------------------------------------------------------------
           do ispin = 1, nspin
             if (t_tgmat%gmat_to_file) then
               irec = ie + ielast*(ispin-1) + ielast*nspin*(ns-1)
@@ -363,11 +376,11 @@ contains
             end if
             call zcopy(lmmaxd*lmmaxd, w1, 1, gs(1,1,ispin), 1)
           end do
-          ! ======================================================================
+          ! ----------------------------------------------------------------------
           ! step two: scan all I,J pairs needed out of this shell
           ! transform with the appropriate symmetry to get Gij
 
-          ! ====================================================== loop over pairs
+          ! ------------------------------------------------------ loop over pairs
           nseff = ns - nsmax
           do l1 = 1, nijcalc(ns)
 
@@ -491,7 +504,7 @@ contains
             ! ----------------------------------------------------------------------
           end do                 ! L1 = 1,NIJCALC(NS)
 
-          ! ======================================================================
+          ! ----------------------------------------------------------------------
         end do                   ! loop over shells
         ! **********************************************************************
         ! write(22,*)DIMAG(XINTEGD(1,1,1)),DIMAG(JXCIJINT(1,1,1))

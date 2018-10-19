@@ -1,25 +1,41 @@
+!------------------------------------------------------------------------------------
+!> Summary: Find the symmetry matrices DROT that act on `t`, `tau`
+!> Author:
+!> Find the symmetry matrices DROT that act on `t`, `tau`
+!>
+!> * `KREL=0`: for real spherical harmonics
+!> * `KREL=1`: for relativistic represntation
+!>  
+!> The `NSYM` allowed symmetry operations are indicated by `ISYMINDEX` in the table `ROTMAT`.
+!> For `KREL=1`, `SYMUNITARY=T/F` indicates unitary/antiunitary symmetry operation.
+!> 
+!> The routine determines first the Euler angles correponding to a symmetry operation. 
+!> Reflections are decomposed into inversion + rotation for this reason
+!------------------------------------------------------------------------------------
 module mod_symtaumat
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  subroutine symtaumat(rotname, rotmat, drot, nsym, isymindex, symunitary, nqmax, nkmmax, nq, nl, krel, iprint, nsymaxd)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *  Find the symmetry matrices DROT that act on t, tau, ....        *
-    ! *  KREL=0: for real spherical harmonics                            *
-    ! *  KREL=1: for relativistic represntation                          *
-    ! *                                                                  *
-    ! *  The NSYM allowed symmetry operations are indicated by ISYMINDEX *
-    ! *  in the table  ROTMAT. For KREL=1, SYMUNITARY=T/F indicates a    *
-    ! *  unitary/antiunitary symmetry operation.                         *
-    ! *                                                                  *
-    ! *  The routine determines first the Euler angles correponding      *
-    ! *  to a symmetry operation. Reflections are decomposed into        *
-    ! *  inversion + rotation for this reason.                           *
-    ! *                                                                  *
-    ! ********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Find the symmetry matrices DROT that act on `t`, `tau`
+  !> Author:
+  !> Category: single-site, k-points, KKRhost
+  !> Deprecated: False 
+  !> Find the symmetry matrices DROT that act on `t`, `tau`
+  !>
+  !> * `KREL=0`: for real spherical harmonics
+  !> * `KREL=1`: for relativistic represntation
+  !>  
+  !> The `NSYM` allowed symmetry operations are indicated by `ISYMINDEX` in the table `ROTMAT`.
+  !> For `KREL=1`, `SYMUNITARY=T/F` indicates unitary/antiunitary symmetry operation.
+  !> 
+  !> The routine determines first the Euler angles correponding to a symmetry operation. 
+  !> Reflections are decomposed into inversion + rotation for this reason
+  !-------------------------------------------------------------------------------
+  subroutine symtaumat(rotname,rotmat,drot,nsym,isymindex,symunitary,nqmax,nkmmax,  &
+    nq,nl,krel,iprint,nsymaxd)
 
     use :: mod_calcrotmat
     use :: mod_checkrmat
@@ -28,11 +44,8 @@ contains
     use :: mod_ddet33
     use :: mod_taustruct
     use :: mod_errortrap
+    use :: mod_constants, only: ci,cone,czero,pi
     implicit none
-
-    ! PARAMETER definitions
-    complex (kind=dp) :: ci, c1, c0
-    parameter (ci=(0.0e0_dp,1.0e0_dp), c1=(1.0e0_dp,0.0e0_dp), c0=(0.0e0_dp,0.0e0_dp))
 
     ! Dummy arguments
     integer :: iprint, krel, nkmmax, nl, nq, nqmax, nsym, nsymaxd
@@ -43,11 +56,14 @@ contains
     logical :: symunitary(48)
 
     ! Local variables
-    real (kind=dp) :: a, b, co1, co2, co3, det, fact(0:100), pi, si1, si2, si3, sk, symeulang(3, 48), tet1, tet2, tet3, rj, rmj
+    real (kind=dp) :: a, b, co1, co2, co3, det, fact(0:100), si1, si2, si3, sk
+    real (kind=dp) symeulang(3, 48), tet1, tet2, tet3, rj, rmj
     real (kind=dp) :: dble
-    complex (kind=dp) :: dinv(nkmmax, nkmmax), dtim(nkmmax, nkmmax), rc(nkmmax, nkmmax), w1(nkmmax, nkmmax), w2(nkmmax, nkmmax)
+    complex (kind=dp) :: dinv(nkmmax, nkmmax), dtim(nkmmax, nkmmax)
+    complex (kind=dp) rc(nkmmax, nkmmax), w1(nkmmax, nkmmax), w2(nkmmax, nkmmax)
     logical :: equal
-    integer :: i, i1, i2, ind0q(nqmax), invflag(48), iq, irel, ireleff, isym, itop, j, k, l, loop, m, n, nk, nkeff, nkm, nlm, nok, ns
+    integer :: i, i1, i2, ind0q(nqmax), invflag(48), iq, irel, ireleff, isym, itop
+    integer :: j, k, l, loop, m, n, nk, nkeff, nkm, nlm, nok, ns
     integer :: nint
     real (kind=dp) :: rmat(3, 3)
     real (kind=dp) :: w
@@ -55,8 +71,6 @@ contains
     equal(a, b) = (abs(a-b)<1e-7_dp)
 
     write (1337, 110)
-
-    pi = 4e0_dp*atan(1e0_dp)
 
     irel = krel*3
     nk = (1-krel)*nl + krel*(2*nl-1)
@@ -95,7 +109,7 @@ contains
             rc(j, i) = w
           end if
           if (m==0) then
-            rc(i, i) = c1
+            rc(i, i) = cone
           end if
           if (m>0) then
             rc(i, i) = w*(-1.0e0_dp)**m
@@ -243,7 +257,7 @@ contains
     do isym = 1, nsym
       if (invflag(isym)/=0) then
 
-        call zgemm('N', 'N', nkm, nkm, nkm, c1, drot(1,1,isym), nkmmax, dinv, nkmmax, c0, w2, nkmmax)
+        call zgemm('N', 'N', nkm, nkm, nkm, cone, drot(1,1,isym), nkmmax, dinv, nkmmax, czero, w2, nkmmax)
 
         do j = 1, nkm
           call zcopy(nkm, w2(1,j), 1, drot(1,j,isym), 1)
@@ -272,8 +286,8 @@ contains
     m = nkmmax
     if (krel==0) then
       do isym = 1, nsym
-        call zgemm('N', 'N', n, n, n, c1, rc, m, drot(1,1,isym), m, c0, w1, m)
-        call zgemm('N', 'C', n, n, n, c1, w1, m, rc, m, c0, drot(1,1,isym), m)
+        call zgemm('N', 'N', n, n, n, cone, rc, m, drot(1,1,isym), m, czero, w1, m)
+        call zgemm('N', 'C', n, n, n, cone, w1, m, rc, m, czero, drot(1,1,isym), m)
       end do
     end if
     ! -----------------------------------------------------------------------
@@ -315,7 +329,7 @@ contains
       if (.not. symunitary(isym)) then
         if (irel==2) call errortrap('SYMTAUMAT', 14, 1)
 
-        call zgemm('N', 'N', nkm, nkm, nkm, c1, drot(1,1,isym), nkmmax, dtim, nkmmax, c0, w2, nkmmax)
+        call zgemm('N', 'N', nkm, nkm, nkm, cone, drot(1,1,isym), nkmmax, dtim, nkmmax, czero, w2, nkmmax)
         do j = 1, nkm
           call zcopy(nkm, w2(1,j), 1, drot(1,j,isym), 1)
         end do

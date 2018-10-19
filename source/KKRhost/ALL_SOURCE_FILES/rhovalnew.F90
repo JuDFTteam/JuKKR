@@ -1,13 +1,22 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculation of the density for the new solver 
+!> Author:
+!> Calculation of the density for the new solver
+!------------------------------------------------------------------------------------
 module mod_rhovalnew
 
 contains
 
-  ! -------------------------------------------------------------------------------
-  ! SUBROUTINE: RHOVALNEW
-  !> @note Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
-  ! -------------------------------------------------------------------------------
-  subroutine rhovalnew(ldorhoef, ielast, nsra, nspin, lmax, ez, wez, zat, socscale, cleb, icleb, iend, ifunm, lmsp, ncheb, npan_tot, npan_log, npan_eq, rmesh, irws, rpan_intervall, &
-    ipan_intervall, rnew, vinsnew, thetasnew, theta, phi, i1, ipot, den_out, espv, rho2ns, r2nef, muorb, angles_new, idoldau, lopt, wldau, denmatn, natyp, ispin)
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculation of the density for the new solver
+  !> Author: 
+  !> Category: physical-observables, KKRhost 
+  !> Deprecated: False 
+  !> Calculation of the density for the new solver
+  !-------------------------------------------------------------------------------
+  subroutine rhovalnew(ldorhoef, ielast, nsra, nspin, lmax, ez, wez, zat, socscale, cleb, icleb, iend, ifunm, lmsp, ncheb, &
+    npan_tot, npan_log, npan_eq, rmesh, irws, rpan_intervall, ipan_intervall, rnew, vinsnew, thetasnew, theta, phi, i1, ipot, &
+    den_out, espv, rho2ns, r2nef, muorb, angles_new, idoldau, lopt, wldau, denmatn, natyp, ispin)
 
 #ifdef CPP_OMP
     use :: omp_lib
@@ -223,9 +232,9 @@ contains
     vnspll0 = czero
 
     call vllmat(1, nrmaxd, irmdnew, lmsize, lmmaxso, vnspll0, vins, lmpotd, cleb, icleb, iend, nspin/(2-korbit), zat, rnew, use_sratrick, ncleb)
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! LDAU
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     if (idoldau==1) then
       lmlo = lopt**2 + 1
       lmhi = (lopt+1)**2
@@ -238,9 +247,9 @@ contains
         vnspll0(lmlo:lmhi, lmlo:lmhi, ir) = vnspll0(lmlo:lmhi, lmlo:lmhi, ir) + wldau(1:mmaxd, 1:mmaxd, 2)
       end do
     end if
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! LDAU
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
 
     ! initial allocate
     if (nsra==2) then
@@ -461,15 +470,16 @@ contains
 
       if (t_wavefunctions%nwfsavemax>0) then ! read wavefunctions?
         ! read in wavefunction from memory
-        call read_wavefunc(t_wavefunctions, rll, rllleft, sll, sllleft, i1, ie, nsra, lmmaxso, irmdnew, ith, nth, rll_was_read_in, sll_was_read_in, rllleft_was_read_in, &
-          sllleft_was_read_in)
+        call read_wavefunc(t_wavefunctions,rll,rllleft,sll,sllleft,i1,ie,nsra,      &
+          lmmaxso,irmdnew,ith,nth,rll_was_read_in,sll_was_read_in,                  &
+          rllleft_was_read_in,sllleft_was_read_in)
       end if
 
       ! recalculate wavefuntions, also include left solution
       ! contruct the spin-orbit coupling hamiltonian and add to potential
       if ( .not. test('NOSOC   ')) then
-        call spinorbit_ham(lmax, lmsize, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpotd, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
-          vnspll0, vnspll1(:,:,:,ith), '1')
+        call spinorbit_ham(lmax, lmsize, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpotd, theta, phi, ipan_intervall, &
+          rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, vnspll0, vnspll1(:,:,:,ith), '1')
       else
         vnspll1(:,:,:,ith) = vnspll0(:,:,:)
       end if
@@ -478,9 +488,11 @@ contains
       vnspll(:, :, :, ith) = czero
       if (nsra==2) then
         if (use_sratrick==0) then
-          call vllmatsra(vnspll1(:,:,:,ith), vnspll(:,:,:,ith), rnew, lmmaxso, irmdnew, nrmaxd, eryd, lmax, 0, 'Ref=0')
+          call vllmatsra(vnspll1(:,:,:,ith),vnspll(:,:,:,ith),rnew,lmmaxso,irmdnew, &
+            nrmaxd,eryd,lmax,0,'Ref=0')
         else if (use_sratrick==1) then
-          call vllmatsra(vnspll1(:,:,:,ith), vnspll(:,:,:,ith), rnew, lmmaxso, irmdnew, nrmaxd, eryd, lmax, 0, 'Ref=Vsph')
+          call vllmatsra(vnspll1(:,:,:,ith),vnspll(:,:,:,ith),rnew,lmmaxso,irmdnew, &
+            nrmaxd,eryd,lmax,0,'Ref=Vsph')
         end if
       else
         vnspll(:, :, :, ith) = vnspll1(:, :, :, ith)
@@ -512,9 +524,9 @@ contains
         rll(:, :, :, ith) = czero
         sll(:, :, :, ith) = czero
 
-        ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !----------------------------------------------------------------------------
         ! Right solutions
-        ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !----------------------------------------------------------------------------
         tmatll = czero
         alphall = czero
         ! faster calculation of RLL.
@@ -534,9 +546,9 @@ contains
 
       end if                       ! read/recalc wavefunctions
 
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !------------------------------------------------------------------------------
       ! Left solutions
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !------------------------------------------------------------------------------
       if ((t_wavefunctions%nwfsavemax>0 .and. (.not. (rllleft_was_read_in .and. sllleft_was_read_in))) .or. (t_wavefunctions%nwfsavemax==0)) then
         ! read/recalc wavefunctions left contruct the TRANSPOSE spin-orbit coupling hamiltonian and add to potential
         if ( .not. test('NOSOC   ')) then
@@ -549,9 +561,11 @@ contains
         vnspll(:, :, :, ith) = czero
         if (nsra==2) then
           if (use_sratrick==0) then
-            call vllmatsra(vnspll1(:,:,:,ith), vnspll(:,:,:,ith), rnew, lmmaxso, irmdnew, nrmaxd, eryd, lmax, 0, 'Ref=0')
+            call vllmatsra(vnspll1(:,:,:,ith),vnspll(:,:,:,ith),rnew,lmmaxso,       &
+              irmdnew,nrmaxd,eryd,lmax,0,'Ref=0')
           else if (use_sratrick==1) then
-            call vllmatsra(vnspll1(:,:,:,ith), vnspll(:,:,:,ith), rnew, lmmaxso, irmdnew, nrmaxd, eryd, lmax, 0, 'Ref=Vsph')
+            call vllmatsra(vnspll1(:,:,:,ith),vnspll(:,:,:,ith),rnew,lmmaxso,       &
+              irmdnew,nrmaxd,eryd,lmax,0,'Ref=Vsph')
           end if
         else
           vnspll(:, :, :, ith) = vnspll1(:, :, :, ith)
@@ -633,7 +647,8 @@ contains
             do ir = 1, irmdnew
               cdentemp(ir, ith) = cden(ir, lm1, jspin, ith)
             end do
-            call intcheb_cell(cdentemp(:,ith), dentemp, rpan_intervall, ipan_intervall, npan_tot, ncheb, irmdnew)
+            call intcheb_cell(cdentemp(:,ith),dentemp,rpan_intervall,ipan_intervall,&
+              npan_tot,ncheb,irmdnew)
             rho2(jspin) = dentemp
             rho2int(jspin) = rho2int(jspin) + rho2(jspin)*df
             if (jspin<=2) then
@@ -648,7 +663,8 @@ contains
               do ir = 1, irmdnew
                 cdentemp(ir, ith) = cdenlm(ir, lm1, jspin, ith)
               end do
-              call intcheb_cell(cdentemp(:,ith), dentemp, rpan_intervall, ipan_intervall, npan_tot, ncheb, irmdnew)
+              call intcheb_cell(cdentemp(:,ith),dentemp,rpan_intervall,             &
+                ipan_intervall,npan_tot,ncheb,irmdnew)
               denlm(lm1, ie, iq, jspin) = dentemp
             end do
             cdentemp(:, ith) = czero
@@ -664,16 +680,16 @@ contains
 
       end do                       ! IQ = 1,NQDOS
 
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !------------------------------------------------------------------------------
       ! Get charge at the Fermi energy (IELAST)
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !------------------------------------------------------------------------------
       if (ie==ielast .and. ldorhoef) then
         call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, cone, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll(:,:,:,ith), & ! SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
           rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), r2nefc_loop(:,:,:,ith), 0, gflle_part(:,:,ith), rpan_intervall, &
           ipan_intervall, nspin/(2-korbit))
       end if
 
-      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !------------------------------------------------------------------------------
       ! Get orbital moment
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if (.not. test('NOSOC   ')) then
@@ -936,7 +952,8 @@ contains
             rhotemp(ir, lm1) = rho2nsc(ir, lm1, jspin)
           end do
         end do
-        call cheb2oldgrid(irws, irmdnew, lmpotd, rmesh, ncheb, npan_tot, rpan_intervall, ipan_intervall, rhotemp, rhonewtemp, irmd)
+        call cheb2oldgrid(irws,irmdnew,lmpotd,rmesh,ncheb,npan_tot,rpan_intervall,  &
+          ipan_intervall,rhotemp,rhonewtemp,irmd)
         do lm1 = 1, lmpotd
           do ir = 1, irws
             rho2nsnew(ir, lm1, jspin) = rhonewtemp(ir, lm1)
@@ -997,8 +1014,8 @@ contains
         ! only on master different from zero:
         angles_new(1) = thetanew
         angles_new(2) = phinew
-        call rotatevector(rho2nsnew, rho2ns, irws, lmpotd, thetanew, phinew, theta, phi, irmd)
-        call rotatevector(r2nefnew, r2nef, irws, lmpotd, thetanew, phinew, theta, phi, irmd)
+        call rotatevector(rho2nsnew,rho2ns,irws,lmpotd,thetanew,phinew,theta,phi,irmd)
+        call rotatevector(r2nefnew,r2nef,irws,lmpotd,thetanew,phinew,theta,phi,irmd)
       else
         rho2ns(1:irmd, 1:lmpotd, 1:nspin/(2-korbit)) = aimag(rho2nsnew(1:irmd, 1:lmpotd,1:nspin/(2-korbit)))
         r2nef(1:irmd, 1:lmpotd, 1:nspin/(2-korbit)) = aimag(r2nefnew(1:irmd, 1:lmpotd,1:nspin/(2-korbit)))
@@ -1015,7 +1032,7 @@ contains
     call mpi_bcast(den_out, idim, mpi_double_complex, master, t_mpi_c_grid%mympi_comm_at, ierr)
     if (ierr/=mpi_success) stop 'error bcast den_out in rhovalnew'
     idim = 2
-    call mpi_bcast(angles_new, idim, mpi_double_precision, master, t_mpi_c_grid%mympi_comm_at, ierr)
+    call mpi_bcast(angles_new,idim,mpi_double_precision,master,t_mpi_c_grid%mympi_comm_at,ierr)
     if (ierr/=mpi_success) stop 'error bcast angles_new in rhovalnew'
 #endif
 

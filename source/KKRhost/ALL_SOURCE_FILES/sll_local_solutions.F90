@@ -1,10 +1,92 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculation of the local irregular solutions
+!> Author: 
+!> Calculation of the local irregular solutions
+!>
+!> 1. Prepare `VJLR`, `VNL`, `VHLR`, which appear in the integrands `TAU(K,IPAN)` 
+!> is used instead of `TAU(K,IPAN)**2`, which directly gives `RLL(r)` and `SLL(r)` 
+!> multiplied with `r`. `TAU` is the radial mesh.
+!> 2. Prepare the source terms `YR`, `ZR`, `YI`, `ZI` because of the conventions used
+!> by Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
+!> a factor \(\sqrt(E)\) is included in the source terms this factor is removed by 
+!> the definition of `ZSLC1SUM` given below
+!> \begin{equation}
+!> vjlr = \kappa J V = \kappa r j V
+!> \end{equation}
+!> \begin{equation}
+!> vhlr = \kappa H V = \kappa r h V
+!> \end{equation}
+!> i.e. prepare terms \(\kappa JDV\), \(\kappa HDV\) appearing in 5.11, 5.12.
+!>
+!> Then determine the local solutions solve the equations 
+!> \begin{equation}
+!> SLV \times YRLL=S
+!> \end{equation}
+!> and 
+!> \begin{equation}
+!> SLV \times ZRLL=C
+!> \end{equation}
+!> and
+!> \begin{equation}
+!> SRV \times YILL=C
+!> \end{equation}
+!> and
+!> \begin{equation}
+!> SRV \times ZILL=S
+!> \end{equation}
+!> i.e., solve system \(A U=J\), see eq. 5.68.
+!------------------------------------------------------------------------------------
 module mod_sll_local_solutions
 
 contains
 
-  subroutine sll_local_solutions(vll, tau, drpan2, csrc1, slc1sum, mihvy, mihvz, mijvy, mijvz, yif, zif, ncheb, ipan, lmsize, lmsize2, nrmax, nvec, jlk_index, hlk, jlk, hlk2, jlk2, &
-    gmatprefactor, cmodesll, lbessel, use_sratrick1)
+  !------------------------------------------------------------------------------------
+  !> Summary: Calculation of the local irregular solutions
+  !> Author: 
+  !> Category: solver, single-site, KKRhost
+  !> Deprecated: False 
+  !> Calculation of the local irregular solutions
+  !>
+  !> 1. Prepare `VJLR`, `VNL`, `VHLR`, which appear in the integrands `TAU(K,IPAN)` 
+  !> is used instead of `TAU(K,IPAN)**2`, which directly gives `RLL(r)` and `SLL(r)` 
+  !> multiplied with `r`. `TAU` is the radial mesh.
+  !> 2. Prepare the source terms `YR`, `ZR`, `YI`, `ZI` because of the conventions used
+  !> by Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
+  !> a factor \(\sqrt(E)\) is included in the source terms this factor is removed by 
+  !> the definition of `ZSLC1SUM` given below
+  !> \begin{equation}
+  !> vjlr = \kappa J V = \kappa r j V
+  !> \end{equation}
+  !> \begin{equation}
+  !> vhlr = \kappa H V = \kappa r h V
+  !> \end{equation}
+  !> i.e. prepare terms \(\kappa JDV\), \(\kappa HDV\) appearing in 5.11, 5.12.
+  !>
+  !> Then determine the local solutions solve the equations 
+  !> \begin{equation}
+  !> SLV \times YRLL=S
+  !> \end{equation}
+  !> and 
+  !> \begin{equation}
+  !> SLV \times ZRLL=C
+  !> \end{equation}
+  !> and
+  !> \begin{equation}
+  !> SRV \times YILL=C
+  !> \end{equation}
+  !> and
+  !> \begin{equation}
+  !> SRV \times ZILL=S
+  !> \end{equation}
+  !> i.e., solve system \(A U=J\), see eq. 5.68.
+  !------------------------------------------------------------------------------------
+  subroutine sll_local_solutions(vll,tau,drpan2,csrc1,slc1sum,mihvy,mihvz,mijvy,    &
+    mijvz,yif,zif,ncheb,ipan,lmsize,lmsize2,nrmax,nvec,jlk_index,hlk,jlk,hlk2,jlk2, &
+    gmatprefactor,cmodesll,lbessel,use_sratrick1)
+    
     use :: mod_datatypes, only: dp
+    use :: mod_constants, only: cone,czero
+
     implicit none
     integer :: ncheb               ! number of chebyshev nodes
     integer :: lmsize              ! lm-components * nspin
@@ -14,9 +96,6 @@ contains
     integer :: nrmax               ! total number of rad. mesh points
 
     integer :: lbessel, use_sratrick1 ! dimensions etc., needed only for host code interface
-
-
-    complex (kind=dp), parameter :: cone = (1.0d0, 0.0d0), czero = (0.0d0, 0.0d0)
 
     ! running indices
     integer :: ivec, ivec2
@@ -305,14 +384,22 @@ contains
 
   end subroutine sll_local_solutions
 
-
+  !-------------------------------------------------------------------------------
+  !> Summary: This subroutine facilitates compile optimization by working witt only two-dimensional arrays
+  !> Author: 
+  !> Category: solver, numerical-tools, KKRhost
+  !> Deprecated: False 
+  !> This subroutine facilitates compile optimization by working witt only two-dimensional arrays
+  !-------------------------------------------------------------------------------
   subroutine svpart(srv1, jlmkmn, hlmkmn, vhli, vjli, ncheb, lmsize)
-    ! this subroutine facilitates compile optimization by working with
-    ! only two-dimensional arrays
+
     use :: mod_datatypes, only: dp
+
     implicit none
+
     integer :: ncheb, lmsize, icheb, lm1
-    complex (kind=dp) :: srv1(0:ncheb, lmsize), jlmkmn(0:ncheb, lmsize), hlmkmn(0:ncheb, lmsize), vhli(lmsize), vjli(lmsize)
+    complex (kind=dp) :: srv1(0:ncheb, lmsize), jlmkmn(0:ncheb, lmsize)
+    complex (kind=dp) :: hlmkmn(0:ncheb, lmsize), vhli(lmsize), vjli(lmsize)
 
     do lm1 = 1, lmsize
       do icheb = 0, ncheb

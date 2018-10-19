@@ -1,36 +1,55 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculate the component projected TAU - matrices
+!> Author: 
+!> Calculate the component projected TAU - matrices
+!> \begin{equation}
+!> TAU(IT) =  TAU(IQ) \left( 1 + (m(t)-m(c)) TAU(IQ) \right)^{-1}
+!> \end{equation}
+!------------------------------------------------------------------------------------
+!> @note It is assumed that all equivalent sites IQ have the same TAU-matrix 
+!> TAUQ(IQ). To get TAU(IT) the first site IQ occupied by type IT is taken to be 
+!> representative for all other (NAT(IT)-1) sites occupied by IT.
+!>
+!> Allows an atom type IT to have different orientation of its moment on different 
+!> but equivalent sites IQ
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_projtau
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  subroutine projtau(icpaflag, cpachng, kmrot, wrtau, wrtaumq, ifiltau, eryd, nt, nq, nkmq, msst, mssq, nlinq, iqat, conc, tauq, taut, tautlin, ikm1lin, ikm2lin, drotq, ntmax, &
-    nqmax, nkmmax, linmax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *   calculate the component projected TAU - matrices               *
-    ! *                                                                  *
-    ! *      TAU(IT) =  TAU(IQ) * ( 1 + (m(t)-m(c))*TAU(IQ) )**(-1)      *
-    ! *                                                                  *
-    ! *   NOTE: it is assumed that all equivalent sites  IQ  have the    *
-    ! *   same TAU-matrix  TAUQ(IQ). To get  TAU(IT)  the first site IQ  *
-    ! *   occupied by type IT is taken to be representative for          *
-    ! *   all other (NAT(IT)-1) sites occupied by IT                     *
-    ! *                                                                  *
-    ! *   allows an atom type IT to have different orientation of        *
-    ! *   its moment on different but equivalent sites  IQ               *
-    ! *                                                                  *
-    ! * 01/11/00                                                         *
-    ! ********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculate the component projected TAU - matrices
+  !> Author: 
+  !> Category: single-site, coherent-potential-approx, KKRhost 
+  !> Deprecated: False 
+  !> Calculate the component projected TAU - matrices
+  !> \begin{equation}
+  !> TAU(IT) = TAU(IQ) \left( 1 + (m(t)-m(c)) TAU(IQ) \right)^{-1}
+  !> \end{equation}
+  !-------------------------------------------------------------------------------
+  !> @note It is assumed that all equivalent sites IQ have the same TAU-matrix 
+  !> TAUQ(IQ). To get TAU(IT) the first site IQ occupied by type IT is taken to be 
+  !> representative for all other (NAT(IT)-1) sites occupied by IT.
+  !>
+  !> Allows an atom type IT to have different orientation of its moment on different 
+  !> but equivalent sites IQ
+  !> @endnote
+  !-------------------------------------------------------------------------------
+  subroutine projtau(icpaflag,cpachng,kmrot,wrtau,wrtaumq,ifiltau,eryd,nt,nq,nkmq,  &
+    msst,mssq,nlinq,iqat,conc,tauq,taut,tautlin,ikm1lin,ikm2lin,drotq,ntmax,nqmax,  &
+    nkmmax,linmax)
+
     use :: mod_getdmat
     use :: mod_rotate
+    use :: mod_constants, only: cone,czero
     implicit none
 
     ! PARAMETER definitions
     real (kind=dp) :: tol
     parameter (tol=1.0e-6_dp)
-    complex (kind=dp) :: c0, c1
-    parameter (c0=(0.0e0_dp,0.0e0_dp), c1=(1.0e0_dp,0.0e0_dp))
 
     ! Dummy arguments
     real (kind=dp) :: cpachng
@@ -57,55 +76,37 @@ contains
       n = nkmq(iq)
 
       if (conc(it)<0.995_dp) then
-
         ! ------------------------- rotate the single site m-matrix if necessary
         if (kmrot/=0) then
-
           call rotate(msst(1,1,it), 'L->G', w1, n, drotq(1,1,iq), m)
-
           call getdmat(tauq(1,1,iq), dmattg, dtiltg, dmamc, n, mssq(1,1,iq), w1, m)
-
         else
-
           call getdmat(tauq(1,1,iq), dmattg, dtiltg, dmamc, n, mssq(1,1,iq), msst(1,1,it), m)
-
         end if
-
         ! -------------------------------------------
         ! TAU(t) = TAU * D~(t)
         ! ----------------------------------------
-        call zgemm('N', 'N', n, n, n, c1, tauq(1,1,iq), m, dtiltg, m, c0, taut(1,1,it), m)
-
+        call zgemm('N', 'N', n, n, n, cone, tauq(1,1,iq), m, dtiltg, m, czero, taut(1,1,it), m)
         icpaf = icpaflag
         cpac = cpachng
-
       else
-
         ! CONC > 0.995:  COPY TAU TO TAUTLIN
-
         do j = 1, n
           call zcopy(n, tauq(1,j,iq), 1, taut(1,j,it), 1)
         end do
-
         icpaf = 0
         cpac = 0e0_dp
-
       end if
 
       ! -------------------------------------------
       ! rotate  TAU(t)  if required
       ! -------------------------------------------
-
       if (kmrot/=0) then
-
         do j = 1, n
           call zcopy(n, taut(1,j,it), 1, w1(1,j), 1)
         end do
-
         call rotate(w1, 'G->L', taut(1,1,it), n, drotq(1,1,iq), m)
-
       end if
-
       ! -------------------------------------------
       ! STORE TAU(t) IN LINEAR ARRAY TAUTLIN
       ! -------------------------------------------

@@ -1,16 +1,26 @@
+!------------------------------------------------------------------------------------
+!> Summary: Adds two vectors together
+!> Author: 
+!> Adds two vectors together
+!------------------------------------------------------------------------------------
 module mod_vadd
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  ! ************************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Adds two vectors together
+  !> Author: 
+  !> Category: numerical-tools, KKRhost
+  !> Deprecated: False 
+  !> Adds two vectors together
+  !-------------------------------------------------------------------------------
   subroutine vadd(a, b, c)
-    ! ************************************************************************
 
-    real (kind=dp), intent (in) :: a(*)
-    real (kind=dp), intent (in) :: b(*)
-    real (kind=dp), intent (out) :: c(*)
+    real (kind=dp), dimension(*), intent (in) :: a !! Input vector
+    real (kind=dp), dimension(*), intent (in) :: b !! Input vector
+    real (kind=dp), dimension(*), intent (out) :: c !! Output vector
 
     integer :: i
 

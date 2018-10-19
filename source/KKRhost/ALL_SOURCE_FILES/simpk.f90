@@ -1,19 +1,27 @@
+!------------------------------------------------------------------------------------
+!> Summary: This subroutine does an integration up to \(r_{cut}\) of an real function \(f\) with an extended 3-point-simpson 
+!> Author: 
+!> The integration of the function $$ fint =\int_{0}^{r_{cut}} f\left(r'\right)dr'$$ has been modified
+!> for functions with kinks - at each kink the integration is restarted.
+!------------------------------------------------------------------------------------
+!> @warning Input \(f\) is destroyed
+!> @endwarning
+!------------------------------------------------------------------------------------
 module mod_simpk
 
 contains
 
-  ! -------------------------------------------------------------------------------
-  ! SUBROUTINE: SINWK
-  !> @brief This subroutine does an integration up to \f$ r_{cut}\f$ of an real
-  ! function
-  !> \f$f\f$ with an extended 3-point-simpson
-  !> @details The integration of the function
-  !> \f$ fint =\int_{0}^{r_{cut}} f\left(r'\right)dr'\f$ has been modified
+  !-------------------------------------------------------------------------------
+  !> Summary: This subroutine does an integration up to \(r_{cut}\) of an real function \(f\) with an extended 3-point-simpson 
+  !> Author:
+  !> Category: numerical-tools, KKRhost 
+  !> Deprecated: False 
+  !> The integration of the function $$ fint =\int_{0}^{r_{cut}} f\left(r'\right)dr'$$ has been modified
   !> for functions with kinks - at each kink the integration is restarted.
-  !> @note Attention : Input \f$f\f$ is destroyed !
-  !> @note Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to
-  ! Fortran90
-  ! -------------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
+  !> @warning Input \(f\) is destroyed 
+  !> @endwarning
+  !-------------------------------------------------------------------------------
   subroutine simpk(f, fint, ipan, ircut, drdi)
 
     use :: global_variables
@@ -21,8 +29,7 @@ contains
     use :: mod_ssum
 
     integer, intent (in) :: ipan   ! < Number of panels in non-MT-region
-    integer, dimension (0:ipand), intent (in) :: ircut ! < R points of panel
-    ! borders
+    integer, dimension (0:ipand), intent (in) :: ircut ! < R points of panel borders
     real (kind=dp), dimension (*), intent (in) :: drdi ! < Derivative dr/di
     ! .. Output variables
     real (kind=dp), intent (out) :: fint

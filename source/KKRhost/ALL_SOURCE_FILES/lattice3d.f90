@@ -1,57 +1,43 @@
+!------------------------------------------------------------------------------------
+!> Summary: Generates the lattice vectors of direct and reciprocal space frombasic translation vectors for a 3D system
+!> Author: V. Popescu 
+!> Generates the lattice vectors of direct and reciprocal space from
+!> basic translation vectors for a 3D system
+!------------------------------------------------------------------------------------
 module mod_lattice3d
   use :: mod_datatypes, only: dp
+  use :: mod_constants, only: pi
   private :: dp
 
 contains
 
-  ! -------------------------------------------------------------------------------
-  ! SUBROUTINE: LATTICE3D
-  !> @brief Generates the lattice vectors of direct and reciprocal space from
-  ! basic translation vectors for a 3D system
-  !> @note - V. Popescu May 2004: Dimension of arrays GN,RM changed from (4,*)
-  ! to (3,*), the 4th
-  !> one it is used only locally (GNR/RMR)
-  !> @note - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote
-  ! to Fortran90
-  ! -------------------------------------------------------------------------------
-  subroutine lattice3d(alat, bravais, recbv, ngmax, nrmax, nshlg, nshlr, nsg, nsr, gn, rm, rmax, gmax, iprint, nmaxd, ishld)
-    ! **********************************************************************
-    ! *                                                                    *
-    ! *  generate lattice vectors of direct and reciprocal space from      *
-    ! *  basic translation vectors br                                      *
-    ! *                                                                    *
-    ! *  alat            : lattice constant                                *
-    ! *  br(i,j)         : i=x,y,z j= 1,2,3 bravais vectors                *
-    ! *                    *** in a.u. ****                                *
-    ! *  rmax            : maximum radius in real space        (input)     *
-    ! *  gmax            : maximum radius in reciprocal space  (input)     *
-    ! *  ngmax           : Number of reciprocal lattice vectors            *
-    ! *  gn(3,nmaxd)     : x,y,z   of reciprocal lattice vectors           *
-    ! *  nrmax           : Number of real lattice vectors                  *
-    ! *  rm(3,nmaxd)     : x,y,z  of real space vectors                    *
-    ! *  nshlg           : shells in reciprocal space                      *
-    ! *  nshlr           : shells in real space                            *
-    ! *  nsg,nsr         : integer arrays, number of atoms in each shell   *
-    ! *                                                                    *
-    ! *  Dimension of arrays GN,RM changed from (4,*) to (3,*), the 4th    *
-    ! *  one it is used only locally (GNR/RMR)       v.popescu May 2004    *
-    ! *                                                                    *
-    ! **********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Generates the lattice vectors of direct and reciprocal space from basic translation vectors for a 3D system
+  !> Author: V. Popescu
+  !> Category: geometry, k-points, electrostatics, KKRhost 
+  !> Deprecated: False 
+  !> Generates the lattice vectors of direct and reciprocal space from basic 
+  !> translation vectors for a 3D system
+  !-------------------------------------------------------------------------------
+  !> @note Popescu May 2004: The routine has been brought to a form which is very similar to
+  !> `LATTICE2D` -- from which it has been originally derived. Dimension of arrays GN,RM
+  !> changed from `(4,*)` to `(2,*)`, the 4th one it is used only locally (GNR/RMR)
+  !> @endnote
+  !------------------------------------------------------------------------------- 
+  subroutine lattice3d(alat,bravais,recbv,ngmax,nrmax,nshlg,nshlr,nsg,nsr,gn,rm,    &
+    rmax,gmax,iprint,nmaxd,ishld)
+
     implicit none
     ! ..
     ! .. Input variables
     integer, intent (in) :: nmaxd  !! Paremeters for the Ewald summations
     integer, intent (in) :: ishld  !! Paremeters for the Ewald summations
-    integer, intent (in) :: iprint
+    integer, intent (in) :: iprint !! Printing index control
     real (kind=dp), intent (in) :: alat !! Lattice constant in a.u.
-    real (kind=dp), dimension (3, 3), intent (in) :: recbv !! Reciprocal basis
-    ! vectors
-    real (kind=dp), dimension (3, 3), intent (in) :: bravais !! Bravais lattice
-    ! vectors
-    real (kind=dp), intent (inout) :: rmax !! Ewald summation cutoff parameter
-    ! for real space summation
-    real (kind=dp), intent (inout) :: gmax !! Ewald summation cutoff parameter
-    ! for reciprocal space summation
+    real (kind=dp), dimension (3, 3), intent (in) :: recbv !! Reciprocal basis vectors
+    real (kind=dp), dimension (3, 3), intent (in) :: bravais !! Bravais lattice vectors
+    real (kind=dp), intent (inout) :: rmax !! Ewald summation cutoff parameter for real space summation
+    real (kind=dp), intent (inout) :: gmax !! Ewald summation cutoff parameter for reciprocal space summation
     ! ..
     ! .. Input/Output variables
     integer, dimension (ishld), intent (inout) :: nsg
@@ -70,7 +56,7 @@ contains
     ! ..
     ! .. Local scalars ..
     integer :: i, k, l, m, n, n1, ng, nr, nsh, nshl, numg, numgh, numr, numrh
-    real (kind=dp) :: a, absgm, absrm, ag, ar, b, c, da, db, gx, gy, gz, pi, rx, ry, rz, vmin
+    real (kind=dp) :: a, absgm, absrm, ag, ar, b, c, da, db, gx, gy, gz, rx, ry, rz, vmin
     ! ..
     ! .. Local arrays ..
     real (kind=dp), dimension (nmaxd) :: gnr
@@ -80,8 +66,6 @@ contains
     real (kind=dp), dimension (3, 3) :: bg
     real (kind=dp), dimension (3, 3) :: br
     real (kind=dp), dimension (4, nmaxd) :: cj
-    ! ----------------------------------------------------------------------------
-    pi = 4.0e0_dp*atan(1.0e0_dp)
     ! ----------------------------------------------------------------------------
     ! OUTPUT
     ! ----------------------------------------------------------------------------
@@ -132,10 +116,9 @@ contains
     numrh = numr/2 + 1
     numgh = numg/2 + 1
 
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! generate lattice vectors of real space
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+    !--------------------------------------------------------------------------------
     nr = 0
     ! ----------------------------------------------------------------------------
     do l = 1, numr
@@ -214,12 +197,11 @@ contains
     nsr(nsh) = nshl
     nshlr = nsh
     if (nshlr<=1) stop ' ERROR: cut-off radius RMAX too small '
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
 
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! generate lattice vectors of real space
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+    !--------------------------------------------------------------------------------
     ng = 0
     ! ----------------------------------------------------------------------------
     do l = 1, numg
@@ -300,19 +282,18 @@ contains
     nsg(nsh) = nshl
     nshlg = nsh
     if (nshlg<=1) stop ' ERROR: cut-off radius GMAX too small '
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! OUTPUT
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     write (1337, fmt=110)
     write (1337, fmt=120) 'Direct  lattice', nrmax, nshlr, rmr(nrmax)
     write (1337, fmt=120) 'Recipr. lattice', ngmax, nshlg, gnr(ngmax)
     write (1337, fmt=130)
 
     if (iprint<3) return
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !--------------------------------------------------------------------------------
     ! OUTPUT
-    ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ! ----------------------------------------------------------------------------
+    !--------------------------------------------------------------------------------
     k = 0
     write (1337, fmt=140) 'real-space'
     do l = 1, nshlr

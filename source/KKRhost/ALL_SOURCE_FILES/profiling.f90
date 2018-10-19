@@ -1,16 +1,11 @@
-! -------------------------------------------------------------------------------
-! MODULE: Profiling
-
-! DESCRIPTION:
-!> @brief Subroutine to handle memory profiling
-!> @details Allows one to track the memory consumption by making use of the
-! memocc()
-!> subroutine
-
-!> @author
-!> Jonathan Chico
-!> @date 10.12.2017
-! -------------------------------------------------------------------------------
+!------------------------------------------------------------------------------------
+!> Summary: Subroutine to handle memory profiling
+!> Author: Jonathan Chico
+!> Allows one to track the memory consumption by making use of the `memocc()` function
+!------------------------------------------------------------------------------------
+!> @note Based in the `profiling` routine included in the [`UppASD` software package](https://github.com/UppASD/UppASD)
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_profiling
 
   use :: mod_datatypes
@@ -18,27 +13,41 @@ module mod_profiling
 
 contains
 
-  ! control the memory occupation by calculating the overall size in bytes of
-  ! the allocated arrays
-  ! usage:
-  ! when allocating allocating an array "stuff" of dimension n in the routine
-  ! "dosome"
-  ! allocate(stuff(n),stat=i_stat)
-  ! call memocc(i_stat,product(shape(stuff))*kind(stuff),'stuff','dosome')
-  ! when deallocating
-  ! i_all=-product(shape(stuff))*kind(stuff)
-  ! deallocate(stuff,stat=i_stat)
-  ! call memocc(i_stat,i_all,'stuff','dosome')
-  ! the counters are initialized with
-  ! call memocc(0,iproc,'count','start') (iproc = mpi rank, nproc=mpi size)
-  ! and stopped with
-  ! call memocc(0,0,'count','stop')
-  ! at the end of the calculation a short report is printed on the screen
-  ! some information can be also written on disk following the needs
-  ! This file is distributed under the terms of the
-  ! GNU General Public License, see http://www.gnu.org/copyleft/gpl.txt .
-  ! Copyright (C) Luigi Genovese, CEA Grenoble, France, 2007
-  !> Memory profiling routine
+!-------------------------------------------------------------------------------
+  !> Summary: Memory profiling routine
+  !> Author: Jonathan Chico
+  !> Category: memory-management, profiling, KKRhost 
+  !> Deprecated: False 
+  !> Memory profiling routine, based in the `profiling` routine included in the 
+  !> [`UppASD` software package](https://github.com/UppASD/UppASD) . 
+  !> control the memory occupation by calculating the overall size in bytes of
+  !> the allocated arrays
+  !> **Usage**:
+  !> when allocating allocating an array `stuff` of dimension `n` in the routine
+  !> `dosome`
+  !>
+  !> `allocate(stuff(n),stat=i_stat)`
+  !>  
+  !> `call memocc(i_stat,product(shape(stuff))*kind(stuff),'stuff','dosome')`
+  !>
+  !> when deallocating
+  !>
+  !> `i_all=-product(shape(stuff))*kind(stuff)`
+  !>
+  !> `deallocate(stuff,stat=i_stat)`
+  !>
+  !> `call memocc(i_stat,i_all,'stuff','dosome')`
+  !>
+  !> the counters are initialized with
+  !> `call memocc(0,iproc,'count','start')` (iproc = mpi rank, nproc=mpi size)
+  !> and stopped with
+  !> `call memocc(0,0,'count','stop')`
+  !> at the end of the calculation a short report is printed on the screen
+  !> some information can be also written on disk following the needs
+  !> This file is distributed under the terms of the
+  !> GNU General Public License, see http://www.gnu.org/copyleft/gpl.txt .
+  !> Copyright (C) Luigi Genovese, CEA Grenoble, France, 2007 
+  !-------------------------------------------------------------------------------
   subroutine memocc(istat, isize, array, routine)
     use :: mod_types, only: t_inc
     implicit none

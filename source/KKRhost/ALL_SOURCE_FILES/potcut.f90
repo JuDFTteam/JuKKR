@@ -1,22 +1,37 @@
+!------------------------------------------------------------------------------------
+!> Summary: Set potential equal zero between muffin-tin and outer sphere
+!> Author:
+!> Set potential equal zero between muffin-tin and outer sphere
+!------------------------------------------------------------------------------------
 module mod_potcut
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Set potential equal zero between muffin-tin and outer sphere
+  !> Author: 
+  !> Category: potential, KKRhost
+  !> Deprecated: False 
+  !> Set potential equal zero between muffin-tin and outer sphere
+  !-------------------------------------------------------------------------------
   subroutine potcut(imt1, irc1, ins, lmpot, r, vm2z, vspsme, vins, z1, irmd, irmind)
-    ! **********************************************************************
-    ! * set potential equal zero between muffin-tin and outer sphere       *
-    ! **********************************************************************
+
     implicit none
     ! ..
     ! .. Scalar Arguments ..
-    real (kind=dp) :: z1
-    integer :: irmd, irmind
-    integer :: imt1, ins, irc1, lmpot
-    ! ..
-    ! .. Array Arguments ..
-    real (kind=dp) :: r(*), vins(irmind:irmd, *), vm2z(*), vspsme(*)
+    integer, intent(in) :: ins      !! (LPOT+1)**2
+    integer, intent(in) :: imt1     !! R point at MT radius
+    integer, intent(in) :: irc1     !! R point for potential cutting
+    integer, intent(in) :: irmd     !! Maximum number of radial points
+    integer, intent(in) :: lmpot    !! (LPOT+1)**2
+    integer, intent(in) :: irmind   !! irmd - irnsd
+    real (kind=dp), intent(in) :: z1 !! Nuclear charge
+    real (kind=dp), dimension(*), intent(in) :: r  !! Radial mesh ( in units a Bohr)
+    real (kind=dp), dimension(*), intent(inout) :: vm2z
+    real (kind=dp), dimension(*), intent(inout) :: vspsme
+    real (kind=dp), dimension(irmind:irmd, *), intent(inout) :: vins   !! Non-spherical part of the potential
     ! ..
     ! .. Local Scalars ..
     integer :: ir, ist, lm

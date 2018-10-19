@@ -1,20 +1,35 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculates the KKR matrix elements for the torque operator
+!> Author: Guillaume Géranton
+!> Calculates the KKR matrix elements for the torque operator, i.e.,
+!> \begin{equation}
+!> \int dr\left[R^\mu_{Ls} \right]^\dagger T^\mu \left(r\right) R^\mu_{L's'}
+!> \end{equation}
+!------------------------------------------------------------------------------------
+!> @note Details are in http://arxiv.org/pdf/1602.03417v1.pdf
+!> This subroutine was adapted `from NORMCOEFF_SO`.
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_normcoeff_so_torq
 
 contains
 
-  ! 12.05.2016 *************************************************************
-  subroutine normcoeff_so_torq(natom, ircut, lmmax, pns, ntcell, ifunm, ipan, lmsp, ksra, cleb, icleb, iend, drdi, irws, visp, nspin, vins, irmin, mode)
-    ! ************************************************************************
-    ! Calculates the KKR matrix elements for the torque operator, i.e.,
-
-    ! INT dr [R^{mu}_{Ls}]^dagger T^{mu}(r) R^{mu}_{L's'}.
-
-    ! Details are in http://arxiv.org/pdf/1602.03417v1.pdf
-
-    ! This subroutine was adapted from NORMCOEFF_SO.
-
-    ! Guillaume Géranton, 2016
-    ! -----------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculates the KKR matrix elements for the torque operator
+  !> Author: Guillaume Géranton
+  !> Category: physical-observables, KKRhost
+  !> Deprecated: False 
+  !> Calculates the KKR matrix elements for the torque operator, i.e.,
+  !> \begin{equation}
+  !> \int dr\left[R^\mu_{Ls} \right]^\dagger T^\mu \left(r\right) R^\mu_{L's'}
+  !> \end{equation}
+  !-------------------------------------------------------------------------------
+  !> @note Details are in http://arxiv.org/pdf/1602.03417v1.pdf
+  !> This subroutine was adapted from `NORMCOEFF_SO`.
+  !> @endnote
+  !-------------------------------------------------------------------------------
+  subroutine normcoeff_so_torq(natom,ircut,lmmax,pns,ntcell,ifunm,ipan,lmsp,ksra,   &
+    cleb,icleb,iend,drdi,irws,visp,nspin,vins,irmin,mode)
 #ifdef CPP_MPI
     use :: mpi
 #endif
@@ -28,46 +43,46 @@ contains
     use :: mod_datatypes, only: dp
     use :: global_variables
     use :: mod_calc_torq_ll_ss
+    use :: mod_constants, only: czero
 
     implicit none
     real (kind=dp), parameter :: eps = 1.0d-12
     ! ..
-    ! .. Scalar Arguments ..
-    integer :: natom, mode, iend, ksra, irws(*), nspin, irmin(*), i2
-    !! lmsize without spin degree of freedom (in contrast to lmmaxd)
-    integer, intent (in) :: lmmax
-    ! ..
+    integer, intent(in) :: iend
+    integer, intent(in) :: mode
+    integer, intent(in) :: ksra
+    integer, intent(in) :: natom
+    integer, intent(in) :: nspin  !! Counter for spin directions
+    integer, intent (in) :: lmmax !! (LMAX+1)^2
+    integer, dimension(*), intent(in) :: irws   !! R point at WS radius
+    integer, dimension(*), intent(in) :: irmin  !! Max R for spherical treatment
+    integer, dimension(*), intent(in) :: ntcell !! Index for WS cell
+    integer, dimension(natypd), intent(in) :: ipan  !! Number of panels in non-MT-region
+    integer, dimension(natypd, *), intent(in)       :: lmsp !! 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
+    integer, dimension(0:ipand, natypd), intent(in) :: ircut !! R points of panel borders
+    integer, dimension(ncleb, 4), intent(in)        :: icleb !! Pointer array
+    integer, dimension(natypd, lmpotd), intent(in)  :: ifunm
+    real (kind=dp), dimension(*), intent(in) :: cleb  !! GAUNT coefficients (GAUNT)
+    real (kind=dp), dimension(irmd, natypd), intent(in) :: drdi !! Derivative dr/di
+    real (kind=dp), dimension(irmd, *), intent(in) :: visp !! spherical part of the potential
+    real (kind=dp), dimension(irmind:irmd, lmpotd, *), intent(in) ::  vins !! non-spher. part of the potential
+    complex (kind=dp), dimension(nspind*lmmax, nspind*lmmax, irmd, 2, natom), intent(in) :: pns
     ! .. Array Arguments ..
-    complex (kind=dp) :: pns(nspind*lmmax, nspind*lmmax, irmd, 2, natypd)
-    real (kind=dp) :: cleb(*), drdi(irmd, natypd), visp(irmd, *), & ! spherical part of the potential
-      vins(irmind:irmd, lmpotd, *), & ! non-spher. part of the potential
-      theta, phi, theta_tmp, phi_tmp, sqa(3)
-    integer :: icleb(ncleb, 4), ifunm(natypd, lmpotd), lmsp(natypd, *), ircut(0:ipand, natypd), ipan(natypd), ntcell(*)
-    ! ..
+    real (kind=dp) :: theta, phi, theta_tmp, phi_tmp
+    real (kind=dp), dimension(3) :: sqa
     ! .. Local Scalars ..
-    complex (kind=dp) :: czero, norm
-    integer :: lm1, lm2, lm1p, lm2p, ir, i1, i1sp1, i1sp2, lmsp1, lmsp2, isigma, i2sp1, i2sp2, insra, nsra
+    complex (kind=dp) :: norm
+    integer :: i2,lm1,lm2,lm1p,lm2p,ir,i1,i1sp1,i1sp2,lmsp1,lmsp2,isigma,i2sp1,i2sp2,insra,nsra
     logical :: lexist
     ! MPI stuff
     integer :: ierr, ihelp, i1_start, i1_end
-    ! ..
-    ! .. External Subroutines ..
-    external :: zgemm
-    ! ..
-    ! .. Intrinsic Functions ..
-    intrinsic :: datan, aimag, dsqrt
-    ! ..
-    ! .. Save statement ..
-    save :: czero
-    ! ..
     ! ..Local Arrays..
-    complex (kind=dp), allocatable :: torq(:, :, :, :), rll_12(:, :, :), dens(:, :, :, :, :, :, :), rll(:, :, :, :, :, :, :)
+    complex (kind=dp), dimension(:, :, :), allocatable :: rll_12
+    complex (kind=dp), dimension(:, :, :, :), allocatable :: torq
+    complex (kind=dp), dimension(:, :, :, :, :, :, :), allocatable :: rll
+    complex (kind=dp), dimension(:, :, :, :, :, :, :), allocatable :: dens
     ! MPI stuff
-    complex (kind=dp), allocatable :: work(:, :, :, :, :, :, :)
-    ! ..
-    ! .. Data statements ..
-    data czero/(0.0d0, 0.0d0)/
-    ! ..
+    complex (kind=dp), dimension(:, :, :, :, :, :, :), allocatable :: work
 
     if (t_inc%i_write>0) write (1337, *) 'KSRA', ksra
     if (ksra>=1) then              ! previously this was .GT. which is wrong for kvrel=1

@@ -1,24 +1,44 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculation of the density 
+!> Author:
+!> The spherical part of the d or f wavefunction is found by adding
+!> the average interaction potential `WLDAUAV` to the spherical
+!> potential. Then the non-spherical parts are found by using only
+!> the deviation of `WLDAU` from the average. This speeds up the
+!> convergence of the Born series. See also subroutines
+!> `regsol`, `pnstmat` and `pnsqns`.
+!------------------------------------------------------------------------------------
+!> @note
+!> Average WLDAU for spherical wavefunctions
+!> -LDA+U implementation Mar. 2002-Dec.2004 Ph. Mavropoulos, H. Ebert, V. Popescu
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_rhoval
 
 contains
 
-  ! -------------------------------------------------------------------------------
-  ! SUBROUTINE: RHOVAL
-
-  !> @note - Average WLDAU for spherical wavefunctions:
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculation of the density
+  !> Author: 
+  !> Category: physical-observables, KKRhost 
+  !> Deprecated: False
   !> The spherical part of the d or f wavefunction is found by adding
   !> the average interaction potential WLDAUAV to the spherical
   !> potential. Then the non-spherical parts are found by using only
   !> the deviation of WLDAU from the average. This speeds up the
   !> convergence of the Born series. See also subroutines
   !> regsol, pnstmat and pnsqns
-  !>
-  !> @note -LDA+U implementation Mar. 2002-Dec.2004 Ph. Mavropoulos, H. Ebert, V. Popescu
-  !> @note -Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
-  ! -------------------------------------------------------------------------------
-  subroutine rhoval(ihost, ldorhoef, icst, ins, ielast, nsra, ispin, nspin, nspinpot, i1, ez, wez, drdi, r, vins, visp, zat, ipan, ircut, irmin, thetas, ifunm, lmsp, rho2ns, r2nef, &
-    rhoorb, den, denlm, muorb, espv, cleb, loflm, icleb, iend, jend, solver, soctl, ctl, vtrel, btrel, rmrel, drdirel, r2drdirel, zrel, jwsrel, irshift, itermvdir, qmtet, qmphi, &
-    mvevil, mvevilef, nmvecmax, idoldau, lopt, phildau, wldau, denmatc, natyp, nqdos, lmax)
+  !-------------------------------------------------------------------------------
+  !> @note 
+  !> Average WLDAU for spherical wavefunctions
+  !> -LDA+U implementation Mar. 2002-Dec.2004 Ph. Mavropoulos, H. Ebert, V. Popescu
+  !> @endnote
+  !-------------------------------------------------------------------------------
+  subroutine rhoval(ihost,ldorhoef,icst,ins,ielast,nsra,ispin,nspin,nspinpot,i1,ez, &
+    wez,drdi,r,vins,visp,zat,ipan,ircut,irmin,thetas,ifunm,lmsp,rho2ns,r2nef,rhoorb,&
+    den,denlm,muorb,espv,cleb,loflm,icleb,iend,jend,solver,soctl,ctl,vtrel,btrel,   &
+    rmrel,drdirel,r2drdirel,zrel,jwsrel,irshift,itermvdir,qmtet,qmphi,mvevil,       &
+    mvevilef,nmvecmax,idoldau,lopt,phildau,wldau,denmatc,natyp,nqdos,lmax)
 
 #ifdef CPP_MPI
     use :: mpi
@@ -76,7 +96,7 @@ contains
     real (kind=dp), dimension (irmd*krel+(1-krel)), intent (in) :: rmrel !! radial mesh
     real (kind=dp), dimension (krel*lmax+1), intent (in) :: soctl
     real (kind=dp), dimension (irmd*krel+(1-krel)), intent (in) :: drdirel !! derivative of radial mesh
-    real (kind=dp), dimension (irmd*krel+(1-krel)), intent (in) :: r2drdirel !! \f$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\f$ (r**2 * drdi)
+    real (kind=dp), dimension (irmd*krel+(1-krel)), intent (in) :: r2drdirel !! $$ r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}$$ ($$r^2  drdi$$)
     real (kind=dp), dimension (irmind:irmd, lmpotd), intent (in) :: vins !! Non-spherical part of the potential
     real (kind=dp), dimension (ncleb, 2), intent (in) :: cleb !! GAUNT coefficients (GAUNT)
     real (kind=dp), dimension (irid, nfund), intent (in) :: thetas !! shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
@@ -327,14 +347,16 @@ contains
         ! non/scalar-relativistic OR relativistic
         ! -------------------------------------------------------------------------
         if (krel==0) then
-          call wfmesh(eryd, ek, cvlight, nsra, zat, r, s, rs, ircut(ipan), irmd, lmax)
-          call cradwf(eryd, ek, nsra, alpha, ipan, ircut, cvlight, rs, s, pz, fz, qz, sz, tmat, visp, drdi, r, zat, lirrsol, idoldau, lopt, wldauav, cutoff)
+          call wfmesh(eryd,ek,cvlight,nsra,zat,r,s,rs,ircut(ipan),irmd,lmax)
+          call cradwf(eryd,ek,nsra,alpha,ipan,ircut,cvlight,rs,s,pz,fz,qz,sz,tmat,  &
+            visp,drdi,r,zat,lirrsol,idoldau,lopt,wldauav,cutoff)
           ! -----------------------------------------------------------------------
           ! Non-spherical
           ! -----------------------------------------------------------------------
           if (ins>0) then
-            call pnsqns(ar, cr, dr, drdi, ek, icst, pz, qz, fz, sz, pns, qns, nsra, vins, ipan, irmin, ircut, & ! Added IRMIN 1.7.2014
-              cleb, icleb, iend, loflm, lmax, idoldau, lopt, lmlo, lmhi, wldau(1,1,ispin), wldauav, cutoff, lmax)
+            call pnsqns(ar,cr,dr,drdi,ek,icst,pz,qz,fz,sz,pns,qns,nsra,vins,ipan,   &
+              irmin,ircut,cleb,icleb,iend,loflm,lmax,idoldau,lopt,lmlo,lmhi,        &
+              wldau(1,1,ispin),wldauav,cutoff,lmax)
           end if
 
           do l = 0, lmax
@@ -423,8 +445,10 @@ contains
           ! call MPI_FINALIZE(L)
 #endif
           ! stop '[rhoval] ERROR array dimensions need to be checked!'
-          call drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhoorb, ie, eryd, df, lastez, gmatll, vtrel, btrel, rmrel, drdirel, r2drdirel, zrel, jwsrel, irshift, solver, &
-            soctl, ctl, qmtet, qmphi, itermvdir, mvevil, mvevilef, lmmaxd, lmax, irmd, lmpotd, ielast, nmvecmax, i1, nqdos) ! qdos
+          call drvrho_qdos(ldorhoef,rho2ns,r2nef,den,dmuorb,rhoorb,ie,eryd,df,      &
+            lastez,gmatll,vtrel,btrel,rmrel,drdirel,r2drdirel,zrel,jwsrel,irshift,  &
+            solver,soctl,ctl,qmtet,qmphi,itermvdir,mvevil,mvevilef,lmmaxd,lmax,irmd,&
+            lmpotd,ielast,nmvecmax,i1,nqdos) ! qdos
 
           do l = 0, lmaxd1
             espv(l, 1) = espv(l, 1) + aimag(eryd*den(l,ie,iq)*df)

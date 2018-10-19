@@ -1,19 +1,41 @@
+!------------------------------------------------------------------------------------
+!> Summary: I/O of the Madelung coefficients
+!> Author:
+!> For a 2D/3D structures it reads the structure matrices from an unstructured file, and
+!> then writes them to a formatted file matrices into a file.
+!------------------------------------------------------------------------------------
 module mod_madelout
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
-  ! **********************************************************************
-  subroutine madel2out(iprint, naez, lrecamad, lmpotd, nleftoff, nrightoff, nleftall, nrightall)
+  !-------------------------------------------------------------------------------
+  !> Summary: Reads and writes the Madelung coefficients for a 2D strutcure
+  !> Author:
+  !> Category: input-output,electrostatics, KKRhost 
+  !> Deprecated: False 
+  !> Reads the full Madelung coefficients from an unformatted file, and then writes 
+  !> the necessary ones to a formatted file.
+  !-------------------------------------------------------------------------------
+  subroutine madel2out(iprint,naez,lrecamad,lmpotd,nleftoff,nrightoff,nleftall,     &
+    nrightall)
     implicit none
-    integer :: iprint, naez, lmpotd
-    integer :: lrecamad, nleftoff, nrightoff, nleftall, nrightall
+    
+    integer, intent(in) :: naez       !! Number of atoms in unit cell
+    integer, intent(in) :: iprint     !! Printing index controller
+    integer, intent(in) :: lmpotd     !! (lpot+1)**2
+    integer, intent(in) :: lrecamad   !! Record length for unformatted files
+    integer, intent(in) :: nleftoff   !! naez*naez
+    integer, intent(in) :: nrightoff  !! nleftoff + naez*nleft*nlbasis
+    integer, intent(in) :: nleftall   !! nleft*nlbasis
+    integer, intent(in) :: nrightall  !! nright*nrbasis
 
+    ! .. Local variables
     integer :: lfmt, iq1, iq2, lm1, lm2
-    real (kind=dp) :: smat(6, 6)
-    real (kind=dp) :: smat1(6, 200), smat2(6, 200)
-    real (kind=dp) :: avmad(lmpotd, lmpotd)
+    real (kind=dp), dimension(6,6) :: smat
+    real (kind=dp), dimension(6,200) :: smat1, smat2
+    real (kind=dp), dimension(lmpotd,lmpotd) :: avmad
     character (len=80) :: fmt
     integer :: irec
 
@@ -129,20 +151,32 @@ contains
 140 format (5x, 2i5, 1p, d18.10)
 150 format (70('*'), /, 10x, a, /, 70('*'))
   end subroutine madel2out
-  ! **********************************************************************
 
-  ! **********************************************************************
-
+  !-------------------------------------------------------------------------------
+  !> Summary: Reads and writes the Madelung coefficients for a 3D strutcure
+  !> Author:
+  !> Category: input-output,electrostatics, KKRhost 
+  !> Deprecated: False 
+  !> Reads the full Madelung coefficients from an unformatted file, and then writes 
+  !> the necessary ones to a formatted file.
+  !-------------------------------------------------------------------------------
   subroutine madel3out(iprint, naez, lrecabmad, smat1, smat2, lmpotd)
 
     implicit none
-    integer :: iprint, naez, lmpotd
-    integer :: lrecabmad
-    integer :: lfmt, iq1, iq2, lm1, lm2
-    real (kind=dp) :: smat1(6, 6), smat2(6, 6)
-    real (kind=dp) :: avmad(lmpotd, lmpotd), bvmad(lmpotd)
-    character (len=80) :: fmt
+
+    integer, intent(in) :: naez       !! Number of atoms in unit cell
+    integer, intent(in) :: iprint     !! Printing index controller
+    integer, intent(in) :: lmpotd     !! (lpot+1)**2
+    integer, intent(in) :: lrecabmad !! Record length for unformatted files
+    real (kind=dp), dimension(6,6), intent(in) :: smat1 !! Bulk Madelung coefficients
+    real (kind=dp), dimension(6,6), intent(in) :: smat2 !! Bulk Madelung coefficients
+
+    ! .. Local variables
     integer :: irec
+    integer :: lfmt, iq1, iq2, lm1, lm2
+    character (len=80) :: fmt
+    real (kind=dp), dimension(lmpotd) :: bvmad
+    real (kind=dp), dimension(lmpotd,lmpotd) :: avmad
 
     ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
     write (1337, 100) 'A(1,1)', min(6, naez), 'avmad.dat'

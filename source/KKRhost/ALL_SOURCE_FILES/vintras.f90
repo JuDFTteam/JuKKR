@@ -1,42 +1,48 @@
+!------------------------------------------------------------------------------------
+!> Summary: Calculate the electron-intracell-potentials and the charge-moments of given charge densities. ( For each spin-direction the potential is the same in the polarized case.)
+!> Author: B. Drittler
+!> Initialize the potential \(V\) with the electron-intracell-potentials
+!> the intracell-potential is expanded into spherical harmonics .
+!> the lm-term of the intracell-potential of the representive atom i is given by
+!> \begin{equation}
+!> V\left(r,lm,i\right)=\frac{8\pi}{2l+1}\left(\int_{0}^{r}dr'\frac{r'^{l}}{r^{l+1}} rho2ns(r',lm,i,1) +\int_{r}^{r_{cut}}dr' \frac{r^l}{r'^{l+1}}rho2ns(r',lm,i,1) ) \right)
+!> \end{equation}
+!> the lm contribution of the charge moment of the representive atom i is given by
+!> \begin{equation}
+!> cmom\left(lm,i\right)=\int_{0}^{r_{cut}} dr'!r'^{l}rho2ns(r',lm,i,1)
+!> \end{equation}
+!> (see notes by b.drittler and u.klemradt) \(r_{cut}\) is muffin tin or
+!> Wigner-Seitz sphere radius, depending on kshape turned on or off
+!------------------------------------------------------------------------------------
+!> @note Attention : `rho2ns(...,1)` is the real charge density times \(r^2\)
+!> developed into spherical harmonics . (see deck rholm)
+!------------------------------------------------------------------------------------
 module mod_vintras
 
 contains
 
-  ! -------------------------------------------------------------------------------
-  ! SUBROUTINE: VINTRAS
-  !> @brief Calculate the electron-intracell-potentials and the charge-moments
-  !> of given charge densities. ( For each spin-direction the potential is the
-  !> same in the polarized case.)
-  !> @details Initialize the potential \f$ V\f$ with the
-  !electron-intracell-potentials
+  !-------------------------------------------------------------------------------
+  !> Summary: Calculate the electron-intracell-potentials and the charge-moments of given charge densities. (For each spin-direction the potential is the same in the polarized case.)
+  !> Author: B. Drittler
+  !> Category: potential, KKRhost
+  !> Deprecated: False 
+  !> Initialize the potential \(V\) with the electron-intracell-potentials
   !> the intracell-potential is expanded into spherical harmonics .
-  !> the lm-term of the intracell-potential of the representive atom i is given
-  !by
-  !>
-  !> \f$V\left(r,lm,i\right)=\frac{8\pi}{2l+1}
-  !\left(\int_{0}^{r}dr'\frac{r'^{l}}{r^{l+1}} rho2ns(r',lm,i,1) +
-  !\int_{r}^{r_{cut}}dr' \frac{r^l}{r'^{l+1}}rho2ns(r',lm,i,1) ) \right)\f$
-  !>
-  !> the lm contribution of the charge moment of the representive atom i is
-  !given by
-  !>
-  !> \f$ cmom\left(lm,i\right)=\int_{0}^{r_{cut}} dr'
-  !r'^{l}rho2ns(r',lm,i,1)\f$
-  !>
-  !>  (see notes by b.drittler and u.klemradt) \f$ r_{cut}\f$ is muffin tin or
+  !> the lm-term of the intracell-potential of the representive atom i is given by
+  !> \begin{equation}
+  !> V\left(r,lm,i\right)=\frac{8\pi}{2l+1}\left(\int_{0}^{r}dr'\frac{r'^{l}}{r^{l+1}} rho2ns(r',lm,i,1) +\int_{r}^{r_{cut}}dr' \frac{r^l}{r'^{l+1}}rho2ns(r',lm,i,1) ) \right)
+  !> \end{equation}
+  !> the lm contribution of the charge moment of the representive atom i is given by
+  !> \begin{equation}
+  !> cmom\left(lm,i\right)=\int_{0}^{r_{cut}} dr'!r'^{l}rho2ns(r',lm,i,1)
+  !> \end{equation}
+  !> (see notes by b.drittler and u.klemradt) \(r_{cut}\) is muffin tin or
   !> Wigner-Seitz sphere radius, depending on kshape turned on or off
-
-  !> @note Attention : \f$ rho2ns(...,1)\f$ is the real charge density times
-  !\f$r^2\f$
+  !> @note Attention : `rho2ns(...,1)` is the real charge density times \(r^2\)
   !> developed into spherical harmonics . (see deck rholm)
-  !>
-  !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to
-  !Fortran90
-  !> @author B. Drittler
-  !> @date May 1987
-  ! -----------------------------------------------------------------------
-
-  subroutine vintras(cmom, cminst, lmax, nspin, nstart, nend, rho2ns, v, r, drdi, irws, ircut, ipan, kshape, ntcell, ilm_map, ifunm, imaxsh, gsh, thetas, lmsp, lmpot, natyp)
+  !-------------------------------------------------------------------------------
+  subroutine vintras(cmom,cminst,lmax,nspin,nstart,nend,rho2ns,v,r,drdi,irws,ircut, &
+    ipan,kshape,ntcell,ilm_map,ifunm,imaxsh,gsh,thetas,lmsp,lmpot,natyp)
 
     use :: mod_constants, only: pi
     use :: global_variables, only: lmxspd, ngshd, irmd, nfund, ncelld, npotd, ipand, irid
@@ -65,7 +71,7 @@ contains
     real (kind=dp), dimension (ngshd), intent (in) :: gsh
     real (kind=dp), dimension (irmd, natyp), intent (in) :: r !! Radial mesh ( in units a Bohr)
     real (kind=dp), dimension (irmd, natyp), intent (in) :: drdi !! Derivative dr/di
-    real (kind=dp), dimension (irid, nfund, ncelld), intent (in) :: thetas !! shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
+    real (kind=dp), dimension (irid, nfund, ncelld), intent (in) :: thetas !! shape function THETA=0 outer space THETA=1 inside WS cell in spherical harmonics expansion
     real (kind=dp), dimension (irmd, lmpot, natyp, 2), intent (in) :: rho2ns !! radial density
     ! .. Output variables
     real (kind=dp), dimension (lmpot, natyp), intent (out) :: cmom !! LM moment of total charge

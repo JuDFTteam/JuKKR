@@ -1,30 +1,41 @@
+!------------------------------------------------------------------------------------
+!> Summary: Spherical harmonics except the factor \(\exp{i m \phi}\)
+!> Author: 
+!> Spherical harmonics except the factor \(\exp{i m \phi}\)
+!> \(m=-l\) to \(l\) , for given \(l\).
+!> \(x=cos(\theta)\)
+!------------------------------------------------------------------------------------
 module mod_spher
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Spherical harmonics except the factor \(\exp{i m \phi}\)
+  !> Author: 
+  !> Category: special-functions, numerical-tools, KKRhost
+  !> Deprecated: False 
+  !> Spherical harmonics except the factor \(\exp{i m \phi}\)
+  !> \(m=-l\) to \(l\) , for given \(l\).
+  !> \(x=cos(\theta)\)
+  !-------------------------------------------------------------------------------
   subroutine spher(ylm, l, x)
-    ! spherical harmonics except the facter exp(i*m*phi)
 
-    ! m=-l to l , for given l.
-    ! x=cos(theta)
+    use :: mod_constants, only : pi
+
+    
     ! .. Scalar Arguments ..
-    real (kind=dp) :: x
-    integer :: l
-    ! ..
-    ! .. Array Arguments ..
-    real (kind=dp) :: ylm(*)
-    ! ..
+    integer, intent(in) :: l !! Angular momentum
+    real (kind=dp), intent(in) :: x !! \(x=cos(\theta)\)
+    ! .. Output variables
+    real (kind=dp), dimension(*), intent(out) :: ylm  !! real spherical harmonic to a given l,m 
     ! .. Local Scalars ..
-    real (kind=dp) :: fac, ovr1, pi, qq
+    real (kind=dp) :: fac, ovr1, qq
     integer :: i, ii, l2, lm, ln, m, nn
     ! ..
     ! .. Intrinsic Functions ..
     intrinsic :: abs, atan, real, sqrt
-    ! ..
-    pi = 4.0e0_dp*atan(1.0e0_dp)
-
 
     ovr1 = abs(x) - 1.e0_dp
     if (ovr1>0.1e-12_dp) then

@@ -1,67 +1,73 @@
-! -------------------------------------------------------------------------------
-! MODULE: MOD_MAIN2
-!> @brief Wrapper module for the calculation of the DFT quantities for the JM-KKR package
-!> @details The code uses the information obtained in the main0 module, this is
-!> mostly done via the get_params_2() call, that obtains parameters of the type
-!> t_params and passes them to local variables
-!> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
+!-----------------------------------------------------------------------------------
+!> Summary: Wrapper module for the calculation of the DFT quantities for the JM-KKR package
+!> Author: Philipp Ruessmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,       
 !> and many others ...
-!! @note
-!> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to Fortran90
-! -------------------------------------------------------------------------------
+!> The code uses the information obtained in the main0 module, this is
+!> mostly done via the `get_params_2()` call, that obtains parameters of the type
+!> `t_params` and passes them to local variables
+!-----------------------------------------------------------------------------------
 module mod_main2
 
-  use :: mod_profiling
-  use :: mod_constants
-  use :: global_variables
+
   use :: mod_datatypes, only: dp
-
-  use :: mod_brydbm
-  use :: mod_convol
-  use :: mod_ecoub
-  use :: mod_epathtb
-  use :: mod_epotinb
-  use :: mod_espcb
-  use :: mod_etotb1
-  use :: mod_force
-  use :: mod_forceh
-  use :: mod_forcxc
-  use :: mod_mtzero
-  use :: mod_mdirnewang
-  use :: mod_mixstr
-  use :: mod_rhosymm
-  use :: mod_relpotcvt
-  use :: mod_rhototb
-  use :: mod_vmadelblk
-  use :: mod_vintras
-  use :: mod_vinterface
-  use :: mod_scfiterang
-  use :: mod_rites
-  use :: mod_writekkrflex
-  use :: mod_vxcdrv
-  use :: mod_rinit
-
-  implicit none
+  private
+  public :: main2
 
 contains
 
-  ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: main2
-  !> @brief Main wrapper routine dealing with the calculation of the DFT quantities
-  !> @details Calculates the potential from density, exc-potential, calculate total energy, ...
-  !> @author Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
+  !-------------------------------------------------------------------------------
+  !> Summary: Main wrapper routine dealing with the calculation of the DFT quantities
+  !> Author: Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
   !> and many others ...
-  ! ----------------------------------------------------------------------------
+  !> Category: potential, xc-potential, total-energy, KKRhost
+  !> Deprecated: False 
+  !> Calculates the potential from density, exc-potential, calculate total energy, ...
+  !-------------------------------------------------------------------------------
+  !> @note JC: there seems to be an array called sum, this is dangerous as it 
+  !> can get confuder by the FORTRAN intrinsic function sum(). The name should
+  !> be changed.
+  !> @endnote
+  !-------------------------------------------------------------------------------
   subroutine main2()
 
+    use :: mod_constants, only: pi
+    use :: global_variables, only: krel, ipand, npotd, natomimpd, lmxspd, iemxd, nspotd, irid, ngshd, linterface, &
+      nfund, ncelld, irmd, nembd1, nembd, irmind, lmmaxd, wlength, natypd, naezd, lmpotd, lpotd, lmaxd, nspind, nspotd, &
+      ipand, ngshd, irid, nfund, ncelld
+    use :: mod_main0, only: lcore, ncore, ircut, ipan, ntcell, lpot, nlbasis, nrbasis, nright, nleft, natomimp, atomimp, &
+      natyp, naez, lly, lmpot, nsra, ins, nspin, lmax, imix, qbound, fcm, itdbry, irns, kpre, kshape, kte, kvmad, kxc, &
+      icc, ishift, ixipol, kforce, ifunm, lmsp, imt, irc, irmin, irws, llmsp, ititle, nfu, hostimp, ilm_map, imaxsh, &
+      ielast, npol, npnt1, npnt2, npnt3, itscf, scfsteps, iesemicore, kaoez, iqat, noq, npolsemi, n1semi, n2semi, n3semi, &
+      zrel, jwsrel, irshift, mixing, lambda_xc, a, b, thetas, drdi, rmesh, zat, rmt, rmtnew, rws, emin, emax, tk, alat, &
+      cmomhost, conc, gsh, ebotsemi, emusemi, tksemi, vins, visp, rmrel, drdirel, vbc, r2drdirel, ecore, ez, wez, txc, lly, &
+      lrhosym, idoldau, lopt, nshell, nemb, fsemicore, qmgam, fact, qmphi, qmtet, ipf, idosemicore, thesme, dez, vtrel, btrel
     use :: mod_types, only: t_inc
-    use :: mod_wunfiles
-#ifdef CPP_TIMING
-    use :: mod_timing
-#endif
-    use :: mod_version_info
-
-    use :: mod_main0
+    use :: mod_wunfiles, only: t_params, get_params_2, read_density, save_emesh, save_scfinfo
+    use :: mod_profiling, only: memocc
+    use :: mod_brydbm, only: brydbm
+    use :: mod_ecoub, only: ecoub
+    use :: mod_epathtb, only: epathtb
+    use :: mod_epotinb, only: epotinb
+    use :: mod_espcb, only: espcb
+    use :: mod_etotb1, only: etotb1
+    use :: mod_force, only: force
+    use :: mod_forceh, only: forceh
+    use :: mod_forcxc, only: forcxc
+    use :: mod_mtzero, only: mtzero
+    use :: mod_mdirnewang, only: mdirnewang
+    use :: mod_mixstr, only: mixstr
+    use :: mod_rhosymm, only: rhosymm
+    use :: mod_relpotcvt, only: relpotcvt
+    use :: mod_rhototb, only: rhototb
+    use :: mod_vmadelblk, only: vmadelblk
+    use :: mod_vintras, only: vintras
+    use :: mod_vinterface, only: vinterface
+    use :: mod_scfiterang, only: scfiterang
+    use :: mod_rites, only: rites
+    use :: mod_writekkrflex, only: writekkrflex
+    use :: mod_vxcdrv, only: vxcdrv
+    use :: mod_rinit, only: rinit 
+    use :: mod_convol, only: convol
 
     implicit none
 
@@ -89,8 +95,8 @@ contains
     real (kind=dp) :: rv
     real (kind=dp) :: mix
     real (kind=dp) :: sum
-    real (kind=dp) :: fpi
-    real (kind=dp) :: rfpi
+    real (kind=dp) :: fpi        !! 4\(\pi\)
+    real (kind=dp) :: rfpi       !! \(\sqrt{4\pi}\)
     real (kind=dp) :: efold
     real (kind=dp) :: efnew
     real (kind=dp) :: denef
@@ -404,7 +410,8 @@ contains
       end do
 
       open (67, file='itermdir.unformatted', form='unformatted')
-      call scfiterang(itscf, itoq, fact, mvphi, mvtet, mvgam, qmphi, qmtet, qmgam, naez, nk, erravang, naez, natyp, nmvecmax, lmmaxd)
+      call scfiterang(itscf,itoq,fact,mvphi,mvtet,mvgam,qmphi,qmtet,qmgam,naez,nk,  &
+        erravang,naez,natyp,nmvecmax,lmmaxd)
       t_params%mvevi = mvevi
       t_params%mvevief = mvevief
     end if
@@ -416,7 +423,8 @@ contains
     ! POTENTIAL PART
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     if (lrhosym) then
-      call rhosymm(lmpot, nspin, 1, natyp, rho2ns, ixipol, irws, ircut, ipan, kshape, natyp, irmd)
+      call rhosymm(lmpot,nspin,1,natyp,rho2ns,ixipol,irws,ircut,ipan,kshape,natyp,  &
+        irmd)
     end if
 
     cminst(:, :) = 0.d0
@@ -504,11 +512,11 @@ contains
     ! -------------------------------------------------------------------------
     if ((kforce==1) .and. (krel/=1)) then
       if (ins==0) then
-        call forceh(cmom, flm, lpot, nspin, 1, natyp, rho2ns, vons, rmesh, drdi, irws, zat)
-        call force(flm, flmc, lpot, nspin, 1, natyp, rhoc, vons, rmesh, drdi, irws)
+        call forceh(cmom,flm,lpot,nspin,1,natyp,rho2ns,vons,rmesh,drdi,irws,zat)
+        call force(flm,flmc,lpot,nspin,1,natyp,rhoc,vons,rmesh,drdi,irws)
       else
-        call forceh(cmom, flm, lpot, nspin, 1, natyp, rho2ns, vons, rmesh, drdi, imt, zat)
-        call force(flm, flmc, lpot, nspin, 1, natyp, rhoc, vons, rmesh, drdi, imt)
+        call forceh(cmom,flm,lpot,nspin,1,natyp,rho2ns,vons,rmesh,drdi,imt,zat)
+        call force(flm,flmc,lpot,nspin,1,natyp,rhoc,vons,rmesh,drdi,imt)
       end if
     end if
     ! -------------------------------------------------------------------------
@@ -576,9 +584,9 @@ contains
     ! -------------------------------------------------------------------------
     if ((kforce==1) .and. (krel/=1)) then
       if (kshape==0) then
-        call forcxc(flm, flmc, lpot, nspin, 1, natyp, rhoc, vons, rmesh, alat, drdi, irws, 0)
+        call forcxc(flm,flmc,lpot,nspin,1,natyp,rhoc,vons,rmesh,alat,drdi,irws,0)
       else
-        call forcxc(flm, flmc, lpot, nspin, 1, natyp, rhoc, vons, rmesh, alat, drdi, imt, 0)
+        call forcxc(flm,flmc,lpot,nspin,1,natyp,rhoc,vons,rmesh,alat,drdi,imt,0)
       end if
     end if
     ! -------------------------------------------------------------------------
@@ -939,13 +947,19 @@ contains
 
 
   ! ----------------------------------------------------------------------------
-  ! SUBROUTINE: POTENSHIFT
-  !> @brief Adds a constant (=VSHIFT) to the potentials of atoms
+  !> Summary: Adds a constant (=VSHIFT) to the potentials of atoms                   
+  !> Author:                                                                         
+  !> Category: potential, KKRhost                                                    
+  !> Deprecated: False                                                               
+  !> Adds a constant (=VSHIFT) to the potentials of atoms                            
   ! ----------------------------------------------------------------------------
   subroutine potenshift(visp, vins, natyp, nspin, ircut, irc, irmin, ntcell, imaxsh, &
     ilm_map, ifunm, lmsp, lmpot, gsh, thetas, thesme, rfpi, rmesh, kshape, vshift, &
     irmd, npotd, irmind, lmxspd)
 
+    use :: global_variables, only: nspotd, ipand, ngshd, irid, nfund, ncelld
+    use :: mod_rinit, only: rinit 
+    use :: mod_convol, only: convol
     implicit none
 
     ! .. Input variables
@@ -998,7 +1012,8 @@ contains
             visp(ir, ipot) = visp(ir, ipot) + pshiftlmr(ir, 1)
           end do
         else                       ! Full-potential
-          call convol(imt1, irc1, ntcell(ih), imaxsh(lmpot), ilm_map, ifunm, lmpot, gsh, thetas, thesme, 0.0_dp, rfpi, rmesh(1,ih), pshiftlmr, pshiftr, lmsp)
+          call convol(imt1,irc1,ntcell(ih),imaxsh(lmpot),ilm_map,ifunm,lmpot,gsh,   &
+            thetas,thesme,0.0_dp,rfpi,rmesh(1,ih),pshiftlmr,pshiftr,lmsp)
 
           do ir = 1, irc1
             visp(ir, ipot) = visp(ir, ipot) + pshiftlmr(ir, 1)

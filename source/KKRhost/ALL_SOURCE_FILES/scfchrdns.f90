@@ -1,31 +1,37 @@
+!------------------------------------------------------------------------------------
+!> Summary: Wrapper for the calculation of the charge, spin and orbital density within an atomic cell
+!> Author:
+!> Wrapper for the calculation of the charge, spin and orbital density within an atomic cell
+!------------------------------------------------------------------------------------
 module mod_scfchrdns
 
 contains
 
-  subroutine scfchrdns(nfilcbwf, r2drdi, jws, imt, shftef, totdos, muespn, mueorb, irel, iprint, nt, nl, nkm, eryd, we, efermi, iecurr, netab, dos, smt, omt, hff, dosi, smti, omti, &
-    hffi, dosm, dosl0, dosint, smtm, smtl0, smtint, omtm, omtl0, omtint, hffm, hffl0, hffint, bcor, bcors, dzz, dzj, szz, szj, ozz, ozj, bzz, bzj, ozzs, ozjs, omtls0, tautlin, &
-    nvaltot, txtt, conc, nat, rhochr, rhospn, rhoorb, qel, gdia, gmdia, goff, ntmax, nlmax, nmuemax, linmax, nrmax, nmmax, nkmmax, eband, ebandt)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! * SUBROUTINE TO CALCULATE THE  CHARGE, SPIN  AND  ORBITAL DENSITY  *
-    ! *                  WITHIN AN ATOMIC CELL                           *
-    ! *                                                                  *
-    ! * 12/03/96 HE                                                      *
-    ! ********************************************************************
+   !-------------------------------------------------------------------------------
+   !> Summary: Wrapper for the calculation of the charge, spin and orbital density within an atomic cell
+   !> Author: 
+   !> Category: physical-observables, input-output, KKRhost
+   !> Deprecated: False 
+   !> Wrapper for the calculation of the charge, spin and orbital density within an atomic cell
+   !-------------------------------------------------------------------------------
+  subroutine scfchrdns(nfilcbwf,r2drdi,jws,imt,shftef,totdos,muespn,mueorb,irel,    &
+    iprint,nt,nl,nkm,eryd,we,efermi,iecurr,netab,dos,smt,omt,hff,dosi,smti,omti,    &
+    hffi,dosm,dosl0,dosint,smtm,smtl0,smtint,omtm,omtl0,omtint,hffm,hffl0,hffint,   &
+    bcor,bcors,dzz,dzj,szz,szj,ozz,ozj,bzz,bzj,ozzs,ozjs,omtls0,tautlin,nvaltot,    &
+    txtt,conc,nat,rhochr,rhospn,rhoorb,qel,gdia,gmdia,goff,ntmax,nlmax,nmuemax,     &
+    linmax,nrmax,nmmax,nkmmax,eband,ebandt)
+
     use :: mod_datatypes, only: dp
     use :: mod_ssite, only: readwfun
     use :: mod_rintsimp
     use :: mod_ikapmue
     use :: mod_rinit
+    use :: mod_constants, only: czero,pi
     implicit none
 
     ! PARAMETER definitions
     integer :: ntmaxchk
     parameter (ntmaxchk=10)
-    complex (kind=dp) :: c0
-    parameter (c0=(0.0e0_dp,0.0e0_dp))
-    real (kind=dp) :: pi
-    parameter (pi=3.141592653589793238462643e0_dp)
 
     ! Dummy arguments
     complex (kind=dp) :: eband, eryd, we
@@ -56,12 +62,12 @@ contains
 
       do it = 1, nt
         do il = 1, nl
-          dosint(il, it) = c0
-          smtint(il, it) = c0
-          omtint(il, it) = c0
-          hffint(il, it) = c0
+          dosint(il, it) = czero
+          smtint(il, it) = czero
+          omtint(il, it) = czero
+          hffint(il, it) = czero
         end do
-        ebandt(it) = c0
+        ebandt(it) = czero
       end do
 
       ! ----------------------------- account for spin degeneracy for IREL <=1
@@ -176,9 +182,7 @@ contains
             if (nkm/=nl**2) write (1337, 110) nkm
           end if
 
-
           ! COEFFICIENTS TO CALCULATE THE SPIN  MAGNETISATION
-
           cgg(1, 1) = gdia(ikm1)
           cgg(1, 2) = goff(ikm1)
           cgg(2, 1) = goff(ikm1)
@@ -188,7 +192,6 @@ contains
           cgf(2, 2) = gmdia(ikm2)
 
           ! COEFFICIENTS TO CALCULATE THE ORBITAL MAGNETISATION
-
           cfg(1, 1) = mj*(kap1+1.0e0_dp)/(kap1+0.5e0_dp)
           cfg(2, 2) = mj*(kap2+1.0e0_dp)/(kap2+0.5e0_dp)
           cfg(1, 2) = 0.5e0_dp*sqrt(1.0e0_dp-(mj/(kap1+0.5e0_dp))**2)
@@ -200,7 +203,8 @@ contains
           ! -------------------------------------------------- read wave
           ! functions
 
-          call readwfun(nfilcbwf, it, l, mj, nsol, 'REG', 'IRR', ikm1, kap1, ikm2, kap2, nt, nkm, zg, zf, jg, jf, jtop, nrmax)
+          call readwfun(nfilcbwf,it,l,mj,nsol,'REG','IRR',ikm1,kap1,ikm2,kap2,nt,   &
+            nkm,zg,zf,jg,jf,jtop,nrmax)
 
           do k1 = 1, nsol
             do k2 = 1, nsol
@@ -346,7 +350,7 @@ contains
 
     if (iecurr==netab) then
 
-      eband = c0
+      eband = czero
       do it = 1, nt
         eband = eband + ebandt(it)*conc(it)*nat(it)
       end do

@@ -105,11 +105,11 @@ contains
     complex (kind=dp), dimension (lmmaxd, lmmaxd), intent (in) :: rrel !! Non-relat. REAL spher. harm. > (kappa,mue) (kappa,mue)  > non-relat. REAL spher. harm.
     complex (kind=dp), dimension (lmmaxd, lmmaxd), intent (in) :: factl
     complex (kind=dp), dimension (lmmaxd, lmmaxd, natyp), intent (in) :: tsst
-    complex (kind=dp), dimension (lmmaxd, lmmaxd, natyp), intent (in) :: msst
-    complex (kind=dp), dimension (2, 2, lmmaxd), intent (in) :: srrel
-    complex (kind=dp), dimension (lmmaxd, lmmaxd, naez), intent (in) :: tqdos ! qdos : Read-in inverse t-matrix
-    complex (kind=dp), dimension (lmmaxd, lmmaxd, naez), intent (in) :: drotq !! Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
-    complex (kind=dp), dimension (lmmaxd, lmmaxd, nrefd), intent (in) :: trefll !! t-matrix of reference system
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, natyp), intent (out) :: msst
+    complex (kind=dp), dimension (2, 2, lmmaxd), intent (in)          :: srrel
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, naez), intent (in)  :: tqdos ! qdos : Read-in inverse t-matrix
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, naez), intent (in)  :: drotq !! Rotation matrices to change between LOCAL/GLOBAL frame of reference for magnetisation <> Oz or noncollinearity
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, nrefd), intent (in) :: trefll   !! t-matrix of reference system
     complex (kind=dp), dimension (lmmaxd, lmmaxd, nsymaxd), intent (in) :: dsymll !! transformation matrix using lattice symmetries
     complex (kind=dp), dimension (lmmaxd, lmmaxd, nrefd), intent (in) :: dtrefll !! LLY Lloyd dtref/dE
     complex (kind=dp), dimension (lmmaxd, lmmaxd, naez), intent (in) :: dtmatll ! LLY  dt/dE (should be av.-tmatrix in CPA)

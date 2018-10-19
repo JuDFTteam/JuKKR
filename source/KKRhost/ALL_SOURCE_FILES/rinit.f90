@@ -1,24 +1,39 @@
+!------------------------------------------------------------------------------------
+!> Summary: Setting the first `N` values of a `real (kind=dp)` array `A` to zero
+!> Author: 
+!> Setting the first `N` values of a `real (kind=dp)` array `A` to zero
+!------------------------------------------------------------------------------------
+!> @note Maybe it can be replaced by calls susch as `A(1:N)=0.0d0`
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_rinit
   use :: mod_datatypes, only: dp
   private :: dp
 
 contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Setting the first `N` values of a `real (kind=dp)` array `A` to zero
+  !> Author: 
+  !> Category: numerical-tools, KKRhost
+  !> Deprecated: False
+  !> Setting the first `N` values of a `real (kind=dp)` array `A` to zero
+  !-------------------------------------------------------------------------------
+  !> @note Maybe it can be replaced by calls susch as `A(1:N)=0.0d0`
+  !> @endnote
+  !-------------------------------------------------------------------------------
   subroutine rinit(n, a)
-    ! **********************************************************************
-    ! * Setting the first N values of a real (kind=dp) array A to zero   *
-    ! **********************************************************************
-    ! ..
+
+    implicit none
     ! .. Arguments ..
-    integer :: n
-    real (kind=dp) :: a(*)
+    integer, intent(in) :: n !! Number of entries to set to zero
+    real (kind=dp), dimension(*), intent(inout) :: a !! Array which entries will be set to zero
     ! ..
     ! .. Locals ..
     integer :: i, m, mp1
     real (kind=dp) :: dzero
     ! ..
     data dzero/0.0e0_dp/
-    ! ..
     ! ..
     m = mod(n, 5)
     if (m/=0) then

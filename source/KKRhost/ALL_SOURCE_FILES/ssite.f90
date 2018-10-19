@@ -1,34 +1,58 @@
+!------------------------------------------------------------------------------------
+!> Summary: Assign quantum numbers and call routine to solve 8 coupled differentail radial Dirac eqautions.
+!> Author: 
+!> Assign quantum numbers and call routine to solve 8 coupled differentail radial 
+!> Dirac eqautions. The resulting wavefunctions are used to calculate t-matrices in
+!> the \(\kappa-\mu\) representation.
+!> Calculation of the radial integrals:
+!> \begin{equation}
+!> \left[ G_1 G_2 + F_1 F_2\right]r^2 dr
+!> \end{equation}
+!> for `IHYPER <> 0`. Calculation of the hyperfine matrix elements.
+!------------------------------------------------------------------------------------
+!> @note
+!> 
+!> * Ryd-units are used throughout.
+!> * To save storage force `JG/JF` and `PR/QR` to share the same storage by 
+!> corresponding argument list in `CALL`.
+!> * 28/10/94 HE tidy up, `P`,`Q` used in `<DIRAC>` instead of `g`,`f`
+!> * 05/10/96 HE workspace for wavefunctions and matrices is allocated dynamically
+!> * 07/02/05 VP few changes connected to the calculation of orbital polarisation
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_ssite
 
 contains
 
-  subroutine ssite(iwrregwf, iwrirrwf, nfilcbwf, calcint, getirrsol, soctl, ctl, eryd, p, ihyper, iprint, ikm1lin, ikm2lin, nlq, nkmq, nlinq, nt, nkm, iqat, tsst, msst, tsstlin, &
-    dzz, dzj, szz, szj, ozz, ozj, bzz, bzj, qzz, qzj, tzz, tzj, vt, bt, at, zat, nucleus, r, drdi, r2drdi, jws, imt, ameopo, lopt, solver, cgc, ozzs, ozjs, nlmax, nqmax, linmax, &
-    nrmax, nmmax, ntmax, nkmmax, nkmpmax, nlamax)
-    ! ********************************************************************
-    ! *                                                                  *
-    ! * ASSIGN QUANTUM NUMBERS AND CALL ROUTINE TO SOLVE                 *
-    ! * 8 COUPLED PARTIAL DIFFERENTIAL RADIAL DIRAC EQUATIONS. THE       *
-    ! * RESULTING WAVEFUNCTIONS ARE USED TO CALCULATE T-MATRICES IN      *
-    ! * THE KAPPA-MU REPRESENTATION                                      *
-    ! *                                                                  *
-    ! * + CALCULATION OF THE RADIAL INTEGRALS                            *
-    ! *   [ G1*G2 + F1*F2 ] R**2 DR                                      *
-    ! *                                                                  *
-    ! * FOR IHYPER <> 0 :                                                *
-    ! * CALCULATION OF THE HYPERFINE MATRIX ELEMENTS                     *
-    ! *                                                                  *
-    ! * RYD-UNITS USED THROUGHOUT                                        *
-    ! *                                                                  *
-    ! * NOTE: to save storage force  JG/JF  and  PR/QR  to share the     *
-    ! *       same storage by corresponding argument list in CALL ....   *
-    ! *                                                                  *
-    ! * 28/10/94  HE  tidy up,  P,Q used in <DIRAC> instead of g,f       *
-    ! * 05/10/96  HE  workspace for wavefunctions and matrices           *
-    ! *               is allocated dynamically !!!                       *
-    ! * 07/02/05  VP  few changes connected to the calculation of orbital*
-    ! *               polarisation                                       *
-    ! ********************************************************************
+  !-------------------------------------------------------------------------------
+  !> Summary: Assign quantum numbers and call routine to solve 8 coupled differentail radial Dirac eqautions.
+  !> Author: 
+  !> Category: dirac, single-site, KKRhost
+  !> Deprecated: False 
+  !> Assign quantum numbers and call routine to solve 8 coupled differentail radial 
+  !> Dirac eqautions. The resulting wavefunctions are used to calculate t-matrices in
+  !> the \(\kappa-\mu\) representation.
+  !> Calculation of the radial integrals:
+  !> \begin{equation}
+  !> \left[ G_1 G_2 + F_1 F_2\right]r^2 dr
+  !> \end{equation}
+  !> for `IHYPER <> 0`. Calculation of the hyperfine matrix elements.
+  !-------------------------------------------------------------------------------
+  !> @note 
+  !>
+  !> * Ryd-units are used throughout.
+  !> * To save storage force `JG/JF` and `PR/QR` to share the same storage by 
+  !> corresponding argument list in `CALL`.
+  !> * 28/10/94 HE tidy up, `P`,`Q` used in `<DIRAC>` instead of `g`,`f`
+  !> * 05/10/96 HE workspace for wavefunctions and matrices is allocated dynamically
+  !> * 07/02/05 VP few changes connected to the calculation of orbital polarisation
+  !> @endnote
+  !-------------------------------------------------------------------------------
+  subroutine ssite(iwrregwf,iwrirrwf,nfilcbwf,calcint,getirrsol,soctl,ctl,eryd,p,   &
+    ihyper,iprint,ikm1lin,ikm2lin,nlq,nkmq,nlinq,nt,nkm,iqat,tsst,msst,tsstlin,dzz, &
+    dzj,szz,szj,ozz,ozj,bzz,bzj,qzz,qzj,tzz,tzj,vt,bt,at,zat,nucleus,r,drdi,r2drdi, &
+    jws,imt,ameopo,lopt,solver,cgc,ozzs,ozjs,nlmax,nqmax,linmax,nrmax,nmmax,ntmax,  &
+    nkmmax,nkmpmax,nlamax)
 
     use :: mod_datatypes, only: dp
     use :: mod_cinit
@@ -626,13 +650,18 @@ contains
 130 format (' IT=', i2, 2i3, a, 2x, 2e14.5, 2x, 2e14.5)
   end subroutine ssite
 
-  subroutine readwfun(nfil, it, l, mj, nsol, sreg, sirr, ikm1, kap1, ikm2, kap2, nt, nkm, zg, zf, jg, jf, jtop, nrmax)
+  !-------------------------------------------------------------------------------
+  !> Summary: Re-read the wave functions written by `<SSITE>` or `<CORE>`
+  !> Author: Who wrote this subroutine
+  !> Category: dirac, input-output, KKRhost
+  !> Deprecated: False 
+  !> Re-read the wave functions written by `<SSITE>` or `<CORE>`
+  !-------------------------------------------------------------------------------
+  subroutine readwfun(nfil,it,l,mj,nsol,sreg,sirr,ikm1,kap1,ikm2,kap2,nt,nkm,zg,zf, &
+    jg,jf,jtop,nrmax)
+
     use :: mod_datatypes, only: dp
-    ! ********************************************************************
-    ! *                                                                  *
-    ! *  reread the wave functions written by  <SSITE>  or  <CORE>       *
-    ! *                                                                  *
-    ! ********************************************************************
+
     implicit none
 
     ! Dummy arguments

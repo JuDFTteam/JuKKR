@@ -1,38 +1,46 @@
+!------------------------------------------------------------------------------------
+!> Summary: This is calculating the intra-atomic contibution of the potential in the case of an interface taking into account the bulk potential on the two sides.
+!> Author: 
+!> It uses the structure dependent matrices `AVMAD` which are calculated
+!> once in the subroutine `MADELUNG2D()` and saved in the DA-file `avmad.unformatted` ( May 2004)
+!>
+!> For each site in a layer the summation in all other layers is split
+!> into three parts: within the slab, over the `NLEFT*NLBASIS` left host
+!> sites and over the `NRIGHT*NRBASIS` right host sites, the last two
+!> steps only in case of decimation run
+!------------------------------------------------------------------------------------
+!> @note
+!> - Adapted for the case of more atoms on the same site, summation is
+!> done over the occupants of that site, the charge is weighted with
+!> the appropriate concentration of the occupant  V. Popescu feb. 2002
+!> @endnote
+!------------------------------------------------------------------------------------
 module mod_vinterface
 
 contains
 
-  ! -------------------------------------------------------------------------------
-  ! SUBROUTINE: VINTERFACE
-  !> @brief This is calculating the intra-atomic contibution of the potential
-  !in
-  !>  the case of an interface taking into account the bulk potential on
-  !>  the two sides.
-
-  !> @details It uses the structure dependent matrices AVMAD which are
-  !calculated
-  !>  once in the subroutine MADELUNG2D() and saved in the DA-file
-  !>  avmad.unformatted ( May 2004)
+  !-------------------------------------------------------------------------------
+  !> Summary: This is calculating the intra-atomic contibution of the potential in the case of an interface taking into account the bulk potential on the two sides.
+  !> Author: 
+  !> Category: potential, KKRhost 
+  !> Deprecated: False 
+  !> It uses the structure dependent matrices `AVMAD` which are calculated
+  !> once in the subroutine `MADELUNG2D()` and saved in the DA-file `avmad.unformatted` ( May 2004)
   !>
-  !>  For each site in a layer the summation in all other layers is split
-  !>  into three parts: within the slab, over the NLEFT*NLBASIS left host
-  !>  sites and over the NRIGHT*NRBASIS right host sites, the last two
-  !>  steps only in case of decimation run
-
+  !> For each site in a layer the summation in all other layers is split
+  !> into three parts: within the slab, over the `NLEFT*NLBASIS` left host
+  !> sites and over the `NRIGHT*NRBASIS` right host sites, the last two
+  !> steps only in case of decimation run
   !-------------------------------------------------------------------------------
   !> @note
   !> - Adapted for the case of more atoms on the same site, summation is
-  !>  done over the occupants of that site, the charge is weighted with
-  !>  the appropriate concentration of the occupant  V. Popescu feb. 2002
+  !> done over the occupants of that site, the charge is weighted with
+  !> the appropriate concentration of the occupant  V. Popescu feb. 2002
+  !> @endnote
   !-------------------------------------------------------------------------------
-  !>
-  !> - Impurity-program adopted feb. 2004 (according to N. Papanikalou)
-  !>
-  !> - Jonathan Chico Feb. 2018: Removed inc.p dependencies and rewrote to
-  ! Fortran90
-  ! -------------------------------------------------------------------------------
-  subroutine vinterface(cmom, cminst, lpot, nspin, nlayers, natyp, v, zat, r, irws, ircut, ipan, kshape, noq, kaoez, iqat, conc, catom, icc, hostimp, nlbasis, nleft, nrbasis, &
-    nright, cmomhost, chrgnt, vinters, naez, lmpot)
+  subroutine vinterface(cmom,cminst,lpot,nspin,nlayers,natyp,v,zat,r,irws,ircut,    &
+    ipan,kshape,noq,kaoez,iqat,conc,catom,icc,hostimp,nlbasis,nleft,nrbasis,nright, &
+    cmomhost,chrgnt,vinters,naez,lmpot)
 
     use :: mod_constants
     use :: global_variables
