@@ -144,6 +144,15 @@ if [[ ! -d tests/test_run19_mpi_2_4 ]]; then
 fi
 cd tests
 
+echo "###########################################"
+echo "run:intel:godfrin_20:"
+echo ""
+cd ../
+if [[ ! -d tests/test_run20_hybrid_1_3 ]]; then
+  tests/tools/run_test_20.sh
+fi
+cd tests
+
 
 #SOC tests
 

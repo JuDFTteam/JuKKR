@@ -133,7 +133,11 @@ contains
     complex (kind=dp), dimension (lmmaxd, lmmaxd, nrefd) :: dtrefll !! LLY Lloyd dtref/dE
     complex (kind=dp), dimension (lmmaxd, lmmaxd, naezd) :: dtmatll !! LLY Lloyd  dt/dE
     complex (kind=dp), dimension (lmmaxd*lmmaxd) :: gimp !!  Cluster GF (ref. syst.)
-    character (len=35), dimension (0:2), parameter :: invalg = [ 'FULL MATRIX                        ', 'BANDED MATRIX (slab)               ', 'BANDED + CORNERS MATRIX (supercell)' ]
+    character (len=35), dimension (0:3), parameter :: invalg = [ &
+      'FULL MATRIX                        ', &
+      'BANDED MATRIX (slab)               ', &
+      'BANDED + CORNERS MATRIX (supercell)', &
+      'GODFRIN: nonuniform block partition' ]
 
     ! .. Allocatable local arrays
     real (kind=dp), dimension (:, :), allocatable :: qvec !! qdos ruess, q-vectors for qdos
@@ -648,16 +652,12 @@ contains
 #ifdef CPP_TIMING
           call timing_start('main1b - kloopz')
 #endif
-          call kloopz1_qdos(eryd,gmatll,ins,alat,ie,igf,nshell,naez,nofks(nmesh),   &
-            volbz(nmesh),bzkp(1,1,nmesh),volcub(1,nmesh),cls,nacls,naclsmax,ncls,rr,&
-            rbasis,ezoa,atom,rcls,icc,ginp,ideci,lefttinvll(1,1,1,1,ie),            &
-            righttinvll(1,1,1,1,ie),vacflag,nlbasis,nrbasis,factl,natomimp,nsymat,  &
-            dsymll,ratom,rrot,nsh1,nsh2,ijtabsym,ijtabsh,icheck,invmod,refpot,      &
-            trefll,tsst,msst,cfctor,cfctorinv,crel,rc,rrel,srrel,irrel,nrrel,drotq, &
-            symunitary,kmrot,natyp,ncpa,icpa,itcpamax,cpatol,noq,iqat,itoq,conc,    &
-            iprint, icpaflag, ispin, nspindd, tqdos, iqdosrun,                      & ! qdos
-            dtrefll, dtmatll, dginp, lly_grtr(ie,ispin),                            & ! LLY Lloyd
-            tracet(ie,ispin), lly)                                                    ! LLY Lloyd
+          call kloopz1_qdos(eryd, gmatll, ins, alat, ie, igf, nshell, naez, nofks(nmesh), volbz(nmesh), bzkp(1,1,nmesh), volcub(1,nmesh), cls, nacls, naclsmax, ncls, rr, rbasis, &
+            ezoa, atom, rcls, icc, ginp, ideci, lefttinvll(1,1,1,1,ie), righttinvll(1,1,1,1,ie), vacflag, nlbasis, nrbasis, factl, natomimp, nsymat, dsymll, ratom, rrot, nsh1, &
+            nsh2, ijtabsym, ijtabsh, icheck, invmod, refpot, trefll, tsst, msst, cfctor, cfctorinv, crel, rc, rrel, srrel, irrel, nrrel, drotq, symunitary, kmrot, natyp, ncpa, &
+            icpa, itcpamax, cpatol, noq, iqat, itoq, conc, iprint, icpaflag, ispin, nspindd, tqdos, iqdosrun, & ! qdos
+            dtrefll, dtmatll, dginp, lly_grtr(ie,ispin), & ! LLY Lloyd
+            tracet(ie,ispin), lly) ! LLY Lloyd
 
 #ifdef CPP_TIMING
           call timing_pause('main1b - kloopz')

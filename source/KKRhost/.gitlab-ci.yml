@@ -357,15 +357,15 @@ run:intel:decimate_19:
     expire_in: 1 day
 
 # godfrin not properly working yet!
-#run:intel:godfrin_20:
-#  stage: run_features
-#  script:
-#    - tests/tools/run_test_20.sh
-#  artifacts:
-#    paths:
-#      - tests/test_run*
-#      - build/*dyn
-#    expire_in: 1 day
+run:intel:godfrin_20:
+  stage: run_features
+  script:
+    - tests/tools/run_test_20.sh
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
 
 # other missing tests:
 # . LDA+U

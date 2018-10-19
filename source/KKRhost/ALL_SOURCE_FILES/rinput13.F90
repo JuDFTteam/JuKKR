@@ -2456,7 +2456,7 @@ contains
       write (111, *) 'Godfrin inversion scheme parameters'
       write (1337, *) 'Godfrin inversion scheme parameters'
 
-      t_godfrin%na = naezd
+      t_godfrin%na = naez
       call ioinput('GODFRIN         ', uio, 2, 7, ier)
       if (ier/=0) stop 'RINPUT: GODFRIN not found!'
       read (unit=uio, fmt=*) t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
@@ -2467,6 +2467,7 @@ contains
 
       ! Inconsistency check
       if (t_godfrin%na/=sum(t_godfrin%bdims)) stop 'godfrin: na /= sum(bdims)'
+
 #ifndef __INTEL_COMPILER
       ! can only use pardiso solver with intel mkl at the moment, probably only
       ! a linking issue that should be solved in the future
