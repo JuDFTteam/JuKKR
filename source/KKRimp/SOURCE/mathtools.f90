@@ -1,5 +1,16 @@
+!------------------------------------------------------------------------------------
+!> Summary: Math tools collection
+!> Author: 
+!> 
+!------------------------------------------------------------------------------------
 module mod_mathtools
 contains
+   !-------------------------------------------------------------------------------
+   !> Summary: Inverts a matrix mat of size nmat x nmat
+   !> Author: 
+   !> Category: KKRimp, numerical-tools
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !-------------------------------------------------------------------------------
 subroutine inverse(nmat,mat)
 ! inverts a matrix mat of size nmat x nmat
 !interface
@@ -16,8 +27,13 @@ call ZGETRI( nmat, mat, nmat, IPIV, WORK, nmat*nmat, INFO )
 if (info/=0) stop '[inverse] error INFO' 
 end subroutine inverse
 
+   !-------------------------------------------------------------------------------
+   !> Summary: Transposes a matrix mat of size nmat x nmat
+   !> Author: 
+   !> Category: KKRimp, numerical-tools
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !-------------------------------------------------------------------------------
 subroutine transpose(mat)
-! transpose a matrix mat of size nmat x nmat
  implicit none
   double complex mat(:,:)
   double complex temp
@@ -35,8 +51,13 @@ do idim1=1,ndim1
 end do
 end subroutine transpose
 
+   !-------------------------------------------------------------------------------
+   !> Summary: Transposes a matrix mat of size nmat x nmat - double precision
+   !> Author: 
+   !> Category: KKRimp, numerical-tools
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !-------------------------------------------------------------------------------
 subroutine transpose_dm(mat)
-! inverts a matrix mat of size nmat x nmat - double precision
  implicit none
   double precision mat(:,:)
   double precision temp
@@ -54,6 +75,12 @@ do idim1=1,ndim1
 end do
 end subroutine transpose_dm
 
+   !-------------------------------------------------------------------------------
+   !> Summary: Conjugates a 2-dim matrix mat
+   !> Author: 
+   !> Category: KKRimp, numerical-tools
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !-------------------------------------------------------------------------------
 subroutine conjugate2(mat)
  implicit none
   double complex mat(:,:)
@@ -70,6 +97,12 @@ end do
 
 end subroutine conjugate2
 
+   !-------------------------------------------------------------------------------
+   !> Summary: Conjugates a 3-dim matrix mat
+   !> Author: 
+   !> Category: KKRimp, numerical-tools
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !-------------------------------------------------------------------------------
 subroutine conjugate3(mat)
  implicit none
   double complex mat(:,:,:)
@@ -90,6 +123,12 @@ end do
 
 end subroutine conjugate3
 
+   !-------------------------------------------------------------------------------
+   !> Summary: Conjugates a 4-dim matrix mat
+   !> Author: 
+   !> Category: KKRimp, numerical-tools
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !-------------------------------------------------------------------------------
 subroutine conjugate4(mat)
  implicit none
   double complex mat(:,:,:,:)
@@ -114,6 +153,12 @@ end do
 end subroutine conjugate4
 
 
+   !-------------------------------------------------------------------------------
+   !> Summary: Solves the system of linear equations
+   !> Author: 
+   !> Category: KKRimp, numerical-tools
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !-------------------------------------------------------------------------------
 subroutine linearsolve_dc(Amat,bmat)!,ndim,lmgf0d,ngd)
   use nrtype
   implicit none
@@ -150,6 +195,12 @@ call zgetrs('n',nrow,ncol,Amat,nrow,temp,bmat,nrow,info)
 
 end subroutine
 
+   !-------------------------------------------------------------------------------
+   !> Summary: Solves the system of linear equations
+   !> Author: 
+   !> Category: KKRimp, numerical-tools
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !-------------------------------------------------------------------------------
 subroutine linearsolve2_dc(Amat,bmat,cmat)!,ndim,lmgf0d,ngd)
   use nrtype
   implicit none
@@ -198,6 +249,12 @@ end subroutine
 
 
 
+   !-------------------------------------------------------------------------------
+   !> Summary: Multiplies matrices mat1 and mat2 with zgemm: N N
+   !> Author: 
+   !> Category: KKRimp, numerical-tools
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !-------------------------------------------------------------------------------
       function matmat(mat1,mat2)
       implicit none
       double complex, intent(in) :: mat1(:,:),mat2(:,:)
@@ -210,6 +267,12 @@ end subroutine
       call zgemm('N','N',n1,n2,n,(1d0,0d0),mat1,n1,mat2,n,(0d0,0d0),matmat,n1)
       end function matmat
 
+   !-------------------------------------------------------------------------------
+   !> Summary: Multiplies matrices mat1 and mat2 with zgemm: N T
+   !> Author: 
+   !> Category: KKRimp, numerical-tools
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !-------------------------------------------------------------------------------
       function matmat1T(mat1,mat2)
       implicit none
       complex(8), intent(in) :: mat1(:,:),mat2(:,:)
@@ -223,6 +286,12 @@ end subroutine
       call zgemm('N','T',n11,n21,n12,(1d0,0d0),mat1,n11,mat2,n11,(0d0,0d0),matmat1T,n21)
       end function matmat1T
 
+   !-------------------------------------------------------------------------------
+   !> Summary: Multiplies matrices mat1 and mat2 with zgemm: T N
+   !> Author: 
+   !> Category: KKRimp, numerical-tools
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !-------------------------------------------------------------------------------
       function matmatT1(mat1,mat2)
       implicit none
       double complex, intent(in) :: mat1(:,:),mat2(:,:)
@@ -236,6 +305,12 @@ end subroutine
       call zgemm('T','N',n12,n22,n11,(1d0,0d0),mat1,n11,mat2,n21,(0d0,0d0),matmatT1,n22)
       end function matmatT1
 
+   !-------------------------------------------------------------------------------
+   !> Summary: Multiplies matrices mat1 and mat2 with dgemm: N N
+   !> Author: 
+   !> Category: KKRimp, numerical-tools
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !-------------------------------------------------------------------------------
       function matmat_dmdm(mat1,mat2)
       implicit none
       double precision, intent(in) :: mat1(:,:),mat2(:,:)
@@ -248,6 +323,12 @@ end subroutine
       call dgemm('N','N',n1,n2,n,(1d0,0d0),mat1,n1,mat2,n,(0d0,0d0),matmat_dmdm,n1)
       end function matmat_dmdm
 
+   !-------------------------------------------------------------------------------
+   !> Summary: Multiplies matrices mat1 and mat2 with dgemm: N T
+   !> Author: 
+   !> Category: KKRimp, numerical-tools
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !-------------------------------------------------------------------------------
       function matmat1T_dmdm(mat1,mat2)
       implicit none
       double precision, intent(in) :: mat1(:,:),mat2(:,:)
@@ -261,6 +342,12 @@ end subroutine
       call dgemm('N','T',n11,n21,n12,(1d0,0d0),mat1,n11,mat2,n11,(0d0,0d0),matmat1T_dmdm,n21)
       end function matmat1T_dmdm
 
+   !-------------------------------------------------------------------------------
+   !> Summary: Multiplies matrices mat1 and mat2 with dgemm: T N
+   !> Author: 
+   !> Category: KKRimp, numerical-tools
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !-------------------------------------------------------------------------------
       function matmatT1_dmdm(mat1,mat2)
       implicit none
       double precision, intent(in) :: mat1(:,:),mat2(:,:)
@@ -275,6 +362,12 @@ end subroutine
       end function matmatT1_dmdm
 
 
+   !-------------------------------------------------------------------------------
+   !> Summary: Multiplies matrix mat1 and vector vec1 with dgemv: N
+   !> Author: 
+   !> Category: KKRimp, numerical-tools
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !-------------------------------------------------------------------------------
       function matvec_dmdm(mat1,vec1)
       implicit none
       real(8), intent(in) :: mat1(:,:),vec1(:)
@@ -289,6 +382,12 @@ end subroutine
       end function matvec_dmdm
 
 
+   !-------------------------------------------------------------------------------
+   !> Summary: Multiplies matrix mat1 and vector vec1 with zgemv: N
+   !> Author: 
+   !> Category: KKRimp, numerical-tools
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !-------------------------------------------------------------------------------
       function matvec_dzdz(mat1,vec1)
       implicit none
       double complex, intent(in) :: mat1(:,:),vec1(:)
@@ -305,6 +404,12 @@ end subroutine
 
 
 
+   !-------------------------------------------------------------------------------
+   !> Summary: Cross product of 2 vectors
+   !> Author: 
+   !> Category: KKRimp, numerical-tools
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !-------------------------------------------------------------------------------
 function cross(a,b) result(axb)
  
 implicit none
@@ -322,6 +427,12 @@ end function cross
 
 
 
+   !-------------------------------------------------------------------------------
+   !> Summary: Rotates vector m2 by theta1 and phi1 angles
+   !> Author: 
+   !> Category: KKRimp, numerical-tools
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !-------------------------------------------------------------------------------
 function  rotvector(theta1,phi1,m2,fac1)
 implicit none
 real(kind=8) theta1,phi1

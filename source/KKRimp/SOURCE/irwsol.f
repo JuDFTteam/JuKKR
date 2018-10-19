@@ -1,24 +1,34 @@
       MODULE mod_IRWSOL
       CONTAINS
+   !-------------------------------------------------------------------------------
+   !> Summary: Calculates the irregular solution of the Schroedinger equation
+   !> Author: B. Drittler Nov 1989
+   !> Category: KKRimp, single-site
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !> 
+   !>  calculates the irregular solution of the schroedinger equation or
+   !>    in semi relativistic approximation for a spherically averaged
+   !>    potential and given energy . to achieve greater precision the
+   !>    leading power r**-s ( in schroedinger case s = l , in case of sra
+   !>    s = sqrt( (l*l+l-1) - 4*z*z/c/c ) ) is analytically separated
+   !>    from the wavefunction .
+   !>
+   !>  the differential equation is solved with a 5 point adams - bashforth
+   !>    and adams - moulton predictor corrector method integrating
+   !>    inwards and extended for potentials with kinks
+   !-------------------------------------------------------------------------------
+   !> @note Notes on the code
+   !> @endnote
+   !> @todo things that must be checked
+   !> @endtodo
+   !> @warning Important precautions
+   !> @endwarning
+   !> @bug If nasty things are found
+   !> @endbug
+   !-------------------------------------------------------------------------------
       SUBROUTINE IRWSOL(EK,FZ,HAMF,MASS,PZ,QZ,SZ,DROR,S,IPAN,IRCUT,
      +                    IRMD,IPAND,LMAXATOM)
       IMPLICIT NONE
-c-----------------------------------------------------------------------
-c  calculates the irregular solution of the schroedinger equation or
-c    in semi relativistic approximation for a spherically averaged
-c    potential and given energy . to achieve greater precision the
-c    leading power r**-s ( in schroedinger case s = l , in case of sra
-c    s = sqrt( (l*l+l-1) - 4*z*z/c/c ) ) is analytically separated
-c    from the wavefunction .
-c
-c
-c  the differential equation is solved with a 5 point adams - bashforth
-c    and adams - moulton predictor corrector method integrating
-c    inwards and extended for potentials with kinks
-c
-c
-c                                               b.drittler   nov.1989
-c-----------------------------------------------------------------------
 C     .. Scalar Arguments ..
       DOUBLE COMPLEX EK
       INTEGER IPAN,IPAND,IRMD,LMAXATOM

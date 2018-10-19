@@ -1,6 +1,22 @@
 module mod_mpienergy
 contains
 
+   !-------------------------------------------------------------------------------
+   !> Summary: Tries to distribute the energy points equally to all processors
+   !> Author:
+   !> Category: KKRimp, communication (mpi)
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !>
+   !-------------------------------------------------------------------------------
+   !> @note Notes on the code
+   !> @endnote
+   !> @todo things that must be checked
+   !> @endtodo
+   !> @warning Important precautions
+   !> @endwarning
+   !> @bug If nasty things are found
+   !> @endbug
+   !-------------------------------------------------------------------------------
 subroutine mpienergy_distribute(myrank,numbproc,ielast,mpi_iebounds)
 ! ##############################################################
 ! This routine tries to distribute the energy points equally
