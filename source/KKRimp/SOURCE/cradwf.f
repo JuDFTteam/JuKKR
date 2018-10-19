@@ -1,5 +1,34 @@
+!-------------------------------------------------------------------------------
+!> Summary: Calculate radial wave functions of spherical potentials
+!> Author: B. Drittler 
+!> Date: Nov. 1987
+!>
+!> Subroutine for radial wave functions of spherical potentials
+!>
+!> The generalized phase shifts are calculated by a wronski relation:
+!>
+!> \begin{equation}
+!> \alpha\left(z,l\right)=-\sqrt{z}\ W\left(h_l(r,z),r_l(r,z)\right), \ 
+!> r \rightarrow 0
+!> \end{equation}
+!>
+!> where \(h_l\) is the free hankel function and \(r_l\) the regular
+!> solution. Using the analytical behaviour of \(r_l\) at the
+!> origin \(\left(r_l = \alpha_l * r^{l+1}  ; r \rightarrow 0\right)\),
+!> the generalized phase shifts can be calculated
+!> directly with the renormalization \(\alpha_l\).
+!>
+!> LDA+U added, March 2003 - Dec 2004, Munich/Juelich
+!-------------------------------------------------------------------------------
       MODULE mod_cradwf
       CONTAINS
+!-------------------------------------------------------------------------------
+!> Summary: Calculate the radial wave functions of spherical potentials
+!> Author: B. Drittler 
+!> Date: Nov. 1987
+!> Category: KKRimp, 
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
       SUBROUTINE CRADWF(E,EK,NSRA,ALPHA,NPAN,NRCUT,CVLIGHT,RS,S,PZ,FZ,
      +                  QZ,SZ,TMAT,VM2Z,DRDI,R,Z,LIRRSOL,IDOLDAU,LOPT,
      +                  WLDAUAV,CUTOFF,LMAXATOM,LMAXP1,NRMAX)
@@ -7,23 +36,6 @@
       USE mod_beshan
       USE mod_irwsol
       IMPLICIT NONE
-c-----------------------------------------------------------------------
-c  subroutine for radial wave functions of spherical potentials
-c
-c             the generalized phase shifts are calculated by
-c             a wronski relation :
-c
-c                 alpha(z,l) =-sqrt(z)*wronski{hl(r;z),rl(r;z)}; r->0
-c
-c             where hl is the free hankel function and rl the regular
-c             solution . Using the analytical behaviour of rl at the
-c             origin (rl = alphal * r**(l+1)  ; r->0),
-c             the generalized phase shifts can be calculated
-c             directly with the renormalization alphal .
-c                                           b.drittler nov.1987
-c
-c   LDA+U added, March 2003 - Dec 2004, Munich/Juelich
-c-----------------------------------------------------------------------
 C     .. Parameters ..
 !       INCLUDE 'inc.p'
       INTEGER LMAXATOM

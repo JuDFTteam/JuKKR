@@ -1,6 +1,16 @@
+!-------------------------------------------------------------------------------
+!> Summary: Generate the cluster around each atom
+!> Author: 
+!> Deprecated: True ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 module mod_clsgenimp
 contains
-! c **********************************************************************
+!-------------------------------------------------------------------------------
+!> Summary: Generate the cluster around each atom
+!> Author: 
+!> Category: KKRimp, geometry, deprecated
+!> Deprecated: True ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
       subroutine clsgen(natom,rr,nr,rmt,tbcluster,lmaxatom,lmaxd) !,naclsd,nclsd)
       use configparams, only: naclsd, nclsd,rcut
       use nrtype
@@ -9,10 +19,10 @@ contains
       use type_tbcluster
       implicit none
 !interface variables
-  integer,intent(in)             ::    natom                  ! number of impurity atoms
-  real(kind=dp),intent(in)       ::    rr(3,nr)               ! real space impurity and surrounding atoms
-  integer,intent(in)             ::    nr                     ! number of impurity and surrounding atoms rr
-  real(kind=dp),intent(in)       ::    rmt(nr)                ! muffin tin radius of atoms
+  integer,intent(in)             ::    natom                  !! number of impurity atoms
+  real(kind=dp),intent(in)       ::    rr(3,nr)               !! real space impurity and surrounding atoms
+  integer,intent(in)             ::    nr                     !! number of impurity and surrounding atoms rr
+  real(kind=dp),intent(in)       ::    rmt(nr)                !! muffin tin radius of atoms
   type(tbcluster_type)           ::    tbcluster
   integer,intent(in)             ::    lmaxatom(nr)
   integer,intent(in)             ::    lmaxd
@@ -32,8 +42,8 @@ contains
   integer                        ::    tb_iatom2index(naclsd)
   integer                        ::    tb_nclsgf
 
-  real(kind=dp)                  ::    rcls_sorted(3,naclsd) !(:,:,:natom)       ! real space position of atom in cluster
-  integer                        ::    atom_sorted(naclsd,nr) !(naclsd,nr)           ! ??????????
+  real(kind=dp)                  ::    rcls_sorted(3,naclsd) !(:,:,:natom)       !! real space position of atom in cluster
+  integer                        ::    atom_sorted(naclsd,nr) !(naclsd,nr)       !! ??????????
   real(kind=dp)                  ::    cluster_rcls_sorted(3,naclsd,natom)
 
 allocate(tbcluster%rcls(3,naclsd,natom), tbcluster%cls(natom), &
