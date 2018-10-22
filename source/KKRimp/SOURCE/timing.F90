@@ -30,7 +30,7 @@ contains
   subroutine timing_init(my_rank)
     use mod_version_info
     implicit none
-    integer  :: my_rank ,intent(in)	!! MPI rank
+    integer  ,intent(in):: my_rank 	!! MPI rank
     character(len=3) :: ctemp		!! temporary variable to store the rank
     if (init/=0) stop '[mod_timing] timing already initilized'
     write(ctemp,'(I03.3)') my_rank
