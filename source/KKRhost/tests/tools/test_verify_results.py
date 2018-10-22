@@ -248,15 +248,22 @@ class Test_features():
         path00 = 'test_run20_hybrid_1_3'
         # first check the two runs individually
         path = path00+'/godfrinON/'
-        standard_verify(path) #, rms_threshold=9*10**-8, rms_threshold_end=9*10**-8)
-        # test deactivated for the moment
-        #path0 = path00+'/godfrinOFF/'
-        #standard_verify(path0) #, rms_threshold=9*10**-8, rms_threshold_end=9*10**-8)
-        ## then check if output is the same for the two runs
-        #fname = 'output.000.txt'
-        #num, text = read_file(path+fname)
-        #num_ref, text_ref = read_file(path0+fname)
-        #assert std(num-num_ref)<10**-14
+        standard_verify(path, rms_threshold=9*10**-8, rms_threshold_end=9*10**-8)
+        # then check no godfrin run
+        path0 = path00+'/godfrinOFF/'
+        standard_verify(path0, rms_threshold=9*10**-8, rms_threshold_end=9*10**-8)
+        # and full inv run
+        path00 = path00+'/fullinv/'
+        standard_verify(path00, rms_threshold=9*10**-8, rms_threshold_end=9*10**-8)
+        # then check if output is the same for the three runs
+        fname = 'output.000.txt'
+        num, text = read_file(path+fname)
+        # check against no godfrin
+        num_ref, text_ref = read_file(path0+fname)
+        assert std(num-num_ref)<10**-14
+        # check against full inv
+        num_ref, text_ref = read_file(path00+fname)
+        assert std(num-num_ref)<10**-14
     #"""
 
 

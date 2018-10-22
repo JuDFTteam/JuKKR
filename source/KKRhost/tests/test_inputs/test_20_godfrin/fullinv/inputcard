@@ -8,7 +8,7 @@
    * * *   R U N N I N G   &   T E S T I N G   O P T I O N S   * * *
 ================================================================================
 RUNOPT
-ewald2d 
+ewald2d full inv
 +-------+-------+-------+-------+-------+
       ***test options*** (2 lines)
 TESTOPT
