@@ -1,3 +1,10 @@
+!------------------------------------------------------------------------------------
+!> Summary: Gaunt shape type
+!> Author: 
+!> Category: KKRimp, special-functions
+!> Deprecated: False 
+!> Contains information 
+!------------------------------------------------------------------------------------
 module type_gauntshape
 use nrtype
   type                               :: gauntshape_type
