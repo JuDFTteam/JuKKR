@@ -651,7 +651,7 @@ contains
   end function fvq
 
   function fvnec(a, x, xl, x0, xl0, b, q)
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     implicit none
     real (kind=dp) :: fvnec
     real (kind=dp), intent (in) :: a, x, xl, x0, xl0, b, q

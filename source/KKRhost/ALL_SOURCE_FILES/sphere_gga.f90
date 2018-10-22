@@ -26,10 +26,10 @@ contains
   subroutine sphere_gga(lmax,yr,wtyr,rij,ijd,lmmaxd,thet,ylm,dylmt1,dylmt2,dylmf1,  &
     dylmf2,dylmtf)
 
-    use :: mod_datatypes
-    use :: mod_lebedev
-    use :: mod_ymy
-    use :: mod_rinit
+    use :: mod_datatypes, only: dp
+    use :: mod_lebedev, only: lebedev
+    use :: mod_ymy, only: ymy
+    use :: mod_rinit, only: rinit
     use :: mod_constants, only: pi
     implicit none
 
@@ -163,8 +163,8 @@ contains
   !-------------------------------------------------------------------------------
   subroutine derivylm(v1, v2, v3, lmax, rabs, ylm, dydth, dydfi, d2ydth2, d2ydfi2, d2ydthdfi)
 
-    use :: mod_datatypes
-    use :: mod_rinit
+    use :: mod_datatypes, only: dp
+    use :: mod_rinit, only: rinit
     use :: mod_constants, only: pi
     implicit none
     ! Parameters:

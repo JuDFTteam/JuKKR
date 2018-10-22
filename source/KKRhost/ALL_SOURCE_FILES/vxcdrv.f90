@@ -23,13 +23,12 @@ contains
   subroutine vxcdrv(exc,kte,kxc,lpot,nspin,nstart,nend,rho2ns,vons,r,drdi,a,irws,   &
     ircut,ipan,ntcell,kshape,gsh,ilm,imaxsh,ifunm,thetas,lmsp)
 
-    use :: global_variables
-
+    use :: global_variables, only: lmpotd, ngshd, ipand, natypd, irmd, irid, nfund, lmxspd, krel, lpotd
     use :: mod_datatypes, only: dp
-    use :: mod_sphere_nogga
-    use :: mod_sphere_gga
-    use :: mod_vxcgga
-    use :: mod_vxclm
+    use :: mod_sphere_nogga, only: sphere_nogga 
+    use :: mod_sphere_gga, only: sphere_gga
+    use :: mod_vxcgga, only: vxcgga
+    use :: mod_vxclm, only: vxclm
     implicit none
     ! Parameters ..
     integer :: ijd 

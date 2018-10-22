@@ -307,7 +307,7 @@ contains
     ! Determine new Fermi level due to valence charge up to old Fermi level
     ! EMAX and density of states DENEF
     ! -------------------------------------------------------------------------
-    if (itscf>1 .and. chrgnt*chrgold<0.d0 .and. abs(chrgnt)>5.d-2) then
+    if (itscf>1 .and. chrgnt*chrgold<0.0_dp .and. abs(chrgnt)>5.d-2) then
       e2shift = chrgnt/(chrgnt-chrgold)*(emax-efold)
     else
       e2shift = chrgnt/denef
@@ -318,7 +318,7 @@ contains
     chrgold = chrgnt
     if (test('no-neutr') .or. opt('no-neutr')) then
       write (1337, *) 'test-opt no-neutr: Setting FERMI level shift to zero'
-      e2shift = 0.d0
+      e2shift = 0.0_dp
     end if
     if (test('slow-neu') .or. opt('slow-neu')) then
       write (1337, *) 'test-opt slow-neu: FERMI level shift * STRMIX'
@@ -427,9 +427,9 @@ contains
         irmd)
     end if
 
-    cminst(:, :) = 0.d0
-    cmom(:, :) = 0.d0
-    vons(:, :, :) = 0.d0
+    cminst(:, :) = 0.0_dp
+    cmom(:, :) = 0.0_dp
+    vons(:, :, :) = 0.0_dp
     call vintras(cmom, cminst, lpot, nspin, 1, natyp, rho2ns, vons, rmesh, drdi, irws, &
       ircut, ipan, kshape, ntcell, ilm_map, ifunm, imaxsh, gsh, thetas, lmsp, lmpot, natyp)
 
@@ -466,7 +466,7 @@ contains
     ! -------------------------------------------------------------------------
     ! fivos      END IF
     ! -------------------------------------------------------------------------
-    if (test('Vspher  ')) vons(1:irmd, 2:lmpot, 1:npotd) = 0.d0
+    if (test('Vspher  ')) vons(1:irmd, 2:lmpot, 1:npotd) = 0.0_dp
     if (test('vpotout ')) then     ! bauer
       open (unit=54633163, file='test_vpotout_inter')
       do i1 = 1, natyp*nspin
@@ -539,22 +539,23 @@ contains
     ! -------------------------------------------------------------------------
     ! End of calculation of the energy
     ! -------------------------------------------------------------------------
-    vxcm(:, :, :) = 0.d0
+    vxcm(:, :, :) = 0.0_dp
+    exc(:, :) = 0.0_dp
     call vxcdrv(exc, kte, kxc, lpot, nspin, 1, natyp, rho2ns, vxcm, rmesh, drdi, a, &
       irws, ircut, ipan, ntcell, kshape, gsh, ilm_map, imaxsh, ifunm, thetas, lmsp)
 
-    if (test('Vspher  ')) vons(1:irmd, 2:lmpot, 1:npotd) = 0.d0
+    if (test('Vspher  ')) vons(1:irmd, 2:lmpot, 1:npotd) = 0.0_dp
 
     ! Recalculate XC-potential with zero spin density for magn. moment scaling
-    vxcnm(:, :, :) = 0.d0          ! Initialize
-    excnm(:, :) = 0.d0
-    if (abs(lambda_xc-1.d0)>eps .and. nspin==2) then
+    vxcnm(:, :, :) = 0.0_dp          ! Initialize
+    excnm(:, :) = 0.0_dp
+    if (abs(lambda_xc-1.0_dp)>eps .and. nspin==2) then
       rho2nsnm(:, :, :, 1) = rho2ns(:, :, :, 1) ! Copy charge density
-      rho2nsnm(:, :, :, 2) = 0.d0  ! Set spin density to zero
+      rho2nsnm(:, :, :, 2) = 0.0_dp  ! Set spin density to zero
       call vxcdrv(excnm, kte, kxc, lpot, nspin, 1, natyp, rho2nsnm, vxcnm, rmesh, drdi, &
         a, irws, ircut, ipan, ntcell, kshape, gsh, ilm_map, imaxsh, ifunm, thetas, lmsp)
       ! Compute the EXC-difference
-      excdiff = 0.d0
+      excdiff = 0.0_dp
       do i1 = 1, natyp
         do lm = 0, lpot
           excdiff = excdiff + exc(lm, i1) - excnm(lm, i1)
@@ -564,8 +565,8 @@ contains
     end if
 
     ! Add xc-potential with magn. part weighted by lambda_xc
-    vons(:, :, :) = vons(:, :, :) + lambda_xc*vxcm(:, :, :) + (1.d0-lambda_xc)*vxcnm(:, :, :)
-    exc(:, :) = lambda_xc*exc(:, :) + (1.d0-lambda_xc)*excnm(:, :)
+    vons(:, :, :) = vons(:, :, :) + lambda_xc*vxcm(:, :, :) + (1.0_dp-lambda_xc)*vxcnm(:, :, :)
+    exc(:, :) = lambda_xc*exc(:, :) + (1.0_dp-lambda_xc)*excnm(:, :)
 
 
     if (test('vpotout ')) then     ! bauer
@@ -596,7 +597,7 @@ contains
       ! OPEN (67,FILE='vmtzero_init',FORM='formatted')                 ! fxf
       ! READ (67,*) VMT_INIT(1)                                        ! fxf
       ! CLOSE(67)                                                      ! fxf
-      vmt_init(1) = 0.d0
+      vmt_init(1) = 0.0_dp
       vmt_init(2) = vmt_init(1)    ! read initial muffin-tin zero                ! fxf
       ! vmt_init is needed as a common reference for potential mixing if more
       ! iterations are to be remembered, e.g., in Anderson mixing.
@@ -686,7 +687,7 @@ contains
         do lm = 1, lmpot
           if (lm/=1 .and. lm/=11 .and. lm/=21 .and. lm/=25 .and. lm/=43 .and. lm/=47) then
             do i = 1, irmd
-              vons(i, lm, ipot) = 0.d0
+              vons(i, lm, ipot) = 0.0_dp
             end do
           end if
         end do
@@ -742,7 +743,7 @@ contains
         do ilm_mapp = 1, lmpot
           do ipos = 1, irmd
             if (ilm_mapp/=1) then
-              vons(ipos, ilm_mapp, ias) = 0.d0
+              vons(ipos, ilm_mapp, ias) = 0.0_dp
             end if
           end do
         end do
@@ -887,7 +888,7 @@ contains
         npol, npnt1, npnt2, npnt3, ebotsemi, emusemi, tksemi, npolsemi, n1semi, n2semi, &
         n3semi, iemxd)
       do ie = 1, ielast
-        wez(ie) = -2.d0/pi*dez(ie)
+        wez(ie) = -2.0_dp/pi*dez(ie)
         if (ie<=iesemicore) wez(ie) = wez(ie)*fsemicore
       end do
       write (1337, '(79("="))')

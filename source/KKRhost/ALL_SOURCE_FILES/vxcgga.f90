@@ -65,12 +65,12 @@ contains
     dylmf1,dylmf2,dylmtf)
 
     use :: mod_datatypes, only: dp
-    use :: global_variables
-    use :: mod_mkxcpe2
-    use :: mod_mkxcpe
-    use :: mod_gradrl
-    use :: mod_simpk
-    use :: mod_simp3
+    use :: global_variables, only: lmxspd, ipand, lmpotd, irmd, ngshd, krel, irid, nfund, lpotd
+    use :: mod_mkxcpe, only: mkxcpe
+    use :: mod_mkxcpe2, only: mkxcpe2
+    use :: mod_gradrl, only:gradrl
+    use :: mod_simpk, only: simpk
+    use :: mod_simp3, only: simp3
     use :: mod_constants, only: pi
     implicit none
 
@@ -105,11 +105,10 @@ contains
     real (kind=dp), dimension(irmd, lmpotd, 2), intent(in) :: rho2ns !! radial density 
     real (kind=dp), dimension(0:lpotd, *), intent(inout) :: exc !! xc-energy
     real (kind=dp), dimension(irmd, lmpotd, 2), intent(inout) :: v
-
     ! Local Scalars ..
+    real (kind=dp), parameter :: zero = 0.0_dp, zero1=1.0e-12_dp
     integer :: ifun,ipan1,ipot,ir,irc0,irc1,irh,irs1,ispin,j,l,l1max,lm,lm2,lmmax,m,mesh,nspin2
-    real (kind=dp) :: chgden,dx,elmxc,fpi,r1,r2,rpoint,spiden,vlmxc,vxc1,vxc2,vxc3,zero,zero1
-
+    real (kind=dp) :: chgden,dx,elmxc,fpi,r1,r2,rpoint,spiden,vlmxc,vxc1,vxc2,vxc3
     ! Local Arrays ..
     real (kind=dp), dimension(ijend)            :: excij
     real (kind=dp), dimension(irmd, 0:lpotd)    :: er
@@ -123,13 +122,10 @@ contains
     real (kind=dp), dimension(irmd, lmpotd)     :: ddrrul
     real (kind=dp), dimension(irmd, 2, lmpotd)  :: rhol
     ! External Functions ..
-    real (kind=dp) :: ddot
-    external :: ddot
+    real (kind=dp), external :: ddot
 
-    ! Data statements ..
-    data zero, zero1/0.d0, 1.d-12/
-
-    write (1337, fmt=*) ' GGA CALCULATION '
+    !write (1337, fmt=*) ' GGA CALCULATION '
+      WRITE (1337,FMT=*) ' GGA CALCULATION ',irmd,ijend,lmpotd,lpotd
     fpi = 4.0_dp*pi
     lmmax = (lmax+1)*(lmax+1)
 

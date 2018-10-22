@@ -121,8 +121,7 @@ contains
 
         end if
         ! 19.5.99   Nikos
-      end do                       ! This way it is compatible with old kkr
-      ! and tb-kkr
+      end do                       ! This way it is compatible with old kkr and tb-kkr
       if (nspin==1) then
         vav1(2) = vav1(1)
         vol1(2) = vol1(1)

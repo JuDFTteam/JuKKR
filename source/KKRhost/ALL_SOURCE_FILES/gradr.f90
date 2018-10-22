@@ -31,8 +31,7 @@ contains
     integer :: i, i1, i2, i3, i4, i5, i6, igd, ist, j, ndvpt, nred
     ! ..
     ! .. Statement Functions ..
-    real (kind=dp) :: f131, f132, f133, f141, f142, f143, f144, f151, f152, f153, f154, f155, f161, f162, f163, f164, f165, f166, f231, f232, f233, f241, f242, f243, f244, f251, &
-      f252, f253, f254, f255, f261, f262, f263, f264, f265, f266
+    real (kind=dp) :: f131, f132, f133, f141, f142, f143, f144, f151, f152, f153, f154, f155, f161, f162, f163, f164, f165, f166, f231, f232, f233, f241, f242, f243, f244, f251, f252, f253, f254, f255, f261, f262, f263, f264, f265, f266
     ! ..
     ! .. Intrinsic Functions ..
     intrinsic :: real
@@ -51,13 +50,13 @@ contains
       write (6, fmt=120) ndvpt
       stop 18
     end if
-    ! .....
-    ! .....ro: total(core+val)(up+down) charge density.
+
+    ! ro: total(core+val)(up+down) charge density.
 
     do i = ist, mesh
       rou(i) = ro(i)*(zta(i)+1.e0_dp)/2.e0_dp
     end do
-    ! .....
+
     if (igd<=0) then
 
       do i = ist, mesh
@@ -77,12 +76,10 @@ contains
     i5 = ist + 4
     i6 = ist + 5
 
-    ! .....drr:d(ro)/dr, ddrr=d(d(ro)/dr)/dr
-    ! c.... drru,ddrru: for up   spin,
-    ! .....
+    ! drr:d(ro)/dr, ddrr=d(d(ro)/dr)/dr
 
     if (nspin==1) go to 100
-    ! .....
+
     if (ndvpt==3) then
 
       drx1 = f131(ro(i1), ro(i2), ro(i3), dx)
@@ -150,7 +147,7 @@ contains
 
     end if
 
-    nred = nint(real(ndvpt,kind=dp)/2+.1e0_dp)
+    nred = int(real(ndvpt, kind=dp)/2 + .1D0)
 
     do j = nred + ist, mesh - nred
 
@@ -190,7 +187,7 @@ contains
       ddrru(j) = (drxxu-drxu*drdi2(j))/drdi(j)**2
 
     end do
-    ! .....
+
     if (ndvpt==3) then
 
       drx0 = f133(ro(mesh-2), ro(mesh-1), ro(mesh), dx)
@@ -265,7 +262,7 @@ contains
 
 100 continue
 
-    ! .....
+
     if (ndvpt==3) then
 
       drx1 = f131(ro(i1), ro(i2), ro(i3), dx)
@@ -311,7 +308,7 @@ contains
 
     end if
 
-    nred = nint(real(ndvpt,kind=dp)/2+.1e0_dp)
+    nred = int(real(ndvpt, kind=dp)/2 + .1D0)
 
     if (mesh-nred<=ist) then
       write (6, fmt='(/'' MESH-NRED.LT.IST. MESH,NRED,IST='',3I4)') mesh, nred, ist
@@ -344,10 +341,8 @@ contains
 
       drr(j) = drx/drdi(j)
       ddrr(j) = (drxx-drx*drdi2(j))/drdi(j)**2
-      ! write(6,9000) j,drr(j)
-      ! 9000       format(1x,' j drr(j)',i5,e15.5)
     end do
-    ! .....
+
     if (ndvpt==3) then
 
       drx0 = f133(ro(mesh-2), ro(mesh-1), ro(mesh), dx)
@@ -398,13 +393,6 @@ contains
 
 110 continue
 
-
-
-    ! write(6,8000) nspin,ist1,mesh,dx
-    ! 8000 format(1x,' nspin ist1 mesh dx',3i5,2d20.10)
-    ! write(6,8001) (ro(kk),drr(kk),ddrr(kk),
-    ! &  drdi(kk),drdi2(kk), kk=ist1,mesh,20)
-    ! 8001 format(1x,' ro drr ddrr drdi drdi2',5f12.5)
     return
 120 format (/, ' ndvpt should be ge.4 .or. le.6. ndvpt=', i3)
   end subroutine gradr

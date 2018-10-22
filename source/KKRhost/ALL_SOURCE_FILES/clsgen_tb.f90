@@ -447,9 +447,9 @@ contains
     end if
     ! ----------------------------------------------------------------------
 
+    ! Calculate number of layers in principal layer
+    nprinc = 1
     if (linterface) then
-      ! Calculate number of layers in principal layer
-      nprinc = 1
       do jatom = 1, naez           ! loop over rows
         do iat = 1, jatom - 1      ! loop over columns before the diagonal
           if (icouplmat(jatom,iat)==1) nprinc = max(nprinc, jatom-iat)
