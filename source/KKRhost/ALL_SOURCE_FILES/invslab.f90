@@ -29,9 +29,17 @@ contains
     complex (kind=dp), parameter :: czero = (0.e0_dp, 0.e0_dp)
     complex (kind=dp), parameter :: cone = (1.e0_dp, 0.e0_dp)
     integer :: ipvt(ndim_slabinv)
-    complex (kind=dp) :: gup(ndim_slabinv, ndim_slabinv, nlayerd), gdow(ndim_slabinv, ndim_slabinv, nlayerd), gdi(ndim_slabinv, ndim_slabinv, nlayerd), &
-      dmat(ndim_slabinv, ndim_slabinv, nlayerd), dinver(ndim_slabinv, ndim_slabinv, nlayerd), f(ndim_slabinv, ndim_slabinv), e(ndim_slabinv, ndim_slabinv), &
-      g(ndim_slabinv, ndim_slabinv), cunit(ndim_slabinv, ndim_slabinv), gin(alm, alm), gdiold(ndim_slabinv, ndim_slabinv, nlayerd)
+    complex (kind=dp) :: gup(ndim_slabinv, ndim_slabinv, nlayerd)
+    complex (kind=dp) :: gdow(ndim_slabinv, ndim_slabinv, nlayerd)
+    complex (kind=dp) :: gdi(ndim_slabinv, ndim_slabinv, nlayerd)
+    complex (kind=dp) :: dmat(ndim_slabinv, ndim_slabinv, nlayerd)
+    complex (kind=dp) :: dinver(ndim_slabinv, ndim_slabinv, nlayerd)
+    complex (kind=dp) :: f(ndim_slabinv, ndim_slabinv)
+    complex (kind=dp) :: e(ndim_slabinv, ndim_slabinv)
+    complex (kind=dp) :: g(ndim_slabinv, ndim_slabinv)
+    complex (kind=dp) :: cunit(ndim_slabinv, ndim_slabinv)
+    complex (kind=dp) :: gin(alm, alm)
+    complex (kind=dp) :: gdiold(ndim_slabinv, ndim_slabinv, nlayerd)
 
     integer :: n, lm, info, i, j, irow
     integer :: icheck(nlayerd, nlayerd)

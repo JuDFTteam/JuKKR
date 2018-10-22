@@ -715,9 +715,9 @@ contains
     deallocate (vref_temp, stat=i_stat)
     call memocc(i_stat, i_all, 'vref_temp', 'main0')
 
-    ! overwrite nprincd if chosen too small
+    nlayer = naez/nprinc
+    ! overwrite nprincd if chosen too small (also up
     if (nprincd<nprinc) then
-      nlayer = naez/nprinc
       if (nlayer*nprinc/=naez) nprinc = naez
       write (*, *) 'Automatically overwriting nprincd with ', nprinc
       write (1337, *) 'Automatically overwriting nprincd with ', nprinc
@@ -732,9 +732,10 @@ contains
       allocate (icheck(naez/nprincd,naez/nprincd), stat=i_stat)
       call memocc(i_stat, product(shape(icheck))*kind(icheck), 'ICHECK', 'main0')
       icheck = 0
-      ! do not forget to update nlayerd as well!
-      nlayerd = nlayer
     end if
+
+    ! store nlayerd for later use
+    nlayerd = nlayer
 
     ! Now the clusters, reference potentials and muffin-tin radii have been set.
     ! -------------------------------------------------------------------------
