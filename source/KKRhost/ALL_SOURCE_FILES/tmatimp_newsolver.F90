@@ -85,7 +85,7 @@ contains
     real (kind=dp), intent (in) :: r_log !! Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
     integer, dimension (natyp), intent (in) :: ipan !! Number of panels in non-MT-region
     integer, dimension (natyp), intent (in) :: irmin !! Max R for spherical treatment
-    integer, dimension (natyp), intent (in) :: hostimp
+    integer, dimension (ihost), intent (in) :: hostimp
     integer, dimension (natomimp), intent (in) :: ipanimp
     integer, dimension (natomimp), intent (in) :: irwsimp
     integer, dimension (natomimp), intent (in) :: atomimp

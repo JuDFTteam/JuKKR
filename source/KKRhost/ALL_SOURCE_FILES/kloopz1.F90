@@ -125,7 +125,7 @@ contains
     integer, intent (inout) :: itcpamax !! Max. number of CPA iterations
     complex (kind=dp), intent (inout) :: tracet !! \f$Tr\left[ (t-tref)^{-1} \frac{d(t-tref)}{dE} \right]\f$
     complex (kind=dp), intent (inout) :: lly_grtr !! Trace Eq.5.38 PhD Thiess (k-integrated)! LLY Lloyd
-    complex (kind=dp), dimension (lmmaxd, lmmaxd, nsheld), intent (out) :: gmatll !! GMATLL = diagonal elements of the G matrix (system)
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, nsheld), intent (inout) :: gmatll !! GMATLL = diagonal elements of the G matrix (system)
     ! .. Local Scalars
     integer :: i_stat, i_all
     integer :: ih, lm1, lm2, ns, nsdia, icall, irec

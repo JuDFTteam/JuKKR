@@ -975,7 +975,7 @@ contains
         call tmatimp_newsolver(irmd,nsra-1,lmax,iend,irid,lpotd,natyp,ncleb,ipand,  &
           irnsd,nfund,t_imp%ihost,ntotd,nspin,lmpotd,ncheb,lmmaxd/(1+korbit),korbit,&
           nspotd,ielast,irmind,t_params%npan_eq,t_params%npan_log,t_imp%natomimp,   &
-          r_log, vins, visp, ipan, irmin, t_imp%hostimp(1:natyp),          &
+          r_log, vins, visp, ipan, irmin, t_imp%hostimp(1:t_imp%ihost),          &
           t_imp%ipanimp(1:t_imp%natomimp), t_imp%irwsimp(1:t_imp%natomimp),         &
           atomimp(1:t_imp%natomimp), t_imp%irminimp(1:t_imp%natomimp), icleb, ircut,&
           t_imp%ircutimp(0:ipand,1:t_imp%natomimp),zat,t_imp%zimp(1:t_imp%natomimp),&
