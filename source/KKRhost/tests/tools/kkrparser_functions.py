@@ -125,7 +125,10 @@ def get_charges_per_atom(outfile_000):
     res1 = parse_array_float(outfile_000, 'charge in wigner seitz', [1, '=', 1])
     # these two are not in output of DOS calculation (and are then ignored)
     res2 = parse_array_float(outfile_000, 'nuclear charge', [2, 'nuclear charge', 1, 0])
-    res3 = parse_array_float(outfile_000, 'core charge', [1, '=', 1])
+    try:
+       res3 = parse_array_float(outfile_000, 'core charge', [1, '=', 1])
+    except IndexError: 
+       res3 = parse_array_float(outfile_000, 'core charge', [1, ':', 1])
     return res1, res2, res3
 
 

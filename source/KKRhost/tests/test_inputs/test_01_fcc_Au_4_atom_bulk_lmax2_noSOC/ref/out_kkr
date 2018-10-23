@@ -1,0 +1,53 @@
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ !!! Most output written to output.myrank.txt files !!!
+ !!! please check these files as well               !!!
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+*******************************************************************************
+          Screened Korringa-Kohn-Rostoker Electronic Structure Code
+                           for Bulk and Interfaces
+          Juelich-Munich 2001 - 2016
+
+ Code version: v2.3-64-g8cc70fc
+ Compile options: mpi
+-O2 -r8 -module ./OBJ -sox -traceback
+-L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+
+ serial number for files:kkrjm_v2.3-64-g8cc70fc_mpi_20180830212646
+*******************************************************************************
+
+ Number of MPI ranks used:   12
+
+*******************************************************************************
+
+           0
+ Calling MADELUNG3D
+ Exited MADELUNG3D
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ +++            SCF ITERATIONS START                +++
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+started on 2018/ 8/30 at 21:26:47
+               Ne         
+          TOT 10.99999985
+          TOT 10.99999985
+          TOT 10.99999985
+          TOT 10.99999985
+      ITERATION   1 charge neutrality in unit cell =    -0.000001
+                new E FERMI   0.7177218402  DOS(E_F) =     4.464884
+      ITERATION   1 average rms-error : v+ + v- =  1.2447D-08
+TOTAL ENERGY in ryd. :          -152010.76195020
+
+Iteration finished on 2018/ 8/30 at 21:26:48
+               Ne         
+          TOT 11.00000007
+          TOT 11.00000007
+          TOT 11.00000007
+          TOT 11.00000007
+      ITERATION   2 charge neutrality in unit cell =     0.000000
+                new E FERMI   0.7177218252  DOS(E_F) =     4.464886
+      ITERATION   2 average rms-error : v+ + v- =  5.7668D-09
+TOTAL ENERGY in ryd. :          -152010.76195102
+
+                 ++++++ SCF ITERATION CONVERGED ++++++
+*******************************************************************************
+Iteration finished on 2018/ 8/30 at 21:26:48

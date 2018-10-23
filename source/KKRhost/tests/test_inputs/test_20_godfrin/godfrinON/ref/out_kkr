@@ -1,0 +1,59 @@
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ !!! Most output written to output.myrank.txt files !!!
+ !!! please check these files as well               !!!
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+*******************************************************************************
+          Screened Korringa-Kohn-Rostoker Electronic Structure Code
+                           for Bulk and Interfaces
+          Juelich-Munich 2001 - 2016
+
+ Code version: v2.2-223-g21cc67f
+ Compile options: jureca
+-O2 -r8 -module ./OBJ -sox -traceback
+-lmkl_intel_lp64 -lmkl_sequential -lmkl_core -liomp5 -lpthread
+
+ serial number for files:kkrjm_v2.2-223-g21cc67f_jureca_20181018151813
+*******************************************************************************
+
+ Number of MPI ranks used:    1
+
+*******************************************************************************
+
+ WARNING: HFIELD>0.0 found, set KHFIELD to 1
+          18
+ Calling MADELUNG3D
+ Exited MADELUNG3D
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ +++            SCF ITERATIONS START                +++
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+started on 2018/10/18 at 15:18:23
+               Ne spin dn  Ne spin up    m_spin 
+          TOT  0.00004475  0.00004334   -0.0000
+          TOT  0.00173294  0.00158472   -0.0001
+          TOT  0.10689614  0.10073901   -0.0062
+          TOT  3.46906596  5.32799220    1.8589
+          TOT  3.55514299  5.43899799    1.8839
+          TOT  3.52233943  5.46163361    1.9393
+          TOT  3.72154620  5.52997855    1.8084
+          TOT  2.86080335  2.89488244    0.0341
+          TOT  3.01035390  2.99804266   -0.0123
+          TOT  2.99644092  2.99972942    0.0033
+          TOT  3.00011515  3.00111330    0.0010
+          TOT  2.99343073  3.00187318    0.0084
+          TOT  2.99339315  3.00471860    0.0113
+          TOT  2.98793446  2.99642678    0.0085
+          TOT  2.79502573  2.80857848    0.0136
+          TOT  0.20534758  0.20679478    0.0014
+          TOT  0.00357283  0.00359816    0.0000
+          TOT  0.00004320  0.00004337    0.0000
+      ITERATION   1 charge neutrality in unit cell =     0.000000
+                    TOTAL mag. moment in unit cell =     7.553541
+                new E FERMI   0.7704326851  DOS(E_F) =    11.949961
+      ITERATION   1 average rms-error : v+ + v- =  7.0808D-09
+                                        v+ - v- =  3.1566D-10
+TOTAL ENERGY in ryd. :          -269265.43926417
+
+                 ++++++ SCF ITERATION CONVERGED ++++++
+*******************************************************************************
+Iteration finished on 2018/10/18 at 15:18:27

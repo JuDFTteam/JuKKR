@@ -1,0 +1,111 @@
+# serial: kkrjm_v2.3-64-g8cc70fc_mpi_20180905153805
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 3, #of points= 3
+Task 1 treats points 4 to 6, #of points= 3
+Task 2 treats points 7 to 9, #of points= 3
+Task 3 treats points 10 to 12, #of points= 3
+Task 4 treats points 13 to 15, #of points= 3
+Task 5 treats points 16 to 18, #of points= 3
+Task 6 treats points 19 to 20, #of points= 2
+Task 7 treats points 21 to 22, #of points= 2
+ ==========================================
+           0 start tbref e-loop
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+ ==========================================
+TBREF: GREF for energy:    1    0.63054450    0.00000000
+ tbref NCLS loop:          10           8
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 2, #of points= 2
+Task 1 treats points 3 to 4, #of points= 2
+Task 2 treats points 5 to 5, #of points= 1
+Task 3 treats points 6 to 6, #of points= 1
+Task 4 treats points 7 to 7, #of points= 1
+Task 5 treats points 8 to 8, #of points= 1
+Task 6 treats points 9 to 9, #of points= 1
+Task 7 treats points 10 to 10, #of points= 1
+ ==========================================
+===============================================================================
+                              < KKR1a finished >
+===============================================================================
+
+
+===============================================================================
+      Inversion algorithm used : FULL MATRIX                        
+===============================================================================
+
+ ************ IE =   1 ENERGY =   0.630544   0.000000 KMESH =   1
+ kkrmat k loop:           1           8
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+Task 1 treats points 2 to 1, #of points= 0
+Task 2 treats points 2 to 1, #of points= 0
+Task 3 treats points 2 to 1, #of points= 0
+Task 4 treats points 2 to 1, #of points= 0
+Task 5 treats points 2 to 1, #of points= 0
+Task 6 treats points 2 to 1, #of points= 0
+Task 7 treats points 2 to 1, #of points= 0
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 || 
+===============================================================================
+      ROTGLL : Expand GF for all pairs by rotation and write out (all E-points)
+===============================================================================
+ 
+ Parallelization host atoms
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 2, #of points= 2
+Task 1 treats points 3 to 4, #of points= 2
+Task 2 treats points 5 to 5, #of points= 1
+Task 3 treats points 6 to 6, #of points= 1
+Task 4 treats points 7 to 7, #of points= 1
+Task 5 treats points 8 to 8, #of points= 1
+Task 6 treats points 9 to 9, #of points= 1
+Task 7 treats points 10 to 10, #of points= 1
+ ==========================================
+ Parallelization imp. atoms
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 2, #of points= 2
+Task 1 treats points 3 to 4, #of points= 2
+Task 2 treats points 5 to 5, #of points= 1
+Task 3 treats points 6 to 6, #of points= 1
+Task 4 treats points 7 to 7, #of points= 1
+Task 5 treats points 8 to 8, #of points= 1
+Task 6 treats points 9 to 9, #of points= 1
+Task 7 treats points 10 to 10, #of points= 1
+ ==========================================
+ start computing Operators
+ Operators using impurity wavefunctions
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 2, #of points= 2
+Task 1 treats points 3 to 4, #of points= 2
+Task 2 treats points 5 to 5, #of points= 1
+Task 3 treats points 6 to 6, #of points= 1
+Task 4 treats points 7 to 7, #of points= 1
+Task 5 treats points 8 to 8, #of points= 1
+Task 6 treats points 9 to 9, #of points= 1
+Task 7 treats points 10 to 10, #of points= 1
+ ==========================================
+ KSRA           1
+ NSRA           2
+ ATOM           1           1           2
+ ATOM           2           1           2
+ KSRA           1
+ NSRA           2
+ LMMAX           9
+ LMMAXD           9
+ LMMAXSO          18
+ ATOM           1           1           2
+ ATOM           2           1           2
+ KSRA           1
+ NSRA           2
+ LMMAX           9
+ LMMAXD           9
+ LMMAXSO          18
+ ATOM           1           1           2
+ ATOM           2           1           2
+ Done with Operators
+===============================================================================
+                              < KKR1b finished >
+===============================================================================
+

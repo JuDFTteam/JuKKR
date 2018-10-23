@@ -1,0 +1,898 @@
+# serial: kkrjm_v2.2-223-g21cc67f_jureca_20181018151813
+
+*******************************************************************************
+          Screened Korringa-Kohn-Rostoker Electronic Structure Code
+                           for Bulk and Interfaces
+          Juelich-Munich 2001 - 2016
+
+ Code version: v2.2-223-g21cc67f
+ Compile options: jureca
+-O2 -r8 -module ./OBJ -sox -traceback
+-lmkl_intel_lp64 -lmkl_sequential -lmkl_core -liomp5 -lpthread
+
+ serial number for files: kkrjm_v2.2-223-g21cc67f_jureca_20181018151813
+*******************************************************************************
+
+ Number of MPI ranks used:    1
+
+*******************************************************************************
+
+         ABASIS         BBASIS         CBASIS
+     1.00000000     1.00000000     1.00000000
+--------------+--------------+--------------+----------------------------------
+          ALAT =      5.97200000
+*** SLAB - INTERFACE CALCULATION ***
+
+ rinput13: <NLBASIS> not found in inputcard
+ rinput13: <NRBASIS> not found in inputcard
+ Number of embedded atoms NEMB=NLBASIS + NRBASIS=           2
+Number of LEFT  Host Layers :    10 with     1 basis
+Number of RIGHT Host Layers :    10 with     1 basis
+Left  side periodicity :    0.00000  -0.50000  -0.70711
+Right side periodicity :    0.00000   0.50000   0.70711
+    Geommetry used : 
+ ATOM       TX          TY          TZ 
+--------------- Left  Host -------------- 
+   10    0.00000000   -5.00000000   -7.07106781    0
+    9    0.00000000   -4.50000000   -6.36396103    0
+    8    0.00000000   -4.00000000   -5.65685425    0
+    7    0.00000000   -3.50000000   -4.94974747    0
+    6    0.00000000   -3.00000000   -4.24264069    0
+    5    0.00000000   -2.50000000   -3.53553391    0
+    4    0.00000000   -2.00000000   -2.82842712    0
+    3    0.00000000   -1.50000000   -2.12132034    0
+    2    0.00000000   -1.00000000   -1.41421356    0
+    1    0.00000000   -0.50000000   -0.70710678    0
+---------------   S L A B  -------------- 
+    1    0.00000000    0.00000000    0.00000000
+    2    0.00000000    0.50000000    0.70710678
+    3    0.00000000    1.00000000    1.41421356
+    4    0.00000000    1.50000000    2.12132034
+    5    0.00000000    2.00000000    2.82842712
+    6    0.00000000    2.50000000    3.53553391
+    7    0.00000000    3.00000000    4.24264069
+    8    0.00000000    3.50000000    4.94974747
+    9    0.00000000    4.00000000    5.65685425
+   10    0.00000000    4.50000000    6.36396103
+   11    0.00000000    5.00000000    7.07106781
+   12    0.00000000    5.50000000    7.77817459
+   13    0.00000000    6.00000000    8.48528137
+   14    0.00000000    6.50000000    9.19238816
+   15    0.00000000    7.00000000    9.89949494
+   16    0.00000000    7.50000000   10.60660172
+   17    0.00000000    8.00000000   11.31370850
+   18    0.00000000    8.50000000   12.02081528
+--------------- Right Host -------------- 
+    1    0.00000000    9.00000000   12.72792206    0
+    2    0.00000000    9.50000000   13.43502884    0
+    3    0.00000000   10.00000000   14.14213562    0
+    4    0.00000000   10.50000000   14.84924240    0
+    5    0.00000000   11.00000000   15.55634919    0
+    6    0.00000000   11.50000000   16.26345597    0
+    7    0.00000000   12.00000000   16.97056275    0
+    8    0.00000000   12.50000000   17.67766953    0
+    9    0.00000000   13.00000000   18.38477631    0
+   10    0.00000000   13.50000000   19.09188309    0
+ NSPIN 
+   2
+---+---------------------------------------------------------------------------
+ Cell information <SHAPE>:
+ WARNING: HFIELD>0.0 found, set KHFIELD to 1
+ INIPOL
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0
+---+---+---+---+---+---+---+---+---+---+---------------------------------------
+---+---------------------------------------------------------------------------
+   INTERVX   INTERVY   INTERVZ
+         5         5         1
+---------+---------+---------+-------------------------------------------------
+ Parameters used for the cluster calculation
+ Clusters inside spheres with radius R =    1.80000000000000     
+---+---------------------------------------------------------------------------
+ RBASIS
+SITE                BASIS VECTORS                 THETA   PHI CPA OCC KAOEZ
+---+--------------+--------------+--------------+------------------------------
+   1     0.00000000     0.00000000     0.00000000   0.0   0.0   0   1  1
+   2     0.00000000     0.50000000     0.70710678   0.0   0.0   0   1  2
+   3     0.00000000     1.00000000     1.41421356   0.0   0.0   0   1  3
+   4     0.00000000     1.50000000     2.12132034   0.0   0.0   0   1  4
+   5     0.00000000     2.00000000     2.82842712   0.0   0.0   0   1  5
+   6     0.00000000     2.50000000     3.53553391   0.0   0.0   0   1  6
+   7     0.00000000     3.00000000     4.24264069   0.0   0.0   0   1  7
+   8     0.00000000     3.50000000     4.94974747   0.0   0.0   0   1  8
+   9     0.00000000     4.00000000     5.65685425   0.0   0.0   0   1  9
+  10     0.00000000     4.50000000     6.36396103   0.0   0.0   0   1 10
+  11     0.00000000     5.00000000     7.07106781   0.0   0.0   0   1 11
+  12     0.00000000     5.50000000     7.77817459   0.0   0.0   0   1 12
+  13     0.00000000     6.00000000     8.48528137   0.0   0.0   0   1 13
+  14     0.00000000     6.50000000     9.19238816   0.0   0.0   0   1 14
+  15     0.00000000     7.00000000     9.89949494   0.0   0.0   0   1 15
+  16     0.00000000     7.50000000    10.60660172   0.0   0.0   0   1 16
+  17     0.00000000     8.00000000    11.31370850   0.0   0.0   0   1 17
+  18     0.00000000     8.50000000    12.02081528   0.0   0.0   0   1 18
+ ATOMINFOC or ATOMINFO:
+ NATYP 
+  18
+   Z lmx     KFG cls pot ntc  MTFAC irns SITE  CONC
+---+---------------------------------------------------------------------------
+  0.   0    0000   1   1   1  1.0000   1    1  1.00000
+  0.   0    0000   1   1   1  1.0000   1    2  1.00000
+  0.   0    0000   1   1   1  1.0000   1    3  1.00000
+ 27.   1    3300   1   1   1  1.0000   1    4  1.00000
+ 27.   1    3300   1   1   1  1.0000   1    5  1.00000
+ 27.   1    3300   1   1   1  1.0000   1    6  1.00000
+ 27.   1    3300   1   1   1  1.0000   1    7  1.00000
+ 74.   3    5544   1   1   1  1.0000   1    8  1.00000
+ 74.   3    5544   1   1   1  1.0000   1    9  1.00000
+ 74.   3    5544   1   1   1  1.0000   1   10  1.00000
+ 74.   3    5544   1   1   1  1.0000   1   11  1.00000
+ 74.   3    5544   1   1   1  1.0000   1   12  1.00000
+ 74.   3    5544   1   1   1  1.0000   1   13  1.00000
+ 74.   3    5544   1   1   1  1.0000   1   14  1.00000
+ 74.   3    5544   1   1   1  1.0000   1   15  1.00000
+  0.   0    0000   1   1   1  1.0000   1   16  1.00000
+  0.   0    0000   1   1   1  1.0000   1   17  1.00000
+  0.   0    0000   1   1   1  1.0000   1   18  1.00000
+---+---+-------+---+---+---+-------+---+---------------------------------------
+---+---------------------------------------------------------------------------
+ NSTEPS
+   1
+---+---------------------------------------------------------------------------
+ I12="4Ryshift                                "
+ I13="potential                               "
+ I40="madelung                                "
+ I19="shapefun                                "
+ I25="scoef                                   "
+ lmax
+   3
+---+---------------------------------------------------------------------------
+          EMIN        EMAX        TK
+   -0.600000    0.900000  800.000000
+-----------+-----------+-----------+-------------------------------------------
+   NPOL  NPNT1  NPNT2  NPNT3
+      3      3     10      2
+------+------+------+------+---------------------------------------------------
+------+------+------+----------------------------------------------------------
+  IFILE    IPE ISHIFT ESHIFT
+     13      1      0    0.000000
+------+------+------+-----------+----------------------------------------------
+ KSHAPE    IRM    INS   ICST INSREF
+      0    900      0      2      0
+------+------+------+------+------+--------------------------------------------
+   KCOR  KVREL    KWS   KHYP KHFIELD   KXC
+      2      1      2      0      1      2
+------+------+------+------+------+------+-------------------------------------
+    KTE   KPRE   KEFG  KVMAD 
+      1      1      0      0
+------+------+------+------+------+--------------------------------------------
+   IMIX    IGF    ICC
+      5      0      0
+------+------+------+------+---------------------------------------------------
+ ITDBRY
+     30
+------+------------------------------------------------------------------------
+      STRMIX        FCM       QBOUND
+    0.010000   20.000000    0.000000
+-----------+-----------+-----------+-------------------------------------------
+      BRYMIX
+    0.010000
+-----------+-------------------------------------------------------------------
+ external magnetic hfield     :         0.0100
+ VCONST                       :       0.000000
+ mixing factor used           :       0.010000
+ convergence quality required :       1.00D-08
+ make use of CPA algorithm    :             NO
+
+                                 check of dimension-data consistency
+                                 -----------------------------------
+                                        lmax   : (     3,     3)
+                                        natyp  : (    18,    18)
+                                        irm    : (   900,   900)
+                                        nspin  : (     2,     2)
+
+
+
+ ********** external magnetic field applied hfield= 0.01000
+                        spin polarized calculation
+                      s.r.a. calculation                        
+                      core relaxation nonsra                    
+                      calculation with full ws-potential
+                      Vosko,Wilk,Nusair      exchange-correlation potential
+ *******************************************************************************
+ IXIPOL
+   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0
+---+---+---+---+---+---+---+---+---+---+---------------------------------------
+    NAEZ    NEMB  
+      18       2
+-------+-------+-------+-------------------------------------------------------
+    NCLS    NREF   NINEQ
+       1       1      18
+-------+-------+-------+-------------------------------------------------------
+---+---+---+---+---+---+---+---+---+---+---------------------------------------
+ 
+     0.00000000    -0.50000000    -0.70710678    19     1
+     0.00000000     9.00000000    12.72792206    20     1
+-------+-------+-------+-------+-------+-------+-------+-----------------------
+-------------------------------------------------------------------------------
+ EXECUTION OPTIONS:
+ godfrin //        //        //        //        //        //        //        
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+ TEST OPTIONS:
+ ie      //RMESH   //clusters//        //        //        //        //        
+ .....   //        //        //        //        //        //        //        
+
+-------------------------------------------------------------------------------
+ < MEMWFSAVE >, use default:           0
+ < UNITMEMWFSAVE >, use default:           2 
+ (MB) (max memory= MEMWFSAVE*1024**UNITMEMWFSAVE)
+ Godfrin inversion scheme parameters
+                                                     na, nb, ldiag, lper, lpardiso; then bdims(1:nb)
+          18           7 T F F
+3 2 3 2 3 2 3 
+-------------------------------------------------------------------------------
+ KMROT
+       0
+-------+-------+-------+-------------------------------------------------------
+  >>>>>>>>> RINPUT13 EXITS NOW <<<<<<<<<< 
+===============================================================================
+                       LATTIX99: surface geometry mode
+===============================================================================
+ 
+     Lattice constants :  ALAT =  5.97200000     2*PI/ALAT =  1.05210739
+
+     Direct lattice cell vectors :
+
+         normalised (ALAT)                     a.u.
+         ----------------------                ----------------------
+     a_1:  0.707107  0.500000                    4.222842  2.986000
+     a_2:  0.707107 -0.500000                    4.222842 -2.986000
+         ----------------------                ----------------------
+ 
+     Unit cell volume :  V =    0.70710678 (ALAT**2) =    25.21881062 (a.u.**2)
+
+     Reciprocal lattice cell vectors :
+
+         normalised (2*PI/ALAT)                1/a.u.
+         ----------------------                ----------------------
+     b_1:  0.707107  1.000000                    0.743952  1.052107
+     b_2:  0.707107 -1.000000                    0.743952 -1.052107
+         ----------------------                ----------------------
+ 
+     < RRGEN > : generation of real space mesh RR(NR)
+
+          Radius R        :        8.724755 (ALAT    units)
+                 R**2     :       76.121348 (ALAT**2 units)
+          mesh divisions  :         10   10
+          vectors created :             341
+ 
+===============================================================================
+                       SCALEVEC: scale site coordinates
+                                 bring all to CARTESIAN system
+===============================================================================
+ 
+     Site coordinates will not be scaled
+ CARTESIAN coordinates
+                                          ---> No transformation required
+              ---------------------------------------------
+                    Positions of ALL generated sites 
+                  in CARTESIAN coordinates (ALAT units)
+              ---------------------------------------------
+               IQ       x           y           z       IT
+               **************** Left  Host ***************
+                10    0.000000   -5.000000   -7.071068  1
+                 9    0.000000   -4.500000   -6.363961  1
+                 8    0.000000   -4.000000   -5.656854  1
+                 7    0.000000   -3.500000   -4.949747  1
+                 6    0.000000   -3.000000   -4.242641  1
+                 5    0.000000   -2.500000   -3.535534  1
+                 4    0.000000   -2.000000   -2.828427  1
+                 3    0.000000   -1.500000   -2.121320  1
+                 2    0.000000   -1.000000   -1.414214  1
+                 1    0.000000   -0.500000   -0.707107  1
+               ****************   S L A B  ***************
+                 1    0.000000    0.000000    0.000000  1
+                 2    0.000000    0.500000    0.707107  2
+                 3    0.000000    1.000000    1.414214  3
+                 4    0.000000    1.500000    2.121320  4
+                 5    0.000000    2.000000    2.828427  5
+                 6    0.000000    2.500000    3.535534  6
+                 7    0.000000    3.000000    4.242641  7
+                 8    0.000000    3.500000    4.949747  8
+                 9    0.000000    4.000000    5.656854  9
+                10    0.000000    4.500000    6.363961 10
+                11    0.000000    5.000000    7.071068 11
+                12    0.000000    5.500000    7.778175 12
+                13    0.000000    6.000000    8.485281 13
+                14    0.000000    6.500000    9.192388 14
+                15    0.000000    7.000000    9.899495 15
+                16    0.000000    7.500000   10.606602 16
+                17    0.000000    8.000000   11.313708 17
+                18    0.000000    8.500000   12.020815 18
+               **************** Right Host ***************
+                 1    0.000000    9.000000   12.727922  1
+                 2    0.000000    9.500000   13.435029  1
+                 3    0.000000   10.000000   14.142136  1
+                 4    0.000000   10.500000   14.849242  1
+                 5    0.000000   11.000000   15.556349  1
+                 6    0.000000   11.500000   16.263456  1
+                 7    0.000000   12.000000   16.970563  1
+                 8    0.000000   12.500000   17.677670  1
+                 9    0.000000   13.000000   18.384776  1
+                10    0.000000   13.500000   19.091883  1
+              ---------------------------------------------
+
+ >>> CLSGEN_TB: generation of cluster coordinates
+ RCUT =    1.80000000000000       RCUTXY =    1.80000000000000     
+ Spherical Clusters are created
+ clsgen_tb: cluster size of site:           1 :          59
+ clsgen_tb: Touching RMT of site:           1 :  0.433012701892218     
+ clsgen_tb: cluster size of site:           2 :          59
+ clsgen_tb: Touching RMT of site:           2 :  0.433012701892218     
+ clsgen_tb: cluster size of site:           3 :          59
+ clsgen_tb: Touching RMT of site:           3 :  0.433012701892218     
+ clsgen_tb: cluster size of site:           4 :          59
+ clsgen_tb: Touching RMT of site:           4 :  0.433012701892218     
+ clsgen_tb: cluster size of site:           5 :          59
+ clsgen_tb: Touching RMT of site:           5 :  0.433012701892218     
+ clsgen_tb: cluster size of site:           6 :          59
+ clsgen_tb: Touching RMT of site:           6 :  0.433012701892218     
+ clsgen_tb: cluster size of site:           7 :          59
+ clsgen_tb: Touching RMT of site:           7 :  0.433012701892218     
+ clsgen_tb: cluster size of site:           8 :          59
+ clsgen_tb: Touching RMT of site:           8 :  0.433012701892218     
+ clsgen_tb: cluster size of site:           9 :          59
+ clsgen_tb: Touching RMT of site:           9 :  0.433012701892218     
+ clsgen_tb: cluster size of site:          10 :          59
+ clsgen_tb: Touching RMT of site:          10 :  0.433012701892218     
+ clsgen_tb: cluster size of site:          11 :          59
+ clsgen_tb: Touching RMT of site:          11 :  0.433012701892218     
+ clsgen_tb: cluster size of site:          12 :          59
+ clsgen_tb: Touching RMT of site:          12 :  0.433012701892218     
+ clsgen_tb: cluster size of site:          13 :          59
+ clsgen_tb: Touching RMT of site:          13 :  0.433012701892218     
+ clsgen_tb: cluster size of site:          14 :          59
+ clsgen_tb: Touching RMT of site:          14 :  0.433012701892218     
+ clsgen_tb: cluster size of site:          15 :          59
+ clsgen_tb: Touching RMT of site:          15 :  0.433012701892218     
+ clsgen_tb: cluster size of site:          16 :          59
+ clsgen_tb: Touching RMT of site:          16 :  0.433012701892218     
+ clsgen_tb: cluster size of site:          17 :          59
+ clsgen_tb: Touching RMT of site:          17 :  0.433012701892218     
+ clsgen_tb: cluster size of site:          18 :          59
+ clsgen_tb: Touching RMT of site:          18 :  0.433012701892218     
+ clsgen_tb: cluster size of site:          19 :          59
+ clsgen_tb: Touching RMT of site:          19 :  0.433012701892218     
+ clsgen_tb: cluster size of site:          20 :          59
+ clsgen_tb: Touching RMT of site:          20 :  0.433012701892218     
+ Clusters from clsgen_tb:
+CLSGEN_TB: Atom    1 Refpot    1 Rmtref 2.5850000 Vref 8.0000000 TB-cluster    1 Sites   59
+CLSGEN_TB: Atom    2 Refpot    1 Rmtref 2.5850000 Vref 8.0000000 TB-cluster    1 Sites   59
+CLSGEN_TB: Atom    3 Refpot    1 Rmtref 2.5850000 Vref 8.0000000 TB-cluster    1 Sites   59
+CLSGEN_TB: Atom    4 Refpot    1 Rmtref 2.5850000 Vref 8.0000000 TB-cluster    1 Sites   59
+CLSGEN_TB: Atom    5 Refpot    1 Rmtref 2.5850000 Vref 8.0000000 TB-cluster    1 Sites   59
+CLSGEN_TB: Atom    6 Refpot    1 Rmtref 2.5850000 Vref 8.0000000 TB-cluster    1 Sites   59
+CLSGEN_TB: Atom    7 Refpot    1 Rmtref 2.5850000 Vref 8.0000000 TB-cluster    1 Sites   59
+CLSGEN_TB: Atom    8 Refpot    1 Rmtref 2.5850000 Vref 8.0000000 TB-cluster    1 Sites   59
+CLSGEN_TB: Atom    9 Refpot    1 Rmtref 2.5850000 Vref 8.0000000 TB-cluster    1 Sites   59
+CLSGEN_TB: Atom   10 Refpot    1 Rmtref 2.5850000 Vref 8.0000000 TB-cluster    1 Sites   59
+CLSGEN_TB: Atom   11 Refpot    1 Rmtref 2.5850000 Vref 8.0000000 TB-cluster    1 Sites   59
+CLSGEN_TB: Atom   12 Refpot    1 Rmtref 2.5850000 Vref 8.0000000 TB-cluster    1 Sites   59
+CLSGEN_TB: Atom   13 Refpot    1 Rmtref 2.5850000 Vref 8.0000000 TB-cluster    1 Sites   59
+CLSGEN_TB: Atom   14 Refpot    1 Rmtref 2.5850000 Vref 8.0000000 TB-cluster    1 Sites   59
+CLSGEN_TB: Atom   15 Refpot    1 Rmtref 2.5850000 Vref 8.0000000 TB-cluster    1 Sites   59
+CLSGEN_TB: Atom   16 Refpot    1 Rmtref 2.5850000 Vref 8.0000000 TB-cluster    1 Sites   59
+CLSGEN_TB: Atom   17 Refpot    1 Rmtref 2.5850000 Vref 8.0000000 TB-cluster    1 Sites   59
+CLSGEN_TB: Atom   18 Refpot    1 Rmtref 2.5850000 Vref 8.0000000 TB-cluster    1 Sites   59
+ Clusters from clsgen_tb in outer region, left:
+CLSGEN_TB: Atom   19 Refpot    1 Rmtref 2.5850000 Vref 8.0000000 TB-cluster    1 Sites   59
+ Clusters from clsgen_tb in outer region, right:
+CLSGEN_TB: Atom   20 Refpot    1 Rmtref 2.5850000 Vref 8.0000000 TB-cluster    1 Sites   59
+ Coupling matrix:
+   1 111000000000000000
+   2 111100000000000000
+   3 111110000000000000
+   4 011111000000000000
+   5 001111100000000000
+   6 000111110000000000
+   7 000011111000000000
+   8 000001111100000000
+   9 000000111110000000
+  10 000000011111000000
+  11 000000001111100000
+  12 000000000111110000
+  13 000000000011111000
+  14 000000000001111100
+  15 000000000000111110
+  16 000000000000011111
+  17 000000000000001111
+  18 000000000000000111
+ CLSGEN_TB: Number of layers in a principal layer: NPRINC=           2
+  Sub clsgen_tb  exiting <<<<<<<<<<<<<
+ Dimension and Input Data CHECK
+ < Vac0 POTENTIAL SPIN DOWN            exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z= 0.00  a= 0.0250  b= 0.000490  rnuc= 0.00000000  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z= 0.00  a= 0.0250  b= 0.000490  rnuc= 0.00000000  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < Vac0 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z= 0.00  a= 0.0250  b= 0.000490  rnuc= 0.00000000  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z= 0.00  a= 0.0250  b= 0.000490  rnuc= 0.00000000  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < Vac0 POTENTIAL SPIN DOWN            exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z= 0.00  a= 0.0250  b= 0.000490  rnuc= 0.00000000  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z= 0.00  a= 0.0250  b= 0.000490  rnuc= 0.00000000  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < Vac0 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z= 0.00  a= 0.0250  b= 0.000490  rnuc= 0.00000000  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z= 0.00  a= 0.0250  b= 0.000490  rnuc= 0.00000000  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < Vac0 POTENTIAL SPIN DOWN            exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z= 0.00  a= 0.0250  b= 0.000490  rnuc= 0.00000000  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z= 0.00  a= 0.0250  b= 0.000490  rnuc= 0.00000000  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < Vac0 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z= 0.00  a= 0.0250  b= 0.000490  rnuc= 0.00000000  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z= 0.00  a= 0.0250  b= 0.000490  rnuc= 0.00000000  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < Co27 POTENTIAL SPIN DOWN            exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z=27.00  a= 0.0250  b= 0.000490  rnuc= 0.00008571  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z=27.00  a= 0.0250  b= 0.000490  rnuc= 0.00008571  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < Co27 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z=27.00  a= 0.0250  b= 0.000490  rnuc= 0.00008571  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z=27.00  a= 0.0250  b= 0.000490  rnuc= 0.00008571  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < Co27 POTENTIAL SPIN DOWN            exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z=27.00  a= 0.0250  b= 0.000490  rnuc= 0.00008571  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z=27.00  a= 0.0250  b= 0.000490  rnuc= 0.00008571  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < Co27 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z=27.00  a= 0.0250  b= 0.000490  rnuc= 0.00008571  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z=27.00  a= 0.0250  b= 0.000490  rnuc= 0.00008571  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < Co27 POTENTIAL SPIN DOWN            exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z=27.00  a= 0.0250  b= 0.000490  rnuc= 0.00008571  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z=27.00  a= 0.0250  b= 0.000490  rnuc= 0.00008571  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < Co27 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z=27.00  a= 0.0250  b= 0.000490  rnuc= 0.00008571  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z=27.00  a= 0.0250  b= 0.000490  rnuc= 0.00008571  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < Co27 POTENTIAL SPIN DOWN            exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z=27.00  a= 0.0250  b= 0.000490  rnuc= 0.00008571  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z=27.00  a= 0.0250  b= 0.000490  rnuc= 0.00008571  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < Co27 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z=27.00  a= 0.0250  b= 0.000490  rnuc= 0.00008571  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z=27.00  a= 0.0250  b= 0.000490  rnuc= 0.00008571  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < W_74 POTENTIAL SPIN DOWN            exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < W_74 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < W_74 POTENTIAL SPIN DOWN            exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < W_74 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < W_74 POTENTIAL SPIN DOWN            exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < W_74 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < W_74 POTENTIAL SPIN DOWN            exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < W_74 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < W_74 POTENTIAL SPIN DOWN            exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < W_74 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < W_74 POTENTIAL SPIN DOWN            exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < W_74 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < W_74 POTENTIAL SPIN DOWN            exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < W_74 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < W_74 POTENTIAL SPIN DOWN            exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < W_74 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z=74.00  a= 0.0250  b= 0.000490  rnuc= 0.00011995  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < Vac0 POTENTIAL SPIN DOWN            exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z= 0.00  a= 0.0250  b= 0.000490  rnuc= 0.00000000  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z= 0.00  a= 0.0250  b= 0.000490  rnuc= 0.00000000  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < Vac0 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z= 0.00  a= 0.0250  b= 0.000490  rnuc= 0.00000000  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z= 0.00  a= 0.0250  b= 0.000490  rnuc= 0.00000000  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < Vac0 POTENTIAL SPIN DOWN            exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z= 0.00  a= 0.0250  b= 0.000490  rnuc= 0.00000000  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z= 0.00  a= 0.0250  b= 0.000490  rnuc= 0.00000000  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < Vac0 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z= 0.00  a= 0.0250  b= 0.000490  rnuc= 0.00000000  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z= 0.00  a= 0.0250  b= 0.000490  rnuc= 0.00000000  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < Vac0 POTENTIAL SPIN DOWN            exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z= 0.00  a= 0.0250  b= 0.000490  rnuc= 0.00000000  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z= 0.00  a= 0.0250  b= 0.000490  rnuc= 0.00000000  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ < Vac0 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair       #serial: kkrjm_
+ rmesh  z= 0.00  a= 0.0250  b= 0.000490  rnuc= 0.00000000  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+ rmesh  z= 0.00  a= 0.0250  b= 0.000490  rnuc= 0.00000000  r(2)= 0.00001240
+ r(174)= 0.0365   drdi(1)= 0.00001225   drdi(irws)= 0.073523
+ irws=   349 imt=   344
+ rws=  2.94044861 rmt=  2.58500000 rmtnew=  2.59487922 alat=  5.97200000
+Doing calculation with potential: 80f75fed7a3b1e9921abb317bc4cf82e  potential
+ SHIFTING OF THE POTENTIALS OF ATOM           1 spin           1  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM           1 spin           2  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM           2 spin           1  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM           2 spin           2  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM           3 spin           1  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM           3 spin           2  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM           4 spin           1  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM           4 spin           2  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM           5 spin           1  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM           5 spin           2  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM           6 spin           1  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM           6 spin           2  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM           7 spin           1  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM           7 spin           2  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM           8 spin           1  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM           8 spin           2  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM           9 spin           1  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM           9 spin           2  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM          10 spin           1  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM          10 spin           2  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM          11 spin           1  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM          11 spin           2  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM          12 spin           1  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM          12 spin           2  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM          13 spin           1  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM          13 spin           2  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM          14 spin           1  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM          14 spin           2  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM          15 spin           1  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM          15 spin           2  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM          16 spin           1  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM          16 spin           2  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM          17 spin           1  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM          17 spin           2  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM          18 spin           1  BY
+  0.000000000000000E+000 RY.
+ SHIFTING OF THE POTENTIALS OF ATOM          18 spin           2  BY
+  0.000000000000000E+000 RY.
+ 
+===============================================================================
+                    EPATHTB: generates a complex E contour
+===============================================================================
+ 
+     E min =    -0.600000 (Ry)        Fermi energy =     0.770433 (Ry)
+     E max =     0.770433 (Ry)        Temperature  =   800.000000 (K )
+     --------------------------------------------------------------
+     GF integration rectangular contour ( ImE > 0 )
+     Number of energy points :  18             poles = 3
+                       contour: N1 = 3, N2 =  10, N3 = 2
+ 
+===============================================================================
+                  MADELUNG3D: setting bulk Madelung coefficients
+===============================================================================
+ 
+     < LATTICE3D > : generating direct/reciprocal lattice vectors
+
+          R max = 35.83200 (a.u.)
+          G max =  8.37240 (1/a.u.)
+
+                         vectors  shells  max. R 
+                         ------------------------------
+          Direct  lattice    161      37   35.83200
+          Recipr. lattice  19945    2354    8.37156
+                         ------------------------------
+
+     < STRMAT > : calculating lattice sums
+
+===============================================================================
+               BZKINT0: finding symmetry, setting BZ integration
+===============================================================================
+
+     < FINDGROUP > : Finding symmetry operations
+
+        ------------------------------------------------------------
+        3D symmetries found for this lattice:  4
+        ------------------------------------------------------------
+        E           C2z         IC2x        IC2y      
+        ------------------------------------------------------------
+
+     < BZKMESH > : creating k-mesh, write to file kpoints
+
+        number of different k-meshes : 3
+        the direct lattice  4 symmetries will be used
+
+        -----------------------------------
+        k-mesh NofKs N kx N ky N kz vol BZ
+        -----------------------------------
+             1     9    5    5    1 -0.1053
+             2     4    3    3    1 -0.1053
+             3     3    2    2    1 -0.1053
+        -----------------------------------
+
+     <SYMTAUMAT> : rotation matrices acting on t/G/tau
+
+        ---------------------------------------------------------
+        ISYM            INV          Euler angles      Unitarity
+        ---------------------------------------------------------
+         1   E           0   0.00000   0.00000   0.00000   T
+         2   C2z         0 180.00000   0.00000   0.00000   T
+         3   IC2x        1 180.00000 180.00000   0.00000   T
+         4   IC2y        1   0.00000 180.00000   0.00000   T
+        ---------------------------------------------------------
+
+     < GFSHELLS > : setting up indices of the GF blocks
+
+        Different shells for GF calculation :  18
+
+     < GFMASK > : set KKR matrix inversion algorithm
+
+        INVERSION algorithm used : godfrin module                     
+
+===============================================================================
+                               < KKR0 finished >
+===============================================================================
+
+ create_newcomms_group_ie input:           1           1           1
+==================================================
+    MPI parallelization: use    1 ranks
+    create processor array of size (nat x ne)   1 x   1
+                N_E
+         <--------------->
+       ^ ( | | | | | | | )
+       | ( | | | | | | | )
+  N_at | ( | | | | | | | )
+       | ( | | | | | | | )
+       v ( | | | | | | | )
