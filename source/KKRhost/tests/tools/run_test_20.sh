@@ -6,4 +6,6 @@ export OMP_NUM_THREADS=1
 mpirun -np 3 ../../../kkr.x | tee out_kkr
 cd ../godfrinOFF/
 mpirun -np 3 ../../../kkr.x | tee out_kkr
+cd ../fullinv/
+mpirun -np 3 ../../../kkr.x | tee out_kkr
 cd ../../../

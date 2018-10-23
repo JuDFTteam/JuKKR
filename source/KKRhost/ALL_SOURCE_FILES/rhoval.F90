@@ -182,16 +182,14 @@ contains
     complex (kind=dp), dimension (:, :, :, :), allocatable :: gflle ! qdos
 
     ! This routine needs irregular wavefunctions
-    logical :: lirrsol
-    parameter (lirrsol=.true.)
+    logical, parameter :: lirrsol=.true.
 
 #ifdef CPP_MPI
     integer :: ie_start
 #endif
     integer :: ie_end, ie_num
     ! .. External Functions
-    logical :: opt, test           ! qdos
-    external :: opt, test          ! qdos
+    logical, external :: opt, test          ! qdos
 
     lmaxd1 = lmax + 1
 
@@ -296,9 +294,9 @@ contains
       call memocc(i_stat, product(shape(qvec))*kind(qvec), 'QVEC', 'RHOVAL') ! qdos
       do iq = 1, nqdos             ! qdos
         read (67, *) (rqvec(ix), ix=1, 3) ! qdos
-        qvec(1,iq) = complex(rqvec(1), 0.0_dp) 
-        qvec(2,iq) = complex(rqvec(2), 0.0_dp) 
-        qvec(3,iq) = complex(rqvec(3), 0.0_dp) 
+        qvec(1,iq) = cmplx(rqvec(1), 0.0_dp) 
+        qvec(2,iq) = cmplx(rqvec(2), 0.0_dp) 
+        qvec(3,iq) = cmplx(rqvec(3), 0.0_dp) 
       end do                       ! qdos
       close (67)                   ! qdos
     end if
