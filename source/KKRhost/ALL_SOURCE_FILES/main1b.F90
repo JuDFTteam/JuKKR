@@ -784,7 +784,7 @@ contains
 #ifdef CPP_TIMING
       if (.not. opt('GREENIMP')) then
         if (t_inc%i_time>0) call timing_stop('main1b - calctref13')
-        if (t_inc%i_time>0) call timing_pause('main1b - fourier')
+        if (t_inc%i_time>0) call timing_stop('main1b - fourier')
         if (t_inc%i_time>0) call timing_stop('main1b - inversion')
         if (t_inc%i_time>0) call timing_stop('main1b - kloopz')
       end if

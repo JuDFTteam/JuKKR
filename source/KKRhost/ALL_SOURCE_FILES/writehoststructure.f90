@@ -33,7 +33,8 @@ contains
     real (kind=dp) :: wght
     character (len=256) :: uio
     integer :: ier, it
-    integer, dimension(12) :: itemp1
+    integer, dimension(8) :: itemp1
+    real (kind=dp), dimension(4) :: ftemp
 
     open (unit=3463453, file='kkrflex_hoststructure.dat')
     call version_print_header(3463453, '; '//md5sum_potential//'; '//md5sum_shapefun)
@@ -49,7 +50,9 @@ contains
     do iatom = 1, nrbasis
       call ioinput('ATOMINFO        ', uio, iatom+1, 7, ier)
       if (ier==0) then
-        read (unit=uio, fmt=*)(itemp1(it), it=1, 12), wght
+        ! read weight from last column in atominfo (ftemp and itemp1 are used to
+        ! skip the first 12 entries in that line)
+        read (unit=uio, fmt=*) ftemp(1), (itemp1(it), it=1, 8), ftemp(2:4), wght
       else
         wght = 1.d0
       end if

@@ -524,8 +524,8 @@ contains
 
 
         ! copy results of rho2ns, r2nef, denef, and denefat to big arrays
-        rho2ns(1:irmd, 1:lmpotd, i1, :) = rho2n1(1:irmd, 1:lmpotd, :)
-        r2nef(1:irmd, 1:lmpotd, i1, :) = rho2n2(1:irmd, 1:lmpotd, :)
+        rho2ns(1:irmd, 1:lmpotd, i1, 1:2) = rho2n1(1:irmd, 1:lmpotd, 1:2)
+        r2nef(1:irmd, 1:lmpotd, i1, 1:2) = rho2n2(1:irmd, 1:lmpotd, 1:2)
         do ispin=1, nspin
           do l = 0, lmaxd1
             denef = denef - 2.0_dp*conc(i1)*aimag(den(l,ielast,1,ipot1+ispin-1))/pi/dble(nspinpot)

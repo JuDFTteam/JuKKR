@@ -363,9 +363,6 @@ contains
         ! diagonal blocks A(i,i)
         aii(1:n, 1:n, i) = a(i0+1:i0+n, i0+1:i0+n)
         ! superdiagonal blocks A(i,i+1)
-        write(*,*) n, m, i0, j0, i
-        write(*,*) shape(aij)
-        write(*,*) shape(a)
         aij(1:n, 1:m, i) = a(i0+1:i0+n, j0+1:j0+n)
         ! subdiagonal blocks A(i+1,i)
         aji(1:m, 1:n, i) = a(j0+1:j0+m, i0+1:i0+n)
