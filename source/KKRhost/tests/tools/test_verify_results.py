@@ -263,7 +263,7 @@ class Test_features():
         assert std(num-num_ref)<10**-14
         # check against full inv
         num_ref, text_ref = read_file(path00+fname)
-        assert std(num-num_ref)<10**-14
+        assert std(num-num_ref)<2*10**-11
     #"""
 
 
