@@ -1,4 +1,4 @@
-#define OUTPUT_CHARGE_AND_POTENTIAL_MOMENTS
+! #define OUTPUT_CHARGE_AND_POTENTIAL_MOMENTS
 
 !> Adds the Madelung Potential to all atoms.
 module MadelungPotential_mod
