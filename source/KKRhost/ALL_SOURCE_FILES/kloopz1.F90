@@ -125,7 +125,7 @@ contains
     integer, intent (inout) :: itcpamax !! Max. number of CPA iterations
     complex (kind=dp), intent (inout) :: tracet !! \f$Tr\left[ (t-tref)^{-1} \frac{d(t-tref)}{dE} \right]\f$
     complex (kind=dp), intent (inout) :: lly_grtr !! Trace Eq.5.38 PhD Thiess (k-integrated)! LLY Lloyd
-    complex (kind=dp), dimension (lmmaxd, lmmaxd, nsheld), intent (inout) :: gmatll !! GMATLL = diagonal elements of the G matrix (system)
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, nsheld), intent (out) :: gmatll !! GMATLL = diagonal elements of the G matrix (system)
     ! .. Local Scalars
     integer :: i_stat, i_all
     integer :: ih, lm1, lm2, ns, nsdia, icall, irec
@@ -264,7 +264,7 @@ contains
     ! ----------------------------------------------------------------------------
     ! GLL2K >  incorporated now
     ! ----------------------------------------------------------------------------
-    tauvbz = 1.d0/volbz
+    tauvbz = 1.0_dp/volbz
     ! ----------------------------------------------------------------------------
     ! Convert inverted delta_t-matrices to p.u.
     ! ----------------------------------------------------------------------------
@@ -374,7 +374,7 @@ contains
         call cpamillsx(itcpa, cpaerr, cpacorr, cpachng, iprint, icpa, naez, nkmq, noq, itoq, conc, mssq, msst, taudelq, dmssq, kmrot, drotq, natyp, naez, lmmaxd)
         mssq(:, :, :) = tqdos(:, :, :) ! lmmaxd,lmmaxd,naez   ! qdos
         itcpamax = 0
-        cpaerr = 0.d0
+        cpaerr = 0.0_dp
       else
         call cpamillsx(itcpa, cpaerr, cpacorr, cpachng, iprint, icpa, naez, nkmq, noq, itoq, conc, mssq, msst, taudelq, dmssq, kmrot, drotq, natyp, naez, lmmaxd)
         ! ----------------------------------------------------------------------
@@ -461,7 +461,7 @@ contains
                 end if
               else
                 if (.not. opt('deci-out')) then
-                  write (37, rec=irec)(0.d0, 0.d0)
+                  write (37, rec=irec) (0.0_dp, 0.0_dp)
                 end if
               end if
 #else

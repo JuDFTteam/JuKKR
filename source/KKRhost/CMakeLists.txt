@@ -77,7 +77,7 @@ elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
     set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -lblas -llapack -ffree-line-length-none -fdefault-real-8 -fimplicit-none")
 
     # debug flags
-    set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g3 -fcheck=all -fbacktrace -Wall -Wextra -mtune=native")
+    set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g3 -fcheck=all -fbacktrace -Wall -Wextra -mtune=native -finit-local-zero")
 
     # release flags
     set(CMAKE_Fortran_FLAGS_RELEASE "-Ofast -march=native -fbacktrace")

@@ -270,7 +270,8 @@ contains
       stop 'ERROR: qdos and deci-out cannot be used simultaniously'
     else if (opt('qdos    ')) then
 #ifdef CPP_MPI
-      open (37, access='direct', recl=wlength*4, file='tmat.qdos', form='unformatted')
+      ! wlength needs to take double complex values
+      open (37, access='direct', recl=wlength*16, file='tmat.qdos', form='unformatted')
 #else
       open (37, file='tmat.qdos', form='formatted') ! qdos ruess
 #endif
@@ -974,7 +975,7 @@ contains
         call tmatimp_newsolver(irmd,nsra-1,lmax,iend,irid,lpotd,natyp,ncleb,ipand,  &
           irnsd,nfund,t_imp%ihost,ntotd,nspin,lmpotd,ncheb,lmmaxd/(1+korbit),korbit,&
           nspotd,ielast,irmind,t_params%npan_eq,t_params%npan_log,t_imp%natomimp,   &
-          r_log, vins, visp, ipan, irmin, t_imp%hostimp(1:t_imp%natomimp),          &
+          r_log, vins, visp, ipan, irmin, t_imp%hostimp(1:natyp),          &
           t_imp%ipanimp(1:t_imp%natomimp), t_imp%irwsimp(1:t_imp%natomimp),         &
           atomimp(1:t_imp%natomimp), t_imp%irminimp(1:t_imp%natomimp), icleb, ircut,&
           t_imp%ircutimp(0:ipand,1:t_imp%natomimp),zat,t_imp%zimp(1:t_imp%natomimp),&

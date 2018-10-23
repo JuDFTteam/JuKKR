@@ -158,7 +158,7 @@ inner:    do j = 1, natomimp
         ! save stuff to t_imp for later use
         t_imp%ihost = ihost
         t_imp%natomimp = natomimp
-        allocate (t_imp%hostimp(ihost), stat=ierr)
+        allocate (t_imp%hostimp(natypd), stat=ierr) ! needs to be natypd dimension
         if (ierr/=0) stop 'Error allocating t_imp%HOSTIMP'
         t_imp%hostimp(1:ihost) = hostimp(1:ihost)
         allocate (t_imp%atomimp(natomimp), stat=ierr)

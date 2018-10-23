@@ -155,6 +155,7 @@ contains
     real (kind=dp), dimension (0:lmax) :: s
     real (kind=dp), dimension (irmd) :: cutoff
     real (kind=dp), dimension (irmd, 0:lmax) :: rs
+    real (kind=dp), dimension (3) :: rqvec !! qvec read in buffer
     complex (kind=dp), dimension (0:lmax) :: ekl
     complex (kind=dp), dimension (0:lmax) :: tmat
     complex (kind=dp), dimension (0:lmax) :: alpha
@@ -289,12 +290,15 @@ contains
     nqdos = 1                      ! qdos
     if (opt('qdos    ')) then      ! qdos
       ! Read BZ path for qdos calculation:                                       ! qdos
-      open (67, file='qvec.dat')   ! qdos
+      open (67, file='qvec.dat', form='formatted')   ! qdos
       read (67, *) nqdos           ! qdos
       allocate (qvec(3,nqdos), stat=i_stat) ! qdos
       call memocc(i_stat, product(shape(qvec))*kind(qvec), 'QVEC', 'RHOVAL') ! qdos
       do iq = 1, nqdos             ! qdos
-        read (67, *)(qvec(ix,iq), ix=1, 3) ! qdos
+        read (67, *) (rqvec(ix), ix=1, 3) ! qdos
+        qvec(1,iq) = complex(rqvec(1), 0.0_dp) 
+        qvec(2,iq) = complex(rqvec(2), 0.0_dp) 
+        qvec(3,iq) = complex(rqvec(3), 0.0_dp) 
       end do                       ! qdos
       close (67)                   ! qdos
     end if
