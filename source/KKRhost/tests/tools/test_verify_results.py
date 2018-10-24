@@ -264,12 +264,19 @@ class Test_features():
         num_ref, text_ref = read_file(path00+fname)
         assert std(num-num_ref)<2*10**-11
 
-    def test_21_XCsn(self):
+    def test_21_XCs(self):
         path00 = 'test_run21_hybrid_1_3'
         # first check the two runs individually
         for padd in 'MJW vBH VWN PW91 PBE PBEsol'.split():
            path = path00+'/'+padd+'/'
            standard_verify(path, rms_threshold=5*10**-7, rms_threshold_end=10**-7)
+
+    def test_22_LDAU(self):
+        path00 = 'test_run22_hybrid_1_3'
+        # first check the two runs individually
+        for padd in 'noSOC SOC'.split():
+           path = path00+'/'+padd+'/'
+           standard_verify(path, rms_threshold=5*10**-8, rms_threshold_end=5*10**-8)
 
 
 class Test_SOC():

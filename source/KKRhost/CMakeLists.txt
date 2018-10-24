@@ -32,7 +32,7 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
     set(compver "intel")
 
     # standard compiler flags
-    set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -g -traceback")
+    set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -traceback")
 
     # increase stacksize on mac
     if(CMAKE_SYSTEM_NAME MATCHES Darwin)
@@ -546,7 +546,9 @@ add_executable(
     ALL_SOURCE_FILES/ymy.f90
     )
 
-target_link_libraries(kkr.x ${lapackblas_libraries})
+if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
+    target_link_libraries(kkr.x ${lapackblas_libraries})
+endif()
 
 if(ENABLE_BdG)
     # for wf testing (BdG)
@@ -756,6 +758,8 @@ if(ENABLE_BdG)
         ALL_SOURCE_FILES/convol.f90
         )
 
-    target_link_libraries(kkr_BdG_radial.x ${lapackblas_libraries})
+    if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
+        target_link_libraries(kkr_BdG_radial.x ${lapackblas_libraries})
+    endif()
 
 endif()
