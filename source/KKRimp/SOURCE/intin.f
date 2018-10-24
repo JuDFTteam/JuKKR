@@ -1,3 +1,22 @@
+!-------------------------------------------------------------------------------
+!> Summary: 
+!> Author: Who wrote this subroutine
+!> Category: core electron, kkrimp
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+!-------------------------------------------------------------------------------
+!> @note Notes on the code
+!> @endnote
+!> @todo things that must be checked
+!> @endtodo
+!> @warning Important precautions
+!> @endwarning
+!> @bug If nasty things are found
+!> @endbug
+!-------------------------------------------------------------------------------
+
+
+
       SUBROUTINE INTIN(G,F,V,E,L,NNE,VALU,SLOP,K1,K2,KC,DG,A,B,Z,NSRA)
 
 C     .. Scalar Arguments ..

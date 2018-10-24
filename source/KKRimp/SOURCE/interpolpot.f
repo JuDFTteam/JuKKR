@@ -2,6 +2,24 @@
 
       CONTAINS
 
+!-------------------------------------------------------------------------------
+!> Summary: This subroutine does the interpolation
+!> Author: Who wrote this subroutine
+!> Category: interpolation, potential
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+!-------------------------------------------------------------------------------
+!> @note Notes on the code
+!> @endnote
+!> @todo things that must be checked
+!> @endtodo
+!> @warning Important precautions
+!> @endwarning
+!> @bug If nasty things are found
+!> @endbug
+!-------------------------------------------------------------------------------
+
+
       SUBROUTINE INTERPOLPOT(R0,R1,V0,V1,N0,N1,NLOC)
 c  ******************************************************************
 c  *
@@ -75,6 +93,22 @@ c               write(6,*) i,r1(i),v1(i)
         V1(I) = V1(I)*FACTOR
    50 CONTINUE
       END SUBROUTINE
+!-------------------------------------------------------------------------------
+!> Summary: This subroutine is used to fit a polynomial to a set of data 
+!> Author: Who wrote this subroutine
+!> Category: interpolation, potential
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+!-------------------------------------------------------------------------------
+!> @note Notes on the code
+!> @endnote
+!> @todo things that must be checked
+!> @endtodo
+!> @warning Important precautions
+!> @endwarning
+!> @bug If nasty things are found
+!> @endbug
+!-------------------------------------------------------------------------------
 
 
       SUBROUTINE INTERPOLPOT_LEASQR(R,V,N,NORDER,C)
@@ -133,7 +167,7 @@ C
 C ------------------------------
 C     .. Parameters ..
       INTEGER IRMD
-      PARAMETER (IRMD=1000)
+      PARAMEggTER (IRMD=1000)
 C     ..
 C     .. Scalar Arguments ..
       INTEGER N,NORDER

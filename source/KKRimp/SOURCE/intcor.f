@@ -1,3 +1,21 @@
+!-------------------------------------------------------------------------------
+!> Summary: This subroutine is used for calcualtion of the core charge density  
+!> Author: Who wrote this subroutine
+!> Category: core-electrons
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+!-------------------------------------------------------------------------------
+!> @note Similar to the intcor.f of  the host kkr code. 
+!> @endnote
+!> @todo things that must be checked
+!> @endtodo
+!> @warning Important precautions
+!> @endwarning
+!> @bug If nasty things are found
+!> @endbug
+!-------------------------------------------------------------------------------
+
+
       SUBROUTINE INTCOR(F1,F2,RHO,G,F,V,VALUE,SLOPE,L,NN,E,SUM,NRE,
      +                    VLNC,A,B,Z,RN,NR,TOL,IRM,IPR,NITMAX,NSRA)
 C     .. Scalar Arguments ..

@@ -1,5 +1,38 @@
+   !-------------------------------------------------------------------------------
+   !> Summary: this is module is used to generat the Gauntcoefficients convoluted with shapefunction 
+   !> Author: Who wrote this subroutine
+   !> Category: TAGS for the code they must be written as TAG1, TAG2, ..., TAGN
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+   !-------------------------------------------------------------------------------
+   !> @note Notes on the code
+   !> @endnote
+   !> @todo things that must be checked
+   !> @endtodo
+   !> @warning Important precautions
+   !> @endwarning
+   !> @bug If nasty things are found
+   !> @endbug
+   !-------------------------------------------------------------------------------
 MODULE MOD_GAUNTSHAPE
 CONTAINS
+   !-------------------------------------------------------------------------------
+   !> Summary: This subroutine generats the Gauntcoefficients convoluted with shapefunction 
+   !> Author: 
+   !> Category: Shapefun, Potential, kkrimp 
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+   !-------------------------------------------------------------------------------
+   !> @note Notes on the code
+   !> @endnote
+   !> @todo things that must be checked
+   !> @endtodo
+   !> @warning Important precautions
+   !> @endwarning
+   !> @bug If nasty things are found
+   !> @endbug
+   !-------------------------------------------------------------------------------
+
      SUBROUTINE GEN_GAUNTSHAPE(lmaxd,NATOM,LMAXATOM,gauntshape,shapefun,ins)
 use type_gauntshape
 use type_shapefun
@@ -42,6 +75,25 @@ end if
 !    call shape() for all lmax values
 
      END SUBROUTINE GEN_GAUNTSHAPE
+
+   !-------------------------------------------------------------------------------
+   !> Summary: Prepares shape corrections using gaussian quadrature as given by
+   !>          m. abramowitz and i.a. stegun, handbook of mathematical functions
+   !>          nbs applied mathematics series 55 (1968), pages 887 and 916
+   !> Author: Who wrote this subroutine
+   !> Category: Shapefun, Potential 
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+   !-------------------------------------------------------------------------------
+   !> @note the parameter LASSLD has to be chosen such that l1+l2+l3 .le. 2*LASSLD 
+   !> @endnote
+   !> @todo things that must be checked
+   !> @endtodo
+   !> @warning Important precautions
+   !> @endwarning
+   !> @bug If nasty things are found
+   !> @endbug
+   !-------------------------------------------------------------------------------
 
 
       SUBROUTINE SHAPE(LPOT,NATOM,GSH,ILM,IMAXSH,SHAPEFUN,W,YR, &
@@ -182,6 +234,29 @@ end if
 !C
       END SUBROUTINE SHAPE
 !C
+
+   !-------------------------------------------------------------------------------
+   !> Summary: This function when used insures to have only non zero Gauntcoffecients
+   !>           The Gauant coefficients are different from zero only if the L1, L2 and L3
+   !>           satisfie the equation: abs(L3-L2)<= L1 >= (L3+L2)
+   !>          
+   !> Author: Who wrote this function
+   !> Category: Potential
+   !> Deprecated: False ! This needs to be set to True for deprecated functions
+   !> A More detailed explanation with the math, concepts, etc necessary to understand the function
+   !-------------------------------------------------------------------------------
+   !> @note Notes on the code
+   !> @endnote
+   !> @todo things that must be checked
+   !> @endtodo
+   !> @warning Important precautions
+   !> @endwarning
+   !> @bug If nasty things are found
+   !> @endbug
+   !-------------------------------------------------------------------------------
+
+
+
       FUNCTION TRIANGLE(L1,L2,L3)
       IMPLICIT NONE
       INTEGER L1,L2,L3
@@ -191,6 +266,24 @@ end if
       TRIANGLE = (L1.GE.ABS(L3-L2)) .AND. (L1.LE.(L3+L2)) &
            .AND. (MOD((L1+L2+L3),2).EQ.0)
       END FUNCTION TRIANGLE
+
+   !-------------------------------------------------------------------------------
+   !> Summary: To get the lmax bounds for every atom
+   !> Author: Who wrote this subroutine
+   !> Category: TAGs
+   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+   !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+   !-------------------------------------------------------------------------------
+   !> @note Notes on the code
+   !> @endnote
+   !> @todo things that must be checked
+   !> @endtodo
+   !> @warning Important precautions
+   !> @endwarning
+   !> @bug If nasty things are found
+   !> @endbug
+   !-------------------------------------------------------------------------------
+
 
 subroutine getlmaxbounds(lmaxatom,natom,lmaxbounds)
     implicit none

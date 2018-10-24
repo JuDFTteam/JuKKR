@@ -1,6 +1,61 @@
+!------------------------------------------------------------------------------------
+!> Summary: This module is used to solve the Dyson equation in free space 
+!> Author: People who wrote it
+!>  solve the system of linear equations:
+!>   math    :  (1 - G_free * T)*G_tb          = G_free
+!> ----------------------------------------------------------------------
+!>     GREF= 1 - G_free * T
+!>    GREFOUT%MAT = G_free
+!>     result : GREFOUT%MAT = tb reference Greensfunction G_ref(n,0) 
+!>
+!> One can write Latex comments like this \(i\hbar\frac{\partial \psi}{\partial t}=-\mathcal{H}\psi\)
+!> or add labeled equations using the standard latex way
+!> \begin{equation}
+!> \mathbf{A} \mathbf{v}= \eta\mathbf{v}
+!> \end{equation}
+!> **FORd** also accepts markdown style so you can _write with style_ 
+!> 
+!> **IMPORTANT**
+!> The JM-KKR follows the coding conventions noted in this example, one that is
+!> not obvious is that **each level of indentation consists of two spaces**. Please keep this:
+!> _do it for the children_.
+!> So please keep the conventions.
+! These are special boxes for ford, notice that this comment does not appear in the html file.
+! These boxes contain important information and should be added when necessary. ALWAYS remember to close the box
+! BEFORE oppening a new one or they will be nested.
+!------------------------------------------------------------------------------------
+!> @note Notes on the code
+!> @endnote
+!> @todo things that must be checked
+!> @endtodo
+!> @warning Important precautions
+!> @endwarning
+!> @bug If nasty things are found
+!> @endbug
+!------------------------------------------------------------------------------------
+
 MODULE mod_GLL95
 
 CONTAINS
+
+   !-------------------------------------------------------------------------------
+   !> Summary:  solution of the DYSON equation for a cluster of potentials
+   !>           (TMATLL) centered at positions RATOM in free space
+   !> Author: Who wrote this subroutine
+   !> Category: Green-function, reference system 
+   !> Deprecated: True ! This needs to be set to True for deprecated subroutines
+   !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+   !-------------------------------------------------------------------------------
+   !> @note Notes on the code
+   !> @endnote
+   !> @todo things that must be checked
+   !> @endtodo
+   !> @warning Important precautions
+   !> @endwarning
+   !> @bug If nasty things are found
+   !> @endbug
+   !-------------------------------------------------------------------------------
+
 
 SUBROUTINE GLL95(ICLS,ERYD,TMATLL,TBCLUSTER, &
                  ALAT,OUT,GREFOUT,LMMAXD,NIMPATOM,NTOTATOM,LMAXATOM)
