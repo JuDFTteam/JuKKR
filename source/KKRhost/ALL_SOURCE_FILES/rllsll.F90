@@ -887,6 +887,7 @@ contains
   end program test_rllsll
 #endif
 
+end module mod_rllsll
   ! subroutine iterativesol (NCHEB,LMSIZE2,LMSIZE,MMAT,BMAT)
   ! implicit none
   ! integer, intent(in) :: NCHEB

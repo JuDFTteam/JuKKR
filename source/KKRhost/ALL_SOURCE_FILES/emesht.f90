@@ -3,8 +3,7 @@ module mod_emesht
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: This subroutine provides the energy mesh in array EZ and the
-  !> appropriate integration weights in array DF.
+  !> Summary: This subroutine provides the energy mesh in array EZ and the appropriate integration weights in array DF.
   !> Author: 
   !> Category: KKRhost, undefined
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
@@ -12,42 +11,40 @@ contains
   !> Poles of the Fermi function C (Matsubara frequencies) and a
   !> contour in
   !> the complex energy are used as described in (????).
-  !> The contour consists of three straight lines with NPNT1, NPNT2, and NPNT3
-  !> integration points and is determined by the input arguments: EBOT, EMU,
-  !> TK, and NPOL.
+  !> The contour consists of three straight lines with `NPNT1`, `NPNT2`, and `NPNT3`
+  !> integration points and is determined by the input arguments: `EBOT`, `EMU`,
+  !> `TK`, and `NPOL`.
   !> The three lines are defined by:
-  !> 1. The line from EBOT to \f$ EBOT+2*NPOL*\pi*i*k*TK \f$ with NPNT1
+  !> 1. The line from EBOT to \( EBOT+2*NPOL*\pi*i*k*TK \) with `NPNT1`
   !> integration points (Gauss-Legendre rule)
-  !> 2. The line from \f$ EBOT+2*NPOL*\pi*i*k*TK\f$ to \f$
-  !> EMU+(2*NPOL*\pi*i-30)*k*TK\f$ with NPNT2 integration points (Gauss-Legendre
-  !> rule)
-  !> 3. The line from \f$ EMU+(2*NPOL*\pi*i-30)*k*TK\f$ to \f$ \infty \f$
+  !> 2. The line from \( EBOT+2NPOL\pi ikTK\) to \(EMU+(2NPOL\pi i-30)kTK\) with 
+  !> `NPNT2` integration points (Gauss-Legendre rule)
+  !> 3. The line from \( EMU+(2NPOL \pi i-30)kTK\) to \() \infty \)
   !>
-  !> The total number of integration points is given by: \f$
-  !> NPNT=NPNT1+NPNT2+NPNT3+NPOL\f$
+  !> The total number of integration points is given by:
+  !> \(NPNT=NPNT1+NPNT2+NPNT3+NPOL\)
   !> The integration points and weights on three lines are chosen according to
   !> Gauss integration rules. Only in third interval
-  !> the Fermi function matters since \f$ e^x < 10^{-10} \f$ for \f$ x <
-  !> -25\f$.
+  !> the Fermi function matters since \() e^x < 10^{-10} \) for \) x < -25\).
   !> There are two special cases determined by NPOL = 0 and NPOL < 0.
   !> - NPOL = 0 leads to density-of-states calculations with constant
   !> integration weights and equally distributed points
-  !> between \f$ EBOT - \pi*i*k*TK\f$ and \f$ EMU - \pi*i*k*TK\f$.
+  !> between \( EBOT - \pi ikTK\) and \( EMU - \pi ikTK\).
   !> The total number of integration points is given by: NPNT=NPNT2
   !> - NPOL < 0 is meant for calculations where the Fermi-Dirac function is
   !> replaced by a step function with step at EMU. When
   !> this option is used no poles of the Fermi-Dirac function are used and the
   !> contour consists of the three straight lines:
-  !> 1. The line from \f$EBOT\f$ to \f$ EBOT-2*NPOL*\pi*i*k*TK\f$ with NPNT1
+  !> 1. The line from \f$EBOT\f$ to \( EBOT-2*NPOL*\pi*i*k*TK\) with NPNT1
   !> integration points (Gauss-Legendre rule)
-  !> 2. The line from \f$EBOT-2*NPOL*\pi*i*k*TK\f$ to
-  !> \f$EMU-2*NPOL*\pi*i*k*TK\f$ with NPNT2 integration points (Gauss-Legendre
+  !> 2. The line from \(EBOT-2NPOL\pi ikTK\) to
+  !> \(EMU-2NPOL\pi ikTK\) with NPNT2 integration points (Gauss-Legendre
   !> rule)
-  !> 3. The line from \f$ EMU-2*NPOL*\pi*i*k*TK\f$ to \f$EMU\f$ with NPNT3
+  !> 3. The line from \( EMU-2NPOL\pi ikTK\) to \f$EMU\f$ with NPNT3
   !> integration points (Gauss-Legendre rule)
   !>
   !> The total number of integration points is given by:
-  !> \f$NPNT=NPNT1+NPNT2+NPNT3\f$
+  !> \(NPNT=NPNT1+NPNT2+NPNT3\)
   !>
   !> @note
   !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to

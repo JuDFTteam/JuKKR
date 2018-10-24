@@ -6,7 +6,7 @@ contains
 
 
   !-------------------------------------------------------------------------------
-  !> Summary:Calculates the muffin-tin radius
+  !> Summary: Calculates the muffin-tin radius
   !> Author: 
   !> Category: KKRhost, radial-grid
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
