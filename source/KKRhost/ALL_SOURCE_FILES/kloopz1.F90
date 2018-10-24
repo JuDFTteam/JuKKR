@@ -428,7 +428,7 @@ contains
     ! In first qdos run write out t matrix which is read in for the calculation for every k point
     if (opt('deci-out') .or. (iqdosrun==0)) then ! qdos ruess
       do ih = 1, naez
-        if (.not. (test('fileverb') .and. opt('deci-out')) ) then
+        if (.not.test('fileverb') .and. .not.opt('deci-out') ) then
           irec0 = lmmaxd**2*(ih-1) + lmmaxd**2*naez*(ie-1) + lmmaxd**2*t_inc%ielast*naez*(ispin-1)
         else
           write (37, 150) ie, eryd, ih
@@ -436,22 +436,23 @@ contains
         do lm1 = 1, lmmaxd
           do lm2 = 1, lmmaxd
             if (lm1==lm2) then
-              if (.not. (test('fileverb') .and. opt('deci-out')) ) then
+              if (.not.test('fileverb') .and. .not.opt('deci-out') ) then
                 irec = irec0 + lm2 + lmmaxd*(lm1-1)
                 write (37, rec=irec) mssq(lm1, lm2, ih)*cfctorinv
               else
                 write (37, 160) lm1, lm2, mssq(lm1, lm2, ih)*cfctorinv
               end if
             else ! lm1/=lm2
-              irec = irec0 + lm2 + lmmaxd*(lm1-1)
               if (abs(mssq(lm1,lm2,ih)/mssq(lm1,lm1,ih))>tolmssq) then
-                if (.not. (test('fileverb') .and. opt('deci-out')) ) then
+                if (.not.test('fileverb') .and. .not.opt('deci-out') ) then
+                  irec = irec0 + lm2 + lmmaxd*(lm1-1)
                   write (37, rec=irec) mssq(lm1, lm2, ih)*cfctorinv
                 else
                   write (37, 160) lm1, lm2, mssq(lm1, lm2, ih)*cfctorinv
                 end if
               else ! abs(...)<=tolmssq
                 if (.not. opt('deci-out')) then
+                  irec = irec0 + lm2 + lmmaxd*(lm1-1)
                   write (37, rec=irec) (0.0_dp, 0.0_dp)
                 end if
               end if ! abs(...)<tolmssq
@@ -474,8 +475,8 @@ contains
     taudelt(:, :, :) = czero
     if (ncpa>0) then
       nsmax = natyp
-      call projtau(icpaflag, cpachng, kmrot, .false., .false., 9, czero, natyp, naez, nkmq, msst, mssq, nlinq, iqat, conc, taudelq, taudelt, tautlin, ikm1lin, ikm2lin, drotq, &
-        nsheld, naez, lmmaxd, linmax)
+      call projtau(icpaflag, cpachng, kmrot, .false., .false., 9, czero, natyp, naez, nkmq, msst, mssq, nlinq, &
+        iqat, conc, taudelq, taudelt, tautlin, ikm1lin, ikm2lin, drotq, nsheld, naez, lmmaxd, linmax)
     else
       nsmax = naez
       do ns = 1, nsmax

@@ -621,7 +621,7 @@ contains
           do isite = 1, naez                                                 ! qdos ruess
             tqdos(:, :, isite) = czero                                       ! qdos ruess
 
-            if ( .not. (test('fileverb') .and. opt('deci-out')) ) then
+            if ( .not. (test('fileverb') .or. opt('deci-out')) ) then
               do lm1 = 1, lmmaxd
                 do lm2 = 1, lmmaxd
                   irec = lm2 + (lm1-1)*lmmaxd + lmmaxd**2*(isite-1) + lmmaxd**2*naez*(ie-1) + lmmaxd**2*ielast*naez*(ispin-1)
