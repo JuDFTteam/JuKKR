@@ -18,6 +18,7 @@ use nrtype
    double complex,allocatable       ::  gfint(:,:)   		  !! Integrated GF resolved in lms1,lms2 (integr. grlle) ! lda+u
    double complex        :: rho2ns_integrated(4)                  !! density integrated over r for all for all spin components
    double complex        :: rho2ns_integrated_scattering(4)       !! integrated density for the multiple scattering part of the potential (R G R) used to speed up angular convergence as explained in Bauer, PhD page 113 orbital magnetic moment
+   double complex        :: orbitalmom(3)		  	  !! orbital moment 
    double complex        :: orbitalmom_lm(0:9,3)		  !! orbital moment lm expansion
    double complex        :: orbitalmom_sp(2,3)			  !! spherical part of the orbital moment	
    double complex        :: orbitalmom_ns(3)			  !! non-spherical part of the orbital moment
