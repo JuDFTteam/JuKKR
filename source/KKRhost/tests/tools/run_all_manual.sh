@@ -153,6 +153,15 @@ if [[ ! -d tests/test_run20_hybrid_1_3 ]]; then
 fi
 cd tests
 
+echo "###########################################"
+echo "run:intel:XCs_21:"
+echo ""
+cd ../
+if [[ ! -d tests/test_run21_hybrid_1_3 ]]; then
+  tests/tools/run_test_21.sh
+fi
+cd tests
+
 
 #SOC tests
 

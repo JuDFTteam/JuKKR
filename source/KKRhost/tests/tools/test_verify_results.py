@@ -243,7 +243,6 @@ class Test_features():
         #cmplist = [path00, path00+'/ref']
         #cmp_modes(cmplist, '', s_rms_bound=2.13*10**-1, max_s_charges_bound=10**-3)
 
-    #"""
     def test_20_godfrin(self):
         path00 = 'test_run20_hybrid_1_3'
         # first check the two runs individually
@@ -264,7 +263,13 @@ class Test_features():
         # check against full inv
         num_ref, text_ref = read_file(path00+fname)
         assert std(num-num_ref)<2*10**-11
-    #"""
+
+    def test_21_XCsn(self):
+        path00 = 'test_run21_hybrid_1_3'
+        # first check the two runs individually
+        for padd in 'MJW vBH VWN PW91 PBE PBEsol'.split():
+           path = path00+'/'+padd+'/'
+           standard_verify(path, rms_threshold=5*10**-7, rms_threshold_end=10**-7)
 
 
 class Test_SOC():
