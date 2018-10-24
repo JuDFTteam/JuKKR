@@ -257,7 +257,7 @@ contains
     end if                         ! qdos
 
     open (30, file='lmdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat')      ! lmdos
-    call version_print_header(31)  ! lmdos
+    call version_print_header(30)  ! lmdos
     write (30, *) ' '              ! lmdos
     write (30, 100) '# ISPIN=', ispin, ' I1=', i1 ! lmdos
 100 format (a8, i3, a4, i5)        ! lmdos
@@ -410,7 +410,7 @@ contains
                 dentot = dentot + den(l, ie, iq) ! qdos
               end do               ! qdos
               write (30, 110) eryd, qvec(1, iq), qvec(2, iq), qvec(3, iq), -aimag(dentot)/pi, (-aimag(denlm(l,ie,iq))/pi, l=1, lmmaxd) ! lmdos
-              write (31, 110) eryd, qvec(1, iq), qvec(2, iq), qvec(3, iq), -aimag(dentot)/pi, (-aimag(denlm(l,ie,iq))/pi, l=1, lmmaxd) ! qdos
+              write (31, 110) ez(ie), real(qvec(1, iq)), real(qvec(2, iq)), real(qvec(3, iq)), -aimag(dentot)/pi, (-aimag(den(l,ie,iq))/pi, l=0, lmaxd1) ! qdos
 110           format (5f10.6, 40e16.8) ! qdos
               ! writeout complex qdos for interpolation                         ! complex qdos
               if (test('compqdos')) then ! complex qdos

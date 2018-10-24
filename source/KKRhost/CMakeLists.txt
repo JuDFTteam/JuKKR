@@ -48,8 +48,8 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
     endif()
 
     # debug flags
-    #set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -g -sox")
-    set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -r8 -CB -check all -check uninit -gen-interfaces -warn all -warn notruncated_source -debug extended -traceback -g -sox")
+    set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -g -sox")
+    #set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -r8 -CB -check all -check uninit -gen-interfaces -warn all -warn notruncated_source -debug extended -traceback -g -sox")
 
     # release flags
     set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -r8 -ip -xHOST")

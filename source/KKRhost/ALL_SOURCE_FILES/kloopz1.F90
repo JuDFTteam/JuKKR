@@ -135,6 +135,7 @@ contains
     logical :: ldia
     character (len=4) :: str4
     character (len=10) :: str10
+    integer :: irec0
     ! .. Local Arrays ..
     integer, dimension (naez) :: nkmq
     integer, dimension (naez) :: nlinq
@@ -155,10 +156,6 @@ contains
     complex (kind=dp), dimension (:, :, :), allocatable :: taudelq
     complex (kind=dp), dimension (:, :, :), allocatable :: taudelt
     complex (kind=dp), dimension (:, :, :, :), allocatable :: gs
-
-#ifdef CPP_MPI
-    integer :: irec0
-#endif
     ! .. External Functions
     logical :: test, opt
     external :: test, opt
@@ -431,44 +428,33 @@ contains
     ! In first qdos run write out t matrix which is read in for the calculation for every k point
     if (opt('deci-out') .or. (iqdosrun==0)) then ! qdos ruess
       do ih = 1, naez
-#ifdef CPP_MPI
-        irec0 = lmmaxd**2*(ih-1) + lmmaxd**2*naez*(ie-1) + lmmaxd**2*t_inc%ielast*naez*(ispin-1)
-        if (opt('deci-out')) write (37, 150) ie, eryd, ih
-#else
-        write (37, 150) ie, eryd, ih
-#endif
+        if (.not. (test('fileverb') .and. opt('deci-out')) ) then
+          irec0 = lmmaxd**2*(ih-1) + lmmaxd**2*naez*(ie-1) + lmmaxd**2*t_inc%ielast*naez*(ispin-1)
+        else
+          write (37, 150) ie, eryd, ih
+        end if
         do lm1 = 1, lmmaxd
           do lm2 = 1, lmmaxd
             if (lm1==lm2) then
-#ifdef CPP_MPI
-              if (.not. opt('deci-out')) then
+              if (.not. (test('fileverb') .and. opt('deci-out')) ) then
                 irec = irec0 + lm2 + lmmaxd*(lm1-1)
                 write (37, rec=irec) mssq(lm1, lm2, ih)*cfctorinv
               else
                 write (37, 160) lm1, lm2, mssq(lm1, lm2, ih)*cfctorinv
               end if
-#else
-              write (37, 160) lm1, lm2, mssq(lm1, lm2, ih)*cfctorinv
-#endif
-            else
-#ifdef CPP_MPI
+            else ! lm1/=lm2
               irec = irec0 + lm2 + lmmaxd*(lm1-1)
               if (abs(mssq(lm1,lm2,ih)/mssq(lm1,lm1,ih))>tolmssq) then
-                if (.not. opt('deci-out')) then
+                if (.not. (test('fileverb') .and. opt('deci-out')) ) then
                   write (37, rec=irec) mssq(lm1, lm2, ih)*cfctorinv
                 else
                   write (37, 160) lm1, lm2, mssq(lm1, lm2, ih)*cfctorinv
                 end if
-              else
+              else ! abs(...)<=tolmssq
                 if (.not. opt('deci-out')) then
                   write (37, rec=irec) (0.0_dp, 0.0_dp)
                 end if
-              end if
-#else
-              if (abs(mssq(lm1,lm2,ih)/mssq(lm1,lm1,ih))>tolmssq) then
-                write (37, 160) lm1, lm2, mssq(lm1, lm2, ih)*cfctorinv
-              end if
-#endif
+              end if ! abs(...)<tolmssq
             end if
           end do
         end do
@@ -651,7 +637,7 @@ contains
 140 format (' CPA: ERROR ', f12.8, '    CORRECTION ', f15.8, '    CHANGE ', f15.8)
 
 150 format (/, 80('*'), /, 'ENERGY ', i5, 2d16.8, ' SITE ', i3)
-160 format (2i5, 1p, 2d22.14)
+160 format (2i5, 2d22.14)
 
   end subroutine kloopz1_qdos
 

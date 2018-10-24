@@ -269,12 +269,12 @@ contains
     if ((opt('qdos    ')) .and. (opt('deci-out'))) then
       stop 'ERROR: qdos and deci-out cannot be used simultaniously'
     else if (opt('qdos    ')) then
-#ifdef CPP_MPI
-      ! wlength needs to take double complex values
-      open (37, access='direct', recl=wlength*16, file='tmat.qdos', form='unformatted')
-#else
-      open (37, file='tmat.qdos', form='formatted') ! qdos ruess
-#endif
+      if (.not. test('fileverb')) then
+        ! wlength needs to take double complex values
+        open (37, access='direct', recl=wlength*16, file='tmat.qdos', form='unformatted')
+      else
+        open (37, file='tmat.qdos', form='formatted') ! qdos ruess
+      end if
     else if (opt('deci-out')) then
       open (37, file='decifile', form='formatted', position='append') ! ruess: needed in case of deci-out option to prepare decifile
     end if
@@ -622,28 +622,30 @@ contains
         if (opt('readcpa ') .or. (opt('qdos    ') .and. (iqdosrun==1))) then ! qdos ruess: read in cpa t-matrix
           do isite = 1, naez                                                 ! qdos ruess
             tqdos(:, :, isite) = czero                                       ! qdos ruess
-#ifdef CPP_MPI
-            do lm1 = 1, lmmaxd
-              do lm2 = 1, lmmaxd
-                irec = lm2 + (lm1-1)*lmmaxd + lmmaxd**2*(isite-1) + lmmaxd**2*naez*(ie-1) + lmmaxd**2*ielast*naez*(ispin-1)
-                read (37, rec=irec) tread
-                if ((lm1+lm2)/=0) then                     ! qdos ruess
-                  tqdos(lm1, lm2, isite) = tread/cfctorinv ! qdos ruess
-                end if                                     ! qdos ruess
+
+            if ( .not. (test('fileverb') .and. opt('deci-out')) ) then
+              do lm1 = 1, lmmaxd
+                do lm2 = 1, lmmaxd
+                  irec = lm2 + (lm1-1)*lmmaxd + lmmaxd**2*(isite-1) + lmmaxd**2*naez*(ie-1) + lmmaxd**2*ielast*naez*(ispin-1)
+                  read (37, rec=irec) tread
+                  if ((lm1+lm2)/=0) then                      ! qdos ruess
+                    tqdos(lm1, lm2, isite) = tread/cfctorinv  ! qdos ruess
+                  end if                                      ! qdos ruess
+                end do
               end do
-            end do
-#else
-            read (37, *) text                          ! qdos ruess
-            read (37, *) text                          ! qdos ruess
-110         continue                                   ! qdos ruess
-            read (37, *) lm1, lm2, tread               ! qdos ruess
-            if ((lm1+lm2)/=0) then                     ! qdos ruess
-              tqdos(lm1, lm2, isite) = tread/cfctorinv ! qdos ruess
-              if ((lm1+lm2)<2*lmmaxd) go to 110        ! qdos ruess
-            end if                                     ! qdos ruess
-#endif
-          end do                                       ! qdos ruess
-        end if                                         ! qdos ruess
+            else ! 'filverb'
+              read (37, *) text                               ! qdos ruess
+              read (37, *) text                               ! qdos ruess
+110           continue                                        ! qdos ruess
+              read (37, fmt='(2i5,2d22.14)') lm1, lm2, tread  ! qdos ruess
+              if ((lm1+lm2)/=0) then                          ! qdos ruess
+                tqdos(lm1, lm2, isite) = tread/cfctorinv      ! qdos ruess
+                if ((lm1+lm2)<2*lmmaxd) go to 110             ! qdos ruess
+              end if                                          ! qdos ruess
+            endif ! 'filverb'
+
+          end do ! isite                                      ! qdos ruess
+        end if                                                ! qdos ruess
         ! -------------------------------------------------------------------
         ! Loop over all QDOS points and change volume for KLOOPZ run accordingly
         ! -------------------------------------------------------------------
