@@ -918,7 +918,7 @@ contains
   !> @note copied from host code @endnote
   !> This subroutine defines the rotation matrices for
   !> all the 32 point groups and names them after 
-  !> J.F. Cornwell (Group Theory??) second edition 
+  !> J.F. Cornwell (Group Theory?) second edition 
   !> Appendix D, p 324-325
   !-------------------------------------------------------------------------------
   subroutine pointgrp(rotmat,rotname)

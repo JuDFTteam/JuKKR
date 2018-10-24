@@ -1,6 +1,8 @@
-project: Jülich KKR code for bulk and interfaces
+project: PKKprime
 src_dir: ./
 exclude_dir: doc
+             saved
+             testgroup
              libs/FEAST/3.0/src/banded
              libs/FEAST/3.0/src/kernel
              libs/FEAST/3.0/src/sparse
@@ -9,9 +11,9 @@ exclude_dir: doc
              libs/FEAST/3.0/src/banded/spike-smp
              libs/FEAST/3.0/src
 output_dir: ./doc
-summary: Source code documentation of the Jülich KKR code for bulk and interfaces
+summary: Source code documentation of the PKKprime code for Fermi surfaces, scattering and transport
 author: The Jülich KKR team
-email: p.ruessmann@fz-juelich.de
+email: be.zimmermann@fz-juelich.de
 docmark: !
 predocmark: >
 media_dir: ./media
@@ -21,20 +23,20 @@ display: public
          protected
          private
 source: true
-graph: true
+graph: true 
 extra_filetypes: 1 #
 		 inc !
 		 mk #
 coloured_edges: true
 search: true 
-warn: true 
+warn: true
 license: by-nc
-version: 1.1.1
-project_website: https://iffgit.fz-juelich.de/kkr/kkrjm
+version: 0.0.1
+project_website: https://iffgit.fz-juelich.de/kkr/pkkr
 dbg: true
 
 This is the introductory text ...
-code locations [gitlab link](https://iffgit.fz-juelich.de/kkr/kkrjm)
+code locations [gitlab link](https://iffgit.fz-juelich.de/kkr/pkkr)
 [code wiki](https://iffwiki.fz-juelich.de/kkr/doku.php)
 
 Some latex example:
@@ -47,5 +49,5 @@ This is an example note
 
 
 @Bug
-If you find any bugs, please email [me](mailto:p.ruessmann@fz-juelich.de)
-or file a new issue on the [gitlab page](https://iffgit.fz-juelich.de/kkr/kkrjm/issues)
+If you find any bugs, please email [me](mailto:be.zimmermann@fz-juelich.de)
+or file a new issue on the [gitlab page](https://iffgit.fz-juelich.de/kkr/pkkr/issues)

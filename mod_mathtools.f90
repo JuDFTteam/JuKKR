@@ -51,7 +51,6 @@ contains
   !> Category: PKKprime, numerical-tools
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
-  !> 
   !-------------------------------------------------------------------------------
   subroutine bubblesort(n, Xin, Iout)
 
@@ -213,12 +212,12 @@ contains
       fermi_velocity_abs(3) = sqrt(sum(fermi_velocity(:,3)**2))
 
       integratedvalue  =   function_value(1)/fermi_velocity_abs(1) * ( 1d0/3d0*d(1)  + 1/6d0*d(2)            - 1d0/6d0*d(2)**2/d(1)) &
-                       & + function_value(2)/fermi_velocity_abs(2) * ( 1d0/6d0*(d(1) + d(2))**3/(d(1)*d(2)))                         &
-                       & + function_value(3)/fermi_velocity_abs(3) * ( 1d0/6d0*d(1)  + 1/3d0*d(2)            - 1d0/6d0*d(1)**2/d(2))
+                         + function_value(2)/fermi_velocity_abs(2) * ( 1d0/6d0*(d(1) + d(2))**3/(d(1)*d(2)))                         &
+                         + function_value(3)/fermi_velocity_abs(3) * ( 1d0/6d0*d(1)  + 1/3d0*d(2)            - 1d0/6d0*d(1)**2/d(2))
 
       densityofstates  =   1/fermi_velocity_abs(1) * ( 1d0/3d0*d(1)  + 1d0/6d0*d(2)            - 1d0/6d0*d(2)**2/d(1)) &
-                       & + 1/fermi_velocity_abs(2) * ( 1d0/6d0*(d(1) + d(2))**3/(d(1)*d(2)))                           &
-                       & + 1/fermi_velocity_abs(3) * ( 1d0/6d0*d(1)  + 1d0/3d0*d(2)            - 1d0/6d0*d(1)**2/d(2))
+                         + 1/fermi_velocity_abs(2) * ( 1d0/6d0*(d(1) + d(2))**3/(d(1)*d(2)))                           &
+                         + 1/fermi_velocity_abs(3) * ( 1d0/6d0*d(1)  + 1d0/3d0*d(2)            - 1d0/6d0*d(1)**2/d(2))
   end subroutine
 
 

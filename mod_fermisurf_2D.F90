@@ -621,7 +621,7 @@ contains
 
     end do!icub
 
-    if(myrank==master) write(*,*) ''
+    if(myrank==master) write(*,*)
     !**************************************!
     !*** (parallelized) loop over cubes ***!
     !**************************************!
@@ -1264,7 +1264,7 @@ contains
      end if!file_present(filename_cube)
     end do!icub
 
-    if(myrank==master) write(*,*) ''
+    if(myrank==master) write(*,*)
     !**************************************!
     !*** (parallelized) loop over cubes ***!
     !**************************************!
