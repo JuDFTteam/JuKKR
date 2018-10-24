@@ -105,9 +105,7 @@ contains
     logical :: lcpaij
 
     character (len=80) :: tmpdir
-#ifndef CPP_MPI
     character (len=80) :: text                             ! qdos ruess
-#endif
 
     ! .. Local arrays
     integer, dimension (maxmshd) :: nofks
