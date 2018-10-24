@@ -1,0 +1,40 @@
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ !!! Most output written to output.myrank.txt files !!!
+ !!! please check these files as well               !!!
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     Screened Korringa-Kohn-Rostoker Electronic Structure Code
+                      for Bulk and Interfaces
+                    Juelich-Munich 2001 - 2018
+
+  Code version: v2.4-305-g96ef9ba
+  Compile options: intel openmp 
+  serial number for files: kkrjm_v2.4-305-g96ef9ba_intel_20181024221127
+
+*******************************************************************************
+
+ Number of OpenMP threads used:    1
+
+*******************************************************************************
+
+ Calling MADELUNG3D
+ Exited MADELUNG3D
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ +++            SCF ITERATIONS START                +++
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+started on 2018/10/24 at 22:11:27
+ MIXLDAU not found, setting to 1.
+               Ne        
+          TOT 10.99999998
+      ITERATION   1 charge neutrality in unit cell =     0.000000
+                new E FERMI   0.6393039315  DOS(E_F) =     5.080944
+      ITERATION   1 average rms-error : v+ + v- =  4.6448D-08
+TOTAL ENERGY in ryd. :            -3304.87849558
+
+                 ++++++ SCF ITERATION CONVERGED ++++++
+*******************************************************************************
+Iteration finished on 2018/10/24 at 22:11:30
+ -------------------MEMORY CONSUMPTION REPORT-----------------------
+ 465 allocations and 585 deallocations, remaining memory(B):-92111870
+ Memory occupation peak: 235393 kB
+ For the array: "GLLKEM" in routine "kkrmat01"
+ -----------------END MEMORY CONSUMPTION REPORT---------------------

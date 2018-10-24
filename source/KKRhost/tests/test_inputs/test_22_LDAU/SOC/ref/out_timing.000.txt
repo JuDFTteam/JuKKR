@@ -1,0 +1,14 @@
+# serial: kkrjm_v2.4-305-g96ef9ba_intel_20181024221015
+ main0                                       0.169500000000000     
+ main1a - tbref                               1.83190000000000     
+ main1a                                       3.30470000000000     
+ main1b - calctref13                         7.000000000000001E-004
+ main1b - fourier                             16.3696999999811     
+ main1b - inversion                           1.84099999999982     
+ main1b - kloopz                              18.5301000000000     
+ main1b                                       18.5437000000000     
+ main1c - rhovalnew                           6.09670000000000     
+ main1c - serial part                        4.700000000000000E-003
+ main1c                                       6.10710000000000     
+ main2                                       5.360000000000000E-002
+ Time in Iteration                            28.0092000000000     
