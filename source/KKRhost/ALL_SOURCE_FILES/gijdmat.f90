@@ -9,7 +9,7 @@ contains
   !> Summary: Subroutine to get the projection matrices to get G_ab from G_CPA
   !> Author: V. Popescu
   !> Date: Oct. 2004
-  !> Category: KKRhost, structural-greensfunction, coherent-potential-approximation
+  !> Category: KKRhost, structural-greensfunction, coherent-potential-approx
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
   !> Subroutine to get the projection matrices

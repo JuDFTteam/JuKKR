@@ -22,7 +22,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Calculation of lattice sums for \(l \leq 2l_{pot}\)
   !> Author: B. Drittler
-  !> Category: electrostatics, geomertry, k-points, KKRhost
+  !> Category: electrostatics, geometry, k-points, KKRhost
   !> Deprecated: False 
   !> Calculation of lattice sums for \(l \leq 2l_{pot}\)
   !> \begin{equation}

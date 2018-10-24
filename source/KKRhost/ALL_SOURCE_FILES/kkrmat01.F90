@@ -754,12 +754,11 @@ contains
 
   end subroutine kkrmat01
 
-  ! -------------------------------------------------------------------------------
-  ! SUBROUTINE: GTDYSON
-  !> @brief Solve the Dyson equation \f$(1-g t)  G = g\f$
-  !> @note
-  !> - Jonathan Chico Apr. 2018: Removed inc.p dependencies and rewrote to Fortran90
-  ! -------------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
+  !> Summary: Solve the Dyson equation \((1-g t)  G = g\)
+  !> Category: KKRhost, k-points, structural-greensfunction
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !-------------------------------------------------------------------------------
   subroutine gtdyson(gtmat, gmat, ndim, lmgf0d, ngd)
 
     use :: mod_constants

@@ -14,7 +14,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Generate an angular mesh and spherical harmonics at those mesh points. For an angular integration the weights are generated .
   !> Author: R. Zeller
-  !> Category: special-functions, radial-mesh, KKRhost 
+  !> Category: special-functions, radial-grid, KKRhost 
   !> Deprecated: False 
   !> Generate an angular mesh and spherical harmonics at those
   !> mesh points. For an angular integration the weights are generated  

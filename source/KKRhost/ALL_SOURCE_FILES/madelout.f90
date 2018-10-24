@@ -13,7 +13,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Reads and writes the Madelung coefficients for a 2D strutcure
   !> Author:
-  !> Category: input-output,electrostatics, KKRhost 
+  !> Category: input-output, electrostatics, KKRhost 
   !> Deprecated: False 
   !> Reads the full Madelung coefficients from an unformatted file, and then writes 
   !> the necessary ones to a formatted file.
@@ -155,7 +155,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Reads and writes the Madelung coefficients for a 3D strutcure
   !> Author:
-  !> Category: input-output,electrostatics, KKRhost 
+  !> Category: input-output, electrostatics, KKRhost 
   !> Deprecated: False 
   !> Reads the full Madelung coefficients from an unformatted file, and then writes 
   !> the necessary ones to a formatted file.

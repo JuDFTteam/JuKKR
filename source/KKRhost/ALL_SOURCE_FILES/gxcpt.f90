@@ -578,6 +578,13 @@ contains
 120 format (/, ' ivn should be 1 for ivg=1. ivn,ivg=', 2i5, /)
   end subroutine gxcpt
 
+!-------------------------------------------------------------------------------
+!> Summary: 
+!> Author:
+!> Date: 
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
   function fncf(x)
     use :: mod_datatypes, only: dp
     implicit none
@@ -587,6 +594,13 @@ contains
     fncf = (1.e0_dp+x*x*x)*log(1.e0_dp+1.e0_dp/x) + x/2.e0_dp - x*x - 0.333333333e0_dp
   end function fncf
 
+!-------------------------------------------------------------------------------
+!> Summary: 
+!> Author:
+!> Date: 
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
   function fncecl(r, g, b1, b2)
     use :: mod_datatypes, only: dp
     implicit none
@@ -596,6 +610,13 @@ contains
     fncecl = g/(1.e0_dp+b1*sqrt(r)+b2*r)
   end function fncecl
 
+!-------------------------------------------------------------------------------
+!> Summary: 
+!> Author:
+!> Date: 
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
   function fncvcl(ce, r, b1, b2)
     use :: mod_datatypes, only: dp
     implicit none
@@ -605,6 +626,13 @@ contains
     fncvcl = ce*(1.e0_dp+1.16666667e0_dp*b1*sqrt(r)+1.33333333e0_dp*b2*r)/(1.e0_dp+b1*sqrt(r)+b2*r)
   end function fncvcl
 
+!-------------------------------------------------------------------------------
+!> Summary: 
+!> Author:
+!> Date: 
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
   function fncecs(r, a, b, c, d)
     use :: mod_datatypes, only: dp
     implicit none
@@ -614,6 +642,13 @@ contains
     fncecs = a*log(r) + b + c*r*log(r) + d*r
   end function fncecs
 
+!-------------------------------------------------------------------------------
+!> Summary: 
+!> Author:
+!> Date: 
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
   function fncvcs(r, a, b, c, d)
     use :: mod_datatypes, only: dp
     implicit none
@@ -623,6 +658,13 @@ contains
     fncvcs = a*log(r) + (b-a/3.e0_dp) + 0.666666667e0_dp*c*r*log(r) + (2.e0_dp*d-c)*r/3.e0_dp
   end function fncvcs
 
+!-------------------------------------------------------------------------------
+!> Summary: 
+!> Author:
+!> Date: 
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
   function ffz(zta)
     use :: mod_datatypes, only: dp
     implicit none
@@ -632,6 +674,13 @@ contains
     ffz = 1.923661051e0_dp*((1.e0_dp+zta)**1.3333333333e0_dp+(1.e0_dp-zta)**1.3333333333e0_dp-2.e0_dp)
   end function ffz
 
+!-------------------------------------------------------------------------------
+!> Summary: 
+!> Author:
+!> Date: 
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
   function fdfdz(zta)
     use :: mod_datatypes, only: dp
     implicit none
@@ -641,6 +690,13 @@ contains
     fdfdz = 2.564881401e0_dp*((1.e0_dp+zta)**.333333333333e0_dp-(1.e0_dp-zta)**.333333333333e0_dp)
   end function fdfdz
 
+!-------------------------------------------------------------------------------
+!> Summary: 
+!> Author:
+!> Date: 
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
   function fvq(b, c)
     use :: mod_datatypes, only: dp
     implicit none
@@ -650,6 +706,13 @@ contains
     fvq = sqrt(4.e0_dp*c-b**2)
   end function fvq
 
+!-------------------------------------------------------------------------------
+!> Summary: 
+!> Author:
+!> Date: 
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
   function fvnec(a, x, xl, x0, xl0, b, q)
     use :: mod_datatypes, only: dp
     implicit none
@@ -659,6 +722,13 @@ contains
     fvnec = a*(log(x*x/xl)+2.e0_dp*b/q*atan(q/(2.e0_dp*x+b))-b*x0/xl0*(log((x-x0)**2/xl)+2.e0_dp*(b+2.e0_dp*x0)/q*atan(q/(2.e0_dp*x+b))))
   end function fvnec
 
+!-------------------------------------------------------------------------------
+!> Summary: 
+!> Author:
+!> Date: 
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
   function fbet(fdd0, ecf, ecp, alc)
     use :: mod_datatypes, only: dp
     implicit none
@@ -668,6 +738,13 @@ contains
     fbet = fdd0*(ecf-ecp)/alc - 1.e0_dp
   end function fbet
 
+!-------------------------------------------------------------------------------
+!> Summary: 
+!> Author:
+!> Date: 
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
   function fdedr(ro, x, a, x0, xl, xl0, xld, b, q)
     use :: mod_datatypes, only: dp
     implicit none

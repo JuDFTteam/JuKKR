@@ -419,6 +419,13 @@ end module mod_gradr
 
 ! .....six point formula for the 2nd deriv.
 
+!-------------------------------------------------------------------------------
+!> Summary: three point formula for the 1st deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f131(f0, f1, f2, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -428,6 +435,13 @@ function f131(f0, f1, f2, d)
   f131 = (-3*f0+4*f1-f2)/(2*d)
 end function f131
 
+!-------------------------------------------------------------------------------
+!> Summary: three point formula for the 1st deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f132(g1, f0, f1, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -437,6 +451,13 @@ function f132(g1, f0, f1, d)
   f132 = (-1*g1-0*f0+f1)/(2*d)
 end function f132
 
+!-------------------------------------------------------------------------------
+!> Summary: three point formula for the 1st deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f133(g2, g1, f0, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -446,6 +467,13 @@ function f133(g2, g1, f0, d)
   f133 = (g2-4*g1+3*f0)/(2*d)
 end function f133
 
+!-------------------------------------------------------------------------------
+!> Summary: four point formula for the 1st deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f141(f0, f1, f2, f3, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -455,6 +483,13 @@ function f141(f0, f1, f2, f3, d)
   f141 = (-11*f0+18*f1-9*f2+2*f3)/(6*d)
 end function f141
 
+!-------------------------------------------------------------------------------
+!> Summary: four point formula for the 1st deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f142(g1, f0, f1, f2, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -464,6 +499,13 @@ function f142(g1, f0, f1, f2, d)
   f142 = (-2*g1-3*f0+6*f1-f2)/(6*d)
 end function f142
 
+!-------------------------------------------------------------------------------
+!> Summary: four point formula for the 1st deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f143(g2, g1, f0, f1, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -473,6 +515,13 @@ function f143(g2, g1, f0, f1, d)
   f143 = (g2-6*g1+3*f0+2*f1)/(6*d)
 end function f143
 
+!-------------------------------------------------------------------------------
+!> Summary: four point formula for the 1st deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f144(g3, g2, g1, f0, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -482,6 +531,13 @@ function f144(g3, g2, g1, f0, d)
   f144 = (-2*g3+9*g2-18*g1+11*f0)/(6*d)
 end function f144
 
+!-------------------------------------------------------------------------------
+!> Summary: five point formula for the 1st deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f151(f0, f1, f2, f3, f4, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -491,6 +547,13 @@ function f151(f0, f1, f2, f3, f4, d)
   f151 = (-50*f0+96*f1-72*f2+32*f3-6*f4)/(24*d)
 end function f151
 
+!-------------------------------------------------------------------------------
+!> Summary: five point formula for the 1st deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f152(g1, f0, f1, f2, f3, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -500,6 +563,13 @@ function f152(g1, f0, f1, f2, f3, d)
   f152 = (-6*g1-20*f0+36*f1-12*f2+2*f3)/(24*d)
 end function f152
 
+!-------------------------------------------------------------------------------
+!> Summary: five point formula for the 1st deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f153(g2, g1, f0, f1, f2, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -509,6 +579,13 @@ function f153(g2, g1, f0, f1, f2, d)
   f153 = (2*g2-16*g1-0*f0+16*f1-2*f2)/(24*d)
 end function f153
 
+!-------------------------------------------------------------------------------
+!> Summary: five point formula for the 1st deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f154(g3, g2, g1, f0, f1, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -518,6 +595,13 @@ function f154(g3, g2, g1, f0, f1, d)
   f154 = (-2*g3+12*g2-36*g1+20*f0+6*f1)/(24*d)
 end function f154
 
+!-------------------------------------------------------------------------------
+!> Summary: five point formula for the 1st deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f155(g4, g3, g2, g1, f0, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -527,6 +611,13 @@ function f155(g4, g3, g2, g1, f0, d)
   f155 = (6*g4-32*g3+72*g2-96*g1+50*f0)/(24*d)
 end function f155
 
+!-------------------------------------------------------------------------------
+!> Summary: six point formula for the 1st deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f161(f0, f1, f2, f3, f4, f5, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -536,6 +627,13 @@ function f161(f0, f1, f2, f3, f4, f5, d)
   f161 = (-274*f0+600*f1-600*f2+400*f3-150*f4+24*f5)/(120*d)
 end function f161
 
+!-------------------------------------------------------------------------------
+!> Summary: six point formula for the 1st deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f162(g1, f0, f1, f2, f3, f4, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -545,6 +643,13 @@ function f162(g1, f0, f1, f2, f3, f4, d)
   f162 = (-24*g1-130*f0+240*f1-120*f2+40*f3-6*f4)/(120*d)
 end function f162
 
+!-------------------------------------------------------------------------------
+!> Summary: six point formula for the 1st deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f163(g2, g1, f0, f1, f2, f3, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -554,6 +659,13 @@ function f163(g2, g1, f0, f1, f2, f3, d)
   f163 = (6*g2-60*g1-40*f0+120*f1-30*f2+4*f3)/(120*d)
 end function f163
 
+!-------------------------------------------------------------------------------
+!> Summary: six point formula for the 1st deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f164(g3, g2, g1, f0, f1, f2, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -563,6 +675,13 @@ function f164(g3, g2, g1, f0, f1, f2, d)
   f164 = (-4*g3+30*g2-120*g1+40*f0+60*f1-6*f2)/(120*d)
 end function f164
 
+!-------------------------------------------------------------------------------
+!> Summary: six point formula for the 1st deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f165(g4, g3, g2, g1, f0, f1, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -572,6 +691,13 @@ function f165(g4, g3, g2, g1, f0, f1, d)
   f165 = (6*g4-40*g3+120*g2-240*g1+130*f0+24*f1)/(120*d)
 end function f165
 
+!-------------------------------------------------------------------------------
+!> Summary: six point formula for the 1st deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f166(g5, g4, g3, g2, g1, f0, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -581,6 +707,13 @@ function f166(g5, g4, g3, g2, g1, f0, d)
   f166 = (-24*g5+150*g4-400*g3+600*g2-600*g1+274*f0)/(120*d)
 end function f166
 
+!-------------------------------------------------------------------------------
+!> Summary: three point formula for the 2nd deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f231(f0, f1, f2, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -590,6 +723,13 @@ function f231(f0, f1, f2, d)
   f231 = (f0-2*f1+f2)/(d*d)
 end function f231
 
+!-------------------------------------------------------------------------------
+!> Summary: three point formula for the 2nd deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f232(g1, f0, f1, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -599,6 +739,13 @@ function f232(g1, f0, f1, d)
   f232 = (g1-2*f0+f1)/(d*d)
 end function f232
 
+!-------------------------------------------------------------------------------
+!> Summary: three point formula for the 2nd deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f233(g2, g1, f0, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -608,6 +755,13 @@ function f233(g2, g1, f0, d)
   f233 = (g2-2*g1+f0)/(d*d)
 end function f233
 
+!-------------------------------------------------------------------------------
+!> Summary: four point formula for the 2nd deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f241(f0, f1, f2, f3, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -617,6 +771,13 @@ function f241(f0, f1, f2, f3, d)
   f241 = (6*f0-15*f1+12*f2-3*f3)/(3*d*d)
 end function f241
 
+!-------------------------------------------------------------------------------
+!> Summary: four point formula for the 2nd deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f242(g1, f0, f1, f2, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -626,6 +787,13 @@ function f242(g1, f0, f1, f2, d)
   f242 = (3*g1-6*f0+3*f1+0*f2)/(3*d*d)
 end function f242
 
+!-------------------------------------------------------------------------------
+!> Summary: four point formula for the 2nd deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f243(g2, g1, f0, f1, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -635,6 +803,13 @@ function f243(g2, g1, f0, f1, d)
   f243 = (0*g2+3*g1-6*f0+3*f1)/(3*d*d)
 end function f243
 
+!-------------------------------------------------------------------------------
+!> Summary: four point formula for the 2nd deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f244(g3, g2, g1, f0, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -644,6 +819,13 @@ function f244(g3, g2, g1, f0, d)
   f244 = (-3*g3+2*g2+15*g1+6*f0)/(3*d*d)
 end function f244
 
+!-------------------------------------------------------------------------------
+!> Summary: five point formula for the 2nd deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f251(f0, f1, f2, f3, f4, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -653,6 +835,13 @@ function f251(f0, f1, f2, f3, f4, d)
   f251 = (35*f0-104*f1+114*f2-56*f3+11*f4)/(12*d*d)
 end function f251
 
+!-------------------------------------------------------------------------------
+!> Summary: five point formula for the 2nd deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f252(g1, f0, f1, f2, f3, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -662,6 +851,13 @@ function f252(g1, f0, f1, f2, f3, d)
   f252 = (11*g1-20*f0+6*f1+4*f2-f3)/(12*d*d)
 end function f252
 
+!-------------------------------------------------------------------------------
+!> Summary: five point formula for the 2nd deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f253(g2, g1, f0, f1, f2, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -671,6 +867,13 @@ function f253(g2, g1, f0, f1, f2, d)
   f253 = (-g2+16*g1-30*f0+16*f1-f2)/(12*d*d)
 end function f253
 
+!-------------------------------------------------------------------------------
+!> Summary: five point formula for the 2nd deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f254(g3, g2, g1, f0, f1, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -680,6 +883,13 @@ function f254(g3, g2, g1, f0, f1, d)
   f254 = (-g3+4*g2+6*g1-20*f0+11*f1)/(12*d*d)
 end function f254
 
+!-------------------------------------------------------------------------------
+!> Summary: five point formula for the 2nd deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f255(g4, g3, g2, g1, f0, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -689,6 +899,13 @@ function f255(g4, g3, g2, g1, f0, d)
   f255 = (11*g4-56*g3+114*g2-104*g1+35*f0)/(12*d*d)
 end function f255
 
+!-------------------------------------------------------------------------------
+!> Summary: six point formula for the 2nd deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f261(f0, f1, f2, f3, f4, f5, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -698,6 +915,13 @@ function f261(f0, f1, f2, f3, f4, f5, d)
   f261 = (225*f0-770*f1+1070*f2-780*f3+305*f4-50*f5)/(60*d*d)
 end function f261
 
+!-------------------------------------------------------------------------------
+!> Summary: six point formula for the 2nd deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f262(g1, f0, f1, f2, f3, f4, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -707,6 +931,13 @@ function f262(g1, f0, f1, f2, f3, f4, d)
   f262 = (50*g1-75*f0-20*f1+70*f2-30*f3+5*f4)/(60*d*d)
 end function f262
 
+!-------------------------------------------------------------------------------
+!> Summary: six point formula for the 2nd deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f263(g2, g1, f0, f1, f2, f3, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -716,6 +947,13 @@ function f263(g2, g1, f0, f1, f2, f3, d)
   f263 = (-5*g2+80*g1-150*f0+80*f1-5*f2+0*f3)/(60*d*d)
 end function f263
 
+!-------------------------------------------------------------------------------
+!> Summary: six point formula for the 2nd deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f264(g3, g2, g1, f0, f1, f2, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -725,6 +963,13 @@ function f264(g3, g2, g1, f0, f1, f2, d)
   f264 = (0*g3-5*g2+80*g1-150*f0+80*f1-5*f2)/(60*d*d)
 end function f264
 
+!-------------------------------------------------------------------------------
+!> Summary: six point formula for the 2nd deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f265(g4, g3, g2, g1, f0, f1, d)
   use :: mod_datatypes, only: dp
   implicit none
@@ -734,6 +979,13 @@ function f265(g4, g3, g2, g1, f0, f1, d)
   f265 = (5*g4-30*g3+70*g2-20*g1-75*f0+50*f1)/(60*d*d)
 end function f265
 
+!-------------------------------------------------------------------------------
+!> Summary: six point formula for the 2nd deriv.
+!> Author: T.Asada
+!> Date: Feb. 1994
+!> Category: KKRhost, numerical-tools
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!-------------------------------------------------------------------------------
 function f266(g5, g4, g3, g2, g1, f0, d)
   use :: mod_datatypes, only: dp
   implicit none

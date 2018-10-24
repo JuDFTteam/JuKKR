@@ -5,7 +5,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Derivative of coupled radial Dirac equations 
   !> Author: 
-  !> Category: KKRhost, dirac, singel-site
+  !> Category: KKRhost, dirac, single-site
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
   !> Supply the derivatives for the coupled set of

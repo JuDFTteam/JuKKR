@@ -9,7 +9,7 @@ contains
   !> Summary: Sort double precision array returning sorted index array
   !> Author: P. Zahn
   !> Date: April 96
-  !> Category: KKRhost, numerical tools
+  !> Category: KKRhost, numerical-tools
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
   !> W   is the original array returned unchanged

@@ -12,7 +12,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Creation of the radial mesh for the old-solver 
   !> Author: 
-  !> Category: radial-mesh, KKRhost
+  !> Category: radial-grid, KKRhost
   !> Deprecated: False 
   !> Creation of the radial mesh for the old-solver 
   !-------------------------------------------------------------------------------

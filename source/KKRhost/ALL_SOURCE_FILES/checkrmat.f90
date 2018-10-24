@@ -6,7 +6,7 @@ module mod_checkrmat
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: Check rotation matrix and Euler angles for cinsistency
+  !> Summary: Check rotation matrix and Euler angles for consistency
   !> Author: 
   !> Category: KKRhost, sanity-check
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines

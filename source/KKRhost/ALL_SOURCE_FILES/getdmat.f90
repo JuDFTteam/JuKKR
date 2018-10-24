@@ -9,7 +9,7 @@ contains
   !> Summary: Calculate projection matrices DMATT and DTILT
   !> Author: Hubert Ebert
   !> Date: 01/11/2000
-  !> Category: KKRhost, k-points, coherent-potential-approximation
+  !> Category: KKRhost, k-points, coherent-potential-approx
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
   !> Calculate projection matrices   DMATT  and  DTILT

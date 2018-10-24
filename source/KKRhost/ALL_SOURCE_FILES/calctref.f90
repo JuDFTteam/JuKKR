@@ -6,7 +6,7 @@ module mod_calctref13
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: Calculates singel-site t-matrix for reference system
+  !> Summary: Calculates single-site t-matrix for reference system
   !> Author: 
   !> Category: KKRhost, single-site, reference-system
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines

@@ -19,7 +19,13 @@ module mod_wunfiles
 
   implicit none
 
-
+  !-------------------------------------------------------------------------------
+  !> Summary: Type holding information of parameters for the communication of data
+  !> Author: 
+  !> Category: communication, KKRhost
+  !> Deprecated: False 
+  !> Type holding information of parameters for the communication of data
+  !-------------------------------------------------------------------------------
   ! define type that replace wunfiles here, later define bcast routine
   type :: type_params
 
