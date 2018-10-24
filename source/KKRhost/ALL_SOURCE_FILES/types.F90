@@ -218,6 +218,33 @@ module mod_types
 
   end type type_imp
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Type holding information for the madelung potentials
+  !> Author: Philipp Ruessmann
+  !> Category: KKRhost, initialization, geometry
+  !> Deprecated: False 
+  !> Needed if avmad and abvmad files are not written but kept in memory
+  !> 
+  !> @warning
+  !> There is no MPI communication of this type yet since it is created in main0
+  !> part and only used in main2 part which are all done by the master rank. This
+  !> needs to be changed if the parallelization is improved int he future.
+  !> @endwarning
+  !-------------------------------------------------------------------------------
+  type :: type_madel
+
+    integer :: n1       = 12       ! number of scalars for mpi bcast + 2 (for N1,N2)
+    !--------------------------------------------------------------------------------
+    ! Array dimensions. can be read from t_params 
+    !--------------------------------------------------------------------------------
+    integer :: irmd   !! Maximum number of radial points
+
+    ! allocatable arrays
+    real(kind=dp), dimension(:,:,:), allocatable :: avmad !!Structure-dependent matrix, dimension: irec, lmpot x lmpot 
+    real(kind=dp), dimension(:,:), allocatable :: bvmad !!Structure-dependent vector, dimension: irec, lmpot
+
+  end type type_madel
+
   ! save types
   type (type_inc), save :: t_inc
   type (type_tgmatices), save :: t_tgmat
@@ -226,6 +253,7 @@ module mod_types
   type (type_dtmatjijdij), allocatable, save :: t_dtmatjij(:) ! dimensions I1=1,...,NATYP
   type (type_cpa), save :: t_cpa
   type (type_imp), save :: t_imp
+  type (type_madel), save :: t_madel
 
 contains
 

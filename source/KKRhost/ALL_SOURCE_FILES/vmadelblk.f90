@@ -55,9 +55,10 @@ contains
   subroutine vmadelblk(cmom,cminst,lmax,nspin,naez,v,zat,r,irws,ircut,ipan,kshape,  &
     noq,kaoez,conc,catom,icc,hostimp,vinters,nemb,lmpot,natyp)
 
-    use :: mod_constants
-    use :: global_variables
+    use :: mod_constants, only: pi
+    use :: global_variables, only: wlength, ipand, irmd, npotd
     use :: mod_datatypes, only: dp
+    use :: mod_types, only: t_madel
 
     implicit none
 
@@ -98,12 +99,13 @@ contains
     logical :: opt
     ! .. Intrinsic Functions ..
     intrinsic :: sqrt
+    logical, external :: test
     ! ----------------------------------------------------------------------------
     write (1337, fmt=100)
     write (1337, fmt=110)
 
     lrecabmad = wlength*2*lmpot*lmpot + wlength*2*lmpot
-    open (69, access='direct', recl=lrecabmad, file='abvmad.unformatted', form='unformatted')
+    if (test('madelfil')) open (69, access='direct', recl=lrecabmad, file='abvmad.unformatted', form='unformatted')
 
     lmmax = (lmax+1)*(lmax+1)
 
@@ -142,7 +144,12 @@ contains
             ! ----------------------------------------------------------------
             if (naez==1) then
               irec = iq1 + naez*(iq1-1)
-              read (69, rec=irec) avmad, bvmad
+              if (test('madelfil')) then
+                read (69, rec=irec) avmad, bvmad
+              else
+                 avmad(:,:) = t_madel%avmad(irec,:,:)
+                 bvmad(:) = t_madel%bvmad(irec,:)
+              end if
               ! -------------------------------------------------------------
               ! Loop over all occupants of site IQ2=IQ1
               ! -------------------------------------------------------------
@@ -171,7 +178,12 @@ contains
               ! -------------------------------------------------------------
               do iq2 = 1, naez
                 irec = iq2 + naez*(iq1-1)
-                read (69, rec=irec) avmad, bvmad
+                if (test('madelfil')) then
+                  read (69, rec=irec) avmad, bvmad
+                else
+                   avmad(:,:) = t_madel%avmad(irec,:,:)
+                   bvmad(:) = t_madel%bvmad(irec,:)
+                end if
                 ! ----------------------------------------------------------
                 ! Loop over all occupants of site IQ2
                 ! ----------------------------------------------------------
@@ -239,7 +251,7 @@ contains
       end do
     end do
     ! ----------------------------------------------------------------------------
-    close (69)
+    if (test('madelfil')) close(69)
     ! ----------------------------------------------------------------------------
     write (1337, *) 'ICC in VMADELBLK', icc
     write (1337, '(25X,30("-"),/)')

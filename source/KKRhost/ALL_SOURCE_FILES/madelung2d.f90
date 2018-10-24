@@ -38,11 +38,12 @@ contains
     nlbasis,nleft,zperleft,tleft,nrbasis,nright,zperight,tright,lmxspd,lassld,      &
     lpotd,lmpotd,nmaxd,ishld,nembd1,wlength)
 
-    use :: mod_madelgaunt
-    use :: mod_madelcoef
+    use :: mod_madelgaunt, only: madelgaunt
+    use :: mod_madelcoef, only: madelcoef
     use :: mod_madelout, only: madel2out
-    use :: mod_ewald2d
-    use :: mod_lattice2d
+    use :: mod_ewald2d, only: ewald2d
+    use :: mod_lattice2d, only: lattice2d
+    use :: mod_types, only: t_madel
     implicit none
     ! ..
     ! .. Scalar Arguments ..
@@ -81,6 +82,7 @@ contains
     integer :: i, ib, ih, ileft, iright
     integer :: lrecamad, irec, nleftoff, nrightoff, nleftall, nrightall
     integer :: ngmax, nrmax, nshlg, nshlr
+    integer :: ierr
     ! ..
     ! .. Local Arrays ..
     ! .. Attention: LMXSPD*LMPOTD appears as NCLEB1 in other routines
@@ -94,7 +96,7 @@ contains
     real (kind=dp), dimension(lmpotd, lmpotd) :: avmad
     ! ..
     ! .. External Functions/Subroutines
-    logical, external :: opt
+    logical, external :: opt, test
     ! ......................................................................
     iprint = 0
     nclebd = lmxspd*lmpotd
@@ -112,7 +114,20 @@ contains
     ! ======================================================================
 
     lrecamad = wlength*2*lmpotd*lmpotd
-    open (69, access='direct', recl=lrecamad, file='avmad.unformatted', form='unformatted')
+    if (test('madelfil')) then
+      open (69, access='direct', recl=lrecamad, file='avmad.unformatted', form='unformatted')
+    else
+      if (opt('DECIMATE')) then
+        nleftoff = naez*naez
+        nrightoff = naez*naez + naez*nleft*nlbasis
+        nleftall = nleft*nlbasis
+        nrightall = nright*nrbasis
+        irec = nright*nrbasis + nrightall*(naez-1) + nrightoff
+      else
+        irec = naez*naez
+      end if
+      allocate(t_madel%avmad(irec, lmpotd, lmpotd), stat=ierr)
+    end if
 
     ! --> calculate the gaunt coefs
 
@@ -156,7 +171,11 @@ contains
           nclebd)
 
         irec = iq2 + naez*(iq1-1)
-        write (69, rec=irec) avmad
+        if (test('madelfil')) then
+          write (69, rec=irec) avmad
+        else
+          t_madel%avmad(irec,:,:) = avmad(:,:)
+        end if
       end do
       ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     end do
@@ -215,7 +234,11 @@ contains
               lmxspd,nclebd)
 
             irec = ileft + nleftall*(iq1-1) + nleftoff
-            write (69, rec=irec) avmad
+            if (test('madelfil')) then
+              write (69, rec=irec) avmad
+            else
+              t_madel%avmad(irec,:,:) = avmad(:,:)
+            end if
           end do                   ! ib loop in left host basis
         end do                     ! ih loop in layers to get convergence
         ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -272,7 +295,11 @@ contains
               lmxspd,nclebd)
 
             irec = iright + nrightall*(iq1-1) + nrightoff
-            write (69, rec=irec) avmad
+            if (test('madelfil')) then
+              write (69, rec=irec) avmad
+            else
+              t_madel%avmad(irec,:,:) = avmad(:,:)
+            end if
           end do                   ! ib loop in right host basis
         end do                     ! ih loop in layers to get convergence
         ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -289,7 +316,8 @@ contains
 
     end if
     ! ######################################################################
-    close (69)
+    
+    if (test('madelfil')) close (69)
 
     if (iprint<1) return
     ! ======================================================================

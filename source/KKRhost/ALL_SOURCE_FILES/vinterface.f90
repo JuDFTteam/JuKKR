@@ -42,9 +42,10 @@ contains
     ipan,kshape,noq,kaoez,iqat,conc,catom,icc,hostimp,nlbasis,nleft,nrbasis,nright, &
     cmomhost,chrgnt,vinters,naez,lmpot)
 
-    use :: mod_constants
-    use :: global_variables
+    use :: mod_constants, only: pi
+    use :: global_variables, only: wlength, ipand, nembd1, irmd, npotd
     use :: mod_datatypes, only: dp
+    use :: mod_types, only: t_madel
 
     implicit none
 
@@ -97,15 +98,19 @@ contains
 
     if (test('flow    ')) write (1337, *) '>>>>>> Vinterface'
 
-    inquire (file='avmad.unformatted', exist=lread) ! ewald2d
+    if (test('madelfil')) then
 
-    if (lread) then
-      lrecamad = wlength*2*lmpot*lmpot
-      open (69, access='direct', recl=lrecamad, file='avmad.unformatted', form='unformatted')
-    else
-      lrecamad = wlength*2*lmpot*lmpot + wlength*2*lmpot
-      open (69, access='direct', recl=lrecamad, file='abvmad.unformatted', form='unformatted')
-    end if
+      inquire (file='avmad.unformatted', exist=lread) ! ewald2d
+
+      if (lread) then
+        lrecamad = wlength*2*lmpot*lmpot
+        open (69, access='direct', recl=lrecamad, file='avmad.unformatted', form='unformatted')
+      else
+        lrecamad = wlength*2*lmpot*lmpot + wlength*2*lmpot
+        open (69, access='direct', recl=lrecamad, file='abvmad.unformatted', form='unformatted')
+      end if
+
+    end if ! madelfil
 
     write (1337, fmt=100)
     write (1337, fmt=110)
@@ -152,7 +157,11 @@ contains
       ! -------------------------------------------------------------------------
       do ilay2 = 1, nlayers
         irec = ilay2 + nlayers*(ilay1-1)
-        read (69, rec=irec) avmad
+        if (test('madelfil')) then
+          read (69, rec=irec) avmad
+        else
+          avmad(:,:) = t_madel%avmad(irec,:,:)
+        end if
 
         ! ----------------------------------------------------------------------
         ! Keep the monopole term -- Hoshino is doing (SMONOPOL(I) -SMONOPOL(0))
@@ -217,7 +226,11 @@ contains
           do ib = 1, nlbasis
             ileft = ileft + 1
             irec = ileft + nleftall*(ilay1-1) + nleftoff
-            read (69, rec=irec) avmad
+            if (test('madelfil')) then
+              read (69, rec=irec) avmad
+            else
+              avmad(:,:) = t_madel%avmad(irec,:,:)
+            end if
 
             iatom = ib
             do lm = 1, lmpot
@@ -247,7 +260,11 @@ contains
           do ib = 1, nrbasis
             iright = iright + 1
             irec = iright + nrightall*(ilay1-1) + nrightoff
-            read (69, rec=irec) avmad
+            if (test('madelfil')) then
+              read (69, rec=irec) avmad
+            else
+              avmad(:,:) = t_madel%avmad(irec,:,:)
+            end if
 
             iatom = nlbasis + ib
             do lm = 1, lmpot
@@ -306,7 +323,7 @@ contains
       ! -------------------------------------------------------------------------
     end do
     ! ----------------------------------------------------------------------------
-    close (69)
+    if (test('madelfil')) close (69)
     write (1337, '(15X,45("-"),/)')
     write (1337, '(79("="))')
     if ((icc==0) .and. (.not. opt('KKRFLEX '))) return

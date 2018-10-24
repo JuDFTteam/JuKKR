@@ -27,11 +27,12 @@ contains
     gmax,naezd,lmxspd,lassld,lpotd, lmpotd,nmaxd,ishld,nembd,wlength)
 
     use :: mod_datatypes, only: dp
-    use :: mod_madelgaunt
-    use :: mod_madelcoef
+    use :: mod_madelgaunt, only: madelgaunt
+    use :: mod_madelcoef, only: madelcoef
     use :: mod_madelout, only: madel3out
-    use :: mod_lattice3d
-    use :: mod_strmat
+    use :: mod_lattice3d, only: lattice3d
+    use :: mod_strmat, only: strmat
+    use :: mod_types, only: t_madel
 
     implicit none
     ! ..
@@ -63,6 +64,7 @@ contains
     integer :: iend, iprint, iq1, iq2, nclebd
     integer :: ngmax, nrmax, nshlg, nshlr
     integer :: lrecabmad, irec
+    integer :: ierr
     ! ..
     ! .. Local Arrays ..
     ! .. Attention: Dimension LMXSPD*LMPOTD appears sometimes as NCLEB1
@@ -74,6 +76,8 @@ contains
     real (kind=dp), dimension(6,6)                  :: smat1, smat2
     real (kind=dp), dimension(3,nmaxd)              :: gn, rm
     real (kind=dp), dimension(lmxspd, naezd, naezd) :: madelsmat
+
+    logical, external :: test
     ! ......................................................................
     iprint = 0
     nclebd = lmxspd*lmpotd
@@ -95,7 +99,12 @@ contains
 
     lrecabmad = wlength*2*lmpotd*lmpotd + wlength*2*lmpotd
     ! lrecabmad = wlength*kind(0.0_dp)*lmpotd*lmpotd + wlength*kind(0.0_dp)*lmpotd
-    open (69, access='direct', recl=lrecabmad, file='abvmad.unformatted', form='unformatted')
+    if (test('madelfil')) then
+      open (69, access='direct', recl=lrecabmad, file='abvmad.unformatted', form='unformatted')
+    else
+      allocate(t_madel%avmad(naez*naez, lmpotd, lmpotd), stat=ierr)
+      allocate(t_madel%bvmad(naez*naez, lmpotd), stat=ierr)
+    end if
 
     ! --> calculate the gaunt coefficients
 
@@ -110,7 +119,12 @@ contains
           iend,lpotd,lmpotd,lmxspd,nclebd)
 
         irec = iq2 + naez*(iq1-1)
-        write (69, rec=irec) avmad, bvmad
+        if (test('madelfil')) then
+          write (69, rec=irec) avmad, bvmad
+        else
+          t_madel%avmad(irec,:,:) = avmad(:,:)
+          t_madel%bvmad(irec,:) = bvmad(:)
+        end if
         ! -----------------------------------------------------------------------
         if ((iq1<=6) .and. (iq2<=6)) then
           smat1(iq1, iq2) = avmad(1, 1)
@@ -119,7 +133,7 @@ contains
         ! -----------------------------------------------------------------------
       end do
     end do
-    close (69)
+    if (test('madelfil')) close (69)
 
     if (iprint<1) return
     ! ======================================================================
