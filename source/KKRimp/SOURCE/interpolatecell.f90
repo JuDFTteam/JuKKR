@@ -33,9 +33,6 @@ contains
 !> @bug If nasty things are found
 !> @endbug
 !-------------------------------------------------------------------------------
-   subroutine name_sub(dummy_in,dummy_out)
-
-
 
 subroutine interpolatecell(nstart,vpot,lmvpot,cell,lmaxatom,cellnew,ispin,nspin,config,cmode,testpot)
 use mod_gauntharmonics, only: gauntcoeff
