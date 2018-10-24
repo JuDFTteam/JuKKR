@@ -6,21 +6,19 @@ contains
 !> 1) distributes panels over the radial mesh of the single site problem. 
 !> 2) Interpolates the potential or shape function of the old mesh points
 !>    to the new Chebyshev panels
-
 !> 1) The mesh is devided into 3 different parts:
-
 !> | |  logarithmic   |     equidistant  |      shapefn       |     regions
 !> | |  ------------- | ---------------  | -----------------  |     regions
 !> | |||| |  |    |       |    |    |    |    |    |     |    |     panels
 !> 0 rmin          rlogpan        rmesh(cell%NRMIN_NS)      R_max   limits
-
-!1st region: logarithmic distribution of the panels (like in mesh points in ASA)
-!2nd region: equistitant distribution of the panels
-!3rd region: distribution of the panels according to the kinks for the shape function
-!            (like it is done for the old mesh)
-
-! 2) Interpolation is done using a spline method
- 
+!>
+!>1st region: logarithmic distribution of the panels (like in mesh points in ASA)
+!>2nd region: equistitant distribution of the panels
+!>3rd region: distribution of the panels according to the kinks for the shape function
+!>            (like it is done for the old mesh)
+!>
+!> 2) Interpolation is done using a spline method
+!> 
 !> Author: Who wrote this subroutine
 !> Category: new-mesh, old-mesh,radial grid, shapefunction, potential
 !> Deprecated: False ! This needs to be set to True for deprecated subroutines
