@@ -11,10 +11,11 @@ contains
   !> Category: KKRhost, core-electrons
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
-  !> @warning uses own (hardcoded) value of `cvlight` which is changed for `nsra==1` @endwarning
+  !> @warning uses own (hardcoded) value of `cvlight_loc` which is changed for `nsra==1` @endwarning
   !-------------------------------------------------------------------------------
   subroutine intout(g, f, v, e, l, nne, k2, dg, a, b, z, nsra)
     use :: mod_datatypes, only: dp
+    use :: mod_constants, only: cvlight
     implicit none
 
     ! .. Scalar Arguments ..
@@ -25,7 +26,7 @@ contains
     real (kind=dp) :: f(*), g(*), v(*)
     ! ..
     ! .. Local Scalars ..
-    real (kind=dp) :: aa, alfa, b1, b2, bb, beta, cvlight, det, df1, df2, df3, dg1, dg2, dg3, dr, ea, fllp1, h83, p12, p21, phi, pp, qq, r, r1, r2, r3, r83sq, rpb, s, sg, sgm1, u, &
+    real (kind=dp) :: aa, alfa, b1, b2, bb, beta, cvlight_loc, det, df1, df2, df3, dg1, dg2, dg3, dr, ea, fllp1, h83, p12, p21, phi, pp, qq, r, r1, r2, r3, r83sq, rpb, s, sg, sgm1, u, &
       x, y, zz
     integer :: i, i1, k, km1, n
     ! ..
@@ -37,8 +38,8 @@ contains
  
 
     zz = z + z
-    cvlight = 274.0720442e0_dp
-    if (nsra==1) cvlight = 1.0e0_dp
+    cvlight_loc = cvlight
+    if (nsra==1) cvlight_loc = 1.0e0_dp
     ea = exp(a)
     fllp1 = l*(l+1.e0_dp)
     r83sq = 64.e0_dp/9.e0_dp
@@ -46,10 +47,10 @@ contains
     r2 = -5.e0_dp*r1
     r3 = 19.e0_dp*r1
     h83 = 8.e0_dp/3.e0_dp
-    aa = -zz/cvlight
+    aa = -zz/cvlight_loc
     bb = fllp1 - aa*aa
-    p21 = (v(1)-e)/cvlight
-    p12 = cvlight - p21
+    p21 = (v(1)-e)/cvlight_loc
+    p12 = cvlight_loc - p21
     px(1) = 0.e0_dp
     qx(1) = 0.e0_dp
     if (z<=20.e0_dp .or. nsra==1) then
@@ -60,7 +61,7 @@ contains
         px(k+2) = ((v(1)-e)*px(k)-zz*px(k+1))/(k+l+l)/(k-1.e0_dp)
       end do
       do k = 2, 10
-        qx(k) = px(k+1)*(l+k-2.e0_dp)/cvlight
+        qx(k) = px(k+1)*(l+k-2.e0_dp)/cvlight_loc
       end do
 
     else
@@ -85,8 +86,8 @@ contains
       rpb = rpb*ea
       r = rpb - b
       dr = a*rpb
-      phi = (e+zz/r-v(k))*dr/cvlight
-      u = dr*cvlight + phi
+      phi = (e+zz/r-v(k))*dr/cvlight_loc
+      u = dr*cvlight_loc + phi
       if (nsra==1) u = dr
       x = -dr/r
       y = -fllp1*x*x/u + phi
@@ -116,8 +117,8 @@ contains
       rpb = rpb*ea
       r = rpb - b
       dr = a*rpb
-      phi = (e+zz/r-v(k))*dr/cvlight
-      u = dr*cvlight + phi
+      phi = (e+zz/r-v(k))*dr/cvlight_loc
+      u = dr*cvlight_loc + phi
       if (nsra==1) u = dr
       x = -dr/r
       y = -fllp1*x*x/u + phi

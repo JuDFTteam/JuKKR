@@ -47,7 +47,7 @@ contains
     use :: mod_types, only: t_inc
     use :: mod_rhoqtools, only: rhoq_find_kmask, rhoq_saveg, rhoq_write_tau0, rhoq_read_mu0_scoef
     use :: global_variables, only: nembd1, nembd2, nsheld, nclsd, naclsd, lmmaxd, nprincd, nrd, nrefd, lmgf0d, krel, ndim_slabinv, alm, almgf0 
-    use :: mod_constants, only: czero, cone, nsymaxd, ci
+    use :: mod_constants, only: czero, cone, nsymaxd, ci,pi
     use :: mod_profiling, only: memocc
     use :: mod_datatypes, only: dp
     use :: mod_decimate, only: decimate
@@ -151,7 +151,7 @@ contains
 
     if (test('flow     ') .and. (t_inc%i_write>0)) write (1337, *) '>>> kkrmat1: loop over k-points'
 
-    citpi = cmi*8.d0*atan(1.d0)    ! = -i*2*PI
+    citpi = cmi*2.0_dp*pi    ! = -i*2*PI
 
     do ns = 1, nshell
       do iu = 1, nsymaxd

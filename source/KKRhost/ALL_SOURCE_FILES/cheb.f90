@@ -24,14 +24,13 @@ contains
   !-------------------------------------------------------------------------------
   subroutine getcmatrix(ncheb, cmatrix)
     use :: mod_datatypes, only: dp
+    use :: mod_constants, only: pi
     implicit none
     integer, intent (in) :: ncheb
     real (kind=dp), intent (out) :: cmatrix(0:ncheb, 0:ncheb)
-    real (kind=dp) :: pi
     ! local
     integer :: icheb1, icheb2
 
-    pi = 4e0_dp*atan(1e0_dp)
     do icheb1 = 0, ncheb
       do icheb2 = 0, ncheb
         ! maybe incorrect
@@ -52,15 +51,14 @@ contains
   !-------------------------------------------------------------------------------
   subroutine getcinvmatrix(ncheb, cinvmatrix)
     use :: mod_datatypes, only: dp
+    use :: mod_constants, only: pi
     implicit none
     integer, intent (in) :: ncheb
     real (kind=dp), intent (out) :: cinvmatrix(0:ncheb, 0:ncheb)
     ! local
-    real (kind=dp) :: pi
     integer :: icheb1, icheb2
     real (kind=dp) :: fac
 
-    pi = 4e0_dp*atan(1e0_dp)
     fac = 1.0e0_dp/(ncheb+1)
     do icheb1 = 0, ncheb
       do icheb2 = 0, ncheb

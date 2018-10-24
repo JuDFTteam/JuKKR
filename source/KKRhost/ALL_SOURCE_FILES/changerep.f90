@@ -28,11 +28,8 @@ contains
   subroutine changerep(a, mode, b, n, m, rc, crel, rrel, text, ltext)
     use :: mod_datatypes, only: dp
     use :: mod_cmatstr, only: cmatstr
+    use :: mod_constants, only: cone, czero
     implicit none
-
-    ! PARAMETER definitions
-    complex (kind=dp) :: c1, c0
-    parameter (c1=(1.0e0_dp,0.0e0_dp), c0=(0.0e0_dp,0.0e0_dp))
 
     ! Dummy arguments
     integer :: ltext, m, n
@@ -47,28 +44,28 @@ contains
 
     ! ---------------------- transform MAT from (kappa,mue) to REAL (l,ml,ms)
     if (mode=='REL>RLM') then
-      call zgemm('N', 'N', n, n, n, c1, rrel, m, a, m, c0, w1, m)
-      call zgemm('N', 'C', n, n, n, c1, w1, m, rrel, m, c0, b, m)
+      call zgemm('N', 'N', n, n, n, cone, rrel, m, a, m, czero, w1, m)
+      call zgemm('N', 'C', n, n, n, cone, w1, m, rrel, m, czero, b, m)
       key = 2
     else if (mode=='RLM>REL') then
-      call zgemm('C', 'N', n, n, n, c1, rrel, m, a, m, c0, w1, m)
-      call zgemm('N', 'N', n, n, n, c1, w1, m, rrel, m, c0, b, m)
+      call zgemm('C', 'N', n, n, n, cone, rrel, m, a, m, czero, w1, m)
+      call zgemm('N', 'N', n, n, n, cone, w1, m, rrel, m, czero, b, m)
       key = 3
     else if (mode=='REL>CLM') then
-      call zgemm('N', 'N', n, n, n, c1, crel, m, a, m, c0, w1, m)
-      call zgemm('N', 'C', n, n, n, c1, w1, m, crel, m, c0, b, m)
+      call zgemm('N', 'N', n, n, n, cone, crel, m, a, m, czero, w1, m)
+      call zgemm('N', 'C', n, n, n, cone, w1, m, crel, m, czero, b, m)
       key = 2
     else if (mode=='CLM>REL') then
-      call zgemm('C', 'N', n, n, n, c1, crel, m, a, m, c0, w1, m)
-      call zgemm('N', 'N', n, n, n, c1, w1, m, crel, m, c0, b, m)
+      call zgemm('C', 'N', n, n, n, cone, crel, m, a, m, czero, w1, m)
+      call zgemm('N', 'N', n, n, n, cone, w1, m, crel, m, czero, b, m)
       key = 3
     else if (mode=='CLM>RLM') then
-      call zgemm('N', 'N', n, n, n, c1, rc, m, a, m, c0, w1, m)
-      call zgemm('N', 'C', n, n, n, c1, w1, m, rc, m, c0, b, m)
+      call zgemm('N', 'N', n, n, n, cone, rc, m, a, m, czero, w1, m)
+      call zgemm('N', 'C', n, n, n, cone, w1, m, rc, m, czero, b, m)
       key = 2
     else if (mode=='RLM>CLM') then
-      call zgemm('C', 'N', n, n, n, c1, rc, m, a, m, c0, w1, m)
-      call zgemm('N', 'N', n, n, n, c1, w1, m, rc, m, c0, b, m)
+      call zgemm('C', 'N', n, n, n, cone, rc, m, a, m, czero, w1, m)
+      call zgemm('N', 'N', n, n, n, cone, w1, m, rc, m, czero, b, m)
       key = 2
     else
       write (*, *) ' MODE = ', mode

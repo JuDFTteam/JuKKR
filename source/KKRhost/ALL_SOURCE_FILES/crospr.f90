@@ -16,7 +16,7 @@ contains
   !> IT INTO Z.
   !>
   !> @note
-  !> Dublication of `cross` subroutine
+  !> Duplication of `cross` subroutine
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine crospr(x, y, z)

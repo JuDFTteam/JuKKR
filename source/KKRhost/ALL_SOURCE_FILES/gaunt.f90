@@ -44,10 +44,10 @@ contains
 
     use :: mod_datatypes, only: dp
     use :: mod_rcstop, only: rcstop
+    use :: mod_constants, only : ci
     implicit none
 
     real (kind=dp), parameter :: eps = 1.0e-12_dp
-    complex (kind=dp), parameter :: ci = (0.0e0_dp, 1.0e0_dp)
     integer :: lmpotd, lmgf0d, lmaxd, ncleb
     integer :: iend, lmax, lpot
     real (kind=dp) :: cleb(ncleb, 2), w(*), yr(4*lmaxd, 0:4*lmaxd, 0:4*lmaxd)

@@ -2,7 +2,7 @@
 !> Summary: EMPTY
 !> Deprecated: True ! This needs to be set to True for deprecated subroutines
 !>
-!> @warning everythong os commented out! @ endwarning
+!> @warning everythong is commented out! @ endwarning
 !-------------------------------------------------------------------------------
 module mod_dirac_bi
 

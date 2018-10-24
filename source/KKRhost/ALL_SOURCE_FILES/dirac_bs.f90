@@ -24,6 +24,8 @@ contains
   !> 06/12/94  HE  CM real
   !> 29/04/95  MB  Adopted for finite nucleus
   !-------------------------------------------------------------------------------
+  !> @note Jonathan Chico: This makes use of common blocks, one should try to remove this
+  !-------------------------------------------------------------------------------
   subroutine dirbs(getirrsol, c, e, l, mj, kap1, kap2, pis, cg1, cg2, cg4, cg5, cg8, v, b, z, nucleus, r, drdi, dovr, nmesh, pr, qr, pi, qi, d_p, dq)
 
     use :: mod_datatypes, only: dp

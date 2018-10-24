@@ -54,6 +54,7 @@ contains
     use :: mod_datatypes, only: dp
     use :: mod_beshan, only: beshan
     use :: mod_cinit, only: cinit
+    use :: mod_constants, only: ci
     implicit none
     ! ..
     ! .. Scalar arguments
@@ -75,14 +76,12 @@ contains
     integer :: j1, l1, lm1
     complex (kind=dp) :: a1, b1, da1, db1, tmatanal, dtmatanal
     complex (kind=dp) :: roote1, roote2
-    complex (kind=dp) :: ci, ciove
+    complex (kind=dp) :: ciove
     ! ..
     ! .. Local arrays
     complex (kind=dp) :: bessjw1(0:lmaxdp1), bessjw2(0:lmaxdp1), bessyw1(0:lmaxdp1), bessyw2(0:lmaxdp1), hankws1(0:lmaxdp1), hankws2(0:lmaxdp1), dbessjw1(0:lmaxdp1), &
       dbessjw2(0:lmaxdp1), dhankws1(0:lmaxdp1) !! Bessel & Hankel Derivatives
     ! ..
-    ! .. Data statement
-    data ci/(0e0_dp, 1e0_dp)/
     ! ..
     lmtmat = 0
     call cinit(lmmaxd*lmmaxd, trefll)

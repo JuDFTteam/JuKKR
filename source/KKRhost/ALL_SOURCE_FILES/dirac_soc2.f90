@@ -45,6 +45,7 @@ contains
     use :: mod_rinvgj, only: rinvgj
     use :: mod_cjlz, only: cjlz
     use :: mod_cinit, only: cinit
+    use :: mod_constants, only: czero
     implicit none
 
     ! PARAMETER definitions
@@ -52,8 +53,6 @@ contains
     integer :: mpsmax, npemax, nabm
     parameter (mpsmax=40, npemax=4, nabm=4)
     ! PARAMETER ( NABM   =      5 )
-    complex (kind=dp) :: cz
-    parameter (cz=(0.0d0,0.0d0))
     real (kind=dp) :: tol
     parameter (tol=1.0d-9)
     integer :: itmax
@@ -194,8 +193,8 @@ contains
     do i = 1, 2
       do j = 1, 2
         do ip = -npemax, mpsmax
-          pc(i, j, ip) = cz
-          qc(i, j, ip) = cz
+          pc(i, j, ip) = czero
+          qc(i, j, ip) = czero
         end do
       end do
     end do
@@ -208,8 +207,8 @@ contains
         i = 3 - j
         pc(j, j, 0) = sqrt(abs(kpy(j))-gam(j))
         qc(j, j, 0) = (kpy(j)+gam(j))*(csqr/tz)*pc(j, j, 0)
-        pc(i, j, 0) = cz
-        qc(i, j, 0) = cz
+        pc(i, j, 0) = czero
+        qc(i, j, 0) = czero
       end do
 
       ! DETERMINE HIGHER EXPANSION COEFFICIENTS FOR THE WAVE FUNCTIONS
@@ -222,7 +221,7 @@ contains
       emvpp = -e + vc(0)
       bqq = bc(0)/csqr
       do i = 1, nsol
-        socpp(i) = cz
+        socpp(i) = czero
       end do
 
       do j = 1, nsol
@@ -291,10 +290,10 @@ contains
 
         do j = 1, nsol
           do i = 1, nsol
-            pr(i, j, n) = cz
-            qr(i, j, n) = cz
-            d_p(i, j, n) = cz
-            dq(i, j, n) = cz
+            pr(i, j, n) = czero
+            qr(i, j, n) = czero
+            d_p(i, j, n) = czero
+            dq(i, j, n) = czero
           end do
         end do
 
@@ -424,10 +423,10 @@ contains
         m = lb(j)
         dq(j, j, n) = cfac*sk(j)*(real(m+1,kind=dp)*cjlz(m,arg)-arg*cjlz(m+1,arg))*drdi(n)*c
 
-        pi(i, j, n) = cz
-        qi(i, j, n) = cz
-        d_p(i, j, n) = cz
-        dq(i, j, n) = cz
+        pi(i, j, n) = czero
+        qi(i, j, n) = czero
+        d_p(i, j, n) = czero
+        dq(i, j, n) = czero
       end do
     end do
     ! ------------------------------------------------------------
@@ -456,7 +455,7 @@ contains
       do j = 1, nsol
         i = 3 - j
         qi(j, j, n) = (d_p(j,j,n)+kpx(j)*pi(j,j,n)*dovr(n))/(emvqq+bqq*cgmd(j))
-        qi(i, j, n) = cz
+        qi(i, j, n) = czero
       end do
 
       do j = 1, nsol

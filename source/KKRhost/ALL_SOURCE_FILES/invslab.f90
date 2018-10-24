@@ -24,10 +24,9 @@ contains
     use :: mod_bofm, only: bofm
     use :: mod_btom, only: btom
     use :: mod_cinit, only: cinit
+    use :: mod_constants, only: czero,cone
     implicit none
 
-    complex (kind=dp), parameter :: czero = (0.e0_dp, 0.e0_dp)
-    complex (kind=dp), parameter :: cone = (1.e0_dp, 0.e0_dp)
     integer :: ipvt(ndim_slabinv)
     complex (kind=dp) :: gup(ndim_slabinv, ndim_slabinv, nlayerd)
     complex (kind=dp) :: gdow(ndim_slabinv, ndim_slabinv, nlayerd)

@@ -58,6 +58,7 @@ contains
     use :: global_variables, only: irmd, lmpotd, natypd, irid, nfund, ngshd, ipand
     use :: mod_simp3, only: simp3
     use :: mod_simpk, only: simpk
+    use :: mod_constants, only: pi
     implicit none
 
     integer :: lpot, kshape, kvmad, lmax, natyp, nspin
@@ -72,7 +73,7 @@ contains
     ! .. Local Arrays ..
     real (kind=dp) :: er(irmd)
 
-    real (kind=dp), parameter :: rfpi = sqrt(16.d0*atan(1.0d0))
+    real (kind=dp), parameter :: rfpi = sqrt(4.0_dp*pi)
 
     ! .. Intrinsic Functions ..
     intrinsic :: atan, sqrt

@@ -20,8 +20,8 @@ contains
     integer, intent(in) :: almd, nsize, pl1, pl2
     ! ..
     ! .. Array Arguments ..
-    complex (kind=dp), intent(in) :: gin(almd, almd)
-    complex (kind=dp), intent(out) :: block(nsize, nsize)
+    complex (kind=dp), dimension(almd,almd), intent(in) :: gin
+    complex (kind=dp), dimension(nsize,nsize), intent(out) :: block
     ! ..
     ! .. Local Scalars ..
     integer :: i1, i1s, i2, i2s

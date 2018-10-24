@@ -34,13 +34,12 @@ contains
     use :: mod_rinvgj, only: rinvgj
     use :: mod_cjlz, only: cjlz
     use :: mod_cinit, only: cinit
+    use :: mod_constants, only: czero
     implicit none
 
     ! PARAMETER definitions
     integer :: mpsmax, npemax, nabm
     parameter (mpsmax=40, npemax=4, nabm=4)
-    complex (kind=dp) :: c0
-    parameter (c0=(0.0d0,0.0d0))
     real (kind=dp) :: tol
     parameter (tol=1.0d-9)
     integer :: itmax
@@ -165,8 +164,8 @@ contains
     do i = 1, 2
       do j = 1, 2
         do ip = -npemax, mpsmax
-          pc(i, j, ip) = c0
-          qc(i, j, ip) = c0
+          pc(i, j, ip) = czero
+          qc(i, j, ip) = czero
         end do
       end do
     end do
@@ -178,8 +177,8 @@ contains
         i = 3 - j
         pc(j, j, 0) = sqrt(abs(kpy(j))-gam(j))
         qc(j, j, 0) = (kpy(j)+gam(j))*(csqr/tz)*pc(j, j, 0)
-        pc(i, j, 0) = c0
-        qc(i, j, 0) = c0
+        pc(i, j, 0) = czero
+        qc(i, j, 0) = czero
       end do
 
       ! DETERMINE HIGHER EXPANSION COEFFICIENTS FOR THE WAVE FUNCTIONS
@@ -263,10 +262,10 @@ contains
 
         do j = 1, nsol
           do i = 1, nsol
-            pr(i, j, n) = c0
-            qr(i, j, n) = c0
-            d_p(i, j, n) = c0
-            dq(i, j, n) = c0
+            pr(i, j, n) = czero
+            qr(i, j, n) = czero
+            d_p(i, j, n) = czero
+            dq(i, j, n) = czero
           end do
         end do
 
@@ -399,10 +398,10 @@ contains
         m = lb(j)
         dq(j, j, n) = cfac*sk(j)*(real(m+1,kind=dp)*cjlz(m,arg)-arg*cjlz(m+1,arg))*drdi(n)*c
 
-        pi(i, j, n) = c0
-        qi(i, j, n) = c0
-        d_p(i, j, n) = c0
-        dq(i, j, n) = c0
+        pi(i, j, n) = czero
+        qi(i, j, n) = czero
+        d_p(i, j, n) = czero
+        dq(i, j, n) = czero
       end do
     end do
     ! ------------------------------------------------------------
@@ -429,7 +428,7 @@ contains
       do j = 1, nsol
         i = 3 - j
         qi(j, j, n) = (d_p(j,j,n)+kpx(j)*pi(j,j,n)*dovr(n))/(emvqq+bqq*cgmd(j))
-        qi(i, j, n) = c0
+        qi(i, j, n) = czero
       end do
 
       do j = 1, nsol

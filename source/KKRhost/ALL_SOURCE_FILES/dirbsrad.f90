@@ -11,6 +11,8 @@ contains
   !> Supply the derivatives for the coupled set of
   !> radial dirac equation in case of a spin-dependent potential
   !-------------------------------------------------------------------------------
+  !> @note Jonathan Chico: This makes use of common blocks, one should try to remove this
+  !-------------------------------------------------------------------------------
   subroutine dirbsrad(xbs, y, dydx, drdi, b, v, r, nmesh)
 
     use :: mod_datatypes, only: dp

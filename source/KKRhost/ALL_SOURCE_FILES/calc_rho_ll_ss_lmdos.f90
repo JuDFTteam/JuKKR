@@ -5,7 +5,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Rho matrix for PKKprime code
   !> Author: 
-  !> Category: KKRhost, physical-observables
+  !> Category: KKRhost, physical-observables, deprecated
   !> Deprecated: True ! This needs to be set to True for deprecated subroutines
   !> 
   !> This is unused (calc_rho_ll_ss is used instead)

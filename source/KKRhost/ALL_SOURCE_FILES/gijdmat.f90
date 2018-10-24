@@ -36,6 +36,7 @@ contains
     use :: mod_datatypes, only: dp
     use :: mod_getdmat, only: getdmat
     use :: mod_cmatstr, only: cmatstr
+    use :: mod_constants, only: cone, czero
     implicit none
 
     integer :: iprint, lmmaxd
@@ -46,12 +47,8 @@ contains
 
     integer :: ik, info, i1, i2
     integer :: ipvt(lmmaxd)
-    complex (kind=dp) :: cone, czero
     complex (kind=dp) :: gll(lmmaxd, lmmaxd), tssq(lmmaxd, lmmaxd), tpg(lmmaxd, lmmaxd), xc(lmmaxd, lmmaxd)
     character (len=18) :: banner
-
-    data cone/(1e0_dp, 0e0_dp)/
-    data czero/(0e0_dp, 0e0_dp)/
 
     ! --> get G(CPA) using the same procedure as for GMATLL in < KLOOPZ >
     ! G(CPA) = -MSSQ - MSSQ * TAUQ * MSSQ

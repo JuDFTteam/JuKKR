@@ -15,6 +15,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine intin(g, f, v, e, l, nne, valu, slop, k1, k2, kc, dg, a, b, z, nsra)
     use :: mod_datatypes, only: dp
+    use :: mod_constants, only: cvlight
     implicit none
 
     ! .. Scalar Arguments ..
@@ -25,7 +26,7 @@ contains
     real (kind=dp) :: f(*), g(*), v(*)
     ! ..
     ! .. Local Scalars ..
-    real (kind=dp) :: af1, af2, af3, ag1, ag2, ag3, b1, b2, cvlight, det, df1, df2, df3, dg1, dg2, dg3, dr, ea, ff, fllp1, gg, h83, phi, q, r, r1, r2, r3, r83sq, rpb, sdg3, sg, &
+    real (kind=dp) :: af1, af2, af3, ag1, ag2, ag3, b1, b2, cvlight_loc, det, df1, df2, df3, dg1, dg2, dg3, dr, ea, ff, fllp1, gg, h83, phi, q, r, r1, r2, r3, r83sq, rpb, sdg3, sg, &
       sgp1, u, vb, x, y, zz
     integer :: i, k, kp1
     ! ..
@@ -37,8 +38,8 @@ contains
 
 
     zz = z + z
-    cvlight = 274.0720442e0_dp
-    if (nsra==1) cvlight = 1.0e0_dp
+    cvlight_loc = cvlight
+    if (nsra==1) cvlight_loc = 1.0e0_dp
     fllp1 = l*(l+1.e0_dp)
     r83sq = 64.e0_dp/9.e0_dp
     r1 = 1.e0_dp/9.e0_dp
@@ -49,8 +50,8 @@ contains
     rpb = b*exp(a*k1-a)
     r = rpb - b
     dr = a*rpb
-    phi = (e+zz/r-v(k1))*dr/cvlight
-    u = dr*cvlight + phi
+    phi = (e+zz/r-v(k1))*dr/cvlight_loc
+    u = dr*cvlight_loc + phi
     if (nsra==1) u = dr
     x = -dr/r
     y = -fllp1*x*x/u + phi
@@ -71,8 +72,8 @@ contains
         gg = g(kp1) - .5e0_dp*ag1
         ff = f(kp1) - .5e0_dp*af1
         vb = (3.e0_dp*v(kp1)+6.e0_dp*v(k)-v(k-1))*.125e0_dp
-        phi = (e+zz/r-vb)*dr/cvlight
-        u = dr*cvlight + phi
+        phi = (e+zz/r-vb)*dr/cvlight_loc
+        u = dr*cvlight_loc + phi
         if (nsra==1) u = dr
         x = -dr/r
         y = -fllp1*x*x/u + phi
@@ -85,8 +86,8 @@ contains
         rpb = rpb*q
         dr = a*rpb
         r = rpb - b
-        phi = (e+zz/r-v(k))*dr/cvlight
-        u = dr*cvlight + phi
+        phi = (e+zz/r-v(k))*dr/cvlight_loc
+        u = dr*cvlight_loc + phi
         if (nsra==1) u = dr
         x = -dr/r
         y = -fllp1*x*x/u + phi
@@ -121,8 +122,8 @@ contains
       rpb = rpb*q
       dr = a*rpb
       r = rpb - b
-      phi = (e+zz/r-v(k))*dr/cvlight
-      u = dr*cvlight + phi
+      phi = (e+zz/r-v(k))*dr/cvlight_loc
+      u = dr*cvlight_loc + phi
       if (nsra==1) u = dr
       x = -dr/r
       y = -fllp1*x*x/u + phi

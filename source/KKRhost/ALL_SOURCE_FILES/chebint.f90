@@ -26,19 +26,18 @@ contains
   !-------------------------------------------------------------------------------
   subroutine chebint(cslc1, csrc1, slc1sum, c1, n)
     use :: mod_datatypes, only: dp
+    use :: mod_constants, only: pi
     implicit none
     ! .. Scalar Arguments ..
     integer, intent (in) :: n
     ! .. Array Arguments ..
     real (kind=dp) :: cslc1(0:n, 0:n), csrc1(0:n, 0:n), slc1sum(0:n)
 
-    ! .. Local Scalars ..
-    real (kind=dp) :: pi
+    ! .. Local Scalars .
     integer :: j, k
     ! .. Local Arrays ..
     real (kind=dp) :: c(0:n, 0:n), c1(0:n, 0:n), s1(0:n, 0:n), s2(0:n, 0:n), sl(0:n, 0:n), slc1(0:n, 0:n), sr(0:n, 0:n), src1(0:n, 0:n)
     ! ..
-    pi = 4.e0_dp*atan(1.e0_dp)
     ! ---------------------------------------------------------------------
     ! determine the discrete cosine transform matrix from the zeros of the
     ! Chebyshev polynomials

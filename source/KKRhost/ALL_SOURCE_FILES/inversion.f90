@@ -23,10 +23,8 @@ contains
     use :: godfrin, only: sparse_inverse, t_godfrin
     use :: mod_invslab, only: invslab
     use :: mod_invsupercell, only: invsupercell
+    use :: mod_constants, only: czero, cone
     implicit none
-
-    complex (kind=dp) :: czero, cone
-    parameter (czero=(0.e0_dp,0.e0_dp), cone=(1.e0_dp,0.e0_dp))
 
     complex (kind=dp) :: gllke(alm, alm), gdi(ndim_slabinv, ndim_slabinv, nlayerd), gup(ndim_slabinv, ndim_slabinv, nlayerd), gdow(ndim_slabinv, ndim_slabinv, nlayerd)
     complex (kind=dp), allocatable :: gtemp(:, :)

@@ -17,11 +17,10 @@ contains
   function cnlz(l, z)
     use :: mod_cjlz, only: cjlz
     use :: mod_datatypes, only: dp
+    use :: mod_constants, only: cone
     implicit none
 
     ! PARAMETER definitions
-    complex (kind=dp) :: c1
-    parameter (c1=(1.0e0_dp,0.0e0_dp))
     integer :: lp2max
     parameter (lp2max=25)
 
@@ -49,8 +48,8 @@ contains
         dfac = dfac*real(k, kind=dp)
       end do
 
-      dt = c1
-      t = c1
+      dt = cone
+      t = cone
 
       do i = 2, 400, 2
         dt = -dt*zsq/real(i*(i-llp1), kind=dp)

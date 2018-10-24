@@ -23,9 +23,9 @@ contains
     use :: mod_cross, only: cross
     implicit none
     ! Passed parameters:
-    real (kind=dp), intent(in) :: matrix(*) !! ipnut matrix
+    real (kind=dp), dimension(*), intent(in) :: matrix !! ipnut matrix
     ! Local parameters:
-    real (kind=dp) :: m1cm2(3) !! temporary value of cross product
+    real (kind=dp), dimension(3) :: m1cm2 !! temporary value of cross product
     ! external calls:
     real (kind=dp), external :: ddot !! ddot is a LAPACK function
 

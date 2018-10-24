@@ -912,7 +912,7 @@ end module mod_rllsll
 !> Author: P. Rüßmann
 !> Category: KKRhost, solver, single-site, unit-test
 !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-!>
+!-------------------------------------------------------------------------------
 !> @note Needs previous run of rllsll with test_prep to generate necessary input 
 !> files. @endnote
 !-------------------------------------------------------------------------------

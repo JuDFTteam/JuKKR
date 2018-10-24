@@ -23,12 +23,11 @@ contains
   !-------------------------------------------------------------------------------
   subroutine cmatmul(n, m, a, b, c)
     use :: mod_datatypes, only: dp
+    use :: mod_constants, only: czero
     implicit none
 
     ! PARAMETER definitions
     real (kind=dp), parameter :: eps = 1.0e-12_dp
-    complex (kind=dp) :: c0
-    parameter (c0=(0.0e0_dp,0.0e0_dp))
 
     ! Dummy arguments
     integer :: m, n
@@ -40,7 +39,7 @@ contains
 
     do j = 1, n
       do i = 1, n
-        c(i, j) = c0
+        c(i, j) = czero
       end do
     end do
 

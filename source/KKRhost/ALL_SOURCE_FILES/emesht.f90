@@ -1,3 +1,43 @@
+!------------------------------------------------------------------------------------
+!> Summary: This subroutine provides the energy mesh in array EZ and the appropriate integration weights in array DF.
+!> Author: 
+!> Poles of the Fermi function (Matsubara frequencies) and a contour in
+!> the complex energy are used as described in (????).
+!> The contour consists of three straight lines with `NPNT1`, `NPNT2`, and `NPNT3`
+!> integration points and is determined by the input arguments: `EBOT`, `EMU`,
+!> `TK`, and `NPOL`.
+!> The three lines are defined by:
+!> 1. The line from \(E_\textrm{BOT}\) to \( E_\textrm{BOT}+2i\pi N_\textrm{POL}k T_{K} \) with `NPNT1`
+!> integration points (Gauss-Legendre rule)
+!> 2. The line from \( E_\textrm{BOT}+2i\pi N_\textrm{POL} k T_{K}\) to \(E_\mu+(2i\pi N_\textrm{POL}-30)kT_K\) with 
+!> `NPNT2` integration points (Gauss-Legendre rule)
+!> 3. The line from \( E_\mu+(2i\pi N_\textrm{POL}-30)kT_K\) to \( \infty \)
+!>
+!> The total number of integration points is given by:
+!> \(N_\textrm{PNT}=N_\textrm{PNT}^1+N_\textrm{PNT}^2+N_\textrm{PNT}^3+N_\textrm{POL}\)
+!> The integration points and weights on three lines are chosen according to
+!> Gauss integration rules. Only in third interval
+!> the Fermi function matters since \( e^x < 10^{-10} \) for \( x < -25\).
+!> There are two special cases determined by NPOL = 0 and NPOL < 0.
+!> - NPOL = 0 leads to density-of-states calculations with constant
+!> integration weights and equally distributed points
+!> between \( E_\textrm{BOT} - i\pi kT_K\) and \( E_\mu - i\pi kT_K\).
+!> The total number of integration points is given by: NPNT=NPNT2
+!> - NPOL < 0 is meant for calculations where the Fermi-Dirac function is
+!> replaced by a step function with step at EMU. When
+!> this option is used no poles of the Fermi-Dirac function are used and the
+!> contour consists of the three straight lines:
+!> 1. The line from \(E_\textrm{BOT}\) to \( E_\textrm{BOT}-2i\pi N_\textrm{POL}kT_K\) with `NPNT1`
+!> integration points (Gauss-Legendre rule)
+!> 2. The line from \(E_\textrm{BOT}-2i\pi N_\textrm{POL}kT_K\) to
+!> \(E_\mu-2i\pi N_\textrm{POL}kT_K\) with `NPNT2` integration points (Gauss-Legendre
+!> rule)
+!> 3. The line from \( E_\mu-2i\pi N_{POL}kT_K\) to \(E_\mu\) with `NPNT3`
+!> integration points (Gauss-Legendre rule)
+!>
+!> The total number of integration points is given by:
+!> \(N_\textrm{PNT)=N_\textrm{PNT}^1+N_\textrm{PNT}^2+N_\textrm{PNT}^3\)
+!------------------------------------------------------------------------------------
 module mod_emesht
 
 contains
@@ -8,48 +48,42 @@ contains
   !> Category: KKRhost, undefined
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
-  !> Poles of the Fermi function C (Matsubara frequencies) and a
-  !> contour in
+  !> Poles of the Fermi function (Matsubara frequencies) and a contour in
   !> the complex energy are used as described in (????).
   !> The contour consists of three straight lines with `NPNT1`, `NPNT2`, and `NPNT3`
   !> integration points and is determined by the input arguments: `EBOT`, `EMU`,
   !> `TK`, and `NPOL`.
   !> The three lines are defined by:
-  !> 1. The line from EBOT to \( EBOT+2*NPOL*\pi*i*k*TK \) with `NPNT1`
+  !> 1. The line from \(E_\textrm{BOT}\) to \( E_\textrm{BOT}+2i\pi N_\textrm{POL}k T_{K} \) with `NPNT1`
   !> integration points (Gauss-Legendre rule)
-  !> 2. The line from \( EBOT+2NPOL\pi ikTK\) to \(EMU+(2NPOL\pi i-30)kTK\) with 
+  !> 2. The line from \( E_\textrm{BOT}+2i\pi N_\textrm{POL} k T_{K}\) to \(E_\mu+(2i\pi N_\textrm{POL}-30)kT_K\) with 
   !> `NPNT2` integration points (Gauss-Legendre rule)
-  !> 3. The line from \( EMU+(2NPOL \pi i-30)kTK\) to \() \infty \)
+  !> 3. The line from \( E_\mu+(2i\pi N_\textrm{POL}-30)kT_K\) to \( \infty \)
   !>
   !> The total number of integration points is given by:
-  !> \(NPNT=NPNT1+NPNT2+NPNT3+NPOL\)
+  !> \(N_\textrm{PNT}=N_\textrm{PNT}^1+N_\textrm{PNT}^2+N_\textrm{PNT}^3+N_\textrm{POL}\)
   !> The integration points and weights on three lines are chosen according to
   !> Gauss integration rules. Only in third interval
-  !> the Fermi function matters since \() e^x < 10^{-10} \) for \) x < -25\).
+  !> the Fermi function matters since \( e^x < 10^{-10} \) for \( x < -25\).
   !> There are two special cases determined by NPOL = 0 and NPOL < 0.
   !> - NPOL = 0 leads to density-of-states calculations with constant
   !> integration weights and equally distributed points
-  !> between \( EBOT - \pi ikTK\) and \( EMU - \pi ikTK\).
+  !> between \( E_\textrm{BOT} - i\pi kT_K\) and \( E_\mu - i\pi kT_K\).
   !> The total number of integration points is given by: NPNT=NPNT2
   !> - NPOL < 0 is meant for calculations where the Fermi-Dirac function is
   !> replaced by a step function with step at EMU. When
   !> this option is used no poles of the Fermi-Dirac function are used and the
   !> contour consists of the three straight lines:
-  !> 1. The line from \f$EBOT\f$ to \( EBOT-2*NPOL*\pi*i*k*TK\) with NPNT1
+  !> 1. The line from \(E_\textrm{BOT}\) to \( E_\textrm{BOT}-2i\pi N_\textrm{POL}kT_K\) with `NPNT1`
   !> integration points (Gauss-Legendre rule)
-  !> 2. The line from \(EBOT-2NPOL\pi ikTK\) to
-  !> \(EMU-2NPOL\pi ikTK\) with NPNT2 integration points (Gauss-Legendre
+  !> 2. The line from \(E_\textrm{BOT}-2i\pi N_\textrm{POL}kT_K\) to
+  !> \(E_\mu-2i\pi N_\textrm{POL}kT_K\) with `NPNT2` integration points (Gauss-Legendre
   !> rule)
-  !> 3. The line from \( EMU-2NPOL\pi ikTK\) to \f$EMU\f$ with NPNT3
+  !> 3. The line from \( E_\mu-2i\pi N_{POL}kT_K\) to \(E_\mu\) with `NPNT3`
   !> integration points (Gauss-Legendre rule)
   !>
   !> The total number of integration points is given by:
-  !> \(NPNT=NPNT1+NPNT2+NPNT3\)
-  !>
-  !> @note
-  !> - Jonathan Chico Jan. 2018: Removed inc.p dependencies and rewrote to
-  !> Fortran90
-  !> @endnote
+  !> \(N_\textrm{PNT)=N_\textrm{PNT}^1+N_\textrm{PNT}^2+N_\textrm{PNT}^3\)
   !-------------------------------------------------------------------------------
   subroutine emesht(ez, df, npnt, ebot, emu, efermi, tk, npol, npnt1, npnt2, npnt3, iemxd)
 

@@ -39,6 +39,7 @@ contains
     use :: mod_datatypes, only: dp
     use :: mod_ddet33, only: ddet33
     use :: mod_latvec, only: latvec
+    use :: mod_constants, only : pi
     implicit none
 
     real (kind=dp), parameter :: eps = 1.0e-12_dp
@@ -58,7 +59,7 @@ contains
     integer :: i, j, isym, nsym, i0, ia
     real (kind=dp) :: mdotmp, mvecq(3, naezd), mvecqp(3, naezd)
     real (kind=dp) :: mrotr(3, 3), symdet, summdotmp
-    real (kind=dp) :: stet, pi
+    real (kind=dp) :: stet
     character (len=10) :: rotname(64)
     character (len=10) :: char(64)
     logical :: llatbas, lbulk
@@ -71,7 +72,6 @@ contains
     ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
     nsym = 0
-    pi = 4.e0_dp*atan(1.e0_dp)
     do isym = 1, nsymaxd
       symunitary(isym) = .true.
     end do

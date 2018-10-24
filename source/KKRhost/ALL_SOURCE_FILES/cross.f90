@@ -21,7 +21,7 @@ contains
   !>   cr12  :cross product
   !>
   !> @note
-  !> the `crospr` subroutine is a dublication of this and should be removed
+  !> the `crospr` subroutine is a duplication of this and should be removed
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine cross(x1, x2, cr12)

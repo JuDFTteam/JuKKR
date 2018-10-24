@@ -13,7 +13,7 @@ contains
   !>
   !> This subroutine copies or subtracts a block to a matrix
   !-------------------------------------------------------------------------------
-  subroutine btom(pl1, pl2, block, nsize, gin, almd, lsub)
+  subroutine btom(pl1, pl2, block_mat, nsize, gin, almd, lsub)
     use :: mod_datatypes, only: dp
     implicit none
     ! .. Scalar Arguments ..
@@ -21,7 +21,8 @@ contains
     logical :: lsub
     ! ..
     ! .. Array Arguments ..
-    complex (kind=dp) :: block(nsize, nsize), gin(almd, almd)
+    complex (kind=dp), dimension(almd, almd) :: gin
+    complex (kind=dp), dimension(nsize,nsize) :: block_mat
     ! ..
     ! .. Local Scalars ..
     integer :: i1, i1s, i2, i2s
@@ -31,13 +32,13 @@ contains
     if (lsub) then
       do i1 = 1, nsize
         do i2 = 1, nsize
-          gin(i1s+i1, i2s+i2) = gin(i1s+i1, i2s+i2) - block(i1, i2)
+          gin(i1s+i1, i2s+i2) = gin(i1s+i1, i2s+i2) - block_mat(i1, i2)
         end do
       end do
     else
       do i1 = 1, nsize
         do i2 = 1, nsize
-          gin(i1s+i1, i2s+i2) = block(i1, i2)
+          gin(i1s+i1, i2s+i2) = block_mat(i1, i2)
         end do
       end do
     end if

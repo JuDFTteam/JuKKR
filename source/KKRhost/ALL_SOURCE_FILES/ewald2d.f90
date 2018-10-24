@@ -50,6 +50,7 @@ contains
     use :: mod_fplaner, only: fplaner
     use :: mod_gamfc, only: gamfc
     use :: mod_ymy, only: ymy
+    use :: mod_constants, only : pi,ci
     implicit none
     ! ..
     ! .. Scalar arguments ..
@@ -64,8 +65,8 @@ contains
     integer :: nsr(*), nsg(*)
     ! ..
     ! .. Local scalars ..
-    real (kind=dp) :: alpha, beta, bound, con, con1, dot1, dq1, dq2, dq3, dqdotg, expbsq, fpi, g1, g2, g3, ga, lamda, pi, r, r0, r1, r2, r3, rfac, s, signrz, stest0, tpi
-    complex (kind=dp) :: aprefmm, aprefpp, bfac, ci, factexp, simag
+    real (kind=dp) :: alpha, beta, bound, con, con1, dot1, dq1, dq2, dq3, dqdotg, expbsq, fpi, g1, g2, g3, ga, lamda, r, r0, r1, r2, r3, rfac, s, signrz, stest0, tpi
+    complex (kind=dp) :: aprefmm, aprefpp, bfac, factexp, simag
     real (kind=dp) :: exponent, crit
     integer :: i, im, ir, l, lm, lmax, lmmax, m, icall, ngmax1
     ! ..
@@ -78,15 +79,13 @@ contains
     data icall/0/
     ! ..
     ! .. Save statements
-    save :: icall, ci, bound, pi, fpi, tpi
+    save :: icall,  bound, fpi, tpi
     ! ..................................................................
 
     icall = 1
     ! ICALL = ICALL + 1
     if (icall==1) then
-      ci = (0.0e0_dp, 1.0e0_dp)
       bound = 1.0e-9_dp
-      pi = 4.0e0_dp*atan(1.0e0_dp)
       fpi = 4.0e0_dp*pi
       tpi = 2.0e0_dp*pi
     end if

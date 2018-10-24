@@ -22,15 +22,15 @@ contains
   !>                                                                  
   !>  LDA+U implementation     Mar. 2002-Dec.2004                     
   !>                           ph.mavropoulos, h. ebert, v. popescu   
-  !>
-  !> Notes:                                                           
+  !-------------------------------------------------------------------------------
+  !> @notes:                                                           
   !>  average WLDAU for spherical wavefunctions:                      
   !>  The spherical part of the d or f wavefunction is found by adding
-  !>  the average interaction potential WLDAUAV to the spherical      
+  !>  the average interaction potential `WLDAUAV` to the spherical      
   !>  potential. Then the non-spherical parts are found by using only 
-  !>  the deviation of WLDAU from the average. This speeds up the     
-  !>  convergence of the Born series. See also subroutines            
-  !>  regsol, pnstmat and pnsqns   
+  !>  the deviation of `WLDAU` from the average. This speeds up the     
+  !>  convergence of the Born series. See also subroutines `regsol`, `pnstmat` and `pnsqns`
+  !> @endnote
   !-------------------------------------------------------------------------------
   subroutine calctmat(icst, ins, ielast, nsra, ispin, nspin, i1, ez, drdi, rmesh, vins, visp, zat, irmin, ipan, &
     ircut, cleb, loflm, icleb, iend, solver, soctl, ctl, vtrel, btrel, rmrel, drdirel, r2drdirel, zrel, jwsrel, idoldau, lopt, wldau, lly, deltae)
