@@ -2,7 +2,7 @@
      >     RCLS,IREFPOT,ATOM,IAT1,IC1,N1,RCLS1,N2,IAT2)
 c#@# KKRtags: VORONOI KKRhost geometry
       implicit none
-c     This function returns true if cluster ic1 is equal to new cluster
+c     This func returns true if cluster ic1 is equal to new cluster
 c     RCLS        coordinates of all (already found) clusters
 c     IC1         First cluster index
 c     N1          Number of atoms in IC1 cluster

@@ -1,6 +1,6 @@
       SUBROUTINE IOinput(CHARKEY,CHAR,ILINE,IFILE,IERROR)
 c *********************************************************
-c *  This subroutine is responsible for the I/O
+c *  This routine is responsible for the I/O
 c *  with the input file.
 c *
 c *  GIVEN a KEYWORD: CHARKEY it positions the
@@ -143,6 +143,7 @@ c                   write(6,*) CHARKEY,CHAR ! test
  1005 FORMAT(4I4)
       END
         SUBROUTINE VERIFY77(STR1,ipos1,ipos2)
+c#@# KKRtags: VORONOI undefined
         implicit none  
 c This sub returns the position of the first space character
 c in ipos2, and the position of the first letter in the string

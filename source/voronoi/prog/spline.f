@@ -6,10 +6,10 @@ c#@# KKRtags: VORONOI special-functions
       REAL*8          yp1,ypn,x(NMAX),y(NMAX),y2(NMAX) 
 c Given arrays x(1:n) and  y(1:n) containing a tabulated function, 
 c i.e., y i = f(xi), with x1<x2<...<xN , and given values yp1 and ypn 
-c for the 1rst derivative of the interpolating function at points 
+c for the 1rst derivative of the interpolating func at points 
 c 1 and n, respectively, this routine returns an array y2(1:n) of 
 c length n which contains the second derivatives of the interpolating 
-c function at the tabulated points xi. 
+c func at the tabulated points xi. 
 c If yp1 and/or ypn are equal to 1.e30 or larger, the routine is
 c signaled to set the corresponding boundary condition for a natural
 c spline, with zero second derivative on that boundary. 

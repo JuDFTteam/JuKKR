@@ -5,7 +5,7 @@ c#@# KKRtags: VORONOI special-functions
       INTEGER n
       REAL*8         x,y,yderiv,xa(*),ya(*),y2a(*)
 c Given the arrays xa(1:n) and ya(1:n) of length n, which tabulate a
-c function (with the xai's in order), and given the array y2a(1:n), which
+c func (with the xai's in order), and given the array y2a(1:n), which
 c is the output from spline above, and given a value of x, this routine
 c returns a cubic-spline interpolated value y and the derivative yderiv.
 c Taken from "Numerical Recipes in Fortran 77", W.H.Press et al.

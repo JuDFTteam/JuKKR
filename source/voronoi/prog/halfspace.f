@@ -2,7 +2,7 @@ c***********************************************************************
       LOGICAL FUNCTION HALFSPACE(A,B,C,D,X,Y,Z,TOLHS)
 c#@# KKRtags: VORONOI geometry
 c Given a plane A*x+B*y+C*z=D, and a point (X,Y,Z) in space, this 
-c function takes the value TRUE if (X,Y,Z) lies in the half-space 
+c func takes the value TRUE if (X,Y,Z) lies in the half-space 
 c defined by the plane and the origin (0,0,0) (including the plane 
 c itself). Else, the value FALSE is returned.
 c

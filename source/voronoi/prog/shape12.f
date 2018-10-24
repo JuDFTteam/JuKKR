@@ -13,7 +13,7 @@ C=====================================================================
      &                 NM_S,       ! array, mesh for each panel
      &                 XRN_S,      ! radial mesh
      &                 DRN_S,      ! drdi for radial mesh
-     &                 NFUN_S,     ! number of nonzero shape-functions
+     &                 NFUN_S,     ! number of nonzero shapefunctions
      &                 LMIFUN_S,   ! lm of the ifun shapefunction
      &                 THETAS_S)   ! Thetas(r,ifun)
       implicit none
@@ -34,7 +34,7 @@ C                In the old version IPAN=-1 is wrong and has to be
 C                set to IPAN=0. 
 C
 C     THIS PROGRAM CALCULATES THE ANGULAR MOMENTUM COMPONENTS OF THE 
-C     SHAPE FUNCTION FOR AN ARBITRARY VORONOI POLYHEDRON.
+C     SHAPEFUNCTION FOR AN ARBITRARY VORONOI POLYHEDRON.
 C     A REAL SPHERICAL HARMONIC BASIS IS USED FOR THE DECOMPOSITION.
 C     ON INPUT WE GIVE :
 C
@@ -68,7 +68,7 @@ C        NVERT         :  NUMBER OF VERTICES OF A FACE
 C        V(I,IVERT)    :  COORDINATES OF THE VERTICES OF A FACE
 C        NEWSCH(IFACE) :  INTEGER   PARAMETER TO CALCULATE   (=1)
 C                         THE CONTRIBUTION OF THE CORRESPONDING
-C                         PYRAMID TO THE SHAPE FUNCTIONS  .  IF
+C                         PYRAMID TO THE SHAPEFUNCTIONS  .  IF
 C                         NEWSCH.NE.1 THE CONTRIBUTION IS TAKEN
 C                         EQUAL TO THAT OF THE PREVIOUS PYRAMID
 C
@@ -76,7 +76,7 @@ C
 C     IN ORDER TO SAVE MEMORY WE STORE IN LOCAL TEMPORARY FILES IN  UNIT
 C     30+1 , 30+2 , ... , 30+NFACE THE TRANSFORMATION MATRICES ASSOCIATE
 C     WITH THE ROTATION OF EACH PYRAMID. THE TEMPORARY DIRECT ACCESS FIL
-C     IN UNIT 10 CONTAINS THE CALCULATED COMPONENTS OF THE SHAPE FUNCTIO
+C     IN UNIT 10 CONTAINS THE CALCULATED COMPONENTS OF THE SHAPEFUNCTIO
 C
 C                  ...........I N P U T  C A R D...(Bcc/fcc)
 C
@@ -1894,6 +1894,7 @@ C-----------------------------------------------------------------------
       RETURN
       END
       SUBROUTINE INTSIM(FD,RATIO,X1,X2,DLT,XEL)
+c#@# KKRtags: VORONOI undefined
       implicit none
       REAL*8 FD,RATIO,X1,X2,DLT
       REAL*8 H,X
@@ -1927,6 +1928,7 @@ C-----------------------------------------------------------------------
       END
 
       REAL*8 FUNCTION FFF(I,X,FD,RATIO)
+c#@# KKRtags: VORONOI undefined
       implicit none
       REAL*8 X,FD,RATIO
       REAL*8 AEXP,A1,A2,A,C1,C2,C,B1,B

@@ -57,6 +57,7 @@ c ------------------------------------------------------------------------
 c ************************************************************************
       SUBROUTINE DSORT_NCOMP(W,NCOMP,LTEST,IND,MAX,POS)
       implicit none
+c#@# KKRtags: VORONOI undefined
 c ************************************************************************
 !     Phivos Mavropoulos 2014
 !     Sorting according to multiple components
@@ -112,6 +113,7 @@ c ************************************************************************
 
 
       FUNCTION CMPR(A1,A2,NCOMP)
+c#@# KKRtags: VORONOI undefined
       IMPLICIT NONE
       ! Input
       INTEGER NCOMP
