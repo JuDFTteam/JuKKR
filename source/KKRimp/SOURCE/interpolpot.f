@@ -167,7 +167,7 @@ C
 C ------------------------------
 C     .. Parameters ..
       INTEGER IRMD
-      PARAMEggTER (IRMD=1000)
+      PARAMETER (IRMD=1000)
 C     ..
 C     .. Scalar Arguments ..
       INTEGER N,NORDER
