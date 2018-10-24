@@ -8,7 +8,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Calculates the angular matrix elements
   !> Author: 
-  !> Category: KKRhost, dirac, physical-observable
+  !> Category: KKRhost, dirac, physical-observables
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>                                                    
   !> Calculate the angular matrix elements connected with       

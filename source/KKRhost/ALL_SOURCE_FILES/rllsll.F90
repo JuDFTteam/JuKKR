@@ -24,101 +24,6 @@ module mod_rllsll
 
 contains
 
-  !-------------------------------------------------------------------------------
-  !> Summary: Direct solver for radial wave functions using integral equations (NEWSOSOL)
-  !> Author: 
-  !> Category: KKRhost, solver, single-site
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
-  !> Radial wave functions by the integral equation method of
-  !> Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
-  !> which has been extended for KKR using non-sperical potentials.
-  !> Further information can be found in
-  !>
-  !> David Bauer,
-  !> "Development of a relativistic full-potential first-principles multiple scattering
-  !> Green function method applied to complex magnetic textures of nano structures
-  !> at surfaces", PhD Thesis, 2014
-  !>
-  !> http://darwin.bth.rwth-aachen.de/opus3/volltexte/2014/4925/
-  !>
-  !>
-  !> This routine solves the following two equations:
-  !>
-  !> ULL(r) = J(r) - PRE * J(r) * int_0^r( dr' r'^2 H2(r') * op(V(r')) * ULL(r') )
-  !> + PRE * H(r) * int_0^r( dr' r'^2 J2(r') * op(V(r')) * ULL(r') )
-  !>
-  !> SLL(r) = H(r) - PRE * H(r) * int_0^r( dr' r'^2 H2(r') * op(V(r')) * RLL(r') )
-  !> + PRE * J(r) * int_0^r( dr' r'^2 H2(r') * op(V(r')) * SLL(r') )
-  !>
-  !> where the integral int_0^r() runs from 0 to r
-  !>
-  !> Potential matrix : VLL(LMSIZE*NVEC,LMSIZE*NVEC)
-  !> LMSIZE = LMMAX (number of LM components) x Number of spin components
-  !> LMSIZE2 = NVEC* LMSIZE
-  !> NVEC is 2 for a spinor and 1 in case of a non-rel. calculation
-  !>
-  !> Green function prefacor PRE=GMATPREFACTOR (scalar value)
-  !> tipically \kappa for non-relativistic and M_0 \kappa for SRA
-  !>
-  !>
-  !> The discretization of the Lippmann-Schwinger equation results in a matrix
-  !> equation which is solved in this routine. Further information is given
-  !> in section 5.2.3, page 90 of Bauer, PhD
-  !>
-  !> Source terms :
-  !> right solution:  J, H  (nvec*lmsize,lmsize) or (lmsize,nvec*lmsize)
-  !> left solution:  J2,H2 (lmsize,nvec*lmsize) or (nvec*lmsize,lmsize)
-  !>
-  !> Example:
-  !> The source term J is for LMSIZE=3 and NVEC=2 given by:
-  !> J =      / jlk(jlk_index(1))                                          \
-  !>          |       0            jlk(jlk_index(2))                       |
-  !>          |       0                   0            jlk(jlk_index(3))   |
-  !>          | jlk(jlk_index(4))                                          |
-  !>          |       0            jlk(jlk_index(5))                       |
-  !>          \       0                   0            jlk(jlk_index(6))   /
-  !>
-  !> first 3 rows are for the large and the last 3 rows for the small component
-  !> 
-  !> Operator op() can be chosen to be a unity or a transpose operation
-  !> The unity operation is used to calculate the right solution
-  !> The transpose operation is used to calculate the left solution
-  !> 
-  !> RMESH      - radial mesh
-  !> RPANBOUND  - panel bounds RPANBOUND(0) left  panel border of panel 1
-  !> RPANBOUND(1) right panel border of panel 1
-  !> NCHEB      - highes chebyshev polynomial
-  !> number of points per panel = NCHEB + 1
-  !> NPAN       - number of panels
-  !> LMSIZE     - number of colums for the source matrix J etc...
-  !> LMSIZE2    - number of rows   for the source matrix J etc...
-  !> NRMAX      - total number of radial points (NPAN*(NCHEB+1))
-  !> NVEC       - number of LMSIZE*LMSIZE blocks in J (LMSIZE2=NVEC*LMSIZE)
-  !>
-  !> SRA trick
-  !> ---------
-  !> on page 68 of Bauer, PhD, a method is described how to speed up the
-  !> calculations in case of the SRA. A similar approach is implemented
-  !> here by using Eq. 4.132 and substituting DV from 4.133, and discretising
-  !> the radial mesh of the Lippmann-Schwinger eq. according to 5.68.
-  !> The Lippmann-Schwinger equation leads to a matrix inversion
-  !> problem. The matrix M which needs to be inverted has a special form
-  !> if the SRA approximation is used:
-  !>
-  !>matrix A ( C 0)     (same as in eq. 5.68)
-  !>          ( B 1)
-  !> (C, B are matricies here)
-  !>
-  !> inverse of A is   (C^-1    0 )
-  !>                   (-B C^-1 1 )
-  !>
-  !> Thus, it is sufficient to only inverse the matrix C which saves computational
-  !> time. This is refered to as the SRA trick.
-  !> 
-  !> @note In future implementation equation 4.134 is supposed to be
-  !> implemented which should lead to an additional speed-up. @endnote
-  !-------------------------------------------------------------------------------
 #ifndef hostcode
   !-------------------------------------------------------------------------------
   !> Summary: Calculation of the regular and irregular solutions for the host code
@@ -956,7 +861,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Routine for the testing of the regular and irregular solutions
   !> Author: 
-  !> Category: unit-tests, solver, KKRhost
+  !> Category: unit-test, solver, KKRhost
   !> Deprecated: False 
   !> Routine for the testing of the regular and irregular solutions
   !-------------------------------------------------------------------------------
@@ -979,7 +884,7 @@ contains
     if (info/=0) stop '[inverse] error INFO'
     call zgetri(nmat, mat, nmat, ipiv, work, nmat*nmat, info)
     if (info/=0) stop '[inverse] error INFO'
-  end subroutine inverse
+  end program test_rllsll
 #endif
 
   ! subroutine iterativesol (NCHEB,LMSIZE2,LMSIZE,MMAT,BMAT)
@@ -999,9 +904,6 @@ contains
   ! NPLM,ZILL,NPLM,CZERO,OUT,NPLM)
 
   ! end subroutine iterativesol
-
-end module mod_rllsll
-
 
 #ifdef test_run
 !-------------------------------------------------------------------------------

@@ -65,7 +65,7 @@ contains
     end do
   end subroutine wfint0
 
-    !-------------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
   !> Summary: Determines the integrands `CDER`, `DDER` or `ADER`, `BDER`
   !> Author: R. Zeller
   !> Category: numerical-tools, single-site, KKRhost 

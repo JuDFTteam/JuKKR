@@ -34,7 +34,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Reads the input potentials
   !> Author: B. Drittler
-  !> Category: ibput-output, potential, shape-functions, KKRhost 
+  !> Category: input-output, potential, shape-functions, KKRhost 
   !> Deprecated: False 
   !> Reads the input potentials with units given by:
   !> 

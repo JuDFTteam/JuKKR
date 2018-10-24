@@ -8,7 +8,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Set flags determining if wavefunctions and t-matrix elements for Jijs are computed
   !> Author: 
-  !> Category: KKRhost, physical-obervables
+  !> Category: KKRhost, physical-observables
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
   !-------------------------------------------------------------------------------
@@ -51,7 +51,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Compute \[\Delta t]\-matrix for Jijs
   !> Author: 
-  !> Category: KKRhost, physical-obervables, single-site
+  !> Category: KKRhost, physical-observables, single-site
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
   !-------------------------------------------------------------------------------

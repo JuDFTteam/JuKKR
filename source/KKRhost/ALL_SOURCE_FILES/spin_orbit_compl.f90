@@ -13,7 +13,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: In this subroutine the matrix \(L\cdot S\) is calculated for the basis of real spherical harmonics
   !> Author: 
-  !> Category: spin-ortbit-coupling, special-functions, KKRhost
+  !> Category: spin-orbit-coupling, special-functions, KKRhost
   !> Deprecated: False 
   !> In this subroutine the matrix \(L\cdot S\) is calculated for the basis of real spherical harmonics
   !-------------------------------------------------------------------------------

@@ -720,7 +720,7 @@ contains
   !-------------------------------------------------------------------------------  
   !> Summary: subroutine handling the allocation/deallocation of arrays that describe energies 
   !> Author: Jonathan Chico 
-  !> Category: memory-management, profiling, total-energies, KKRhost 
+  !> Category: memory-management, profiling, total-energy, KKRhost 
   !> Deprecated: False 
   !> Subroutine handling the allocation/deallocation of arrays that describe 
   !> energies 

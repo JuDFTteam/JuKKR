@@ -1,5 +1,5 @@
 !------------------------------------------------------------------------------------
-!> Summary: SIt calculates all the elements of the Green Function of the impurity cluster
+!> Summary: It calculates all the elements of the Green Function of the impurity cluster
 !> Author: 
 !> It calculates all the elements of the Green Function of the impurity cluster
 !> using the GF calculated for the representative pairs. The representative pair 
@@ -24,7 +24,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: It calculates all the elements of the Green Function of the impurity cluster
   !> Author: 
-  !> Category: TAGS for the code they must be written as TAG1, TAG2, ..., TAGN
+  !> Category: KKRhost
   !> Deprecated: False
   !> It calculates all the elements of the Green Function of the impurity cluster
   !> using the GF calculated for the representative pairs. The representative pair 

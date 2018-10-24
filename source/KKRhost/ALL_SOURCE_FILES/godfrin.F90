@@ -25,9 +25,10 @@ module godfrin
   !-------------------------------------------------------------------------------
   !> Summary: For the input parameters of the godfrin inversion scheme
   !> Author: Manuel dos Santos Dias, Flaviano Dos Santos
+  !> Category: KKRhost, structural-greensfunction, numerical-tools
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !-------------------------------------------------------------------------------
-  type :: type_godfrin             ! GODFRIN Flaviano
+  type :: type_godfrin             
     !> na: number of atoms, nb: number of blocks
     integer :: na, nb
     !> ldiag: diagonal part of inverse only, lper: periodic system, lpardiso:
@@ -70,7 +71,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Main driver for sparse matrix inversion
   !> Author: Manuel dos Santos Dias, Flaviano Dos Santos
-  !> Category: KKRhost, structural-greensfunction, numerical-tool
+  !> Category: KKRhost, structural-greensfunction, numerical-tools
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
   !> Typical dimensions:
@@ -230,7 +231,7 @@ contains
     !-------------------------------------------------------------------------------
     !> Summary: Copies the matrix A to storage in compressed sparse row format
     !> Author: Manuel dos Santos Dias, Flaviano Dos Santos
-    !> Category: KKRhost, structural-greensfunction, numerical-tool
+    !> Category: KKRhost, structural-greensfunction, numerical-tools
     !> Deprecated: False ! This needs to be set to True for deprecated subroutines
     !>
     !> Fills in matrix B with unit matrix
@@ -336,7 +337,7 @@ contains
     !-------------------------------------------------------------------------------
     !> Summary: Copy tridiagonals of matrix A
     !> Author: Manuel dos Santos Dias, Flaviano Dos Santos
-    !> Category: KKRhost, structural-greensfunction, numerical-tool
+    !> Category: KKRhost, structural-greensfunction, numerical-tools
     !> Deprecated: False ! This needs to be set to True for deprecated subroutines
     !>
     !-------------------------------------------------------------------------------
@@ -400,7 +401,7 @@ contains
     !-------------------------------------------------------------------------------
     !> Summary: Fills in the diagonal of the matrix inverse
     !> Author: Manuel dos Santos Dias, Flaviano Dos Santos
-    !> Category: KKRhost, structural-greensfunction, numerical-tool
+    !> Category: KKRhost, structural-greensfunction, numerical-tools
     !> Deprecated: False ! This needs to be set to True for deprecated subroutines
     !>
     !> Also computes the first/last row/column for periodic blocks
@@ -488,7 +489,7 @@ contains
     !-------------------------------------------------------------------------------
     !> Summary: Fills in the off-diagonal elements of the matrix inverse
     !> Author: Manuel dos Santos Dias, Flaviano Dos Santos
-    !> Category: KKRhost, structural-greensfunction, numerical-tool
+    !> Category: KKRhost, structural-greensfunction, numerical-tools
     !> Deprecated: False ! This needs to be set to True for deprecated subroutines
     !>
     !> It includes the correction for periodic blocks
@@ -534,7 +535,7 @@ contains
     !-------------------------------------------------------------------------------
     !> Summary: Corrects the diagonal blocks for the periodic case
     !> Author: Manuel dos Santos Dias, Flaviano Dos Santos
-    !> Category: KKRhost, structural-greensfunction, numerical-tool
+    !> Category: KKRhost, structural-greensfunction, numerical-tools
     !> Deprecated: False ! This needs to be set to True for deprecated subroutines
     !>
     !-------------------------------------------------------------------------------
@@ -581,7 +582,7 @@ contains
     !-------------------------------------------------------------------------------
     !> Summary: Corrects the off-diagonal blocks for the periodic case
     !> Author: Manuel dos Santos Dias, Flaviano Dos Santos
-    !> Category: KKRhost, structural-greensfunction, numerical-tool
+    !> Category: KKRhost, structural-greensfunction, numerical-tools
     !> Deprecated: False ! This needs to be set to True for deprecated subroutines
     !>
     !-------------------------------------------------------------------------------
@@ -629,7 +630,7 @@ contains
     !-------------------------------------------------------------------------------
     !> Summary: Saves the borders of the inverse matrix without corner blocks
     !> Author: Manuel dos Santos Dias, Flaviano Dos Santos
-    !> Category: KKRhost, structural-greensfunction, numerical-tool
+    !> Category: KKRhost, structural-greensfunction, numerical-tools
     !> Deprecated: False ! This needs to be set to True for deprecated subroutines
     !>
     !> These are multiplied by appropriate blocks for later use
@@ -738,7 +739,7 @@ contains
     !-------------------------------------------------------------------------------
     !> Summary: Builds the j-th column of the inverse starting from the diagonal
     !> Author: Manuel dos Santos Dias, Flaviano Dos Santos
-    !> Category: KKRhost, structural-greensfunction, numerical-tool
+    !> Category: KKRhost, structural-greensfunction, numerical-tools
     !> Deprecated: False ! This needs to be set to True for deprecated subroutines
     !>
     !-------------------------------------------------------------------------------
@@ -818,7 +819,7 @@ contains
     !-------------------------------------------------------------------------------
     !> Summary: Builds the i-th row of the inverse starting from the diagonal
     !> Author: Manuel dos Santos Dias, Flaviano Dos Santos
-    !> Category: KKRhost, structural-greensfunction, numerical-tool
+    !> Category: KKRhost, structural-greensfunction, numerical-tools
     !> Deprecated: False ! This needs to be set to True for deprecated subroutines
     !>
     !-------------------------------------------------------------------------------
@@ -898,7 +899,7 @@ contains
     !-------------------------------------------------------------------------------
     !> Summary: Print matrix
     !> Author: Manuel dos Santos Dias, Flaviano Dos Santos
-    !> Category: KKRhost, structural-greensfunction, numerical-tool, input-output
+    !> Category: KKRhost, structural-greensfunction, numerical-tools, input-output
     !> Deprecated: False ! This needs to be set to True for deprecated subroutines
     !>
     !-------------------------------------------------------------------------------

@@ -11,7 +11,7 @@ contains
    !-------------------------------------------------------------------------------  
    !> Summary: Routine for the mixing of the potential matrix in the case of LDA+U
    !> Author: 
-   !> Category: potential, KKRhost 
+   !> Category: potential, mixing, lda+u, KKRhost 
    !> Deprecated: False 
    !> Routine for the mixing of the potential matrix in the case of LDA+U as well as 
    !> the rms error in the interaction matrix

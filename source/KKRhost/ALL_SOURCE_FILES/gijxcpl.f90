@@ -8,7 +8,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Determines the pairs of the GF that are needed for the calculation of the exchange constants
   !> Author: 
-  !> Category: KKRhost, structural-greensfuntion
+  !> Category: KKRhost, structural-greensfunction
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
   !> In case of tasks requiring Gij blocks calculation, set variables: 

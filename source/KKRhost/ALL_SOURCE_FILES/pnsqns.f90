@@ -10,7 +10,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Calculate non-spherical contribution to the density
   !> Author: 
-  !> Category: physical-observable, KKRhost 
+  !> Category: physical-observables, KKRhost 
   !> Deprecated: False 
   !> Calculate non-spherical contribution to the density
   !-------------------------------------------------------------------------------
