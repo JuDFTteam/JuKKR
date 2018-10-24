@@ -1026,7 +1026,7 @@ contains
 
         ! calculate the torque expectation value
         ! ATTENTION!!!!! This is not properly implemented. If it made sense to calculate the torque
-        !                also when there is the two-fold conjugation degeneracy (AFMs???), this implementation
+        !                also when there is the two-fold conjugation degeneracy (AFMs?), this implementation
         !                would only store the torque of the last SQA. Therefore, in "read_cfg", we check 
         !                that cfg%nsqa=1 if ltorq=1.
         if(allocated(torq_value)) then
@@ -2493,8 +2493,7 @@ contains
       end do!i_band=1, nbands
     end do! i1=1,nkpts_all
 
-    if (sum(nkpts_band(:))/=nkpts_all) stop 'Some kpts were not found in order_lines(). &
-                                 & Probably there is band that makes a loop in the IBZ. '
+    if (sum(nkpts_band(:))/=nkpts_all) stop 'Some kpts were not found in order_lines(). Probably there is band that makes a loop in the IBZ. '
     
   end subroutine
 

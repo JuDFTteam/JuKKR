@@ -631,16 +631,14 @@ contains
 
     if(myrank==master)then
       write(*,'("Charge conductivity / 1 at.% in ",A,":")') trim(unitstr)
-      if(nBZdim==2) write(*,'("Attention: these values have to be divided by the thickness &
-               &of the film in units of the lattice constant to get proper units")')
+      if(nBZdim==2) write(*,'("Attention: these values have to be divided by the thickness of the film in units of the lattice constant to get proper units")')
       do isqa=1,nsqa
         write(*,'(2X,"isqa= ",I0)') isqa
         write(*,'(4X,"(",3ES18.9,")")') chcond(:,:,isqa)
       end do!isqa
 
       write(*,'("Spin conductivity / 1 at.% in ",A,":")') trim(unitstr)
-      if(nBZdim==2) write(*,'("Attention: these values have to be divided by the thickness &
-               &of the film in units of the lattice constant to get proper units")')
+      if(nBZdim==2) write(*,'("Attention: these values have to be divided by the thickness of the film in units of the lattice constant to get proper units")')
       do isqa=1,nsqa
         write(*,'(2X,"isqa= ",I0)') isqa
         write(*,'(4X,"(",3ES18.9,")")') spcond(:,:,isqa)
