@@ -320,7 +320,7 @@ end do !kspin
 deltaTmat=RBpotR_integrated
 
 ! stop
-end subroutine calcBpotspin
+end subroutine calccouplingdeltat
 
 
 !-------------------------------------------------------------------------------
