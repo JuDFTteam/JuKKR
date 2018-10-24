@@ -15,7 +15,7 @@ contains
   !> Summary: Main subroutine regarding the claculation of the structural Greens function `gmat`
   !> Author: Philipp Ruessmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,     
   !> and many others ... 
-  !> Category: structural-greensfunction, k-points, reference-system 
+  !> Category: structural-greensfunction, k-points, reference-system, KKRhost 
   !> Deprecated: False 
   !> Main subroutine regarding the claculation of the structural Green's function `gmat`
   !-------------------------------------------------------------------------------  
