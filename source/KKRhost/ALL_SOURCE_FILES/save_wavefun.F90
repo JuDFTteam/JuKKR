@@ -24,12 +24,12 @@ module mod_save_wavefun
     integer :: nth                 ! number of OpenMP tasks used without MPI (not the number of tasks in hybrid mode) in OpenMP mode only
 
     ! allocatable arrays
-    integer, allocatable :: isave_wavefun(:, :) !! 0 if (iat_myrank, ie_myrank) pair is not saved, 1...Nwfsavemax otherwise, for first, second, ... Nwfsavemax-th saved wavefunction on this rank; (Nat_myrank, Ne_myrank)
+    integer, dimension(:,:), allocatable :: isave_wavefun !! 0 if (iat_myrank, ie_myrank) pair is not saved, 1...Nwfsavemax otherwise, for first, second, ... Nwfsavemax-th saved wavefunction on this rank; (Nat_myrank, Ne_myrank)
     logical :: save_rll, save_sll, save_rllleft, save_sllleft !! logicals that say which wavefunctions are stored (used to reduce amount of memory that is used
-    complex (kind=dp), allocatable :: rll(:, :, :, :, :) !! regular right wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
-    complex (kind=dp), allocatable :: rllleft(:, :, :, :, :) !! regular left wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
-    complex (kind=dp), allocatable :: sll(:, :, :, :, :) !! iregular right wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
-    complex (kind=dp), allocatable :: sllleft(:, :, :, :, :) !! iregular left wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
+    complex (kind=dp), dimension(:, :, :, :, :),  allocatable :: rll !! regular right wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
+    complex (kind=dp), dimension(:, :, :, :, :), allocatable :: rllleft !! regular left wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
+    complex (kind=dp), dimension(:, :, :, :, :), allocatable :: sll !! iregular right wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
+    complex (kind=dp), dimension(:, :, :, :, :), allocatable :: sllleft !! iregular left wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
 
   end type type_wavefunctions
 

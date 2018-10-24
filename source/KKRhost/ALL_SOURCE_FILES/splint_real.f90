@@ -42,7 +42,8 @@ contains
     implicit none
     real (kind=dp), parameter :: eps = 1e-14_dp
     integer :: n
-    real (kind=dp) :: x, y, yderiv, xa(*), ya(*), y2a(*)
+    real (kind=dp) :: x, y, yderiv
+    real (kind=dp), dimension(*) :: xa, ya, y2a
     integer :: k, khi, klo
     real (kind=dp) :: a, b, h
 

@@ -18,15 +18,16 @@ contains
   !> of small-component in the case of a scalar-relativistic calculation.
   !> Then creates source terms needed to solve Lippmann-Schwinger equations as described 
   !> in the PhD thesis of David Bauer.
-  !>
+  !-------------------------------------------------------------------------------
   !> @note 
   !> - in the case of using the `SRATRICK` (default behavior) first the spherical solutions are computed (diagonal)
   !>   which are then used to compute the non-spherical solutions in a second step
   !> - Jonathan Chico Apr. 2019: Removed inc.p dependencies and rewrote to Fortran90
   !> @endnote
   !-------------------------------------------------------------------------------
-  subroutine tmat_newsolver(ielast, nspin, lmax, zat, socscale, ez, nsra, cleb, icleb, iend, ncheb, npan_tot, rpan_intervall, ipan_intervall, rnew, vinsnew, theta, phi, i1, ipot, &
-    lmpot, lly, deltae, idoldau, lopt, wldau, t_dtmatjij_at, ispin)
+  subroutine tmat_newsolver(ielast,nspin,lmax,zat,socscale,ez,nsra,cleb,icleb,iend, &
+    ncheb,npan_tot,rpan_intervall,ipan_intervall,rnew,vinsnew,theta,phi,i1,ipot,    &
+    lmpot,lly,deltae,idoldau,lopt,wldau,t_dtmatjij_at,ispin)
 
 #ifdef CPP_OMP
     use :: omp_lib ! necessary for omp functions
@@ -801,8 +802,9 @@ contains
   !> Wrapper routine for the allocation/deallocation of the arrays for the t-matrix
   !> calculation.
   !-------------------------------------------------------------------------------
-  subroutine allocate_locals_tmat_newsolver(allocmode, irmdnew, lmpot, nspin, vins, aux, ipiv, tmat0, tmatll, alpha0, dtmatll, alphall, dalphall, jlk_index, nsra, lmmaxso, nth, &
-    lmax, vnspll, vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
+  subroutine allocate_locals_tmat_newsolver(allocmode,irmdnew,lmpot,nspin,vins,aux, &
+    ipiv,tmat0,tmatll,alpha0,dtmatll,alphall,dalphall,jlk_index,nsra,lmmaxso,nth,   &
+    lmax,vnspll,vnspll0,vnspll1,hlk,jlk,hlk2,jlk2,tmatsph,rll,sll,rllleft,sllleft)
     use :: mod_datatypes, only: dp
     use :: mod_constants, only: czero
     use :: global_variables, only: korbit

@@ -43,9 +43,11 @@ contains
   subroutine spline_real(nmax, x, y, n, yp1, ypn, y2)
     implicit none
     integer :: n, nmax
-    real (kind=dp) :: yp1, ypn, x(nmax), y(nmax), y2(nmax)
+    real (kind=dp) :: yp1, ypn
+    real (kind=dp), dimension(nmax) :: x, y, y2
     integer :: i, k
-    real (kind=dp) :: p, qn, sig, un, u(nmax)
+    real (kind=dp) :: p, qn, sig, un
+    real (kind=dp), dimension(nmax) :: u
 
     if (n>nmax) stop 'SPLINE: n > NMAX.'
     if (abs(yp1)>0.99e30_dp) then

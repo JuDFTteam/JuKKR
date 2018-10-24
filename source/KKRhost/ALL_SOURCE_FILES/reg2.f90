@@ -67,11 +67,13 @@ contains
     ! Polynom 2. Grades
     parameter (n=2, lda=n+1)
     real (kind=dp) :: xm, fm
-    real (kind=dp) :: x(*), f(*), w(*), c(*)
+    real (kind=dp), dimension(*) :: x, f, w, c
 
     real (kind=dp) :: dummy
-    real (kind=dp) :: a(lda, n+1), b(n+1)
-    integer :: ipiv(n+1), info
+    real (kind=dp), dimension(n+1) :: b
+    real (kind=dp), dimension(lda, n+1) :: a
+    integer :: info
+    integer, dimension(n+1) :: ipiv
     integer :: i, j, j1, k, k1, l, m
 
     ! Berechnung der ersten Spalte der Matrix und der rechten Seite

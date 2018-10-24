@@ -13,17 +13,17 @@ module mod_timing
   private
   public :: timings_1a, timings_1b, load_imbalance, timing_init, timing_start, timing_stop, timing_pause, print_time_and_date
   ! for adaptive load imbalance tackling
-  real (kind=dp), allocatable, save :: timings_1a(:, :)
-  real (kind=dp), allocatable, save :: timings_1b(:)
-  integer, allocatable, save :: load_imbalance(:)
+  real (kind=dp), dimension(:,:), allocatable, save :: timings_1a
+  real (kind=dp), dimension(:), allocatable, save :: timings_1b
+  integer, dimension(:), allocatable, save :: load_imbalance
 
 
   integer, parameter :: nkeys = 20
   integer, parameter :: nkeylen = 40
-  character (len=nkeylen) :: timingkeys(nkeys) = ''
-  integer :: start_time(nkeys) = 0
-  real (kind=dp) :: interm_time(nkeys) = 0.0d0
-  integer :: ispaused(nkeys) = 0
+  character (len=nkeylen), dimension(nkeys) :: timingkeys = ''
+  integer, dimension(nkeys) :: start_time = 0
+  real (kind=dp), dimension(nkeys) :: interm_time = 0.0d0
+  integer, dimension(nkeys) :: ispaused = 0
   integer :: init = 0
 
 contains

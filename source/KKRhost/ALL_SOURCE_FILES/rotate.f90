@@ -27,20 +27,18 @@ contains
   !> see: E.M. ROSE ELEMENTARY THEORY OF ANGULAR MOMENTUM
   !-------------------------------------------------------------------------------
   subroutine rotate(t1, mode, t2, n, rot, nkmmax)
-    implicit none
+    use :: mod_constants, only: cone, czero
 
-    ! PARAMETER definitions
-    complex (kind=dp) :: c0, c1
-    parameter (c0=(0.0e0_dp,0.0e0_dp), c1=(1.0e0_dp,0.0e0_dp))
+    implicit none
 
     ! Dummy arguments
     character (len=4) :: mode
     integer :: n, nkmmax
-    complex (kind=dp) :: rot(nkmmax, nkmmax), t1(nkmmax, nkmmax), t2(nkmmax, nkmmax)
+    complex (kind=dp), dimension(nkmmax, nkmmax) :: rot, t1, t2
 
     ! Local variables
     character (len=1) :: fl1, fl2
-    complex (kind=dp) :: w1(nkmmax, nkmmax)
+    complex (kind=dp), dimension(nkmmax, nkmmax) :: w1
 
 
     if (mode=='L->G') then
@@ -54,9 +52,9 @@ contains
       stop 'in <ROTATE>  MODE not allowed'
     end if
 
-    call zgemm(fl1, 'N', n, n, n, c1, rot, nkmmax, t1, nkmmax, c0, w1, nkmmax)
+    call zgemm(fl1, 'N', n, n, n, cone, rot, nkmmax, t1, nkmmax, czero, w1, nkmmax)
 
-    call zgemm('N', fl2, n, n, n, c1, w1, nkmmax, rot, nkmmax, c0, t2, nkmmax)
+    call zgemm('N', fl2, n, n, n, cone, w1, nkmmax, rot, nkmmax, czero, t2, nkmmax)
 
   end subroutine rotate
 

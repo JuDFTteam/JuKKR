@@ -25,11 +25,11 @@ contains
     implicit none
 
     integer, intent (in) :: lmax, lmmaxd
-    complex (kind=dp), intent (out) :: l_s(lmmaxd*2, lmmaxd*2)
+    complex (kind=dp), dimension(lmmaxd*2, lmmaxd*2), intent (out) :: l_s
 
     ! local variables
     integer :: rl, lm1, lm2
-    complex (kind=dp), allocatable :: ls_l(:, :)
+    complex (kind=dp), dimension(:,:), allocatable :: ls_l
 
 
     call cinit((2*lmmaxd)**2, l_s)

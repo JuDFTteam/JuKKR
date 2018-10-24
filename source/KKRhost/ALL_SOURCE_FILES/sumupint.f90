@@ -20,13 +20,16 @@ contains
 
     implicit none
 
-    ! Dummy arguments
-    integer :: n
-    complex (kind=dp) :: sum
-    real (kind=dp) :: vf, vg
-    complex (kind=dp) :: f(2, 2), g(2, 2)
-    real (kind=dp) :: wf(2, 2), wg(2, 2)
-
+    ! .. Input variables
+    integer, intent(in) :: n
+    real (kind=dp), intent(in) :: vf
+    real (kind=dp), intent(in) :: vg
+    real (kind=dp), dimension(2,2), intent(in) :: wf
+    real (kind=dp), dimension(2,2), intent(in) :: wg
+    complex (kind=dp), dimension(2,2), intent(in) :: f
+    complex (kind=dp), dimension(2,2), intent(in) :: g
+    ! .. Output variables
+    complex (kind=dp), intent(out) :: sum
     ! Local variables
     integer :: i, j
 

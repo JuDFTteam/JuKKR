@@ -30,6 +30,7 @@ contains
     use :: mod_errmsg
     use :: mod_nrmliz
     use :: mod_rinit
+    use :: mod_constants, only: pi
     implicit none
     ! Passed parameters:
     integer :: iopt, nrot
@@ -39,7 +40,7 @@ contains
     integer :: i, idamax, in, j
     real (kind=dp) :: costbn, detop, dnrm2, omcos, sintbn, sinpb3, tiny, twopi, vfac
     character (len=144) :: messg
-    parameter (twopi=6.28318530717958648e0_dp)
+    parameter (twopi=2.0_dp*pi)
     parameter (tiny=1.0e-3_dp)
 
     if (iopt==-1) then

@@ -19,8 +19,9 @@ contains
   !> Subroutine that constructs SOC potential for the new solverfrom radial derivative 
   !> of `vins` and adds this to `vnspll` (output is `vnspll1=vnspll+V_SOC`)
   !-------------------------------------------------------------------------------
-  subroutine spinorbit_ham(lmax, lmmaxd, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpotd, theta, phi, ipan_intervall, rpan_intervall, &
-    npan_tot, ncheb, irmdnew, nrmaxd, vnspll, vnspll1, mode)
+  subroutine spinorbit_ham(lmax,lmmaxd,vins,rnew,eryd,zat,cvlight,socscale,nspin,   &
+    lmpotd,theta,phi,ipan_intervall,rpan_intervall,npan_tot,ncheb,irmdnew,nrmaxd,   &
+    vnspll,vnspll1,mode)
 
     use :: mod_datatypes, only: dp
     use :: mod_cheb, only: getclambdacinv
@@ -51,15 +52,16 @@ contains
     complex (kind=dp), dimension(2*lmmaxd, 2*lmmaxd, irmdnew), intent (out) :: vnspll1 !! output potential (sum of input + V_SOC) in (l,m,s) basis
 
     ! locals
-    real (kind=dp) :: vr(irmdnew)
-    real (kind=dp) :: dvdr(irmdnew)
-    real (kind=dp) :: rmass(irmdnew)
-    real (kind=dp) :: hsofac(irmdnew)
+    real (kind=dp), dimension(irmdnew) :: vr
+    real (kind=dp), dimension(irmdnew) :: dvdr
+    real (kind=dp), dimension(irmdnew) :: rmass
+    real (kind=dp), dimension(irmdnew) :: hsofac
     ! real (kind=dp) :: rnucl, atn
     real (kind=dp) :: widthfac, phi, theta
     integer :: ir, ip, lm1, lm2, ispin, irmin, irmax, ncoll
-    complex (kind=dp) :: lsmh(2*lmmaxd, 2*lmmaxd), temp
-    real (kind=dp) :: clambdacinv(0:ncheb, 0:ncheb)
+    complex (kind=dp) :: temp
+    complex (kind=dp), dimension(2*lmmaxd, 2*lmmaxd) :: lsmh
+    real (kind=dp), dimension(0:ncheb, 0:ncheb) :: clambdacinv
     logical :: test, opt
     external :: test, opt
 

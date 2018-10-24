@@ -22,8 +22,8 @@ contains
     parameter (ijd=434)
     integer :: i, ij
 
-    real (kind=dp) :: r1(ijd), r2(ijd), r3(ijd)
-    real (kind=dp) :: w(ijd), rij1, rij2, rij3, wij
+    real (kind=dp), dimension(ijd) :: r1, r2, r3, w
+    real (kind=dp) :: rij1, rij2, rij3, wij
 
     data (r1(i), i=1, 30)/1.000000000000000000e00_dp, -1.000000000000000000e00_dp, 0.000000000000000000e00_dp, 0.000000000000000000e00_dp, 0.000000000000000000e00_dp, &
       0.000000000000000000e00_dp, 0.577350269189625842e00_dp, 0.577350269189625842e00_dp, 0.577350269189625842e00_dp, 0.577350269189625842e00_dp, -0.577350269189625842e00_dp, &

@@ -30,12 +30,12 @@ contains
     implicit none
 
     integer, intent (in) :: lmax
-    complex (kind=dp), intent (out) :: l_s((2*lmax+1)*2, (2*lmax+1)*2)
+    complex (kind=dp), dimension((2*lmax+1)*2, (2*lmax+1)*2), intent (out) :: l_s
 
     ! local variables
     integer :: i1, i2, i1l
-    complex (kind=dp), allocatable :: l_min(:, :)
-    complex (kind=dp), allocatable :: l_up(:, :)
+    complex (kind=dp), dimension(:,:), allocatable :: l_min
+    complex (kind=dp), dimension(:,:), allocatable :: l_up
     real (kind=dp) :: lfac
 
     allocate (l_min(-lmax:lmax,-lmax:lmax))

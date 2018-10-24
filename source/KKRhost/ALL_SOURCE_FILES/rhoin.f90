@@ -82,6 +82,7 @@ contains
 
     use :: mod_datatypes, only: dp
     use :: global_variables
+    use :: mod_constants, only: pi,czero
     implicit none
     ! lm-dos
     ! ..
@@ -95,7 +96,7 @@ contains
     integer :: icleb(ncleb, 4), jend(lmpotd, 0:lmaxd, 0:lmaxd)
     ! ..
     ! .. External Functions ..
-    complex (kind=dp) :: czero, efac1, efac2, ffz, gmatl, ppz, v1, v2
+    complex (kind=dp) :: efac1, efac2, ffz, gmatl, ppz, v1, v2
     real (kind=dp) :: c0ll
     integer :: i, ir, j, j0, j1, l, l1, l2, lm1, lm2, lm3, lm3max, ln2, ln3, m
     ! ..
@@ -107,17 +108,12 @@ contains
     external :: zdotu
     ! ..
     ! .. Data statements ..
-    intrinsic :: atan, aimag, sqrt
+    intrinsic :: aimag, sqrt
     ! ..
-
-    save :: czero
     ! C0LL = 1/sqrt(4*pi)
 
-    data czero/(0.0e0_dp, 0.0e0_dp)/
-
-
     ! ---> set up array wr(lm1,lm2)
-    c0ll = 1.0e0_dp/sqrt(16.0e0_dp*atan(1.0e0_dp))
+    c0ll = 1.0e0_dp/sqrt(4.0e0_dp*pi)
     ! use first vr
 
     lm3max = icleb(iend, 3)

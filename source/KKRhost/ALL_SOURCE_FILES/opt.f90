@@ -21,7 +21,7 @@ logical function opt(string)
   implicit none
   character (len=8), intent (in) :: string
   integer :: i
-  character (len=8) :: optc(32)
+  character (len=8), dimension(32) :: optc
 
   optc = t_params%optc
 

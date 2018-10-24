@@ -21,7 +21,7 @@ logical function test(string)
   implicit none
   character (len=8), intent (in) :: string
   integer :: i
-  character (len=8) :: testc(32)
+  character (len=8), dimension(32) :: testc
 
   testc = t_params%testc
 

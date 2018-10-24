@@ -22,7 +22,8 @@ contains
   !> the `inc.p`
   !> @endnote
   !-------------------------------------------------------------------------------
-  subroutine testdim(nspin, naez, nemb, natyp, ins, insref, nref, irns, nlayer, krel, nspind, nprincd, knosph, irnsd, korbit)
+  subroutine testdim(nspin,naez,nemb,natyp,ins,insref,nref,irns,nlayer,krel,nspind, &
+    nprincd,knosph,irnsd,korbit)
 
     implicit none
 

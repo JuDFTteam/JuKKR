@@ -70,12 +70,9 @@ contains
     use :: mod_rinit
     use :: mod_sumupint
     use :: mod_rnuctab
+    use :: mod_constants, only: ci
 
     implicit none
-
-    ! PARAMETER definitions
-    complex (kind=dp) :: ci
-    parameter (ci=(0.0e0_dp,1.0e0_dp))
 
     real (kind=dp) :: f1, e0, a0, cautog
 

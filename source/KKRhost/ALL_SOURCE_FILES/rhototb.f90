@@ -57,6 +57,7 @@ contains
     use :: mod_datatypes, only: dp
     use :: mod_simpk
     use :: mod_simp3
+    use :: mod_constants, only: pi
 
     implicit none
 
@@ -102,7 +103,7 @@ contains
     real (kind=dp), dimension (naez, 2*krel+(1-krel)*nspin) :: csite
     real (kind=dp), dimension (krel*naez+(1-krel)) :: muosite
 
-    rfpi = sqrt(16.0e0_dp*atan(1.0e0_dp))
+    rfpi = sqrt(4.0e0_dp*pi)
 
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Loop over atomic sites

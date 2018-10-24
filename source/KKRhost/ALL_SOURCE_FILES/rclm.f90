@@ -84,10 +84,10 @@ contains
     real (kind=dp), parameter :: eps = 1.0e-12_dp
     ! ..
     integer :: ldim, key, ll
-    complex (kind=dp) :: vmat(2*ldim+1, 2*ldim+1)
+    complex (kind=dp), dimension(2*ldim+1, 2*ldim+1) :: vmat
     ! .. Locals
-    complex (kind=dp) :: vtmp(2*ldim+1, 2*ldim+1)
-    complex (kind=dp) :: aa(2*ldim+1, 2*ldim+1), aac(2*ldim+1, 2*ldim+1)
+    complex (kind=dp), dimension(2*ldim+1, 2*ldim+1) :: vtmp
+    complex (kind=dp), dimension(2*ldim+1, 2*ldim+1) :: aa, aac
     real (kind=dp) :: ovsqrtwo
     complex (kind=dp) :: oneovrt, ciovrt, cimovrt, blj
     complex (kind=dp) :: a11, a13, a31, a33

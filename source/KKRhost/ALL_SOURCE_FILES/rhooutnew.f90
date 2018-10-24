@@ -15,7 +15,7 @@ contains
   subroutine rhooutnew(nsra, lmax, gmatll, ek, lmpot, df, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll, rllleft, sllleft, cden, cdenlm, cdenns, &
     rho2nsc, corbital, gflle_part, rpan_intervall, ipan_intervall, nspin)
 
-    use :: mod_constants
+    use :: mod_constants, only: cone,czero,pi
     use :: mod_profiling
     use :: global_variables
     use :: mod_datatypes, only: dp
@@ -115,7 +115,7 @@ contains
       call calc_orbitalmoment(lmax, lmmaxso, loperator)
     end if
 
-    c0ll = 1e0_dp/sqrt(16e0_dp*atan(1e0_dp))
+    c0ll = 1e0_dp/sqrt(4e0_dp*pi)
     cden = czero
     cdenlm = czero
 

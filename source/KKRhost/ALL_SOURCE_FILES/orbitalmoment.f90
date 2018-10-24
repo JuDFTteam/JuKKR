@@ -16,7 +16,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine calc_orbitalmoment(lmax, lmsize, loperator)
 
-    use :: mod_constants
+    use :: mod_constants, only: czero
     use :: mod_profiling
     use :: mod_datatypes, only: dp
 
