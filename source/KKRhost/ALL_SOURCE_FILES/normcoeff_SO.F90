@@ -1,3 +1,9 @@
+!-----------------------------------------------------------------------------------------!
+! Copyright (c) 2018 Peter Grünberg Institut, Forschungszentrum Jülich, Germany           !
+! This file is part of Jülich KKR code and available as free software under the conditions!
+! of the MIT license as expressed in the LICENSE.md file in more detail.                  !
+!-----------------------------------------------------------------------------------------!
+
 !------------------------------------------------------------------------------------
 !> Summary: Calculates the norm of the wavefunctions with full potential and spin orbit coupling.
 !> Author:

@@ -1,3 +1,9 @@
+!-----------------------------------------------------------------------------------------!
+! Copyright (c) 2018 Peter Grünberg Institut, Forschungszentrum Jülich, Germany           !
+! This file is part of Jülich KKR code and available as free software under the conditions!
+! of the MIT license as expressed in the LICENSE.md file in more detail.                  !
+!-----------------------------------------------------------------------------------------!
+
 !------------------------------------------------------------------------------------
 !> Summary: This routine returns an array `y2(1:n)` of length `n` which contains the second derivatives of the interpolating function at the tabulated points `xi`.
 !> Author: 

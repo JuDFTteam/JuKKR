@@ -1,3 +1,9 @@
+!-----------------------------------------------------------------------------------------!
+! Copyright (c) 2018 Peter Grünberg Institut, Forschungszentrum Jülich, Germany           !
+! This file is part of Jülich KKR code and available as free software under the conditions!
+! of the MIT license as expressed in the LICENSE.md file in more detail.                  !
+!-----------------------------------------------------------------------------------------!
+
 !------------------------------------------------------------------------------------
 !> Summary: Module responsible for storing the input variables and primary arrays so that they are distributed via MPI processes.
 !> Author: Philipp Ruessmann and many others ...

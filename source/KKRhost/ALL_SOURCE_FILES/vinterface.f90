@@ -1,3 +1,9 @@
+!-----------------------------------------------------------------------------------------!
+! Copyright (c) 2018 Peter Grünberg Institut, Forschungszentrum Jülich, Germany           !
+! This file is part of Jülich KKR code and available as free software under the conditions!
+! of the MIT license as expressed in the LICENSE.md file in more detail.                  !
+!-----------------------------------------------------------------------------------------!
+
 !------------------------------------------------------------------------------------
 !> Summary: This is calculating the intra-atomic contibution of the potential in the case of an interface taking into account the bulk potential on the two sides.
 !> Author: 

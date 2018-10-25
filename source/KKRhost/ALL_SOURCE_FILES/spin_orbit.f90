@@ -1,3 +1,9 @@
+!-----------------------------------------------------------------------------------------!
+! Copyright (c) 2018 Peter Grünberg Institut, Forschungszentrum Jülich, Germany           !
+! This file is part of Jülich KKR code and available as free software under the conditions!
+! of the MIT license as expressed in the LICENSE.md file in more detail.                  !
+!-----------------------------------------------------------------------------------------!
+
 !------------------------------------------------------------------------------------
 !> Summary: In this subroutine the matrix \(L\cdot S\) is calculated for the basis of real spherical harmonics
 !> Author: 

@@ -1,3 +1,9 @@
+!-----------------------------------------------------------------------------------------!
+! Copyright (c) 2018 Peter Grünberg Institut, Forschungszentrum Jülich, Germany           !
+! This file is part of Jülich KKR code and available as free software under the conditions!
+! of the MIT license as expressed in the LICENSE.md file in more detail.                  !
+!-----------------------------------------------------------------------------------------!
+
 !------------------------------------------------------------------------------------
 !> Summary: Calculate the spin-polarized exchange-correlation potential and the spin-polarized exchange-correlation energy from ceperley-alder ( parametrization of vosko, wilk and nusair ) ( m. manninen )
 !> Author: B. Drittler
