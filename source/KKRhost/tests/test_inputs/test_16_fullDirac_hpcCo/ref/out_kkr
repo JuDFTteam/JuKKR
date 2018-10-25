@@ -1,0 +1,45 @@
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ !!! Most output written to output.myrank.txt files !!!
+ !!! please check these files as well               !!!
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+*******************************************************************************
+          Screened Korringa-Kohn-Rostoker Electronic Structure Code
+                           for Bulk and Interfaces
+          Juelich-Munich 2001 - 2016
+
+ Code version: v2.3-61-g4b60676
+ Compile options: mpi
+-O2 -r8 -module ./OBJ -sox -traceback
+-L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+
+ serial number for files:kkrjm_v2.3-61-g4b60676_mpi_20180829213346
+*******************************************************************************
+
+ Number of MPI ranks used:   12
+
+*******************************************************************************
+
+           0
+ IRNS(*) is set to 1 in case of spherical potential treatment.
+ Calling MADELUNG3D
+ Exited MADELUNG3D
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ +++            SCF ITERATIONS START                +++
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+started on 2018/ 8/29 at 21:33:46
+               Ne spin dn  Ne spin up    m_spin    m_orb   spin dn  spin up
+          TOT  3.38970279  5.61029721    2.2206    0.1095  0.1180 -0.0085
+          TOT  3.38970279  5.61029721    2.2206    0.1095  0.1180 -0.0085
+      ITERATION   1 charge neutrality in unit cell =     0.000000
+                    TOTAL mag. moment in unit cell =     4.660152
+                              spin magnetic moment =     4.441163
+                           orbital magnetic moment =     0.218990
+                new E FERMI   0.7432853466  DOS(E_F) =    17.371137
+      ITERATION   1 average rms-error : v+ + v- =  6.8855D-08
+                                        v+ - v- =  2.8721D-08
+TOTAL ENERGY in ryd. :            -5571.08695753
+
+                 ++++++ SCF ITERATION CONVERGED ++++++
+*******************************************************************************
+Iteration finished on 2018/ 8/29 at 21:33:48

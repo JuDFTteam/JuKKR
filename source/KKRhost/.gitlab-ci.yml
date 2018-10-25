@@ -1,175 +1,176 @@
-# docker image containing Developlement Tools and the current Intel compilers based on CentOS 7
-image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers
+###############################################################################
+####          continuous integration setting of the JuKKR code             ####
+###############################################################################
 
+# docker image containing Developlement Tools and the current Intel compilers based on CentOS 7 with cmake
+image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/extended_intel2016
 
 before_script:
   # set +e prevents sourced scripts from aborting if single commands fail (GitLab CI sets `-e` by default)
   - set +e && source compilervars.sh intel64 && set -e
-  # install pip
-  - curl -O https://bootstrap.pypa.io/get-pip.py 
-  - python get-pip.py 
-  - pip install numpy
   # set environment variables to avoind stack size issue
   - export OMP_NUM_THREADS=1
   - export OMP_STACKSIZE=1g
   - ulimit -s unlimited
-
+  # install pip and numpy
+  - pip install numpy || curl -O https://bootstrap.pypa.io/get-pip.py && python get-pip.py && pip install numpy
 
 stages:
   - test
   - build
-  - run
+  - run_serial
+  - run_parallel
+  - run_features
+  - run_features_SOC
   - verify
-
+  - deploy:codecov
+  - deploy:doc
 
 ###############################################################################
-
 
 test:intel:
   stage: test
   script:
     # test if dependencies are working
     - echo 'do some tests here'
+    - echo 'ifort ' && which ifort
+    - echo 'mpiifort ' && which mpiifort
+    - echo 'gfortran ' && which gfortran && ls /opt/gcc8/bin
     # needs to be implemented (tests for dependencies e.g. MPI, OpenMP, LAPACK, etc.)
-
+    - which profmerge
+    - which codecov || which Codecov
 
 ###############################################################################
 
-
 ### 1. compile code in different versions ###
+ ## 1.1 debug versions for multiple compilers
+ ## 1.2 production versions
 
 ## 1.1 debug versions ##
+build:gnu:debug:
+  stage: build
+  script:
+    - mkdir build_gfortran_debug && cd build_gfortran_debug
+    - FC=/opt/gcc8/bin/gfortran cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug ..
+    - make -j4 VERBOSE=1 || echo 'GNU compile unsuccessful!'
 
 build:intel:debug:
   stage: build
   script:
-    - cp tests/inc.p .
-    - make clean; make debug
-
-build:intel:mpi_debug:
-  stage: build
-  script:
-    - cp tests/inc.p .
-    - make clean; make mpidebug
+    - mkdir build_debug && cd build_debug
+    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/bin/intel64/ifort cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug ..
+    - make -j4
 
 build:intel:openmp_debug:
   stage: build
   script:
-    - cp tests/inc.p .
-    - make clean; make ompdebug
+    - mkdir build_ompdebug && cd build_ompdebug
+    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/bin/intel64/ifort cmake -DENABLE_MPI=OFF -DENABLE_OMP=ON -DCMAKE_BUILD_TYPE=Debug ..
+    - make -j4
 
 build:intel:hybrid_debug:
   stage: build
   script:
-    - cp tests/inc.p .
-    - make clean; make hybriddebug
+    - mkdir build_hybriddebug && cd build_hybriddebug
+    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/mpi/intel64/bin/mpiifort cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DCMAKE_BUILD_TYPE=Debug ..
+    - make -j4
 
 ## 1.2 production versions ##
-
 build:intel:hybrid:
   stage: build
   script:
     # compile code
-    - cp tests/inc.p .
-    - make clean; make hybrid; cp kkr.x kkr.x_hybrid
+    - mkdir build && cd build
+    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/mpi/intel64/bin/mpiifort cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DENABLE_COV=ON ..
+    - make -j4
+    - cp kkr.x ..
+    - cd ..
   artifacts:
     paths:
-      - kkr.x_hybrid
+      - kkr.x
+      - build
+      - build/pgopti.spi
     expire_in: 1 day
-
-build:intel:omp:
-  stage: build
-  script:
-    # compile code
-    - cp tests/inc.p .
-    - make clean; make openmp; cp kkr.x kkr.x_omp
-  artifacts:
-    paths:
-      - kkr.x_omp
-    expire_in: 1 day
-
-build:intel:mpi:
-  stage: build
-  script:
-    # compile code
-    - cp tests/inc.p .
-    - make clean; make mpi; cp kkr.x kkr.x_mpi
-  artifacts:
-    paths:
-      - kkr.x_mpi
-    expire_in: 1 day
-
-build:intel:serial:
-  stage: build
-  script:
-    # compile code
-    - cp tests/inc.p .
-    - make clean; make serial; cp kkr.x kkr.x_serial
-  artifacts:
-    paths:
-      - kkr.x_serial
-    expire_in: 1 day
-
-build:intel:mpi-aiida:
-  stage: build
-  script:
-    # compile code
-    - cp tests/inc.p_1 inc.p
-    - make clean; make mpi; cp kkr.x kkr.x_1_mpi
-  artifacts:
-    paths:
-      - kkr.x_1_mpi
-    expire_in: 1 day
-
 
 ###############################################################################
 
-
 ### 2. run tests with compiled versions ###
+ ## 2.1 simple test systems in serial
+ ## 2.2 comparison serial/parallel run
+ ## 2.3 special features beyond selfconsistency
+ ## 2.4 integration with aiida
 
+## 2.1 simple test systems in serial ##
 run:intel:serial_1:
-  stage: run
+  stage: run_serial
   script:
     - cd tests
     - ./run_serial.py 1
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+      - build/*dyn
+    expire_in: 1 day
 
 run:intel:serial_2:
-  stage: run
+  stage: run_serial
   script:
     - cd tests
     - ./run_serial.py 2
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+      - build/*dyn
+    expire_in: 1 day
 
 run:intel:serial_3:
-  stage: run
+  stage: run_serial
   script:
     - cd tests
     - ./run_serial.py 3
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+      - build/*dyn
+    expire_in: 1 day
 
+## 2.2 comparison serial/parallel run ##
 run:intel:parallel_2:
-  stage: run
+  stage: run_parallel
   script:
     - cd tests
     - ./run_parallel.py 2
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+      - build/*dyn
+    expire_in: 1 day
 
-run:intel:multi_node:
+run:intel:MPIatom_7:
+  stage: run_parallel
+  script:
+    - cd tests
+    - ./run_parallel.py -7
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
+ 
+run:intel:MPIenerg_8:
+  stage: run_parallel
+  script:
+    - cd tests
+    - ./run_parallel.py -8
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
+
+run:intel:multi_node_9:
   image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-control:latest
-  stage: run
+  stage: run_parallel
   services:
      - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
        alias: c1
@@ -185,10 +186,36 @@ run:intel:multi_node:
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+      - build/*dyn
+    expire_in: 1 day
  
+# parallel SOC mode
+run:intel:MPIatom_SOC_7_1:
+  stage: run_parallel
+  script:
+    - cd tests
+    - ./run_parallel.py -1007
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
+ 
+run:intel:MPIenerg_SOC_8_1:
+  stage: run_parallel
+  script:
+    - cd tests
+    - ./run_parallel.py -1008
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
+
+
+## 2.3 special features beyond selfconsistency ##
 run:intel:Jijs_4:
-  stage: run
+  stage: run_features
   script:
     - cd tests
     - ./run_serial.py 4
@@ -196,10 +223,11 @@ run:intel:Jijs_4:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 run:intel:kkrflex_5:
-  stage: run
+  stage: run_features
   script:
     - cd tests
     - ./run_serial.py 5
@@ -207,10 +235,11 @@ run:intel:kkrflex_5:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
 run:intel:FERMIOUT_6:
-  stage: run
+  stage: run_features
   script:
     - cd tests
     - ./run_serial.py 6
@@ -218,83 +247,157 @@ run:intel:FERMIOUT_6:
   artifacts:
     paths:
       - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
+ 
+run:intel:OPERATOR_10:
+  stage: run_features
+  script:
+      - tests/tools/run_test_10.sh
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
     expire_in: 1 day
 
+run:intel:DTM_GMATLL_11:
+  stage: run_features
+  script:
+      - tests/tools/run_test_11.sh
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
 
-run:intel:MPIatom_7:
-  stage: run
+run:intel:qdos_12:
+  stage: run_features
   script:
     - cd tests
-    - ./run_parallel.py -7
+    - ./run_parallel.py -12
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
- 
-run:intel:MPIenerg_8:
-  stage: run
-  script:
-    - cd tests
-    - ./run_parallel.py -8
-  artifacts:
-    paths:
-      - tests/test_run*
-    expire_in: 2 days
- 
-run:intel:OPERATOR_12:
-  stage: run
-  script:
-    - cp tests/inc.p_72 inc.p && make clean && make mpi && cp kkr.x kkr.x_72 && mkdir tests/test_run12_mpi_1_8 && cd tests/test_run12_mpi_1_8 && ln -s ../test_inputs/test_12_*/* . && ln -s ../../kkr.x_72 kkr.x && export OMP_NUM_THREADS=1 && mpirun -np 8 ./kkr.x | tee out_kkr
-    - rm -f gmat tmat gref *for* inputcard_generated.txt
-    # run calculation with impurity wavefunctions
-    - rm inputcard && ln -s imp/* . &&  export OMP_NUM_THREADS=1 && mpirun -np 8 ./kkr.x | tee out_kkr
-    - rm -f gmat tmat gref *for* inputcard_generated.txt && cd ../
-  artifacts:
-    paths:
-      - tests/test_run*
-    expire_in: 2 days
+      - build/*dyn
+    expire_in: 1 day
 
-run:intel:DTM_GMATLL_13:
-  stage: run
-  script:
-    - cp tests/inc.p_16 inc.p && make clean && make mpi && cp kkr.x kkr.x_16
-    - mkdir tests/test_run13_mpi_1_8 && cd tests/test_run13_mpi_1_8 && ln -s ../test_inputs/test_13_*/* . && rm DTM GMAT && cp -r ../test_inputs/test_13_*/{DTM,GMAT} . && ln -s ../../kkr.x_16 kkr.x
-    - export OMP_NUM_THREADS=1 && mpirun -np 8 ./kkr.x | tee out_kkr
-    - rm -f gmat tmat gref *for* inputcard_generated.txt
-    - cd DTM && pwd && ls && ls -ltr .. && mpirun -np 8 ../kkr.x | tee out_kkr
-    - rm -f gmat tmat gref *for* inputcard_generated.txt
-    - cd ../GMAT && mpirun -np 8 ../kkr.x | tee out_kkr
-    - rm -f gmat tmat gref *for* inputcard_generated.txt && cd ../
-  artifacts:
-    paths:
-      - tests/test_run*
-    expire_in: 2 days
+#run:intel:rhoq_13:
+#  stage: run_features
+#  script:
+#      - tests/tools/run_test_13.sh
+#  artifacts:
+#    paths:
+#      - tests/test_run*
+#      - build/*dyn
+#    expire_in: 1 day
 
-run:intel:qdos_14:
-  stage: run
+run:intel:ASA_14:
+  stage: run_features
   script:
     - cd tests
     - ./run_parallel.py -14
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+      - build/*dyn
+    expire_in: 1 day
 
-run:intel:rhoq_15:
-  stage: run
+run:intel:CPA_15:
+  stage: run_features
   script:
-    - mkdir tests/test_run15 && cd tests/test_run15 && ln -s ../test_inputs/test_15_*/* .
-    - ./prepare.sh
-    - ./run.sh
+    - cd tests
+    - ./run_parallel.py -15
   artifacts:
     paths:
       - tests/test_run*
-    expire_in: 2 days
+      - build/*dyn
+    expire_in: 1 day
 
+run:intel:Dirac_16:
+  stage: run_features
+  script:
+    - cd tests
+    - ./run_parallel.py -16
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
 
+run:intel:lambda_xc_17:
+  stage: run_features
+  script:
+    - cd tests
+    - ./run_parallel.py -17
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
+
+#no working test case yet
+#run:intel:noco_18:
+#  stage: run_features
+#  script:
+#    - cd tests
+#    - ./run_parallel.py -18
+#  artifacts:
+#    paths:
+#      - tests/test_run*
+#      - build/*dyn
+#    expire_in: 1 day
+
+run:intel:decimate_19:
+  stage: run_features
+  script:
+      - tests/tools/run_test_19.sh
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
+
+run:intel:godfrin_20:
+  stage: run_features
+  script:
+    - tests/tools/run_test_20.sh
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
+
+run:intel:XCs_21:
+  stage: run_features
+  script:
+    - tests/tools/run_test_21.sh
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
+
+run:intel:LDAU_22:
+  stage: run_features
+  script:
+    - tests/tools/run_test_22.sh
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
+
+# other missing tests:
+# . LDA+U
+# . LDA+U, SOC
+# . godfrin module
+# . other exchange-correlation potentials
+# ...
+
+## 2.4 integration with aiida ##
 run:intel:aiida-kkr:
   image: iffregistry.fz-juelich.de/docker-images/aiida-kkr:latest
-  stage: run
+  stage: run_features
   services:
     - name: postgres:latest
       alias: db
@@ -313,7 +416,7 @@ run:intel:aiida-kkr:
   script:
     # some prepararion
     - umask 000 # needed to ensure that all subdirs created by aiida have the right permissions
-    - cp kkr.x_1_mpi "${KKR_EXECUTABLE_PATH}" # copy kkr executable to correct dir
+    - cp kkr.x "${KKR_EXECUTABLE_PATH}" # copy kkr executable to correct dir
     - export C_FORCE_ROOT='true' # needed since root process executes aiida
     - verdi devel setproperty logging.celery_loglevel INFO && verdi devel setproperty logging.aiida_loglevel INFO && verdi daemon restart # restart aiida daemon with increased loglevel
     # compile latest voronoi version and add to aiida
@@ -335,11 +438,134 @@ run:intel:aiida-kkr:
       - celery.log
       - test_export.aiida.tar.gz
     expire_in: 2 day
+  only: 
+    - schedules
+    - triggers
+    - web
 
+## 2.5 SOC tests ##
+run:intel:Au_bulk_SOC_1_1:
+  stage: run_features_SOC
+  script:
+    - cd tests
+    - ./run_parallel.py -1001
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
+
+run:intel:Fe_slab_SOC_2_1:
+  stage: run_features_SOC
+  script:
+    - cd tests
+    - ./run_parallel.py -1002
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
+
+run:intel:Si_LLY_SOC_3_1:
+  stage: run_features_SOC
+  script:
+    - cd tests
+    - ./run_parallel.py -1003
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
+
+run:intel:NOSOC_3_2:
+  stage: run_features_SOC
+  script:
+    - tests/tools/run_test_03_2.sh
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
+
+run:intel:Jijs_SOC_4_1:
+  stage: run_features_SOC
+  script:
+    - cd tests
+    - ./run_parallel.py -1004
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
+
+run:intel:kkrflex_SOC_5_1:
+  stage: run_features_SOC
+  script:
+    - cd tests
+    - ./run_parallel.py -1005
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
+
+run:intel:FERMIOUT_SOC_6_1:
+  stage: run_features_SOC
+  script:
+    - cd tests
+    - ./run_parallel.py -1006
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
+
+run:intel:qdos_SOC_12_1:
+  stage: run_features_SOC
+  script:
+    - cd tests
+    - ./run_parallel.py -1012
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
+
+run:intel:ASA_SOC_14_1:
+  stage: run_features_SOC
+  script:
+    - cd tests
+    - ./run_parallel.py -1014
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
+
+run:intel:CPA_SOC_15_1:
+  stage: run_features_SOC
+  script:
+    - cd tests
+    - ./run_parallel.py -1015
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
+
+run:intel:decimate_SOC_19_1:
+  stage: run_features_SOC
+  script:
+      - tests/tools/run_test_19_1.sh
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
 
 ###############################################################################
-### 3. check outcome of the test runs ###
 
+### 3. check outcome of the test runs ###
 verify:intel:
   stage: verify
   script:
@@ -348,6 +574,11 @@ verify:intel:
     # prepare and execute verification using pytest
     - cd tests
     - pytest -v --ignore=tools/aiida_simple_test.py 
+    - tar -zcvf ../all_test_results.tar.gz test_run*
+  artifacts:
+    paths:
+      - all_test_results.tar.gz
+    expire_in: 1 day
 
 verify:intel:aiida:
   image: iffregistry.fz-juelich.de/docker-images/aiida-kkr:latest
@@ -371,4 +602,47 @@ verify:intel:aiida:
     # check some output of the calculation
     - verdi import test_export.aiida.tar.gz
     - python tests/tools/aiida_check_results.py
+  only: 
+    - schedules
+    - triggers
+    - web
     
+###############################################################################
+# for Gitlab pages (online code documentation build with ford)
+
+codecov:
+  stage: deploy:codecov
+  allow_failure: true
+  script:
+    - cd build && ls -ltr
+    - profmerge
+    - codecov -spi pgopti.spi -dpi pgopti.dpi
+    - tar -zcvf ../cov.tar.gz CODE_COVERAGE.HTML CodeCoverage
+    - rm -rf *.dyn pgopti.spi pgopti.dpi
+  artifacts:
+    paths:
+      - cov.tar.gz
+  only: 
+    - schedules
+    - triggers
+    - web
+
+
+pages:
+  stage: deploy:doc
+  image: ubuntu:latest
+  allow_failure: true
+  script:
+    - apt-get update && apt-get upgrade -y  && apt-get install -y python-pip && apt-get install -y graphviz
+    - pip install ford
+    - ford doc_ford.md
+    - mv doc/ public/
+    # add code coverage
+    - tar -zxvf cov.tar.gz && mv CODE_COVERAGE.HTML public/page/codecov/index.html && mv CodeCoverage public/page/codecov/CodeCoverage
+  artifacts:
+    paths:
+      - public
+  only: 
+    - schedules
+    - triggers
+    - web

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from subprocess import call
-import sys
+import sys, os
 from numpy import array
 
 
@@ -20,7 +20,7 @@ npara_pairs = [[1,1]] # first entry is OMP_NUM_THREADS second number of MPI rank
 global_options = ''
 #global_options = 'source /usr/local/bin/compilervars-12.sh intel64; source /usr/local/intel/mkl/bin/mklvars.sh intel64'
 
-test_systems = ['test_run1', 'test_run2', 'test_run3', 'test_run4', 'test_run5', 'test_run6']
+test_systems = ['test_run01', 'test_run02', 'test_run03', 'test_run04', 'test_run05', 'test_run06']
 
 # define masks of test_systes for exgensive (i.e. non-serial) tests
 # key is the test_coverage that enters as input via sys.argv command line argument
@@ -42,16 +42,17 @@ for mode in modes:
             # run calculation
             if run_calc:
                 path = testcase+'_'+mode+'_'+str(npara[0])+'_'+str(npara[1])
-                job = 'mkdir '+path
-                print job
-                call(job, shell=True)
-                job = 'cd '+path+'; '
-                job+= 'ln -s ../test_inputs/test_%s_*/* .; ln -s ../../kkr.x_%s kkr.x; '%(testcase.replace('test_run',''), mode)
-                if global_options != '':
-                    job+= global_options+'; '
-                job+= 'export OMP_NUM_THREADS=%i; mpirun -np %i ./kkr.x | tee out_kkr'%(npara[0], npara[1])
-                print job
-                call(job, shell=True)
-                job = 'cd '+path+'; rm -f gmat tmat gref *for* inputcard_generated.txt'
-                print job
-                call(job, shell=True)
+                if path not in os.listdir('.'):
+                    job = 'mkdir '+path
+                    print job
+                    call(job, shell=True)
+                    job = 'cd '+path+'; '
+                    job+= 'ln -s ../test_inputs/test_%s_*/* .; '%(testcase.replace('test_run',''))
+                    if global_options != '':
+                        job+= global_options+'; '
+                    job+= 'export OMP_NUM_THREADS=%i; mpirun -np %i ../../kkr.x | tee out_kkr'%(npara[0], npara[1])
+                    print job
+                    call(job, shell=True)
+                    job = 'cd '+path+'; rm -f gmat tmat gref *for* inputcard_generated.txt'
+                    print job
+                    call(job, shell=True)
