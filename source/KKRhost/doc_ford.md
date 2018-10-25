@@ -1,9 +1,9 @@
-project: Jülich KKR code for bulk and interfaces
-summary: Source code documentation of the Jülich KKR code for bulk and interfaces
+project: The Jülich KKR code
+summary: Source code documentation of the Jülich KKR code
 author: The Jülich KKR team
 email: p.ruessmann@fz-juelich.de
 license: by-nc
-version: 1.1.1
+version: 2.4
 project_website: https://iffgit.fz-juelich.de/kkr/kkrjm
 project_download: https://iffgit.fz-juelich.de/kkr/kkrjm
 src_dir: ./ALL_SOURCE_FILES

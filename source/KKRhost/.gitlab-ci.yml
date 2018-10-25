@@ -83,6 +83,7 @@ build:intel:hybrid:
     - mkdir build && cd build
     - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/mpi/intel64/bin/mpiifort cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DENABLE_COV=ON ..
     - make -j4
+    - cp kkr.x ..
     - cd ..
   artifacts:
     paths:

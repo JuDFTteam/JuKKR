@@ -1,4 +1,4 @@
-# Jülich KKR code for bulk and interfaces
+# The Jülich KKR code for bulk and interfaces
 
 ## Description
 
@@ -11,6 +11,10 @@ The Korringa-Kohn-Rostoker (KKR) Greens function method is a highly accurate all
 - [cmake](https://cmake.org)
 
 ### Compiling the code
+
+The easiest way to set up the code is to execute the `install.py` script.
+
+Alternatively you can configure the build manually as shown below. 
 
 ```
 mkdir build

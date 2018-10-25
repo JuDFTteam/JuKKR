@@ -29,8 +29,8 @@ Major code refactoring getting rid of the `inc.p` files which eliminates the nee
 - `README`, `CHANGELOG`, `CONTRIBUTING` files and better documentation
 - use cmake to auto-generate dependencies and makefile
 - use FORD for automatic source code documentation
-- readin of things for Bogoliubov-de-Gennes formalism
-- test cases for ASA, Dirac, CPA, SOC, ...
+- read-in of things for Bogoliubov-de-Gennes formalism
+- test cases for ASA, Dirac, CPA, SOC, godfrin, LDA+U, XCs
 - test option `noserial` to omit writing serial number to `kkrflex_*` files (for backwards compatibility)
 
 ### Changed

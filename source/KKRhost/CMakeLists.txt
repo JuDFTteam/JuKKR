@@ -23,7 +23,7 @@ enable_language(Fortran)
 set(CMAKE_Fortran_MODULE_DIRECTORY ${PROJECT_BINARY_DIR}/modules)
 
 # here the executables are written to
-set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ../ )
+set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ./ )
 
 # we define some compiler flags
 if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
