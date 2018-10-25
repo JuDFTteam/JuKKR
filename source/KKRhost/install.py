@@ -28,7 +28,7 @@ def goodbye():
    print("To compile the code please go to the build directory and type")
    print("    'make'")
    print(" or")
-   print("    'make -jn'")
+   print("    'make -j n'")
    print(" where n is the number of tasks you want to use in the parallel compilation process.")
    print("***********************************************************")
 
@@ -37,13 +37,14 @@ def goodbye():
 def usage():
    """ Prints usage info and exists. """
    print("Acceptable arguments:")
-   print("  -i or --interactive        Use interactive installation script asking the user for input (default if none are given).")
-   print("  -d or --debug              Set up debug mode of the code.")
    print("  -h or --help               Print this message and exit.")
-   print("  --machine=name             Use a predefined set of settings for a specific machine where 'name' is one of 'iff', 'claix', 'jureca'.")
-   print("  --compiler=name            Use a specific compiler, 'name' could for example be 'mpiifort' or 'gfortran'.")
-   print("  --parallelization=scheme   Use either MPI, OpenMP or both (hybrid) parallelization: 'scheme should be one of 'mpi', 'openmp', 'hybrid'.")
-   print("  --flags=flag1,flag2        Add cmake flags manually (can be combined with either -m or the settings with -c and -p).")
+   print("  -i or --interactive        Use interactive installation script asking the user for input.")
+   print("  -v or --verbose            Verbose mode.")
+   #print("  -d or --debug              Set up debug mode of the code.")
+   #print("  --machine=name             Use a predefined set of settings for a specific machine where 'name' is one of 'iff', 'claix', 'jureca'.")
+   #print("  --compiler=name            Use a specific compiler, 'name' could for example be 'mpiifort' or 'gfortran'.")
+   #print("  --parallelization=scheme   Use either MPI, OpenMP or both (hybrid) parallelization: 'scheme should be one of 'mpi', 'openmp', 'hybrid'.")
+   #print("  --flags=flag1,flag2        Add cmake flags manually (can be combined with either -m or the settings with -c and -p).")
    sys.exit()
 
 ##########################################################################
@@ -94,14 +95,14 @@ def read_machine(flags, mname):
 
 ##########################################################################
 
-def check_dependencies():
+def check_dependencies(verbose):
    """ Check if all necessary dependencies are available (e.g. cmake). """
    print("check_dependecies: Not implemented yet.")
    pass
 
 ##########################################################################
 
-def create_build_dir():
+def create_build_dir(verbose):
    """ Create a build directory and store eventually previously existing ones. """
    import shutil
    # check for existence of build dir
@@ -112,9 +113,17 @@ def create_build_dir():
          i += 1
          oldbuild = 'build_{}'.format(i)
       print("Found old build directory. Moving this to {}".format(oldbuild))
+      if verbose:
+         print("Continue (will rename old build dir)? [Y/n]")
+         answer = input()
+         if 'n' in answer.lower(): sys.exit()
       shutil.move('build', oldbuild)
 
    # create build dir
+   if verbose:
+      print("Continue (will create build dir)? [Y/n]")
+      answer = input()
+      if 'n' in answer.lower(): sys.exit()
    os.makedirs('build')
 
 ##########################################################################
@@ -157,6 +166,10 @@ def run_cmake(compiler, parallelization, flags, verbose):
    print("\nNow run cmake command: '{}'".format(task))
    print("\n***********************************************************\n")
 
+   if verbose:
+      print("Continue (will run cmake command)? [Y/n]")
+      answer = input()
+      if 'n' in answer.lower(): sys.exit()
    call(task, shell=True)
 
 ##########################################################################
@@ -165,11 +178,11 @@ def main(argv):
    # print greeting lines
    greeting()
    # process script options
-   if 1:#try:
+   try:
       if len(argv)==0: usage()
       opts, args = getopt.getopt(argv, "ivhdmcpf:", ["interactive", "verbose", "help", "debug", "machine=", "compiler=", "parallelization=", "flags="])
-      print(argv, len(argv), opts,args)
-   else:#except getopt.GetoptError:
+      #print(argv, len(argv), opts,args)
+   except getopt.GetoptError:
       usage()
 
    # define defaults
@@ -178,11 +191,13 @@ def main(argv):
    flags = []
    verbose = False
 
-   # now deal with different input options:
+   # first check for vebosity level (determines additional printing)
    for opt, arg in opts:
       if opt in ("-v", "--verbose"):
          verbose = True
 
+   # now deal with different input options:
+   for opt, arg in opts:
       if opt in ("-h", "--help"):
          usage()
 
@@ -210,10 +225,10 @@ def main(argv):
           flags.append("CMAKE_BUILD_TYPE=Debug")
 
    # check dependencies
-   create_build_dir()
+   create_build_dir(verbose)
 
    # create build dir
-   check_dependencies()
+   check_dependencies(verbose)
 
    # run cmake with previously read-in options
    run_cmake(compiler, parallelization, flags, verbose)
