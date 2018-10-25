@@ -8,6 +8,7 @@
 import os
 import sys
 import getopt
+import shutil
 
 ##########################################################################
  
@@ -40,11 +41,11 @@ def usage():
    print("  -h or --help               Print this message and exit.")
    print("  -i or --interactive        Use interactive installation script asking the user for input.")
    print("  -v or --verbose            Verbose mode.")
-   #print("  -d or --debug              Set up debug mode of the code.")
-   #print("  --machine=name             Use a predefined set of settings for a specific machine where 'name' is one of 'iff', 'claix', 'jureca'.")
-   #print("  --compiler=name            Use a specific compiler, 'name' could for example be 'mpiifort' or 'gfortran'.")
-   #print("  --parallelization=scheme   Use either MPI, OpenMP or both (hybrid) parallelization: 'scheme should be one of 'mpi', 'openmp', 'hybrid'.")
-   #print("  --flags=flag1,flag2        Add cmake flags manually (can be combined with either -m or the settings with -c and -p).")
+   print("  -d or --debug              Set up debug mode of the code.")
+   print("  --machine=name             Use a predefined set of settings for a specific machine where 'name' is one of 'iff', 'claix', 'jureca'.")
+   print("  --compiler=name            Use a specific compiler, 'name' could for example be 'mpiifort' or 'gfortran'.")
+   print("  --parallelization=scheme   Use either MPI, OpenMP or both (hybrid) parallelization: 'scheme should be one of 'mpi', 'openmp', 'hybrid'.")
+   print("  --flags=flag1,flag2        Add cmake flags manually (can be combined with either -m or the settings with -c and -p).")
    sys.exit()
 
 ##########################################################################
@@ -97,14 +98,24 @@ def read_machine(flags, mname):
 
 def check_dependencies(verbose):
    """ Check if all necessary dependencies are available (e.g. cmake). """
-   print("check_dependecies: Not implemented yet.")
-   pass
+   print("check-dependencies...")
+   # check make
+   print("make availabale?")
+   if shutil.which('make') is None:
+      print("Command 'make' not found. Maybe you have to import some modules?")
+      sys.exit()
+   print("OK")
+   # check cmake
+   print("cmake availabale?")
+   if shutil.which('cmake') is None:
+      print("Command 'cmake' not found. Maybe you have to import some modules?")
+      sys.exit()
+   print("OK")
 
 ##########################################################################
 
 def create_build_dir(verbose):
    """ Create a build directory and store eventually previously existing ones. """
-   import shutil
    # check for existence of build dir
    if 'build' in os.listdir('.'):
       i = 1
