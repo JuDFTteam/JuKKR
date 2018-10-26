@@ -101,120 +101,120 @@ module mod_main0
   
   ! decalration of common variables
 
-  integer :: kte                   !! Calculation of the total energy On/Off (1/0)
-  integer :: kws                   !! 0 (MT), 1(ASA)
-  integer :: kxc                   !! Type of xc-potential 0=vBH 1=MJW 2=VWN 3=PW91
-  integer :: igf                   !! Do not print or print (0/1) the KKRFLEX_* files
-  integer :: icc                   !! Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
-  integer :: ins                   !! 0 (MT), 1(ASA), 2(Full Potential)
+  integer :: kte = 1               !! Calculation of the total energy On/Off (1/0)
+  integer :: kws = 1               !! 0 (MT), 1(ASA)
+  integer :: kxc = 2               !! Type of xc-potential 0=MJW 1=vBH 2=VWN 3=PW91 4=PBE 5=PBEsol
+  integer :: igf = 0               !! Do not print or print (0/1) the KKRFLEX_* files
+  integer :: icc = 0               !! Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
+  integer :: ins = 2               !! 0 (MT), 1(ASA), 2(Full Potential)
   integer :: irm                   !! Maximum number of radial points
-  integer :: ipe                   !! Not real used, IPFE should be 0
-  integer :: ipf                   !! Not real used, IPFE should be 0
-  integer :: ipfe                  !! Not real used, IPFE should be 0
-  integer :: kcor
-  integer :: kefg
-  integer :: khyp
-  integer :: kpre
-  integer :: nprinc                !! number of principal layers used for slab-inversion
-  integer :: nsra                  !! scalar-relativistic (nsra==2) or non-relativistic (nsra==1)
-  integer :: lpot                  !! Maximum l component in potential expansion
-  integer :: imix                  !! Type of mixing scheme used (0=straight, 4=Broyden 2nd, 5=Anderson)
-  integer :: iend                  !! Number of nonzero gaunt coefficients
-  integer :: icst                  !! Number of Born approximation
-  integer :: naez                  !! Number of atoms in unit cell
-  integer :: nemb                  !! Number of 'embedding' positions
-  integer :: lmax                  !! Maximum l component in wave function expansion
-  integer :: ncls                  !! Number of reference clusters
-  integer :: nref                  !! Number of diff. ref. potentials
-  integer :: npol                  !! Number of Matsubara Poles (EMESHT)
-  integer :: npnt1                 !! number of E points (EMESHT) for the contour integration
-  integer :: npnt2                 !! number of E points (EMESHT) for the contour integration
-  integer :: npnt3                 !! number of E points (EMESHT) for the contour integration
-  integer :: lmmax                 !! (LMAX+1)^2
-  integer :: nvirt
-  integer :: lmpot                 !! (LPOT+1)**2
-  integer :: kvmad
-  integer :: itscf                 !! counter scf iterations
-  integer :: ncheb                 !! Number of Chebychev pannels for the new solver
-  integer :: nineq                 !! Number of ineq. positions in unit cell
-  integer :: natyp                 !! Number of kinds of atoms in unit cell
-  integer :: ifile                 !! Unit specifier for potential card
-  integer :: kvrel                 !! 0,1,2 : non / scalar relat. / full Dirac calculation
-  integer :: nspin                 !! Counter for spin directions
-  integer :: nleft                 !! Number of repeated basis for left host to get converged electrostatic potentials
-  integer :: nright                !! Number of repeated basis for right host to get converged electrostatic potentials
-  integer :: invmod                !! Inversion scheme
-  integer :: khfeld                !! 0,1: no / yes external magnetic field
-  integer :: itdbry                !! Number of SCF steps to remember for the Broyden mixing
-  integer :: insref                !! INS for reference pot. (usual 0)
-  integer :: kshape                !! Exact treatment of WS cell
-  integer :: ielast                !! number of energy points in complex energy contour
-  integer :: ishift
-  integer :: kfrozn
-  integer :: nsymat
-  integer :: nqcalc
-  integer :: kforce                !! Calculation of the forces
-  integer :: n1semi                !! Number of energy points for the semicore contour
-  integer :: n2semi                !! Number of energy points for the semicore contour
-  integer :: n3semi                !! Number of energy points for the semicore contour
-  integer :: nlayer                !! Number of principal layer
-  integer :: nlbasis               !! Number of basis layers of left host (repeated units)
-  integer :: nrbasis               !! Number of basis layers of right host (repeated units)
-  integer :: intervx               !! Number of intervals in x-direction for k-net in IB of the BZ
-  integer :: intervy               !! Number of intervals in y-direction for k-net in IB of the BZ
-  integer :: intervz               !! Number of intervals in z-direction for k-net in IB of the BZ
-  integer :: maxmesh               !! Number of different k-meshes
-  integer :: npan_eq               !! Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
-  integer :: npan_log              !! Number of intervals from nucleus to [R_LOG] Used in conjunction with runopt NEWSOSOL
-  integer :: npolsemi              !! Number of poles for the semicore contour
-  integer :: scfsteps              !! number of scf iterations
-  integer :: natomimp              !! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-  integer :: iesemicore
-  integer :: idosemicore
-  real (kind=dp) :: tk             !! Temperature
-  real (kind=dp) :: fcm            !! Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
-  real (kind=dp) :: e2in
-  real (kind=dp) :: emin           !! Lower value (in Ryd) for the energy contour
-  real (kind=dp) :: emax           !! Maximum value (in Ryd) for the DOS calculation Controls also [NPT2] in some cases
-  real (kind=dp) :: alat           !! Lattice constant in a.u.
-  real (kind=dp) :: rmax           !! Ewald summation cutoff parameter for real space summation
-  real (kind=dp) :: gmax           !! Ewald summation cutoff parameter for reciprocal space summation
-  real (kind=dp) :: r_log          !! Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
-  real (kind=dp) :: rcutz          !! Parameter for the screening cluster along the z-direction
-  real (kind=dp) :: rcutxy         !! Parameter for the screening cluster along the x-y plane
-  real (kind=dp) :: qbound         !! Convergence parameter for the potential
-  real (kind=dp) :: vconst         !! Potential shift in the first iteration
-  real (kind=dp) :: hfield         !! External magnetic field, for initial potential shift in spin polarised case
-  real (kind=dp) :: mixing         !! Magnitude of the mixing parameter
-  real (kind=dp) :: abasis         !! Scaling factors for rbasis
-  real (kind=dp) :: bbasis         !! Scaling factors for rbasis
-  real (kind=dp) :: cbasis         !! Scaling factors for rbasis
-  real (kind=dp) :: efermi         !! Fermi energy
-  real (kind=dp) :: eshift
-  real (kind=dp) :: tksemi         !! Temperature of semi-core contour
-  real (kind=dp) :: tolrdif        !! For distance between scattering-centers smaller than [<TOLRDIF>], free GF is set to zero. Units are Bohr radii.
-  real (kind=dp) :: alatnew
-  real (kind=dp) :: volume0        !! Unit cell volume
-  real (kind=dp) :: emusemi        !! Top of semicore contour in Ryd.
-  real (kind=dp) :: ebotsemi       !! Bottom of semicore contour in Ryd
-  real (kind=dp) :: fsemicore      !! Initial normalization factor for semicore states (approx. 1.)
-  real (kind=dp) :: lambda_xc      !! Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
-  character (len=10) :: solver     !! Type of solver
-  character (len=40) :: i12        !! File identifiers
-  character (len=40) :: i13        !! Potential file name
-  character (len=40) :: i19        !! Shape function file name
-  character (len=40) :: i25        !! Scoef file name
-  character (len=40) :: i40        !! File identifiers
-  logical :: lrhosym
-  logical :: linipol               !! True: Initial spin polarization; false: no initial spin polarization
-  logical :: lcartesian            !! True: Basis in cartesian coords; false: in internal coords
+  integer :: ipe = 0               !! Not real used, IPFE should be 0
+  integer :: ipf = 0               !! Not real used, IPFE should be 0
+  integer :: ipfe = 0              !! Not real used, IPFE should be 0
+  integer :: kcor = 0
+  integer :: kefg = 0
+  integer :: khyp = 0
+  integer :: kpre = 0
+  integer :: nprinc = 1            !! number of principal layers used for slab-inversion
+  integer :: nsra = 1              !! scalar-relativistic (nsra==2) or non-relativistic (nsra==1)
+  integer :: lpot = 2              !! Maximum l component in potential expansion
+  integer :: imix = 0              !! Type of mixing scheme used (0=straight, 4=Broyden 2nd, 5=Anderson)
+  integer :: iend = 1              !! Number of nonzero gaunt coefficients
+  integer :: icst = 2              !! Number of Born approximation
+  integer :: naez = 1              !! Number of atoms in unit cell
+  integer :: nemb = 1              !! Number of 'embedding' positions
+  integer :: lmax = 2              !! Maximum l component in wave function expansion
+  integer :: ncls = 1              !! Number of reference clusters
+  integer :: nref = 1              !! Number of diff. ref. potentials
+  integer :: npol = 7              !! Number of Matsubara Poles (EMESHT)
+  integer :: npnt1 = 3             !! number of E points (EMESHT) for the contour integration going up
+  integer :: npnt2 = 10            !! number of E points (EMESHT) for the contour integration goind parallel to the real axis
+  integer :: npnt3 = 4             !! number of E points (EMESHT) for the contour integration going down
+  integer :: lmmax = 16            !! (LMAX+1)^2
+  integer :: nvirt = 0
+  integer :: lmpot = 16            !! (LPOT+1)**2
+  integer :: kvmad = 0
+  integer :: itscf = 0             !! counter scf iterations
+  integer :: ncheb = 10            !! Number of Chebychev pannels for the new solver
+  integer :: nineq = 1             !! Number of ineq. positions in unit cell
+  integer :: natyp = 1             !! Number of kinds of atoms in unit cell
+  integer :: ifile = 13            !! Unit specifier for potential card
+  integer :: kvrel = 1             !! 0,1,2 : non / scalar relat. / full Dirac calculation
+  integer :: nspin = 2             !! Counter for spin directions
+  integer :: nleft = 1             !! Number of repeated basis for left host to get converged electrostatic potentials
+  integer :: nright = 1            !! Number of repeated basis for right host to get converged electrostatic potentials
+  integer :: invmod = 2            !! Inversion scheme, default: Corner band matrix inversion scheme
+  integer :: khfeld = 0            !! 0,1: no / yes external magnetic field
+  integer :: itdbry = 10           !! Number of SCF steps to remember for the Broyden mixing
+  integer :: insref = 0            !! INS for reference pot. (usual 0)
+  integer :: kshape = 2            !! Exact treatment of WS cell
+  integer :: ielast = 0            !! number of energy points in complex energy contour
+  integer :: ishift = 0
+  integer :: kfrozn = 0
+  integer :: nsymat = 0
+  integer :: nqcalc = 0
+  integer :: kforce = 0            !! Calculation of the forces
+  integer :: n1semi = 0            !! Number of energy points for the semicore contour
+  integer :: n2semi = 0            !! Number of energy points for the semicore contour
+  integer :: n3semi = 0            !! Number of energy points for the semicore contour
+  integer :: nlayer = 1            !! Number of principal layer
+  integer :: nlbasis = 0           !! Number of basis layers of left host (repeated units)
+  integer :: nrbasis = 0           !! Number of basis layers of right host (repeated units)
+  integer :: intervx = 10          !! Number of intervals in x-direction for k-net in IB of the BZ
+  integer :: intervy = 10          !! Number of intervals in y-direction for k-net in IB of the BZ
+  integer :: intervz = 10          !! Number of intervals in z-direction for k-net in IB of the BZ
+  integer :: maxmesh = 1           !! Number of different k-meshes
+  integer :: npan_eq = 30          !! Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
+  integer :: npan_log = 30         !! Number of intervals from nucleus to [R_LOG] Used in conjunction with runopt NEWSOSOL
+  integer :: npolsemi = 0          !! Number of poles for the semicore contour
+  integer :: scfsteps = 1          !! number of scf iterations
+  integer :: natomimp = 0          !! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
+  integer :: iesemicore = 0
+  integer :: idosemicore = 0
+  real (kind=dp) :: tk = 800.0_dp       !! Temperature
+  real (kind=dp) :: fcm = 20.0_dp       !! Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
+  real (kind=dp) :: e2in = 0.0_dp    
+  real (kind=dp) :: emin = -0.30_dp     !! Lower value (in Ryd) for the energy contour
+  real (kind=dp) :: emax = 0.70_dp      !! Maximum value (in Ryd) for the DOS calculation Controls also [NPT2] in some cases
+  real (kind=dp) :: alat = 1.0_dp       !! Lattice constant in a.u.
+  real (kind=dp) :: rmax = 10.0_dp      !! Ewald summation cutoff parameter for real space summation
+  real (kind=dp) :: gmax = 100.0_dp     !! Ewald summation cutoff parameter for reciprocal space summation
+  real (kind=dp) :: r_log = 0.5_dp      !! Radius up to which log-rule is used for interval width. Used in conjunction with runopt NEWSOSOL
+  real (kind=dp) :: rcutz = 2.30_dp     !! Parameter for the screening cluster along the z-direction
+  real (kind=dp) :: rcutxy = 2.30_dp    !! Parameter for the screening cluster along the x-y plane
+  real (kind=dp) :: qbound = 1.0e-7_dp  !! Convergence parameter for the potential
+  real (kind=dp) :: vconst = 0.0_dp     !! Value of potential shift in the first iteration in Ry
+  real (kind=dp) :: hfield = 0.0_dp     !! Value of external magnetic field in Ry, for initial potential shift in spin polarised case
+  real (kind=dp) :: mixing = 0.01_dp    !! Magnitude of the mixing parameter
+  real (kind=dp) :: abasis = 1.0_dp     !! Scaling factors for rbasis
+  real (kind=dp) :: bbasis = 1.0_dp     !! Scaling factors for rbasis
+  real (kind=dp) :: cbasis = 1.0_dp     !! Scaling factors for rbasis
+  real (kind=dp) :: efermi = 0.0_dp     !! Fermi energy
+  real (kind=dp) :: eshift = 0.0_dp
+  real (kind=dp) :: tksemi = 800.0_dp   !! Temperature of semi-core contour
+  real (kind=dp) :: tolrdif = 1.0_dp    !! For distance between scattering-centers smaller than [<TOLRDIF>], free GF is set to zero. Units are Bohr radii.
+  real (kind=dp) :: alatnew = 1.0_dp
+  real (kind=dp) :: volume0 = 1.0_dp    !! Unit cell volume
+  real (kind=dp) :: emusemi = 0.0_dp    !! Top of semicore contour in Ryd.
+  real (kind=dp) :: ebotsemi = -0.50_dp !! Bottom of semicore contour in Ryd
+  real (kind=dp) :: fsemicore = 0.00_dp !! Initial normalization factor for semicore states (approx. 1.)
+  real (kind=dp) :: lambda_xc = 1.0_dp !! Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
+  character (len=10) :: solver = 'BS        ' !! Type of solver
+  character (len=40) :: i12 = '                                        ' !! File identifiers
+  character (len=40) :: i13 = 'potential                               ' !! Potential file name
+  character (len=40) :: i19 = 'shapefun                                ' !! Shape function file name
+  character (len=40) :: i25 = 'scoef                                   ' !! Default name of scoef file
+  character (len=40) :: i40 = '                                        ' !! File identifiers
+  logical :: lrhosym = .false.        !! 
+  logical :: linipol = .false.        !! True: Initial spin polarization; false: no initial spin polarization
+  logical :: lcartesian = .false.     !! True: Basis in cartesian coords; false: in internal coords
   ! ..
   ! .. Arrays ..
   integer, dimension (nsymaxd) :: isymindex
-  integer, dimension (:), allocatable :: cls !! Cluster around atomic sites
-  integer, dimension (:), allocatable :: irc !! R point for potential cutting
-  integer, dimension (:), allocatable :: imt !! R point at MT radius
-  integer, dimension (:), allocatable :: nfu !! number of shape function components in cell 'icell'
+  integer, dimension (:), allocatable :: cls  !! Cluster around atomic sites
+  integer, dimension (:), allocatable :: irc  !! R point for potential cutting
+  integer, dimension (:), allocatable :: imt  !! R point at MT radius
+  integer, dimension (:), allocatable :: nfu  !! number of shape function components in cell 'icell'
   integer, dimension (:), allocatable :: nsh1 !! Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
   integer, dimension (:), allocatable :: nsh2 !! Corresponding index of the sites I/J in  (NSH1/2) in the unit cell in a shell
   integer, dimension (:), allocatable :: lmxc
@@ -247,9 +247,9 @@ module mod_main0
   integer, dimension (:, :), allocatable :: jsh
   integer, dimension (:, :), allocatable :: ilm_map
   integer, dimension (:, :), allocatable :: kfg
-  integer, dimension (:, :), allocatable :: atom !! Atom at site in cluster
-  integer, dimension (:, :), allocatable :: ezoa !! EZ of atom at site in cluster
-  integer, dimension (:, :), allocatable :: lmsp !! 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
+  integer, dimension (:, :), allocatable :: atom  !! Atom at site in cluster
+  integer, dimension (:, :), allocatable :: ezoa  !! EZ of atom at site in cluster
+  integer, dimension (:, :), allocatable :: lmsp  !! 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
   integer, dimension (:, :), allocatable :: lcore !! Angular momentum of core states
   integer, dimension (:, :), allocatable :: icleb !! Pointer array
   integer, dimension (:, :), allocatable :: ircut !! R points of panel borders
@@ -320,14 +320,14 @@ module mod_main0
   ! -------------------------------------------------------------------------
   ! Magnetisation angles -- description see RINPUT13
   ! -------------------------------------------------------------------------
-  integer :: kmrot                                    !! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
+  integer :: kmrot = 0                                    !! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
   real (kind=dp), dimension (:), allocatable :: qmtet !! \( \theta\) angle of the magnetization with respect to the z-axis
   real (kind=dp), dimension (:), allocatable :: qmphi !! \( \phi\) angle of the magnetization with respect to the z-axis
   ! -------------------------------------------------------------------------
   ! CPA variables
   ! -------------------------------------------------------------------------
-  integer :: ncpa                             !! NCPA = 0/1 CPA flag
-  integer :: itcpamax                         !! Max. number of CPA iterations
+  integer :: ncpa = 0                             !! NCPA = 0/1 CPA flag
+  integer :: itcpamax = 0                         !! Max. number of CPA iterations
   integer, dimension (:), allocatable :: noq  !! Number of diff. atom types located
   integer, dimension (:), allocatable :: iqat !! The site on which an atom is located on a given site
   integer, dimension (:), allocatable :: icpa !! ICPA = 0/1 site-dependent CPA flag
@@ -348,7 +348,7 @@ module mod_main0
   !> @endnote
   ! -------------------------------------------------------------------------
   integer, dimension (:), allocatable :: hostimp     !! 
-  real (kind=dp) :: cpatol                           !! Convergency tolerance for CPA-cycle
+  real (kind=dp) :: cpatol = 1e-4_dp                           !! Convergency tolerance for CPA-cycle
   real (kind=dp), dimension (:), allocatable :: conc !! Concentration of a given atom
   ! -------------------------------------------------------------------------------
   complex (kind=dp), dimension (:, :), allocatable :: rc       !! NREL REAL spher. harm. > CMPLX. spher. harm. NREL CMPLX. spher. harm. > REAL spher. harm.
@@ -368,7 +368,7 @@ module mod_main0
   real (kind=dp), dimension (:, :), allocatable :: drdirel   !! derivative of radial mesh
   real (kind=dp), dimension (:, :), allocatable :: r2drdirel !! \( r^2 \frac{\partial}{\partial \mathbf{r}}\frac{\partial}{\partial i}\) (r**2 * drdi)
   real (kind=dp), dimension (:, :, :), allocatable :: thesme
-  logical :: para
+  logical :: para = .true.
   logical, dimension (nsymaxd) :: symunitary !! unitary/antiunitary symmetry flag
 
   ! -------------------------------------------------------------------------
@@ -393,10 +393,10 @@ module mod_main0
   !>                       their corresponding index in the unit cell
   !> @endnote
   ! -------------------------------------------------------------------------
-  integer :: ntldau    !! number of atoms on which LDA+U is applied
-  integer :: idoldau   !! flag to perform LDA+U
-  integer :: itrunldau !! Iteration index for LDA+U
-  integer :: kreadldau !! LDA+U arrays available
+  integer :: ntldau = 0    !! number of atoms on which LDA+U is applied
+  integer :: idoldau = 0   !! flag to perform LDA+U
+  integer :: itrunldau = 0 !! Iteration index for LDA+U
+  integer :: kreadldau = 0 !! LDA+U arrays available
   integer, dimension (:), allocatable :: lopt            !! angular momentum QNUM for the atoms on which LDA+U should be applied (-1 to switch it OFF)
   integer, dimension (:), allocatable :: itldau          !! integer pointer connecting the NTLDAU atoms to heir corresponding index in the unit cell
   real (kind=dp), dimension (:), allocatable :: ueff     !! input U parameter for each atom
@@ -412,8 +412,8 @@ module mod_main0
   ! LDA+U LDA+U LDA+U
   ! -------------------------------------------------------------------------
   ! Lloyds formula
-  integer :: lly              !! LLY <> 0 : apply Lloyds formula
-  complex (kind=dp) :: deltae !! Energy difference for numerical derivative
+  integer :: lly = 0              !! LLY <> 0 : apply Lloyds formula
+  complex (kind=dp) :: deltae = (1.0e-5_dp, 0.0_dp) !! Energy difference for numerical derivative
 
   ! SUSC (BEGIN: modifications by Manuel and Benedikt)    ! susc
   ! LOGICAL THAT CHECKS WHETHER ENERGY MESH FILE EXISTS   ! susc
@@ -421,7 +421,7 @@ module mod_main0
   ! SUSC (END:   modifications by Manuel and Benedikt)    ! susc
 
   ! ruess: IVSHIFT test option
-  integer :: ivshift
+  integer :: ivshift = 0
 
   ! allocations:
   real (kind=dp), dimension (:, :, :), allocatable :: thetas     !! shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
@@ -551,8 +551,14 @@ contains
     ! -------------------------------------------------------------------------
     ! End write version info
     ! -------------------------------------------------------------------------
-    ! allocate and initialize default values
-    call init_all_wrapper()
+
+    ! allocate and initialize testc and optc in t_params for run and test options
+    allocate (t_params%optc(32), stat=i_stat) ! CHARACTER*8
+    call memocc(i_stat, product(shape(t_params%optc))*kind(t_params%optc), 't_params%OPTC', 'main0')
+    t_params%optc(1:32) = '        '
+    allocate (t_params%testc(32), stat=i_stat)
+    call memocc(i_stat, product(shape(t_params%testc))*kind(t_params%testc), 't_params%TESTC', 'main0')
+    t_params%testc(1:32) = '        '
 
     ! -------------------------------------------------------------------------
     ! Reading of the inputcard, and allocation of several arrays
@@ -1437,451 +1443,6 @@ contains
     end do
 
   end subroutine bshift_ns
-
-  !-------------------------------------------------------------------------------
-  !> Summary: Set default values for misc variables for the calculation
-  !> Author: Jonathan Chico
-  !> Date: 22.12.2017
-  !> Category: initialization, KKRhost 
-  !> Deprecated: False 
-  !> The idea behind this kind of routine is to separate the initialization
-  !> of variables such that one can use this to modularize the code
-  !-------------------------------------------------------------------------------
-  subroutine init_misc_variables()
-
-    use :: global_variables, only: nsheld
-    implicit none
-
-    ipe     = 0
-    ipf     = 0
-    ipfe    = 0
-    kcor    = 0
-    kefg    = 0
-    khyp    = 0
-    kpre    = 0
-    nsra    = 1
-    iend    = 1
-    nvirt   = 0
-    kvmad   = 0
-    itscf   = 0
-    nsheld  = 301   !! Number of blocks of the GF matrix that need to be calculated (NATYPD + off-diagonals in case of impurity)
-    invmod  = 2     !! Corner band matrix inversion scheme
-    ielast  = 0
-    ishift  = 0
-    kfrozn  = 0
-    nsymat  = 0
-    nqcalc  = 0
-    kforce  = 0     !! Calculation of the forces
-    para    = .true.
-    lrhosym = .false.
-
-  end subroutine init_misc_variables
-
-  !-------------------------------------------------------------------------------
-  !> Summary: set default values for the relativistic variables
-  !> Author: Jonathan Chico
-  !> Date: 26.12.2017
-  !> Category: initialization, KKRhost 
-  !> Deprecated: False 
-  !> The idea behind this kind of routine is to separate the initialization
-  !> of variables such that one can use this to modularize the code
-  !-------------------------------------------------------------------------------
-  subroutine init_relativistic_variables()
-
-    use :: global_variables, only: krel, korbit, lnc
-    implicit none
-
-    krel    = 0       ! Switch for non- (or scalar-) relativistic/relativistic (Dirac) program (0/1). Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
-    kvrel   = 1       ! Scalar-relativistic calculation
-    korbit  = 0       ! No spin-orbit coupling
-    lnc     = .true.  ! Coupled equations in two spins (switches true if KREL=1 or KORBIT=1 or KNOCO=1)
-
-  end subroutine init_relativistic_variables
-
-  !-------------------------------------------------------------------------------
-  !> Summary: set default values for the cluster variables
-  !> Author: Jonathan Chico
-  !> Date: 26.12.2017
-  !> Category: initialization, KKRhost 
-  !> Deprecated: False 
-  !> The idea behind this kind of routine is to separate the initialization
-  !> of variables such that one can use this to modularize the code
-  !-------------------------------------------------------------------------------
-  subroutine init_cluster_variables()
-
-    use :: global_variables, only: nofgij, nclsd, naclsd, natomimpd
-    implicit none
-
-    nclsd     = 2     ! NAEZD + NEMBD maximum number of different TB-clusters
-    naclsd    = 500   ! Maximum number of atoms in a TB-cluster
-    nofgij    = 2     ! NATOMIMPD*NATOMIMPD+1 probably the same variable than NOFGIJD
-    natomimp  = 0     ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-    natomimpd = 150   ! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
-    i25       = 'scoef                                   ' ! Default name of scoef file
-
-  end subroutine init_cluster_variables
-
-  !-------------------------------------------------------------------------------
-  !> Summary: set default values for the I/O variables
-  !> Author: Jonathan Chico
-  !> Date: 26.12.2017
-  !> Category: initialization, input-output, KKRhost 
-  !> Deprecated: False 
-  !> The idea behind this kind of routine is to separate the initialization
-  !> of variables such that one can use this to modularize the code
-  !-------------------------------------------------------------------------------
-  subroutine init_io_variables()
-
-    use :: global_variables, only: wlength
-    implicit none
-
-    igf     = 0   ! Not printing the Green functions
-    icc     = 0   ! Not printing the Green functions
-    wlength = 1   ! Word length for direct access files, compiler dependent ifort/others (1/4)
-#ifdef __GFORTRAN__
-    wlength = 4
-#endif
-    i12     = '                                        '
-    i40     = '                                        '
-
-  end subroutine init_io_variables
-
-  !-------------------------------------------------------------------------------
-  !> Summary: set default values for the unit cell variables
-  !> Author: Jonathan Chico
-  !> Date: 26.12.2017
-  !> Category: initialization, KKRhost 
-  !> Deprecated: False 
-  !> The idea behind this kind of routine is to separate the initialization
-  !> of variables such that one can use this to modularize the code
-  !-------------------------------------------------------------------------------
-  subroutine init_cell_variables()
-
-    use :: global_variables, only: linterface
-    implicit none
-
-    naez        = 1       ! Number of atoms in the unit cell
-    nemb        = 1       ! Number of embedded atoms
-    ncls        = 1       ! Number of clusters
-    natyp       = 1       ! Number of kinds of atoms in the unit cell
-    nineq       = 1
-    alat        = 1.0d0   ! Lattice constant in a.u.
-    abasis      = 1.0d0   ! Scaling factors for rbasis
-    bbasis      = 1.0d0   ! Scaling factors for rbasis
-    cbasis      = 1.0d0   ! Scaling factors for rbasis
-    alatnew     = 1.0d0
-    volume0     = 1.0d0
-    lcartesian  = .false. ! True: Basis in cartesian coords; false: in internal coords
-    linterface  = .false. ! If True a matching with semi-inifinite surfaces must be performed
-
-  end subroutine init_cell_variables
-
-  !-------------------------------------------------------------------------------
-  !> Summary: set default values for the slab calculation variables
-  !> Author: Jonathan Chico
-  !> Date: 26.12.2017
-  !> Category: initialization, KKRhost 
-  !> Deprecated: False 
-  !> The idea behind this kind of routine is to separate the initialization
-  !> of variables such that one can use this to modularize the code
-  !-------------------------------------------------------------------------------
-  subroutine init_slab_variables()
-
-    use :: global_variables, only: nprincd, nlayerd
-    implicit none
-
-    nleft   = 1
-    nright  = 1
-    nlayer  = 1 ! Number of principal layer
-    nlbasis = 0 ! Number of basis layers of left host (repeated units)
-    nrbasis = 0 ! Number of basis layers of right host (repeated units)
-    nprincd = 1 ! Number of principle layers, set to a number >= NRPINC in output of main0
-    nlayerd = 1 ! (NAEZD/NPRINCD)
-
-  end subroutine init_slab_variables
-
-  !-------------------------------------------------------------------------------
-  !> Summary: set default values for the energy variables
-  !> Author: Jonathan Chico
-  !> Date: 26.12.2017
-  !> Category: initialization, KKRhost 
-  !> Deprecated: False 
-  !> The idea behind this kind of routine is to separate the initialization
-  !> of variables such that one can use this to modularize the code
-  !-------------------------------------------------------------------------------
-  subroutine init_energy_variables()
-
-    use :: global_variables, only: iemxd
-    implicit none
-
-    lly         = 0        ! No Lloyds formula
-    kte         = 1        ! Calculate the total energy
-    npol        = 7        ! Number of poles
-    iemxd       = 101      ! Dimension for energy-dependent arrays
-    npnt1       = 7        ! Number of points in the energy contour
-    npnt2       = 7        ! Number of points in the energy contour
-    npnt3       = 7        ! Number of points in the energy contour
-    n1semi      = 0        ! Number of energy points for the semicore contour
-    n2semi      = 0        ! Number of energy points for the semicore contour
-    n3semi      = 0        ! Number of energy points for the semicore contour
-    ivshift     = 0
-    npolsemi    = 0
-    iesemicore  = 0
-    idosemicore = 0
-    tk        = 800.d0      ! Temperature
-    fcm       = 20.0d0
-    e2in      = 0.0d0
-    emin      = -0.30d0     ! Energies needed in EMESHT
-    emax      = 0.70d0      ! Energies needed in EMESHT
-    efermi    = 0.d0        ! Setting the Fermi energy to zero
-    eshift    = 0.d0
-    tksemi    = 800.d0      ! Temperature for the semi-core contour
-    emusemi   = 0.0d0
-    ebotsemi  = -0.5d0
-    fsemicore = 0.0d0
-    deltae    = (1.d-5, 0.d0)
-
-  end subroutine init_energy_variables
-
-  !-------------------------------------------------------------------------------
-  !> Summary: set default values for the convergence and solver variables
-  !> Author: Jonathan Chico
-  !> Date: 26.12.2017
-  !> Category: initialization, KKRhost 
-  !> Deprecated: False 
-  !> The idea behind this kind of routine is to separate the initialization
-  !> of variables such that one can use this to modularize the code
-  !-------------------------------------------------------------------------------
-  subroutine init_convergence_variables()
-
-    use :: global_variables, only: ishld, nmaxd, ntrefd, ntperd
-    implicit none
-
-    imix      = 0             ! Straight mixing
-    ishld     = 200000        ! Paremeters for the Ewald summations
-    nmaxd     = 2000000       ! Paremeters for the Ewald summations
-    ncheb     = 10            ! Number of Chebychev pannels for the new solver
-    itdbry    = 10
-    ntrefd    = 0             ! Parameter in broyden subroutine MUST BE 0 for the host program
-    ntperd    = 1             ! Parameter in broyden subroutines
-    npan_eq   = 30
-    npan_log  = 30
-    scfsteps  = 100           ! Number of SCF steps
-    rmax      = 7.0d0         ! Ewald summation cutoff parameter for real space summation
-    gmax      = 100.d0        ! Ewald summation cutoff parameter for reciprocal space summation
-    r_log     = 0.1d0
-    rcutz     = 2.30d0        ! Parameter for the screening cluster along the z-direction
-    rcutxy    = 2.30d0        ! Parameter for the screening cluster along the x-y plane
-    qbound    = 1.d-7         ! Convergence parameter for the potential
-    mixing    = 0.001d0       ! Magnitude of the mixing parameter
-    tolrdif   = 1.0d0         ! Tolerance for r<tolrdif (a.u.) to handle vir. atoms
-    solver    = 'BS        '  ! Set the BS-solver as default
-
-  end subroutine init_convergence_variables
-
-  !-------------------------------------------------------------------------------
-  !> Summary: set default values for the potential variables
-  !> Author: Jonathan Chico
-  !> Date: 26.12.2017
-  !> Category: initialization, KKRhost 
-  !> Deprecated: False 
-  !> The idea behind this kind of routine is to separate the initialization
-  !> of variables such that one can use this to modularize the code
-  !-------------------------------------------------------------------------------
-  subroutine init_potential_variables()
-
-    use :: global_variables, only: irid, nfund, ngshd, ipand, ntotd, knosph, ncelld, nspotd, nsatypd
-    implicit none
-
-    kws       = 1     ! FP/ASA potential ()
-    kxc       = 2     ! VWN potential
-    ins       = 1     ! FP/ASA calculation ()
-    icst      = 2     ! Number of Born approximation
-    irid      = 350   ! Shape functions parameters in non-spherical part
-    nref      = 1     ! Number of reference potentials
-    lpot      = 3     ! Maximum l for expansion of the potential
-    nfund     = 289   ! Shape functions parameters in non-spherical part
-    ngshd     = 60000 ! Shape functions parameters in non-spherical part
-    ipand     = 50    ! Number of panels in non-spherical part
-    ntotd     = 80    ! IPAND+30
-    ifile     = 13    ! File identifier of the potential file
-    lmpot     = 16    ! (LPOT+1)**2
-    insref    = 0     ! INS For reference potential
-    knosph    = 1     ! Switch for spherical/non-spherical(0/1) program. Same obs. as for KREL applies.
-    kshape    = 2     ! FP/ASA calculation (2/0)
-    ncelld    = 1     ! Number of cells (shapes) in non-spherical part
-    nspotd    = 2     ! Number of potentials for storing non-sph. potentials (2*KREL+(1-KREL)*NSPIND)*NSATYPD
-    nsatypd   = 1     ! (NATYPD-1)*KNOSPH+1
-    vconst    = 0.d0  ! Potential shift
-    lambda_xc = 1.0d0 ! Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
-    i13       = 'potential                               ' ! Default name of potential file
-    i19       = 'shapefun                                ' ! Default name of shapefunction file
-
-  end subroutine init_potential_variables
-
-  !-------------------------------------------------------------------------------
-  !> Summary: set default values for the angular momentum variables
-  !> Author: Jonathan Chico
-  !> Date: 26.12.2017
-  !> Category: initialization, KKRhost 
-  !> Deprecated: False 
-  !> The idea behind this kind of routine is to separate the initialization
-  !> of variables such that one can use this to modularize the code
-  !-------------------------------------------------------------------------------
-  subroutine init_angular_momentum_variables()
-
-    use :: global_variables, only: ncleb, lmmaxd
-    implicit none
-
-    lmax    = 3   ! Maximum l for expansion
-    ncleb   = 784 ! (LMAX*2+1)**2 * (LMAX+1)**2
-    lmmax   = 16  ! (LMAX+1)**2
-    lmmaxd  = 32  ! (KREL+KORBIT+1)*(LMAX+1)**2
-
-  end subroutine init_angular_momentum_variables
-
-  !-------------------------------------------------------------------------------
-  !> Summary: set default values for the magnetisation variables for the calculation
-  !> Author: Jonathan Chico
-  !> Date: 22.12.2017
-  !> Category: initialization, KKRhost 
-  !> Deprecated: False 
-  !> the idea behind this kind of routine is to separate the initialization
-  !> of variables such that one can use this to modularize the code
-  !-------------------------------------------------------------------------------
-  subroutine init_magnetization_variables()
-
-    use :: global_variables, only: knoco, nspind, nspindd
-    implicit none
-
-    kmrot   = 0       ! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
-    knoco   = 0       ! Collinear calculation
-    nspin   = 2       ! Spin polarised calculation
-    nspind  = 2       ! KREL+(1-KREL)*(NSPIN+1)
-    khfeld  = 0       ! No external magnetic field
-    nspindd = 1       ! NSPIND-KORBIT
-    hfield  = 0.d0    ! External magnetic field, for initial potential shift in spin polarised case
-    linipol = .false. ! True: Initial spin polarization; false: no initial spin polarization
-
-  end subroutine init_magnetization_variables
-
-  !-------------------------------------------------------------------------------
-  !> Summary: Set default values for the CPA variables for the calculation
-  !> Author: Jonathan Chico
-  !> Date: 22.12.2017
-  !> Category: initialization, KKRhost 
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
-  !> The idea behind this kind of routine is to separate the initialization
-  !> of variables such that one can use this to modularize the code
-  !-------------------------------------------------------------------------------
-  subroutine init_cpa_variables()
-
-    implicit none
-
-    ncpa      = 0     ! NCPA = 0/1 CPA flag
-    itcpamax  = 0     ! Max. number of CPA iterations
-    cpatol    = 1d-4  ! Convergency tolerance for CPA-cycle
-
-  end subroutine init_cpa_variables
-
-  !-------------------------------------------------------------------------------
-  !> Summary: Set default values for the LDA+U variables for the calculation
-  !> Author: Jonathan Chico
-  !> Date: 22.12.2017
-  !> Category: initialization, KKRhost 
-  !> Deprecated: False 
-  !> The idea behind this kind of routine is to separate the initialization
-  !> of variables such that one can use this to modularize the code
-  !-------------------------------------------------------------------------------
-  subroutine init_ldau_variables()
-
-    implicit none
-
-    ntldau    = 0 ! number of atoms on which LDA+U is applied
-    idoldau   = 0 ! flag to perform LDA+U
-    itrunldau = 0 ! iteration index
-    kreadldau = 0 ! LDA+U arrays available
-
-  end subroutine init_ldau_variables
-
-  !-------------------------------------------------------------------------------
-  !> Summary: set default values for the mesh variables
-  !> Author: Jonathan Chico
-  !> Date: 26.12.2017
-  !> Category: initialization, k-points, KKRhost 
-  !> Deprecated: False 
-  !> The idea behind this kind of routine is to separate the initialization
-  !> of variables such that one can use this to modularize the code
-  !-------------------------------------------------------------------------------
-  subroutine init_mesh_variables()
-
-    use :: global_variables, only: nrd, irmd, irnsd, kpoibz
-    implicit none
-
-    nrd     = 20000   ! Number of real space
-    irmd    = 900     ! Number of radial mesh points in (0,...,RWS)
-    irnsd   = 890     ! Number of radial mesh points in (RMT,...,RWS)
-    kpoibz  = 250000  ! Number of reciprocal space vectors
-    intervx = 0       ! Number of intervals in x-direction for k-net in IB of the BZ
-    intervy = 0       ! Number of intervals in y-direction for k-net in IB of the BZ
-    intervz = 0       ! Number of intervals in z-direction for k-net in IB of the BZ
-    maxmesh = 1
-
-  end subroutine init_mesh_variables
-
-
-  !-------------------------------------------------------------------------------
-  !> Summary: Wrapper for initialization subroutines and allocation of test/opt arrays
-  !> Author: Philipp Ruessmann
-  !> Category: initialization, KKRhost 
-  !> Deprecated: False
-  !> Wrapper for initialization subroutines and allocation of test/opt arrays 
-  !-------------------------------------------------------------------------------
-  subroutine init_all_wrapper()
-    use :: mod_wunfiles, only: t_params
-    use :: mod_profiling, only: memocc
-    implicit none
-    integer :: i_stat
-
-    ! Set the default values for the I/O variables
-    call init_io_variables()
-    ! Set the defaults values for the CPA variables
-    call init_cpa_variables()
-    ! Set the default values for the Slab mode variables
-    call init_slab_variables()
-    ! Set the default values for the LDA+U variables
-    call init_ldau_variables()
-    ! Set the default values for misc variables for the calculation
-    call init_misc_variables()
-    ! Set the default values for the distinct mesh variables
-    call init_mesh_variables()
-    ! Set the default values for the unit cell variables
-    call init_cell_variables()
-    ! Set the default variables for the energy related variables
-    call init_energy_variables()
-    ! Set the default values for the cluster variables
-    call init_cluster_variables()
-    ! Set the default values for the potential variables
-    call init_potential_variables()
-    ! Set the default values for the convergence and solver variables
-    call init_convergence_variables()
-    ! Set the default values for the relativistic variables
-    call init_relativistic_variables()
-    ! Set the default values for the magnetisation variables
-    call init_magnetization_variables()
-    ! Set the default values for the angular momentum related variables
-    call init_angular_momentum_variables()
-
-    ! allocate and initialize testc and optc in t_params for run and test options
-    allocate (t_params%optc(32), stat=i_stat) ! CHARACTER*8
-    call memocc(i_stat, product(shape(t_params%optc))*kind(t_params%optc), 't_params%OPTC', 'main0')
-    t_params%optc(1:32) = '        '
-    allocate (t_params%testc(32), stat=i_stat)
-    call memocc(i_stat, product(shape(t_params%testc))*kind(t_params%testc), 't_params%TESTC', 'main0')
-    t_params%testc(1:32) = '        '
-
-  end subroutine init_all_wrapper
 
 
   !-------------------------------------------------------------------------------  
