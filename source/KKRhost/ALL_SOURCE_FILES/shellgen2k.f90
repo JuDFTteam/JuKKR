@@ -275,7 +275,7 @@ contains
               ri(k) = rsymat(isym, k, 1)*ratom(1, ii) + rsymat(isym, k, 2)*ratom(2, ii) + rsymat(isym, k, 3)*ratom(3, ii)
             end do
 
-            if ((ai==nsh1(ii) .and. aj==nsh2(ii)) .or. (ai==nsh2(ii) .and. aj==nsh1(ii))) then
+            if ( ai==nsh1(ii) .and. aj==nsh2(ii) ) then
 
               r1 = (rcls(1,j)-rcls(1,i)-ri(1))**2 + (rcls(2,j)-rcls(2,i)-ri(2))**2 + (rcls(3,j)-rcls(3,i)-ri(3))**2
 
