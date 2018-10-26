@@ -630,11 +630,9 @@ codecov:
 
 pages:
   stage: deploy:doc
-  image: ubuntu:latest
+  image: iffregistry.fz-juelich.de/docker-images/kkr-pages:latest
   allow_failure: true
   script:
-    - apt-get update && apt-get upgrade -y  && apt-get install -y python-pip && apt-get install -y graphviz
-    - pip install ford
     - ford doc_ford.md
     - mv doc/ public/
     # add code coverage
