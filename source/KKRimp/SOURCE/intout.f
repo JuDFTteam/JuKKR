@@ -1,5 +1,5 @@
 !-------------------------------------------------------------------------------
-!> Summary: 
+!> Summary: This subroutine is use for the calculation of the core electron charge density 
 !> Author: Who wrote this subroutine
 !> Category: core electron, kkrimp
 !> Deprecated: False ! This needs to be set to True for deprecated subroutines

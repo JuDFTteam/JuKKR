@@ -4,7 +4,7 @@
 !>           loss of significant figures. This subroutine should be used
 !>           only for core states.
 !> Author: Who wrote this subroutine
-!> Category: Special-functions
+!> Category: Special-functions, kkrimp
 !> Deprecated: False ! This needs to be set to True for deprecated subroutines
 !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
 !-------------------------------------------------------------------------------

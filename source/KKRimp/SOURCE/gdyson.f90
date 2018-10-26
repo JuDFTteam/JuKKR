@@ -38,7 +38,7 @@ contains
    !>           from the Dyson equation  G=(1-Gref*T)**-1*Gref it also stores the onsite
    !>           Green function used to calculate the charge density, LDOS 
    !> Author: Who wrote this subroutine
-   !> Category: Physical-Obsevables 
+   !> Category: Physical-Obsevables, kkrimp 
    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
    !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
    !-------------------------------------------------------------------------------

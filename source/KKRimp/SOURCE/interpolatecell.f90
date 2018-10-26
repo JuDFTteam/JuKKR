@@ -20,7 +20,7 @@ contains
 !> 2) Interpolation is done using a spline method
 !> 
 !> Author: Who wrote this subroutine
-!> Category: new-mesh, old-mesh,radial grid, shapefunction, potential
+!> Category: new-mesh, old-mesh,radial grid, shapefunction, potential, kkrimp
 !> Deprecated: False ! This needs to be set to True for deprecated subroutines
 !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
 !-------------------------------------------------------------------------------
@@ -335,9 +335,9 @@ first=0
 end subroutine interpolatecell
 
 !-------------------------------------------------------------------------------
-!> Summary: creates the new mesh, radial grid
+!> Summary: creates the new mesh
 !> Author: Who wrote this subroutine
-!> Category: new mesh
+!> Category: new mesh, radial grid, kkrimp
 !> Deprecated: False ! This needs to be set to True for deprecated subroutines
 !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
 !-------------------------------------------------------------------------------

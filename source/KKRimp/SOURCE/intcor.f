@@ -1,7 +1,7 @@
 !-------------------------------------------------------------------------------
 !> Summary: This subroutine is used for calcualtion of the core charge density  
 !> Author: Who wrote this subroutine
-!> Category: core-electrons
+!> Category: core-electrons, kkrimp
 !> Deprecated: False ! This needs to be set to True for deprecated subroutines
 !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
 !-------------------------------------------------------------------------------
