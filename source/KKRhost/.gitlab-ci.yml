@@ -633,10 +633,11 @@ pages:
   image: iffregistry.fz-juelich.de/docker-images/kkr-pages:latest
   allow_failure: true
   script:
-    - ford doc_ford.md
+    - ford settings_ford.md
     - mv doc/ public/
     # add code coverage
-    - tar -zxvf cov.tar.gz && mv CODE_COVERAGE.HTML public/page/codecov/index.html && mv CodeCoverage public/page/codecov/CodeCoverage
+    # this is deactivated since otherwise the source code can be seen without login
+    #- tar -zxvf cov.tar.gz && mv CODE_COVERAGE.HTML public/page/codecov/index.html && mv CodeCoverage public/page/codecov/CodeCoverage
   artifacts:
     paths:
       - public

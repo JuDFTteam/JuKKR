@@ -20,7 +20,7 @@ display: public
 extra_filetypes: 1 #
 		 inc !
 		 mk #
-source: true
+source: false
 search: true 
 graph: true 
 coloured_edges: true

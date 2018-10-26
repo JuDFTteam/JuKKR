@@ -863,54 +863,8 @@ contains
 
   ! end subroutine iterativesol
 
-#ifdef test_run
-  !-------------------------------------------------------------------------------
-  !> Summary: Routine for the testing of the regular and irregular solutions
-  !> Author: 
-  !> Category: unit-test, solver, KKRhost
-  !> Deprecated: False 
-  !> Routine for the testing of the regular and irregular solutions
-  !-------------------------------------------------------------------------------
-  program test_rllsll
-
-    use :: mod_timing
-    use :: mod_constants
-    use :: mod_datatypes, only :: dp
-
-    implicit none
-    ! interface
-    integer :: nmat
-    complex (kind=dp) :: mat(nmat, nmat)
-    complex (kind=dp) :: work(nmat, nmat)
-    ! local
-    integer :: ipiv(nmat)
-    integer :: info
-
-    call zgetrf(nmat, nmat, mat, nmat, ipiv, info)
-    if (info/=0) stop '[inverse] error INFO'
-    call zgetri(nmat, mat, nmat, ipiv, work, nmat*nmat, info)
-    if (info/=0) stop '[inverse] error INFO'
-  end program test_rllsll
-#endif
-
 end module mod_rllsll
-  ! subroutine iterativesol (NCHEB,LMSIZE2,LMSIZE,MMAT,BMAT)
-  ! implicit none
-  ! integer, intent(in) :: NCHEB
-  ! integer, intent(in) :: LMSIZE,LMSIZE2
-  ! complex (kind=dp) :: MMAT(0:NCHEB,LMSIZE2,0:NCHEB,LMSIZE2)
-  ! complex (kind=dp) :: BMAT(0:NCHEB,LMSIZE2,LMSIZE)
-  ! complex (kind=dp) :: XMAT(0:NCHEB,LMSIZE2,LMSIZE)
-  ! !########################################################
-  ! ! solves the system of linear equations
-  ! ! MMAT*XMAT = BMAT
-  ! !########################################################
 
-  ! NPLM = (NCHEB+1)*LMSIZE2
-  ! CALL ZGEMM('N','N',NPLM,LMSIZE,NPLM,CONE,SRV, &
-  ! NPLM,ZILL,NPLM,CZERO,OUT,NPLM)
-
-  ! end subroutine iterativesol
 
 #ifdef test_run
 !-------------------------------------------------------------------------------
