@@ -1116,7 +1116,6 @@ contains
       do i = 1, natyp
         call ioinput('<FPRADIUS>      ', uio, i, 7, ier)
         if (ier==0) then
-          write(*,*) uio
           read (unit=uio, fmt=*) fpradius(i)
         end if
         write (111, fmt='(F6.3)') fpradius(i)
