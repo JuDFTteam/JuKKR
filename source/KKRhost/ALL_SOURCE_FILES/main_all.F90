@@ -180,7 +180,7 @@ program kkrcode
     call memocc(0, 0, 'count', 'start')
 
     call allocate_cell(1,naezd,nembd,natypd,cls,imt,irws,irns,ntcell,refpot,kfg,    &
-      kaoez,rmt,zat,rws,mtfac,rmtref,rmtrefat,rmtnew,rbasis,lmxc)
+      kaoez,rmt,zat,rws,mtfac,rmtref,rmtrefat,rmtnew,rbasis,lmxc,fpradius)
     call allocate_semi_inf_host(1,nembd,tleft,tright)
     call allocate_cpa(1,naezd,natypd,noq,icpa,iqat,hostimp,conc)
     call allocate_soc(1,krel,natypd,lmaxd,socscale,cscl,socscl)
@@ -188,7 +188,7 @@ program kkrcode
     call allocate_magnetization(1,naezd,natypd,lmmaxd,inipol,ixipol,qmtet,qmphi,    &
       drotq)
     call allocate_potential(1,irmd,natypd,npotd,ipand,nfund,lmxspd,lmpotd,irmind,   &
-      nspotd,nfu,irc,ncore,irmin,lmsp,lmsp1,ircut,lcore,llmsp,ititle,fpradius,visp, &
+      nspotd,nfu,irc,ncore,irmin,lmsp,lmsp1,ircut,lcore,llmsp,ititle,visp, &
       ecore, vins)
     call allocate_ldau_potential(1,irmd,natypd,mmaxd,nspind,itldau,wldau,uldau,     &
       phildau)
@@ -914,10 +914,10 @@ program kkrcode
 
   ! Deallocation of input arrays
   call allocate_cell(-1,naez,nemb,natyp,cls,imt,irws,irns,ntcell,refpot,kfg,kaoez,  &
-    rmt,zat,rws,mtfac,rmtref,rmtrefat,rmtnew,rbasis,lmxc)
+    rmt,zat,rws,mtfac,rmtref,rmtrefat,rmtnew,rbasis,lmxc,fpradius)
   call allocate_semi_inf_host(-1, nemb, tleft, tright)
   call allocate_potential(-1,irm,natyp,npotd,ipand,nfund,lmxspd,lmpot,irmind,nspotd,&
-    nfu,irc,ncore,irmin,lmsp,lmsp1,ircut,lcore,llmsp,ititle,fpradius,visp,ecore,vins)
+    nfu,irc,ncore,irmin,lmsp,lmsp1,ircut,lcore,llmsp,ititle,visp,ecore,vins)
   call allocate_cpa(-1, naez, natyp, noq, icpa, iqat, hostimp, conc)
   call allocate_ldau(-1, natyp, lopt, ueff, jeff, erefldau)
   call allocate_ldau_potential(-1,irm,natyp,mmaxd,nspind,itldau,wldau,uldau,phildau)

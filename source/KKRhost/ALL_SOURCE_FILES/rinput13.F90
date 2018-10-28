@@ -510,7 +510,7 @@ contains
     ! Allocate the unit cell arrays
     !--------------------------------------------------------------------------------
     call allocate_cell(1,naez,nemb,natyp,cls,imt,irws,irns,ntcell,refpot,kfg,kaoez, &
-      rmt,zat,rws,mtfac,rmtref,rmtrefat,rmtnew,rbasis,lmxc)
+      rmt,zat,rws,mtfac,rmtref,rmtrefat,rmtnew,rbasis,lmxc,fpradius)
     !--------------------------------------------------------------------------------
     ! End of allocation of the unit cell arrays
     !--------------------------------------------------------------------------------
@@ -1116,6 +1116,7 @@ contains
       do i = 1, natyp
         call ioinput('<FPRADIUS>      ', uio, i, 7, ier)
         if (ier==0) then
+          write(*,*) uio
           read (unit=uio, fmt=*) fpradius(i)
         end if
         write (111, fmt='(F6.3)') fpradius(i)

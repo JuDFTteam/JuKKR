@@ -610,7 +610,7 @@ contains
     !! @endnote
     !--------------------------------------------------------------------------------
     ! Call to allocate the arrays associated with the potential
-    call allocate_potential(1, irmd, natypd, npotd, ipand, nfund, lmxspd, lmpotd, irmind, nspotd, nfu, irc, ncore, irmin, lmsp, lmsp1, ircut, lcore, llmsp, ititle, fpradius, visp, &
+    call allocate_potential(1, irmd, natypd, npotd, ipand, nfund, lmxspd, lmpotd, irmind, nspotd, nfu, irc, ncore, irmin, lmsp, lmsp1, ircut, lcore, llmsp, ititle, visp, &
       ecore, vins)
     ! Call to allocate the arrays associated with the LDA+U potential
     call allocate_ldau_potential(1, irmd, natypd, mmaxd, nspind, itldau, wldau, uldau, phildau)
