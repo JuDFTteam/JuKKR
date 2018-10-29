@@ -26,6 +26,7 @@ title: Changelog
 Major code refactoring getting rid of the `inc.p` files which eliminates the need to recompile the code for different system sizes.
 
 ### Added
+- MIT license
 - `README`, `CHANGELOG`, `CONTRIBUTING` files and better documentation
 - use cmake to auto-generate dependencies and makefile
 - use FORD for automatic source code documentation

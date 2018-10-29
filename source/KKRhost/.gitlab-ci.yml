@@ -387,7 +387,7 @@ run:intel:LDAU_22:
       - build/*dyn
     expire_in: 1 day
 
-run:intel:LDAU_23:
+run:intel:DOS_23:
   stage: run_features
   script:
     - tests/tools/run_test_23.sh
