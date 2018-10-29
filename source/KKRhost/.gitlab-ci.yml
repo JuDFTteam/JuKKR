@@ -387,6 +387,16 @@ run:intel:LDAU_22:
       - build/*dyn
     expire_in: 1 day
 
+run:intel:LDAU_23:
+  stage: run_features
+  script:
+    - tests/tools/run_test_23.sh
+  artifacts:
+    paths:
+      - tests/test_run*
+      - build/*dyn
+    expire_in: 1 day
+
 # other missing tests:
 # . LDA+U
 # . LDA+U, SOC

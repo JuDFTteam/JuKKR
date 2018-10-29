@@ -162,6 +162,24 @@ if [[ ! -d tests/test_run21_hybrid_1_3 ]]; then
 fi
 cd tests
 
+echo "###########################################"
+echo "run:intel:LDA+U_22:"
+echo ""
+cd ../
+if [[ ! -d tests/test_run22_hybrid_1_3 ]]; then
+  tests/tools/run_test_22.sh
+fi
+cd tests
+
+echo "###########################################"
+echo "run:intel:DOS_23:"
+echo ""
+cd ../
+if [[ ! -d tests/test_run23_hybrid_1_3 ]]; then
+  tests/tools/run_test_23.sh
+fi
+cd tests
+
 
 #SOC tests
 

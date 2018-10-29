@@ -278,6 +278,19 @@ class Test_features():
            path = path00+'/'+padd+'/'
            standard_verify(path, rms_threshold=5*10**-8, rms_threshold_end=5*10**-8)
 
+    def test_23_DOS(self):
+        path0 = 'test_run23_hybrid_1_3/bulk_SOC/'
+        path00 = 'test_run23_hybrid_1_3/slab_noSOC/'
+        for fname in 'complex.dos  dos.atom1  dos.atom2  dos.atom3  dos.atom4'.split():
+           # check bulk run with SOC
+           num, text = read_file(path0+fname)
+           num_ref, text_ref = read_file(path0+'/ref/'+fname)
+           assert std(num-num_ref)<10**-14
+           # check slab run without SOC
+           num, text = read_file(path00+fname)
+           num_ref, text_ref = read_file(path00+'/ref/'+fname)
+           assert std(num-num_ref)<10**-14
+
 
 class Test_SOC():
     """
