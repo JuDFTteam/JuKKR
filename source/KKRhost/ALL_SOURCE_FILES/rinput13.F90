@@ -510,7 +510,7 @@ contains
     ! Allocate the unit cell arrays
     !--------------------------------------------------------------------------------
     call allocate_cell(1,naez,nemb,natyp,cls,imt,irws,irns,ntcell,refpot,kfg,kaoez, &
-      rmt,zat,rws,mtfac,rmtref,rmtrefat,rmtnew,rbasis,lmxc)
+      rmt,zat,rws,mtfac,rmtref,rmtrefat,rmtnew,rbasis,lmxc,fpradius)
     !--------------------------------------------------------------------------------
     ! End of allocation of the unit cell arrays
     !--------------------------------------------------------------------------------
