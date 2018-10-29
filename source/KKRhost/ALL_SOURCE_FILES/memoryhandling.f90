@@ -35,7 +35,7 @@ contains
   !> unit cell. 
   !-------------------------------------------------------------------------------  
   subroutine allocate_cell(flag,naez,nemb,natyp,cls,imt,irws,irns,ntcell,refpot,kfg,&
-    kaoez,rmt,zat,rws,mtfac,rmtref,rmtrefat,rmtnew,rbasis,lmxc)
+    kaoez,rmt,zat,rws,mtfac,rmtref,rmtrefat,rmtnew,rbasis,lmxc,fpradius)
 
     implicit none
 
@@ -59,7 +59,9 @@ contains
     real (kind=dp), dimension (:), allocatable, intent (inout) :: rmtref !! Muffin-tin radius of reference system
     real (kind=dp), dimension (:), allocatable, intent (inout) :: rmtrefat
     real (kind=dp), dimension (:), allocatable, intent (inout) :: rmtnew !! Adapted muffin-tin radius
+    real (kind=dp), dimension (:), allocatable, intent (inout) :: fpradius !! R point at which full-potential treatment starts
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: rbasis !! Position of atoms in the unit cell in units of bravais vectors
+
 
     ! .. Local variables
     integer :: i_stat, i_all
@@ -116,6 +118,9 @@ contains
       allocate (lmxc(natyp), stat=i_stat)
       call memocc(i_stat, product(shape(lmxc))*kind(lmxc), 'LMXC', 'allocate_cell')
       lmxc = 0
+      allocate (fpradius(natyp), stat=i_stat)
+      call memocc(i_stat, product(shape(fpradius))*kind(fpradius), 'FPRADIUS', 'allocate_cell')
+      fpradius = -1.e0_dp          ! Negative value signals to use IRNS from pot-file (sub. startb1)
     else
       if (allocated(zat)) then
         i_all = -product(shape(zat))*kind(zat)
@@ -192,6 +197,11 @@ contains
         deallocate (lmxc, stat=i_stat)
         call memocc(i_stat, i_all, 'LMXC', 'allocate_cell')
       end if
+      if (allocated(fpradius)) then
+        i_all = -product(shape(fpradius))*kind(fpradius)
+        deallocate (fpradius, stat=i_stat)
+        call memocc(i_stat, i_all, 'FPRADIUS', 'allocate_cell')
+      end if
     end if
 
   end subroutine allocate_cell
@@ -219,21 +229,21 @@ contains
     if (flag>0) then
 
       allocate (tleft(3,nemb+1), stat=i_stat)
-      call memocc(i_stat, product(shape(tleft))*kind(tleft), 'TLEFT', 'allocate_cell')
+      call memocc(i_stat, product(shape(tleft))*kind(tleft), 'TLEFT', 'allocate_semi_inf_host')
       tleft = 0.e0_dp
       allocate (tright(3,nemb+1), stat=i_stat)
-      call memocc(i_stat, product(shape(tright))*kind(tright), 'TRIGHT', 'allocate_cell')
+      call memocc(i_stat, product(shape(tright))*kind(tright), 'TRIGHT', 'allocate_semi_inf_host')
       tright = 0.e0_dp
     else
       if (allocated(tleft)) then
         i_all = -product(shape(tleft))*kind(tleft)
         deallocate (tleft, stat=i_stat)
-        call memocc(i_stat, i_all, 'TLEFT', 'allocate_cell')
+        call memocc(i_stat, i_all, 'TLEFT', 'allocate_semi_inf_host')
       end if
       if (allocated(tright)) then
         i_all = -product(shape(tright))*kind(tright)
         deallocate (tright, stat=i_stat)
-        call memocc(i_stat, i_all, 'TRIGHT', 'allocate_cell')
+        call memocc(i_stat, i_all, 'TRIGHT', 'allocate_semi_inf_host')
       end if
     end if
 
@@ -249,7 +259,7 @@ contains
   !> potential
   !-------------------------------------------------------------------------------  
   subroutine allocate_potential(flag,irm,natyp,npotd,ipand,nfund,lmxspd,lmpot,      &
-    irmind,nspotd,nfu,irc,ncore,irmin,lmsp,lmsp1,ircut,lcore,llmsp,ititle,fpradius, &
+    irmind,nspotd,nfu,irc,ncore,irmin,lmsp,lmsp1,ircut,lcore,llmsp,ititle,      &
     visp,ecore,vins)
 
     implicit none
@@ -274,7 +284,6 @@ contains
     integer, dimension (:, :), allocatable, intent (inout) :: lcore !! Angular momentum of core states
     integer, dimension (:, :), allocatable, intent (inout) :: llmsp !! lm=(l,m) of 'nfund'th nonvanishing component of non-spherical pot.
     integer, dimension (:, :), allocatable, intent (inout) :: ititle
-    real (kind=dp), dimension (:), allocatable, intent (inout) :: fpradius !! R point at which full-potential treatment starts
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: visp !! Spherical part of the potential
     real (kind=dp), dimension (:, :), allocatable, intent (inout) :: ecore  !! Core energies
     real (kind=dp), dimension (:, :, :), allocatable, intent (inout) :: vins  !! Non-spherical part of the potential
@@ -284,9 +293,6 @@ contains
 
     if (flag>0) then
 
-      allocate (fpradius(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(fpradius))*kind(fpradius), 'FPRADIUS', 'allocate_potential')
-      fpradius = -1.e0_dp          ! Negative value signals to use IRNS from pot-file (sub. startb1)
       allocate (irc(natyp), stat=i_stat)
       call memocc(i_stat, product(shape(irc))*kind(irc), 'IRC', 'allocate_potential')
       irc = 0
@@ -328,11 +334,6 @@ contains
       visp = 0.e0_dp
 
     else
-      if (allocated(fpradius)) then
-        i_all = -product(shape(fpradius))*kind(fpradius)
-        deallocate (fpradius, stat=i_stat)
-        call memocc(i_stat, i_all, 'FPRADIUS', 'allocate_potential')
-      end if
       if (allocated(irc)) then
         i_all = -product(shape(irc))*kind(irc)
         deallocate (irc, stat=i_stat)
