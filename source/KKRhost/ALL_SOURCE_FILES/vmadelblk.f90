@@ -61,8 +61,9 @@ contains
   subroutine vmadelblk(cmom,cminst,lmax,nspin,naez,v,zat,r,irws,ircut,ipan,kshape,  &
     noq,kaoez,conc,catom,icc,hostimp,vinters,nemb,lmpot,natyp)
 
-    use :: mod_constants, only: pi
+    use :: mod_constants, only: pi, czero
     use :: global_variables, only: wlength, ipand, irmd, npotd
+    use :: mod_main0, only: npol
     use :: mod_datatypes, only: dp
     use :: mod_types, only: t_madel
 
@@ -150,7 +151,10 @@ contains
             ! ----------------------------------------------------------------
             if (naez==1) then
               irec = iq1 + naez*(iq1-1)
-              if (test('madelfil')) then
+              if (npol==0) then
+                avmad(:,:) = czero
+                bvmad(:) = czero
+              elseif (test('madelfil')) then
                 read (69, rec=irec) avmad, bvmad
               else
                  avmad(:,:) = t_madel%avmad(irec,:,:)
@@ -184,11 +188,14 @@ contains
               ! -------------------------------------------------------------
               do iq2 = 1, naez
                 irec = iq2 + naez*(iq1-1)
-                if (test('madelfil')) then
+                if (npol==0) then
+                  avmad(:,:) = czero
+                  bvmad(:) = czero
+                elseif (test('madelfil')) then
                   read (69, rec=irec) avmad, bvmad
                 else
-                   avmad(:,:) = t_madel%avmad(irec,:,:)
-                   bvmad(:) = t_madel%bvmad(irec,:)
+                  avmad(:,:) = t_madel%avmad(irec,:,:)
+                  bvmad(:) = t_madel%bvmad(irec,:)
                 end if
                 ! ----------------------------------------------------------
                 ! Loop over all occupants of site IQ2

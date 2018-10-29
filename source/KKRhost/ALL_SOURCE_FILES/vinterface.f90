@@ -48,8 +48,9 @@ contains
     ipan,kshape,noq,kaoez,iqat,conc,catom,icc,hostimp,nlbasis,nleft,nrbasis,nright, &
     cmomhost,chrgnt,vinters,naez,lmpot)
 
-    use :: mod_constants, only: pi
+    use :: mod_constants, only: pi, czero
     use :: global_variables, only: wlength, ipand, nembd1, irmd, npotd
+    use :: mod_main0, only: npol
     use :: mod_datatypes, only: dp
     use :: mod_types, only: t_madel
 
@@ -163,7 +164,9 @@ contains
       ! -------------------------------------------------------------------------
       do ilay2 = 1, nlayers
         irec = ilay2 + nlayers*(ilay1-1)
-        if (test('madelfil')) then
+        if (npol==0) then
+          avmad(:,:) = czero
+        elseif (test('madelfil')) then
           read (69, rec=irec) avmad
         else
           avmad(:,:) = t_madel%avmad(irec,:,:)
@@ -232,7 +235,9 @@ contains
           do ib = 1, nlbasis
             ileft = ileft + 1
             irec = ileft + nleftall*(ilay1-1) + nleftoff
-            if (test('madelfil')) then
+            if (npol==0) then
+              avmad(:,:) = czero
+            elseif (test('madelfil')) then
               read (69, rec=irec) avmad
             else
               avmad(:,:) = t_madel%avmad(irec,:,:)
@@ -266,7 +271,9 @@ contains
           do ib = 1, nrbasis
             iright = iright + 1
             irec = iright + nrightall*(ilay1-1) + nrightoff
-            if (test('madelfil')) then
+            if (npol==0) then
+              avmad(:,:) = czero
+            elseif (test('madelfil')) then
               read (69, rec=irec) avmad
             else
               avmad(:,:) = t_madel%avmad(irec,:,:)
