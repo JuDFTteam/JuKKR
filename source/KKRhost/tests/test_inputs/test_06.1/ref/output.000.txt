@@ -1,0 +1,95 @@
+# serial: kkrjm_v2.3-64-g8cc70fc_mpi_20180831103326
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+Task 1 treats points 2 to 2, #of points= 1
+Task 2 treats points 3 to 3, #of points= 1
+Task 3 treats points 4 to 4, #of points= 1
+ ==========================================
+ atom:            1  NSRA:           2
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 3, #of points= 3
+ ==========================================
+   ==> find_isave_wavefun
+   (maxmem given per rank for storage:           0.00MB
+    number of wavefunctions that fit in:          0
+    total memory needed for storage:           0.00MB
+    Ne=          3, Nat=          4
+    memory demand per atom and energy point for rll, rllleft, sll and sllleft respectively:           1.00MB)  <==
+    Number of saved wavefunctions per atom and energy:  1; save rll: T; save sll: F; save rllleft: F; save sllleft: F
+ energy:           1  (0.709995000000000,0.000000000000000E+000)
+ energy:           1  (0.710005000000000,0.000000000000000E+000)
+ energy:           2  (0.710995000000000,0.000000000000000E+000)
+ energy:           2  (0.711005000000000,0.000000000000000E+000)
+ energy:           3  (0.708995000000000,0.000000000000000E+000)
+ energy:           3  (0.709005000000000,0.000000000000000E+000)
+           0 start tbref e-loop
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 3, #of points= 3
+ ==========================================
+TBREF: GREF for energy:    1    0.71000000    0.00000000
+ tbref NCLS loop:           1           4
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+Task 1 treats points 2 to 1, #of points= 0
+Task 2 treats points 2 to 1, #of points= 0
+Task 3 treats points 2 to 1, #of points= 0
+ ==========================================
+TBREF: GREF for energy:    2    0.71100000    0.00000000
+ tbref NCLS loop:           1           4
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+Task 1 treats points 2 to 1, #of points= 0
+Task 2 treats points 2 to 1, #of points= 0
+Task 3 treats points 2 to 1, #of points= 0
+ ==========================================
+TBREF: GREF for energy:    3    0.70900000    0.00000000
+ tbref NCLS loop:           1           4
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1, #of points= 1
+Task 1 treats points 2 to 1, #of points= 0
+Task 2 treats points 2 to 1, #of points= 0
+Task 3 treats points 2 to 1, #of points= 0
+ ==========================================
+===============================================================================
+                              < KKR1a finished >
+===============================================================================
+
+
+===============================================================================
+      Inversion algorithm used : FULL MATRIX                        
+===============================================================================
+
+ ************ IE =   1 ENERGY =   0.710000   0.000000 KMESH =   1
+ kkrmat k loop:        1000           4
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 250, #of points= 250
+Task 1 treats points 251 to 500, #of points= 250
+Task 2 treats points 501 to 750, #of points= 250
+Task 3 treats points 751 to 1000, #of points= 250
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =   2 ENERGY =   0.711000   0.000000 KMESH =   1
+ kkrmat k loop:        1000           4
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 250, #of points= 250
+Task 1 treats points 251 to 500, #of points= 250
+Task 2 treats points 501 to 750, #of points= 250
+Task 3 treats points 751 to 1000, #of points= 250
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| 
+ ************ IE =   3 ENERGY =   0.709000   0.000000 KMESH =   1
+ kkrmat k loop:        1000           4
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 250, #of points= 250
+Task 1 treats points 251 to 500, #of points= 250
+Task 2 treats points 501 to 750, #of points= 250
+Task 3 treats points 751 to 1000, #of points= 250
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| 
+===============================================================================
+                              < KKR1b finished >
+===============================================================================
+

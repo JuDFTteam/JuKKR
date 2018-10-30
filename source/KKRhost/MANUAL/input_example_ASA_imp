@@ -1,0 +1,12 @@
+FILES   GREENFILE =green_rel.scf
+        POTFILE  =composed.potent
+        COEFILE  =impurity.coefs
+        SHAPEFILE=shapefun
+
+
+SCF NITER=200 SCFALG=broyden2
+    SCFMIX=0.0001
+    SCFTOL = 1E-7
+    VXC=VWN
+
+CONTROL IPRINT=0  NSPIN=2 SOLVER='ABM-OP'

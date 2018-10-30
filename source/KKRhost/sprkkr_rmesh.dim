@@ -1,0 +1,35 @@
+!-*-Mode: Fortran-*-
+! previous line: choose emacs Fortran major mode
+! ########### R-MESH RELATED BOUNDARIES ###########
+! cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+!     this include - file is used in:
+!     gen, scf, chi, dirac_bs, dirbsmid, dirbsrad, dirbsstp
+! cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+! ======= SPR-KKR and TB-KKR common parameters =========================
+
+      INTEGER NRMAX,ITMAX,NTMAXLOC,NRMAXLOC,NCFMAX
+
+      PARAMETER ( ITMAX=50 )
+      PARAMETER ( NTMAXLOC=2 )
+      PARAMETER ( NRMAXLOC=900 )
+! radial mesh points
+      PARAMETER ( NRMAX=900 )
+      PARAMETER ( NCFMAX=8 )
+
+
+! ======= only TB-KKR parameters =========================
+!
+!      INTEGER
+!     & IPAND,IRID,IRMD,IRNSD,IRMIND,NFUND,NCELLD,NCFMAX,
+!     & NPANMAX
+!
+!      PARAMETER ( IPAND=5 )
+!      PARAMETER ( NPANMAX=IPAND )
+!      PARAMETER ( IRID=135 )
+!      PARAMETER ( IRNSD=400 )
+!      PARAMETER ( IRMD=NRMAX )
+!      PARAMETER ( IRMIND=IRMD-IRNSD )
+!      PARAMETER ( NFUND=24)
+!      PARAMETER ( NCELLD=1 )
+

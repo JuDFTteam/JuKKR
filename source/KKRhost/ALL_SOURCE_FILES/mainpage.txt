@@ -1,0 +1,21 @@
+!-----------------------------------------------------------------------------------------!
+! Copyright (c) 2018 Peter Grünberg Institut, Forschungszentrum Jülich, Germany           !
+! This file is part of Jülich KKR code and available as free software under the conditions!
+! of the MIT license as expressed in the LICENSE.md file in more detail.                  !
+!-----------------------------------------------------------------------------------------!
+
+/**
+@mainpage Document Title 
+
+@section Introduction
+
+ Write some introductory remarks in this section.  For example, 
+
+ This document describes the source code for the XYZ model.
+
+ One can add diagrams to the document.  For example,
+ The following diagram shows the breakdown of the entire XYZ model.
+
+@image html KKRscheme.png
+
+*/

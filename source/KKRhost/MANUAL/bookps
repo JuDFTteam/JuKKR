@@ -1,0 +1,14 @@
+#!/bin/sh
+NPG=32
+if [ x$2 != x ]
+then
+NPG=$2
+fi
+dvips $1 -o a.ps
+psbook -s$NPG a.ps b.ps
+psnup -2 b.ps book.ps
+#pspr -Ktumble a.ps>A.ps
+psselect -e -r a.ps >FIRST.ps
+psselect -o  a.ps>SECOND.ps
+rm -f a.ps b.ps
+

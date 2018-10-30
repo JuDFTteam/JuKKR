@@ -1,0 +1,33 @@
+# serial: kkrjm_v2.3-64-g8cc70fc_mpi_20180830212646
+ main0                                       0.395200000000000     
+ MPI 1                                       0.135300000000000     
+ main1a - tbref - calctref13                 0.000000000000000E+000
+ main1a - tbref - gll13                      1.800000000000000E-002
+ main1a - tbref                              1.830000000000000E-002
+ main1a                                      9.569999999999999E-002
+ main1b - calctref13                         0.000000000000000E+000
+ main1b - inversion                          6.000000000000001E-004
+ main1b - kloopz                             5.800000000000000E-003
+ main1b                                      7.700000000000000E-003
+ main1c - rhoval                             9.770000000000000E-002
+ main1c - communication                      2.410000000000000E-002
+ main1c - serial part                        2.200000000000000E-003
+ main1c                                      0.159700000000000     
+ main2                                       0.358900000000000     
+ MPI 2                                       0.123200000000000     
+ Time in Iteration                           0.745200000000000     
+ main1a - tbref - calctref13                 1.000000000000000E-004
+ main1a - tbref - gll13                      1.780000000000000E-002
+ main1a - tbref                              1.810000000000000E-002
+ main1a                                      0.100400000000000     
+ main1b - calctref13                         0.000000000000000E+000
+ main1b - inversion                          6.000000000000001E-004
+ main1b - kloopz                             5.099999999999999E-003
+ main1b                                      1.000000000000000E-002
+ main1c - rhoval                             8.710000000000000E-002
+ main1c - communication                      3.450000000000000E-002
+ main1c - serial part                        1.800000000000000E-003
+ main1c                                      0.158700000000000     
+ main2                                       0.313000000000000     
+ MPI 2                                       7.800000000000000E-002
+ Time in Iteration                           0.660300000000000     
