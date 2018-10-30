@@ -1,0 +1,24 @@
+###############################################################################
+# first build executables
+
+build_kkrimp:intel:hybrid:
+  stage: build_kkrimp
+  script:
+    # compile code
+    - cd SOURCE
+    - make clean; make hybrid; cp kkrflex.exe kkrflex.exe_hybrid
+  artifacts:
+    paths:
+      - SOURCE/kkrflex.exe_hybrid
+    expire_in: 1 day
+
+build_kkrimp:intel:mpi:
+  stage: build_kkrimp
+  script:
+    # compile code
+    - cd SOURCE
+    - make clean; make mpi; cp kkrflex.exe kkrflex.exe_mpi
+  artifacts:
+    paths:
+      - SOURCE/kkrflex.exe_mpi
+    expire_in: 1 day
