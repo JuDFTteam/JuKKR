@@ -479,7 +479,7 @@ run_kkrhost:intel:Fe_slab_SOC_2_1:
     expire_in: 1 day
 
 run_kkrhost:intel:Si_LLY_SOC_3_1:
-  stage: run_features_SOC
+  stage: run_kkrhost_features_SOC
   script:
     - cd tests/KKRhost
     - ./run_parallel.py -1003
@@ -500,7 +500,7 @@ run_kkrhost:intel:NOSOC_3_2:
     expire_in: 1 day
 
 run_kkrhost:intel:Jijs_SOC_4_1:
-  stage: run_features_SOC
+  stage: run_kkrhost_features_SOC
   script:
     - cd tests/KKRhost
     - ./run_parallel.py -1004
