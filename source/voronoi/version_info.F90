@@ -1,15 +1,9 @@
-!-----------------------------------------------------------------------------------------!
-! Copyright (c) 2018 Peter Grünberg Institut, Forschungszentrum Jülich, Germany           !
-! This file is part of Jülich KKR code and available as free software under the conditions!
-! of the MIT license as expressed in the LICENSE.md file in more detail.                  !
-!-----------------------------------------------------------------------------------------!
-
 ! choose one of the following by uncommenting for use in different codes
-#define host
+!#define host
 !#define imp
 !#define scatter
 !#define pkkr
-!#define voro
+#define voro
 
 !------------------------------------------------------------------------------------
 !> Summary: Wrapper module for the generation of version and serial headers 
@@ -29,19 +23,19 @@ module mod_version_info
   private
   public :: serialnr, construct_serialnr, version_check_header, version_print_header
 
-#ifdef host
+#ifdef hostcode
   character (len=5), parameter :: codename = 'kkrjm'
 #endif
-#ifdef imp
+#ifdef impcode
    character(len=6), parameter :: codename='kkrimp'
 #endif
-#ifdef scatter
+#ifdef scattercode
    character(len=10), parameter :: codename='kkrscatter'
 #endif
-#ifdef pkkr
+#ifdef pkkrcode
    character(len=4), parameter :: codename='pkkr'
 #endif
-#ifdef voro
+#ifdef vorocode
    character(len=4), parameter :: codename='voronoi'
 #endif
 
@@ -57,9 +51,9 @@ contains
   !> Deprecated: False 
   !> Take information from version file and create serial number with time stamp
   !-------------------------------------------------------------------------------
-  subroutine construct_serialnr
-    use :: mod_version
-
+  subroutine construct_serialnr()
+    ! take information from version file and create serial number with time stamp
+    use mod_version, only: version
     implicit none
 
     integer, dimension (8) :: values

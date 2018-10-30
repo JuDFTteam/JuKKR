@@ -1,4 +1,3 @@
-
 # deal with OpenMP flags:
 # only these files contain OpenMP statements:
 set_source_files_properties(source/KKRhost/gll95.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
@@ -31,6 +30,8 @@ execute_process(COMMAND ln -s ../source/KKRhost/sprkkr_rmesh.dim .)
 # the executable is built from this list of files
 add_executable(
     kkr.x
+    source/common/version.F90
+    source/common/version_info.F90
     source/KKRhost/DataTypes.f90
     source/KKRhost/addvirtual14.f90
     source/KKRhost/amemagvec.f90
@@ -328,8 +329,6 @@ add_executable(
     source/KKRhost/types.F90
     source/KKRhost/vadd.f90
     source/KKRhost/veq.f90
-    source/KKRhost/version.F90
-    source/KKRhost/version_info.F90
     source/KKRhost/vinterface.f90
     source/KKRhost/vintras.f90
     source/KKRhost/vllmat.f90
@@ -366,10 +365,10 @@ if(ENABLE_BdG)
     # for wf testing (BdG)
     add_executable(
         kkr_BdG_radial.x
+        source/common/version.F90
+        source/common/version_info.F90
         source/KKRhost/main_tmat_runner.F90
         source/KKRhost/DataTypes.f90
-        source/KKRhost/version.F90
-        source/KKRhost/version_info.F90 
         source/KKRhost/constants.f90 
         source/KKRhost/mympi.F90 
         source/KKRhost/global_variables.F90 

@@ -42,7 +42,7 @@ option(COMPILE_KKRHOST "Compile KKRhost" ON)
 option(COMPILE_KKRIMP "Compile KKRimp" OFF)
 option(COMPILE_KKRSUSC "Compile KKRsusc" OFF)
 option(COMPILE_PKKPRIME "Compile PKKprime" OFF)
-option(COMPILE_VORONOI "Compile voronoi" OFF)
+option(COMPILE_VORONOI "Compile voronoi" ON)
 
 
 if(COMPILE_KKRHOST)

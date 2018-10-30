@@ -1,5 +1,5 @@
       PROGRAM KKRGEOMETRY
-      use mod_version, only: version
+      use mod_version, only: version1, version2, version3, version4
       use mod_version_info, only: serialnr
       use mod_version_info, only: construct_serialnr
       use mod_version_info, only: version_print_header
@@ -289,8 +289,10 @@ c     -----------------------------------------------------------------------
       call construct_serialnr()
       WRITE(*,'(A)')       '##########################################'
       WRITE(*,'(A)')       'This is the Voronoi program'
-      WRITE(*,'(A,A)')     'Code version: ',trim(version(1))
-      WRITE(*,'(A,A,A,A)') 'Compile options:',(trim(version(i)),i=2,4)
+      WRITE(*,'(A,A)')     'Code version: ',trim(version1)
+      WRITE(*,'(A,A,A,A)') 'Compile options:', trim(version2), 
+     +                                         trim(version3), 
+     +                                         trim(version4)
       WRITE(*,'(A,A)')     'serial number for files:', serialnr
       WRITE(*,'(A)')       '##########################################'
       WRITE(*,'(A)')
