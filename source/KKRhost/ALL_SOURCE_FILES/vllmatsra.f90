@@ -1,99 +1,134 @@
-subroutine vllmatsra(vll0,vll,rmesh,lmsize,nrmax,nrmaxd,eryd,cvlight,lmax,lval_in,cmode)  
-!************************************************************************************
-! The perubation matrix for the SRA-equations are set up
-!************************************************************************************
-implicit none
-!interface
-  DOUBLE COMPLEX VLL(2*lmsize,2*lmsize,nrmax)
-  DOUBLE COMPLEX VLL0(lmsize,lmsize,nrmax)
-  double precision            :: rmesh(nrmaxd)
-  double complex              :: eryd
-  double precision            :: cvlight
-  integer                     :: lmax,lval_in
-  integer                     :: lmsize,nrmax,nrmaxd
-  character(len=*)            :: cmode
-!local
-  integer                     :: ilm,lval,mval,ival,ir
-  integer                     :: loflm(lmsize)
-  double complex              :: Mass,Mass0
-  double complex,parameter    :: cone=(1.0D0,0.0D0)
-  double complex,parameter    :: czero=(0.0D0,0.0D0)
+!-----------------------------------------------------------------------------------------!
+! Copyright (c) 2018 Peter Grünberg Institut, Forschungszentrum Jülich, Germany           !
+! This file is part of Jülich KKR code and available as free software under the conditions!
+! of the MIT license as expressed in the LICENSE.md file in more detail.                  !
+!-----------------------------------------------------------------------------------------!
+
+!------------------------------------------------------------------------------------
+!> Summary: Constructs potential including big/small components and with relativistic mass terms etc included
+!> Author: 
+!> Constructs potential including big/small components and with relativistic mass terms etc included
+!------------------------------------------------------------------------------------
+module mod_vllmatsra
+  
+  private
+  public :: vllmatsra
+
+contains
+
+  !-------------------------------------------------------------------------------
+  !> Summary: The perturbation matrix for the SRA-equations are set up
+  !> Author: 
+  !> Category: KKRhost, potential, single-site
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Constructs potential including big/small components and with relativistic mass terms etc. included
+  !>
+  !> Two modes are supported:
+  !>
+  !> `cmode=='Ref=0'`
+  !> ---------------- 
+  !> The SRA-trick is not used. Then the proper mass terms as described in the PhD thesis of D. Bauer are inlcuded.
+  !> This means that the potential matrix is changed in the following way
+  !>
+  !> from  / V11  V12 \   to    / V21  V22 \
+  !>       \ V21  V22 /         \-V11 -V12 /
+  !> because of the convention used for the left solution
+  !>
+  !> `cmode=='Ref=Vsph'`
+  !> -------------------
+  !> THis assumes that the SRA-trick is used in which case the small component of vll vanishes
+  !-------------------------------------------------------------------------------
+  subroutine vllmatsra(vll0, vll, rmesh, lmsize, nrmax, nrmaxd, eryd, lmax, lval_in, cmode)
+    use :: mod_datatypes, only: dp
+    use :: mod_constants, only: czero, cone, cvlight
+    implicit none
+
+    ! inputs
+    integer, intent (in) :: lmax            !! Maximum l component in wave function expansion
+    integer, intent (in) :: nrmax           !! NTOTD*(NCHEBD+1)
+    integer, intent (in) :: nrmaxd          !! dimension for rmesh (maximum of nrmax values of all atoms)
+    integer, intent (in) :: lmsize          !! (lmax+2)^2
+    integer, intent (in) :: lval_in         !! l-value used in spherical calculation of calcpsh (lmsize=1)
+    complex (kind=dp), intent (in) :: eryd  !! energy (used in rel-mass factor)
+    character (len=*), intent (in) :: cmode !! either 'Ref=0' or 'Ref=Vsph' which determines the used reference system (for calcsph trick or direct evaluation)
+    real (kind=dp), dimension (nrmaxd), intent (in) :: rmesh !! radial mesh
+    complex (kind=dp), dimension (lmsize, lmsize, nrmax), intent (in) :: vll0 !! input potential in (l,m,s) basis
+    ! outputs
+    complex (kind=dp), dimension (2*lmsize, 2*lmsize, nrmax), intent (out) :: vll !! output potential in (l,m,s) basis with big/small components
+    ! locals
+    integer :: ilm, lval, mval, ival, ir
+    integer, dimension (lmsize) :: loflm
+    complex (kind=dp) :: mass, mass0
+
+    logical, external :: test
 
 
-!************************************************************************************
-! determine the bounds of the matricies to get the lm-expansion and the max. number
-! of radial points
-!************************************************************************************
+    ! *******************************************************************************
+    ! calculate the index array to determine the L value of an LM index
+    ! in case of spin-orbit coupling 2*(LMAX+1)**2 are used instead of
+    ! (LMAX+1)**2
+    ! the second half refers to the second spin and has the the same L value
+    ! *******************************************************************************
+    ilm = 0
 
-
-
-!************************************************************************************
-! calculate the index array to determine the L value of an LM index
-! in case of spin-orbit coupling 2*(LMAX+1)**2 are used instead of (LMAX+1)**2
-! the second half refers to the second spin and has the the same L value
-!************************************************************************************
-ilm=0
-
-if (lmsize==1) then
-  loflm(1)=lval_in
-elseif ((lmax+1)**2 == lmsize) then
-  do lval=0,lmax
-    do mval = -lval,lval
-      ilm=ilm+1
-      loflm(ilm)=lval
-    end do
-  end do
-elseif (2* (lmax+1)**2 ==lmsize ) then
-  do ival=1,2
-    do lval=0,lmax
-      do mval = -lval,lval
-        ilm=ilm+1
-        loflm(ilm)=lval
+    if (lmsize==1) then
+      loflm(1) = lval_in
+    else if ((lmax+1)**2==lmsize) then
+      do lval = 0, lmax
+        do mval = -lval, lval
+          ilm = ilm + 1
+          loflm(ilm) = lval
+        end do
       end do
-    end do
-  end do
-else
-  stop '[vllmatsra] error'
-end if
+    else if (2*(lmax+1)**2==lmsize) then
+      do ival = 1, 2
+        do lval = 0, lmax
+          do mval = -lval, lval
+            ilm = ilm + 1
+            loflm(ilm) = lval
+          end do
+        end do
+      end do
+    else
+      stop '[vllmatsra] error'
+    end if
 
+    vll(:, :, :) = czero
 
+    if (cmode=='Ref=0') then
+      ! without SRA-trick the full matrix is constructed and the proper mass terms (as described in the PhD thesis of Bauer) have to be included
+      vll(1:lmsize, 1:lmsize, :) = vll0(1:lmsize, 1:lmsize, :) ! /cvlight
 
+      do ir = 1, nrmax
+        do ival = 1, lmsize
+          lval = loflm(ival)
+          mass = cone + (eryd-vll0(ival,ival,ir))/cvlight**2
+          mass0 = cone + eryd/cvlight**2
 
-vll=(0.0D0,0d0)
+          ! *************************************************************************
+          ! Conventional potential matrix
+          ! *************************************************************************
 
+          vll(lmsize+ival, lmsize+ival, ir) = -vll0(ival, ival, ir)/cvlight**2 ! TEST 9/22/2011
+          vll(ival, ival, ir) = vll(ival, ival, ir) + (1.0e0_dp/mass-1.0e0_dp/mass0)*lval*(lval+1)/rmesh(ir)**2
 
+          ! *************************************************************************
+          ! The pertubation matrix is changed in the following way
+          ! from  / V11  V12 \   to    / V21  V22 \
+          !       \ V21  V22 /         \-V11 -V12 /
+          ! because of the convention used for the left solution
+          ! ************************************************************************************
+        end do ! ival
+      end do ! ir
 
+    else if (cmode=='Ref=Vsph') then
 
-if     (cmode=='Ref=0') then
-  vll(1:lmsize,1:lmsize,:)= vll0 !/cvlight
+      ! for SRA-trick the small component of vll vanishes, i.e. only big component is copied (lower half)
+      vll(lmsize+1:2*lmsize, 1:lmsize, :) = vll0(1:lmsize, 1:lmsize, :)
 
-  do ir=1,nrmax
-      do ival=1,lmsize  
-        lval=loflm(ival)
-        Mass =cone+(eryd-vll0(ival,ival,ir))/cvlight**2
-        Mass0=cone+eryd/cvlight**2
+    end if
 
-  !************************************************************************************
-  ! Conventional potential matrix
-  !************************************************************************************
+  end subroutine vllmatsra
 
-       vll(lmsize+ival,lmsize+ival,ir)= -vll0(ival,ival,ir)/cvlight**2 ! TEST 9/22/2011
-       vll(ival,ival,ir)=vll(ival,ival,ir)+ (1.0D0/Mass-1.0D0/Mass0)*lval*(lval+1)/rmesh(ir)**2
-
-  !************************************************************************************
-  ! The pertubation matrix is changed in the following way
-  !
-  !     from  / V11  V12 \   to    / V21  V22 \
-  !           \ V21  V22 /         \-V11 -V12 / 
-  ! because of the convention used for the left solution
-  !************************************************************************************
-     end do !ival
-
-  end do !ir
-elseif     (cmode=='Ref=Vsph') then
- vll(lmsize+1:2*lmsize,1:lmsize,:)=vll0
-endif
-
-
-end subroutine vllmatsra
-
+end module mod_vllmatsra

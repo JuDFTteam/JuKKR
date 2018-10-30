@@ -1,0 +1,19 @@
+# serial: kkrjm_v2.2-223-g21cc67f_jureca_20181018144815
+ main0                                        10.8421000000000     
+ MPI 1                                       5.000000000000000E-004
+ main1a - tbref                               1.76950000000000     
+ main1a                                       2.10670000000000     
+ main1b - calctref13                         1.000000000000000E-004
+ main1b_inversion                            5.020000000000002E-002
+ main1b - kloopz                             0.247400000000000     
+ main1b - calctref13                         2.000000000000000E-004
+ main1b_inversion                            4.989999999999999E-002
+ main1b - kloopz                             0.244300000000000     
+ main1b                                      0.498400000000000     
+ main1c - rhoval                             0.172300000000000     
+ main1c - communication                      1.780000000000000E-002
+ main1c - serial part                        1.300000000000000E-002
+ main1c                                      0.254600000000000     
+ main2                                       0.755200000000000     
+ MPI 2                                       1.000000000000000E-004
+ Time in Iteration                            3.61520000000000     

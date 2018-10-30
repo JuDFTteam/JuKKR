@@ -1,35 +1,41 @@
-c-*-Mode: Fortran-*-
-c previous line: choose emacs Fortran major mode
-C ########### R-MESH RELATED BOUNDARIES ###########
-c cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-c     this include - file is used in:
-c     gen, scf, chi, dirac_bs, dirbsmid, dirbsrad, dirbsstp
-c cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+!-----------------------------------------------------------------------------------------!
+! Copyright (c) 2018 Peter Grünberg Institut, Forschungszentrum Jülich, Germany           !
+! This file is part of Jülich KKR code and available as free software under the conditions!
+! of the MIT license as expressed in the LICENSE.md file in more detail.                  !
+!-----------------------------------------------------------------------------------------!
 
-C ======= SPR-KKR and TB-KKR common parameters =========================
+!-*-Mode: Fortran-*-
+! previous line: choose emacs Fortran major mode
+! ########### R-MESH RELATED BOUNDARIES ###########
+! cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+!     this include - file is used in:
+!     gen, scf, chi, dirac_bs, dirbsmid, dirbsrad, dirbsstp
+! cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+
+! ======= SPR-KKR and TB-KKR common parameters =========================
 
       INTEGER NRMAX,ITMAX,NTMAXLOC,NRMAXLOC,NCFMAX
 
       PARAMETER ( ITMAX=50 )
       PARAMETER ( NTMAXLOC=2 )
       PARAMETER ( NRMAXLOC=900 )
-c radial mesh points
+! radial mesh points
       PARAMETER ( NRMAX=900 )
       PARAMETER ( NCFMAX=8 )
 
 
-C ======= only TB-KKR parameters =========================
-c
-c      INTEGER
-c     & IPAND,IRID,IRMD,IRNSD,IRMIND,NFUND,NCELLD,NCFMAX,
-c     & NPANMAX
-c
-c      PARAMETER ( IPAND=5 )
-c      PARAMETER ( NPANMAX=IPAND )
-c      PARAMETER ( IRID=135 )
-c      PARAMETER ( IRNSD=400 )
-c      PARAMETER ( IRMD=NRMAX )
-c      PARAMETER ( IRMIND=IRMD-IRNSD )
-c      PARAMETER ( NFUND=24)
-c      PARAMETER ( NCELLD=1 )
+! ======= only TB-KKR parameters =========================
+!
+!      INTEGER
+!     & IPAND,IRID,IRMD,IRNSD,IRMIND,NFUND,NCELLD,NCFMAX,
+!     & NPANMAX
+!
+!      PARAMETER ( IPAND=5 )
+!      PARAMETER ( NPANMAX=IPAND )
+!      PARAMETER ( IRID=135 )
+!      PARAMETER ( IRNSD=400 )
+!      PARAMETER ( IRMD=NRMAX )
+!      PARAMETER ( IRMIND=IRMD-IRNSD )
+!      PARAMETER ( NFUND=24)
+!      PARAMETER ( NCELLD=1 )
 

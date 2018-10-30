@@ -1,0 +1,17 @@
+#FILEVERSION= 2   # serial: kkrjm_v2.3-61-g4b60676_mpi_20180828093815
+       2    lmaxd
+       2    lmax
+       0    korbit
+       1    nspin, used as nspind
+    9700    nrd
+       0    nembd
+       0    nemb
+       1    ncls once again, used as nclsd
+       1    ncls
+       4    natypd
+       4    natyp
+       4    naezd
+       4    naez
+      65    naclsmax, used as naclsd
+       3    ielast
+       1    ins

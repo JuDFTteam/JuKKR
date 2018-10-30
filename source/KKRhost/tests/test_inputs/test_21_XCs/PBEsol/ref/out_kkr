@@ -1,0 +1,115 @@
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ !!! Most output written to output.myrank.txt files !!!
+ !!! please check these files as well               !!!
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     Screened Korringa-Kohn-Rostoker Electronic Structure Code
+                      for Bulk and Interfaces
+                    Juelich-Munich 2001 - 2018
+
+  Code version: v2.3-323-ge50f66a
+  Compile options: intel hybrid 
+  serial number for files: kkrjm_v2.3-323-ge50f66a_intel_20181023083814
+
+*******************************************************************************
+
+ Number of OpenMP threads used:    1
+
+*******************************************************************************
+
+ Number of MPI ranks used:   12
+
+*******************************************************************************
+
+ Calling MADELUNG3D
+ Exited MADELUNG3D
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ +++            SCF ITERATIONS START                +++
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+started on 2018/10/23 at  8:38:15
+               Ne        
+          TOT 10.93934292
+      ITERATION   1 charge neutrality in unit cell =    -0.060657
+                new E FERMI   0.5987849587  DOS(E_F) =     5.122224
+      ITERATION   1 average rms-error : v+ + v- =  4.7968D-02
+TOTAL ENERGY in ryd. :            -3307.13847977
+
+Iteration finished on 2018/10/23 at  8:38:18
+               Ne        
+          TOT 10.97469026
+      ITERATION   2 charge neutrality in unit cell =    -0.025310
+                new E FERMI   0.6037965850  DOS(E_F) =     5.050205
+      ITERATION   2 average rms-error : v+ + v- =  4.5422D-02
+TOTAL ENERGY in ryd. :            -3307.13805878
+
+Iteration finished on 2018/10/23 at  8:38:19
+               Ne        
+          TOT 10.80674381
+      ITERATION   3 charge neutrality in unit cell =    -0.193256
+                new E FERMI   0.6360108100  DOS(E_F) =     5.999095
+      ITERATION   3 average rms-error : v+ + v- =  1.8064D-02
+TOTAL ENERGY in ryd. :            -3307.13699057
+
+Iteration finished on 2018/10/23 at  8:38:21
+               Ne        
+          TOT 10.93826049
+      ITERATION   4 charge neutrality in unit cell =    -0.061740
+                new E FERMI   0.6484836866  DOS(E_F) =     4.949901
+      ITERATION   4 average rms-error : v+ + v- =  1.2856D-02
+TOTAL ENERGY in ryd. :            -3307.13475343
+
+Iteration finished on 2018/10/23 at  8:38:23
+               Ne        
+          TOT 10.96568672
+      ITERATION   5 charge neutrality in unit cell =    -0.034313
+                new E FERMI   0.6553075053  DOS(E_F) =     5.028457
+      ITERATION   5 average rms-error : v+ + v- =  4.3868D-03
+TOTAL ENERGY in ryd. :            -3307.13607401
+
+Iteration finished on 2018/10/23 at  8:38:24
+               Ne        
+          TOT 10.98341246
+      ITERATION   6 charge neutrality in unit cell =    -0.016588
+                new E FERMI   0.6585595068  DOS(E_F) =     5.100716
+      ITERATION   6 average rms-error : v+ + v- =  5.7768D-04
+TOTAL ENERGY in ryd. :            -3307.13633993
+
+Iteration finished on 2018/10/23 at  8:38:26
+               Ne        
+          TOT 10.99453957
+      ITERATION   7 charge neutrality in unit cell =    -0.005460
+                new E FERMI   0.6596230517  DOS(E_F) =     5.134181
+      ITERATION   7 average rms-error : v+ + v- =  8.2366D-04
+TOTAL ENERGY in ryd. :            -3307.13633449
+
+Iteration finished on 2018/10/23 at  8:38:28
+               Ne        
+          TOT 10.99988926
+      ITERATION   8 charge neutrality in unit cell =    -0.000111
+                new E FERMI   0.6596446044  DOS(E_F) =     5.137964
+      ITERATION   8 average rms-error : v+ + v- =  8.2454D-04
+TOTAL ENERGY in ryd. :            -3307.13632924
+
+Iteration finished on 2018/10/23 at  8:38:29
+               Ne        
+          TOT 11.00149213
+      ITERATION   9 charge neutrality in unit cell =     0.001492
+                new E FERMI   0.6593539704  DOS(E_F) =     5.134057
+      ITERATION   9 average rms-error : v+ + v- =  4.1547D-04
+TOTAL ENERGY in ryd. :            -3307.13630930
+
+Iteration finished on 2018/10/23 at  8:38:31
+               Ne        
+          TOT 11.00162058
+      ITERATION  10 charge neutrality in unit cell =     0.001621
+                new E FERMI   0.6590380607  DOS(E_F) =     5.129892
+      ITERATION  10 average rms-error : v+ + v- =  3.0641D-05
+TOTAL ENERGY in ryd. :            -3307.13628492
+
+                 ++++++ SCF ITERATION CONVERGED ++++++
+*******************************************************************************
+Iteration finished on 2018/10/23 at  8:38:32
+ -------------------MEMORY CONSUMPTION REPORT-----------------------
+ 668 allocations and 743 deallocations, remaining memory(B):-88152430
+ Memory occupation peak: 239260 kB
+ For the array: "GLLKEM" in routine "kkrmat01"
+ -----------------END MEMORY CONSUMPTION REPORT---------------------
