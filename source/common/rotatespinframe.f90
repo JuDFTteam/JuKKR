@@ -10,8 +10,13 @@
 !> Wrapper to setup the rotation matrices to transform from the local to the global frame of references
 !------------------------------------------------------------------------------------
 module mod_rotatespinframe
+
   use :: mod_datatypes, only: dp
-  private :: dp
+
+  character (len=25), parameter :: spinmode= 'kkr'
+
+  private
+  public :: spinmode, rotatematrix, rotatevector
 
 contains
 
@@ -26,6 +31,11 @@ contains
   !> \begin{bmatrix} \cos{\frac{\theta}{2}} \exp{-\frac{i\phi}{2}} & -\sin{\frac{\theta}{2}}\exp{-i\frac{i\phi}{2}} \\ \sin{\frac{\theta}{2}} \exp{ \frac{i\phi}{2}} & \cos{\frac{\theta}{2}} \exp{ \frac{i\phi}{2}}\end{bmatrix}
   !> \end{equation}
   !> `Udegga = transpose(complex conjug ( U ) )`
+  !> 
+  !> @note
+  !>   * mode=0: 'loc->glob'
+  !>   * mode=1: 'glob->loc'
+  !> @endnote
   !-------------------------------------------------------------------------------
   subroutine rotatematrix(mat, theta, phi, lmmax, mode)
     implicit none
@@ -190,7 +200,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine create_umatrix(theta, phi, lmmax, umat, udeggamat)
 
-    use :: mod_constants
+    use :: mod_constants, only: ci, czero
 
     implicit none
     ! interface
@@ -203,9 +213,7 @@ contains
     complex (kind=dp) :: umat11, umat12, umat21, umat22
     complex (kind=dp) :: udeggamat11, udeggamat12, udeggamat21, udeggamat22
     integer :: ival
-    character (len=25) :: spinmode
 
-    spinmode = 'kkr'
     if (spinmode=='regular') then
       umat11 = cos(theta/2.0e0_dp)*exp(-ci/2.0e0_dp*phi)
       umat12 = -sin(theta/2.0e0_dp)*exp(-ci/2.0e0_dp*phi)

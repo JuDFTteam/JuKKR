@@ -32,7 +32,9 @@ add_executable(
     kkr.x
     source/common/version.F90
     source/common/version_info.F90
-    source/KKRhost/DataTypes.f90
+    source/common/DataTypes.f90
+    source/common/constants.f90
+    source/common/rotatespinframe.f90
     source/KKRhost/addvirtual14.f90
     source/KKRhost/amemagvec.f90
     source/KKRhost/bastrmat.f90
@@ -75,7 +77,6 @@ add_executable(
     source/KKRhost/cmatstr.f90
     source/KKRhost/cmomsread.f90
     source/KKRhost/cnlz.f90
-    source/KKRhost/constants.f90
     source/KKRhost/convol.f90
     source/KKRhost/core.f90
     source/KKRhost/coredir.f90
@@ -276,7 +277,6 @@ add_executable(
     source/KKRhost/rmatstr.f90
     source/KKRhost/rnuctab.f90
     source/KKRhost/rotate.f90
-    source/KKRhost/rotatespinframe.f90
     source/KKRhost/rotgll.F90
     source/KKRhost/rotmat.f90
     source/KKRhost/rrgen.f90

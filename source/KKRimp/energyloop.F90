@@ -598,7 +598,7 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
            end if
 
            if (config%ncoll==1) then
-              call rotatematrix(tmat(iatom,ispin)%tmat,density(iatom)%theta, density(iatom)%phi,(lmaxatom(iatom)+1)**2,'loc->glob')
+              call rotatematrix(tmat(iatom,ispin)%tmat,density(iatom)%theta, density(iatom)%phi,(lmaxatom(iatom)+1)**2, 0) !'loc->glob')
            end if
 
         if ( config_testflag('write_tmat') ) then
@@ -645,14 +645,14 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
         if ( config%ncoll==1 .and. config_testflag('calctmatfirstIter') ) then
           if (config%ncoll==1) then
             do iatom=1,natom
-              call rotatematrix(tmat(iatom,ispin)%tmat,density(iatom)%theta, density(iatom)%phi,(lmaxatom(iatom)+1)**2,'glob->loc')
+              call rotatematrix(tmat(iatom,ispin)%tmat,density(iatom)%theta, density(iatom)%phi,(lmaxatom(iatom)+1)**2,1) !'glob->loc')
             end do !iatom
           end if
         end if
 
         if (config%ncoll==1) then
           do iatom=1,natom
-            call rotatematrix(gmatonsite(iatom,ispin)%gmat,density(iatom)%theta, density(iatom)%phi,(lmaxatom(iatom)+1)**2,'glob->loc')
+            call rotatematrix(gmatonsite(iatom,ispin)%gmat,density(iatom)%theta, density(iatom)%phi,(lmaxatom(iatom)+1)**2, 1) ! 'glob->loc')
           end do !iatom
         end if
 
@@ -974,7 +974,7 @@ if (config%ncoll==1) then
   do iatom=1,natom
     call rotatevector(density(iatom)%rho2ns_complex,density(iatom)%rho2ns, &
                       cell(iatom)%nrmax,(2*lmaxatom(iatom)+1)**2, &
-                      density(iatom)%theta,density(iatom)%phi,density(iatom)%thetaold,density(iatom)%phiold)
+                      density(iatom)%theta,density(iatom)%phi,density(iatom)%thetaold,density(iatom)%phiold, cell(iatom)%nrmax)
 
     write(23452326,'(5000F)') density(iatom)%theta*180/pi,density(iatom)%phi*180/pi
     write(23452327,'(5000F)') density(iatom)%magmoment

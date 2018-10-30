@@ -53,7 +53,7 @@ contains
     rho2ns_temp(1,2)=density%rho2ns_integrated(3)
     rho2ns_temp(2,1)=density%rho2ns_integrated(4)
     
-    call rotatematrix(rho2ns_temp,theta_old,phi_old,1,'loc->glob')
+    call rotatematrix(rho2ns_temp,theta_old,phi_old,1, 0) ! 'loc->glob')
     
     density%rho2ns_integrated(1)=rho2ns_temp(1,1)
     density%rho2ns_integrated(2)=rho2ns_temp(2,2)
@@ -66,7 +66,7 @@ contains
     rho2ns_temp(1,2)=density%rho2ns_integrated_scattering(3)
     rho2ns_temp(2,1)=density%rho2ns_integrated_scattering(4)
     
-    call rotatematrix(rho2ns_temp,theta_old,phi_old,1,'loc->glob')
+    call rotatematrix(rho2ns_temp,theta_old,phi_old,1, 0) !'loc->glob')
     
     density%rho2ns_integrated_scattering(1)=rho2ns_temp(1,1)
     density%rho2ns_integrated_scattering(2)=rho2ns_temp(2,2)

@@ -257,7 +257,7 @@ do kspin=1,3
       call intcheb_cell(fntemp,cellnew,RBpotR_integrated(ilm1,ilm2,kspin))
     end do
   end do
-  call rotatematrix(RBpotR_integrated(:,:,kspin),theta, phi,lmmax,'loc->glob')
+  call rotatematrix(RBpotR_integrated(:,:,kspin), theta, phi, lmmax,0 ) ! 'loc->glob')
 ! stop
 end do !kspin
 
@@ -284,7 +284,7 @@ integer        :: ispin
 call calc_sigma(sigma)
 sigmatemp=sigma
 do ispin=1,3
-  call rotatematrix(sigmatemp(:,:,ispin),theta, phi,1,'glob->loc')
+  call rotatematrix(sigmatemp(:,:,ispin), theta, phi, 1, 1) !'glob->loc')
 !   lambda(:,:,ispin) = sigmatemp(:,:,ispin)- sigma(:,:,3)
   lambda(:,:,ispin) = sigmatemp(:,:,ispin) !test
 end do !ispin

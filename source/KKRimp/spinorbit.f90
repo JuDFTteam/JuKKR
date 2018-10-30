@@ -123,7 +123,7 @@ module mod_spinorbit
     end if
 
     if (ncoll==1) then                                        ! added 2.2.2012
-      call rotatematrix(lsham,theta, phi,lmmax,'glob->loc')   ! added 2.2.2012
+      call rotatematrix(lsham,theta, phi,lmmax,1) !'glob->loc')   ! added 2.2.2012
     end if                                                    ! added 2.2.2012
 
     if (mode=='conjg') then ! not needed, might be deleted
