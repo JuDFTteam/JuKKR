@@ -84,12 +84,14 @@ build_kkrhost:intel:hybrid:
     - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/mpi/intel64/bin/mpiifort cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DENABLE_COV=ON ..
     - make -j4
     - cp kkr.x ..
+    - cp kkr.x ../tests/KKRhost/kkr.x
     - cd ..
   artifacts:
     paths:
       - kkr.x
       - build
       - build/pgopti.spi
+      - tests/KKRhost/kkr.x
     expire_in: 1 day
 
 ###############################################################################
