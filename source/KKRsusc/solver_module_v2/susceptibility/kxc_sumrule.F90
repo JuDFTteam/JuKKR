@@ -102,16 +102,16 @@
   do q2=1,jqmax
     do q1=1,iqmax
       kernel(q1,q2) = 0.5d0*(kssusc0(iqp(q1),iqm(q2)) + kssusc0(iqm(q1),iqp(q2)))
+      kernel(q1,q2) = kernel(q1,q2) + 0.5d0*(kssusc0(iqp(q1),iqp(q2)) + kssusc0(iqm(q1),iqm(q2)))
     end do
   end do
-!  do iq=1,iqmax
-!    write(*,'(10000es10.2)') kernel(iq,1:jqmax)
-!  end do
-! m+ only:  m+ = \chi0^+- B-
+  do iq=1,iqmax
+    write(*,'(10000es10.2)') kernel(iq,1:jqmax)
+  end do
+! NEW: in local frame m_z = (twisted \chi_0)_zz B_z
   bxcden(1:iqmax) = mxcden(1:iqmax)
   call zgesv(iqmax,1,kernel,ndensum,ipiv,bxcden,ndensum,info)
   if (info /= 0) stop 'kxc_sumrule: failure in zgesv'
-
 ! divide bxc by the magnetization
   mxclm = 0.d0
   do q1=1,iqmax
@@ -124,6 +124,7 @@
     bxcden(q1) = cmplx(re,im)
     kxcden(q1) = 0.d0
     if (abs(mtotden(q1)) > tol .and. abs(bxcden(q1)) > tol) kxcden(q1) = bxcden(q1)/mtotden(q1)
+    write(444,'(4i4,8es16.8)') ia2, is, ilm, ib, mtotden(q1), mxcden(q1), bxcden(q1), kxcden(q1)
     mxclm(ilm,ia2) = mxclm(ilm,ia2) + suscnorm(iqp(q1))*bxcden(q1)
   end do
   write(*,'("bxc in density basis:")')

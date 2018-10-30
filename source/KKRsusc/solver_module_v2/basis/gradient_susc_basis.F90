@@ -3,7 +3,7 @@
 ! gradnorm is the used array with a basis grad(phi*Y)*phi*Y
 ! gradnorm2 is a testarray for the basis  grad(phi*Y)*phi*Y - phi*Y*grad(phi*Y)
   use global
-  use derivative_panels
+  use mod_derivative_panels
 
   implicit none
 

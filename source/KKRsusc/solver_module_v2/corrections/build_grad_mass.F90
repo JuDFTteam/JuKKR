@@ -8,7 +8,7 @@
 ! e-e potential     is repulsive  -> positive
 ! nuclear potential is attractive -> negative
   use global, only: lmmax, lm2i, i4b, r8b, c8b, grad_mass, nasusc, npanat, ircutat
-  use derivative_panels
+  use mod_derivative_panels
 
   implicit none
 

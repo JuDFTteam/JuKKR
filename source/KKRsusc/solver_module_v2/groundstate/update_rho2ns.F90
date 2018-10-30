@@ -31,11 +31,7 @@
     nr1 = irmkd!nrpts1(ia)
     do lm=1,lmpot
       rho2ns(nr0:nr1,lm,ih,1) = new_rho2ns(1:nr,lm,1,ia)/sqrt4pi
-!      if (ia > 3) then
-!        rho2ns(nr0:nr1,lm,ih,2) = 0.d0
-!      else
-        rho2ns(nr0:nr1,lm,ih,2) = new_rho2ns(1:nr,lm,2,ia)/sqrt4pi
-!      end if
+      rho2ns(nr0:nr1,lm,ih,2) = new_rho2ns(1:nr,lm,2,ia)/sqrt4pi
     end do
 ! ******
   end do

@@ -213,6 +213,17 @@
     lcurrentint = .false.
   end if
 
+! Current induced magnetic fields
+  call find_keyinfile('lcurrentbfield',nchars,nlines,inputfile,iline,ipos,found)
+  if (found) then
+    read(inputfile(iline)(ipos:nchars),*) lcurrentbfield
+  else
+    if (my_rank == 0) then
+      if (lwarn .and. itc == 1) write(*,'("set_groundstate_options: WARNING - key lcurrentbfield not found!")')
+    end if ! my_rank 
+    lcurrentbfield = .false.
+  end if
+
 ! Interpolation grid size
 ! used for plotting of the interpolated currents
   call find_keyinfile('nint',nchars,nlines,inputfile,iline,ipos,found)

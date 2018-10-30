@@ -181,4 +181,4 @@
   end if ! my_rank 
 
 ! All done
-  end subroutine gather_coeff_mpi
+  end subroutine read_proj

@@ -54,7 +54,7 @@
       else if (ibasis == 2) then
         do il=0,nlmax
           call new_basis2(nb,ia,il,my_rank)
-          if (my_rank == 0) then
+          if (my_rank == 0 .and. loutbasis) then
             if (itc == 1) write(*,'("New basis2:  ",3i6)') ia, il, nb
           end if ! my_rank
           nsum = nsum + nb*(2*il+1)*nsmax
@@ -85,7 +85,7 @@
   end if
 ! ******
   if (ibasismethod == 0) stop 'printing basis functions only'
-  if (my_rank == 0) then
+  if (my_rank == 0 .and. loutbasis) then
     write(*,'("newbasis: nlmsb is changed to",i8,", reallocating arrays")') nlmsbnew
   end if ! my_rank
   nlmsb = nlmsbnew

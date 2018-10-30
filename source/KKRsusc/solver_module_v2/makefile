@@ -39,9 +39,9 @@ UTILS    = $(OBJ)/radint.o $(OBJ)/ymy_gaunts.o $(OBJ)/rymy.o \
            $(OBJ)/chebyweights.o $(OBJ)/llsetup.o $(OBJ)/LebedevLaikov.o \
            $(OBJ)/bessel_new.o $(OBJ)/free_gf.o $(OBJ)/ratval.o \
            $(OBJ)/ratroots.o $(OBJ)/least_squares.o $(OBJ)/ratval2.o \
-           $(OBJ)/rotvec.o $(OBJ)/derivative_panels.o $(OBJ)/ymy.o \
-           $(OBJ)/spline.o $(OBJ)/spline_panels.o $(OBJ)/spline_panels2.o \
-           $(OBJ)/splint.o 
+           $(OBJ)/rotvec.o $(OBJ)/mod_derivative_panels.o $(OBJ)/ymy.o \
+           $(OBJ)/spline.o $(OBJ)/mod_spline_panels2.o $(OBJ)/mod_spline_panels.o \
+           $(OBJ)/splint.o $(OBJ)/zchop.o
 
 PROJDIR  = projection
 PROJ     = $(OBJ)/reg_coeffs.o $(OBJ)/irr_coeffs.o $(OBJ)/out_coeffs.o \
@@ -63,7 +63,8 @@ GS       = $(OBJ)/save_rho2ns.o $(OBJ)/read_rho2ns.o $(OBJ)/update_rho2ns.o \
            $(OBJ)/density_of_states.o $(OBJ)/get_xc2.o $(OBJ)/vxc_vwn.o \
            $(OBJ)/density_matrix.o $(OBJ)/current_density.o \
            $(OBJ)/current_soc.o $(OBJ)/current_zeeman.o \
-           $(OBJ)/current_interpolation.o $(OBJ)/rho_interpolation.o
+           $(OBJ)/current_interpolation.o $(OBJ)/rho_interpolation.o \
+           $(OBJ)/current_induced_bfield.o
 
 CORRDIR  = corrections
 CORR     = $(OBJ)/build_selfe.o $(OBJ)/build_zeeman.o $(OBJ)/build_vscfb.o \
@@ -88,7 +89,8 @@ SUSC     = $(OBJ)/dyn_susc_expansion.o $(OBJ)/dynamic_susc.o $(OBJ)/dynamic_susc
            $(OBJ)/analytic_continuation.o $(OBJ)/add_susc_block_one_sided.o \
            $(OBJ)/current_correlation.o $(OBJ)/current_correlation_interpolation.o \
            $(OBJ)/current_correlation_divergence_interpolation.o $(OBJ)/susc_interpolation.o \
-           $(OBJ)/current_correlation_divergence.o
+           $(OBJ)/current_correlation_divergence.o $(OBJ)/build_twist.o $(OBJ)/kxc_sumrule2.o
+
 
 
 IODIR    = io
@@ -99,7 +101,7 @@ IO       = $(OBJ)/new_input.o $(OBJ)/load_input.o $(OBJ)/find_keyinline.o \
            $(OBJ)/set_susc_options.o $(OBJ)/set_fit_options.o $(OBJ)/set_ldau_options.o \
            $(OBJ)/set_groundstate_options.o $(OBJ)/set_groups.o $(OBJ)/set_global_options.o \
            $(OBJ)/close_outsusc.o $(OBJ)/outsusc_out.o $(OBJ)/outsusc_in.o \
-           $(OBJ)/outsusc_in2.o $(OBJ)/outsusc_in_soc.o
+           $(OBJ)/outsusc_in2.o $(OBJ)/outsusc_in_soc.o $(OBJ)/set_output_options.o
 
 ########################################################################
 #                          Solver module     
@@ -199,19 +201,22 @@ $(OBJ)/least_squares.o: $(UTILSDIR)/least_squares.F90
 $(OBJ)/rotvec.o: $(UTILSDIR)/rotvec.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
 
-$(OBJ)/derivative_panels.o: $(UTILSDIR)/derivative_panels.F90
-	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@; mv derivative_panels.mod $(OBJ)/
+$(OBJ)/mod_derivative_panels.o: $(UTILSDIR)/mod_derivative_panels.F90
+	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@; mv mod_derivative_panels.mod $(OBJ)/
 
 $(OBJ)/spline.o: $(UTILSDIR)/spline.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
 
-$(OBJ)/spline_panels.o: $(UTILSDIR)/spline_panels.F90
-	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
+$(OBJ)/mod_spline_panels2.o: $(UTILSDIR)/mod_spline_panels2.F90
+	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@; mv mod_spline_panels2.mod $(OBJ)/
 
-$(OBJ)/spline_panels2.o: $(UTILSDIR)/spline_panels2.F90
-	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
+$(OBJ)/mod_spline_panels.o: $(UTILSDIR)/mod_spline_panels.F90
+	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@; mv mod_spline_panels.mod $(OBJ)/
 
 $(OBJ)/splint.o: $(UTILSDIR)/splint.F90
+	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
+
+$(OBJ)/zchop.o: $(UTILSDIR)/zchop.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
 
 ########################################################################
@@ -430,6 +435,9 @@ $(OBJ)/density_matrix.o: $(GSDIR)/density_matrix.F90
 $(OBJ)/rho_interpolation.o: $(GSDIR)/rho_interpolation.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
 
+$(OBJ)/current_induced_bfield.o: $(GSDIR)/current_induced_bfield.F90
+	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
+
 ########################################################################
 #                       Corrections module
 ########################################################################
@@ -607,6 +615,12 @@ $(OBJ)/current_correlation_divergence_interpolation.o: $(SUSCDIR)/current_correl
 $(OBJ)/susc_interpolation.o: $(SUSCDIR)/susc_interpolation.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
 
+$(OBJ)/build_twist.o: $(SUSCDIR)/build_twist.F90
+	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
+
+$(OBJ)/kxc_sumrule2.o: $(SUSCDIR)/kxc_sumrule2.F90
+	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
+
 ########################################################################
 #                            I/O module
 ########################################################################
@@ -659,6 +673,9 @@ $(OBJ)/set_groups.o: $(IODIR)/set_groups.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
 
 $(OBJ)/set_global_options.o: $(IODIR)/set_global_options.F90
+	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
+
+$(OBJ)/set_output_options.o: $(IODIR)/set_output_options.F90
 	$(FC) $(FFLAGS) -c -I$(OBJ) $< -o $@
 
 $(OBJ)/close_outsusc.o: $(IODIR)/close_outsusc.F90

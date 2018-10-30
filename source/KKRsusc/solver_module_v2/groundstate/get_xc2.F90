@@ -1,9 +1,11 @@
   subroutine get_xc2(ia)
 ! xc potential and energy for atom ia
 ! Uses the density from the impurity program
+! Rigid spin approximation: the spin density is taken to be collinear in the WS cell
 ! The density matrix and the core densities are multiplied by 4pi
 ! This was factored out in the vxc_vwn subroutine
 ! Cartesian indices: 1:4 <=> x y z n
+! TO DO: local frame or global frame?
   use global
 
   implicit none
@@ -46,14 +48,23 @@
     rho = 0.d0
     do ilm=1,lmmax2
       if (abs(gs_qlm(ilm,ia)) > tol .or. abs(gs_mlm(ilm,ia)) > tol) then
-        rho(3,:) = rho(3,:) + new_rho2ns(ir,ilm,2,ia)*ylm(:,ilm)
+!       z-component of spin density
+!        rho(3,:) = rho(3,:) + new_rho2ns(ir,ilm,2,ia)*ylm(:,ilm)
+!       vector spin density
+        do k=1,3
+          rho(k,:) = rho(k,:) + magdir(k,ia)*new_rho2ns(ir,ilm,2,ia)*ylm(:,ilm)
+        end do
+!       charge density
         rho(4,:) = rho(4,:) + new_rho2ns(ir,ilm,1,ia)*ylm(:,ilm)
       end if
     end do
 !    write(iodb,'("get_xc: rho=",4es16.8)') rho(:,1)*rmesh(ir,ia)**2
 !   ++++++++++++++++++++++++++++++++++++++++++
 !   Add the core charge and magnetization densities
-    rho(3,:) = rho(3,:) + mrc(ir,ia)
+!    rho(3,:) = rho(3,:) + mrc(ir,ia)
+    do k=1,3
+      rho(k,:) = rho(k,:) + magdir(k,ia)*mrc(ir,ia)
+    end do
     rho(4,:) = rho(4,:) + nrc(ir,ia)
 !   Divide by fourpi and r^2 -- this comes from the basis functions
     rho = rho/(fourpi*rmesh(ir,ia)**2)
@@ -62,24 +73,26 @@
       den = rho(4,ill)
       maglen = sqrt(dot_product(rho(1:3,ill),rho(1:3,ill)))
       if (maglen > magtol) then
-        magdir2 = rho(1:3,ill)/maglen
+!        magdir2 = rho(1:3,ill)/maglen
       else
-        magdir2 = (/0.d0,0.d0,1.d0/)
+!        magdir2 = (/0.d0,0.d0,1.d0/)
         maglen = 0.d0
       end if
       if (den < 0.d0) then
         den = 0.d0
         maglen = 0.d0
-        magdir2 = (/0.d0,0.d0,1.d0/)
+!        magdir2 = (/0.d0,0.d0,1.d0/)
       end if
+!     this computes Vxc and Bxc for a given radial value (ir) and angular direction (ill)
       call vxc_vwn(den,maglen,vxc,bxc,exc)
 !      fpirho(1) = den
 !      fpirho(2) = maglen
 !      call vosko(exc2,fpirho,vxc2,1,1)
 !      write(iodb,'("get_xc: diff vosko=",6es16.8)') vxc-bxc, vxc+bxc, exc, vxc2, exc2
-      vxclm(ir,1:lmmax2) = vxclm(ir,1:lmmax2) + vxc*wll(ill)*ylm(ill,1:lmmax)
+      vxclm(ir,1:lmmax2) = vxclm(ir,1:lmmax2) + vxc*wll(ill)*ylm(ill,1:lmmax2)
       do k=1,3
-        bxclm(ir,k,1:lmmax2) = bxclm(ir,k,1:lmmax2) + magdir2(k)*bxc*wll(ill)*ylm(ill,1:lmmax2)
+!        bxclm(ir,k,1:lmmax2) = bxclm(ir,k,1:lmmax2) + magdir2(k)*bxc*wll(ill)*ylm(ill,1:lmmax2)
+        bxclm(ir,k,1:lmmax2) = bxclm(ir,k,1:lmmax2) + magdir(k,ia)*bxc*wll(ill)*ylm(ill,1:lmmax2)
       end do
 !     *************************************************
 !     ****************    xc kernel    ****************
@@ -88,7 +101,8 @@
       trans = 0.d0; longt = 0.d0
       do n=1,3
         do k=1,3
-          longt(k,n) = magdir2(k)*magdir2(n)
+!          longt(k,n) = magdir2(k)*magdir2(n)
+          longt(k,n) = magdir(k,ia)*magdir(n,ia)
           trans(k,n) = -longt(k,n)
         end do
         trans(n,n) = trans(n,n) + 1.d0

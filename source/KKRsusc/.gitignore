@@ -7,8 +7,11 @@
 ################
 *.log
 *.aux
-
+user_guide/NEW_FORMAT/main.pdf
 *.swp
+*.bbl
+*.blg
+*.gz
 # scoef_maker #
 ###############
 codes/scoef_maker/*
