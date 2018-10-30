@@ -1,0 +1,42 @@
+### 3. check outcome of the test runs ###
+verify_kkrhost:intel:
+  stage: verify_kkrhost
+  script:
+    # use pip to install pytest
+    - pip install pytest
+    # prepare and execute verification using pytest
+    - cd tests/KKRhost
+    - pytest -v --ignore=tools/aiida_simple_test.py 
+    - tar -zcvf ../all_test_results.tar.gz test_run*
+  artifacts:
+    paths:
+      - all_test_results.tar.gz
+    expire_in: 1 day
+
+verify_kkrhost:intel:aiida:
+  image: iffregistry.fz-juelich.de/docker-images/aiida-kkr:latest
+  stage: verify_kkrhost
+  services:
+    - name: postgres:latest
+      alias: db
+    - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+      alias: c1
+    - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+      alias: c2
+    - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+      alias: c3
+    - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+      alias: c4
+  variables:
+    POSTGRES_USER: aiida
+    POSTGRES_DB: aiida_default
+    POSTGRES_PASSWORD: password
+  script:
+    # check some output of the calculation
+    - verdi import test_export.aiida.tar.gz
+    - python tests/KKRhost/tools/aiida_check_results.py
+  only: 
+    - schedules
+    - triggers
+    - web
+    

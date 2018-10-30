@@ -1,0 +1,51 @@
+### 1. compile code in different versions ###
+ ## 1.1 debug versions for multiple compilers
+ ## 1.2 production versions
+
+## 1.1 debug versions ##
+build_kkrhost:gnu:debug:
+  stage: build_kkrhost
+  script:
+    - mkdir build_gfortran_debug && cd build_gfortran_debug
+    - FC=/opt/gcc8/bin/gfortran cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug ..
+    - make -j4 VERBOSE=1 || echo 'GNU compile unsuccessful!'
+
+build_kkrhost:intel:debug:
+  stage: build_kkrhost
+  script:
+    - mkdir build_debug && cd build_debug
+    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/bin/intel64/ifort cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug ..
+    - make -j4
+
+build_kkrhost:intel:openmp_debug:
+  stage: build_kkrhost
+  script:
+    - mkdir build_ompdebug && cd build_ompdebug
+    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/bin/intel64/ifort cmake -DENABLE_MPI=OFF -DENABLE_OMP=ON -DCMAKE_BUILD_TYPE=Debug ..
+    - make -j4
+
+build_kkrhost:intel:hybrid_debug:
+  stage: build_kkrhost
+  script:
+    - mkdir build_hybriddebug && cd build_hybriddebug
+    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/mpi/intel64/bin/mpiifort cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DCMAKE_BUILD_TYPE=Debug ..
+    - make -j4
+
+## 1.2 production versions ##
+build_kkrhost:intel:hybrid:
+  stage: build_kkrhost
+  script:
+    # compile code
+    - mkdir build && cd build
+    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/mpi/intel64/bin/mpiifort cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DENABLE_COV=ON ..
+    - make -j4
+    - cp kkr.x ..
+    - cp kkr.x ../tests/KKRhost/kkr.x
+    - cd ..
+  artifacts:
+    paths:
+      - kkr.x
+      - build
+      - build/pgopti.spi
+      - tests/KKRhost/kkr.x
+    expire_in: 1 day
