@@ -1,0 +1,111 @@
+ check all matrix inversions. There might be an error due: Hermitian
+ check all matrix inversions. There might be an error due: Hermitian
+ check all matrix inversions. There might be an error due: Hermitian
+  **************************************************************************
+  **************************************************************************
+                                KKR FLEX IMPURITY CODE
+                          Version: kkrimp_v1.2-34-g7a14a3c_mpi_20180921092924
+  **************************************************************************
+  **************************************************************************
+  ###############################################
+  ##########   MPI Initialization    ############
+  ###############################################
+  ###    using            4  processors
+  ###############################################
+ check all matrix inversions. There might be an error due: Hermitian
+  ###############################################
+  ###    Starting pre dyson energy loop
+  ###############################################
+  ###############################################
+ Proc =            0 ie=            1  ..            4
+ Proc =            1 ie=            5  ..            8
+ Proc =            2 ie=            9  ..           12
+ Proc =            3 ie=           13  ..           15
+ ****************************************************************
+ using LDA (Vosko-Wilk-Nusair)
+ ****************************************************************
+  Iteration Number            1
+ [read_potential] angle file does not exist
+                  setting all starting angles to zero
+   ###############################################
+ Initial angles for non-collinear calculation
+   ###############################################
+         iatom      theta               phi                  moment fixed
+  ###############################################
+  ###    Starting energy loop
+  ###############################################
+[energyloop] proc=   0 Energy ie=   1 to   4 ( 4 energies)
+[energyloop] proc=   1 Energy ie=   5 to   8 ( 4 energies)
+[energyloop] proc=   2 Energy ie=   9 to  12 ( 4 energies)
+[energyloop] proc=   3 Energy ie=  13 to  15 ( 3 energies)
+ [read_spinorbit] no kkrflex_spinorbitperatom exists
+ spinorbit index
+ Atom           1           1
+ Atom           2           1
+ Atom           3           1
+ Atom           4           1
+ Atom           5           1
+0%***************100%
+  ||||||||||||||| Rotation of the charge density
+ The integrated charge density is:
+ magnetic moment is  -5.102731084735893E-018  4.537705597348874E-018
+   3.18128812066120     
+ magnetic moment2 is  -5.102731084735893E-018  4.537705597348874E-018
+  0.629967472650777     
+ no rotation magnetic moment is fixed by config
+ Rotation of the charge density
+ The integrated charge density is:
+ magnetic moment is  -4.373871204209256E-015 -2.678625359446227E-010
+   3.18128817044063     
+ magnetic moment2 is  -4.373871204209256E-015 -2.678625359446227E-010
+  0.629967522430203     
+ no rotation magnetic moment is fixed by config
+ Rotation of the charge density
+ The integrated charge density is:
+ magnetic moment is  -2.678625337318812E-010  4.360433905102586E-015
+   3.18128817044063     
+ magnetic moment2 is  -2.678625337318812E-010  4.360433905102586E-015
+  0.629967522430203     
+ no rotation magnetic moment is fixed by config
+ Rotation of the charge density
+ The integrated charge density is:
+ magnetic moment is   2.678625254033790E-010 -4.352965365688240E-015
+   3.18128817044063     
+ magnetic moment2 is   2.678625254033790E-010 -4.352965365688240E-015
+  0.629967522430203     
+ no rotation magnetic moment is fixed by config
+ Rotation of the charge density
+ The integrated charge density is:
+ magnetic moment is   4.364778841850173E-015  2.678625449889334E-010
+   3.18128817044063     
+ magnetic moment2 is   4.364778841850173E-015  2.678625449889334E-010
+  0.629967522430204     
+ no rotation magnetic moment is fixed by config
+==================================================================== 
+Atom     1:          charge in WS-cell =    25.494781    spin moment =    3.181288
+Atom     2:          charge in WS-cell =    25.494781    spin moment =    3.181288
+Atom     3:          charge in WS-cell =    25.494781    spin moment =    3.181288
+Atom     4:          charge in WS-cell =    25.494781    spin moment =    3.181288
+Atom     5:          charge in WS-cell =    25.494781    spin moment =    3.181288
+                    TOTAL mag. moment in unit cell =    15.906441
+ TOTAL RMS-ERROR for LDA+U:  0.000000000000000E+000
+      rms-error for atom  1 :v+ + v- =  1.2552D-03  ,  v+ - v- =  1.8924D-05
+      rms-error non spherical contribution for atom   1 :v+ + v- =  2.4898D-04  ,  v+ - v- =  2.1460D-05
+      rms-error for atom  2 :v+ + v- =  1.0669D-03  ,  v+ - v- =  1.8923D-05
+      rms-error non spherical contribution for atom   2 :v+ + v- =  2.2138D-04  ,  v+ - v- =  2.1460D-05
+      rms-error for atom  3 :v+ + v- =  1.0669D-03  ,  v+ - v- =  1.8923D-05
+      rms-error non spherical contribution for atom   3 :v+ + v- =  2.2138D-04  ,  v+ - v- =  2.1460D-05
+      rms-error for atom  4 :v+ + v- =  1.0669D-03  ,  v+ - v- =  1.8923D-05
+      rms-error non spherical contribution for atom   4 :v+ + v- =  2.2138D-04  ,  v+ - v- =  2.1460D-05
+      rms-error for atom  5 :v+ + v- =  1.0669D-03  ,  v+ - v- =  1.8923D-05
+      rms-error non spherical contribution for atom   5 :v+ + v- =  2.2138D-04  ,  v+ - v- =  2.1460D-05
+-------------------------------------------------------------------------------
+
+      ITERATION   1 average rms-error : v+ + v- =  1.1302D-03
+                                        v+ - v- =  2.8612D-05
+
+   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+               TOTAL ENERGY in ryd. :   -12729.32115292
+                                eV  :  -173192.59774240
+   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ Deleting file kkrflex_greennew, processor           0

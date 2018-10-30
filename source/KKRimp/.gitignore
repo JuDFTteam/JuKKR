@@ -1,0 +1,10 @@
+*.[oa]
+*.*~
+*.mod
+*.exe
+*.swp
+version
+/test/
+*.png
+out_*.txt
+version.f90

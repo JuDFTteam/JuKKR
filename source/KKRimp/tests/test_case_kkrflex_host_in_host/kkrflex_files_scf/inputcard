@@ -1,0 +1,37 @@
+RUNOPT
+KKRFLEX
+
+--------xxxxxxxx--------xxxxxxxx--------xxxxxxxx
+TESTOPT
+
+
+
+--------xxxxxxxx--------xxxxxxxx--------xxxxxxxx
+
+
+ALATBASIS= 5.416871386 # 2.8665 Ang. 
+BRAVAIS
+-0.5  0.5  0.5
+ 0.5 -0.5  0.5
+ 0.5  0.5 -0.5
+
+LMAX= 2
+NSPIN= 2
+NAEZ= 1
+<RBASIS>                                 <ZATOM>       <SHAPE>
+0.0          0.0           0.0            26.0            1
+
+EMIN               EMAX              TEMPR       NPOL    NPT1   NPT2   NPT3
+-0.4                1.0               800.0       6        4     25     5
+
+NSTEPS=  100
+IMIX=     5
+STRMIX=  5.0E-002
+QBOUND=  1.0E-007
+BRYMIX=  1.0E-002
+
+BZDIVIDE=   30   30   30
+RCLUSTZ= 2.3
+
+RMAX= 15
+GMAX= 60
