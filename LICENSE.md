@@ -2,7 +2,7 @@
 title: License
 ---
 
-# License of the Jülich KKR code
+# License of the Jülich KKR codes
 
 MIT License
 

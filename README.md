@@ -1,4 +1,4 @@
-# The Jülich KKR code for bulk and interfaces
+# The Jülich KKR codes
 
 ## Description
 
@@ -39,11 +39,11 @@ List of default values for `-D<options>` (used if not specified):
 
 - The code's [wiki page](https://iffwiki.fz-juelich.de/kkr/doku.php)
 
-- The [source code documentation](https://kkr.iffgit.fz-juelich.de/kkrjm/)
+- The [source code documentation](https://kkr.iffgit.fz-juelich.de/jukkr/)
 
 
 ## Found a bug?
 
-If you find any bugs, please file a new issue on the [gitlab page](https://iffgit.fz-juelich.de/kkr/kkrjm/issues)
+If you find any bugs, please file a new issue on the [gitlab page](https://iffgit.fz-juelich.de/kkr/jukkr/issues)
 
 

@@ -42,7 +42,7 @@ Add a describtion here.
 
 ----
 
-## v3.0 (2018-10-30)
+## kkrhost-v3.0 (2018-10-30)
 
 Major code refactoring getting rid of the `inc.p` files which eliminates the need to recompile the code for different system sizes.
 
@@ -74,7 +74,7 @@ Major code refactoring getting rid of the `inc.p` files which eliminates the nee
 
 ----
 
-## v2.4 (2018-10-16)
+## kkrhost-v2.4 (2018-10-16)
 
 Include Godfrin slab inversion, rhoq-writeout and more digits in alat writeout.
 
@@ -94,7 +94,7 @@ Include Godfrin slab inversion, rhoq-writeout and more digits in alat writeout.
 
 ----
 
-## v2.3 (2018-05-30)
+## kkrhost-v2.3 (2018-05-30)
 
 Major changes merging branches `qdos_parallel`, and `develop_auto_tests` with some code cleanup.
 
@@ -115,7 +115,7 @@ Major changes merging branches `qdos_parallel`, and `develop_auto_tests` with so
 
 ----
 
-## v2.2 (2017-04-21)
+## kkrhost-v2.2 (2017-04-21)
 
 Some corrections, in particular change of sign in DMI vector calculation (with SOC).
 
@@ -137,7 +137,7 @@ Some corrections, in particular change of sign in DMI vector calculation (with S
 
 ----
 
-## v2.1 (2016-09-08)
+## kkrhost-v2.1 (2016-09-08)
 
 Some bugfixes and full Jij-tensor calculation (using new solver). 
 
@@ -159,7 +159,7 @@ Some bugfixes and full Jij-tensor calculation (using new solver).
 
 ----
 
-## v2.0 (2016-03-24)
+## kkrhost-v2.0 (2016-03-24)
 
 Major improvement to MPI parallelization.
 
@@ -179,7 +179,7 @@ Major improvement to MPI parallelization.
 
 ----
 
-## v1.4 (2015-11-13)
+## kkrhost-v1.4 (2015-11-13)
 
 Improvement to MPI parallelization and new version of Lloyd.
 
@@ -198,7 +198,7 @@ Improvement to MPI parallelization and new version of Lloyd.
 
 ----
 
-## v1.3 (2015-04-29)
+## kkrhost-v1.3 (2015-04-29)
 
 First version with MPI parallelization and Long's implementation of Lloyd's formula
 
@@ -208,7 +208,7 @@ First version with MPI parallelization and Long's implementation of Lloyd's form
 
 ----
 
-## v1.2 (2015-04-21)
+## kkrhost-v1.2 (2015-04-21)
 
 Got rid of unformatted files for data transfer between 1a, 1b, 1c parts of the code.
 
@@ -220,7 +220,7 @@ Got rid of unformatted files for data transfer between 1a, 1b, 1c parts of the c
 
 ----
 
-## v1.1 (2015-04-17)
+## kkrhost-v1.1 (2015-04-17)
 
 First version with a single executable.
 
@@ -229,7 +229,7 @@ First version with a single executable.
 
 ----
 
-## v1.0 (2015-04-15)
+## kkrhost-v1.0 (2015-04-15)
 
 Started version control with git based on KKR code `JMcode_2015_03_10`
 This version is the JM code containing Long's addition of David's routine for FP+SOC
@@ -237,16 +237,16 @@ and Philipp's addition of qdos with SOC. All changes mentioned below are include
 
 ----
 
-## Old versions (before version control with *git*)
+## Old versions of kkrhost (before version control with *git*)
 
-### 2015-03-10
+### kkrhost: 2015-03-10
 
 Fixed a bug in rhovalnew.f that was causing erroneous results when calculating
 qdos.
 
 ----
 
-### 2015-01-22
+### kkrhost: 2015-01-22
 
 Again: 
 Fixed a bug in rinput13.f90 that did not allow the runopt XCPL to work
@@ -254,14 +254,14 @@ properly. (Was not working with NPOL=0)
 
 ----
 
-### 2015-01-11
+### kkrhost: 2015-01-11
 
 Fixed a bug in rinput13.f90 that did not allow the runopt XCPL to work
 properly.
 
 ----
 
-### 2014-11-13
+### kkrhost: 2014-11-13
 
 Fixed a bug that would not allow using the REFPOT information for the
 left/right region in 2D if ATOMINFO was used (the routine clsgen_tb was
@@ -272,7 +272,7 @@ the decimal point.
 
 ----
 
-### 2014-11-06
+### kkrhost: 2014-11-06
 
 inc.cls not needed any more.
 Parameters NCLSD, NACLSD transfered to inc.p, with default NACLSD = NAEZD + NEMBD
@@ -280,7 +280,7 @@ Cluster info found automatically.
 
 ----
 
-### 2014-10-13
+### kkrhost: 2014-10-13
 
 `IQAT(NAEZD,NATYPD)` is changed to `IQAT(NATYPD)` because only the `IQAT(1,*)` was
 ever used.
@@ -293,14 +293,14 @@ ICC and IGREENFUN are automatically set to 1 if `OPT('KKRFLEX ')` is used.
 
 ----
 
-### 2014-07-25
+### kkrhost: 2014-07-25
 
 Philipp's OMP parallelization is included. 
 Lloyd's formula is included for non-relativistic non-cpa calculations.
 
 ----
 
-### 2013-09-27
+### kkrhost: 2013-09-27
 
 rinput99 is changed to rinput13.
 - everything useless was thrown out

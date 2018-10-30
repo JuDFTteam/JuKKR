@@ -4,14 +4,14 @@ title: Contribution guide
 
 # How to contribute
 
-We are glad you want to contribute to the Jülich KKR program.
+We are glad you want to contribute to the Jülich KKR programs.
 
 Here are some important resources:
 
   * Join our [KKR channel](https://iffchat.fz-juelich.de/signup_user_complete/?id=ascuxqyto3r53pn97gxm1kcu8h) on the iff-chat Mattermost server.
   * Check our [Wiki page](https://iffwiki.fz-juelich.de/kkr/doku.php) and don't be afraid to improve and add things that might be of general interest once you found domething out that is missing there.
-  * Take a look at our [online source code documentation](https://kkr.iffgit.fz-juelich.de/kkrjm) and the [readme page](https://kkr.iffgit.fz-juelich.de/kkrjm/page/index.html) given there.
-  * Bugs? Check our [issues page](https://iffgit.fz-juelich.de/kkr/kkrjm/issues) to see if the bug is already known. If it is a new one please [submit a new issue](https://iffgit.fz-juelich.de/kkr/kkrjm/issues/new?issue%5Bassignee_id%5D=&issue%5Bmilestone_id%5D=).
+  * Take a look at our [online source code documentation](https://kkr.iffgit.fz-juelich.de/jukkr) and the [readme page](https://kkr.iffgit.fz-juelich.de/jukkr/page/index.html) given there.
+  * Bugs? Check our [issues page](https://iffgit.fz-juelich.de/kkr/kkrjm/issues) to see if the bug is already known. If it is a new one please [submit a new issue](https://iffgit.fz-juelich.de/kkr/jukkr/issues/new?issue%5Bassignee_id%5D=&issue%5Bmilestone_id%5D=).
 
 ## Testing
 
