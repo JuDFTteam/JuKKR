@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-cd tests
+cd tests/KKRhost
 cp -rL test_inputs/test_03.2_NOSOC/ test_run03.2_hybrid_1_3
 cd test_run03.2_hybrid_1_3
 

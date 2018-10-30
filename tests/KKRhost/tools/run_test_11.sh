@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-mkdir tests/test_run11_mpi_1_8
-cd tests/test_run11_mpi_1_8
+mkdir tests/KKRhost/test_run11_mpi_1_8
+cd tests/KKRhost/test_run11_mpi_1_8
 ln -s ../test_inputs/test_11_*/* .
 rm DTM GMAT
 cp -r ../test_inputs/test_11_*/{DTM,GMAT} .

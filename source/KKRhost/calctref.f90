@@ -136,8 +136,7 @@ contains
       tmatanal = -ciove*a1/b1
       dtmatanal = ci*0.5e0_dp/roote1**3*a1/b1 - ci/roote1*(da1/b1-a1*db1/b1**2)
 
-      alpharef(l1) = -(roote2/roote1)**l1/(rmtref**2*roote1*b1) ! Following R.
-      ! Zeller
+      alpharef(l1) = -(roote2/roote1)**l1/(rmtref**2*roote1*b1) ! Following R. Zeller
       dalpharef(l1) = (l1/2.e0_dp/roote2-(l1+1)/2.e0_dp/roote1-db1/b1)*alpharef(l1)
 
       do j1 = -l1, l1

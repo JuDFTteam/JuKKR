@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-mkdir tests/test_run19_mpi_2_4
-cd tests/test_run19_mpi_2_4
+mkdir tests/KKRhost/test_run19_mpi_2_4
+cd tests/KKRhost/test_run19_mpi_2_4
 ln -s ../test_inputs/test_19_*/* .
 rm bulk
 cp -r ../test_inputs/test_19_*/bulk .

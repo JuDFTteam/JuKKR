@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-cd tests
+cd tests/KKRhost
 cp -r test_inputs/test_20_godfrin/ test_run20_hybrid_1_3
 cd test_run20_hybrid_1_3/godfrinON/
 export OMP_NUM_THREADS=1

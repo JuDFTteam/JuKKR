@@ -6,9 +6,9 @@ license: by-nc
 version: 2.4
 project_website: https://iffgit.fz-juelich.de/kkr/kkrjm
 project_download: https://iffgit.fz-juelich.de/kkr/kkrjm
-src_dir: ./ALL_SOURCE_FILES
+src_dir: ../../source/KKRhost/
 page_dir: ./
-output_dir: ./doc
+output_dir: ./build
 media_dir: ./media
 docmark: !
 predocmark: >

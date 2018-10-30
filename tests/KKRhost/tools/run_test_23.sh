@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-cd tests
+cd tests/KKRhost
 cp -rL test_inputs/test_23_dos/ test_run23_hybrid_1_3
 export OMP_NUM_THREADS=1
 

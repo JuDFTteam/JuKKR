@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-mkdir tests/test_run10_mpi_1_8
-cd tests/test_run10_mpi_1_8
+mkdir tests/KKRhost/test_run10_mpi_1_8
+cd tests/KKRhost/test_run10_mpi_1_8
 ln -s ../test_inputs/test_10_*/* .
 export OMP_NUM_THREADS=1
 mpirun -np 8 ../../kkr.x | tee out_kkr
