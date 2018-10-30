@@ -1,0 +1,8 @@
+build_voronoi:intel:
+  stage: build_voronoi
+  script:
+    - cd prog && make 
+  artifacts:
+    paths:
+      - voronoi.exe
+    expire_in: 1 day
