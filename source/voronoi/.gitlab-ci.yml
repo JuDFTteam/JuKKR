@@ -1,0 +1,66 @@
+############################################################
+####       gitlab-ci settings for voronoi code          ####
+############################################################
+#
+# docker image containing Developlement Tools and the current Intel compilers based on CentOS 7
+image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers
+
+
+before_script:
+  # set +e prevents sourced scripts from aborting if single commands fail (GitLab CI sets `-e` by default)
+  - set +e && source compilervars.sh intel64 && set -e
+  # set environment variables to avoind stack size issue
+  - export OMP_NUM_THREADS=1
+  - export OMP_STACKSIZE=1g
+  - ulimit -s unlimited
+
+
+stages:
+  - build
+  - run
+#  needs to be implemented:
+#  - verify
+
+############################################################
+
+build:intel:
+  stage: build
+  script:
+    - cd prog && make 
+  artifacts:
+    paths:
+      - voronoi.exe
+    expire_in: 1 day
+
+############################################################
+
+run:intel:oldstyle:
+  stage: run
+  script:
+    - cd tests/
+    - cp -r test_inputs/test01_oldstyle test_run01
+    - cd test_run01 && ln -s ../../ElementDataBase . && ../../voronoi.exe | tee out_voronoi
+  artifacts:
+    paths:
+      - tests/test_run01
+    expire_in: 1 day
+
+run:intel:newstyle:
+  stage: run
+  script:
+    - cd tests/
+    - cp -r test_inputs/test02_newstyle test_run02
+    - cd test_run02 && ln -s ../../ElementDataBase . && ../../voronoi.exe | tee out_voronoi
+  artifacts:
+    paths:
+      - tests/test_run02
+    expire_in: 1 day
+
+############################################################
+ 
+#verify:intel:
+#  stage: build
+#  script:
+#    - cd tests/
+#    - pytest -v
+

@@ -1,0 +1,10 @@
+prog/*.o
+prog/*.mod
+prog/*~
+prog/*__genmod*
+prog/version.f90
+prog/inc.p
+prog/inc.cls
+prog20*
+voronoi.exe
+tests/test_run*
