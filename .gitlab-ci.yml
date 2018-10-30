@@ -104,33 +104,33 @@ build_kkrhost:intel:hybrid:
 run_kkrhost:intel:serial_1:
   stage: run_kkrhost_serial
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_serial.py 1
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 run_kkrhost:intel:serial_2:
   stage: run_kkrhost_serial
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_serial.py 2
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 run_kkrhost:intel:serial_3:
   stage: run_kkrhost_serial
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_serial.py 3
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
@@ -138,33 +138,33 @@ run_kkrhost:intel:serial_3:
 run_kkrhost:intel:parallel_2:
   stage: run_kkrhost_parallel
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_parallel.py 2
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 run_kkrhost:intel:MPIatom_7:
   stage: run_kkrhost_parallel
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_parallel.py -7
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
  
 run_kkrhost:intel:MPIenerg_8:
   stage: run_kkrhost_parallel
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_parallel.py -8
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
@@ -181,11 +181,11 @@ run_kkrhost:intel:multi_node_9:
      - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
        alias: c4
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_multi_node.py
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
  
@@ -193,22 +193,22 @@ run_kkrhost:intel:multi_node_9:
 run_kkrhost:intel:MPIatom_SOC_7_1:
   stage: run_kkrhost_parallel
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_parallel.py -1007
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
  
 run_kkrhost:intel:MPIenerg_SOC_8_1:
   stage: run_kkrhost_parallel
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_parallel.py -1008
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
@@ -217,121 +217,121 @@ run_kkrhost:intel:MPIenerg_SOC_8_1:
 run_kkrhost:intel:Jijs_4:
   stage: run_kkrhost_features
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_serial.py 4
     - ./run_parallel.py -4
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 run_kkrhost:intel:kkrflex_5:
   stage: run_kkrhost_features
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_serial.py 5
     - ./run_parallel.py -5
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 run_kkrhost:intel:FERMIOUT_6:
   stage: run_kkrhost_features
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_serial.py 6
     - ./run_parallel.py -6
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
  
 run_kkrhost:intel:OPERATOR_10:
   stage: run_kkrhost_features
   script:
-      - tests/tools/run_test_10.sh
+      - tests/KKRhost/tools/run_test_10.sh
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 run_kkrhost:intel:DTM_GMATLL_11:
   stage: run_kkrhost_features
   script:
-      - tests/tools/run_test_11.sh
+      - tests/KKRhost/tools/run_test_11.sh
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 run_kkrhost:intel:qdos_12:
   stage: run_kkrhost_features
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_parallel.py -12
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 #run_kkrhost:intel:rhoq_13:
 #  stage: run_kkrhost_features
 #  script:
-#      - tests/tools/run_test_13.sh
+#      - tests/KKRhost/tools/run_test_13.sh
 #  artifacts:
 #    paths:
-#      - tests/test_run*
+#      - tests/KKRhost/test_run*
 #      - build/*dyn
 #    expire_in: 1 day
 
 run_kkrhost:intel:ASA_14:
   stage: run_kkrhost_features
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_parallel.py -14
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 run_kkrhost:intel:CPA_15:
   stage: run_kkrhost_features
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_parallel.py -15
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 run_kkrhost:intel:Dirac_16:
   stage: run_kkrhost_features
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_parallel.py -16
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 run_kkrhost:intel:lambda_xc_17:
   stage: run_kkrhost_features
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_parallel.py -17
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
@@ -339,61 +339,61 @@ run_kkrhost:intel:lambda_xc_17:
 #run_kkrhost:intel:noco_18:
 #  stage: run_kkrhost_features
 #  script:
-#    - cd tests
+#    - cd tests/KKRhost
 #    - ./run_parallel.py -18
 #  artifacts:
 #    paths:
-#      - tests/test_run*
+#      - tests/KKRhost/test_run*
 #      - build/*dyn
 #    expire_in: 1 day
 
 run_kkrhost:intel:decimate_19:
   stage: run_kkrhost_features
   script:
-      - tests/tools/run_test_19.sh
+      - tests/KKRhost/tools/run_test_19.sh
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 run_kkrhost:intel:godfrin_20:
   stage: run_kkrhost_features
   script:
-    - tests/tools/run_test_20.sh
+    - tests/KKRhost/tools/run_test_20.sh
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 run_kkrhost:intel:XCs_21:
   stage: run_kkrhost_features
   script:
-    - tests/tools/run_test_21.sh
+    - tests/KKRhost/tools/run_test_21.sh
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 run_kkrhost:intel:LDAU_22:
   stage: run_kkrhost_features
   script:
-    - tests/tools/run_test_22.sh
+    - tests/KKRhost/tools/run_test_22.sh
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 run_kkrhost:intel:DOS_23:
   stage: run_kkrhost_features
   script:
-    - tests/tools/run_test_23.sh
+    - tests/KKRhost/tools/run_test_23.sh
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
@@ -434,7 +434,7 @@ run_kkrhost:intel:aiida-kkr:
     - cd voronoi/prog/ && make && cd ../../
     - verdi code setup < "tests/tools/setup_voronoi_aiida.txt" 
     # finally run simple test case using kkr_scf workflow of aiida
-    - tests/tools/aiida_simple_test.py
+    - tests/KKRhost/tools/aiida_simple_test.py
     # check some output of the calculation and export aiida database
     - verdi work report 6
     - verdi export create -n 6 -a tar.gz test_export.aiida.tar.gz
@@ -457,119 +457,119 @@ run_kkrhost:intel:aiida-kkr:
 run_kkrhost:intel:Au_bulk_SOC_1_1:
   stage: run_kkrhost_features_SOC
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_parallel.py -1001
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 run_kkrhost:intel:Fe_slab_SOC_2_1:
   stage: run_kkrhost_features_SOC
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_parallel.py -1002
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 run_kkrhost:intel:Si_LLY_SOC_3_1:
   stage: run_features_SOC
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_parallel.py -1003
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 run_kkrhost:intel:NOSOC_3_2:
   stage: run_kkrhost_features_SOC
   script:
-    - tests/tools/run_test_03_2.sh
+    - tests/KKRhost/tools/run_test_03_2.sh
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 run_kkrhost:intel:Jijs_SOC_4_1:
   stage: run_features_SOC
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_parallel.py -1004
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 run_kkrhost:intel:kkrflex_SOC_5_1:
   stage: run_kkrhost_features_SOC
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_parallel.py -1005
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 run_kkrhost:intel:FERMIOUT_SOC_6_1:
   stage: run_kkrhost_features_SOC
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_parallel.py -1006
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 run_kkrhost:intel:qdos_SOC_12_1:
   stage: run_kkrhost_features_SOC
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_parallel.py -1012
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 run_kkrhost:intel:ASA_SOC_14_1:
   stage: run_kkrhost_features_SOC
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_parallel.py -1014
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 run_kkrhost:intel:CPA_SOC_15_1:
   stage: run_kkrhost_features_SOC
   script:
-    - cd tests
+    - cd tests/KKRhost
     - ./run_parallel.py -1015
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
 run_kkrhost:intel:decimate_SOC_19_1:
   stage: run_kkrhost_features_SOC
   script:
-      - tests/tools/run_test_19_1.sh
+      - tests/KKRhost/tools/run_test_19_1.sh
   artifacts:
     paths:
-      - tests/test_run*
+      - tests/KKRhost/test_run*
       - build/*dyn
     expire_in: 1 day
 
@@ -582,7 +582,7 @@ verify_kkrhost:intel:
     # use pip to install pytest
     - pip install pytest
     # prepare and execute verification using pytest
-    - cd tests
+    - cd tests/KKRhost
     - pytest -v --ignore=tools/aiida_simple_test.py 
     - tar -zcvf ../all_test_results.tar.gz test_run*
   artifacts:
@@ -611,7 +611,7 @@ verify_kkrhost:intel:aiida:
   script:
     # check some output of the calculation
     - verdi import test_export.aiida.tar.gz
-    - python tests/tools/aiida_check_results.py
+    - python tests/KKRhost/tools/aiida_check_results.py
   only: 
     - schedules
     - triggers
