@@ -1,0 +1,63 @@
+module broydenmixing
+
+      INTEGER LMPOTD
+      PARAMETER (LMPOTD= (LPOTD+1)**2)
+      INTEGER IRMIND
+      PARAMETER (IRMIND=IRMD-IRNSD)
+      INTEGER NSPINDD
+      PARAMETER (NSPINDD=2*KREL + (1-KREL)*NSPIND)
+      INTEGER NTIRD
+      PARAMETER (NTIRD= (IRMD*NTPERD+ (IRNSD+1)* (LMPOTD-1)*NATYPD)*
+     +          NSPINDD)
+      INTEGER ITDTHD
+      PARAMETER (ITDTHD=40)
+
+         IF (IMIX.GE.3) 
+     +       CALL BRYDBM(VISP,VONS,VINS,VSPSMDUM,VSPSMDUM,INS,
+     +                   LMPOT,R,DRDI,MIX,CONC,
+     +                   IRC,IRMIN,NSPIN,1,NATYP,ITDBRY,
+     +                   IMIX,IOBROY,IPF,LSMEAR)
+
+
+!       SUBROUTINE BRYDBM(VISP,V,VINS,VSPSME,VSPSMO,INS,LMPOT,
+!      +                  R,DRDI,ALPHA,ATWGHT,IRC,IRMIN,NSPIN,
+!      +                  NATPS,NATYP,ITDEPT,IMIX,IOBROY,IPF,LSMEAR
+!      +                  IRMD,LMPOTD,IRMIND,ITDTHD,NTIRD)
+
+!       SUBROUTINE BRYDBM(VISP,V,VINS,VSPSME,VSPSMO,INS,LMPOT,
+!      +                  R,DRDI,ALPHA,ATWGHT,IRC,IRMIN,NSPIN,
+!      +                  NATPS,NATYP,ITDEPT,IMIX,IOBROY,IPF,LSMEAR
+!      +                  IRMD,LMPOTD,IRMIND,ITDTHD,NTIRD)
+
+
+
+
+      SUBROUTINE MIXBROYDEN(VPOT,VPOT_OUT,INS,MIXFAC,NSPIN,CELL,LMAXATOM, &
+                        NATOM,ITDEPT,IMIX,LMPOTD,IRMD)
+      USE TYPE_CELL
+      IMPLICIT NONE
+! !       INCLUDE 'inc.p'
+     REAL(8)            :: VPOT(IRMD,LMPOTD,NSPIN,NATOM)
+     REAL(8)            :: VPOT_OUT(IRMD,LMPOTD,NSPIN,NATOM)
+     INTEGER            :: INS
+     INTEGER            :: MIXFAC
+     INTEGER            :: NSPIN
+     TYPE(CELL_TYPE)    :: CELL(NATOM)
+     INTEGER            :: LMAXATOM(NATOM)
+     INTEGER            :: NATOM
+     INTEGER            :: ITDEPT
+     INTEGER            :: IMIX
+     INTEGER            :: LMPOTD
+     INTEGER            :: IRMD
+
+
+     INTEGER            :: NTIRD
+
+     CALL MIXBROYDEN_SHIFT(FM,'.',VPOT_OUT,INS,CELL,NATOM,NSPIN,NTIRD,LMAXATOM,LMPOTD,IRMD)
+
+
+     CALL MIXBROYDEN(VPOT,VPOT_OUT,INS,MIXFAC,NSPIN,CELL,LMAXATOM, &
+                        NATOM,ITDEPT,IMIX,NTIRD,LMPOTD,IRMD)
+     END SUBROUTINE MIXBROYDEN
+ 
+end module broydenmixing
