@@ -1,0 +1,47 @@
+###############################################################################
+####         continuous integration setting of the PKKprime code           ####
+###############################################################################
+
+# docker image containing Developlement Tools and the current Intel compilers based on CentOS 7 with cmake
+image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/extended_intel2016
+
+before_script:
+  # set +e prevents sourced scripts from aborting if single commands fail (GitLab CI sets `-e` by default)
+  - set +e && source compilervars.sh intel64 && set -e
+  # set environment variables to avoind stack size issue
+  - export OMP_NUM_THREADS=1
+  - export OMP_STACKSIZE=1g
+  - ulimit -s unlimited
+  # install pip and numpy
+  - pip install numpy || curl -O https://bootstrap.pypa.io/get-pip.py && python get-pip.py && pip install numpy
+
+stages:
+  - build
+
+###############################################################################
+# compile code
+
+build:compile:
+  stage: build
+  script:
+    - make install
+
+###############################################################################
+# for Gitlab pages (online code documentation build with ford)
+
+pages:
+  stage: build
+  image: ubuntu:latest
+  allow_failure: true
+  script:
+    - apt-get update && apt-get upgrade -y  && apt-get install -y python-pip && apt-get install -y graphviz
+    - pip install ford
+    - ford ford_settings.md
+    - mv doc/ public/
+  artifacts:
+    paths:
+      - public
+#  only:
+#    - schedules
+#    - triggers
+#    - web

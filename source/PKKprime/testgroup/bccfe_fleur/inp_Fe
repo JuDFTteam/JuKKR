@@ -1,0 +1,12 @@
+Fe bcc
+
+&input inistop=f /
+
+&lattice latsys='cP' a0=6.82 /
+
+2
+26 0.0 0.0 0.0
+26 0.5 0.5 0.5
+
+&soc 0.0 0.0 /
+&end/
