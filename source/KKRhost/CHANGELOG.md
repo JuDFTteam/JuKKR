@@ -23,6 +23,27 @@ title: Changelog
 
 **Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release.**
 
+Add a describtion here.
+
+### Added
+- None
+
+### Changed
+- None
+
+### Deprecated
+- None
+
+### Removed
+- None
+
+### Fixed
+- None
+
+----
+
+## v3.0 (2018-10-30)
+
 Major code refactoring getting rid of the `inc.p` files which eliminates the need to recompile the code for different system sizes.
 
 ### Added
@@ -49,6 +70,7 @@ Major code refactoring getting rid of the `inc.p` files which eliminates the nee
 ### Fixed
 - gfortran compilation
 - interfaces to Dirac routines (now also work in debug mode)
+- wrong symmetrization of shells for Jij calculation without inversino symmetry (issue #64)
 
 ----
 
