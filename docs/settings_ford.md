@@ -6,7 +6,7 @@ license: by-nc
 version: 2.4
 project_website: https://iffgit.fz-juelich.de/kkr/kkrjm
 project_download: https://iffgit.fz-juelich.de/kkr/kkrjm
-src_dir: ../../source/KKRhost/
+src_dir: ../source/KKRhost/
 page_dir: ./
 output_dir: ./build
 media_dir: ./media
@@ -21,7 +21,7 @@ extra_filetypes: 1 #
 		 inc !
 		 mk #
 source: false
-search: true 
+search: false #true 
 graph: true 
 coloured_edges: true
 warn: false 

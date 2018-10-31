@@ -26,8 +26,8 @@ all_incp_incudes.txt
 */out_timing.*.txt
 */output.*.txt
 
-# doxygen files
-/doc/
+# documentation
+/docs/build
 
 # automatic tests
 .cache/
