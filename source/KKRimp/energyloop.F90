@@ -23,6 +23,9 @@ module mod_energyloop
 subroutine energyloop(my_rank,mpi_size,ITSCF,cell, vpot, shapefun,zatom,natom,nspin,lmaxatom, &
                       lmaxd,density,ielast,ez,wez,config,gmat,gmatonsite,tmat,energyparts, &
                       ldau)                                                                         ! lda+u
+#ifdef CPP_MPI
+       use mpi
+#endif
       use nrtype
       use mod_rhoval
       use mod_rhoval_new
@@ -127,9 +130,6 @@ subroutine energyloop(my_rank,mpi_size,ITSCF,cell, vpot, shapefun,zatom,natom,ns
      integer            :: idotime 
      double precision,allocatable   :: testpotdummy(:,:)
      logical            ::   calcleft
-#ifdef MPI
-       INCLUDE "mpif.h"
-#endif
 
 call timing_start('energyloop')
 
@@ -325,7 +325,7 @@ if (config%ncoll==1) then
     call read_angle(natom,my_rank,density)
   end if
 
-#ifdef MPI
+#ifdef CPP_MPI
       write(1337,*) 'Distributed new angles from my_rank 0 to others'
     do iatom=1,natom
       call mpi_bcast(density(iatom)%theta,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierror)
@@ -411,7 +411,7 @@ writeout_ie=1
 !#                      Start the energy loop
 !####################################################################
 !####################################################################
-#ifdef MPI
+#ifdef CPP_MPI
 call mpi_barrier(MPI_COMM_WORLD,ierror)
 if (ITSCF==1) then 
   write(*,'(A,I3,A,I4,A,I4,A,I2,A)') '[energyloop] proc= ',my_rank,' Energy ie=', &
@@ -444,7 +444,7 @@ if ( .not. config_testflag('nodisplayeloop') ) then
     write(*,'(A)') '100%'
     write(*,'(A$)') '  '
   end if
-#ifdef MPI
+#ifdef CPP_MPI
   call mpi_barrier(MPI_COMM_WORLD,ierror)
 #endif
 end if
@@ -796,7 +796,7 @@ end if
 end do !ie
 
 
-#ifdef MPI
+#ifdef CPP_MPI
 
 call mpi_barrier(MPI_COMM_WORLD,ierror)
 

@@ -1,6 +1,9 @@
 module mod_preconditioning
   contains
    subroutine preconditioning_start(my_rank,mpi_size,ez, wez, ielast, intercell_ach, alat,vmtzero,lattice_relax,gmatbulk) 
+#ifdef CPP_MPI
+  use mpi
+#endif
      use nrtype
      use mod_dysonvirtatom, only: dysonvirtatom
      use mod_read_atominfo
@@ -43,9 +46,6 @@ module mod_preconditioning
       integer,allocatable                      :: mpi_iebounds(:,:)
       integer                                  :: my_rank
       integer                                  :: mpi_size,ierror
-#ifdef MPI
-       INCLUDE "mpif.h"
-#endif
 
 call log_write('>>>>>>>>>>>> preconditioning read_atominfo >>>>>>>>>>>>>>>>>>>>>')
 call read_atominfo('total','kkrflex_atominfo',natom,ntotatom,RIMPATOM,&
@@ -81,7 +81,7 @@ else
     write(*,*) 'my_rank=1 reads tmat and communicates to other processes'
     call preconditioning_readtmat(IELAST,lmsizehost,NTOTATOM,NSPIN,TMAT,KGREFSOC)
   end if
-#ifdef MPI
+#ifdef CPP_MPI
    call mpi_bcast( TMAT, lmsizehost*lmsizehost*Ntotatom*IELAST*(NSPIN-KGREFSOC),MPI_DOUBLE_COMPLEX,0,MPI_COMM_WORLD, ierror)
 #endif
 end if
@@ -203,7 +203,7 @@ if (my_rank==0) then
   write(*,*) ' ###    Starting pre dyson energy loop'
   write(*,*) ' ###############################################'
 end if
-#ifdef MPI
+#ifdef CPP_MPI
 call mpi_barrier(MPI_COMM_WORLD,ierror)
 ! print *, 'ierror=',ierror
 #endif
@@ -240,7 +240,7 @@ close(89)
 if(config_testflag('gmat_plain')) close(8989)
 deallocate(gmathostnew)
 
-#ifdef MPI
+#ifdef CPP_MPI
 call mpi_barrier(MPI_COMM_WORLD,ierror)
 #endif
 

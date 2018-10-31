@@ -20,7 +20,7 @@ C
 C
 C PARAMETER definitions
 C
-#ifdef MPI
+#ifdef CPP_MPI
       use mpi
 #endif
       USE NRTYPE
@@ -103,7 +103,7 @@ C Read from ldaupot file IRUNLDAU,LOPT,UEFF,JEFF,EREFLDAU.
 ! Arrays are allocated in this routine
       CALL RWLDAUPOT(.FALSE.,1,NATYP,NSPIN,LMAXD,IRMD,IRUNLDAU,LDAU)
 
-#ifdef MPI
+#ifdef CPP_MPI
       CALL MPI_BARRIER(MPI_COMM_WORLD,IERROR)
 #endif
 

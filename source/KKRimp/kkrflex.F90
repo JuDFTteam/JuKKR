@@ -14,6 +14,10 @@
 !------------------------------------------------------------------------------------
 program kkrflex
 
+
+#ifdef CPP_MPI
+  use mpi
+#endif
 ! modules
   use nrtype
   use mod_read_potential
@@ -161,10 +165,6 @@ program kkrflex
   type(tmat_type),allocatable    :: tmatll(:,:) !(lmmaxd,lmmaxd)
   integer                              :: istop_selfcons
 
-#ifdef MPI
-       INCLUDE "mpif.h"
-#endif
-
 
 
 
@@ -187,7 +187,7 @@ program kkrflex
 my_rank=0
 mpi_size=1
 
-#ifdef MPI
+#ifdef CPP_MPI
       CALL MPI_INIT(ierror)
       CALL MPI_COMM_RANK(MPI_COMM_WORLD, my_rank, ierror)
       CALL MPI_COMM_SIZE(MPI_COMM_WORLD, mpi_size, ierror)
@@ -208,7 +208,7 @@ if (my_rank==0) then
   write(*,*) ' **************************************************************************'
 end if
 
-#ifdef MPI
+#ifdef CPP_MPI
 if (my_rank==0) then
   write(*,*) ' ###############################################'
   write(*,*) ' ##########   MPI Initialization    ############'
@@ -306,7 +306,7 @@ if ( config_runflag('LLYsimple') ) then
     close(192837)
     write(*,*) 'Renormalize weights with factor:',llyfac
   end if
-#ifdef MPI
+#ifdef CPP_MPI
   call MPI_Bcast(llyfac, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierror)
   if(ierror/=0) stop 'Error in MPI_Bcast for llyfac'
 #endif
@@ -1078,12 +1078,10 @@ end if
 
   end if
 
-#ifdef MPI
+#ifdef CPP_MPI
     if (my_rank==0 .and. istop_selfcons==1) call log_write('send stop signal')
     call mpi_bcast( istop_selfcons,1,MPI_INTEGER,0,MPI_COMM_WORLD, ierror)
-#endif
 
-#ifdef MPI
   call mpi_bcast( vpot,cell(1)%NRMAXD*(2*LMAXD+1)**2*NSPIN*NATOM,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD, ierror)
   do iatom = 1,natom                                                                                       ! lda+u
   if (ldau(iatom)%lopt.ge.0) then                                                                          ! lda+u
@@ -1111,7 +1109,7 @@ if (my_rank==0) then
 end if
 ! ********************************************************** 
 
-#ifdef MPI
+#ifdef CPP_MPI
 call log_write('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
 call log_write('>>>>>>>>>>>>>>>>>>>>> mpi_finalize >>>>>>>>>>>>>>>>>>>>>')
 call log_write('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
