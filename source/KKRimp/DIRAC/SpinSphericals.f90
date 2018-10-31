@@ -1,6 +1,7 @@
 module SpinSphericals
 
   use Constants
+  use mod_datatypes, only: dp
 
 contains
 
@@ -14,7 +15,7 @@ contains
     integer :: kappa,l
     real :: mu,ms
     double precision :: theta,phi
-    double complex :: chi1,chi2
+    complex (kind=dp) :: chi1,chi2
 
     l=getL(kappa)
     ! first component
@@ -35,7 +36,7 @@ contains
   end subroutine SpinSphericalHarmonic
 
 
-  double complex function ComplexSphericalHarmonic(l,m,theta,phi)
+  complex (kind=dp) function ComplexSphericalHarmonic(l,m,theta,phi)
     ! calculates the value of the Complex Spherical Harmonics
     ! input l=0..10, m=0..l
     implicit none
@@ -46,7 +47,7 @@ contains
   end function ComplexSphericalHarmonic
 
 
-  double complex function RealSphericalHarmonic(l,m,theta,phi)
+  complex (kind=dp) function RealSphericalHarmonic(l,m,theta,phi)
     ! calculates the value of the Real Spherical Harmonics
     ! input l=0..10, m=0..l
     implicit none
@@ -163,11 +164,11 @@ contains
     ! input variable
     integer   :: lcut
     ! outupt
-    integer,allocatable,dimension(:) :: LambdabarArray
+    integer, allocatable, dimension(:) :: LambdabarArray
     ! other variables
     integer                               :: Lambda,Lambdacut
-    integer,allocatable,dimension(:)      :: KappaArray
-    real,allocatable,dimension(:)         :: MuArray
+    integer, allocatable, dimension(:)      :: KappaArray
+    real, allocatable, dimension(:)         :: MuArray
     
     Lambdacut = getLambdacut(lcut)
     allocate(LambdabarArray(Lambdacut))
@@ -184,8 +185,8 @@ contains
     ! input variable
     integer :: lcut
     ! output variables
-    integer,allocatable,dimension(:) :: KappaArray
-    real,allocatable,dimension(:) :: MuArray
+    integer, allocatable, dimension(:) :: KappaArray
+    real, allocatable, dimension(:) :: MuArray
     ! other variables
     integer :: k,kk
     integer :: absolutkappa,kappa

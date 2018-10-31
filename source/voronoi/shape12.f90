@@ -1,134 +1,134 @@
-C=====================================================================
+!=====================================================================
   
-      SUBROUTINE SHAPE(NPOI8,AFACE8,BFACE8,CFACE8,DFACE8,
-     &                 TOLVDIST,   ! Max. tolerance for distance of two vertices
-     &                 TOLEULER,   ! Used in calculation of Euler angles, subr. EULER
-     &                 NMIN,       ! Min. number of points in panel
-     &                 NVERTICES8,XVERT8,YVERT8,ZVERT8,NFACE8,LMAX8,
-     &                 DLT8,KEYPAN8,NM8,ICLUSTER,
-     &                 NCELL_S,    ! number of cell
-     &                 SCALE_S,    ! scaling factor
-     &                 NPAN_S,     ! panels for the shape
-     &                 MESHN_S,    ! number of mesh points 
-     &                 NM_S,       ! array, mesh for each panel
-     &                 XRN_S,      ! radial mesh
-     &                 DRN_S,      ! drdi for radial mesh
-     &                 NFUN_S,     ! number of nonzero shapefunctions
-     &                 LMIFUN_S,   ! lm of the ifun shapefunction
-     &                 THETAS_S)   ! Thetas(r,ifun)
+      SUBROUTINE SHAPE(NPOI8,AFACE8,BFACE8,CFACE8,DFACE8, &
+                       TOLVDIST, & ! Max. tolerance for distance of two 
+                       TOLEULER, & ! Used in calculation of Euler angles
+                       NMIN,     & ! Min. number of points in panel
+                       NVERTICES8,XVERT8,YVERT8,ZVERT8,NFACE8,LMAX8, &
+                       DLT8,KEYPAN8,NM8,ICLUSTER, &
+                       NCELL_S,  & ! number of cell
+                       SCALE_S,  & ! scaling factor
+                       NPAN_S,   & ! panels for the shape
+                       MESHN_S,  & ! number of mesh points
+                       NM_S,     & ! array, mesh for each panel
+                       XRN_S,    & ! radial mesh
+                       DRN_S,    & ! drdi for radial mesh
+                       NFUN_S,   & ! number of nonzero shapefunctions
+                       LMIFUN_S, & ! lm of the ifun shapefunction
+                       THETAS_S)   ! Thetas(r,ifun)
       implicit none
-c#@# KKRtags: VORONOI radial-grid initialization shape-functions
-C----------------------------------------------------------------------
-C
-C                       S H A P E   P R O G R A M 
-C
-C        F O R  A R B I T R A R Y  V O R O N O I  P O L Y H E D R A
-C
-C
-C                                                           N.Stefanou
-C----------------------------------------------------------------------
-C     In order to improve the efficency of the code and to
-C     check more, this program was changed in summer 1998 by N.Stefanou
-C     ATTENTION: BUG is removed! 
-C                In the old version IPAN=-1 is wrong and has to be
-C                set to IPAN=0. 
-C
-C     THIS PROGRAM CALCULATES THE ANGULAR MOMENTUM COMPONENTS OF THE 
-C     SHAPEFUNCTION FOR AN ARBITRARY VORONOI POLYHEDRON.
-C     A REAL SPHERICAL HARMONIC BASIS IS USED FOR THE DECOMPOSITION.
-C     ON INPUT WE GIVE :
-C
-C        LMAX          :  MAXIMUM ANGULAR MOMENTUM
-C
-C        DLT           :  DEFINES THE STEP FOR GAUSS-LEGENDRE CALC.
-C  TIME (DEC)  DLT    TOTAL ENERGY (BCC-TEST CdSb in Ge 12 Shells)
-C  1104S      0.002  -.59583341\
-C   315S      0.005  -.59583341 \
-C    51S      0.050  -.59583341  --> NO CHANGES ALSO IN
-C    40S      0.100  -.59583341 /    CHARGES OR FORCES
-C    38S      0.200  -.59583341/
-C    38S      0.300  -.59583354---> CHARGES DIFFER IN 10NTH DIGIT
-C    35S      0.400  -.59583673---> CHARGES DIFFER IN 7NNTH DIGIT
-C                                   FORCES DIFFER IN 5TH DIGIT
-C    --->TO BE AT THE SAVE SIDE USE 0.05 OR 0.1 (SHOULD BE QUITE GOOD)
-C        SIMILAR RESULTS WERE HELD FOR Cu in Fe NN relaxation.
-C
-C
-C        NFACE         :  NUMBER OF FACES OF THE POLYHEDRON
-C        KEYPAN        :  KEY TO DEFINE  THE  RADIAL  MESH.  IF KEYPAN=
-C                         THE DEFAULT  RADIAL  DIVISION  OF PANNELS GIVE
-C                         IN DATA STATEMENT IS USED.OTHERWISE THE  NUMBE
-C                         OF  RADIAL  MESH  POINTS PER PANNEL  (NM(IPAN)
-C                         IS READ IN INPUT
-C                      ** IN THIS VERSION THE MESH IS DETERMINED
-C                         BY SUBROUTINE MESH0.
-C        Z(I)          :  COEFFICIENTS OF THE EQUATION OF A FACE
-C                         Z(1)*X + Z(2)*Y + Z(3)*Z  =  1
-C        NVERT         :  NUMBER OF VERTICES OF A FACE
-C        V(I,IVERT)    :  COORDINATES OF THE VERTICES OF A FACE
-C        NEWSCH(IFACE) :  INTEGER   PARAMETER TO CALCULATE   (=1)
-C                         THE CONTRIBUTION OF THE CORRESPONDING
-C                         PYRAMID TO THE SHAPEFUNCTIONS  .  IF
-C                         NEWSCH.NE.1 THE CONTRIBUTION IS TAKEN
-C                         EQUAL TO THAT OF THE PREVIOUS PYRAMID
-C
-C
-C     IN ORDER TO SAVE MEMORY WE STORE IN LOCAL TEMPORARY FILES IN  UNIT
-C     30+1 , 30+2 , ... , 30+NFACE THE TRANSFORMATION MATRICES ASSOCIATE
-C     WITH THE ROTATION OF EACH PYRAMID. THE TEMPORARY DIRECT ACCESS FIL
-C     IN UNIT 10 CONTAINS THE CALCULATED COMPONENTS OF THE SHAPEFUNCTIO
-C
-C                  ...........I N P U T  C A R D...(Bcc/fcc)
-C
-C                                       if not (Bcc/fcc) change main prg
-C bcc                          <----- Gives the lattice parameters
-C    16    1   0.05000                lmax,nkey,division
-C                                     LMAX=4*LMAX(KKR), 
-C                                     NKEY is not used, 
-C                                     DIVISION is DLT      
-C   125    0                          number of mesh points,keypan
-C                                     Number of mesh points 
-C                                     used for the radial mesh (Depends
-C                                     on the number of pannels).
-C                                     If keypan is 1, 
-C                                     then the radial mesh division is 
-C                                     taken from the input
-C   -3.30000 -3.30000  -3.30000      relaxation percent
-C
-C    63   32   30    7   21   15   15   15   15   15 \     
-C    15   17   15   15   23   15   15    0    0    0  \ This is the
-C     0   17   15   15   23   15   15    0    0    0  / radial mesh info
-C     0    0    0    0    0    0    0    0    0    0 /
-C                  .........................................
-C
-C
-C     THE DEFINITION OF REAL SPHERICAL HARMONICS IS NOT THE STANDARD  ON
-C     REFERED IN THE PAPER:
-C     N.STEFANOU,H.AKAI AND R.ZELLER,COMPUTER PHYS.COMMUN. 60 (1990) 231
-C     IF YOU WANT TO HAVE ANGULAR MOMENTUM COMPONENTS IN THE STANDARD BA
-C     SIS CHANGE THE FOLLOWING STATEMENTS IN THE ROUTINES :
-C     IN CCOEF      ISI=1                        ---->    ISI=1-2*MOD(M,
-C     IN DREAL      IF(MOD(M+MP),2).EQ.0) D=-D   ---->    DELETE THE LIN
-C
-C
-C-----------------------------------------------------------------------
-C
-C
-C     .. PARAMETER STATEMENTS ..
-C
+!#@# KKRtags: VORONOI radial-grid initialization shape-functions
+!----------------------------------------------------------------------
+!
+!                       S H A P E   P R O G R A M 
+!
+!        F O R  A R B I T R A R Y  V O R O N O I  P O L Y H E D R A
+!
+!
+!                                                           N.Stefanou
+!----------------------------------------------------------------------
+!     In order to improve the efficency of the code and to
+!     check more, this program was changed in summer 1998 by N.Stefanou
+!     ATTENTION: BUG is removed! 
+!                In the old version IPAN=-1 is wrong and has to be
+!                set to IPAN=0. 
+!
+!     THIS PROGRAM CALCULATES THE ANGULAR MOMENTUM COMPONENTS OF THE 
+!     SHAPEFUNCTION FOR AN ARBITRARY VORONOI POLYHEDRON.
+!     A REAL SPHERICAL HARMONIC BASIS IS USED FOR THE DECOMPOSITION.
+!     ON INPUT WE GIVE :
+!
+!        LMAX          :  MAXIMUM ANGULAR MOMENTUM
+!
+!        DLT           :  DEFINES THE STEP FOR GAUSS-LEGENDRE CALC.
+!  TIME (DEC)  DLT    TOTAL ENERGY (BCC-TEST CdSb in Ge 12 Shells)
+!  1104S      0.002  -.59583341\
+!   315S      0.005  -.59583341 \
+!    51S      0.050  -.59583341  --> NO CHANGES ALSO IN
+!    40S      0.100  -.59583341 /    CHARGES OR FORCES
+!    38S      0.200  -.59583341/
+!    38S      0.300  -.59583354---> CHARGES DIFFER IN 10NTH DIGIT
+!    35S      0.400  -.59583673---> CHARGES DIFFER IN 7NNTH DIGIT
+!                                   FORCES DIFFER IN 5TH DIGIT
+!    --->TO BE AT THE SAVE SIDE USE 0.05 OR 0.1 (SHOULD BE QUITE GOOD)
+!        SIMILAR RESULTS WERE HELD FOR Cu in Fe NN relaxation.
+!
+!
+!        NFACE         :  NUMBER OF FACES OF THE POLYHEDRON
+!        KEYPAN        :  KEY TO DEFINE  THE  RADIAL  MESH.  IF KEYPAN=
+!                         THE DEFAULT  RADIAL  DIVISION  OF PANNELS GIVE
+!                         IN DATA STATEMENT IS USED.OTHERWISE THE  NUMBE
+!                         OF  RADIAL  MESH  POINTS PER PANNEL  (NM(IPAN)
+!                         IS READ IN INPUT
+!                      ** IN THIS VERSION THE MESH IS DETERMINED
+!                         BY SUBROUTINE MESH0.
+!        Z(I)          :  COEFFICIENTS OF THE EQUATION OF A FACE
+!                         Z(1)*X + Z(2)*Y + Z(3)*Z  =  1
+!        NVERT         :  NUMBER OF VERTICES OF A FACE
+!        V(I,IVERT)    :  COORDINATES OF THE VERTICES OF A FACE
+!        NEWSCH(IFACE) :  INTEGER   PARAMETER TO CALCULATE   (=1)
+!                         THE CONTRIBUTION OF THE CORRESPONDING
+!                         PYRAMID TO THE SHAPEFUNCTIONS  .  IF
+!                         NEWSCH.NE.1 THE CONTRIBUTION IS TAKEN
+!                         EQUAL TO THAT OF THE PREVIOUS PYRAMID
+!
+!
+!     IN ORDER TO SAVE MEMORY WE STORE IN LOCAL TEMPORARY FILES IN  UNIT
+!     30+1 , 30+2 , ... , 30+NFACE THE TRANSFORMATION MATRICES ASSOCIATE
+!     WITH THE ROTATION OF EACH PYRAMID. THE TEMPORARY DIRECT ACCESS FIL
+!     IN UNIT 10 CONTAINS THE CALCULATED COMPONENTS OF THE SHAPEFUNCTIO
+!
+!                  ...........I N P U T  C A R D...(Bcc/fcc)
+!
+!                                       if not (Bcc/fcc) change main prg
+! bcc                          <----- Gives the lattice parameters
+!    16    1   0.05000                lmax,nkey,division
+!                                     LMAX=4*LMAX(KKR), 
+!                                     NKEY is not used, 
+!                                     DIVISION is DLT      
+!   125    0                          number of mesh points,keypan
+!                                     Number of mesh points 
+!                                     used for the radial mesh (Depends
+!                                     on the number of pannels).
+!                                     If keypan is 1, 
+!                                     then the radial mesh division is 
+!                                     taken from the input
+!   -3.30000 -3.30000  -3.30000      relaxation percent
+!
+!    63   32   30    7   21   15   15   15   15   15 \     
+!    15   17   15   15   23   15   15    0    0    0  \ This is the
+!     0   17   15   15   23   15   15    0    0    0  / radial mesh info
+!     0    0    0    0    0    0    0    0    0    0 /
+!                  .........................................
+!
+!
+!     THE DEFINITION OF REAL SPHERICAL HARMONICS IS NOT THE STANDARD  ON
+!     REFERED IN THE PAPER:
+!     N.STEFANOU,H.AKAI AND R.ZELLER,COMPUTER PHYS.COMMUN. 60 (1990) 231
+!     IF YOU WANT TO HAVE ANGULAR MOMENTUM COMPONENTS IN THE STANDARD BA
+!     SIS CHANGE THE FOLLOWING STATEMENTS IN THE ROUTINES :
+!     IN CCOEF      ISI=1                        ---->    ISI=1-2*MOD(M,
+!     IN DREAL      IF(MOD(M+MP),2).EQ.0) D=-D   ---->    DELETE THE LIN
+!
+!
+!-----------------------------------------------------------------------
+!
+!
+!     .. PARAMETER STATEMENTS ..
+!
       include 'inc.geometry'
       INTEGER    ICD,ICED,IBMAXD,ISUMD,MESHND
       INTEGER    NVTOTD
       PARAMETER (ICD=1729,ICED=((LMAXD1+1)*(LMAXD1+2))/2)
-c
-c     PARAMETER (IBMAXD=(LMAXD1+1)*(LMAXD1+1),ISUMD=23426)
-c
+!
+!     PARAMETER (IBMAXD=(LMAXD1+1)*(LMAXD1+1),ISUMD=23426)
+!
       PARAMETER (IBMAXD=(LMAXD1+1)*(LMAXD1+1),ISUMD=100000)
       PARAMETER (MESHND=IRID)
       PARAMETER (NVTOTD=NFACED*NVERTD)
-C
-C     .. SCALAR VARIABLES ..
-C
+!
+!     .. SCALAR VARIABLES ..
+!
       INTEGER     ICE,IFACE,IMAX,IP,IPAN,IPMAX,IREC,IS,ISU,ISUM,IS0
       INTEGER     ITEMP,ITET,IV,IVERT,IVTOT,K,KEYPAN,K0,L,LMAX,M,MESHN
       INTEGER     NFUN,LM0,NCELL,NPOI,NMIN
@@ -137,9 +137,9 @@ C
       REAL*8      SCALE,A1,A2,A3,A4
       REAL*8      TOLVDIST,TOLEULER
       LOGICAL    KHCP
-C
-C     .. ARRAY VARIABLES ..
-C
+!
+!     .. ARRAY VARIABLES ..
+!
       INTEGER   ISW(IBMAXD),NM(NPAND),LOFM(IBMAXD),MOFM(IBMAXD)
       INTEGER   NEWSCH(NFACED)
       INTEGER   NVERTICES(NFACED)
@@ -150,58 +150,58 @@ C
       REAL*8     S(-LMAXD1:LMAXD1,0:LMAXD1),SUM(0:LMAXD1,2)
       REAL*8     S1(-LMAXD1:LMAXD1,0:LMAXD1),S2(-LMAXD1:LMAXD1,0:LMAXD1)
       REAL*8    AFACE(NFACED),BFACE(NFACED),CFACE(NFACED),DFACE(NFACED)
-      REAL*8    XVERT(NVERTD,NFACED),YVERT(NVERTD,NFACED),
+      REAL*8    XVERT(NVERTD,NFACED),YVERT(NVERTD,NFACED),&
      &          ZVERT(NVERTD,NFACED)
  
       integer NPOI8,NVERTICES8(NFACED),NFACE8,LMAX8,KEYPAN8,NM8(NPAND)
       integer ICLUSTER,icount
-      REAL*8           AFACE8(NFACED),BFACE8(NFACED),CFACE8(NFACED),
+      REAL*8           AFACE8(NFACED),BFACE8(NFACED),CFACE8(NFACED),&
      &                 DFACE8(NFACED)
-      REAL*8           XVERT8(NVERTD,NFACED),YVERT8(NVERTD,NFACED),
+      REAL*8           XVERT8(NVERTD,NFACED),YVERT8(NVERTD,NFACED),&
      &          ZVERT8(NVERTD,NFACED)
       REAL*8           dlt8
       integer j,i1
       logical test
-c
-c  Basic output
-c
+!
+!  Basic output
+!
       integer NCELL_S,NPAN_S,MESHN_S,NFUN_S 
       integer NM_S(NPAND),LMIFUN_S(IBMAXD)
-      REAL*8           XRN_S(MESHND),DRN_S(MESHND),
+      REAL*8           XRN_S(MESHND),DRN_S(MESHND),&
      &                 THETAS_S(MESHND,IBMAXD) 
       REAL*8           scale_s
-C
-C     .. SCALARS IN COMMON ..
-C
+!
+!     .. SCALARS IN COMMON ..
+!
       REAL*8       PI
-C
-C     .. ARRAYS IN COMMON ..
-C
+!
+!     .. ARRAYS IN COMMON ..
+!
       INTEGER     ISIGNU(NVTOTD),NTT(NFACED)
       REAL*8      ALPHA(NFACED),BETA(NFACED),GAMMA(NFACED),R0(NFACED)
       REAL*8      FA(NVTOTD),FB(NVTOTD),FD(NVTOTD),RD(NVTOTD)
-C
-C     .. INTRINSIC FUNCTIONS ..
-C
+!
+!     .. INTRINSIC FUNCTIONS ..
+!
       INTRINSIC ABS,ACOS,DMAX1,DMIN1,ATAN,DFLOAT,SQRT
-C
-C     .. EXTERNAL ROUTINES ..
-C
+!
+!     .. EXTERNAL ROUTINES ..
+!
       EXTERNAL CCOEF,CRIT,DREAL,MESH,PINTG,TEST
-C
-C     .. COMMON BLOCKS ..
-C
+!
+!     .. COMMON BLOCKS ..
+!
       COMMON /ANGLES/ PI,ALPHA,BETA,GAMMA
       COMMON /TETRA/  FA,FB,FD,R0,RD,ISIGNU,NTT
-C
-C     .. DATA STATEMENTS ..
-C
-c$      DATA NM/NPAND*25/
-C-----------------------------------------------------------------------
+!
+!     .. DATA STATEMENTS ..
+!
+!$      DATA NM/NPAND*25/
+!-----------------------------------------------------------------------
       PI=4.D0*DATAN(1.D0)
       FPISQ=DSQRT(4.D0*PI)
       KHCP=.false.
-cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+!ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       
       NPOI = NPOI8
       do i=1,nfaced
@@ -227,18 +227,18 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       end do 
       DLT = dlt8
 
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-C-----------------------------------------
-C  THIS CALL DOES SOME GEOMETRICAL TESTS (N.STEFANOU 98)
+!cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+!-----------------------------------------
+!  THIS CALL DOES SOME GEOMETRICAL TESTS (N.STEFANOU 98)
       CALL POLCHK(NFACE,NVERTICES,XVERT,YVERT,ZVERT,TOLVDIST)
-C**********   FOR HCP CASE ONLY    *********
+!**********   FOR HCP CASE ONLY    *********
       if (khcp) then
       COA  =SQRT(8.D0/3.D0)
       COA  =2.D0
       SQ3O3=SQRT(3.D0)/3.D0
       end if
-C**********   FOR HCP CASE  ONLY   *********
-c$      READ(7,104) NFACE,LMAX,KEYPAN,DLT
+!**********   FOR HCP CASE  ONLY   *********
+!$      READ(7,104) NFACE,LMAX,KEYPAN,DLT
       IBMAX=(LMAX+1)*(LMAX+1)
       ISUM=0
       DO 19 L=0,LMAX
@@ -247,44 +247,44 @@ c$      READ(7,104) NFACE,LMAX,KEYPAN,DLT
       IF(ISUM.GT.ISUMD . OR . LMAX.GT.LMAXD1) GO TO 200
       IPAN=0 
       IVTOT=0
-C.......................................................................
-C     S T O R A G E            I N    C O M M O N        B L O C K S
-C     C A L C U L A T I O N    O F    R O T A T I O N    M A T R I C E S
-C.......................................................................
+!.......................................................................
+!     S T O R A G E            I N    C O M M O N        B L O C K S
+!     C A L C U L A T I O N    O F    R O T A T I O N    M A T R I C E S
+!.......................................................................
       DO 1 IFACE=1,NFACE
       ITEMP=30+IFACE
-c$      READ(7,103) A1,A2,A3,A4,NVERT,NEWSCH(IFACE)       !1.3.2000
+!$      READ(7,103) A1,A2,A3,A4,NVERT,NEWSCH(IFACE)       !1.3.2000
       A1 = AFACE(IFACE)
       A2 = BFACE(IFACE)
       A3 = CFACE(IFACE)
       A4 = DFACE(IFACE)
       NVERT = NVERTICES(IFACE)
       NEWSCH(IFACE) = 1         ! THIS is ALWAYS ONE!
-c -----------------
+! -----------------
       Z(1)=A1/A4
       Z(2)=A2/A4
       Z(3)=A3/A4
 
-C************    FOR HCP CASE ONLY (TO REMOVE OTHERWISE)   ************
+!************    FOR HCP CASE ONLY (TO REMOVE OTHERWISE)   ************
       if (khcp) then
       Z(1)=Z(1)*SQ3O3
       Z(3)=Z(3)*8.D0/COA/3.D0
       end if
-C************    FOR HCP CASE ONLY (TO REMOVE OTHERWISE)   ************
+!************    FOR HCP CASE ONLY (TO REMOVE OTHERWISE)   ************
 
       DO 2 IVERT=1,NVERT
-c$      READ(7,100) (V(I,IVERT),I=1,3)           ! 1.3.2000
+!$      READ(7,100) (V(I,IVERT),I=1,3)           ! 1.3.2000
         
         V(1,IVERT) = XVERT(IVERT,IFACE)  
         V(2,IVERT) = YVERT(IVERT,IFACE)        
         V(3,IVERT) = ZVERT(IVERT,IFACE)
 
-C************    FOR HCP CASE ONLY (TO REMOVE OTHERWISE)   ************
+!************    FOR HCP CASE ONLY (TO REMOVE OTHERWISE)   ************
       if (khcp) then
       V(1,IVERT)=V(1,IVERT)*SQ3O3
       V(3,IVERT)=V(3,IVERT)*COA
       end if
-C************    FOR HCP CASE ONLY (TO REMOVE OTHERWISE)   ************
+!************    FOR HCP CASE ONLY (TO REMOVE OTHERWISE)   ************
 
     2 CONTINUE
       CALL CRIT(IFACE,NVERT,V,Z,IPAN,IVTOT,TOLEULER,TOLVDIST,CRT)
@@ -296,18 +296,18 @@ C************    FOR HCP CASE ONLY (TO REMOVE OTHERWISE)   ************
       REWIND ITEMP
     1 CONTINUE
 
-C.......................................................................
-C     D E F I N I T I O N    O F    T H E    S U I T A B L E    M E S H
-C.......................................................................
+!.......................................................................
+!     D E F I N I T I O N    O F    T H E    S U I T A B L E    M E S H
+!.......................................................................
       NVTOT=IVTOT
       NPAN=IPAN
-c$      IF(KEYPAN.NE.0) THEN 
-c$      READ(7,106) (NM(IPAN),IPAN=1,NPAN-1)
-c$      IF (NM(NPAN-1).LT.6) THEN
-c$      WRITE(6,*) 'Check number of points for each panel'
-c$      STOP
-c$      END IF
-c$      END IF
+!$      IF(KEYPAN.NE.0) THEN 
+!$      READ(7,106) (NM(IPAN),IPAN=1,NPAN-1)
+!$      IF (NM(NPAN-1).LT.6) THEN
+!$      WRITE(6,*) 'Check number of points for each panel'
+!$      STOP
+!$      END IF
+!$      END IF
       CALL MESH(CRT,NPAN,NM,XRN,DRN,MESHN,NPOI,KEYPAN,NMIN)
       IF (TEST('verb0   ')) THEN 
       WRITE(6,102)
@@ -315,9 +315,9 @@ c$      END IF
       WRITE(6,101) IV,FA(IV)/PI,FB(IV)/PI,FD(IV)/PI,RD(IV),ISIGNU(IV)
     3 CONTINUE
       END IF
-C.......................................................................
-C     E X P A N S I O N    C O E F F I C I E N T S
-C.......................................................................
+!.......................................................................
+!     E X P A N S I O N    C O E F F I C I E N T S
+!.......................................................................
       CALL CCOEF(LMAX,CL,C)
       IVTOT=0
       DO 21 IFACE=1,NFACE
@@ -328,19 +328,19 @@ C.......................................................................
    21 CONTINUE
       DO 27 IBM=1,IBMAX
    27 ISW(IBM)=0
-      OPEN(11,STATUS='SCRATCH',ACCESS='DIRECT',
-     *        FORM='UNFORMATTED',RECL=80)
-C.......................................................................
-C     L O O P    O V E R    R A D I A L    M E S H    P O I N T S
-C.......................................................................
+      OPEN(11,STATUS='SCRATCH',ACCESS='DIRECT',&
+     &        FORM='UNFORMATTED',RECL=80)
+!.......................................................................
+!     L O O P    O V E R    R A D I A L    M E S H    P O I N T S
+!.......................................................................
       DO 12 N=1,MESHN
       R=XRN(N)
       DO 9 IBM=1,IBMAX
     9 B(IBM)=0.D0
       IVTOT=0
-C.......................................................................
-C     L O O P    O V E R    P Y R A M I D S
-C.......................................................................
+!.......................................................................
+!     L O O P    O V E R    P Y R A M I D S
+!.......................................................................
       DO 13 IFACE=1,NFACE
       NTET=NTT(IFACE)
       ITEMP=30+IFACE
@@ -364,14 +364,14 @@ C.......................................................................
       DO 4 I=0,LMAX-M
       S(-M,I)=0.D0
     4 S( M,I)=0.D0
-C.......................................................................
-C     L O O P     O V E R     T E T R A H E D R A
-C.......................................................................
+!.......................................................................
+!     L O O P     O V E R     T E T R A H E D R A
+!.......................................................................
       DO 14 ITET=1,NTET
       IVTOT=IVTOT+1
       IF(R.LE.RD(IVTOT))      T H E N
-      CALL PINTG(FA(IVTOT),FB(IVTOT),DLT,S1,LMAX,ISIGNU(IVTOT),
-     *           ARG1,FD(IVTOT),0)
+      CALL PINTG(FA(IVTOT),FB(IVTOT),DLT,S1,LMAX,ISIGNU(IVTOT),&
+     &           ARG1,FD(IVTOT),0)
       DO 22 I=0,LMAX
    22 S(0,I)=S(0,I)+S1(0,I)
       DO 10 M=1,LMAX
@@ -383,17 +383,17 @@ C.......................................................................
       ARG2=RUPSQ(IVTOT)/R0(IFACE)
       FK=FD(IVTOT)-ACOS(RAP)
       FL=FD(IVTOT)+ACOS(RAP)
-C CRAY AMAX1
+! CRAY AMAX1
       FK=DMAX1(FA(IVTOT),FK)
       FL=DMAX1(FA(IVTOT),FL)
       FK=DMIN1(FB(IVTOT),FK)
       FL=DMIN1(FB(IVTOT),FL)
-      CALL PINTG(FA(IVTOT),FK,DLT,S1,LMAX,ISIGNU(IVTOT),
-     *           ARG1,FD(IVTOT),0)
-      CALL PINTG(FK       ,FL,DLT,S2,LMAX,ISIGNU(IVTOT),
-     *           ARG2,FD(IVTOT),1)
-      CALL PINTG(FL,FB(IVTOT),DLT,S3,LMAX,ISIGNU(IVTOT),
-     *           ARG1,FD(IVTOT),0)
+      CALL PINTG(FA(IVTOT),FK,DLT,S1,LMAX,ISIGNU(IVTOT),&
+     &           ARG1,FD(IVTOT),0)
+      CALL PINTG(FK       ,FL,DLT,S2,LMAX,ISIGNU(IVTOT),&
+     &           ARG2,FD(IVTOT),1)
+      CALL PINTG(FL,FB(IVTOT),DLT,S3,LMAX,ISIGNU(IVTOT),&
+     &           ARG1,FD(IVTOT),0)
       DO 23 I=0,LMAX
    23 S(0,I)=S(0,I)+S1(0,I)+S2(0,I)+S3(0,I)
       DO 20 M=1,LMAX
@@ -402,9 +402,9 @@ C CRAY AMAX1
    20 S( M,I)=S( M,I)+S1( M,I)+S2( M,I)+S3( M,I)
                               E N D   I F
    14 CONTINUE
-C.......................................................................
-C     I N T E G R A L   E X P A N S I O N        B A C K - R O T A T I O
-C.......................................................................
+!.......................................................................
+!     I N T E G R A L   E X P A N S I O N        B A C K - R O T A T I O
+!.......................................................................
    32 CONTINUE
       IB=0
       IC=0
@@ -421,7 +421,7 @@ C.......................................................................
       DO 7 K=L,K0,-1
       IS=2*K-L-MP
       IC=IC+1
-C CRAY FLOAT
+! CRAY FLOAT
       SUM(MP,2)=SUM(MP,2)+CL(IC)*S(-MP,IS)
     7 SUM(MP,1)=SUM(MP,1)+CL(IC)*S( MP,IS)
       SUM(MP,2)=SUM(MP,2)*C(ICE)
@@ -433,7 +433,7 @@ C CRAY FLOAT
       DO 24 K=L,K0,-1
       IS=2*K-L
       IC=IC+1
-C CRAY FLOAT
+! CRAY FLOAT
    24 SUM(0,1)=SUM(0,1)+CL(IC)*S(0,IS)
       SUM(0,1)=SUM(0,1)*C(ICE)
       IMAX=1
@@ -462,15 +462,15 @@ C CRAY FLOAT
     5 CONTINUE
       REWIND ITEMP
    13 CONTINUE
-C.......................................................................
-C     D E F I N E S   A N D    S A V E S   S H A P E    F U N C T I O N
-C.......................................................................
+!.......................................................................
+!     D E F I N E S   A N D    S A V E S   S H A P E    F U N C T I O N
+!.......................................................................
       B(1)=FPISQ-B(1)/FPISQ
       DO 15 IBM=2,IBMAX
       B(IBM)=-B(IBM)/FPISQ
    15 CONTINUE
       DO 25 IBM=1,IBMAX
-C     write(6,*) ibm,b(ibm)
+!     write(6,*) ibm,b(ibm)
       IF(ABS(B(IBM)).GT.1.D-6) ISW(IBM)=1
       IREC=(IBM-1)*MESHN+N
       WRITE(11,REC=IREC) B(IBM)
@@ -480,10 +480,10 @@ C     write(6,*) ibm,b(ibm)
       DO 36 IBM=1,IBMAX
       IF(ISW(IBM).EQ.1)  NFUN=NFUN+1
    36 CONTINUE
-C THIS IS FOR DIFFERENT SHELLS...
+! THIS IS FOR DIFFERENT SHELLS...
         NCELL=1
         SCALE=1.d0
-C
+!
         WRITE(9,106) NCELL
         WRITE(9,111) SCALE
         WRITE(9,106) NPAN-1,MESHN
@@ -503,11 +503,11 @@ C
         END DO
         NFUN_S = NFUN 
         
-C     WRITE(9,106) MESHN,NFUN
-C     WRITE(9,108) (XRN(N),N=1,MESHN)
+!     WRITE(9,106) MESHN,NFUN
+!     WRITE(9,108) (XRN(N),N=1,MESHN)
       ICOUNT = 0 
       DO 28 IBM=1,IBMAX
-C here is;l;lsd
+! here is;l;lsd
 
       IF(ISW(IBM).EQ.0) GO TO 28
  
@@ -527,7 +527,7 @@ C here is;l;lsd
    28 CONTINUE
       CLOSE(11)
       RETURN
-C     STOP
+!     STOP
   200 WRITE(6,107) ISUM,ISUMD,LMAX,LMAXD1
       STOP
   100 FORMAT(4F16.8)
@@ -537,8 +537,8 @@ C     STOP
   104 FORMAT(3I5,F10.5)
   105 FORMAT(/10X,I3,'-TH PYRAMID SUBDIVIDED IN ',I3,' TETRAHEDRA')
   106 FORMAT(16I5)
-  107 FORMAT(23X,'FROM MAIN : ISUM=',I7,'  GREATER THAN DIMENSIONED',I7/
-     *       23X,'       OR   LMAX=',I7,'  GREATER THAN DIMENSIONED',I7)
+  107 FORMAT(23X,'FROM MAIN : ISUM=',I7,'  GREATER THAN DIMENSIONED',I7/&
+     &       23X,'       OR   LMAX=',I7,'  GREATER THAN DIMENSIONED',I7)
   108 FORMAT(5D14.7)
   109 FORMAT(/3X,'ANGULAR MOMENTUM : (',I3,',',I4,')'/3X,29('-')/)
   110 FORMAT(11X,'BUT IS IDENTICAL TO A PREVIOUS ONE.')
@@ -546,53 +546,53 @@ C     STOP
       END
       SUBROUTINE ROTATE(V,VZ,IFACE,NVERT)
       implicit none
-c#@# KKRtags: VORONOI geometry
-C-----------------------------------------------------------------------
-C     THIS ROUTINE PERFORMS THE ROTATION OF NVERT VECTORS THROUGH THE
-C     EULER ANGLES: ALPHA(IFACE),BETA(IFACE),GAMMA(IFACE).
-C     V (I,IVERT) : INPUT   VECTORS
-C     VZ(I,IVERT) : ROTATED VECTORS
-C-----------------------------------------------------------------------
-C
-C     .. PARAMETER STATEMENTS ..
-C
+!#@# KKRtags: VORONOI geometry
+!-----------------------------------------------------------------------
+!     THIS ROUTINE PERFORMS THE ROTATION OF NVERT VECTORS THROUGH THE
+!     EULER ANGLES: ALPHA(IFACE),BETA(IFACE),GAMMA(IFACE).
+!     V (I,IVERT) : INPUT   VECTORS
+!     VZ(I,IVERT) : ROTATED VECTORS
+!-----------------------------------------------------------------------
+!
+!     .. PARAMETER STATEMENTS ..
+!
       include 'inc.geometry'
 !     INTEGER NFACED,NVERTD
 !     PARAMETER(NFACED=200,NVERTD=250)
-C
-C     .. SCALAR ARGUMENTS ..
-C
+!
+!     .. SCALAR ARGUMENTS ..
+!
       INTEGER   IFACE,NVERT
-C
-C     .. ARRAY ARGUMENTS ..
-C
+!
+!     .. ARRAY ARGUMENTS ..
+!
       REAL*8 V(3,NVERTD),VZ(3,NVERTD)
-C
-C     .. LOCAL SCALARS ..
-C
+!
+!     .. LOCAL SCALARS ..
+!
       INTEGER   I,J,IVERT
       REAL*8    SA,SB,SG,CA,CB,CG
-C
-C     .. LOCAL ARRAYS ..
-C
+!
+!     .. LOCAL ARRAYS ..
+!
       REAL*8 A(3,3)
-C
-C     .. INTRINSIC FUNCTIONS ..
-C
+!
+!     .. INTRINSIC FUNCTIONS ..
+!
       INTRINSIC COS,SIN
-C
-C     .. SCALARS IN COMMON ..
-C
+!
+!     .. SCALARS IN COMMON ..
+!
       REAL*8 PI
-C
-C     .. ARRAYS IN COMMON ..
-C
+!
+!     .. ARRAYS IN COMMON ..
+!
       REAL*8 ALPHA(NFACED),BETA(NFACED),GAMMA(NFACED)
-C
-C     .. COMMON BLOCKS ..
-C
+!
+!     .. COMMON BLOCKS ..
+!
        COMMON /ANGLES/ PI,ALPHA,BETA,GAMMA
-C-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
       CA=DCOS(ALPHA(IFACE))
       SA=DSIN(ALPHA(IFACE))
       CB=DCOS(BETA(IFACE))
@@ -618,58 +618,58 @@ C-----------------------------------------------------------------------
       END
       SUBROUTINE EULER(Z,XX,IFACE,TOLEULER)
       implicit none
-c#@# KKRtags: VORONOI geometry
-C-----------------------------------------------------------------------
-C     GIVEN TWO DISTINCT POINTS (Z(1),Z(2),Z(3)) AND (XX(1),XX(2),XX(3))
-C     THIS ROUTINE DEFINES  A LOCAL COORDINATE  SYSTEM WITH THE  Z- AXIS
-C     PASSING THROUGH (Z(1),Z(2),Z(3))  AND THE X- AXIS PARALLEL TO  THE
-C     VECTOR : (XX(1)-Z(1),XX(2)-Z(2),XX(3)-Z(3)).
-C     THE EULER ANGLES ROTATING THIS LOCAL COORDINATE SYSTEM BACK TO THE
-C     ORIGINAL FRAME OF REFERENCE ARE CALCULATED  AND STORED  IN COMMON.
-C-----------------------------------------------------------------------
-C
-C     .. PARAMETER STATEMENTS ..
-C
+!#@# KKRtags: VORONOI geometry
+!-----------------------------------------------------------------------
+!     GIVEN TWO DISTINCT POINTS (Z(1),Z(2),Z(3)) AND (XX(1),XX(2),XX(3))
+!     THIS ROUTINE DEFINES  A LOCAL COORDINATE  SYSTEM WITH THE  Z- AXIS
+!     PASSING THROUGH (Z(1),Z(2),Z(3))  AND THE X- AXIS PARALLEL TO  THE
+!     VECTOR : (XX(1)-Z(1),XX(2)-Z(2),XX(3)-Z(3)).
+!     THE EULER ANGLES ROTATING THIS LOCAL COORDINATE SYSTEM BACK TO THE
+!     ORIGINAL FRAME OF REFERENCE ARE CALCULATED  AND STORED  IN COMMON.
+!-----------------------------------------------------------------------
+!
+!     .. PARAMETER STATEMENTS ..
+!
       include 'inc.geometry'
 !     INTEGER NFACED
 !     PARAMETER(NFACED=200)
-C
-C     .. SCALAR ARGUMENTS ..
-C
+!
+!     .. SCALAR ARGUMENTS ..
+!
       INTEGER   IFACE
-C
-C     .. ARRAY ARGUMENTS ..
-C
+!
+!     .. ARRAY ARGUMENTS ..
+!
       REAL*8    XX(3),Z(3)
-C
-C     .. LOCAL SCALARS ..
-C
+!
+!     .. LOCAL SCALARS ..
+!
       INTEGER   I
       REAL*8    RX,RZ,S,P,RZP,SA,CA,SG,CG
-      REAL*8    TOLEULER   ! introduced by Phivos (05.2008) to account for inaccuracies.
-      ! Earlier, 1.D-5 was hard-coded at the places in this subr. where TOL is used
-C     DATA TOLEULER /1.D-10/
-C
-C     .. LOCAL ARRAYS ..
-C
+      REAL*8    TOLEULER   ! introduced by Phivos (05.2008) to account f
+      ! Earlier, 1.D-5 was hard-coded at the places in this subr. where 
+!     DATA TOLEULER /1.D-10/
+!
+!     .. LOCAL ARRAYS ..
+!
       REAL*8    X(3),Y(3)
-C
-C     .. SCALARS IN COMMON ..
-C
+!
+!     .. SCALARS IN COMMON ..
+!
       REAL*8    PI
-C
-C     .. ARRAYS IN COMMON ..
-C
+!
+!     .. ARRAYS IN COMMON ..
+!
       REAL*8    ALPHA(NFACED),BETA(NFACED),GAMMA(NFACED)
-C
-C     .. INTRINSIC FUNCTIONS ..
-C
+!
+!     .. INTRINSIC FUNCTIONS ..
+!
       INTRINSIC SQRT,ACOS,ABS,ATAN2
-C
-C     .. COMMON BLOCKS ..
-C
+!
+!     .. COMMON BLOCKS ..
+!
       COMMON /ANGLES/ PI,ALPHA,BETA,GAMMA
-C-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
       IF(IFACE.GT.NFACED) GO TO 20
       DO 4 I=1,3
     4 X(I)=XX(I)-Z(I)
@@ -725,33 +725,33 @@ C-----------------------------------------------------------------------
       END
       SUBROUTINE PERP(R0,R1,R2,RD,TOLVDIST,INSIDE)
       implicit none
-c#@# KKRtags: VORONOI geometry
-C-----------------------------------------------------------------------
-C     GIVEN  TWO  DISTINCT  POINTS   R1 , R2, THIS  ROUTINE CALCULATES
-C     THE COORDINATES  OF THE FOOT OF  THE  PERPENDICULAR FROM A POINT
-C     R0 TO THE LINE JOINING R1   AND  R2. THE LOGICAL VARIABLE INSIDE
-C     GIVES THE ADDITIONAL INFORMATION WHETHER THE FOOT OF THE PERPEN-
-C     DICULAR LIES WITHIN THE SEGMENT OR NOT.
-C-----------------------------------------------------------------------
-C
-C     .. ARRAY ARGUMENTS ..
-C
+!#@# KKRtags: VORONOI geometry
+!-----------------------------------------------------------------------
+!     GIVEN  TWO  DISTINCT  POINTS   R1 , R2, THIS  ROUTINE CALCULATES
+!     THE COORDINATES  OF THE FOOT OF  THE  PERPENDICULAR FROM A POINT
+!     R0 TO THE LINE JOINING R1   AND  R2. THE LOGICAL VARIABLE INSIDE
+!     GIVES THE ADDITIONAL INFORMATION WHETHER THE FOOT OF THE PERPEN-
+!     DICULAR LIES WITHIN THE SEGMENT OR NOT.
+!-----------------------------------------------------------------------
+!
+!     .. ARRAY ARGUMENTS ..
+!
       REAL*8 R0(3),R1(3),R2(3),RD(3)
       REAL*8 TOLVDIST
-C
-C     .. LOGICAL ARGUMENTS ..
-C
+!
+!     .. LOGICAL ARGUMENTS ..
+!
       LOGICAL INSIDE
-C
-C     .. LOCAL SCALARS ..
-C
+!
+!     .. LOCAL SCALARS ..
+!
       INTEGER   I
       REAL*8    DX,DY,DZ,S,D,DA,DB,DC,D1,D2,CO
-C
-C     .. INTRINSIC FUNCTIONS ..
-C
+!
+!     .. INTRINSIC FUNCTIONS ..
+!
       INTRINSIC DMAX1
-C---------------------------------------------------------------------
+!---------------------------------------------------------------------
       DX=R2(1)-R1(1)
       DY=R2(2)-R1(2)
       DZ=R2(3)-R1(3)
@@ -766,88 +766,88 @@ C---------------------------------------------------------------------
       RD(3)=DC/D
       D1=(RD(1)-R1(1))**2+(RD(2)-R1(2))**2+(RD(3)-R1(3))**2
       D2=(RD(1)-R2(1))**2+(RD(2)-R2(2))**2+(RD(3)-R2(3))**2
-C CRAY AMAX1
+! CRAY AMAX1
       CO=D-DMAX1(D1,D2)
       INSIDE=.FALSE.
       IF ( CO.GT.TOLVDIST)  INSIDE=.TRUE.
       RETURN
   100 WRITE(6,200) (R1(I),I=1,3),(R2(I),I=1,3)
       STOP
-  200 FORMAT(///33X,'FROM PERP:   IDENTICAL POINTS'/33X,2('(',3E14.6,')'
-     *,3X))
+  200 FORMAT(///33X,'FROM PERP:   IDENTICAL POINTS'/33X,2('(',3E14.6,')'&
+     &,3X))
       END
       SUBROUTINE CRIT(IFACE,NVERT,V,Z,IPAN,IVTOT,TOLEULER,TOLVDIST,CRT)
       implicit none
-c#@# KKRtags: VORONOI geometry radial-grid
-C-----------------------------------------------------------------------
-C     THIS ROUTINE CALCULATES THE CRITICAL POINTS 'CRT' OF THE SHAPE
-C     FUNCTIONS DUE TO THE FACE: Z(1)*X + Z(2)*Y + Z(3)*Z = 1
-C     THE FACE IS ROTATED THROUGH THE APPROPRIATE EULER ANGLES TO BE
-C     PERPENDICULAR TO THE Z-AXIS. A FURTHER SUBDIVISION OF THE CEN-
-C     TRAL PYRAMID INTO ELEMENTARY TETRAHEDRA IS PERFORMED. THE  NE-
-C     CESSARY QUANTITIES FOR THE CALCULATION ARE STORED IN COMMON.
-C-----------------------------------------------------------------------
-C
-C     .. PARAMETER STATEMENTS ..
-C
+!#@# KKRtags: VORONOI geometry radial-grid
+!-----------------------------------------------------------------------
+!     THIS ROUTINE CALCULATES THE CRITICAL POINTS 'CRT' OF THE SHAPE
+!     FUNCTIONS DUE TO THE FACE: Z(1)*X + Z(2)*Y + Z(3)*Z = 1
+!     THE FACE IS ROTATED THROUGH THE APPROPRIATE EULER ANGLES TO BE
+!     PERPENDICULAR TO THE Z-AXIS. A FURTHER SUBDIVISION OF THE CEN-
+!     TRAL PYRAMID INTO ELEMENTARY TETRAHEDRA IS PERFORMED. THE  NE-
+!     CESSARY QUANTITIES FOR THE CALCULATION ARE STORED IN COMMON.
+!-----------------------------------------------------------------------
+!
+!     .. PARAMETER STATEMENTS ..
+!
       include 'inc.geometry'
       INTEGER NVTOTD
 !     PARAMETER (NVERTD=250,NFACED=200)
       PARAMETER (NVTOTD=NFACED*NVERTD)
-C
-C     .. SCALAR ARGUMENTS ..
-C
+!
+!     .. SCALAR ARGUMENTS ..
+!
       INTEGER   IFACE,NVERT,IPAN,IVTOT
       REAL*8 TOLEULER,TOLVDIST
-C
-C     .. ARRAY ARGUMENTS ..
-C
+!
+!     .. ARRAY ARGUMENTS ..
+!
       REAL*8 V(3,NVERTD),Z(3),CRT(NPAND)
-C
-C     .. LOCAL SCALARS ..
-C
+!
+!     .. LOCAL SCALARS ..
+!
       INTEGER   I,IX,ICORN,IVERT,INEW,IP,IVERTP,IVERT1,IBACK
       REAL*8    ARG,A1,A2,A3,CF1,CF2,CF3,CO,CRRT,DD,DOWN,D1,D2
       REAL*8    FF,F1,F2,OMEGA,RDD,S,SF1,SF2,SF3,UP,XJ,YJ,ZMOD2
       REAL*8    ZVMOD
-C
-C     .. LOCAL ARRAYS ..
-C
+!
+!     .. LOCAL ARRAYS ..
+!
       INTEGER   IN(NVERTD)
       REAL*8    VZ(3,NVERTD),RDV(3),ORIGIN(3)
-C
-C     .. LOCAL LOGICAL ..
-C
+!
+!     .. LOCAL LOGICAL ..
+!
       LOGICAL INSIDE,TEST
-C
-C     .. SCALARS IN COMMON ..
-C
+!
+!     .. SCALARS IN COMMON ..
+!
       REAL*8 PI
-C
-C     .. ARRAYS IN COMMON ..
-C
+!
+!     .. ARRAYS IN COMMON ..
+!
       INTEGER   ISIGNU(NVTOTD),NTT(NFACED)
       REAL*8    RD(NVTOTD),R0(NFACED),FA(NVTOTD),FB(NVTOTD),FD(NVTOTD)
       REAL*8    ALPHA(NFACED),BETA(NFACED),GAMMA(NFACED)
-C
-C     .. INTRINSIC FUNCTIONS ..
-C
+!
+!     .. INTRINSIC FUNCTIONS ..
+!
       INTRINSIC ABS,ACOS,DMAX1,DMIN1,ATAN2,SIGN,SQRT
-C
-C     .. EXTERNAL ROUTINES ..
-C
+!
+!     .. EXTERNAL ROUTINES ..
+!
       EXTERNAL EULER,PERP,ROTATE
-C
-C     .. COMMON BLOCKS ..
-C
+!
+!     .. COMMON BLOCKS ..
+!
       COMMON/ANGLES/  PI,ALPHA,BETA,GAMMA
       COMMON/TETRA/ FA,FB,FD,R0,RD,ISIGNU,NTT
-C
-C     .. DATA STATEMENTS ..
-C
+!
+!     .. DATA STATEMENTS ..
+!
       DATA ORIGIN/3*0.D0/
       PI=4.D0*DATAN(1.D0)  ! added 1.3.2012, fivos
-C-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
       NTT(IFACE)=0
       IF (TEST('verb0   ')) WRITE(6,203) IFACE,(Z(I),I=1,3)
       ZMOD2=Z(1)*Z(1)+Z(2)*Z(2)+Z(3)*Z(3)
@@ -859,7 +859,7 @@ C-----------------------------------------------------------------------
       ZVMOD=DSQRT((V(1,1)-Z(1))**2+(V(2,1)-Z(2))**2+(V(3,1)-Z(3))**2)
       IF(ZVMOD.LT.1D-6)  IX=2 
       CALL EULER(Z,V(1,IX),IFACE,TOLEULER)
-      IF (TEST('verb0   '))
+      IF (TEST('verb0   '))&
      &     WRITE(6,204) ALPHA(IFACE)/PI,BETA(IFACE)/PI,GAMMA(IFACE)/PI
       CALL ROTATE(V,VZ,IFACE,NVERT)
       R0(IFACE)=1D0/DSQRT(ZMOD2)
@@ -867,9 +867,9 @@ C-----------------------------------------------------------------------
       IF (TEST('verb0   ')) WRITE(6,207)
       DO 2 IVERT =1,NVERT
       IF(DABS(R0(IFACE)-VZ(3,IVERT)).GT.1D-6) GO TO 101
-C.......................................................................
-C     D I S T A N C E S   O F   V E R T I C E S   F R O M   C E N T E R
-C.......................................................................
+!.......................................................................
+!     D I S T A N C E S   O F   V E R T I C E S   F R O M   C E N T E R
+!.......................................................................
       CRRT=DSQRT(VZ(1,IVERT)**2+VZ(2,IVERT)**2+VZ(3,IVERT)**2)
       INEW=1
       DO 3 IP=1,IPAN
@@ -882,9 +882,9 @@ C.......................................................................
                              E N D   I F
       IVERTP=IVERT+1
       IF(IVERT.EQ.NVERT) IVERTP=1
-C.......................................................................
-C     D I S T A N C E S   O F   E D G E S   F R O M   C E N T E R
-C.......................................................................
+!.......................................................................
+!     D I S T A N C E S   O F   E D G E S   F R O M   C E N T E R
+!.......................................................................
       CALL PERP(ORIGIN,VZ(1,IVERT),VZ(1,IVERTP),RDV,TOLVDIST,INSIDE)
       RDD=DSQRT(RDV(1)*RDV(1)+RDV(2)*RDV(2)+RDV(3)*RDV(3))
       IF(INSIDE)             T H E N
@@ -908,9 +908,9 @@ C.......................................................................
       OMEGA=DACOS(ARG)
       S=S-OMEGA
       IF(DABS(OMEGA-PI).GT.1D-6)                 T H E N
-C.......................................................................
-C     S U B D I V I S I O N    I N T O    T E T R A H E D R A
-C.......................................................................
+!.......................................................................
+!     S U B D I V I S I O N    I N T O    T E T R A H E D R A
+!.......................................................................
       NTT(IFACE)=NTT(IFACE)+1
       IVTOT=IVTOT+1
       IF (TEST('verb0   ')) WRITE(6,205) IVTOT,IVERT,(VZ(I,IVERT),I=1,3)
@@ -939,7 +939,7 @@ C.......................................................................
                                                            E L S E
       FD(IVTOT)=2D0*DATAN2(SF3,CF3+1D0)
                                                            E N D    I F
-C CRAY AMIN1
+! CRAY AMIN1
       FA(IVTOT)=DMIN1(F1,F2)
       FB(IVTOT)=DMAX1(F1,F2)
       IF((FB(IVTOT)-FA(IVTOT)).GT.PI)                 T H E N
@@ -954,10 +954,10 @@ C CRAY AMIN1
       ICORN=1
                              E N D    I F
     2 CONTINUE
-C.......................................................................
-C     F O O T   O F   T H E    P E R P E N D I C U L A R   TO    T H E
-C     F A C E   O U T S I D E   O R  I N S I D E   T H E   P O L Y G O N
-C.......................................................................
+!.......................................................................
+!     F O O T   O F   T H E    P E R P E N D I C U L A R   TO    T H E
+!     F A C E   O U T S I D E   O R  I N S I D E   T H E   P O L Y G O N
+!.......................................................................
       IF(S.LT.1D-06.OR.ICORN.EQ.1)               T H E N
       INEW=1
       DO 5 IP=1,IPAN
@@ -975,17 +975,17 @@ C.......................................................................
       IVERTP=IVERT+1
       IF(IVERT.EQ.NVERT) IVERTP=1
       IF(IVERT.EQ.IVERT1.OR.IVERTP.EQ.IVERT1)    GO TO 7
-      DOWN=VZ(2,IVERT1)*(VZ(1,IVERTP)-VZ(1,IVERT))
-     *    -VZ(1,IVERT1)*(VZ(2,IVERTP)-VZ(2,IVERT))
+      DOWN=VZ(2,IVERT1)*(VZ(1,IVERTP)-VZ(1,IVERT))&
+     &    -VZ(1,IVERT1)*(VZ(2,IVERTP)-VZ(2,IVERT))
       IF(DABS(DOWN).LE.1D-06)                     GO TO 7
-      UP  =VZ(1,IVERT1)*(VZ(2,IVERT)*(VZ(1,IVERTP)+VZ(1,IVERT))
-     *    -              VZ(1,IVERT)*(VZ(2,IVERTP)+VZ(2,IVERT)))
+      UP  =VZ(1,IVERT1)*(VZ(2,IVERT)*(VZ(1,IVERTP)+VZ(1,IVERT))&
+     &    -              VZ(1,IVERT)*(VZ(2,IVERTP)+VZ(2,IVERT)))
       XJ=UP/DOWN
       YJ=XJ*VZ(2,IVERT1)/VZ(1,IVERT1)
       DD=(VZ(1,IVERTP)-VZ(1,IVERT))**2+(VZ(2,IVERTP)-VZ(2,IVERT))**2
       D1=(XJ-VZ(1,IVERT ))**2+(YJ-VZ(2,IVERT ))**2
       D2=(XJ-VZ(1,IVERTP))**2+(YJ-VZ(2,IVERTP))**2
-C CRAY AMAX1
+! CRAY AMAX1
       CO=DD-DMAX1(D1,D2)
       IF(CO.GT.1D-06)        T H E N
       IN(IVERT1)=1
@@ -1008,15 +1008,15 @@ C CRAY AMAX1
       STOP
   102 WRITE(6,202) IPAN,NPAND
       STOP
-  200 FORMAT(//13X,'FATAL ERROR FROM CRIT: THE',I3,'-TH FACE OF THE POLY
-     *HEDRON PASSES THROUGH THE CENTER'/13X,'(',3E14.7,' )')
-  201 FORMAT(//13X,'FATAL ERROR FROM CRIT: THE VERTICES OF THE',I3,'-TH
-     *ROTATED POLYGON DO NOT LIE ON THE PLANE:',E13.6,' *Z = 1'/30(/13X,
-     *3E13.6))
-  202 FORMAT(//13X,'ERROR FROM CRIT: NUMBER OF PANNELS=',I5,' GREATER TH
-     *AN DIMENSIONED=',I5)
-  203 FORMAT(//80('*')/3X,'FACE:',I3,' EQUATION:',F10.4,'*X +',F10.4,
-     *'*Y +',F10.4,'*Z  =  1')
+  200 FORMAT(//13X,'FATAL ERROR FROM CRIT: THE',I3,'-TH FACE OF THE POLY&
+     &HEDRON PASSES THROUGH THE CENTER'/13X,'(',3E14.7,' )')
+  201 FORMAT(//13X,'FATAL ERROR FROM CRIT: THE VERTICES OF THE',I3,'-TH&
+     &ROTATED POLYGON DO NOT LIE ON THE PLANE:',E13.6,' *Z = 1'/30(/13X,&
+     &3E13.6))
+  202 FORMAT(//13X,'ERROR FROM CRIT: NUMBER OF PANNELS=',I5,' GREATER TH&
+     &AN DIMENSIONED=',I5)
+  203 FORMAT(//80('*')/3X,'FACE:',I3,' EQUATION:',F10.4,'*X +',F10.4,&
+     &'*Y +',F10.4,'*Z  =  1')
   204 FORMAT(3X,'ROTATION ANGLES  :',3(F10.4,4X)/)
   205 FORMAT(I5,'       VZ(',I2,')  =  (',3F10.4,' )')
   206 FORMAT(5X,'       VZ(',I2,')  =  (',3F10.4,' )')
@@ -1024,39 +1024,39 @@ C CRAY AMAX1
       END
       SUBROUTINE MESH(CRT,NPAN,NM,XRN,DRN,MESHN,NPOI,KEYPAN,NMIN)
       implicit none
-c#@# KKRtags: VORONOI radial-grid
-C-----------------------------------------------------------------------
-C     THIS ROUTINE DEFINES A UNIQUE SUITABLE RADIAL MESH 'XRN,DRN' OF
-C     'MESHN' POINTS,DISTRIBUTED INTO 'NPAN' PANNELS  DEFINED  BY THE
-C     CRITICAL POINTS 'CRT'
-C-----------------------------------------------------------------------
-C
-C     .. PARAMETER STATEMENTS ..
-C
+!#@# KKRtags: VORONOI radial-grid
+!-----------------------------------------------------------------------
+!     THIS ROUTINE DEFINES A UNIQUE SUITABLE RADIAL MESH 'XRN,DRN' OF
+!     'MESHN' POINTS,DISTRIBUTED INTO 'NPAN' PANNELS  DEFINED  BY THE
+!     CRITICAL POINTS 'CRT'
+!-----------------------------------------------------------------------
+!
+!     .. PARAMETER STATEMENTS ..
+!
       include 'inc.geometry'
-c      INTEGER NPAND,MESHND
-c      PARAMETER (NPAND=80,MESHND=1000)
+!      INTEGER NPAND,MESHND
+!      PARAMETER (NPAND=80,MESHND=1000)
        INTEGER MESHND
        PARAMETER (MESHND=IRID)
-C
-C     .. SCALAR ARGUMENTS ..
-C
+!
+!     .. SCALAR ARGUMENTS ..
+!
       INTEGER   NPAN,MESHN,NPOI,KEYPAN,NMIN
-C
-C     .. ARRAY ARGUMENTS ..
-C
+!
+!     .. ARRAY ARGUMENTS ..
+!
       INTEGER   NM(NPAND)
       REAL*8    CRT(NPAND),XRN(MESHND),DRN(MESHND)
-C
-C     .. LOCAL SCALARS ..
-C
+!
+!     .. LOCAL SCALARS ..
+!
       INTEGER   IORD,IPAN,N1,N2,K
       REAL*8    C,D
-C
-C     .. INTRINSIC FUNCTIONS ..
-C
+!
+!     .. INTRINSIC FUNCTIONS ..
+!
       INTRINSIC DFLOAT
-C-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
       DO 10 IORD=1,NPAN
       C=CRT(IORD)
       DO 20 IPAN=NPAN,IORD,-1
@@ -1066,13 +1066,13 @@ C-----------------------------------------------------------------------
       CRT(IORD)=C
    20 CONTINUE
    10 CONTINUE
-C
-C     CALCULATE AN APPROPRIATE MESH
-C
+!
+!     CALCULATE AN APPROPRIATE MESH
+!
       IF (KEYPAN.EQ.0) THEN
       CALL MESH0(CRT,NM,NPAN,NPOI,NMIN)
       END IF
-C
+!
       WRITE(6,103)
       N2=0
       DO 50 IPAN = 1,NPAN-1
@@ -1080,7 +1080,7 @@ C
       N1 = N2 + 1
       N2 = N2 + NM(IPAN)
       IF (MESHND.GE.N2)      T  H  E  N
-C CRAY FLOAT
+! CRAY FLOAT
       C = (CRT(IPAN+1)-CRT(IPAN))/DFLOAT(N2-N1)
       D = CRT(IPAN) - C*DFLOAT(N1)
       DO 60 K = N1,N2
@@ -1093,62 +1093,62 @@ C CRAY FLOAT
    50 CONTINUE
       WRITE(6,105)
       MESHN = N2
-c      WRITE(6,101)(K,DRN(K),XRN(K),K=1,MESHN)
+!      WRITE(6,101)(K,DRN(K),XRN(K),K=1,MESHN)
       RETURN
    70 WRITE (6,102) MESHND
       STOP
   101 FORMAT (/'    NEW MESH  K,DRN,XRN'/(1H ,I3,2F12.7))
   102 FORMAT ('   *** FROM MESH  :    NXR=',I4,' IS TOO SMALL')
-  103 FORMAT(/50('-')/'I',13X,'SUITABLE RADIAL MESH',15X,'I'/'I',13X,
-     *20('*'),15X,'I'/'I',3X,'IPAN',7X,'FROM',7X,'TO',13X,'POINTS  I'/
-     *'I',48X,'I')
+  103 FORMAT(/50('-')/'I',13X,'SUITABLE RADIAL MESH',15X,'I'/'I',13X,&
+     &20('*'),15X,'I'/'I',3X,'IPAN',7X,'FROM',7X,'TO',13X,'POINTS  I'/&
+     &'I',48X,'I')
   104 FORMAT('I',2X,I5,2E24.16,I10,'   I')
   105 FORMAT(50('-'))
       END
       SUBROUTINE PINTG(X1,X2,DLT,S,LMAX,ISI,ARG,FD,ITYPE)
       implicit none
-c#@# KKRtags: VORONOI solver radial-grid
-C-----------------------------------------------------------------------
-C     THIS ROUTINE  ACCOMPLISHES THE  FI-INTEGRATION  OF REAL  SPHERICAL
-C     HARMONICS BY THE REPEATED SIMPSON'S METHOD , OR ANALYTICALLY ACCOR
-C     DING TO THE VALUE OF ITYPE. THE OBTAINED RESULTS HAVE TO BE MULTI-
-C     PLIED BY THE APPROPRIATE EXPANSION COEFFICIENTS.
-C-----------------------------------------------------------------------
-C
-C     .. PARAMETER STATEMENTS ..
-C
+!#@# KKRtags: VORONOI solver radial-grid
+!-----------------------------------------------------------------------
+!     THIS ROUTINE  ACCOMPLISHES THE  FI-INTEGRATION  OF REAL  SPHERICAL
+!     HARMONICS BY THE REPEATED SIMPSON'S METHOD , OR ANALYTICALLY ACCOR
+!     DING TO THE VALUE OF ITYPE. THE OBTAINED RESULTS HAVE TO BE MULTI-
+!     PLIED BY THE APPROPRIATE EXPANSION COEFFICIENTS.
+!-----------------------------------------------------------------------
+!
+!     .. PARAMETER STATEMENTS ..
+!
       include 'inc.geometry'
-c      INTEGER LMAXD,NDIM
-c      PARAMETER (LMAXD=25,NDIM=1000)
+!      INTEGER LMAXD,NDIM
+!      PARAMETER (LMAXD=25,NDIM=1000)
       INTEGER NDIM
       PARAMETER (NDIM=1000)
-C
-C     .. SCALAR ARGUMENTS ..
-C
+!
+!     .. SCALAR ARGUMENTS ..
+!
       REAL*8 X1,X2,DLT,ARG,FD
       INTEGER   LMAX,ISI,ITYPE
-C
-C     .. ARRAY ARGUMENTS ..
-C
+!
+!     .. ARRAY ARGUMENTS ..
+!
       REAL*8 S(-LMAXD1:LMAXD1,0:LMAXD1)
-C
-C     .. LOCAL SCALARS ..
-C
+!
+!     .. LOCAL SCALARS ..
+!
       INTEGER   I,M,N,K
       REAL*8    X,THETA,W
-C
-C     .. LOCAL ARRAYS ..
-C
+!
+!     .. LOCAL ARRAYS ..
+!
       REAL*8    XX(NDIM),WW(NDIM)
-C
-C     .. INTRINSIC FUNCTIONS ..
-C
+!
+!     .. INTRINSIC FUNCTIONS ..
+!
       INTRINSIC DFLOAT,ACOS,ATAN,COS,IABS
-C
-C     .. EXTERNAL ROUTINE ..
-C
+!
+!     .. EXTERNAL ROUTINE ..
+!
       EXTERNAL RECUR,RECUR0,GAULEG
-C-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
       IF(LMAX.LE.LMAXD1) GO TO 1
       WRITE(6,200)LMAX,LMAXD1
   200 FORMAT(3X,'FROM PINTG: LMAX=',I4,' GREATER THAN DIMENSIONED',I4)
@@ -1165,7 +1165,7 @@ C-----------------------------------------------------------------------
       CALL RECUR0(LMAX,X1,THETA,-DFLOAT(ISI),S)
       CALL RECUR0(LMAX,X2,THETA, DFLOAT(ISI),S)
       RETURN
-C                         E N D    I F
+!                         E N D    I F
    10 CONTINUE
       N=(X2-X1)/DLT+3
       IF(N.GT.NDIM) STOP 'INCREASE NDIM'
@@ -1180,28 +1180,28 @@ C                         E N D    I F
       END
       SUBROUTINE GAULEG(X1,X2,X,W,N)
       IMPLICIT NONE
-c#@# KKRtags: VORONOI special-functions
-C     ----------------------------------------------------------------
-C     GINEN THE LOWER AND UPPER LIMITS OF INTEGRATION  X1 AND X2, AND
-C     GIVEN N, THIS SUBROUTINE RETURNS THE  ARRAYS X(1:N) AND  W(1:N)
-C     OF LENGTH N, CONTAINING THE ABSCISSAS AND WEIGHTS OF THE  GAUSS
-C     LEGENDRE N-POINT QUADRATURE FORMULA (NUMERICAL RECIPES,2ND ED.).
-C     ----------------------------------------------------------------
-C
-C     .. SCALAR ARGUMENTS ..
-C
+!#@# KKRtags: VORONOI special-functions
+!     ----------------------------------------------------------------
+!     GINEN THE LOWER AND UPPER LIMITS OF INTEGRATION  X1 AND X2, AND
+!     GIVEN N, THIS SUBROUTINE RETURNS THE  ARRAYS X(1:N) AND  W(1:N)
+!     OF LENGTH N, CONTAINING THE ABSCISSAS AND WEIGHTS OF THE  GAUSS
+!     LEGENDRE N-POINT QUADRATURE FORMULA (NUMERICAL RECIPES,2ND ED.).
+!     ----------------------------------------------------------------
+!
+!     .. SCALAR ARGUMENTS ..
+!
       INTEGER   N
       REAL*8    X1,X2
-C
-C     .. ARRAY ARGUMENTS ..
-C
+!
+!     .. ARRAY ARGUMENTS ..
+!
       REAL*8    X(1),W(1)
-C
-C     .. LOCAL SCALARS ..
-C
+!
+!     .. LOCAL SCALARS ..
+!
       INTEGER   I,J,M
       REAL*8    P1,P2,P3,PP,XL,XM,Z,Z1,PI314
-C     ----------------------------------------------------------------
+!     ----------------------------------------------------------------
       PI314 = 4.D0*DATAN(1.D0)
 
       M=(N+1)/2
@@ -1230,38 +1230,38 @@ C     ----------------------------------------------------------------
       END
       SUBROUTINE RECUR(LMAX,X,THETA,FAC,S)
       implicit none
-c#@# KKRtags: VORONOI special-functions
-C-----------------------------------------------------------------------
-C     THIS ROUTINE IS USED TO PERFORM THE FI-INTEGRATION OF REAL SPHE-
-C     RICAL HARMONICS .THE THETA-INTEGRATION IS PERFORMED ANALYTICALLY
-C     USING RECURRENCE RELATIONS.
-C-----------------------------------------------------------------------
-C
-C     .. PARAMETER STATEMENTS ..
-C
+!#@# KKRtags: VORONOI special-functions
+!-----------------------------------------------------------------------
+!     THIS ROUTINE IS USED TO PERFORM THE FI-INTEGRATION OF REAL SPHE-
+!     RICAL HARMONICS .THE THETA-INTEGRATION IS PERFORMED ANALYTICALLY
+!     USING RECURRENCE RELATIONS.
+!-----------------------------------------------------------------------
+!
+!     .. PARAMETER STATEMENTS ..
+!
        include 'inc.geometry'
-c      INTEGER LMAXD
-c      PARAMETER (LMAXD=25)
-C
-C     .. SCALAR ARGUMENTS ..
-C
+!      INTEGER LMAXD
+!      PARAMETER (LMAXD=25)
+!
+!     .. SCALAR ARGUMENTS ..
+!
       INTEGER   LMAX
       REAL*8 X,THETA,FAC
-C
-C     .. ARRAY ARGUMENTS ..
-C
+!
+!     .. ARRAY ARGUMENTS ..
+!
       REAL*8 S(-LMAXD1:LMAXD1,0:LMAXD1)
-C
-C     .. LOCAL SCALARS ..
-C
+!
+!     .. LOCAL SCALARS ..
+!
       INTEGER   M,I
       REAL*8 OL0,OL,EL0,EL,C1,C2,SS,CC
       REAL*8 C01(LMAXD1),C02(LMAXD1),SSA(LMAXD1+2),CCA(LMAXD1+2)
-C
-C     .. INTRINSIC FUNCTIONS ..
-C
+!
+!     .. INTRINSIC FUNCTIONS ..
+!
       INTRINSIC COS,SIN,DFLOAT
-C-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
       SS=SIN(THETA)
       CC=COS(THETA)
       DO 13 I=1,LMAX
@@ -1353,37 +1353,37 @@ C-----------------------------------------------------------------------
       END
       SUBROUTINE RECUR0(LMAX,X,THETA,FAC,S)
       implicit none
-c#@# KKRtags: VORONOI special-functions
-C-----------------------------------------------------------------------
-C     THIS ROUTINE IS USED TO PERFORM  THE  FI - INTEGRATION  OF REAL SP
-C     RICAL HARMONICS ANALYTICALLY.  THE  THETA-INTEGRATION  IS   PERFOR
-C     ALSO ANALYTICALLY USING RECURRENCE RELATIONS.(THETA IS FI-INDEPEND
-C-----------------------------------------------------------------------
-C
-C     .. PARAMETER STATEMENTS ..
-C
+!#@# KKRtags: VORONOI special-functions
+!-----------------------------------------------------------------------
+!     THIS ROUTINE IS USED TO PERFORM  THE  FI - INTEGRATION  OF REAL SP
+!     RICAL HARMONICS ANALYTICALLY.  THE  THETA-INTEGRATION  IS   PERFOR
+!     ALSO ANALYTICALLY USING RECURRENCE RELATIONS.(THETA IS FI-INDEPEND
+!-----------------------------------------------------------------------
+!
+!     .. PARAMETER STATEMENTS ..
+!
        include 'inc.geometry'
-c      INTEGER LMAXD
-c      PARAMETER (LMAXD=25)
-C
-C     .. SCALAR ARGUMENTS ..
-C
+!      INTEGER LMAXD
+!      PARAMETER (LMAXD=25)
+!
+!     .. SCALAR ARGUMENTS ..
+!
       INTEGER   LMAX
       REAL*8 X,THETA,FAC
-C
-C     .. ARRAY ARGUMENTS ..
-C
+!
+!     .. ARRAY ARGUMENTS ..
+!
       REAL*8 S(-LMAXD1:LMAXD1,0:LMAXD1)
-C
-C     .. LOCAL SCALARS ..
-C
+!
+!     .. LOCAL SCALARS ..
+!
       INTEGER   M,I
       REAL*8 OL0,OL,EL0,EL,C1,C2,SS,CC
-C
-C     .. INTRINSIC FUNCTIONS ..
-C
+!
+!     .. INTRINSIC FUNCTIONS ..
+!
       INTRINSIC COS,SIN,DFLOAT
-C-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
       SS=SIN(THETA)
       CC=COS(THETA)
       OL0=(THETA-SS*CC)/2D0
@@ -1468,29 +1468,29 @@ C-----------------------------------------------------------------------
       END
       SUBROUTINE REDUCE(NMBR,IFMX,IFI,IEXP)
       implicit none
-c#@# KKRtags: VORONOI
-c#@# KKRmerge: integer factorization is performed here
-C-----------------------------------------------------------------------
-C     THIS ROUTINE REDUCES A POSITIVE INTEGER   INPUT NUMBER 'NMBR'
-C     TO A PRODUCT  OF  FIRST  NUMBERS 'IFI' , AT POWERS  'IEXP'.
-C-----------------------------------------------------------------------
-C
-C     .. SCALAR ARGUMENTS ..
-C
+!#@# KKRtags: VORONOI
+!#@# KKRmerge: integer factorization is performed here
+!-----------------------------------------------------------------------
+!     THIS ROUTINE REDUCES A POSITIVE INTEGER   INPUT NUMBER 'NMBR'
+!     TO A PRODUCT  OF  FIRST  NUMBERS 'IFI' , AT POWERS  'IEXP'.
+!-----------------------------------------------------------------------
+!
+!     .. SCALAR ARGUMENTS ..
+!
       INTEGER   NMBR,IFMX
-C
-C     .. ARRAY  ARGUMENTS ..
-C
+!
+!     .. ARRAY  ARGUMENTS ..
+!
       INTEGER   IEXP(1),IFI(1)
-C
-C     .. LOCAL SCALARS ..
-C
+!
+!     .. LOCAL SCALARS ..
+!
       INTEGER   I,NMB
-C
-C     .. INTRINSIC FUNCTIONS ..
-C
+!
+!     .. INTRINSIC FUNCTIONS ..
+!
       INTRINSIC MOD
-C-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
       IF(NMBR.LE.0) GO TO 4
       DO 5 I=1,IFMX
     5 IEXP(I)=0
@@ -1509,61 +1509,61 @@ C-----------------------------------------------------------------------
       STOP
     4 WRITE(6,101) NMBR
       STOP
-  100 FORMAT(3X,I15,'  CANNOT BE REDUCED IN THE BASIS OF FIRST NUMBERS G
-     *IVEN'/20X,'INCREASE THE BASIS OF FIRST NUMBERS')
+  100 FORMAT(3X,I15,'  CANNOT BE REDUCED IN THE BASIS OF FIRST NUMBERS G&
+     &IVEN'/20X,'INCREASE THE BASIS OF FIRST NUMBERS')
   101 FORMAT(3X,I15,'  NON POSITIVE NUMBER')
       END
       SUBROUTINE CCOEF(LMAX,CL,COE)
       implicit none
-c#@# KKRtags: VORONOI special-functions
-C-----------------------------------------------------------------------
-C     THIS ROUTINE CALCULATES THE COEFFICIENTS OF A POLYNOMIAL EXPANSION
-C     OF RENORMALIZED LEGENDRE FUNCTIONS IN POWERS OF COSINES.
-C     THE POSSIBILITY OF OVERFLOW (HIGH LMAX) IS AVOIDED BY USING FACTO-
-C     RIZED FORMS FOR THE NUMBERS.
-C-----------------------------------------------------------------------
-C
-C     .. PARAMETER STATEMENTS ..
-C
+!#@# KKRtags: VORONOI special-functions
+!-----------------------------------------------------------------------
+!     THIS ROUTINE CALCULATES THE COEFFICIENTS OF A POLYNOMIAL EXPANSION
+!     OF RENORMALIZED LEGENDRE FUNCTIONS IN POWERS OF COSINES.
+!     THE POSSIBILITY OF OVERFLOW (HIGH LMAX) IS AVOIDED BY USING FACTO-
+!     RIZED FORMS FOR THE NUMBERS.
+!-----------------------------------------------------------------------
+!
+!     .. PARAMETER STATEMENTS ..
+!
       include 'inc.geometry'
       INTEGER ICD,ICED,IFMX,LMA2D
       PARAMETER (ICD=1729,ICED=((LMAXD1+1)*(LMAXD1+2))/2)
       PARAMETER (IFMX=25,LMA2D=LMAXD1/2+1)
-C
-C     .. SCALAR ARGUMENTS ..
-C
+!
+!     .. SCALAR ARGUMENTS ..
+!
       INTEGER   LMAX
-C
-C     .. ARRAY ARGUMENTS ..
-C
+!
+!     .. ARRAY ARGUMENTS ..
+!
       REAL*8    CL(ICD),COE(ICED)
-C
-C     .. LOCAL SCALARS ..
-C
+!
+!     .. LOCAL SCALARS ..
+!
       INTEGER   ICMAX,L,LI,ICE,IC,I1,L2P,M,K,K0,ISI,IRE,IR,IC1,IC2
       INTEGER   LA,LB,IEUPSQ,IEINT,IEMOD
       REAL*8    UP,DOWN,UPSQ
-C
-C     .. LOCAL ARRAYS ..
-C
+!
+!     .. LOCAL ARRAYS ..
+!
       INTEGER   IE(IFMX,LMA2D),IED(IFMX),IFI(IFMX)
       INTEGER   L1ST(IFMX),L2ST(IFMX),L1(IFMX),L2(IFMX),JM0(IFMX)
       INTEGER   IEA(IFMX),IEB(IFMX),IL2P(IFMX)
       logical test
-C
-C     .. INTRINSIC FUNCTIONS ..
-C
+!
+!     .. INTRINSIC FUNCTIONS ..
+!
       INTRINSIC MOD,SQRT,DFLOAT
-C
-C     .. EXTERNAL ROUTINES ..
-C
+!
+!     .. EXTERNAL ROUTINES ..
+!
       EXTERNAL REDUCE,TEST
-C
-C     .. DATA STATEMENTS ..
-C
-      DATA IFI/2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,
+!
+!     .. DATA STATEMENTS ..
+!
+      DATA IFI/2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,&
      &         61,67,71,73,79,83,89,97/
-C-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
       ICMAX=0
       DO 9 L=0,LMAX
       LI=L/2+1
@@ -1588,9 +1588,9 @@ C-----------------------------------------------------------------------
     2 CONTINUE
       ICE=ICE+1
       ISI=1
-C  THIS IS CHANGED
-C     ISI=1-2*MOD(M,2)
-C
+!  THIS IS CHANGED
+!     ISI=1-2*MOD(M,2)
+!
       K0=(L+M+1)/2
       K=L
       IRE=1
@@ -1644,7 +1644,7 @@ C
                                        E N D    I F
    17 CONTINUE
       COE(ICE)=SQRT(UPSQ)* UP / DOWN
-      if (TEST('SHAPE   ')) 
+      if (TEST('SHAPE   ')) &
      &      WRITE(6,201) L,M,UP,UPSQ,DOWN,(CL(IC),IC=IC1,IC2)
       IF(M. EQ .0)  GO TO 20
       LA=L+M
@@ -1672,55 +1672,55 @@ C
       RETURN
   100 WRITE(6,204) LMAX,LMAXD1,ICMAX,ICD
       STOP
-  201 FORMAT(2X,'L=',I2,' M=',I2,F10.3,' *SQRT(',F16.2,')/',F10.3/
-     *       2X,'CL  :',6F14.2)
+  201 FORMAT(2X,'L=',I2,' M=',I2,F10.3,' *SQRT(',F16.2,')/',F10.3/&
+     &       2X,'CL  :',6F14.2)
   202 FORMAT(80('*'))
   203 FORMAT(13X,'THERE ARE',I5,'  COEFFICIENTS'/)
-  204 FORMAT(13X,'FROM CCOEF: INCONSISTENCY DATA-DIMENSION'/
-     *       14X,'LMAX:',2I5/13X,'ICMAX:',2I5)
+  204 FORMAT(13X,'FROM CCOEF: INCONSISTENCY DATA-DIMENSION'/&
+     &       14X,'LMAX:',2I5/13X,'ICMAX:',2I5)
       END
       SUBROUTINE DREAL(LMAX,ALPHA,BETA,GAMMA,ITEMP)
       implicit none
-c#@# KKRtags: VORONOI special-functions
-C------------------------------------------------------------------
-C     THIS ROUTINE COMPUTES TRANSFORMATION MATRICES ASSOCIATED TO
-C     THE ROTATION THROUGH THE EULER ANGLES ALPHA,BETA,GAMMA  FOR
-C     REAL SPHERICAL HARMONICS UP TO QUANTUM NUMBER LMAX. THE RE-
-C     SULTS ARE STORED IN THE TEMPORARY FILE IN UNIT ITEMP.
-C------------------------------------------------------------------
-C
-C     .. PARAMETER STATEMENTS ..
-C
+!#@# KKRtags: VORONOI special-functions
+!------------------------------------------------------------------
+!     THIS ROUTINE COMPUTES TRANSFORMATION MATRICES ASSOCIATED TO
+!     THE ROTATION THROUGH THE EULER ANGLES ALPHA,BETA,GAMMA  FOR
+!     REAL SPHERICAL HARMONICS UP TO QUANTUM NUMBER LMAX. THE RE-
+!     SULTS ARE STORED IN THE TEMPORARY FILE IN UNIT ITEMP.
+!------------------------------------------------------------------
+!
+!     .. PARAMETER STATEMENTS ..
+!
       include 'inc.geometry'
-c      INTEGER LMAXD,ISUMD
-c     PARAMETER (LMAXD=25,ISUMD=23426)
-c      PARAMETER (LMAXD=25,ISUMD=100000)
+!      INTEGER LMAXD,ISUMD
+!     PARAMETER (LMAXD=25,ISUMD=23426)
+!      PARAMETER (LMAXD=25,ISUMD=100000)
       INTEGER ISUMD
       PARAMETER (ISUMD=100000)
-C
-C     .. SCALAR ARGUMENTS ..
-C
+!
+!     .. SCALAR ARGUMENTS ..
+!
       INTEGER   LMAX,ITEMP
       REAL*8    ALPHA,BETA,GAMMA
-C
-C     .. LOCAL SCALARS ..
-C
+!
+!     .. LOCAL SCALARS ..
+!
       INTEGER   L,M,MP,I,IMAX,IP,IPMAX,ISU,ISUM
       REAL*8    SQR2,FAC,FAC1,FAC2,D,D1,D2
-C
-C     .. LOCAL ARRAYS ..
-C
+!
+!     .. LOCAL ARRAYS ..
+!
       REAL*8 DMN(LMAXD1+1,LMAXD1+1),DPL(LMAXD1+1,LMAXD1+1),DMATL(ISUMD)
-C
-C     .. EXTERNAL ROUTINES ..
-C
+!
+!     .. EXTERNAL ROUTINES ..
+!
       REAL*8 DROT
       EXTERNAL DROT
-C
-C     .. INTRINSIC FUNCTIONS ..
-C
+!
+!     .. INTRINSIC FUNCTIONS ..
+!
       INTRINSIC COS,SIN,MOD,SQRT
-C-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
       SQR2=SQRT(2.D0)
       ISU=0
       DO 2 L=0,LMAX
@@ -1756,24 +1756,24 @@ C-----------------------------------------------------------------------
       MP=0
    11 CONTINUE
       DO 6 IP=1,IPMAX
-      I F ( I   . E Q . 2 )                      G O  T O   7
-      I F ( I P . E Q . 2 )                      G O  T O  10
-      D= COS(MP*ALPHA)*COS(M*GAMMA)*DPL(MP+1,M+1)
-     *  -SIN(MP*ALPHA)*SIN(M*GAMMA)*DMN(MP+1,M+1)
+      I F ( I   . E Q .2 )                      G O  T O   7
+      I F ( I P . E Q .2 )                      G O  T O  10
+      D= COS(MP*ALPHA)*COS(M*GAMMA)*DPL(MP+1,M+1)&
+     &  -SIN(MP*ALPHA)*SIN(M*GAMMA)*DMN(MP+1,M+1)
                                                  G O  T O   9
-    7 I F ( I P . E Q . 2 )                      G O  T O   8
-      D=-COS(MP*ALPHA)*SIN(M*GAMMA)*DPL(MP+1,M+1)
-     *  -SIN(MP*ALPHA)*COS(M*GAMMA)*DMN(MP+1,M+1)
+    7 I F ( I P . E Q .2 )                      G O  T O   8
+      D=-COS(MP*ALPHA)*SIN(M*GAMMA)*DPL(MP+1,M+1)&
+     &  -SIN(MP*ALPHA)*COS(M*GAMMA)*DMN(MP+1,M+1)
                                                  G O  T O   9
-    8 D=-SIN(MP*ALPHA)*SIN(M*GAMMA)*DPL(MP+1,M+1)
-     *  +COS(MP*ALPHA)*COS(M*GAMMA)*DMN(MP+1,M+1)
+    8 D=-SIN(MP*ALPHA)*SIN(M*GAMMA)*DPL(MP+1,M+1)&
+     &  +COS(MP*ALPHA)*COS(M*GAMMA)*DMN(MP+1,M+1)
                                                  G O  T O   9
-   10 D= SIN(MP*ALPHA)*COS(M*GAMMA)*DPL(MP+1,M+1)
-     *  +COS(MP*ALPHA)*SIN(M*GAMMA)*DMN(MP+1,M+1)
+   10 D= SIN(MP*ALPHA)*COS(M*GAMMA)*DPL(MP+1,M+1)&
+     &  +COS(MP*ALPHA)*SIN(M*GAMMA)*DMN(MP+1,M+1)
     9 CONTINUE
-C THIS IS CHANGED
-      IF(MOD(M+MP,2) . NE . 0)  D=-D
-C
+! THIS IS CHANGED
+      IF(MOD(M+MP,2) . NE .0)  D=-D
+!
       ISU=ISU+1
       DMATL(ISU)=D
     6 CONTINUE
@@ -1791,31 +1791,31 @@ C
       END
       FUNCTION DROT(L,MP,M,BETA)
       implicit none
-c#@# KKRtags: VORONOI special-functions
-C-----------------------------------------------------------------------
-C     CALCULATION OF D COEFFICIENT ACCORDING TO ROSE, ELEMENTARY THEORY
-C     ANGULAR MOMENTUM,J.WILEY & SONS ,1957 , EQ. (4.13).
-C-----------------------------------------------------------------------
-C
-C     .. SCALAR ARGUMENTS ..
-C
+!#@# KKRtags: VORONOI special-functions
+!-----------------------------------------------------------------------
+!     CALCULATION OF D COEFFICIENT ACCORDING TO ROSE, ELEMENTARY THEORY
+!     ANGULAR MOMENTUM,J.WILEY & SONS ,1957 , EQ. (4.13).
+!-----------------------------------------------------------------------
+!
+!     .. SCALAR ARGUMENTS ..
+!
       INTEGER   L,M,MP
       REAL*8    BETA,DROT
-C
-C     .. LOCAL SCALARS ..
-C
+!
+!     .. LOCAL SCALARS ..
+!
       INTEGER   L0,M0,MP0,N1,N2,N3,N4,NN,I,KMIN,KMAX,LTRM,N,K
       REAL*8    SINB,TERM,FF,BETA2,COSB
-C
-C     .. LOCAL ARRAYS ..
-C
+!
+!     .. LOCAL ARRAYS ..
+!
       INTEGER        NF(4)
       EQUIVALENCE (N1,NF(1)),(N2,NF(2)),(N3,NF(3)),(N4,NF(4))
-C
-C     .. INTRINSIC FUNCTIONS ..
-C
+!
+!     .. INTRINSIC FUNCTIONS ..
+!
       INTRINSIC IABS,ABS,SQRT,COS,SIN,MOD,MIN0,MAX0
-C-----------------------------------------------------------------------
+!-----------------------------------------------------------------------
       DATA L0,M0,MP0/-1,1,1/
          L0=-1
          M0=1
@@ -1823,8 +1823,8 @@ C-----------------------------------------------------------------------
    10 IF(L.NE.L0) GO TO 2
                            WRITE(6,300) L0,M0,MP0
   300                      FORMAT(3X,'L0,M0,MP0=',3I3)
-      IF((IABS(M ).EQ.IABS(M0).AND.IABS(MP).EQ.IABS(MP0)).OR.
-     1   (IABS(MP).EQ.IABS(M0).AND.IABS(M ).EQ.IABS(MP0))) GO TO 1
+      IF((IABS(M ).EQ.IABS(M0).AND.IABS(MP).EQ.IABS(MP0)).OR.&
+     &   (IABS(MP).EQ.IABS(M0).AND.IABS(M ).EQ.IABS(MP0))) GO TO 1
     2 FF=1.D0
       IF(IABS(M).LE.L.AND.IABS(MP).LE.L) GO TO 3
       WRITE(6,100) L,M,MP
@@ -1894,7 +1894,7 @@ C-----------------------------------------------------------------------
       RETURN
       END
       SUBROUTINE INTSIM(FD,RATIO,X1,X2,DLT,XEL)
-c#@# KKRtags: VORONOI undefined
+!#@# KKRtags: VORONOI undefined
       implicit none
       REAL*8 FD,RATIO,X1,X2,DLT
       REAL*8 H,X
@@ -1928,7 +1928,7 @@ c#@# KKRtags: VORONOI undefined
       END
 
       REAL*8 FUNCTION FFF(I,X,FD,RATIO)
-c#@# KKRtags: VORONOI undefined
+!#@# KKRtags: VORONOI undefined
       implicit none
       REAL*8 X,FD,RATIO
       REAL*8 AEXP,A1,A2,A,C1,C2,C,B1,B
@@ -1953,27 +1953,27 @@ c#@# KKRtags: VORONOI undefined
       END
       SUBROUTINE MESH0(CRT,NM,NPAN,NAPROX,NMIN)
       IMPLICIT NONE
-c#@# KKRtags: VORONOI radial-grid initialization
-C ***********************************************************
-C *  THIS SUBROUTINE CALCULATES AN APPROPRIATE MESH FOR
-C *  THE SHAPE FUNCTIONS. MORE THAN NMIN POINTS BETWEEN TWO
-C *  CRITICAL POINTS
-c *  In case of more dense mesh increase NMIN 
-C *
-C ***********************************************************
-c      INTEGER NPAND,MESHND
-c      PARAMETER (NPAND=80,MESHND=1000)
+!#@# KKRtags: VORONOI radial-grid initialization
+! ***********************************************************
+! *  THIS SUBROUTINE CALCULATES AN APPROPRIATE MESH FOR
+! *  THE SHAPE FUNCTIONS. MORE THAN NMIN POINTS BETWEEN TWO
+! *  CRITICAL POINTS
+! *  In case of more dense mesh increase NMIN 
+! *
+! ***********************************************************
+!      INTEGER NPAND,MESHND
+!      PARAMETER (NPAND=80,MESHND=1000)
        include 'inc.geometry'
        INTEGER MESHND
        PARAMETER (MESHND=IRID)
-C
-C
+!
+!
       REAL*8 CRT(NPAND)
       REAL*8 DIST,D1
       INTEGER   NM(NPAND)
       INTEGER   NAPROX,NPAN,NMIN,N,NTOT,I,NT,NA
       INTRINSIC DFLOAT
-c     DATA NMIN/3/  ! 7
+!     DATA NMIN/3/  ! 7
       IF ((NPAN-1)*NMIN.GE.NAPROX) THEN
       WRITE(6,*) NPAN,NMIN,NAPROX
       STOP ' INCREASE NUMBER OF POINTS'
@@ -2004,78 +2004,78 @@ c     DATA NMIN/3/  ! 7
       NM(1) = NM(1) + NTOT 
       RETURN
       END
-C=====================================================================
+!=====================================================================
       SUBROUTINE POLCHK(NFACE,NVERTICES,XVERT,YVERT,ZVERT,TOLVDIST)
       IMPLICIT NONE
-c#@# KKRtags: VORONOI unit-test sanity-check
-C     ----------------------------------------------------------------
-C     THIS SUBROUTINE READS THE COORDINATES OF THE VERTICES OF EACH
-C     (POLYGON)  FACE OF  A CONVEX POLYHEDRON AND  CHECKS  IF THESE 
-C     VERTICES ARRANGED  CONSECUTIVELY DEFINE A  POLYGON. THEN  THE 
-C     SUBROUTINE  DETERMINES  THE  VERTICES  AND  THE  EDGES OF THE 
-C     POLYHEDRON AND CHECKS IF  THE  NUMBER  OF  VERTICES  PLUS THE  
-C     NUMBER OF FACES EQUALS THE NUMBER OF EDGES PLUS 2.
-C
-C     DATA ARE READ FROM FILE IN UNIT 7, WHICH WE FINALLY REWIND
-C     ----------------------------------------------------------------
-C
-C     .. PARAMETER STATEMENTS ..
-C
+!#@# KKRtags: VORONOI unit-test sanity-check
+!     ----------------------------------------------------------------
+!     THIS SUBROUTINE READS THE COORDINATES OF THE VERTICES OF EACH
+!     (POLYGON)  FACE OF  A CONVEX POLYHEDRON AND  CHECKS  IF THESE 
+!     VERTICES ARRANGED  CONSECUTIVELY DEFINE A  POLYGON. THEN  THE 
+!     SUBROUTINE  DETERMINES  THE  VERTICES  AND  THE  EDGES OF THE 
+!     POLYHEDRON AND CHECKS IF  THE  NUMBER  OF  VERTICES  PLUS THE  
+!     NUMBER OF FACES EQUALS THE NUMBER OF EDGES PLUS 2.
+!
+!     DATA ARE READ FROM FILE IN UNIT 7, WHICH WE FINALLY REWIND
+!     ----------------------------------------------------------------
+!
+!     .. PARAMETER STATEMENTS ..
+!
       include 'inc.geometry'
 
       INTEGER NVRTD,NEDGED
       PARAMETER (NVRTD=500,NEDGED=NVRTD+NFACED-2)
-c
-c     ...Arrays ......
-c
+!
+!     ...Arrays ......
+!
       INTEGER   NVERTICES(NFACED)
-      REAL*8    XVERT(NVERTD,NFACED),YVERT(NVERTD,NFACED),
+      REAL*8    XVERT(NVERTD,NFACED),YVERT(NVERTD,NFACED),&
      &          ZVERT(NVERTD,NFACED)
-c     ...Scalars....
+!     ...Scalars....
       REAL*8 TOLVDIST
-C
-C     .. LOCAL SCALARS ..
-C
+!
+!     .. LOCAL SCALARS ..
+!
       INTEGER   IVERT,INEW,IVERTP,IVERTM,IVRT,IEDGE,NVRT,NEDGE
       INTEGER   IFACE,NFACE,NVERT,I
       REAL*8    ARG,A1,A2,DOWN,UP,FISUM,T
       REAL*8    VRTX,VRTY,VRTZ,VRTPX,VRTPY,VRTPZ,VRTMX,VRTMY,VRTMZ
       REAL*8    PI314
-C
-C     .. LOCAL ARRAYS ..
-C
+!
+!     .. LOCAL ARRAYS ..
+!
       REAL*8    V1(3,NEDGED),V2(3,NEDGED),V(3,NVERTD),VRT(3,NVRTD)
-C
-C     .. INTRINSIC FUNCTIONS ..
-C
+!
+!     .. INTRINSIC FUNCTIONS ..
+!
       INTRINSIC ABS,ACOS,SIGN,SQRT
-C     ----------------------------------------------------------------
-c$      READ(7,100) NFACE,LDUM,KDUM,DDUM
+!     ----------------------------------------------------------------
+!$      READ(7,100) NFACE,LDUM,KDUM,DDUM
       PI314 = 4.D0*DATAN(1.D0)
 
       NVRT=0
       NEDGE=0
       DO 10 IFACE=1,NFACE
-c$      READ(7,101) DUM1,DUM2,DUM3,DUM4,NVERT
+!$      READ(7,101) DUM1,DUM2,DUM3,DUM4,NVERT
       NVERT = NVERTICES(IFACE)
       FISUM=(NVERT-2)*PI314
       !write(6,*) 'starting ',fisum
       DO 25 IVERT=1,NVERT
-c$      READ(7,102) (V(I,IVERT),I=1,3)
+!$      READ(7,102) (V(I,IVERT),I=1,3)
         V(1,IVERT) = XVERT(IVERT,IFACE)
         V(2,IVERT) = YVERT(IVERT,IFACE)
         V(3,IVERT) = ZVERT(IVERT,IFACE)
    25 CONTINUE
-C
-C------> T R E A T M E N T   O F   V E R T I C E S
-C
+!
+!------> T R E A T M E N T   O F   V E R T I C E S
+!
       DO 2 IVERT =1,NVERT
       VRTX=V(1,IVERT)
       VRTY=V(2,IVERT)
       VRTZ=V(3,IVERT)
       INEW=1                          ! Save all different vertices
       DO 13 IVRT=1,NVRT
-      T=(VRTX-VRT(1,IVRT))**2+(VRTY-VRT(2,IVRT))**2
+      T=(VRTX-VRT(1,IVRT))**2+(VRTY-VRT(2,IVRT))**2&
      & +(VRTZ-VRT(3,IVRT))**2
       IF(T.LT.TOLVDIST) INEW=0
    13 CONTINUE
@@ -2099,7 +2099,7 @@ C
       A1=SQRT((VRTPX-VRTX)**2+(VRTPY-VRTY)**2+(VRTPZ-VRTZ)**2)
       A2=SQRT((VRTMX-VRTX)**2+(VRTMY-VRTY)**2+(VRTMZ-VRTZ)**2)
       DOWN=A1*A2
-      UP=(VRTPX-VRTX)*(VRTMX-VRTX)+(VRTPY-VRTY)*(VRTMY-VRTY)+
+      UP=(VRTPX-VRTX)*(VRTMX-VRTX)+(VRTPY-VRTY)*(VRTMY-VRTY)+&
      &   (VRTPZ-VRTZ)*(VRTMZ-VRTZ)
       ! write(6,*)
       ! write(6,*) VRTX,VRTY,VRTZ
@@ -2114,22 +2114,22 @@ C
                              E L S E
       STOP 'IDENTICAL CONSECUTIVE VERTICES'
                              E N D    I F
-C
-C------> T R E A T M E N T   O F   E D G E S 
-C
+!
+!------> T R E A T M E N T   O F   E D G E S 
+!
       INEW=1                          ! Save all different edges
       DO 14 IEDGE=1,NEDGE
-      T=(VRTX-V1(1,IEDGE))**2+(VRTY-V1(2,IEDGE))**2 
+      T=(VRTX-V1(1,IEDGE))**2+(VRTY-V1(2,IEDGE))**2 &
      & +(VRTZ-V1(3,IEDGE))**2
       IF(T.LT.TOLVDIST)         THEN
-      T=(VRTPX-V2(1,IEDGE))**2+(VRTPY-V2(2,IEDGE))**2 
+      T=(VRTPX-V2(1,IEDGE))**2+(VRTPY-V2(2,IEDGE))**2 &
      & +(VRTPZ-V2(3,IEDGE))**2
       IF(T.LT.TOLVDIST) INEW=0
                              ELSE
-      T=(VRTX-V2(1,IEDGE))**2+(VRTY-V2(2,IEDGE))**2 
+      T=(VRTX-V2(1,IEDGE))**2+(VRTY-V2(2,IEDGE))**2 &
      & +(VRTZ-V2(3,IEDGE))**2
       IF(T.LT.TOLVDIST) THEN
-      T=(VRTPX-V1(1,IEDGE))**2+(VRTPY-V1(2,IEDGE))**2 
+      T=(VRTPX-V1(1,IEDGE))**2+(VRTPY-V1(2,IEDGE))**2 &
      & +(VRTPZ-V1(3,IEDGE))**2
       IF(T.LT.TOLVDIST) INEW=0
                      END IF
@@ -2156,8 +2156,8 @@ C
        WRITE(6,*) '            WARNING FROM SHAPE      '
 !      WRITE(6,*) '   >>  STOP ILLEGAL POLYHEDRON      '
        WRITE(6,*) 'NVRT=',NVRT,' ; NFACE=',NFACE,' ; NEDGE=',NEDGE
-c changed 6.10.2000
-c       IF((NVRT+NFACE).NE.(NEDGE+2)) STOP 'ILLEGAL POLYHEDRON'
+! changed 6.10.2000
+!       IF((NVRT+NFACE).NE.(NEDGE+2)) STOP 'ILLEGAL POLYHEDRON'
       END IF 
       REWIND 7 
       RETURN

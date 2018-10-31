@@ -1,12 +1,17 @@
-project: The Jülich KKR code
-summary: Source code documentation of the Jülich KKR code
+project: The Jülich KKR codes
+summary: Source code documentation of the Jülich KKR code family
 author: The Jülich KKR team
 email: p.ruessmann@fz-juelich.de
 license: by-nc
-version: 2.4
-project_website: https://iffgit.fz-juelich.de/kkr/kkrjm
-project_download: https://iffgit.fz-juelich.de/kkr/kkrjm
-src_dir: ../source/KKRhost/
+version: 3.0
+project_website: https://iffgit.fz-juelich.de/kkr/jukkr
+project_download: https://iffgit.fz-juelich.de/kkr/jukkr
+src_dir: ../source/voronoi/
+         ../source/KKRhost/
+         ../source/KKRimp/
+         ../source/voronoi/
+         ../source/PKKprime/
+exclude_dir: 
 page_dir: ./
 output_dir: ./build
 media_dir: ./media
@@ -20,15 +25,22 @@ display: public
 extra_filetypes: 1 #
 		 inc !
 		 mk #
+preprocess: true
+macro: CPP_MPI
+       CPP_HYBRID
+display: public
+         protected
+         private
+lower: true
 source: false
-search: false #true 
+search: true 
 graph: true 
 coloured_edges: true
 warn: false 
 dbg: true
 
 
-#### Welcome to the Jülich KKR code for bulk and interfaces!
+#### Welcome to the documenation of the Jülich KKR codes
 
 Our Jülich KKR package allows to perform all electron density functional theory calculations to analyze
 
@@ -46,7 +58,7 @@ employing
 
 to predict
 
-* scattering effects (with the [Pkkprime code](https://iffgit.fz-juelich.de/kkr/pkkr))
+* scattering effects (with the [Pkkprime code](https://iffgit.fz-juelich.de/kkr/pkkr)
 * electronic transport properties (e.g. conductivities, spin relaxation, family of Hall and Nernst effects with the [Pkkprime code](https://iffgit.fz-juelich.de/kkr/pkkr))
 * magnetic response functions (with the [KKRsusc code](https://iffgit.fz-juelich.de/kkr/kkrsusc))
 * magnetic (exchange) parameters for micromagnetic and atomistic spin models
@@ -61,9 +73,9 @@ to predict
 
 
 #### Code location and further reading
-  * Down load the code via the [gitlab link](https://iffgit.fz-juelich.de/kkr/kkrjm)
+  * Down load the code via the [gitlab link](https://iffgit.fz-juelich.de/kkr/jukkr)
   * See examples of the code usage on the [code's wiki page](https://iffwiki.fz-juelich.de/kkr/doku.php)
-  * Find the latest [online version of the documentation](https://kkr.iffgit.fz-juelich.de/kkrjm)
+  * Find the latest [online version of the documentation](https://kkr.iffgit.fz-juelich.de/jukkr)
   * Download the [`aiida-kkr` plugin](https://github.com/broeder-j/aiida-kkr)
   * Check the [online documentation of `aiida-kkr`](https://aiida-kkr.readthedocs.io)
 
@@ -78,6 +90,6 @@ Please check the ***Readme*** page of this documentation for further information
 @endnote
 
 @bug
-If you find any bugs, please file a new issue on the [gitlab page](https://iffgit.fz-juelich.de/kkr/kkrjm/issues)
+If you find any bugs, please file a new issue on the [gitlab page](https://iffgit.fz-juelich.de/kkr/jukkr/issues)
 @endbug
 

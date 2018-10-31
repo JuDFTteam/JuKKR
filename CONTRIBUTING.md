@@ -1,7 +1,3 @@
----
-title: Contribution guide
----
-
 # How to contribute
 
 We are glad you want to contribute to the Jülich KKR programs.

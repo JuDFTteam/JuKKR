@@ -2,4 +2,4 @@
 title: Readme
 ---
 
-{!README.md!}
+{!../README.md!}

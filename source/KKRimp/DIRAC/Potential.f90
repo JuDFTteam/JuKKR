@@ -2,6 +2,8 @@ module Potential
 ! Version mit Speedup durch Vermeiden doppelter Integrationen
 ! zusätzlicher Speedup durch Berücksichtigung von verschwindenden rel. Gaunt-Koeffizienten
 
+use mod_datatypes, only: dp
+
 contains
 
 subroutine PotentialMatrixArray(lcut,lcut_input,zatom,meshpoints,nrmax,kinenergy,VLLin,PotMatrixArray)
@@ -12,20 +14,20 @@ implicit none
 
 ! input 
 integer                                     :: lcut, lcut_input, nrmax
-double complex                              :: kinenergy
+complex (kind=dp)                              :: kinenergy
 double precision                            :: meshpoints(nrmax)
 double precision                            :: zatom,VLLin(nrmax,(2*lcut+1)**2,2)
 
 ! output
-double complex                              :: PotMatrixArray(:,:,:)
+complex (kind=dp)                              :: PotMatrixArray(:,:,:)
 
 ! other variables
 integer                                     :: k
-double complex,allocatable,dimension(:,:)   :: PotMatrix
-double complex,allocatable                  :: chi1array(:,:), chi2array(:,:)
+complex (kind=dp), allocatable, dimension(:,:)   :: PotMatrix
+complex (kind=dp), allocatable                  :: chi1array(:,:), chi2array(:,:)
 double precision                            :: theta_array(integrationpoints),phi_array(integrationpoints), weight_array(integrationpoints)
-integer,allocatable                         :: DcoeffIndexListA(:,:), DcoeffIndexListB(:,:)
-double complex,allocatable                  :: DcoeffListA(:), DcoeffListB(:)
+integer, allocatable                         :: DcoeffIndexListA(:,:), DcoeffIndexListB(:,:)
+complex (kind=dp), allocatable                  :: DcoeffListA(:), DcoeffListB(:)
 
 if(verbose > 0) then
     write(*,*) ""
@@ -91,19 +93,19 @@ integer                         :: nr
 ! l cut-off for the input potential, expanded in spherical harmonics
 integer                         :: lcut_input
 double precision                :: r
-double complex                  :: kinenergy
-double complex,allocatable      :: chi1array(:,:), chi2array(:,:)
+complex (kind=dp)                  :: kinenergy
+complex (kind=dp), allocatable      :: chi1array(:,:), chi2array(:,:)
 double precision                :: VLLin(:,:,:)
 
 
-double complex                  :: energy
+complex (kind=dp)                  :: energy
 integer                         :: Lambdacut,Lambda1,Lambda2
-double complex,allocatable,dimension(:,:,:) :: wcoeff
-double complex,allocatable,dimension(:,:) :: PotMatrix
+complex (kind=dp), allocatable, dimension(:,:,:) :: wcoeff
+complex (kind=dp), allocatable, dimension(:,:) :: PotMatrix
 
 double precision                 :: theta_array(integrationpoints), phi_array(integrationpoints), weight_array(integrationpoints)
-integer,allocatable              :: DcoeffIndexListA(:,:), DcoeffIndexListB(:,:)
-double complex,allocatable       :: DcoeffListA(:), DcoeffListB(:)
+integer, allocatable              :: DcoeffIndexListA(:,:), DcoeffIndexListB(:,:)
+complex (kind=dp), allocatable       :: DcoeffListA(:), DcoeffListB(:)
 
 r = meshpoints(nr)
 
@@ -170,15 +172,15 @@ implicit none
 ! l cut-off for the expansion in spin spherical harmonics
 integer                         :: lcut
 integer                         :: Lambdacut
-integer,allocatable             :: DcoeffIndexListA(:,:), DcoeffIndexListB(:,:)
-double complex,allocatable      :: DcoeffListA(:), DcoeffListB(:)
+integer, allocatable             :: DcoeffIndexListA(:,:), DcoeffIndexListB(:,:)
+complex (kind=dp), allocatable      :: DcoeffListA(:), DcoeffListB(:)
 double precision                :: temp_realpart, temp_imagpart
 character(len=100)              :: filename
 character(len=2)                :: lcutstring
 integer                         :: currentline, filelengthA, filelengthB
 
-integer,allocatable,dimension(:):: KappaArray, LambdabarArray
-real,allocatable,dimension(:)   :: MuArray
+integer, allocatable, dimension(:):: KappaArray, LambdabarArray
+real, allocatable, dimension(:)   :: MuArray
 
 call KappaMuArray(lcut,KappaArray,MuArray)
 call makeLambdabarArray(lcut,LambdabarArray)
@@ -261,8 +263,8 @@ implicit none
 ! input
 ! l cut-off for the expansion in spin spherical harmonics
 integer                         :: lcut
-integer,allocatable             :: DcoeffIndexListA(:,:), DcoeffIndexListB(:,:)
-double complex,allocatable      :: DcoeffListA(:), DcoeffListB(:)
+integer, allocatable             :: DcoeffIndexListA(:,:), DcoeffIndexListB(:,:)
+complex (kind=dp), allocatable      :: DcoeffListA(:), DcoeffListB(:)
 double precision                :: zatom,VLLin(:,:,:)
 double precision                :: meshpoints(:)
 integer                         :: nr
@@ -271,14 +273,14 @@ integer                         :: nr
 ! l cut-off for the input potential, expanded in spherical harmonics
 integer                         :: lcut_input
 double precision                :: r
-double complex,allocatable      :: chi1array(:,:), chi2array(:,:)
+complex (kind=dp), allocatable      :: chi1array(:,:), chi2array(:,:)
 double precision                :: theta_array(integrationpoints), phi_array(integrationpoints), weight_array(integrationpoints)
 
 double precision                :: potPhi
 integer                         :: Lambda1, Lambdacut
-double complex,allocatable      :: wcoeff(:,:,:)
-integer,allocatable,dimension(:):: KappaArray, LambdabarArray
-real,allocatable,dimension(:)   :: MuArray
+complex (kind=dp), allocatable      :: wcoeff(:,:,:)
+integer, allocatable, dimension(:):: KappaArray, LambdabarArray
+real, allocatable, dimension(:)   :: MuArray
 
 r = meshpoints(nr)
 
@@ -314,8 +316,8 @@ implicit none
 ! input
 ! l cut-off for the expansion in spin spherical harmonics
 integer                         :: lcut
-integer,allocatable             :: DcoeffIndexListA(:,:), DcoeffIndexListB(:,:)
-double complex,allocatable      :: DcoeffListA(:), DcoeffListB(:)
+integer, allocatable             :: DcoeffIndexListA(:,:), DcoeffIndexListB(:,:)
+complex (kind=dp), allocatable      :: DcoeffListA(:), DcoeffListB(:)
 
 double precision                :: VLLin(:,:,:)
 double precision                :: zatom,meshpoints(:)
@@ -325,16 +327,16 @@ integer                         :: nr
 ! l cut-off for the input potential, expanded in spherical harmonics
 integer                         :: lcut_input
 double precision                :: r
-double complex,allocatable      :: chi1array(:,:), chi2array(:,:)
+complex (kind=dp), allocatable      :: chi1array(:,:), chi2array(:,:)
 double precision                :: theta_array(integrationpoints), phi_array(integrationpoints), weight_array(integrationpoints)
 
 integer                         :: Lambdacut, Lambda1, Lambda2, Lambda3, Lambda4, test_zero, test_nonzero
 integer                         :: linecount, filelengthA, filelengthB
-double complex,allocatable      :: vcoeff(:,:,:), wcoeff(:,:,:)
+complex (kind=dp), allocatable      :: vcoeff(:,:,:), wcoeff(:,:,:)
 
 
-integer,allocatable,dimension(:):: KappaArray, LambdabarArray
-real,allocatable,dimension(:)   :: MuArray
+integer, allocatable, dimension(:):: KappaArray, LambdabarArray
+real, allocatable, dimension(:)   :: MuArray
 
 r = meshpoints(nr)
 
@@ -413,7 +415,7 @@ integer                         :: nr
 ! l cut-off for the input potential, expanded in spherical harmonics
 integer                         :: lcut_input
 double precision                :: r
-double complex,allocatable      :: chi1array(:,:), chi2array(:,:)
+complex (kind=dp), allocatable      :: chi1array(:,:), chi2array(:,:)
 double precision                :: theta_array(integrationpoints), phi_array(integrationpoints), weight_array(integrationpoints)
 
 ! variables
@@ -426,16 +428,16 @@ double precision                :: deviation
 double precision                :: potPhi,potBx,potBy,potBz
 double precision                :: eval_phi,eval_theta
 integer                         :: out_potprecision
-double complex, dimension(4,4)  :: potMatrixIn,potMatrix,differenceMatrix ! 4x4 potential matrix
+complex (kind=dp), dimension(4,4)  :: potMatrixIn,potMatrix,differenceMatrix ! 4x4 potential matrix
 
 integer                         :: Lambdacut, Lambda1, Lambda2
-double complex, dimension(4)    :: v
-double complex,allocatable,dimension(:,:,:) :: vcoeff
+complex (kind=dp), dimension(4)    :: v
+complex (kind=dp), allocatable, dimension(:,:,:) :: vcoeff
 
-integer,allocatable,dimension(:):: KappaArray, LambdabarArray
-real,allocatable,dimension(:)   :: MuArray
-double complex                  :: chi11,chi12,chi21,chi22
-double complex,allocatable    	:: nuL(:,:,:), nuR(:,:,:)
+integer, allocatable, dimension(:):: KappaArray, LambdabarArray
+real, allocatable, dimension(:)   :: MuArray
+complex (kind=dp)                  :: chi11,chi12,chi21,chi22
+complex (kind=dp), allocatable        :: nuL(:,:,:), nuR(:,:,:)
 
 
 ! test options
@@ -568,7 +570,7 @@ integer                         :: nr
 ! l cut-off for the input potential, expanded in spherical harmonics
 integer                         :: lcut_input
 double precision                :: r
-double complex,allocatable      :: chi1array(:,:), chi2array(:,:)
+complex (kind=dp), allocatable      :: chi1array(:,:), chi2array(:,:)
 double precision                :: theta_array(integrationpoints), phi_array(integrationpoints), weight_array(integrationpoints)
 double precision                :: VLLin(:,:,:)
 
@@ -580,14 +582,14 @@ integer                         :: j,k
 double precision                :: deviation
 double precision                :: potPhi
 double precision                :: eval_phi,eval_theta
-double complex, dimension(4,4)  :: potMatrixIn,potMatrix,differenceMatrix ! 4x4 potential matrix
+complex (kind=dp), dimension(4,4)  :: potMatrixIn,potMatrix,differenceMatrix ! 4x4 potential matrix
 
 integer                         :: Lambdacut, Lambda1, Lambda2
-double complex,allocatable,dimension(:,:,:) :: vcoeff
+complex (kind=dp), allocatable, dimension(:,:,:) :: vcoeff
 
-integer,allocatable,dimension(:):: KappaArray, LambdabarArray
-real,allocatable,dimension(:)   :: MuArray
-double complex                  :: chi11,chi12,chi21,chi22
+integer, allocatable, dimension(:):: KappaArray, LambdabarArray
+real, allocatable, dimension(:)   :: MuArray
+complex (kind=dp)                  :: chi11,chi12,chi21,chi22
 
 r = meshpoints(nr)
 
@@ -693,16 +695,16 @@ subroutine makeSpinSphericalArray(lcut,chi1array,chi2array)
   ! input: lcut
   integer                               :: lcut
   ! output: chi1array, chi2array
-  double complex,allocatable            :: chi1array(:,:), chi2array(:,:)
+  complex (kind=dp), allocatable            :: chi1array(:,:), chi2array(:,:)
   
-  double complex                        :: chi1,chi2
+  complex (kind=dp)                        :: chi1,chi2
   double precision                      :: x,y,z,r,theta,phi,weight
   integer                               :: kappa
   real                                  :: mu
   
   integer                               :: Lambdacut, j, Lambda
-  integer,allocatable,dimension(:)      :: KappaArray
-  real,allocatable,dimension(:)         :: MuArray
+  integer, allocatable, dimension(:)      :: KappaArray
+  real, allocatable, dimension(:)         :: MuArray
   
   Lambdacut = getLambdacut(lcut+1)
   call KappaMuArray(lcut,KappaArray,MuArray)
@@ -733,28 +735,28 @@ subroutine nuCoefficients(lcut,zatom,meshpoints,nr,chi1array,chi2array,theta_arr
   use Lebedev
   use DiracConfig
   implicit none
-  integer				:: Lambda
+  integer                :: Lambda
   double precision                      :: zatom,meshpoints(:)
   integer                               :: nr
 
-  double precision			:: r_fix
+  double precision            :: r_fix
   double precision                      :: theta_array(integrationpoints), phi_array(integrationpoints), weight_array(integrationpoints)
   double precision                      :: VLLin(:,:,:)
 
 
-  double complex,allocatable    	:: nuL(:,:,:), nuR(:,:,:)
-  integer				:: j
+  complex (kind=dp), allocatable        :: nuL(:,:,:), nuR(:,:,:)
+  integer                :: j
   ! ^ index 1..4 corresponds to a,b,c,d i.e. the different sub-matrices, index i=1,2 corresponds to the different eigenvalues of the respective sub-matrix 
-  double complex, dimension(4,2)	:: eigenvalue
-  double complex, dimension(4,2,2)	:: eigenvector
-  double complex			:: chi1,chi2
-  double precision			:: potPhi,potBx,potBy,potBz
-  integer				:: matrixindex,eigenvalueindex
+  complex (kind=dp), dimension(4,2)    :: eigenvalue
+  complex (kind=dp), dimension(4,2,2)    :: eigenvector
+  complex (kind=dp)            :: chi1,chi2
+  double precision            :: potPhi,potBx,potBy,potBz
+  integer                :: matrixindex,eigenvalueindex
  
-  integer				:: lcut, Lambdacut
-  integer,allocatable,dimension(:)	:: KappaArray, LambdabarArray
-  real,allocatable,dimension(:)		:: MuArray
-  double complex,allocatable            :: chi1array(:,:), chi2array(:,:)
+  integer                :: lcut, Lambdacut
+  integer, allocatable, dimension(:)    :: KappaArray, LambdabarArray
+  real, allocatable, dimension(:)        :: MuArray
+  complex (kind=dp), allocatable            :: chi1array(:,:), chi2array(:,:)
 
   r_fix = meshpoints(nr)
 
@@ -829,23 +831,23 @@ subroutine ExpansionCoefficients(Lambda1,Lambda2,lcut,meshpoints,nr,chi1array,ch
   use Lebedev
   use DiracConfig
   implicit none
-  double complex, dimension(4)		:: vcoeff ! index 1..4 corresponds to a,b,c,d
-  integer				:: Lambda1, Lambda2
+  complex (kind=dp), dimension(4)        :: vcoeff ! index 1..4 corresponds to a,b,c,d
+  integer                :: Lambda1, Lambda2
   double precision                      :: meshpoints(:)
   integer                               :: nr
 
-  double precision			:: r_fix
+  double precision            :: r_fix
   double precision                      :: theta_array(integrationpoints), phi_array(integrationpoints), weight_array(integrationpoints)
 
-  double complex,allocatable    	:: nuL(:,:,:), nuR(:,:,:)
+  complex (kind=dp), allocatable        :: nuL(:,:,:), nuR(:,:,:)
 
   ! ^ index 1..4 corresponds to a,b,c,d i.e. the different sub-matrices, index i=1,2 corresponds to the different eigenvalues of the respective sub-matrix 
-  integer				:: matrixindex
+  integer                :: matrixindex
  
-  integer				:: lcut, Lambdacut, printtimer
-  integer,allocatable,dimension(:)	:: KappaArray, LambdabarArray
-  real,allocatable,dimension(:)		:: MuArray
-  double complex,allocatable            :: chi1array(:,:), chi2array(:,:)
+  integer                :: lcut, Lambdacut, printtimer
+  integer, allocatable, dimension(:)    :: KappaArray, LambdabarArray
+  real, allocatable, dimension(:)        :: MuArray
+  complex (kind=dp), allocatable            :: chi1array(:,:), chi2array(:,:)
   printtimer = 1 ! 1=print computing step times 0=don't
   Lambdacut = getLambdacut(lcut)
   call makeLambdabarArray(lcut,LambdabarArray)
@@ -874,8 +876,8 @@ subroutine SubMatrixEigenvalue(potPhi,potBx,potBy,potBz,eigenvalue)
   ! eigenvalueindex = 1,2 corresponds to the two different eigenvalues of the corresponding sub-matrix
   use Constants
   implicit none
-  double precision			:: potPhi,potBx,potBy,potBz
-  double complex, dimension(4,2)	:: eigenvalue
+  double precision            :: potPhi,potBx,potBy,potBz
+  complex (kind=dp), dimension(4,2)    :: eigenvalue
   eigenvalue(1,1) = echarge * potPhi + muB * sqrt(potBx**2 + potBy**2 + potBz**2)
   eigenvalue(1,2) = echarge * potPhi - muB * sqrt(potBx**2 + potBy**2 + potBz**2)
   eigenvalue(2,1) = 0
@@ -898,8 +900,8 @@ subroutine SubMatrixEigenvector(potPhi,potBx,potBy,potBz,eigenvector)
   ! ventryindex = 1,2 corresponds to the 1st and 2nd entry of the eigenvector
   use Constants
   implicit none
-  double precision			:: potPhi,potBx,potBy,potBz
-  double complex, dimension(4,2,2)	:: eigenvector
+  double precision            :: potPhi,potBx,potBy,potBz
+  complex (kind=dp), dimension(4,2,2)    :: eigenvector
   double precision                      :: norm
   integer                               :: matrixindex, eigenvalueindex
   if(potBx==0 .AND. potBy==0) then
@@ -1100,7 +1102,7 @@ integer function CheckExistence(filename)
   close(unit=78)
 end function CheckExistence
 
-double complex function GetNumberOfLines(filename)
+complex (kind=dp) function GetNumberOfLines(filename)
 ! opens a file and finds out the number of lines
   use DiracConfig
   implicit none
