@@ -491,7 +491,7 @@ run_kkrhost:intel:aiida-kkr:
   script:
     # some prepararion
     - umask 000 # needed to ensure that all subdirs created by aiida have the right permissions
-    - cp kkr.x "${KKR_EXECUTABLE_PATH}" # copy kkr executable to correct dir
+    - cp tests/kkr.x "${KKR_EXECUTABLE_PATH}" # copy kkr executable to correct dir
     - export C_FORCE_ROOT='true' # needed since root process executes aiida
     - verdi devel setproperty logging.celery_loglevel INFO && verdi devel setproperty logging.aiida_loglevel INFO && verdi daemon restart # restart aiida daemon with increased loglevel
     # compile latest voronoi version and add to aiida
