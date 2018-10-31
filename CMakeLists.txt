@@ -41,7 +41,7 @@ set(complib "")
 option(COMPILE_KKRHOST "Compile KKRhost" ON)
 option(COMPILE_KKRIMP "Compile KKRimp" ON)
 option(COMPILE_KKRSUSC "Compile KKRsusc" OFF)
-option(COMPILE_PKKPRIME "Compile PKKprime" OFF)
+option(COMPILE_PKKPRIME "Compile PKKprime" ON)
 option(COMPILE_VORONOI "Compile voronoi" ON)
 
 

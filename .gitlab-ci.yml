@@ -26,16 +26,20 @@ stages:
   - verify_kkrhost
   - deploy:codecov_kkrhost
   - deploy:doc_kkrhost
-  # kkrimp stages ...
+  # kkrimp stages
   - build_kkrimp
   - run_kkrimp_parallel
   - run_kkrimp_features
   - verify_kkrimp
-  # kkrsusc stages ...
-  # pkkprime stages ...
-  # voronoi stages ...
+  # kkrsusc stages 
+    # to be implemented ...
+  # pkkprime stages
+  - build_pkkprime
+    # run and verift stages not defined yet
+  # voronoi stages
   - build_voronoi
   - run_voronoi
+    # verify stage not defined yet
 
 ###############################################################################
 
@@ -44,12 +48,12 @@ test:intel:
   script:
     # test if dependencies are working
     - echo 'do some tests here'
-    - echo 'ifort ' && which ifort
-    - echo 'mpiifort ' && which mpiifort
-    - echo 'gfortran ' && which gfortran
-    # needs to be implemented (tests for dependencies e.g. MPI, OpenMP, LAPACK, etc.)
+    - which ifort
+    - which mpiifort
+    - which gfortran
     - which profmerge
     - which codecov || which Codecov
+    # needs to be implemented (tests for dependencies e.g. MPI, OpenMP, LAPACK, etc.)
 
 ###############################################################################
 # include build / run / verify scripts for all codes
@@ -59,7 +63,7 @@ include:
     - tests/gitlab-ci/build_kkrhost.yml
     - tests/gitlab-ci/build_kkrimp.yml
     #- tests/gitlab-ci/build_kkrsusc.yml
-    #- tests/gitlab-ci/build_pkkprime.yml
+    - tests/gitlab-ci/build_pkkprime.yml
     - tests/gitlab-ci/build_voronoi.yml
     ### 2. run tests ###
     - tests/gitlab-ci/run_kkrhost.yml
@@ -69,7 +73,7 @@ include:
     - tests/gitlab-ci/run_voronoi.yml
     ### 3. verify results ###
     - tests/gitlab-ci/verify_kkrhost.yml
-    #- tests/gitlab-ci/verify_kkrimp.yml
+    - tests/gitlab-ci/verify_kkrimp.yml
     #- tests/gitlab-ci/verify_kkrsusc.yml
     #- tests/gitlab-ci/verify_pkkprime.yml
     #- tests/gitlab-ci/verify_voronoi.yml

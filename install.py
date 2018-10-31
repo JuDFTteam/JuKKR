@@ -13,7 +13,7 @@ import shutil
 ##########################################################################
 #global settings:
 
-codeslist = ['kkrhost', 'kkrimp', 'voronoi'] # still to add 'kkrsusc', pkkprime
+codeslist = ['kkrhost', 'kkrimp', 'voronoi', 'pkkprime'] # still to add 'kkrsusc', pkkprime
 
 ##########################################################################
  
