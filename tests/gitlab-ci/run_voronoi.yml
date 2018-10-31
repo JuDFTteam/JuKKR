@@ -3,7 +3,7 @@ run_voronoi:intel:oldstyle:
   script:
     - cd tests/voronoi
     - cp -r test_inputs/test01_oldstyle test_run01
-    - cd test_run01 && ln -s ../../ElementDataBase . && ../../voronoi.exe | tee out_voronoi
+    - cd test_run01 && ln -s ../../../ElementDataBase . && ../../voronoi.exe | tee out_voronoi
   artifacts:
     paths:
       - tests/test_run01
@@ -14,7 +14,7 @@ run_voronoi:intel:newstyle:
   script:
     - cd tests/voronoi
     - cp -r test_inputs/test02_newstyle test_run02
-    - cd test_run02 && ln -s ../../ElementDataBase . && ../../voronoi.exe | tee out_voronoi
+    - cd test_run02 && ln -s ../../../ElementDataBase . && ../../voronoi.exe | tee out_voronoi
   artifacts:
     paths:
       - tests/test_run02
