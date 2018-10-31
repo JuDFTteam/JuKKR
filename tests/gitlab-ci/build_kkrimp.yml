@@ -1,24 +1,25 @@
-###############################################################################
-# first build executables
-
 build_kkrimp:intel:hybrid:
   stage: build_kkrimp
   script:
     # compile code
-    - cd SOURCE
-    - make clean; make hybrid; cp kkrflex.exe kkrflex.exe_hybrid
+    - mkdir build_kkrimp_hybrid && cd build_kkrimp_hybrid
+    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/mpi/intel64/bin/mpiifort cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DENABLE_COV=ON -DCOMPILE_KKRHOST=OFF -DCOMPILE_KKRIMP=ON -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF ..
+    - make -j4
+    - cp kkrflex.exe ../tests/kkrflex.exe_hybrid
   artifacts:
     paths:
-      - SOURCE/kkrflex.exe_hybrid
+      - tests/kkrflex.exe_hybrid
     expire_in: 1 day
 
 build_kkrimp:intel:mpi:
   stage: build_kkrimp
   script:
     # compile code
-    - cd SOURCE
-    - make clean; make mpi; cp kkrflex.exe kkrflex.exe_mpi
+    - mkdir build_kkrimp_hybrid && cd build_kkrimp_hybrid
+    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/mpi/intel64/bin/mpiifort cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DENABLE_COV=ON -DCOMPILE_KKRHOST=OFF -DCOMPILE_KKRIMP=ON -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF ..
+    - make -j4
+    - cp kkrflex.exe ../tests/kkrflex.exe_mpi
   artifacts:
     paths:
-      - SOURCE/kkrflex.exe_mpi
+      - tests/kkrflex.exe_mpi
     expire_in: 1 day

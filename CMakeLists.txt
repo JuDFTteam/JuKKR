@@ -38,7 +38,7 @@ set(complib "")
 
 
 # default values of codes to compile:
-option(COMPILE_KKRHOST "Compile KKRhost" OFF)
+option(COMPILE_KKRHOST "Compile KKRhost" ON)
 option(COMPILE_KKRIMP "Compile KKRimp" ON)
 option(COMPILE_KKRSUSC "Compile KKRsusc" OFF)
 option(COMPILE_PKKPRIME "Compile PKKprime" OFF)
