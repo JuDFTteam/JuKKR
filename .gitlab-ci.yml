@@ -46,7 +46,7 @@ test:intel:
     - echo 'do some tests here'
     - echo 'ifort ' && which ifort
     - echo 'mpiifort ' && which mpiifort
-    - echo 'gfortran ' && which gfortran && ls /opt/gcc8/bin
+    - echo 'gfortran ' && which gfortran
     # needs to be implemented (tests for dependencies e.g. MPI, OpenMP, LAPACK, etc.)
     - which profmerge
     - which codecov || which Codecov

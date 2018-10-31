@@ -14,21 +14,21 @@ build_kkrhost:intel:debug:
   stage: build_kkrhost
   script:
     - mkdir build_debug && cd build_debug
-    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/bin/intel64/ifort cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug -DCOMPILE_KKRHOST=ON -DCOMPILE_KKRIMP=OFF -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF ..
+    - FC=$(which ifort) cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug -DCOMPILE_KKRHOST=ON -DCOMPILE_KKRIMP=OFF -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF ..
     - make -j4
 
 build_kkrhost:intel:openmp_debug:
   stage: build_kkrhost
   script:
     - mkdir build_ompdebug && cd build_ompdebug
-    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/bin/intel64/ifort cmake -DENABLE_MPI=OFF -DENABLE_OMP=ON -DCMAKE_BUILD_TYPE=Debug -DCOMPILE_KKRHOST=ON -DCOMPILE_KKRIMP=OFF -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF ..
+    - FC=$(which ifort) cmake -DENABLE_MPI=OFF -DENABLE_OMP=ON -DCMAKE_BUILD_TYPE=Debug -DCOMPILE_KKRHOST=ON -DCOMPILE_KKRIMP=OFF -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF ..
     - make -j4
 
 build_kkrhost:intel:hybrid_debug:
   stage: build_kkrhost
   script:
     - mkdir build_hybriddebug && cd build_hybriddebug
-    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/mpi/intel64/bin/mpiifort cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DCMAKE_BUILD_TYPE=Debug -DCOMPILE_KKRHOST=ON -DCOMPILE_KKRIMP=OFF -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF ..
+    - FC=$(which mpiifort) cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DCMAKE_BUILD_TYPE=Debug -DCOMPILE_KKRHOST=ON -DCOMPILE_KKRIMP=OFF -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF ..
     - make -j4
 
 ## 1.2 production versions ##
@@ -37,7 +37,7 @@ build_kkrhost:intel:hybrid:
   script:
     # compile code
     - mkdir build && cd build
-    - FC=/usr/local/intel/compilers_and_libraries_2016.2.181/linux/mpi/intel64/bin/mpiifort cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DENABLE_COV=ON -DCOMPILE_KKRHOST=ON -DCOMPILE_KKRIMP=OFF -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF ..
+    - FC=$(which mpiifort) cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DENABLE_COV=ON -DCOMPILE_KKRHOST=ON -DCOMPILE_KKRIMP=OFF -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF ..
     - make -j4
     - cp kkr.x ../tests/kkr.x
     - cd ..
