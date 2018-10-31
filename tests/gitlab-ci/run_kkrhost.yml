@@ -473,6 +473,7 @@ run_kkrhost:intel:DOS_23:
 run_kkrhost:intel:aiida-kkr:
   image: iffregistry.fz-juelich.de/docker-images/aiida-kkr:latest
   stage: run_kkrhost_features
+  allow_failure: true
   services:
     - name: postgres:latest
       alias: db
