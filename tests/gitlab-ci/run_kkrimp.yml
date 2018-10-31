@@ -1,95 +1,94 @@
-###############################################################################
 # then run checks with old solver to check parallelism
 
 run_kkrimp_parallel:intel:mpi_1:
   stage: run_kkrimp_parallel
   script:
-    - cd KKRimp/test_case_kkrflex_host_in_host/imp/
+    - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template/ test_run_mpi_1
     - cd test_run_mpi_1/
     - ln -s ../../../../kkrflex.exe_mpi kkrflex.exe
     - ./kkrflex.exe | tee out
   artifacts:
     paths:
-      - KKRimp/test_case_kkrflex_host_in_host/imp/test_run_mpi_1
+      - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_mpi_1
     expire_in: 2 days
 
 run_kkrimp_parallel:intel:mpi_8:
   stage: run_kkrimp_parallel
   script:
-    - cd KKRimp/test_case_kkrflex_host_in_host/imp/
+    - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template/ test_run_mpi_8
     - cd test_run_mpi_8/
     - ln -s ../../../../kkrflex.exe_mpi kkrflex.exe
     - mpirun -np 8 ./kkrflex.exe | tee out
   artifacts:
     paths:
-      - KKRimp/test_case_kkrflex_host_in_host/imp/test_run_mpi_8
+      - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_mpi_8
     expire_in: 2 days
 
 run_kkrimp_parallel:intel:hybrid_1_1:
   stage: run_kkrimp_parallel
   script:
-    - cd KKRimp/test_case_kkrflex_host_in_host/imp/
+    - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template/ test_run_hybrid_1_1
     - cd test_run_hybrid_1_1/
     - ln -s ../../../../kkrflex.exe_hybrid kkrflex.exe
     - export OMP_NUM_THREADS=1; mpirun -np 1 ./kkrflex.exe | tee out
   artifacts:
     paths:
-      - KKRimp/test_case_kkrflex_host_in_host/imp/test_run_hybrid_1_1
+      - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_hybrid_1_1
     expire_in: 2 days
 
 run_kkrimp_parallel:intel:hybrid_1_8:
   stage: run_kkrimp_parallel
   script:
-    - cd KKRimp/test_case_kkrflex_host_in_host/imp/
+    - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template/ test_run_hybrid_1_8
     - cd test_run_hybrid_1_8/
     - ln -s ../../../../kkrflex.exe_hybrid kkrflex.exe
     - export OMP_NUM_THREADS=1; mpirun -np 8 ./kkrflex.exe | tee out
   artifacts:
     paths:
-      - KKRimp/test_case_kkrflex_host_in_host/imp/test_run_hybrid_1_8
+      - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_hybrid_1_8
     expire_in: 2 days
 
 run_kkrimp_parallel:intel:hybrid_8_1:
   stage: run_kkrimp_parallel
   script:
-    - cd KKRimp/test_case_kkrflex_host_in_host/imp/
+    - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template/ test_run_hybrid_8_1
     - cd test_run_hybrid_8_1/
     - ln -s ../../../../kkrflex.exe_hybrid kkrflex.exe
     - export OMP_NUM_THREADS=8; mpirun -np 1 ./kkrflex.exe | tee out
   artifacts:
     paths:
-      - KKRimp/test_case_kkrflex_host_in_host/imp/test_run_hybrid_8_1
+      - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_hybrid_8_1
     expire_in: 2 days
 
 run_kkrimp_parallel:intel:hybrid_2_4:
   stage: run_kkrimp_parallel
   script:
-    - cd KKRimp/test_case_kkrflex_host_in_host/imp/
+    - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template/ test_run_hybrid_2_4
     - cd test_run_hybrid_2_4/
     - ln -s ../../../../kkrflex.exe_hybrid kkrflex.exe
     - export OMP_NUM_THREADS=2; mpirun -np 4 ./kkrflex.exe | tee out
   artifacts:
     paths:
-      - KKRimp/test_case_kkrflex_host_in_host/imp/test_run_hybrid_2_4
+      - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_hybrid_2_4
     expire_in: 2 days
 
 run_kkrimp_parallel:intel:hybrid_4_2:
   stage: run_kkrimp_parallel
   script:
-    - cd KKRimp/test_case_kkrflex_host_in_host/imp/
+    - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template/ test_run_hybrid_4_2
     - cd test_run_hybrid_4_2/
     - ln -s ../../../../kkrflex.exe_hybrid kkrflex.exe
     - export OMP_NUM_THREADS=4; mpirun -np 2 ./kkrflex.exe | tee out
   artifacts:
     paths:
-      - KKRimp/test_case_kkrflex_host_in_host/imp/test_run_hybrid_4_2
+      - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_hybrid_4_2
     expire_in: 2 days
 
 ###############################################################################
@@ -98,80 +97,80 @@ run_kkrimp_parallel:intel:hybrid_4_2:
 run_kkrimp_features:intel:tmatnew-hybrid:
   stage: run_kkrimp_features
   script:
-    - cd KKRimp/test_case_kkrflex_host_in_host/imp/
+    - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template_tmatnew/ test_run_tmatnew_hybrid_2_4
     - cd test_run_tmatnew_hybrid_2_4/
     - ln -s ../../../../kkrflex.exe_hybrid kkrflex.exe
     - export OMP_NUM_THREADS=2; mpirun -np 4 ./kkrflex.exe | tee out
   artifacts:
     paths:
-      - KKRimp/test_case_kkrflex_host_in_host/imp/test_run_tmatnew_hybrid_2_4
+      - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_tmatnew_hybrid_2_4
     expire_in: 2 days
 
 run_kkrimp_features:intel:tmatnew-mpi:
   stage: run_kkrimp_features
   script:
-    - cd KKRimp/test_case_kkrflex_host_in_host/imp/
+    - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template_tmatnew/ test_run_tmatnew_mpi_8
     - cd test_run_tmatnew_mpi_8/
     - ln -s ../../../../kkrflex.exe_hybrid kkrflex.exe
     - export OMP_NUM_THREADS=1; mpirun -np 8 ./kkrflex.exe | tee out
   artifacts:
     paths:
-      - KKRimp/test_case_kkrflex_host_in_host/imp/test_run_tmatnew_mpi_8
+      - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_tmatnew_mpi_8
     expire_in: 2 days
 
 run_kkrimp_features:intel:tmatnew-nosavewf:
   stage: run_kkrimp_features
   script:
-    - cd KKRimp/test_case_kkrflex_host_in_host/imp/test_run_nosavewf/
+    - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_nosavewf/
     - ln -s ../../../../kkrflex.exe_hybrid kkrflex.exe
     - export OMP_NUM_THREADS=1; mpirun -np 8 ./kkrflex.exe | tee out
   artifacts:
     paths:
-      - KKRimp/test_case_kkrflex_host_in_host/imp/test_run_nosavewf/
+      - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_nosavewf/
     expire_in: 2 days
 
 run_kkrimp_features:intel:tmatnew-nosratrick:
   stage: run_kkrimp_features
   script:
-    - cd KKRimp/test_case_kkrflex_host_in_host/imp/test_run_nosratrick/
+    - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_nosratrick/
     - ln -s ../../../../kkrflex.exe_hybrid kkrflex.exe
     - export OMP_NUM_THREADS=1; mpirun -np 8 ./kkrflex.exe | tee out
   artifacts:
     paths:
-      - KKRimp/test_case_kkrflex_host_in_host/imp/test_run_nosratrick/
+      - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_nosratrick/
     expire_in: 2 days
 
 run_kkrimp_features:intel:tmatnew-Jij:
   stage: run_kkrimp_features
   script:
-    - cd KKRimp/test_case_kkrflex_host_in_host/imp/test_run_Jij/
+    - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_Jij/
     - ln -s ../../../../kkrflex.exe_hybrid kkrflex.exe
     - export OMP_NUM_THREADS=1; mpirun -np 8 ./kkrflex.exe | tee out
   artifacts:
     paths:
-      - KKRimp/test_case_kkrflex_host_in_host/imp/test_run_Jij/
+      - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_Jij/
     expire_in: 2 days
 
 run_kkrimp_features:intel:tmatnew-Jij_nosavewf:
   stage: run_kkrimp_features
   script:
-    - cd KKRimp/test_case_kkrflex_host_in_host/imp/test_run_Jij_savewf/
+    - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_Jij_savewf/
     - ln -s ../../../../kkrflex.exe_hybrid kkrflex.exe
     - export OMP_NUM_THREADS=1; mpirun -np 8 ./kkrflex.exe | tee out
   artifacts:
     paths:
-      - KKRimp/test_case_kkrflex_host_in_host/imp/test_run_Jij_savewf/
+      - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_Jij_savewf/
     expire_in: 2 days
 
 run_kkrimp_features:intel:tmatnew-Jij_nosratrick:
   stage: run_kkrimp_features
   script:
-    - cd KKRimp/test_case_kkrflex_host_in_host/imp/test_run_Jij_nosratrick/
+    - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_Jij_nosratrick/
     - ln -s ../../../../kkrflex.exe_hybrid kkrflex.exe
     - export OMP_NUM_THREADS=1; mpirun -np 8 ./kkrflex.exe | tee out
   artifacts:
     paths:
-      - KKRimp/test_case_kkrflex_host_in_host/imp/test_run_Jij_nosratrick/
+      - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_Jij_nosratrick/
     expire_in: 2 days

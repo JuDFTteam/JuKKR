@@ -11,13 +11,22 @@ import getopt
 import shutil
 
 ##########################################################################
+#global settings:
+
+codeslist = ['kkrhost', 'kkrimp', 'voronoi'] # still to add 'kkrsusc', pkkprime
+
+##########################################################################
  
 def greeting():
    """ Prints greeting. """
    print("***********************************************************")
-   print("Welcome to the Installation script of the Juelich KKR code.")
+   print("Welcome to the Installation script of the Juelich KKR codes.")
    print("\nYou can find useful additional information in our KKR wiki: \033[4mhttps://kkr.iff.kfa-juelich.de/doku.php\033[0m")
-   print("and in our code's documentation: \033[4mhttps://kkr.iffgit.fz-juelich.de/kkrjm/index.html\033[0m")
+   print("and in our code's documentation: \033[4mhttps://kkr.iffgit.fz-juelich.de/jukkr/index.html\033[0m")
+   print("\nCurrently this script only supports individual builds of one of these codes:")
+   for code in codeslist:
+      print("  * {}".format(code))
+   print("\nTo build a different code please go to the source/code subdirectory and build the code as in a previous version (see wiki).\n")
    print("***********************************************************\n")
 
 ##########################################################################
@@ -42,6 +51,7 @@ def usage():
    print("  -i or --interactive        Use interactive installation script asking the user for input.")
    print("  -v or --verbose            Verbose mode.")
    print("  -d or --debug              Set up debug mode of the code.")
+   print("  --program=name             Set up build of this program. Available are: {}".format(codeslist))
    print("  --machine=name             Use a predefined set of settings for a specific machine where 'name' is one of 'iff', 'claix', 'jureca'.")
    print("  --compiler=name            Use a specific compiler, 'name' could for example be 'mpiifort' or 'gfortran'.")
    print("  --parallelization=scheme   Use either MPI, OpenMP or both (hybrid) parallelization: 'scheme should be one of 'mpi', 'openmp', 'hybrid'.")
@@ -50,8 +60,16 @@ def usage():
 
 ##########################################################################
 
-def read_interactive(flags):
+def read_interactive(flags, codeslist):
    """ Interactively ask user for input and return the neede options. """
+
+   print("Please input the the codename of the code you want to compile (one of {}).".format(codeslist))
+   while True:
+      code = input()
+      if code not in codeslist:
+         print("your input is not a valid code name. Please chose a valid scheme.")
+      else:
+         break
 
    print("Please input the compiler name (e.g. 'gfortran', 'ifort', 'mpiifort'). Empty input will try the system's default.")
    compiler = input()
@@ -84,7 +102,7 @@ def read_interactive(flags):
 
    print("Summary of inputs:\n----------\n Compiler: {}\n Parallelization scheme: {}\n Cmake flags: {}\n".format(compiler, parallelization, flags))
 
-   return compiler, parallelization, flags
+   return compiler, parallelization, flags, code
 
 ##########################################################################
 
@@ -139,7 +157,7 @@ def create_build_dir(verbose):
 
 ##########################################################################
 
-def run_cmake(compiler, parallelization, flags, verbose):
+def run_cmake(compiler, parallelization, flags, verbose, code):
    """ Runs cmake step to create makefile etc in build directory. """
    from subprocess import call
 
@@ -167,6 +185,31 @@ def run_cmake(compiler, parallelization, flags, verbose):
       task += "-DENABLE_MPI=OFF  "
       task += "-DENABLE_OMP=OFF  "
 
+   # add code compile flags
+   comp_host = 'OFF'
+   comp_imp = 'OFF'
+   comp_susc = 'OFF'
+   comp_pkkr = 'OFF'
+   comp_voro = 'OFF'
+   if code=='kkrhost':
+      comp_host = 'ON'
+   elif code=='kkrimp':
+      comp_imp = 'ON'
+   elif code=='kkrsusc':
+      comp_susc = 'ON'
+   elif code=='pkkprime':
+      comp_pkkr = 'ON'
+   elif code=='voronoi':
+      comp_voro = 'ON'
+   else:
+      print("Error setting code option!")
+      sys.exit()
+   task += " -DCOMPILE_KKRHOST={} ".format(comp_host)
+   task += " -DCOMPILE_KKRIMP={} ".format(comp_imp)
+   task += " -DCOMPILE_KKRSUSC={} ".format(comp_susc)
+   task += " -DCOMPILE_KKRPKKPRIME={} ".format(comp_pkkr)
+   task += " -DCOMPILE_VORONOI={} ".format(comp_voro)
+
    # add additional flags if given
    for flag in flags:
       task += "-D{} ".format(flag)
@@ -191,7 +234,7 @@ def main(argv):
    # process script options
    try:
       if len(argv)==0: usage()
-      opts, args = getopt.getopt(argv, "ivhdmcpf:", ["interactive", "verbose", "help", "debug", "machine=", "compiler=", "parallelization=", "flags="])
+      opts, args = getopt.getopt(argv, "ivhdm", ["interactive", "verbose", "help", "debug", "machine=", "compiler=", "parallelization=", "flags=","program="])
       #print(argv, len(argv), opts,args)
    except getopt.GetoptError:
       usage()
@@ -201,6 +244,7 @@ def main(argv):
    parallelization = None
    flags = []
    verbose = False
+   code = None
 
    # first check for vebosity level (determines additional printing)
    for opt, arg in opts:
@@ -213,24 +257,31 @@ def main(argv):
          usage()
 
       elif opt in ("-i", "--interactive"):
-         compiler, parallelization, flags = read_interactive(flags)
+         compiler, parallelization, flags, code = read_interactive(flags, codeslist)
 
-      elif opt in ("-m", "--machine"):
+      elif opt=="--machine":
          compiler, parallelization, flags = read_machine(flags, args)
 
       else: # read in options from compiler and parallelization info
-         if opt in ("-c", "--compiler"):
+         if opt=="--compiler":
             compiler = arg
             if compiler=='': compiler = None
          
-         if opt in ("-p", "--parallelization"):
+         if opt=="--parallelization":
             parallelization = arg
             if parallelization=='': parallelization = None
          
       # finally allow to add flags additionally
-      if opt in ("-f", "--flags") and "-i" not in opts and "--interactive" not in opts:
-         for iarg in arg.split(':'):
-             flags.append(iarg)
+      if "-i" not in opts and "--interactive" not in opts:
+          if opt=="--flags" :
+             for iarg in arg.split(','):
+                 flags.append(iarg)
+
+          if opt=="--program":
+             code = arg
+             if code not in codeslist:
+                print("your input is not a valid code name. Please chose a valid scheme.")
+                print("Supported codes: {}".format(codelist))
 
       if opt in ("-d", "--debug"):
           flags.append("CMAKE_BUILD_TYPE=Debug")
@@ -242,7 +293,7 @@ def main(argv):
    check_dependencies(verbose)
 
    # run cmake with previously read-in options
-   run_cmake(compiler, parallelization, flags, verbose)
+   run_cmake(compiler, parallelization, flags, verbose, code)
 
    # print final messages
    goodbye()

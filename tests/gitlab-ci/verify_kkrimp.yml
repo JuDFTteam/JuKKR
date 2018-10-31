@@ -9,5 +9,5 @@ verify_kkrimp:intel:
     - pip install numpy
     - pip install pytest
     # prepare and execute verification using pytest
-    - cd tests
+    - cd tests/KKRimp
     - pytest -v
