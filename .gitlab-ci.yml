@@ -60,20 +60,20 @@ test:intel:
 
 include:
     ### 1. build codes ###
-    #- tests/gitlab-ci/build_kkrhost.yml
-    #- tests/gitlab-ci/build_kkrimp.yml
+    - tests/gitlab-ci/build_kkrhost.yml
+    - tests/gitlab-ci/build_kkrimp.yml
     #- tests/gitlab-ci/build_kkrsusc.yml
-    #- tests/gitlab-ci/build_pkkprime.yml
+    - tests/gitlab-ci/build_pkkprime.yml
     - tests/gitlab-ci/build_voronoi.yml
     ### 2. run tests ###
-    #- tests/gitlab-ci/run_kkrhost.yml
-    #- tests/gitlab-ci/run_kkrimp.yml
+    - tests/gitlab-ci/run_kkrhost.yml
+    - tests/gitlab-ci/run_kkrimp.yml
     #- tests/gitlab-ci/run_kkrsusc.yml
     #- tests/gitlab-ci/run_pkkprime.yml
     - tests/gitlab-ci/run_voronoi.yml
     ### 3. verify results ###
-    #- tests/gitlab-ci/verify_kkrhost.yml
-    #- tests/gitlab-ci/verify_kkrimp.yml
+    - tests/gitlab-ci/verify_kkrhost.yml
+    - tests/gitlab-ci/verify_kkrimp.yml
     #- tests/gitlab-ci/verify_kkrsusc.yml
     #- tests/gitlab-ci/verify_pkkprime.yml
     #- tests/gitlab-ci/verify_voronoi.yml
