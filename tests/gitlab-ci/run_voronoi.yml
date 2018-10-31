@@ -6,7 +6,7 @@ run_voronoi:intel:oldstyle:
     - cd test_run01 && ln -s ../../../ElementDataBase . && ../../voronoi.exe | tee out_voronoi
   artifacts:
     paths:
-      - tests/test_run01
+      - tests/voronoi/test_run01
     expire_in: 1 day
 
 run_voronoi:intel:newstyle:
@@ -17,5 +17,5 @@ run_voronoi:intel:newstyle:
     - cd test_run02 && ln -s ../../../ElementDataBase . && ../../voronoi.exe | tee out_voronoi
   artifacts:
     paths:
-      - tests/test_run02
+      - tests/voronoi/test_run02
     expire_in: 1 day
