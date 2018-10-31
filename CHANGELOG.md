@@ -38,6 +38,26 @@ Add a describtion here.
 
 ----
 
+## kkrimp-v1.3 (2018-10-31)
+
+Some bugfixed and som new funcitonalities.
+
+### Added
+- simple version of Lloyd's formula: `LLYsimple` option
+- use other XC functionals than VWN (other LDAs and PW91 GGA, no PBE yet!)
+- auto tests with *gitlab-ci*
+- ford documentation of source code
+
+### Changed
+- default behavior to use SRA-trick automatically
+- relaxed comparison between old and new mesh in `cheb2oldgrid`
+
+### Fixed
+- doubling of allocations in rllsll
+- bugfix Jijsymmetries (string of wavefunctions did not work properly)
+
+----
+
 ## kkrhost-v3.0 (2018-10-30)
 
 Major code refactoring getting rid of the `inc.p` files which eliminates the need to recompile the code for different system sizes.
@@ -175,6 +195,36 @@ Major improvement to MPI parallelization.
 
 ----
 
+## kkrimp-v1.2 (2016-02-22)
+
+New version tag, now everything is faster because wavefunctions are not
+always recalculated and hybrid parallelisation (explicit OpenMP
+parallelism in rllsll) is implemented.
+
+### Added
+- OpenMP parallel version of rllsll by Sachin
+
+### Fixed
+- bugfix usespinorbit
+
+----
+
+## kkrimp-v1.1 (2015-11-20)
+
+Version which prints build information and has minor improvements
+
+### Added
+- version information
+
+### Changed
+- case sensitivity of run/test options removed
+- default behavior of storing more wavefunctions
+
+### Fixed
+- bug in spinorbitperatom
+
+----
+
 ## kkrhost-v1.4 (2015-11-13)
 
 Improvement to MPI parallelization and new version of Lloyd.
@@ -191,6 +241,12 @@ Improvement to MPI parallelization and new version of Lloyd.
 - LLOYD with MPI 
 - energy MPI parallelization for qdos
 - MPI parallelization CPA
+
+----
+
+## kkrimp-v1.0 (2015-10-19)
+
+First version of KKRimp that is tracked with git. Started from *kkrimp_source_2014_10_01*.
 
 ----
 
@@ -286,6 +342,41 @@ Array `NAT(NATYPD)` removed (was=1 always)
 Changes in startb1.f to incorporate array fpradius.
 
 ICC and IGREENFUN are automatically set to 1 if `OPT('KKRFLEX ')` is used.
+
+----
+
+### kkrimp: 2014-10-01
+
+Further corrections for running with lower lmax than given in
+the host GF. Changes mainly in _dysonviratom.f90_ (again) and
+in rhooutnew. Now the lmax-per-atom (lmaxatom) is given
+to rhooutnew (before it was only lmaxd) and some according
+changes were made in the routine. Works when all atoms
+have the same lmax (lower-or-equal than the host), but crashes
+in rhooutnew when lmax is different per atom.
+However, different-lmax-per-atom runs in case of no-spin-orbit
+(old radial solver). 
+
+
+----
+
+### kkrimp: 2014-07-31
+
+Corrected a bug in _dysonviratom.f90_ that was causing problems 
+when lmax of impurity was smaller than lmax of host and 
+spin-orbit of host was on.
+
+Small change in _cheb2oldgridc.f90_ for improved numerical accuracy.
+
+Change in _rllsll.f90_ so that the subr. _inverse_ defined within this 
+file is commented out, because the subr. _inverse_  of the module
+_rllslltools.f90_ is used when _inverse_ is called from _rllsll_. 
+
+Change of record length definition (recl) in direct-access files.
+Defined parameter wlength=1 (or 4 depending on compiler) in _nrtype.f90_ 
+and included this in all places where a direct-access file is opened.
+The changed files are: 
+gdyson.f90, utrafo.f90, wavefunctodisc.f90, energyloop.F90, preconditioning.F90
 
 ----
 
