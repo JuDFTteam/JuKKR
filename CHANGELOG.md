@@ -15,20 +15,24 @@
 
 ----
 
-## *UNRELEASED* (last updated: 2018-10-16)
+## *UNRELEASED* (last updated: 2018-10-31)
 
 **Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release.**
 
-Add a describtion here.
+Start of large KKR repository holding *voronoi*, *KKRhost*, *KKRimp*, *KKRsusc*, and *PKKprime* with major refactoring of code structure.
+
 
 ### Added
-- None
+- 
 
 ### Changed
-- None
+- `install.py` script now deals with *KKRhost*, *KKRimp*, *PKKprime*, and *voronoi*
+- updated documentation
+- tests structure
+- directory structure following `source`, `docs`, `utils`, `tests`, etc. 
 
 ### Deprecated
-- None
+- makefiles of *PKKprime*, *voronoi*, *KKRimp*
 
 ### Removed
 - None
