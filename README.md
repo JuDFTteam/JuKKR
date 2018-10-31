@@ -12,28 +12,7 @@ The Korringa-Kohn-Rostoker (KKR) Greens function method is a highly accurate all
 
 ### Compiling the code
 
-The easiest way to set up the code is to execute the `install.py` script.
-
-Alternatively you can configure the build manually as shown below. 
-
-```
-mkdir build
-cd build
-FC=<compiler-you-want-to-use> cmake -D<options> ..
-```
-
-where with `FC` you coose the compiler, e.g. `FC=gfortran`, `FC=mpif90` (gfortran with MPI), `FC=ifort`, `FC=mpiifort`, ...
-
-In case cmake does not find the compiler you have chosen try wrapping the compiler like this (here for `mpiifort` as an example): `FC=$(which mpiifort)`
-
-List of default values for `-D<options>` (used if not specified):
-```
- -DENABLE_MPI=ON # use MPI parallelization by default
- -DENABLE_OMP=OFF # OpenMP level of parallelization turned off
- -DENABLE_COV=OFF # do not write coverage reports while running (slows code down)
- -DCMAKE_BUILD_TYPE=Release # use release version (alternative: Debug)
- -DENABLE_BdG=OFF # disable Bogoliubov-de-Gennes formalism
-```
+The easiest way to set up the code is to execute the `install.py` script which will guide you through the installation. Afterwards you shoud go to the `build` directory and execute `make` which will start the compilation of the code. The compiled executable will then be placed in the `build` directory.
 
 ## Further reading
 
