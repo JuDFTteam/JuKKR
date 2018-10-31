@@ -13,7 +13,7 @@ add_executable(
     source/voronoi/normalplane0.f
     source/voronoi/sortvertices.f
     source/voronoi/ioinput.f
-    source/voronoi/shape12.f
+    source/voronoi/shape12.f90
     source/voronoi/maindriver12.f
     source/voronoi/clsgen_voronoi.f
     source/voronoi/clsgen_tb.f

@@ -14,7 +14,7 @@
                        XRN_S,    & ! radial mesh
                        DRN_S,    & ! drdi for radial mesh
                        NFUN_S,   & ! number of nonzero shapefunctions
-                       LMIFUN_S, & ! lm of the ifun shapefunction
+                       LMIFUN_S, & ! lm of the IFun shapefunction
                        THETAS_S)   ! Thetas(r,ifun)
       implicit none
 !#@# KKRtags: VORONOI radial-grid initialization shape-functions
@@ -80,7 +80,7 @@
 !
 !                  ...........I N P U T  C A R D...(Bcc/fcc)
 !
-!                                       if not (Bcc/fcc) change main prg
+!                                       IF not (Bcc/fcc) change main prg
 ! bcc                          <----- Gives the lattice parameters
 !    16    1   0.05000                lmax,nkey,division
 !                                     LMAX=4*LMAX(KKR), 
@@ -90,7 +90,7 @@
 !                                     Number of mesh points 
 !                                     used for the radial mesh (Depends
 !                                     on the number of pannels).
-!                                     If keypan is 1, 
+!                                     IF keypan is 1, 
 !                                     then the radial mesh division is 
 !                                     taken from the input
 !   -3.30000 -3.30000  -3.30000      relaxation percent
@@ -232,11 +232,11 @@
 !  THIS CALL DOES SOME GEOMETRICAL TESTS (N.STEFANOU 98)
       CALL POLCHK(NFACE,NVERTICES,XVERT,YVERT,ZVERT,TOLVDIST)
 !**********   FOR HCP CASE ONLY    *********
-      if (khcp) then
+      IF (khcp) then
       COA  =SQRT(8.D0/3.D0)
       COA  =2.D0
       SQ3O3=SQRT(3.D0)/3.D0
-      end if
+      end IF
 !**********   FOR HCP CASE  ONLY   *********
 !$      READ(7,104) NFACE,LMAX,KEYPAN,DLT
       IBMAX=(LMAX+1)*(LMAX+1)
@@ -244,11 +244,11 @@
       DO 19 L=0,LMAX
       IS0=(2*L+1)*(2*L+1)
    19 ISUM=ISUM+IS0
-      IF(ISUM.GT.ISUMD . OR . LMAX.GT.LMAXD1) GO TO 200
+      IF(ISUM.GT.ISUMD .OR. LMAX.GT.LMAXD1) GO TO 200
       IPAN=0 
       IVTOT=0
 !.......................................................................
-!     S T O R A G E            I N    C O M M O N        B L O C K S
+!     S TO R A G E            I N    C O M M O N        B L O C K S
 !     C A L C U L A T I O N    O F    R O T A T I O N    M A T R I C E S
 !.......................................................................
       DO 1 IFACE=1,NFACE
@@ -266,10 +266,10 @@
       Z(3)=A3/A4
 
 !************    FOR HCP CASE ONLY (TO REMOVE OTHERWISE)   ************
-      if (khcp) then
+      IF (khcp) then
       Z(1)=Z(1)*SQ3O3
       Z(3)=Z(3)*8.D0/COA/3.D0
-      end if
+      end IF
 !************    FOR HCP CASE ONLY (TO REMOVE OTHERWISE)   ************
 
       DO 2 IVERT=1,NVERT
@@ -280,10 +280,10 @@
         V(3,IVERT) = ZVERT(IVERT,IFACE)
 
 !************    FOR HCP CASE ONLY (TO REMOVE OTHERWISE)   ************
-      if (khcp) then
+      IF (khcp) then
       V(1,IVERT)=V(1,IVERT)*SQ3O3
       V(3,IVERT)=V(3,IVERT)*COA
-      end if
+      end IF
 !************    FOR HCP CASE ONLY (TO REMOVE OTHERWISE)   ************
 
     2 CONTINUE
@@ -369,7 +369,7 @@
 !.......................................................................
       DO 14 ITET=1,NTET
       IVTOT=IVTOT+1
-      IF(R.LE.RD(IVTOT))      T H E N
+      IF(R.LE.RD(IVTOT)) THEN
       CALL PINTG(FA(IVTOT),FB(IVTOT),DLT,S1,LMAX,ISIGNU(IVTOT),&
      &           ARG1,FD(IVTOT),0)
       DO 22 I=0,LMAX
@@ -378,7 +378,7 @@
       DO 10 I=0,LMAX-M
       S(-M,I)=S(-M,I)+S1(-M,I)
    10 S( M,I)=S( M,I)+S1( M,I)
-                              E L S E
+                              ELSE
       RAP =RUPSQ(IVTOT)/RDOWN
       ARG2=RUPSQ(IVTOT)/R0(IFACE)
       FK=FD(IVTOT)-ACOS(RAP)
@@ -400,7 +400,7 @@
       DO 20 I=0,LMAX-M
       S(-M,I)=S(-M,I)+S1(-M,I)+S2(-M,I)+S3(-M,I)
    20 S( M,I)=S( M,I)+S1( M,I)+S2( M,I)+S3( M,I)
-                              E N D   I F
+                              END   IF
    14 CONTINUE
 !.......................................................................
 !     I N T E G R A L   E X P A N S I O N        B A C K - R O T A T I O
@@ -646,8 +646,8 @@
 !
       INTEGER   I
       REAL*8    RX,RZ,S,P,RZP,SA,CA,SG,CG
-      REAL*8    TOLEULER   ! introduced by Phivos (05.2008) to account f
-      ! Earlier, 1.D-5 was hard-coded at the places in this subr. where 
+      REAL*8    TOLEULER   ! introduced by Phivos (05.2008) to account for inaccuracies.
+      ! Earlier, 1.D-5 was hard-coded at the places in this subr. where TOL is used
 !     DATA TOLEULER /1.D-10/
 !
 !     .. LOCAL ARRAYS ..
@@ -691,28 +691,28 @@
       Y(3)=Z(1)*X(2)-Z(2)*X(1)
       SA=Y(3)*RZP
       CA=X(3)*RZP
-      IF(DABS(SA).LT.TOLEULER .AND. DABS(CA+1.D0).LT.TOLEULER)  T H E N
+      IF(DABS(SA).LT.TOLEULER .AND. DABS(CA+1.D0).LT.TOLEULER)  THEN
       ALPHA(IFACE)=PI
-                                                      E L S E
+                                                      ELSE
       ALPHA(IFACE)=2D0*DATAN2(SA,CA+1D0)
-                                                      E N D    I F
+                                                      END    IF
       SG= Z(2)*RZP
       CG=-Z(1)*RZP
-      IF(DABS(SG).LT.TOLEULER .AND. DABS(CG+1D0).LT.TOLEULER)  T H E N
+      IF(DABS(SG).LT.TOLEULER .AND. DABS(CG+1D0).LT.TOLEULER)  THEN
       GAMMA(IFACE)=PI
-                                                      E L S E
+                                                      ELSE
       GAMMA(IFACE)=2D0*DATAN2(SG,CG+1D0)
-                                                      E N D    I F
+                                                      END    IF
       DO 2 I=1,3
     2 Z(I)=Z(I)*RZ
       RETURN
    10 SG=-Z(3)*X(2)
       CG= Z(3)*X(1)
-      IF(DABS(SG).LT.TOLEULER .AND. DABS(CG+1D0).LT.TOLEULER)  T H E N
+      IF(DABS(SG).LT.TOLEULER .AND. DABS(CG+1D0).LT.TOLEULER)  THEN
       GAMMA(IFACE)=PI
-                                                      E L S E
+                                                      ELSE
       GAMMA(IFACE)=2D0*DATAN2(SG,CG+1D0)
-                                                      E N D    I F
+                                                      END    IF
       DO 3 I=1,3
     3 Z(I)=Z(I)*RZ
       RETURN
@@ -875,11 +875,11 @@
       DO 3 IP=1,IPAN
       IF(DABS(CRRT-CRT(IP)).LT.1D-6) INEW=0
     3 CONTINUE
-      IF(INEW.EQ.1)          T H E N
+      IF(INEW.EQ.1)          THEN
       IPAN=IPAN+1
       IF(IPAN.GT.NPAND) GO TO 102
       CRT(IPAN)=CRRT
-                             E N D   I F
+                             END   IF
       IVERTP=IVERT+1
       IF(IVERT.EQ.NVERT) IVERTP=1
 !.......................................................................
@@ -887,29 +887,29 @@
 !.......................................................................
       CALL PERP(ORIGIN,VZ(1,IVERT),VZ(1,IVERTP),RDV,TOLVDIST,INSIDE)
       RDD=DSQRT(RDV(1)*RDV(1)+RDV(2)*RDV(2)+RDV(3)*RDV(3))
-      IF(INSIDE)             T H E N
+      IF(INSIDE)             THEN
       INEW=1
       DO 4 IP=1,IPAN
       IF(DABS(RDD-CRT(IP)).LT.1D-4) INEW=0
     4 CONTINUE
-      IF(INEW.EQ.1)          T H E N
+      IF(INEW.EQ.1)          THEN
       IPAN=IPAN+1
       IF(IPAN.GT.NPAND) GO TO 102
       CRT(IPAN)=RDD
-                             E N D   I F
-                             E N D    I F
+                             END   IF
+                             END    IF
       A1=DSQRT(VZ(1,IVERT )*VZ(1,IVERT )+VZ(2,IVERT )*VZ(2,IVERT ))
       A2=DSQRT(VZ(1,IVERTP)*VZ(1,IVERTP)+VZ(2,IVERTP)*VZ(2,IVERTP))
       DOWN=A1*A2
       UP=VZ(1,IVERT)*VZ(1,IVERTP)+VZ(2,IVERT)*VZ(2,IVERTP)
-      IF(DOWN.GT.1D-6)      T H E N
+      IF(DOWN.GT.1D-6)      THEN
       ARG=UP/DOWN
       IF(DABS(ARG).GE.1D0) ARG=SIGN(1D0,ARG)
       OMEGA=DACOS(ARG)
       S=S-OMEGA
-      IF(DABS(OMEGA-PI).GT.1D-6)                 T H E N
+      IF(DABS(OMEGA-PI).GT.1D-6)                 THEN
 !.......................................................................
-!     S U B D I V I S I O N    I N T O    T E T R A H E D R A
+!     S U B D I V I S I O N    I N TO    T E T R A H E D R A
 !.......................................................................
       NTT(IFACE)=NTT(IFACE)+1
       IVTOT=IVTOT+1
@@ -924,51 +924,51 @@
       SF2=VZ(2,IVERTP)/A2
       CF3=RDV(1)/A3
       SF3=RDV(2)/A3
-      IF(DABS(SF1).LT.TOLEULER .AND. DABS(CF1+1D0).LT.TOLEULER)  T H E N
+      IF(DABS(SF1).LT.TOLEULER .AND. DABS(CF1+1D0).LT.TOLEULER)  THEN
       F1=PI
-                                                           E L S E
+                                                           ELSE
       F1=2D0*DATAN2(SF1,CF1+1D0)
-                                                           E N D    I F
-      IF(DABS(SF2).LT.TOLEULER .AND. DABS(CF2+1D0).LT.TOLEULER)  T H E N
+                                                           END    IF
+      IF(DABS(SF2).LT.TOLEULER .AND. DABS(CF2+1D0).LT.TOLEULER)  THEN
       F2=PI
-                                                           E L S E
+                                                           ELSE
       F2=2D0*DATAN2(SF2,CF2+1D0)
-                                                           E N D    I F
-      IF(DABS(SF3).LT.TOLEULER .AND. DABS(CF3+1D0).LT.TOLEULER)  T H E N
+                                                           END    IF
+      IF(DABS(SF3).LT.TOLEULER .AND. DABS(CF3+1D0).LT.TOLEULER)  THEN
       FD(IVTOT)=PI
-                                                           E L S E
+                                                           ELSE
       FD(IVTOT)=2D0*DATAN2(SF3,CF3+1D0)
-                                                           E N D    I F
+                                                           END    IF
 ! CRAY AMIN1
       FA(IVTOT)=DMIN1(F1,F2)
       FB(IVTOT)=DMAX1(F1,F2)
-      IF((FB(IVTOT)-FA(IVTOT)).GT.PI)                 T H E N
+      IF((FB(IVTOT)-FA(IVTOT)).GT.PI)                 THEN
       FF=FA(IVTOT)+2D0*PI
       FA(IVTOT)=FB(IVTOT)
       FB(IVTOT)=FF
-                                                      E N D   I F
+                                                      END   IF
       IF((FA(IVTOT)-FD(IVTOT)).GT.PI)  FD(IVTOT)= 2D0*PI+FD(IVTOT)
       IF((FD(IVTOT)-FA(IVTOT)).GT.PI)  FD(IVTOT)=-2D0*PI+FD(IVTOT)
-                                                 E N D    I F
-                             E L S E
+                                                 END    IF
+                             ELSE
       ICORN=1
-                             E N D    I F
+                             END    IF
     2 CONTINUE
 !.......................................................................
-!     F O O T   O F   T H E    P E R P E N D I C U L A R   TO    T H E
-!     F A C E   O U T S I D E   O R  I N S I D E   T H E   P O L Y G O N
+!     F O O T   O F   T H E    P E R P END I C U L A R   TO    T H E
+!     F A C E   O U T S I D E   O R  I N S I D E   T H E   P O L Y GO N
 !.......................................................................
-      IF(S.LT.1D-06.OR.ICORN.EQ.1)               T H E N
+      IF(S.LT.1D-06.OR.ICORN.EQ.1)               THEN
       INEW=1
       DO 5 IP=1,IPAN
       IF(DABS(R0(IFACE)-CRT(IP)).LT.1D-4) INEW=0
     5 CONTINUE
-      IF(INEW.EQ.1)          T H E N
+      IF(INEW.EQ.1)          THEN
       IPAN=IPAN+1
       IF(IPAN.GT.NPAND) GO TO 102
       CRT(IPAN)=R0(IFACE)
-                             E N D   I F
-                                                 E L S E
+                             END   IF
+                                                 ELSE
       DO 6 IVERT1=1,NVERT
       IN(IVERT1)=0
       DO 7 IVERT=1,NVERT
@@ -987,10 +987,10 @@
       D2=(XJ-VZ(1,IVERTP))**2+(YJ-VZ(2,IVERTP))**2
 ! CRAY AMAX1
       CO=DD-DMAX1(D1,D2)
-      IF(CO.GT.1D-06)        T H E N
+      IF(CO.GT.1D-06)        THEN
       IN(IVERT1)=1
       GO TO 6
-                             E N D   I F
+                             END   IF
     7 CONTINUE
     6 CONTINUE
       IBACK=IVTOT-NVERT
@@ -1000,7 +1000,7 @@
       IF(IVERT.EQ.NVERT) IVERTP=1
       IF(IN(IVERT).EQ.0.AND.IN(IVERTP).EQ.0)     ISIGNU(IBACK)=-1
     8 CONTINUE
-                                                 E N D   I F
+                                                 END   IF
       RETURN
   100 WRITE(6,200) IFACE,(Z(I),I=1,3)
       STOP
@@ -1079,7 +1079,7 @@
       WRITE(6,104) IPAN,CRT(IPAN),CRT(IPAN+1),NM(IPAN)
       N1 = N2 + 1
       N2 = N2 + NM(IPAN)
-      IF (MESHND.GE.N2)      T  H  E  N
+      IF (MESHND.GE.N2)      THEN
 ! CRAY FLOAT
       C = (CRT(IPAN+1)-CRT(IPAN))/DFLOAT(N2-N1)
       D = CRT(IPAN) - C*DFLOAT(N1)
@@ -1087,9 +1087,9 @@
       XRN(K) = C*DFLOAT(K) + D
       DRN(K) = C
    60 CONTINUE
-                             E  L  S  E
+                             ELSE
       GO TO 70
-                             E  N  D    I  F
+                             END    IF
    50 CONTINUE
       WRITE(6,105)
       MESHN = N2
@@ -1165,7 +1165,7 @@
       CALL RECUR0(LMAX,X1,THETA,-DFLOAT(ISI),S)
       CALL RECUR0(LMAX,X2,THETA, DFLOAT(ISI),S)
       RETURN
-!                         E N D    I F
+!                         END    IF
    10 CONTINUE
       N=(X2-X1)/DLT+3
       IF(N.GT.NDIM) STOP 'INCREASE NDIM'
@@ -1569,7 +1569,7 @@
       LI=L/2+1
     9 ICMAX=ICMAX+(LMAX+1-L)*LI
       IF(LMAX.GT.LMAXD1.OR.ICMAX.GT.ICD) GO TO 100
-      if (TEST('verb0   ')) WRITE(6,203) ICMAX
+      IF (TEST('verb0   ')) WRITE(6,203) ICMAX
       ICE=0
       IC=1
       L=0
@@ -1598,7 +1598,7 @@
       DO 13 I1=1,IFMX
    13 IE(I1,IRE)=JM0(I1)
     3 CONTINUE
-      IF((K-1). LT .K0)  GO TO 30
+      IF((K-1).LT.K0)  GO TO 30
       IRE=IRE+1
       IC=IC+1
       LA=(2*K-L-M)*(2*K-L-M-1)
@@ -1614,7 +1614,7 @@
       DO 4 I1=1,IFMX
       IED(I1)=IE(I1,1)
       DO 5 IR=2,IRE
-      IF(IE(I1,IR). LT .IED(I1))  IED(I1)=IE(I1,IR)
+      IF(IE(I1,IR).LT.IED(I1))  IED(I1)=IE(I1,IR)
     5 CONTINUE
       DO 6 IR=1,IRE
     6 IE(I1,IR)=IE(I1,IR)-IED(I1)
@@ -1637,16 +1637,16 @@
       IEINT =IEUPSQ/2-L2(I1)
       IEMOD =MOD(IEUPSQ,2)
       UPSQ =UPSQ*IFI(I1) **IEMOD
-      IF(IEINT.GE.0)                   T H E N
+      IF(IEINT.GE.0)                   THEN
       UP   =UP  *IFI(I1) **IEINT
-                                       E L S E
+                                       ELSE
       DOWN =DOWN*IFI(I1) **(-IEINT)
-                                       E N D    I F
+                                       END    IF
    17 CONTINUE
       COE(ICE)=SQRT(UPSQ)* UP / DOWN
-      if (TEST('SHAPE   ')) &
+      IF (TEST('SHAPE   ')) &
      &      WRITE(6,201) L,M,UP,UPSQ,DOWN,(CL(IC),IC=IC1,IC2)
-      IF(M. EQ .0)  GO TO 20
+      IF(M.EQ.0)  GO TO 20
       LA=L+M
       LB=L-M+1
       CALL REDUCE(LA,IFMX,IFI,IEA)
@@ -1657,8 +1657,8 @@
       M=M-1
       GO TO 2
    20 CONTINUE
-      if (TEST('SHAPE   ')) WRITE(6,202)
-      IF(L. EQ .LMAX)   GO TO 10
+      IF (TEST('SHAPE   ')) WRITE(6,202)
+      IF(L.EQ.LMAX)   GO TO 10
       LA=(2*L+1)*(2*L+2)
       LB=(L+1)*2
       CALL REDUCE(LA,IFMX,IFI,IEA)
@@ -1732,13 +1732,13 @@
       FAC=FAC1*FAC2/2.D0
       D1=DROT(L,MP ,M,BETA)
       D2=DROT(L,MP,-M,BETA)
-      I F ( M O D ( M , 2       ) .N E. 0 )  D 2 = - D 2
+      IF ( MOD( M , 2       ).ne. 0 )  D2 = - D2
       DPL(MP+1,M+1)=(D1+D2)*FAC
       DMN(MP+1,M+1)=(D1-D2)*FAC
-      I F ( M O D ( M + M P , 2 ) .N E. 0 )  G O  T O  4
+      IF ( MOD ( M + MP , 2 ).ne. 0 )  GO  TO  4
       DPL(M+1,MP+1)=DPL(MP+1,M+1)
       DMN(M+1,MP+1)=DMN(MP+1,M+1)
-                                             G O  T O  5
+                                             GO  TO  5
     4 DMN(M+1,MP+1)=-DMN(MP+1,M+1)
       DPL(M+1,MP+1)=-DPL(MP+1,M+1)
     5 CONTINUE
@@ -1756,23 +1756,23 @@
       MP=0
    11 CONTINUE
       DO 6 IP=1,IPMAX
-      I F ( I   . E Q .2 )                      G O  T O   7
-      I F ( I P . E Q .2 )                      G O  T O  10
+      IF ( I  .eq.2 )                      GO  TO   7
+      IF ( IP.eq.2 )                      GO  TO  10
       D= COS(MP*ALPHA)*COS(M*GAMMA)*DPL(MP+1,M+1)&
      &  -SIN(MP*ALPHA)*SIN(M*GAMMA)*DMN(MP+1,M+1)
-                                                 G O  T O   9
-    7 I F ( I P . E Q .2 )                      G O  T O   8
+                                                 GO  TO   9
+    7 IF ( IP.eq.2 )                      GO  TO   8
       D=-COS(MP*ALPHA)*SIN(M*GAMMA)*DPL(MP+1,M+1)&
      &  -SIN(MP*ALPHA)*COS(M*GAMMA)*DMN(MP+1,M+1)
-                                                 G O  T O   9
+                                                 GO  TO   9
     8 D=-SIN(MP*ALPHA)*SIN(M*GAMMA)*DPL(MP+1,M+1)&
      &  +COS(MP*ALPHA)*COS(M*GAMMA)*DMN(MP+1,M+1)
-                                                 G O  T O   9
+                                                 GO  TO   9
    10 D= SIN(MP*ALPHA)*COS(M*GAMMA)*DPL(MP+1,M+1)&
      &  +COS(MP*ALPHA)*SIN(M*GAMMA)*DMN(MP+1,M+1)
     9 CONTINUE
 ! THIS IS CHANGED
-      IF(MOD(M+MP,2) . NE .0)  D=-D
+      IF(MOD(M+MP,2).ne.0)  D=-D
 !
       ISU=ISU+1
       DMATL(ISU)=D
@@ -2079,13 +2079,13 @@
      & +(VRTZ-VRT(3,IVRT))**2
       IF(T.LT.TOLVDIST) INEW=0
    13 CONTINUE
-      IF(INEW.EQ.1)                  T H E N
+      IF(INEW.EQ.1)                  THEN
       NVRT=NVRT+1
       IF(NVRT.GT.NVRTD) STOP 'INCREASE NVRTD'
       VRT(1,NVRT)=V(1,IVERT)
       VRT(2,NVRT)=V(2,IVERT)
       VRT(3,NVRT)=V(3,IVERT)
-                                     E N D   I F
+                                     END   IF
       IVERTP=IVERT+1                  
       IF(IVERT.EQ.NVERT) IVERTP=1
       VRTPX=V(1,IVERTP)
@@ -2094,7 +2094,7 @@
       IVERTM=IVERT-1
       IF(IVERT.EQ.1) IVERTM=NVERT
       VRTMX=V(1,IVERTM)
-      VRTMY=V(2,IVERTM)               ! Check if the  consecutive
+      VRTMY=V(2,IVERTM)               ! Check IF the  consecutive
       VRTMZ=V(3,IVERTM)               ! vertices define a polygon
       A1=SQRT((VRTPX-VRTX)**2+(VRTPY-VRTY)**2+(VRTPZ-VRTZ)**2)
       A2=SQRT((VRTMX-VRTX)**2+(VRTMY-VRTY)**2+(VRTMZ-VRTZ)**2)
@@ -2106,14 +2106,14 @@
       ! write(6,*) VRTMX,VRTMY,VRTMZ
       ! write(6,*) VRTPX,VRTPY,VRTPZ
       ! write(6,*) 'fisum ',ivert,a1,a2,up,arg,ACOS(ARG)
-      IF(DOWN.GE.TOLVDIST)   T H E N
+      IF(DOWN.GE.TOLVDIST)   THEN
       ARG=UP/DOWN
       IF(ABS(ARG).GE.1.D0) ARG=SIGN(1.D0,ARG)
       FISUM=FISUM-ACOS(ARG)
       
-                             E L S E
+                             ELSE
       STOP 'IDENTICAL CONSECUTIVE VERTICES'
-                             E N D    I F
+                             END    IF
 !
 !------> T R E A T M E N T   O F   E D G E S 
 !
@@ -2135,7 +2135,7 @@
                      END IF
                              END IF
    14 CONTINUE
-      IF(INEW.EQ.1)                T H E N
+      IF(INEW.EQ.1)                THEN
       NEDGE=NEDGE+1
       IF(NEDGE.GT.NEDGED) STOP 'INSUFFICIENT NEDGED'
       V1(1,NEDGE)=V(1,IVERT )
@@ -2144,7 +2144,7 @@
       V2(1,NEDGE)=V(1,IVERTP)
       V2(2,NEDGE)=V(2,IVERTP)
       V2(3,NEDGE)=V(3,IVERTP)
-                                   E N D   I F
+                                   END   IF
     2 CONTINUE
       IF(FISUM.GT.1.D-6) THEN
       write(6,*) 'fisum =',fisum
