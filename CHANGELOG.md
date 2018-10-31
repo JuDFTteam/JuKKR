@@ -90,6 +90,28 @@ Major code refactoring getting rid of the `inc.p` files which eliminates the nee
 
 ----
 
+## pkkprime-v1.1 (2018-10-24)
+
+Major update of Fermi surface and scattering code.
+
+### Added
+- ford source code annotations
+- masked integration for lifetime
+- feast library
+- optimized memory footprint
+- MIT license
+- different weights of multiple impurities
+- torkance calculation
+
+### Changed
+- kfixstart==kfixstop option
+- signchange spinflux
+
+### Fixed
+- some small bugs corrected
+
+----
+
 ## kkrhost-v2.4 (2018-10-16)
 
 Include Godfrin slab inversion, rhoq-writeout and more digits in alat writeout.
@@ -332,6 +354,18 @@ properly.
 
 ----
 
+## pkkprime-v1.0 (2015-01-07)
+
+Initial version of git tracking.
+
+--
+
+## pkkprime-*untracked* (2014-11-19)
+
+The output of the atom resolved torque for bulk systems is now implemented (but not tested though).
+
+----
+
 ### kkrhost: 2014-11-13
 
 Fixed a bug that would not allow using the REFPOT information for the
@@ -343,11 +377,26 @@ the decimal point.
 
 ----
 
+## pkkprime-*untracked* (2014-11-10)
+
+Implemented the atom resolved torque (set LTORQATOM=1 in the input file). The output for bulk systems is not yet implemented though.
+
+----
+
 ### kkrhost: 2014-11-06
 
 inc.cls not needed any more.
 Parameters NCLSD, NACLSD transfered to inc.p, with default NACLSD = NAEZD + NEMBD
 Cluster info found automatically.
+
+----
+
+## pkkprime-*untracked* (2014-10-24)
+
+- Implemented writeout of Pkk' for option SCATTFIX and LLIFETIME.
+- For option SCATTFIX, changed the implementation such that the INCOMMING k-vector is fixed (before it was outgoing k-vector).
+- To solve memory-issues with very large slab calculations, the paramter 'NROOTMAX' can be set in the inputcard. If NROOTMAX= 0 assumes the maximal possible value.
+- Included checks whether actually TBKKR_torq orr TBKKR_rhod-files are present when they shall be used.
 
 ----
 
