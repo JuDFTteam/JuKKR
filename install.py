@@ -207,7 +207,7 @@ def run_cmake(compiler, parallelization, flags, verbose, code):
    task += " -DCOMPILE_KKRHOST={} ".format(comp_host)
    task += " -DCOMPILE_KKRIMP={} ".format(comp_imp)
    task += " -DCOMPILE_KKRSUSC={} ".format(comp_susc)
-   task += " -DCOMPILE_KKRPKKPRIME={} ".format(comp_pkkr)
+   task += " -DCOMPILE_PKKPRIME={} ".format(comp_pkkr)
    task += " -DCOMPILE_VORONOI={} ".format(comp_voro)
 
    # add additional flags if given
