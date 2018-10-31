@@ -1,0 +1,65 @@
+# the executable is built from this list of files
+add_executable(
+    voronoi.exe
+    source/common/version.F90
+    source/common/version_info.F90
+    source/voronoi/crospr.f
+    source/voronoi/vertex3d.f
+    source/voronoi/analyzevert3d.f
+    source/voronoi/halfspace.f
+    source/voronoi/polyhedron08.f
+    source/voronoi/voronoi12.f
+    source/voronoi/distplane.f
+    source/voronoi/normalplane0.f
+    source/voronoi/sortvertices.f
+    source/voronoi/ioinput.f
+    source/voronoi/shape12.f90
+    source/voronoi/maindriver12.f
+    source/voronoi/clsgen_voronoi.f
+    source/voronoi/clsgen_tb.f
+    source/voronoi/elementdatabase.f
+    source/voronoi/lattix12.f
+    source/voronoi/scalevec2000.f
+    source/voronoi/readinput12.f90
+    source/voronoi/rrgen2000.f
+    source/voronoi/spatpr.f
+    source/voronoi/dsort.f
+    source/voronoi/test.f
+    source/voronoi/clustcomp_voronoi.f
+    source/voronoi/clustcomp_tb.f
+    source/voronoi/veq.f
+    source/voronoi/vsub.f
+    source/voronoi/vadd.f
+    source/voronoi/ddet33.f
+    source/voronoi/rcstop.f
+    source/voronoi/vmul.f
+    source/voronoi/scalpr.f
+    source/voronoi/opt.f
+    source/voronoi/cross.f
+    source/voronoi/mtmesh.f
+    source/voronoi/sname.f
+    source/voronoi/genpotstart12.f
+    source/voronoi/length.f
+    source/voronoi/spline.f
+    source/voronoi/splint.f
+    source/voronoi/ritesone.f
+    source/voronoi/jellstart12.f
+    source/voronoi/pdbplot.f
+    source/voronoi/writeshape.f
+    source/voronoi/readimpatoms12.f
+    source/voronoi/clsgenimp12.f
+    source/voronoi/rationalbasis.f
+    source/voronoi/scalevecimp.f
+    source/voronoi/testpanel.f
+    source/voronoi/fakeshape.f
+    source/voronoi/findpanels.f
+    source/voronoi/suggestpts.f
+    source/voronoi/divpanels.f
+    source/voronoi/equivws.f
+    source/voronoi/wsclasses.f
+    source/voronoi/inc.geometry
+    )
+
+if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
+    target_link_libraries(voronoi.exe ${lapackblas_libraries})
+endif()

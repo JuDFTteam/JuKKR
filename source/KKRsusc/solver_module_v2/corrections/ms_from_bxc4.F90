@@ -25,24 +25,23 @@
   complex(kind=c8b), parameter :: i2pi = (0.d0,twopi), iu = (0.d0,1.d0), czero = (0.d0,0.d0), cone = (1.d0,0.d0)
   integer(kind=i4b) :: i3(3), ia, ia2, i1, ib1, ilm1, is1, i2, ib2, ilm2, is2, ja, j1, jb1, jlm1, js1, j2, jb2, jlm2, js2, i, j, k
   complex(kind=c8b), allocatable :: gfij(:,:), gfji(:,:), work(:,:), work1(:,:), work2(:,:)
-  real(kind=r8b),    allocatable :: msgflm(:,:), msxclm(:,:), mssoclm(:,:), rotmat(:,:,:)
+  real(kind=r8b),    allocatable :: msgflm(:,:), msxclm(:,:), mssoclm(:,:), rotmat(:,:)
   complex(kind=c8b) :: tmp1, tmp2, mvec(3)
   real(kind=r8b)    :: rotgen(3,3,3), rvec(3)
   complex(kind=c8b) :: twistpauli(2,2,3,3)
   real(kind=r8b)    :: re, im
-  integer(kind=i4b) :: jlms, jb, jlm, js, ilms, ib, ilm, is, iatom
 
 !  write(*,'("ms_from_bxc4: ie=",i4)') ie
 ! ----------------------------------------------------------------------
-! Generators of spatial rotations
+! (Transpose of the) generators of spatial rotations
 ! Any similarity with the Levi-Civita symbol is not coincidence
   rotgen(:,:,:) = 0.d0
 ! x
-  rotgen(2,3,1) =  1.d0; rotgen(3,2,1) = -1.d0
+  rotgen(2,3,1) = +1.d0; rotgen(3,2,1) = -1.d0
 ! y
-  rotgen(1,3,2) = -1.d0; rotgen(3,1,2) =  1.d0
+  rotgen(1,3,2) = -1.d0; rotgen(3,1,2) = +1.d0
 ! z
-  rotgen(1,2,3) =  1.d0; rotgen(2,1,3) = -1.d0
+  rotgen(1,2,3) = +1.d0; rotgen(2,1,3) = -1.d0
 ! ----------------------------------------------------------------------
 ! Twisted Pauli matrices: for each generator rotate Pauli matrices
   twistpauli(:,:,:,:) = 0.d0
@@ -136,14 +135,16 @@
 ! ----------------------------------------------------------------------
 ! Print output
   if (ie == nescf) then
-    write(*,'(" Noncollinear sum rule: msgflm, msxclm+mssoclm, msxclm, mssoclm")')
-    allocate(rotmat(3,3,nasusc2),msgflm(3,lmmax0),msxclm(3,lmmax0),mssoclm(3,lmmax0))
+    if(loutsusc) write(*,'(" Noncollinear sum rule: msgflm, msxclm+mssoclm, msxclm, mssoclm")')
+    allocate(rotmat(3,3),msgflm(3,lmmax0),msxclm(3,lmmax0),mssoclm(3,lmmax0))
     mtotsusc = 0.d0; mxcsusc = 0.d0; msocsusc = 0.d0
     suscatom: do ia2=1,nasusc2
       ia = iasusc2(ia2)
 !     rotation matrices to local frame
-      call rotvec(uz,magdir(:,ia),rotmat(:,:,ia2))
+!      write(*,'("ms_from_bxc4: rotvec for ia2,ia=",2i4)') ia2, ia
+      call rotvec(magdir(:,ia),uz,rotmat)
 !      call rotvec(uz,uz,rotmat(:,:,ia2))
+!      write(*,'(3es16.8)') (rotmat(i,:,ia2),i=1,3)
       msgflm = 0.d0; msxclm = 0.d0; mssoclm = 0.d0
       lm2: do ilm2=1,lmmax
       lm1: do ilm1=1,lmmax
@@ -156,19 +157,19 @@
 !         ------------------------------------------------------------
 !         spin density from onsite GF in local frame
           mvec(:) = msgf(:,ib1,ib2,ilm1,ilm2,ia2)
-          msgf(:,ib1,ib2,ilm1,ilm2,ia2) = matmul(transpose(rotmat(:,:,ia2)),mvec(:))
+          msgf(:,ib1,ib2,ilm1,ilm2,ia2) = matmul(rotmat(:,:),mvec(:))
 !         ------------------------------------------------------------
 !         spin density from all SOC+Bext atoms
           mvec(:) = sum(mssoc(:,ib1,ib2,ilm1,ilm2,:,ia2),dim=2)
 !         spin density from SOC+Bext atoms in susc
 !          mvec(:) = sum(mssoc(:,ib1,ib2,ilm1,ilm2,iasusc2(1:nasusc2),ia2),dim=2)
-          msocsusc(ib1,ib2,ilm1,ilm2,ia2) = sum(rotmat(:,3,ia2)*mvec(:))
+          msocsusc(ib1,ib2,ilm1,ilm2,ia2) = sum(rotmat(3,:)*mvec(:))
 !         ------------------------------------------------------------
 !         spin density from all Bxc atoms
 !          mvec(:) = sum(msxc(:,ib1,ib2,ilm1,ilm2,:,ia2),dim=2)
 !         spin density from Bxc atoms in susc
           mvec(:) = sum(msxc(:,ib1,ib2,ilm1,ilm2,iasusc2(1:nasusc2),ia2),dim=2)
-          mxcsusc(ib1,ib2,ilm1,ilm2,ia2) = sum(rotmat(:,3,ia2)*mvec(:))
+          mxcsusc(ib1,ib2,ilm1,ilm2,ia2) = sum(rotmat(3,:)*mvec(:))
 !         ------------------------------------------------------------
 !         total spin density from onsite GF
 !          mtotsusc(ib1,ib2,ilm1,ilm2,ia2) = msgf(ib1,ib2,ilm1,ilm2,ia2)
@@ -199,9 +200,9 @@
       where (abs(mssoclm) < tol) mssoclm = 0.d0
 !     print contributions to current atom
       do jlm1=1,lmmax0
-        msxclm(:,jlm1)  = matmul(transpose(rotmat(:,:,ia2)),msxclm(:,jlm1))
-        mssoclm(:,jlm1) = matmul(transpose(rotmat(:,:,ia2)),mssoclm(:,jlm1))
-        write(*,'("ia=",i4," lm=",2i4,2(3es12.4,2x)" | ",3(3es12.4,2x))') ia, i2lm(:,jlm1), msgflm(:,jlm1), &
+        msxclm(:,jlm1)  = matmul(rotmat(:,:),msxclm(:,jlm1))
+        mssoclm(:,jlm1) = matmul(rotmat(:,:),mssoclm(:,jlm1))
+        if(loutsusc) write(*,'("ia=",i4," lm=",2i4,2(3es12.4,2x)" | ",3(3es12.4,2x))') ia, i2lm(:,jlm1), msgflm(:,jlm1), &
             msxclm(:,jlm1)+mssoclm(:,jlm1), msxclm(:,jlm1), mssoclm(:,jlm1)
       end do
     end do suscatom

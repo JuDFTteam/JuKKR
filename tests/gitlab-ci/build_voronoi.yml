@@ -1,0 +1,19 @@
+build_voronoi:intel:
+  stage: build_voronoi
+  script:
+    - cd prog && make 
+    - mkdir build_voronoi && cd build_voronoi
+    - FC=$(which mpiifort) cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DENABLE_COV=ON -DCOMPILE_KKRHOST=OFF -DCOMPILE_KKRIMP=OFF -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=ON ..
+    - make -j4
+    - cp voronoi.exe ../tests/voronoi.exe
+  artifacts:
+    paths:
+      - tests/voronoi.exe
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-voronoi

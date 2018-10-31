@@ -1,0 +1,717 @@
+### 2. run tests with compiled versions ###
+ ## 2.1 simple test systems in serial
+ ## 2.2 comparison serial/parallel run
+ ## 2.3 special features beyond selfconsistency
+ ## 2.4 integration with aiida
+
+## 2.1 simple test systems in serial ##
+run_kkrhost:intel:serial_1:
+  stage: run_kkrhost_serial
+  script:
+    - cd tests/KKRhost
+    - ./run_serial.py 1
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:serial_2:
+  stage: run_kkrhost_serial
+  script:
+    - cd tests/KKRhost
+    - ./run_serial.py 2
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:serial_3:
+  stage: run_kkrhost_serial
+  script:
+    - cd tests/KKRhost
+    - ./run_serial.py 3
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+## 2.2 comparison serial/parallel run ##
+run_kkrhost:intel:parallel_2:
+  stage: run_kkrhost_parallel
+  script:
+    - cd tests/KKRhost
+    - ./run_parallel.py 2
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:MPIatom_7:
+  stage: run_kkrhost_parallel
+  script:
+    - cd tests/KKRhost
+    - ./run_parallel.py -7
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+ 
+run_kkrhost:intel:MPIenerg_8:
+  stage: run_kkrhost_parallel
+  script:
+    - cd tests/KKRhost
+    - ./run_parallel.py -8
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:multi_node_9:
+  image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-control:latest
+  stage: run_kkrhost_parallel
+  services:
+     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+       alias: c1
+     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+       alias: c2
+     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+       alias: c3
+     - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+       alias: c4
+  script:
+    - cd tests/KKRhost
+    - ./run_multi_node.py
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+ 
+# parallel SOC mode
+run_kkrhost:intel:MPIatom_SOC_7_1:
+  stage: run_kkrhost_parallel
+  script:
+    - cd tests/KKRhost
+    - ./run_parallel.py -1007
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+ 
+run_kkrhost:intel:MPIenerg_SOC_8_1:
+  stage: run_kkrhost_parallel
+  script:
+    - cd tests/KKRhost
+    - ./run_parallel.py -1008
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+
+## 2.3 special features beyond selfconsistency ##
+run_kkrhost:intel:Jijs_4:
+  stage: run_kkrhost_features
+  script:
+    - cd tests/KKRhost
+    - ./run_serial.py 4
+    - ./run_parallel.py -4
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:kkrflex_5:
+  stage: run_kkrhost_features
+  script:
+    - cd tests/KKRhost
+    - ./run_serial.py 5
+    - ./run_parallel.py -5
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:FERMIOUT_6:
+  stage: run_kkrhost_features
+  script:
+    - cd tests/KKRhost
+    - ./run_serial.py 6
+    - ./run_parallel.py -6
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+ 
+run_kkrhost:intel:OPERATOR_10:
+  stage: run_kkrhost_features
+  script:
+      - tests/KKRhost/tools/run_test_10.sh
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:DTM_GMATLL_11:
+  stage: run_kkrhost_features
+  script:
+      - tests/KKRhost/tools/run_test_11.sh
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:qdos_12:
+  stage: run_kkrhost_features
+  script:
+    - cd tests/KKRhost
+    - ./run_parallel.py -12
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+#run_kkrhost:intel:rhoq_13:
+#  stage: run_kkrhost_features
+#  script:
+#      - tests/KKRhost/tools/run_test_13.sh
+#  artifacts:
+#    paths:
+#      - tests/KKRhost/test_run*
+#      - build/*dyn
+#    expire_in: 1 day
+
+run_kkrhost:intel:ASA_14:
+  stage: run_kkrhost_features
+  script:
+    - cd tests/KKRhost
+    - ./run_parallel.py -14
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:CPA_15:
+  stage: run_kkrhost_features
+  script:
+    - cd tests/KKRhost
+    - ./run_parallel.py -15
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:Dirac_16:
+  stage: run_kkrhost_features
+  script:
+    - cd tests/KKRhost
+    - ./run_parallel.py -16
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:lambda_xc_17:
+  stage: run_kkrhost_features
+  script:
+    - cd tests/KKRhost
+    - ./run_parallel.py -17
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+#no working test case yet
+#run_kkrhost:intel:noco_18:
+#  stage: run_kkrhost_features
+#  script:
+#    - cd tests/KKRhost
+#    - ./run_parallel.py -18
+#  artifacts:
+#    paths:
+#      - tests/KKRhost/test_run*
+#      - build/*dyn
+#    expire_in: 1 day
+
+run_kkrhost:intel:decimate_19:
+  stage: run_kkrhost_features
+  script:
+      - tests/KKRhost/tools/run_test_19.sh
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:godfrin_20:
+  stage: run_kkrhost_features
+  script:
+    - tests/KKRhost/tools/run_test_20.sh
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:XCs_21:
+  stage: run_kkrhost_features
+  script:
+    - tests/KKRhost/tools/run_test_21.sh
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:LDAU_22:
+  stage: run_kkrhost_features
+  script:
+    - tests/KKRhost/tools/run_test_22.sh
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:DOS_23:
+  stage: run_kkrhost_features
+  script:
+    - tests/KKRhost/tools/run_test_23.sh
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+## 2.4 integration with aiida ##
+run_kkrhost:intel:aiida-kkr:
+  image: iffregistry.fz-juelich.de/docker-images/aiida-kkr:latest
+  stage: run_kkrhost_features
+  allow_failure: true
+  services:
+    - name: postgres:latest
+      alias: db
+    - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+      alias: c1
+    - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+      alias: c2
+    - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+      alias: c3
+    - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
+      alias: c4
+  variables:
+    POSTGRES_USER: aiida
+    POSTGRES_DB: aiida_default
+    POSTGRES_PASSWORD: password
+  script:
+    # some prepararion
+    - umask 000 # needed to ensure that all subdirs created by aiida have the right permissions
+    - cp tests/kkr.x "${KKR_EXECUTABLE_PATH}" # copy kkr executable to correct dir
+    - export C_FORCE_ROOT='true' # needed since root process executes aiida
+    - verdi devel setproperty logging.celery_loglevel INFO && verdi devel setproperty logging.aiida_loglevel INFO && verdi daemon restart # restart aiida daemon with increased loglevel
+    # compile latest voronoi version and add to aiida
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@iffgit.fz-juelich.de/kkr/voronoi.git voronoi
+    - cd voronoi/prog/ && make && cd ../../
+    - verdi code setup < "tests/KKRhost/tools/setup_voronoi_aiida.txt" 
+    # finally run simple test case using kkr_scf workflow of aiida
+    - tests/KKRhost/tools/aiida_simple_test.py
+    # check some output of the calculation and export aiida database
+    - verdi work report 6
+    - verdi export create -n 6 -a tar.gz test_export.aiida.tar.gz
+    # copy log file to include in artifacts
+    - cp /root/.aiida/daemon/log/celery.log .
+    - cp test_export.aiida.tar.gz /builds/kkr/aiida_run/
+    - tar -zcvf aiida_run.tar.gz /builds/kkr/aiida_run/
+  artifacts:
+    paths:
+      - aiida_run.tar.gz
+      - celery.log
+      - test_export.aiida.tar.gz
+    expire_in: 2 day
+  only: 
+    - schedules
+    - triggers
+    - web
+
+## 2.5 SOC tests ##
+run_kkrhost:intel:Au_bulk_SOC_1_1:
+  stage: run_kkrhost_features_SOC
+  script:
+    - cd tests/KKRhost
+    - ./run_parallel.py -1001
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:Fe_slab_SOC_2_1:
+  stage: run_kkrhost_features_SOC
+  script:
+    - cd tests/KKRhost
+    - ./run_parallel.py -1002
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:Si_LLY_SOC_3_1:
+  stage: run_kkrhost_features_SOC
+  script:
+    - cd tests/KKRhost
+    - ./run_parallel.py -1003
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:NOSOC_3_2:
+  stage: run_kkrhost_features_SOC
+  script:
+    - tests/KKRhost/tools/run_test_03_2.sh
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:Jijs_SOC_4_1:
+  stage: run_kkrhost_features_SOC
+  script:
+    - cd tests/KKRhost
+    - ./run_parallel.py -1004
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:kkrflex_SOC_5_1:
+  stage: run_kkrhost_features_SOC
+  script:
+    - cd tests/KKRhost
+    - ./run_parallel.py -1005
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:FERMIOUT_SOC_6_1:
+  stage: run_kkrhost_features_SOC
+  script:
+    - cd tests/KKRhost
+    - ./run_parallel.py -1006
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:qdos_SOC_12_1:
+  stage: run_kkrhost_features_SOC
+  script:
+    - cd tests/KKRhost
+    - ./run_parallel.py -1012
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:ASA_SOC_14_1:
+  stage: run_kkrhost_features_SOC
+  script:
+    - cd tests/KKRhost
+    - ./run_parallel.py -1014
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:CPA_SOC_15_1:
+  stage: run_kkrhost_features_SOC
+  script:
+    - cd tests/KKRhost
+    - ./run_parallel.py -1015
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
+
+run_kkrhost:intel:decimate_SOC_19_1:
+  stage: run_kkrhost_features_SOC
+  script:
+      - tests/KKRhost/tools/run_test_19_1.sh
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost

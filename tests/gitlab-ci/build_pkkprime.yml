@@ -1,0 +1,13 @@
+build_pkkprime:compile:
+  stage: build_pkkprime
+  script:
+    - mkdir build_pkkprime && cd build_pkkprime
+    - FC=$(which mpiifort) cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DENABLE_COV=ON -DCOMPILE_KKRHOST=OFF -DCOMPILE_KKRIMP=OFF -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=ON -DCOMPILE_VORONOI=OFF ..
+    - make -j4
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-pkkprime

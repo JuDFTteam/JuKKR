@@ -81,7 +81,7 @@
       if (found) then
         read(inputfile(iline)(ipos:nchars),*) i
         if (i /= 0) then
-          if (i /= 1) stop 'set_jij_options: unknown ijij option'
+          if (i /= 1 .and. i /= 2) stop 'set_jij_options: unknown ijij option'
           ijij(istart:iend) = i
         else
           ntot = ntot - igroup(ig)
@@ -111,7 +111,7 @@
         istart = sum(igroup(1:ig-1)) + 1
         iend   = sum(igroup(1:ig))
         if (ijij(istart) /= 0) then
-          write(*,'(" ig, istart, iend=",3i6,"  iasusc=",1000i4)') ig, istart, iend, iasusc(istart:iend)
+          write(*,'(" ig, ijij, istart, iend=",4i6,"  iasusc=",1000i4)') ig, ijij(istart), istart, iend, iasusc(istart:iend)
         end if
       end do
       write(*,'("************************************************************"/)')

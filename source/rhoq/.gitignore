@@ -1,0 +1,10 @@
+*.o
+*.mod
+rhoq.x*
+test_system/*
+*.exe
+*~
+*tmp
+*__genmod.f90
+matmul_test/*out
+version.f90

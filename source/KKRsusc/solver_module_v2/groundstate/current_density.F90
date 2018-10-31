@@ -3,7 +3,7 @@
 ! the net-current contribution to the orbital magnetic moment for atom ia
 
   use global
-  use derivative_panels
+  use mod_derivative_panels
 
   implicit none
 
@@ -399,6 +399,12 @@
         end do
       end do
     end do
+  end if
+  
+! #############################################################
+! calculate current induced magnetic fields
+  if(lcurrentbfield) then
+    call current_induced_bfield(curr_lm(0,:,:,:),nr,ia,lmmaxJ,numpan,numrcut)
   end if
   
 ! #############################################################

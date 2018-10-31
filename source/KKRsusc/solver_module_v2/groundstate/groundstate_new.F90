@@ -47,6 +47,10 @@
       open(unit=222,file="current_int_tot_2.dat")
       open(unit=223,file="current_int_tot_3.dat")
     end if
+    if(lcurrentbfield) then
+      open(unit=777,file="current_induced_bfield.dat")
+      write(777,'("# curr_r and curr_r_r")')
+    end if
 !   Net currents of each atom
     open(unit=330,file="current_net_0.dat")
     write(330,'("# positions jx jy jz")')
@@ -92,11 +96,13 @@
     call charge_density(ia,gfsum)
 ! Current density
     if(lcurrent) then
+! Header for output files
       nr=nrpts(ia)
       call current_density(ia,nr,gfsum,curr_sum,morb_non_loc_sum,npanat(ia),ircutat(:,ia))
     end if
 ! Compute DOS
     if (ldos) call density_of_states(ia,lgsonsite,lgsstruct)
+! ----------------------------------------------------------------------
 !    write(*,*) "before density matrix"
 ! ----------------------------------------------------------------
 ! xc-potential and energy
@@ -106,11 +112,18 @@
 !    call get_xc2(ia,lmmax4,kxclm)
 !    call get_xc_basis(ia,lmmax2,gfsum,kxc,kxcbasis(:,:,ia))
 ! ----------------------------------------------------------------
+! Interpolation of charge and magnetization density on regular grid
+    if (ia==1) then
+! Interpolation is not working with the panels
+! SIGSEV in line 35 of  mod_spline_panels2.F90
+!      if ((lsusc .AND. lcurrcorr .AND. lcurrcorrint) .OR. (lcurrent .AND. lcurrentint)) call rho_interpolation(npanat(ia),ircutat(:,ia))
+    end if
+! ----------------------------------------------------------------------
   end do
   if(lcurrent) then
     close(220); close(221); close(222); close(223)
     close(330); close(331); close(332); close(333)
-    close(440)
+    close(440); close(777)
   end if
   write(*,'(" qe    tot=",f16.8)') tcharge
   write(*,'(" mspin tot=",3f16.8)') tmspin
@@ -189,9 +202,6 @@
 ! ----------------------------------------------------------------------
 ! output density matrix for selected atoms and l-channels
   if (ldos .and. ldosdmat) call density_matrix(lgsonsite,lgsstruct)
-! ----------------------------------------------------------------------
-! Interpolation of charge and magnetization density on regular grid
-  if (lsusc .AND. lcurrcorr .AND. lcurrcorrint) call rho_interpolation()
 ! ----------------------------------------------------------------------
   call cpu_time(finish)
   deallocate(gfsum,egfsum,tgfsum)

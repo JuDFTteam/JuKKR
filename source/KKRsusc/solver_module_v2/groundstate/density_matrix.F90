@@ -83,29 +83,29 @@
     norm = dot_product(pzef(1:nbmax,i),pzef(1:nbmax,i))
     pzef(1:nbmax,i) = pzef(1:nbmax,i)/sqrt(norm)
   end do
-! orbital rotation matrices for C3v symmetry
-  u0(:) = (/ 1.d0, 0.d0, 0.d0 /)
-  do ia=1,natoms
-    u1(:) = (/ cos(2.d0*ia*pi/3.d0), sin(2.d0*ia*pi/3.d0), 0.d0 /)
-    call orb_rotation(u0,u1,rotmat(:,:,ia,ia))
-  end do
-! for rotating the bonds to the z direction
-  u1(:) = (/ 0.d0, 0.d0, 1.d0 /)
-! 1 2
-  u0(:) = (/ 1.d0, 0.d0, 0.d0 /)
-  call orb_rotation(u0,u1,rotmat(:,:,1,2))
-  u0(:) = -u0(:)
-  call orb_rotation(u0,u1,rotmat(:,:,2,1))
-! 1 3
-  u0(:) = (/ cos(pi/3.d0), sin(pi/3.d0), 0.d0 /)
-  call orb_rotation(u0,u1,rotmat(:,:,1,3))
-  u0(:) = -u0(:)
-  call orb_rotation(u0,u1,rotmat(:,:,3,1))
-! 2 3
-  u0(:) = (/ cos(2.d0*pi/3.d0), sin(2.d0*pi/3.d0), 0.d0 /)
-  call orb_rotation(u0,u1,rotmat(:,:,2,3))
-  u0(:) = -u0(:)
-  call orb_rotation(u0,u1,rotmat(:,:,3,2))
+!! orbital rotation matrices for C3v symmetry
+!  u0(:) = (/ 1.d0, 0.d0, 0.d0 /)
+!  do ia=1,natoms
+!    u1(:) = (/ cos(2.d0*ia*pi/3.d0), sin(2.d0*ia*pi/3.d0), 0.d0 /)
+!    call orb_rotation(u0,u1,rotmat(:,:,ia,ia))
+!  end do
+!! for rotating the bonds to the z direction
+!  u1(:) = (/ 0.d0, 0.d0, 1.d0 /)
+!! 1 2
+!  u0(:) = (/ 1.d0, 0.d0, 0.d0 /)
+!  call orb_rotation(u0,u1,rotmat(:,:,1,2))
+!  u0(:) = -u0(:)
+!  call orb_rotation(u0,u1,rotmat(:,:,2,1))
+!! 1 3
+!  u0(:) = (/ cos(pi/3.d0), sin(pi/3.d0), 0.d0 /)
+!  call orb_rotation(u0,u1,rotmat(:,:,1,3))
+!  u0(:) = -u0(:)
+!  call orb_rotation(u0,u1,rotmat(:,:,3,1))
+!! 2 3
+!  u0(:) = (/ cos(2.d0*pi/3.d0), sin(2.d0*pi/3.d0), 0.d0 /)
+!  call orb_rotation(u0,u1,rotmat(:,:,2,3))
+!  u0(:) = -u0(:)
+!  call orb_rotation(u0,u1,rotmat(:,:,3,2))
 ! ----------------------------------------------------------------------
 ! **********
   do ie=1,ne
@@ -262,7 +262,7 @@
       do i=1,ndim
         zdmat(i,i,ie) = zdmat(i,i,ie) - dosezero
       end do
-      write(iofile,'(1000es12.4)') ze0, dosefac*zdmat(:,:,ie)
+      write(iofile,'(10000es12.4)') ze0, dosefac*zdmat(:,:,ie)
     end if
 ! ******
   end do

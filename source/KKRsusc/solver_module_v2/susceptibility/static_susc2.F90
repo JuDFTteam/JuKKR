@@ -78,7 +78,7 @@
   if (netot /= nescf) stop 'static_susc2: netot /= nescf'
   do ie=1,nepan
     read(iofile,*) rea, ima, reb, imb, ipan(ie)
-    write(*,'(4f10.6,i8)') rea, ima, reb, imb, ipan(ie)
+    if(loutsusc) write(*,'(4f10.6,i8)') rea, ima, reb, imb, ipan(ie)
     ea(ie) = cmplx(rea,ima); eb(ie) = cmplx(reb,imb)
   end do
   if (netot /= sum(ipan(1:nepan))) stop 'static_susc2: netot /= sum(ipan)'
@@ -120,11 +120,11 @@
 !         Get the projected GFs
 !         Gji(E + i0)
           call projected_gf(ie0+je,ja,ia,gfji0,lsusconsite,lsuscstruct)
-          if (.true.) call local_frame(ja,ia,magdir,gfji0,gf)   !!!!!!!!!!!!!!!!!! this only needs to be called if lrot or soc from host!!!!!!!!!!!!!!!!!!!!!
+          if (lrot .OR. lsoc_new) call local_frame(ja,ia,magdir,gfji0,gf)   
 !         Gji(E - i0) = Gij(E + i0)^\dagger
           call projected_gf(ie0+je,ia,ja,gfjiw,lsusconsite,lsuscstruct)
-          if (.true.) call local_frame(ia,ja,magdir,gfjiw,gf)  !!!! same here !!!!!!!!!!!!!!!!!
           gfjiw = conjg(transpose(gfjiw))
+          if (lrot .OR. lsoc_new) call local_frame(ia,ja,magdir,gfjiw,gf)  
 !         --------------------------------------------------------------
 !         ~~~~~~~~~~~~~~~~
           do ie=1,ipan(ip)     ! energy
@@ -135,11 +135,13 @@
 !           ------------------------------------------------------------
 !           Gij(E + i0)
             call projected_gf(ie0+ie,ia,ja,gfijw,lsusconsite,lsuscstruct)
-            if (.true.) call local_frame(ia,ja,magdir,gfijw,gf)
+!           if (.true.) call local_frame(ia,ja,magdir,gfijw,gf)   !Why always true? Laziness of Juba..
+            if (lrot .OR. lsoc_new) call local_frame(ia,ja,magdir,gfijw,gf)  
 !           Gij(E - i0) = Gji(E + i0)^\dagger
             call projected_gf(ie0+ie,ja,ia,gfij0,lsusconsite,lsuscstruct)
-            if (.true.) call local_frame(ja,ia,magdir,gfij0,gf)
             gfij0 = conjg(transpose(gfij0))
+!           if (.true.) call local_frame(ja,ia,magdir,gfij0,gf)
+            if (lrot .OR. lsoc_new) call local_frame(ja,ia,magdir,gfij0,gf)
 !           ------------------------------------------------------------
             if (ie == je) then
 !             Extrapolation to EB + i0
@@ -438,15 +440,17 @@
 ! ----------------------------------------------------------------------
 ! DOS at EF test
   where (abs(dosylm) < susctol) dosylm = 0.d0
-  write(*,'(/,"DOS at EF sum rule: ia, dos, susc (up then dn)")')
-  do ia2=1,nasusc2
-    do ilm=1,lmmax0
-      write(*,'(2i4,8es16.8)') ia2, ilm, real(dosylm(1,ilm,ia2)), real(sum(suscylm0(3,3:4,ilm,1,ia2,:))),  &
-          real(dosylm(2,ilm,ia2)), real(sum(suscylm0(4,3:4,ilm,1,ia2,:)))
-!      write(*,'(2i4,8es16.8)') ia2, ilm, dosylm(1,ilm,ia2), sum(suscylm(3,3:4,ilm,1,ia2,:)),  &
-!          dosylm(2,ilm,ia2), sum(suscylm(4,3:4,ilm,1,ia2,:))
+  if(loutsusc) then
+    write(*,'(/,"DOS at EF sum rule: ia, dos, susc (up then dn)")')
+    do ia2=1,nasusc2
+      do ilm=1,lmmax0
+        write(*,'(2i4,8es16.8)') ia2, ilm, real(dosylm(1,ilm,ia2)), real(sum(suscylm0(3,3:4,ilm,1,ia2,:))),  &
+            real(dosylm(2,ilm,ia2)), real(sum(suscylm0(4,3:4,ilm,1,ia2,:)))
+!        write(*,'(2i4,8es16.8)') ia2, ilm, dosylm(1,ilm,ia2), sum(suscylm(3,3:4,ilm,1,ia2,:)),  &
+!            dosylm(2,ilm,ia2), sum(suscylm(4,3:4,ilm,1,ia2,:))
+      end do
     end do
-  end do
+  end if
 ! ----------------------------------------------------------------------
 ! change from spin to cartesian
   if (lcartesian) then
@@ -725,112 +729,114 @@
   end do
   end if
 ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-  do ia2=1,nasusc2
-    ia = iasusc2(ia2)
-    norm2 = czero
-!   Now construct the potential in the susceptibility basis
-    nr = nrpts(ia)
-    dr(1:nr) = drmesh(1:nr,ia)!/rmesh(1:nr,ia)**2
-    do iq=1+sum(nalmsbden(1:ia2-1)),sum(nalmsbden(1:ia2))
-      vlmsbden(iq) = 0.d0
-      i4 = i2almsbden(:,iq)
-      ib = i4(1); ilm = i4(2); is = i4(3)!; ia = i4(4)
-      s1 = i2is(1,is); s2 = i2is(2,is)
-!     spherical input potential
-!      if (ilm == 1 .and. is == 1) then
-      if (ilm == 1) then
-        work(1:nr) = suscbasis(1:nr,ib,ilm,is,ia2)*br(1:nr,ia)
-        norm = radint(nr,work,dr,npanat(ia),ircutat(:,ia))
-        vlmsbden(iq) = norm*2.d0
-        norm2 = norm2 + vlmsbden(iq)*suscnorm(iq)
-      end if
+  if(loutsusc) then ! Additional tests only for full output
+    do ia2=1,nasusc2
+      ia = iasusc2(ia2)
+      norm2 = czero
+!     Now construct the potential in the susceptibility basis
+      nr = nrpts(ia)
+      dr(1:nr) = drmesh(1:nr,ia)!/rmesh(1:nr,ia)**2
+      do iq=1+sum(nalmsbden(1:ia2-1)),sum(nalmsbden(1:ia2))
+        vlmsbden(iq) = 0.d0
+        i4 = i2almsbden(:,iq)
+        ib = i4(1); ilm = i4(2); is = i4(3)!; ia = i4(4)
+        s1 = i2is(1,is); s2 = i2is(2,is)
+!       spherical input potential
+!        if (ilm == 1 .and. is == 1) then
+        if (ilm == 1) then
+          work(1:nr) = suscbasis(1:nr,ib,ilm,is,ia2)*br(1:nr,ia)
+          norm = radint(nr,work,dr,npanat(ia),ircutat(:,ia))
+          vlmsbden(iq) = norm*2.d0
+          norm2 = norm2 + vlmsbden(iq)*suscnorm(iq)
+        end if
+      end do
+      write(*,'("KS susc ia=",i4," potnorm=",2f16.8)') ia, norm2
     end do
-    write(*,'("KS susc ia=",i4," potnorm=",2f16.8)') ia, norm2
-  end do
-! ----------------------------------------------------------------------
-! Jij from Bxc * KS susc * Bxc
-  jijsusc = 0.d0
-  do jq=1,ndensum
-    i4 = i2almsbden(:,jq)
-    jb = i4(1); jlm = i4(2); js = i4(3); ja2 = i4(4)
+!   ----------------------------------------------------------------------
+!   Jij from Bxc * KS susc * Bxc
+    jijsusc = 0.d0
+    do jq=1,ndensum
+      i4 = i2almsbden(:,jq)
+      jb = i4(1); jlm = i4(2); js = i4(3); ja2 = i4(4)
+      do iq=1,ndensum
+        i4 = i2almsbden(:,iq)
+        ib = i4(1); ilm = i4(2); is = i4(3); ia2 = i4(4)
+        jijsusc(is,js,ia2,ja2) = jijsusc(is,js,ia2,ja2) - vlmsbden(iq)*kssusc0(iq,jq)*vlmsbden(jq)
+      end do
+    end do
+    write(*,'(/,"Jijsusc 0 ia, ja, Jij")')
+    do ja2=1,nasusc2
+      ja = iasusc2(ja2)
+      do ia2=1,nasusc2
+        ia = iasusc2(ia2)
+        if (lcartesian) then
+          block(:,:) = czero
+          do j=1,4
+          do i=1,4
+            do js=1,4
+            do is=1,4
+              block(i,j) = block(i,j) + ds2c(i,i2is(1,is),i2is(2,is))*jijsusc(is,js,ia2,ja2)*pc2s(i2is(1,js),i2is(2,js),j)
+            end do
+            end do
+          end do
+          end do
+          jijsusc(:,:,ia2,ja2) = block
+        end if
+        do j=1,4
+          do i=1,4
+            re = real(jijsusc(i,j,ia2,ja2))
+            if (abs(re) < 1.d-8) re = 0.d0
+            im = aimag(jijsusc(i,j,ia2,ja2))
+            if (abs(im) < 1.d-8) im = 0.d0
+            jijsusc(i,j,ia2,ja2) = cmplx(re,im)
+          end do
+        end do
+        do i=1,4
+          write(*,'(2i4,8es16.8)') ia, ja, (jijsusc(i,j,ia2,ja2),j=1,4)
+        end do
+      end do
+    end do
+!   ----------------------------------------------------------------------
+!   KS susc * Bxc in density basis
+    call zgemv('N',ndensum,ndensum,cone,kssusc0,ndensum,vlmsbden,1,czero,rhoden,1)
+!   multipoles
+    rhodenylm = 0.d0
     do iq=1,ndensum
       i4 = i2almsbden(:,iq)
       ib = i4(1); ilm = i4(2); is = i4(3); ia2 = i4(4)
-      jijsusc(is,js,ia2,ja2) = jijsusc(is,js,ia2,ja2) - vlmsbden(iq)*kssusc0(iq,jq)*vlmsbden(jq)
+      rhodenylm(is,ilm,ia2) = rhodenylm(is,ilm,ia2) + suscnorm(iq)*rhoden(iq)
     end do
-  end do
-  write(*,'(/,"Jijsusc 0 ia, ja, Jij")')
-  do ja2=1,nasusc2
-    ja = iasusc2(ja2)
+    write(*,'(/,"KS susc ia, im, il, rhoden ylm")')
     do ia2=1,nasusc2
       ia = iasusc2(ia2)
-      if (lcartesian) then
-        block(:,:) = czero
-        do j=1,4
-        do i=1,4
-          do js=1,4
-          do is=1,4
-            block(i,j) = block(i,j) + ds2c(i,i2is(1,is),i2is(2,is))*jijsusc(is,js,ia2,ja2)*pc2s(i2is(1,js),i2is(2,js),j)
-          end do
-          end do
-        end do
-        end do
-        jijsusc(:,:,ia2,ja2) = block
-      end if
-      do j=1,4
-        do i=1,4
-          re = real(jijsusc(i,j,ia2,ja2))
-          if (abs(re) < 1.d-8) re = 0.d0
-          im = aimag(jijsusc(i,j,ia2,ja2))
-          if (abs(im) < 1.d-8) im = 0.d0
-          jijsusc(i,j,ia2,ja2) = cmplx(re,im)
-        end do
-      end do
-      do i=1,4
-        write(*,'(2i4,8es16.8)') ia, ja, (jijsusc(i,j,ia2,ja2),j=1,4)
+      do ilm=1,lmmax0
+        norm = sum(abs(rhodenylm(:,ilm,ia2)))
+        if (abs(norm) > susctol) then
+          write(*,'(3i4,8f16.8)') ia, i2lm(:,ilm), rhodenylm(:,ilm,ia2)
+        end if
       end do
     end do
-  end do
-! ----------------------------------------------------------------------
-! KS susc * Bxc in density basis
-  call zgemv('N',ndensum,ndensum,cone,kssusc0,ndensum,vlmsbden,1,czero,rhoden,1)
-! multipoles
-  rhodenylm = 0.d0
-  do iq=1,ndensum
-    i4 = i2almsbden(:,iq)
-    ib = i4(1); ilm = i4(2); is = i4(3); ia2 = i4(4)
-    rhodenylm(is,ilm,ia2) = rhodenylm(is,ilm,ia2) + suscnorm(iq)*rhoden(iq)
-  end do
-  write(*,'(/,"KS susc ia, im, il, rhoden ylm")')
-  do ia2=1,nasusc2
-    ia = iasusc2(ia2)
-    do ilm=1,lmmax0
-      norm = sum(abs(rhodenylm(:,ilm,ia2)))
-      if (abs(norm) > susctol) then
-        write(*,'(3i4,8f16.8)') ia, i2lm(:,ilm), rhodenylm(:,ilm,ia2)
-      end if
-    end do
-  end do
-!  if (lenhanced) denominator = kssusc0
-!  call zgesv(ndensum,1,kssusc0,ndensum,ipiv,rhoden,ndensum,info)
-!  if (lenhanced) kssusc0 = denominator
-!  rhodenylm = 0.d0
-!  do iq=1,ndensum
-!    i4 = i2almsbden(:,iq)
-!    ib = i4(1); ilm = i4(2); is = i4(3); ia2 = i4(4)
-!    rhodenylm(is,ilm,ia2) = rhodenylm(is,ilm,ia2) + suscnorm(iq)*rhoden(iq)
-!  end do
-!  write(*,'(/,"KS susc ia, im, il, potden ylm")')
-!  do ia2=1,nasusc2
-!    ia = iasusc2(ia2)
-!    do ilm=1,lmmax0
-!      norm = sum(abs(rhodenylm(:,ilm,ia2)))
-!      if (abs(norm) > susctol) then
-!        write(*,'(3i4,8f16.8)') ia, i2lm(:,ilm), rhodenylm(:,ilm,ia2)
-!      end if
+!    if (lenhanced) denominator = kssusc0
+!    call zgesv(ndensum,1,kssusc0,ndensum,ipiv,rhoden,ndensum,info)
+!    if (lenhanced) kssusc0 = denominator
+!    rhodenylm = 0.d0
+!    do iq=1,ndensum
+!      i4 = i2almsbden(:,iq)
+!      ib = i4(1); ilm = i4(2); is = i4(3); ia2 = i4(4)
+!      rhodenylm(is,ilm,ia2) = rhodenylm(is,ilm,ia2) + suscnorm(iq)*rhoden(iq)
 !    end do
-!  end do
-! ----------------------------------------------------------------------
+!    write(*,'(/,"KS susc ia, im, il, potden ylm")')
+!    do ia2=1,nasusc2
+!      ia = iasusc2(ia2)
+!      do ilm=1,lmmax0
+!        norm = sum(abs(rhodenylm(:,ilm,ia2)))
+!        if (abs(norm) > susctol) then
+!          write(*,'(3i4,8f16.8)') ia, i2lm(:,ilm), rhodenylm(:,ilm,ia2)
+!        end if
+!      end do
+!    end do
+  end if
+! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   deallocate(suscblock0,suscblock1,suscblock2,suscwork)
   deallocate(gf,gfijw,gfjiw,gfij0,gfji0,gfijdef,gfjidef,gfijef,gfjief,gfijdeb,gfjideb,gfijeb,gfjieb)
   deallocate(suscylm0,suscylm1,suscylm2,jijsusc,suscy00,dosylm,suscden,rhoden,rhodenylm)

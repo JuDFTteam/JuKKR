@@ -89,6 +89,14 @@
   logical           :: lserial = .true.
 
 !-----------------------------------------------------------------------
+!                         Output options    
+!-----------------------------------------------------------------------
+! --> Full output for basis
+  logical           :: loutbasis = .false.
+! --> Full output for susceptibility
+  logical           :: loutsusc = .false.
+
+!-----------------------------------------------------------------------
 !                         Basis construction
 !-----------------------------------------------------------------------
 ! --> basis type (see subroutine new_basis)
@@ -162,11 +170,11 @@
   logical           :: lsumrule = .false.
 ! --> spin sum rule for noncollinear case
   logical           :: lnewsumrule = .false.
-! --> spin-current spin correlation function (added by Sascha)
+! --> spin-current spin correlation function 
   logical           :: lcurrcorr = .false.
-! --> interpolation of spin-current spin correlation function (added by Sascha)
+! --> interpolation of spin-current spin correlation function
   logical           :: lcurrcorrint = .false.
-! --> divergence of spin-current spin correlation function (added by Sascha)
+! --> divergence of spin-current spin correlation function
   logical           :: lcurrcorrdiv = .false.
 ! --> number of x,y,z points on interpolation grid 
   integer(kind=i4b) :: n_int
@@ -233,6 +241,7 @@
   logical           :: lcurrentzeeman = .false.
   logical           :: lcurrentint = .false.
   logical           :: lcurrentoutput = .false.
+  logical           :: lcurrentbfield = .false.
 !-----------------------------------------------------------------------
 !                       Atom-dependent parameters     
 !-----------------------------------------------------------------------
@@ -454,7 +463,7 @@
 ! --> all non-zero components of groundstate charge and magnetization densities
   real(kind=r8b),    allocatable :: old_rho2ns(:,:,:,:), gs_qlm(:,:), gs_mlm(:,:), new_rho2ns(:,:,:,:)
 ! --> charge and magnetization densities (not projected)
-  real(kind=r8b),    allocatable :: rho_lm(:,:,:,:)
+  complex(kind=c8b), allocatable :: rho_lm(:,:,:,:)
 ! --> density matrix integrated over WS sphere
   complex(kind=c8b), allocatable :: rhomat(:,:,:)
 ! --> xc kernel
@@ -501,7 +510,7 @@
   complex(kind=c8b), allocatable :: kernel(:,:)
 ! --> storage for kronecker form of susc denominator
   complex(kind=c8b), allocatable :: denominator(:,:)
-! Gradient of scalar relativistic mass (added by Sascha)
+! Gradient of scalar relativistic mass
   complex(kind=c8b), allocatable :: grad_mass(:,:,:,:,:)
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !

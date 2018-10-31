@@ -2,6 +2,7 @@
 ! interpolates the susceptibility
 ! also calclates m x dm/dt which is used for the spin pumped current in the equation of Tserkovnyak
   use global
+  use mod_spline_panels
 
   implicit none
  

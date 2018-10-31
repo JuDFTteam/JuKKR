@@ -1,0 +1,65 @@
+# default is Release build type (use '-DCMAKE_BUILD_TYPE=Debug' for Debug mode)
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release")
+    message("Release build")
+endif()
+
+# add '-debug' to compiler version identification
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    set(compver "${compver}-debug")
+endif()
+
+# common preprocessing options for all compilers
+add_definitions(-DCPP_TIMING)
+
+# compiler flags etc for parallelization
+# MPI option (enable with '-DENABLE_MPI=ON')
+# and OpenMP option (enable with '-DENABLE_OMP=ON')
+# hybrid version with -DENABLE_MPI=ON and -DENABLE_OMP=ON
+option(ENABLE_MPI "Enable MPI parallelization" ON)
+option(ENABLE_OMP "Enable OpenMP parallelization" OFF)
+set(ompflags "") # default
+if(ENABLE_MPI)
+    message("MPI is enabled")
+    add_definitions(-DCPP_MPI)
+    if(ENABLE_OMP)
+        message("OpenMP (hybrid MPI/OpenMP) is enabled")
+        add_definitions(-DCPP_HYBRID)
+        if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
+            set(ompflags "-qopenmp")
+        elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
+            set(ompflags "-fopenmp")
+        endif()
+        set(compflag "hybrid")
+    else()
+        set(compflag "mpi")
+    endif()
+elseif(ENABLE_OMP)
+    message("OpenMP is enabled")
+    add_definitions(-DCPP_OMP)
+    if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
+        set(ompflags "-qopenmp")
+    elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
+        set(ompflags "-fopenmp")
+    endif()
+    set(compflag "openmp")
+else()
+    message("both MPI and OpenMP are disabled")
+endif()
+
+# extract version info
+# generate a Git version string
+execute_process(COMMAND git describe OUTPUT_VARIABLE GIT_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+# write compiler flags for version info
+add_definitions(-DCOMPVER1="${GIT_VERSION}")
+add_definitions(-DCOMPVER2="${compver}")
+add_definitions(-DCOMPVER3="${compflag}")
+add_definitions(-DCOMPVER4="${complib}")
+
+
+
+if(ENABLE_BdG)
+    add_definitions(-DCPP_BdG)
+endif()
+

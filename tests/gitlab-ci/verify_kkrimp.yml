@@ -1,0 +1,20 @@
+###############################################################################
+# finally check outcome of calculations
+
+verify_kkrimp:intel:
+  stage: verify_kkrimp
+  script:
+    - curl -O https://bootstrap.pypa.io/get-pip.py 
+    - python get-pip.py 
+    - pip install numpy
+    - pip install pytest
+    # prepare and execute verification using pytest
+    - cd tests/KKRimp
+    - pytest -v
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrimp

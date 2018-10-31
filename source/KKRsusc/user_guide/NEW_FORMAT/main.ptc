@@ -1,0 +1,129 @@
+\boolfalse {citerequest}\boolfalse {citetracker}\boolfalse {pagetracker}\boolfalse {backtracker}\relax 
+\defcounter {refsection}{0}\relax 
+\select@language {english}
+\defcounter {refsection}{0}\relax 
+\contentsline {part}{\@mypartnumtocformat {I}{Part One}}{5}{part.1}
+\ttl@starttoc {default@1}
+\defcounter {refsection}{0}\relax 
+\contentsline {chapter}{\numberline {1}Prerequisites and Installation}{7}{chapter.1}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {1.1}Getting the codes}{7}{section.1.1}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {1.2}Preparation to run}{8}{section.1.2}
+\defcounter {refsection}{0}\relax 
+\contentsline {chapter}{\numberline {2}J\"ulich-M\"unich KKR code}{11}{chapter.2}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {2.1}Compile the \texttt {JM-KKR} program}{11}{section.2.1}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.1.1}Brief list of what each executable does for \textit {legacy} versions of \texttt {JM-KKR}}{12}{subsection.2.1.1}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {2.2}The \texttt {inputcard} file}{13}{section.2.2}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.2.1}Run options}{16}{subsection.2.2.1}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.2.2}Energy contour}{16}{subsection.2.2.2}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.2.3}Atomic info}{16}{subsection.2.2.3}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {2.3}\texttt {VORONOI} program}{16}{section.2.3}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {2.4}Running KKR program}{18}{section.2.4}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.4.1}Some parameters that are frequently changed}{18}{subsection.2.4.1}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.4.2}SCF}{19}{subsection.2.4.2}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.4.3}DOS}{19}{subsection.2.4.3}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.4.4}Magnetic calculation}{19}{subsection.2.4.4}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {2.5}Full Potential (FP)}{20}{section.2.5}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {2.6}Band structure calculation}{21}{section.2.6}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {2.7}Slab calculation}{22}{section.2.7}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.7.1}Parameters}{23}{subsection.2.7.1}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.7.2}Things to check/tricks}{23}{subsection.2.7.2}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.7.3}Non-symmetric positions, relaxed structure}{24}{subsection.2.7.3}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {2.7.4}Version of JM code with only one executable}{25}{subsection.2.7.4}
+\defcounter {refsection}{0}\relax 
+\contentsline {chapter}{\numberline {3}KKRFLEX}{27}{chapter.3}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {3.1}Impurity calculation}{27}{section.3.1}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {3.1.1}Vacuum impurity}{30}{subsection.3.1.1}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {3.1.2}Real impurity}{32}{subsection.3.1.2}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {3.1.3}Magnetic impurities}{32}{subsection.3.1.3}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {3.1.4}Impurity DOS}{34}{subsection.3.1.4}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {3.1.5}More than one impurity}{34}{subsection.3.1.5}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {3.1.6}Irregular geometries}{35}{subsection.3.1.6}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{old fashioned: gofrin}{36}{section*.2}
+\defcounter {refsection}{0}\relax 
+\contentsline {chapter}{\numberline {4}Calculating the susceptibility}{39}{chapter.4}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {4.1}KKRSUSC}{39}{section.4.1}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.1.1}Basic information}{39}{subsection.4.1.1}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.1.2}Runflag in impurity inputcard}{39}{subsection.4.1.2}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.1.3}Proper energy mesh}{40}{subsection.4.1.3}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.1.4}Proper inputcard, inpsusc.dat}{41}{subsection.4.1.4}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.1.5}Input files}{42}{subsection.4.1.5}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.1.6}Executing the program}{43}{subsection.4.1.6}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.1.7}Output of the program}{43}{subsection.4.1.7}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.1.8}SCF vs NSCF calculations}{43}{subsection.4.1.8}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {4.2}Using the SELFE program; calculating susceptibilities}{44}{section.4.2}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.2.1}Inputcard}{44}{subsection.4.2.1}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.2.2}Energy mesh file of scf run: emesh.scf}{45}{subsection.4.2.2}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.2.3}Executing the program, files that are needed, files that are created}{45}{subsection.4.2.3}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.2.4}SCF vs NSCF calculations}{46}{subsection.4.2.4}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {4.3}Calculating self-energies and renormalized DOS}{46}{section.4.3}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.3.1}Applying constant magnetic field}{47}{subsection.4.3.1}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.3.2}Code}{47}{subsection.4.3.2}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {4.4}Impurity solver with spin-orbit interaction (Manuels program)}{48}{section.4.4}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.4.1}Notes on the code}{48}{subsection.4.4.1}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{Kernels}{48}{section*.3}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsubsection}{KS susceptibility}{48}{section*.4}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.4.2}Running the code, inputcard}{49}{subsection.4.4.2}
+\defcounter {refsection}{0}\relax 
+\contentsline {subsection}{\numberline {4.4.3}Output files}{51}{subsection.4.4.3}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {4.5}Manuels program to build geometry}{52}{section.4.5}
+\defcounter {refsection}{0}\relax 
+\contentsline {chapter}{\leavevmode {\color {FZJTeal}Bibliography}}{53}{chapter*.11}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{Books}{53}{section*.12}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{Articles}{53}{section*.13}
+\defcounter {refsection}{0}\relax 
+\contentsline {chapter}{\leavevmode {\color {FZJTeal}Index}}{55}{section*.14}
+\contentsfinish 

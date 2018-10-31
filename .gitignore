@@ -1,0 +1,59 @@
+# files that are build or temporary
+*.mod
+*.x
+kkr.x*
+*.exe
+*~
+*/*~
+*.o
+ALL_SOURCE_FILES/inc.p
+version
+version.f90
+compver
+*.pyc
+build*
+
+# some array dimensions
+inc.p
+
+# files that might only be useful during development
+*.png
+all_incp_incudes.txt
+/test/
+*.py
+!getversion.py
+/benchmark/
+*/out_timing.*.txt
+*/output.*.txt
+
+# documentation
+/docs/build
+
+# automatic tests
+.cache/
+tests/test_run*
+tests/test_inputs/test_13_rhoq_Cu_Cu111/rhoq_module/last_version_number
+
+# Code coverage report
+*.dyn
+CODE_COVERAGE.HTML
+CodeCoverage/
+pgopti.dpi
+pgopti.dpi.lock
+pgopti.spi
+pgopti.spl
+HTML
+
+# BdG developments test outputs
+develop_BdG/*/*/clusters
+develop_BdG/*/*/couplings.dat
+develop_BdG/*/*/inputcard_generated.txt
+develop_BdG/*/*/meminfo00000
+develop_BdG/*/*/out_timing.000.txt
+develop_BdG/*/*/output.000.txt
+develop_BdG/*/*/rll_atom_001_energ_001.dat
+develop_BdG/*/*/rll_source_hlk2_atom_001_energ_001.dat
+develop_BdG/*/*/rll_source_hlk_atom_001_energ_001.dat
+develop_BdG/*/*/rll_source_jlk2_atom_001_energ_001.dat
+develop_BdG/*/*/rll_source_jlk_atom_001_energ_001.dat
+develop_BdG/*/*/sll_atom_001_energ_001.dat
