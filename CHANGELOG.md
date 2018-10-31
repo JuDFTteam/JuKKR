@@ -2,7 +2,7 @@
 
 ## Conventions used for this changelog
 
- - keep it concise and human readable
+ - keep it concise but human readable
  - keep the *UNRELEASED* section up to date with the `develop` branch
  - create a new subsection for each release version
  - each version should have the following information:
@@ -131,6 +131,19 @@ Major changes merging branches `qdos_parallel`, and `develop_auto_tests` with so
 
 ----
 
+## rhoq-v1.1 (2018-01-30)
+
+First working (beta) version of the rhoq module (KKR-QPI) functionality.
+Needs writeout of files from host code (use `rhoqtest` test option).
+
+### Added
+- hybrid parallelization (MPI+OpenMP)
+- timing and version info
+- kmask selective integration
+- exclude region (C_M-term)
+
+----
+
 ## kkrhost-v2.2 (2017-04-21)
 
 Some corrections, in particular change of sign in DMI vector calculation (with SOC).
@@ -206,6 +219,12 @@ parallelism in rllsll) is implemented.
 
 ### Fixed
 - bugfix usespinorbit
+
+----
+
+## rhoq-v1.0 (2016-02-01)
+
+Initialized rhoq module and started development of KKR-QPI feature.
 
 ----
 
