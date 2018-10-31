@@ -10,3 +10,10 @@ build_voronoi:intel:
     paths:
       - tests/voronoi.exe
     expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-voronoi

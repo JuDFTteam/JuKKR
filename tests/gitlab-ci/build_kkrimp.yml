@@ -10,6 +10,13 @@ build_kkrimp:intel:hybrid:
     paths:
       - tests/kkrflex.exe_hybrid
     expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrimp
 
 build_kkrimp:intel:mpi:
   stage: build_kkrimp
@@ -23,3 +30,10 @@ build_kkrimp:intel:mpi:
     paths:
       - tests/kkrflex.exe_mpi
     expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrimp

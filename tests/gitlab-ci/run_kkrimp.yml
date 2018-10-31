@@ -11,7 +11,14 @@ run_kkrimp_parallel:intel:mpi_1:
   artifacts:
     paths:
       - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_mpi_1
-    expire_in: 2 days
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrimp
 
 run_kkrimp_parallel:intel:mpi_8:
   stage: run_kkrimp_parallel
@@ -24,7 +31,14 @@ run_kkrimp_parallel:intel:mpi_8:
   artifacts:
     paths:
       - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_mpi_8
-    expire_in: 2 days
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrimp
 
 run_kkrimp_parallel:intel:hybrid_1_1:
   stage: run_kkrimp_parallel
@@ -37,7 +51,14 @@ run_kkrimp_parallel:intel:hybrid_1_1:
   artifacts:
     paths:
       - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_hybrid_1_1
-    expire_in: 2 days
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrimp
 
 run_kkrimp_parallel:intel:hybrid_1_8:
   stage: run_kkrimp_parallel
@@ -50,7 +71,14 @@ run_kkrimp_parallel:intel:hybrid_1_8:
   artifacts:
     paths:
       - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_hybrid_1_8
-    expire_in: 2 days
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrimp
 
 run_kkrimp_parallel:intel:hybrid_8_1:
   stage: run_kkrimp_parallel
@@ -63,7 +91,14 @@ run_kkrimp_parallel:intel:hybrid_8_1:
   artifacts:
     paths:
       - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_hybrid_8_1
-    expire_in: 2 days
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrimp
 
 run_kkrimp_parallel:intel:hybrid_2_4:
   stage: run_kkrimp_parallel
@@ -76,7 +111,14 @@ run_kkrimp_parallel:intel:hybrid_2_4:
   artifacts:
     paths:
       - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_hybrid_2_4
-    expire_in: 2 days
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrimp
 
 run_kkrimp_parallel:intel:hybrid_4_2:
   stage: run_kkrimp_parallel
@@ -89,7 +131,14 @@ run_kkrimp_parallel:intel:hybrid_4_2:
   artifacts:
     paths:
       - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_hybrid_4_2
-    expire_in: 2 days
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrimp
 
 ###############################################################################
 # now run tests for features of the code (SOC+mpi, SOC+hybrid, Jijs, wf-saving, sratrick)
@@ -105,7 +154,14 @@ run_kkrimp_features:intel:tmatnew-hybrid:
   artifacts:
     paths:
       - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_tmatnew_hybrid_2_4
-    expire_in: 2 days
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrimp
 
 run_kkrimp_features:intel:tmatnew-mpi:
   stage: run_kkrimp_features
@@ -118,7 +174,14 @@ run_kkrimp_features:intel:tmatnew-mpi:
   artifacts:
     paths:
       - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_tmatnew_mpi_8
-    expire_in: 2 days
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrimp
 
 run_kkrimp_features:intel:tmatnew-nosavewf:
   stage: run_kkrimp_features
@@ -129,7 +192,14 @@ run_kkrimp_features:intel:tmatnew-nosavewf:
   artifacts:
     paths:
       - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_nosavewf/
-    expire_in: 2 days
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrimp
 
 run_kkrimp_features:intel:tmatnew-nosratrick:
   stage: run_kkrimp_features
@@ -140,7 +210,14 @@ run_kkrimp_features:intel:tmatnew-nosratrick:
   artifacts:
     paths:
       - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_nosratrick/
-    expire_in: 2 days
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrimp
 
 run_kkrimp_features:intel:tmatnew-Jij:
   stage: run_kkrimp_features
@@ -151,7 +228,14 @@ run_kkrimp_features:intel:tmatnew-Jij:
   artifacts:
     paths:
       - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_Jij/
-    expire_in: 2 days
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrimp
 
 run_kkrimp_features:intel:tmatnew-Jij_nosavewf:
   stage: run_kkrimp_features
@@ -162,7 +246,14 @@ run_kkrimp_features:intel:tmatnew-Jij_nosavewf:
   artifacts:
     paths:
       - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_Jij_savewf/
-    expire_in: 2 days
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrimp
 
 run_kkrimp_features:intel:tmatnew-Jij_nosratrick:
   stage: run_kkrimp_features
@@ -173,4 +264,11 @@ run_kkrimp_features:intel:tmatnew-Jij_nosratrick:
   artifacts:
     paths:
       - tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_Jij_nosratrick/
-    expire_in: 2 days
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrimp

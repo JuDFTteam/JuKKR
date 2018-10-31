@@ -8,6 +8,13 @@ run_voronoi:intel:oldstyle:
     paths:
       - tests/voronoi/test_run01
     expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-voronoi
 
 run_voronoi:intel:newstyle:
   stage: run_voronoi
@@ -19,3 +26,10 @@ run_voronoi:intel:newstyle:
     paths:
       - tests/voronoi/test_run02
     expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-voronoi

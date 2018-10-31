@@ -10,6 +10,13 @@ build_kkrhost:gnu:debug:
     - mkdir build_gfortran_debug && cd build_gfortran_debug
     - FC=/opt/gcc8/bin/gfortran cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug -DCOMPILE_KKRHOST=ON -DCOMPILE_KKRIMP=OFF -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF ..
     - make -j4 VERBOSE=1 || echo 'GNU compile unsuccessful!'
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
 
 build_kkrhost:intel:debug:
   stage: build_kkrhost
@@ -17,6 +24,13 @@ build_kkrhost:intel:debug:
     - mkdir build_debug && cd build_debug
     - FC=$(which ifort) cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug -DCOMPILE_KKRHOST=ON -DCOMPILE_KKRIMP=OFF -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF ..
     - make -j4
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
 
 build_kkrhost:intel:openmp_debug:
   stage: build_kkrhost
@@ -24,6 +38,13 @@ build_kkrhost:intel:openmp_debug:
     - mkdir build_ompdebug && cd build_ompdebug
     - FC=$(which ifort) cmake -DENABLE_MPI=OFF -DENABLE_OMP=ON -DCMAKE_BUILD_TYPE=Debug -DCOMPILE_KKRHOST=ON -DCOMPILE_KKRIMP=OFF -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF ..
     - make -j4
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
 
 build_kkrhost:intel:hybrid_debug:
   stage: build_kkrhost
@@ -31,6 +52,13 @@ build_kkrhost:intel:hybrid_debug:
     - mkdir build_hybriddebug && cd build_hybriddebug
     - FC=$(which mpiifort) cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DCMAKE_BUILD_TYPE=Debug -DCOMPILE_KKRHOST=ON -DCOMPILE_KKRIMP=OFF -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF ..
     - make -j4
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
 
 ## 1.2 production versions ##
 build_kkrhost:intel:hybrid:
@@ -48,3 +76,10 @@ build_kkrhost:intel:hybrid:
       - build/pgopti.spi
       - tests/kkr.x
     expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost

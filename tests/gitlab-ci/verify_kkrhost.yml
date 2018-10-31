@@ -12,6 +12,13 @@ verify_kkrhost:intel:
     paths:
       - all_test_results.tar.gz
     expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrhost
 
 verify_kkrhost:intel:aiida:
   image: iffregistry.fz-juelich.de/docker-images/aiida-kkr:latest

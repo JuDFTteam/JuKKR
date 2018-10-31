@@ -11,3 +11,10 @@ verify_kkrimp:intel:
     # prepare and execute verification using pytest
     - cd tests/KKRimp
     - pytest -v
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - devlop-kkrimp
