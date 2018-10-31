@@ -5,6 +5,7 @@
 ## 1.1 debug versions ##
 build_kkrhost:gnu:debug:
   stage: build_kkrhost
+  allow_failure: true
   script:
     - mkdir build_gfortran_debug && cd build_gfortran_debug
     - FC=/opt/gcc8/bin/gfortran cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug -DCOMPILE_KKRHOST=ON -DCOMPILE_KKRIMP=OFF -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF ..
