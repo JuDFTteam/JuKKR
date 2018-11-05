@@ -7,7 +7,13 @@
 !>           
 !-------------------------------------------------------------------------------
       CONTAINS
-
+!-------------------------------------------------------------------------------
+!> Summary: Calculation of Coulomb interaction potential in LDA+U in the
+!> non-relativistic case
+!> Author:
+!> Category: KKRimp, single-site, electrostatics, potential, lda+u 
+!>           
+!-------------------------------------------------------------------------------
       SUBROUTINE CALCWLDAU(
      >     NSPIN,NATOM,LMAXD,IRMD,LMAXATOM,DENSITY,STRMIX,
      X     LDAU)
@@ -312,6 +318,12 @@ C 7. Write out rms error
       END SUBROUTINE CALCWLDAU
 
 !*********************************************************************
+!-------------------------------------------------------------------------------
+!> Summary: Write-out routine 
+!> Author:
+!> Category: KKRimp, single-site, electrostatics, potential, lda+u 
+!>           
+!-------------------------------------------------------------------------------
       SUBROUTINE RWRITE(Z,MMAXD,MMAX,IFILE)
       implicit none
       INTEGER MMAXD,MMAX,M1,M2,IFILE
@@ -323,6 +335,12 @@ C 7. Write out rms error
       RETURN
       END SUBROUTINE RWRITE
 !*********************************************************************
+!-------------------------------------------------------------------------------
+!> Summary: Write-out routine 
+!> Author:
+!> Category: KKRimp, single-site, electrostatics, potential, lda+u 
+!>           
+!-------------------------------------------------------------------------------
       SUBROUTINE ZWRITE(Z,MMAXD,MMAX,IFILE)
       implicit none
       INTEGER MMAXD,MMAX,M1,M2,IFILE
@@ -336,7 +354,12 @@ C 7. Write out rms error
 
 
 !*********************************************************************
-
+!-------------------------------------------------------------------------------
+!> Summary: Mix old and new potential. Linear mixing with factor xmix.
+!> Author:
+!> Category: KKRimp, single-site, electrostatics, potential, lda+u 
+!>           
+!-------------------------------------------------------------------------------
       SUBROUTINE WMIX(XMIX,WLDAU,WLDAU_OLD,MMAXD,NSPIND)
 c Mix old and new potential. Linear mixing with factor xmix.
       implicit none

@@ -8,7 +8,12 @@ module mod_cheb2oldgridc
 use mod_chebyshev
 integer :: first=1
 contains
-
+!-------------------------------------------------------------------------------
+!> Summary: Interpolates from the Chebychev mesh to the 'old' radial mesh 
+!> Author:
+!> Category: KKRimp, radial-grid
+!>           
+!-------------------------------------------------------------------------------
 subroutine cheb2oldgridc(cell,cellnew,ncheb,lmmaxpot,arrayin,arrayout)
 use type_cell
 use type_cellnew
@@ -167,7 +172,12 @@ end do !in
 first=0
 end subroutine cheb2oldgridc
 
-
+!-------------------------------------------------------------------------------
+!> Summary: Complex matrix multiplication 
+!> Author:
+!> Category: KKRimp, radial-grid
+!>           
+!-------------------------------------------------------------------------------
       function matmat_zmzm(mat1,mat2)
       implicit none
       complex(16), intent(in) :: mat1(:,:),mat2(:,:)

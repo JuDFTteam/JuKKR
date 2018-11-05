@@ -6,7 +6,12 @@ module mod_calctmatfull
 !>           
 !-------------------------------------------------------------------------------
   contains
-
+!-------------------------------------------------------------------------------
+!> Summary: Calculate full t-matrices (no idea why this is done) 
+!> Author:
+!> Category: KKRimp, single-site
+!>           
+!-------------------------------------------------------------------------------
 SUBROUTINE CALCTMATFULL(ERYD,VPOT1,VPOT2,CELL,ZATOM,LMAXATOM,TMATLL,config,nspin,lmaxd)!     &
   use mod_calctmat
   use type_cell
