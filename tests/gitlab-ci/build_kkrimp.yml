@@ -3,7 +3,7 @@ build_kkrimp:intel:hybrid:
   script:
     # compile code
     - mkdir build_kkrimp_hybrid && cd build_kkrimp_hybrid
-    - FC=$(which mpiifort) cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DENABLE_COV=ON -DCOMPILE_KKRHOST=OFF -DCOMPILE_KKRIMP=ON -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF ..
+    - FC=$(which mpiifort) cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DENABLE_COV=ON -DCOMPILE_KKRHOST=OFF -DCOMPILE_KKRIMP=ON -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF -DCOMPILE_RHOQ=OFF ..
     - make -j4
     - cp kkrflex.exe ../tests/kkrflex.exe_hybrid
   artifacts:
@@ -23,7 +23,7 @@ build_kkrimp:intel:mpi:
   script:
     # compile code
     - mkdir build_kkrimp_hybrid && cd build_kkrimp_hybrid
-    - FC=$(which mpiifort) cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DENABLE_COV=ON -DCOMPILE_KKRHOST=OFF -DCOMPILE_KKRIMP=ON -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF ..
+    - FC=$(which mpiifort) cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DENABLE_COV=ON -DCOMPILE_KKRHOST=OFF -DCOMPILE_KKRIMP=ON -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF -DCOMPILE_RHOQ=OFF ..
     - make -j4
     - cp kkrflex.exe ../tests/kkrflex.exe_mpi
   artifacts:
