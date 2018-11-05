@@ -2,6 +2,7 @@
      +                     R_LOG,NPAN_LOG,NPAN_EQ,NCHEB,
      +                     NPAN_TOT,RNEW,RPAN_INTERVALL,IPAN_INTERVALL,
      +                     THETAS,THETASNEW,NFUN,NPAN_LOGNEW,NPAN_EQNEW)
+       use mod_interpolspline, only: interpolspline
        IMPLICIT NONE
        INTEGER IRMIN,IPAN,IRWS,NFUN
        INTEGER NPAN_LOG,NPAN_EQ,NCHEB,NPAN_INST,NPAN_TOT

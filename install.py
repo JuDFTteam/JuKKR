@@ -13,7 +13,7 @@ import shutil
 ##########################################################################
 #global settings:
 
-codeslist = ['kkrhost', 'kkrimp', 'voronoi', 'pkkprime'] # still to add 'kkrsusc', pkkprime
+codeslist = ['kkrhost', 'kkrimp', 'voronoi', 'pkkprime', 'rhoq'] # still to add 'kkrsusc'
 
 ##########################################################################
  
@@ -191,6 +191,7 @@ def run_cmake(compiler, parallelization, flags, verbose, code):
    comp_susc = 'OFF'
    comp_pkkr = 'OFF'
    comp_voro = 'OFF'
+   comp_rhoq = 'OFF'
    if code=='kkrhost':
       comp_host = 'ON'
    elif code=='kkrimp':
@@ -201,6 +202,8 @@ def run_cmake(compiler, parallelization, flags, verbose, code):
       comp_pkkr = 'ON'
    elif code=='voronoi':
       comp_voro = 'ON'
+   elif code=='rhoq':
+      comp_rhoq = 'ON'
    else:
       print("Error setting code option!")
       sys.exit()
@@ -209,6 +212,7 @@ def run_cmake(compiler, parallelization, flags, verbose, code):
    task += " -DCOMPILE_KKRSUSC={} ".format(comp_susc)
    task += " -DCOMPILE_PKKPRIME={} ".format(comp_pkkr)
    task += " -DCOMPILE_VORONOI={} ".format(comp_voro)
+   task += " -DCOMPILE_RHOQ={} ".format(comp_rhoq)
 
    # add additional flags if given
    for flag in flags:
