@@ -385,6 +385,7 @@ if(ENABLE_BdG)
         source/common/test.f90 
         source/common/cinit.f90 
         source/common/intcheb_cell.f90 
+        source/common/rotatespinframe.f90 
         source/KKRhost/main_tmat_runner.F90
         source/KKRhost/global_variables.F90 
         source/KKRhost/save_wavefun.F90 
@@ -530,7 +531,6 @@ if(ENABLE_BdG)
         source/KKRhost/phicalc.f90 
         source/KKRhost/interpolate_poten.f90 
         source/KKRhost/vllmat.f90 
-        source/KKRhost/rotatespinframe.f90 
         source/KKRhost/spinorbit_ham.f90 
         source/KKRhost/spin_orbit.f90 
         source/KKRhost/spin_orbit_compl.f90 
