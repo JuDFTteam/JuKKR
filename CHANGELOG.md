@@ -15,7 +15,7 @@
 
 ----
 
-## *UNRELEASED* (last updated: 2018-11-05)
+## *UNRELEASED* (last updated: 2018-11-06)
 
 **Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release.**
 
@@ -23,12 +23,13 @@ Start of large KKR repository holding *voronoi*, *KKRhost*, *KKRimp*, *KKRsusc*,
 
 
 ### Added
-- None
+- cmake installation scripts
+- add rhoq repo (KKR-QPI)
 
 ### Changed
-- `install.py` script now deals with *KKRhost*, *KKRimp*, *PKKprime*, and *voronoi*
+- `install.py` script now deals with *KKRhost*, *KKRimp*, *PKKprime*, *voronoi*, and *rhoq*
 - updated documentation
-- tests structure
+- restructured tests (see `gitlab-ci.yml` and `tests/gitlab-ci/*.yml` files)
 - directory structure following `source`, `docs`, `utils`, `tests`, etc. 
 
 ### Deprecated
