@@ -10,12 +10,6 @@
 !-------------------------------------------------------------------------------
 !> @note This subroutine should be used only for core states.
 !> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
 !-------------------------------------------------------------------------------
 
 

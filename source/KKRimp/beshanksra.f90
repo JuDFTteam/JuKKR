@@ -7,12 +7,6 @@
 !> @note Notes on the code
 !> Manuel: As far as I can tell it is not used anywhere
 !> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
 !------------------------------------------------------------------------------------
       MODULE MOD_BESHANKSRA
 
@@ -27,15 +21,6 @@
 !> for the orders l .le. lmax.
 !> For |z| .lt. 1 the taylor expansions of jl and nl are used.
 !> For |z| .ge. 1 the explicit expressions for hl(+), hl(-) are used.
-!-------------------------------------------------------------------------------
-!> @note Notes on the code
-!> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
 !-------------------------------------------------------------------------------
       SUBROUTINE BESHANK(HL,JL,NL,Z,LMAX)
 C     .. Parameters ..

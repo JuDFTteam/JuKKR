@@ -3,15 +3,6 @@
 !> Author:
 !> For details see vinters2010; also used to construct the intercell potential of the host
 !------------------------------------------------------------------------------------
-!> @note Notes on the code
-!> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
-!------------------------------------------------------------------------------------
 module mod_amn2010
 REAL*8,allocatable                           ::     CLEB(:,:)
 INTEGER,allocatable                          ::     ICLEB(:,:)
@@ -26,15 +17,6 @@ contains
 !> Category: electrostatics, potential, KKRimp
 !> Deprecated: False 
 !> For details see vinters2010
-!-------------------------------------------------------------------------------
-!> @note Notes on the code
-!> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
 !-------------------------------------------------------------------------------
 subroutine amn2010(jatom,amat,bmat,alat,gauntcoeff,lpotmax,ntotatom,ratom)
 use type_gauntcoeff
