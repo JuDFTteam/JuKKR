@@ -1,4 +1,4 @@
-build_voronoi:intel:
+build_rhoq:intel:
   stage: build_rhoq
   script:
     - mkdir build_rhoq && cd build_rhoq
