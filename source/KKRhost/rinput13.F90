@@ -846,15 +846,17 @@ contains
     ! ----------------------------------------------------------------------------
     ! Readin Options for Bogoliubov-de-Gennes Formalism
     ! ----------------------------------------------------------------------------
-    call ioinput('KBdG            ', uio, 1, 7, ier)
+    call ioinput('KBDG            ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) kBdG
-      write (111, *) 'KBdG= ', kBdG
+      write (111, *) 'KBDG= ', kBdG
     else
-      write (111, *) 'Default KBdG= ', kBdG
+      write (111, *) 'Default KBDG= ', kBdG
+      write(*,*) kbdg, opt('useBdG  ')
     end if
     if (kBdG/=0 .and. .not. opt('useBdG  ')) call addopt('useBdG  ')
     if (opt('useBdG  ') .and. kBdG/=1) kBdG = 1
+    write(*,*) kbdg, opt('useBdG  '), kbdg/=1, opt('useBdG  ') .and. kBdG/=1
 
     ! read in starting value of Delta
     if (kBdG/=0) then
