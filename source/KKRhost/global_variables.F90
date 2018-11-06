@@ -12,10 +12,10 @@
 !-------------------------------------------------------------------------------
 module global_variables
 
+  use mod_datatypes, only: dp
   implicit none
 
-  integer :: kBdG = 0         !! Switch between normal (noSOC or SOC) calculations and supermatrix calculations 
-                              !! for Bogoliubov-de-Gennes formalism
+  integer :: kBdG = 0         !! Switch between normal (noSOC or SOC) calculations and supermatrix calculations for Bogoliubov-de-Gennes formalism
   integer :: irid = 350       !! Shape functions parameters in non-spherical part
   integer :: krel = 0         !! Switch for non-relativistic/relativistic (0/1) program. 
                               !! Attention: several other parameters depend explicitly on KREL,
@@ -85,6 +85,7 @@ module global_variables
   integer :: nchebd
   integer :: maxmshd = 30         !! maximal number of different k-meshes
   logical :: linterface = .false. !! use 2D or 3D mode, if True a matching with semi-inifinite surfaces must be performed
+  real (kind=dp) :: delta_BdG = 10**-4 !! initial value of Delta_BdG in Ry
 
 
 end module global_variables

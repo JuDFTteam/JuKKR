@@ -40,7 +40,7 @@ contains
     qmtet, qmphi, kreadldau, lopt, ueff, jeff, erefldau)
 
     use :: mod_profiling, only: memocc
-    use :: mod_constants, only: czero, cvlight
+    use :: mod_constants, only: czero, cvlight, ryd
     use :: mod_wunfiles, only: t_params
     use :: memoryhandling, only: allocate_semi_inf_host, allocate_magnetization, allocate_cell, allocate_cpa, allocate_soc, allocate_ldau
     use :: mod_types, only: t_inc
@@ -53,7 +53,7 @@ contains
     use :: mod_ioinput, only: ioinput
     use :: global_variables, only: linterface, korbit, krel, irmd, irnsd, nsheld, knosph, iemxd, nrd, knoco, kpoibz, ntrefd, natomimpd, &
       nprincd, ipand, nfund, irid, ngshd, nmaxd, ishld, wlength, naclsd, ntotd, ncleb, nspind, nspindd, npotd, lmmaxd, lmgf0d, &
-      lassld, nembd1, irmind, nofgij, ntperd, nsatypd, nspotd, lnc, lmxspd, naezd, lm2d, nclsd, mmaxd, ncleb, kBdG
+      lassld, nembd1, irmind, nofgij, ntperd, nsatypd, nspotd, lnc, lmxspd, naezd, lm2d, nclsd, mmaxd, ncleb, kBdG, delta_BdG
 
 
     implicit none
@@ -855,6 +855,18 @@ contains
     end if
     if (kBdG/=0 .and. .not. opt('useBdG  ')) call addopt('useBdG  ')
     if (opt('useBdG  ') .and. kBdG/=1) kBdG = 1
+
+    ! read in starting value of Delta
+    if (kBdG/=0) then
+      call ioinput('delta_BdG       ', uio, 1, 7, ier)
+      if (ier==0) then
+        read (unit=uio, fmt=*) delta_BdG
+        write (111, *) 'delta_BdG= ', delta_BdG
+      else
+        write (111, *) 'Default delta_BdG= ', delta_BdG
+      end if
+      write (1337, *) 'Use Bogoliubov-de-Gennes formalism with initial value of Delta set to ', delta_BdG, 'Ry = ', delta_BdG*ryd*1000, 'meV' 
+    end if
 
 
     ! ----------------------------------------------------------------------------
