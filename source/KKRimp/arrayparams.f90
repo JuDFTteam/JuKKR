@@ -1,3 +1,17 @@
+!------------------------------------------------------------------------------------
+!> Summary: Module handling common array dimensions
+!> Author:
+!> Array dimensions are defined according to lmax; used in main program
+!------------------------------------------------------------------------------------
+!> @note Notes on the code
+!> @endnote
+!> @todo things that must be checked
+!> @endtodo
+!> @warning Important precautions
+!> @endwarning
+!> @bug If nasty things are found
+!> @endbug
+!------------------------------------------------------------------------------------
 module arrayparams
 use nrtype
 ! initial global variables
@@ -36,6 +50,22 @@ integer :: IRMTD
 integer :: NCORED
 contains
 
+!-------------------------------------------------------------------------------
+!> Summary: Define common array dimensions based on lmax
+!> Author:
+!> Category: initialization, KKRimp
+!> Deprecated: False 
+!> Array dimensions are defined according to lmax
+!-------------------------------------------------------------------------------
+!> @note Notes on the code
+!> @endnote
+!> @todo things that must be checked
+!> @endtodo
+!> @warning Important precautions
+!> @endwarning
+!> @bug If nasty things are found
+!> @endbug
+!-------------------------------------------------------------------------------
 subroutine arrayparams_set(LMAXD1)
 integer,save          :: first = 1
 

@@ -1,12 +1,43 @@
+!------------------------------------------------------------------------------------
+!> Summary: Module handling spherical bessel, hankel and neumann functions for SRA
+!> Author: R. Zeller
+!> This version is used for the source terms of the single-site solver
+!> It also initializes the small components of the SRA spherical scattering wavefunctions
+!------------------------------------------------------------------------------------
+!> @note Notes on the code
+!> Manuel: As far as I can tell it is not used anywhere
+!> @endnote
+!> @todo things that must be checked
+!> @endtodo
+!> @warning Important precautions
+!> @endwarning
+!> @bug If nasty things are found
+!> @endbug
+!------------------------------------------------------------------------------------
       MODULE MOD_BESHANKSRA
-        CONTAINS
+
+      CONTAINS
+
+!-------------------------------------------------------------------------------
+!> Summary: Spherical bessel, hankel and neumann functions up to order lmax
+!> Author: R. Zeller
+!> Category: special-functions, KKRimp
+!> Deprecated: False 
+!> calculates spherical bessel, hankel and neumann functions
+!> for the orders l .le. lmax.
+!> For |z| .lt. 1 the taylor expansions of jl and nl are used.
+!> For |z| .ge. 1 the explicit expressions for hl(+), hl(-) are used.
+!-------------------------------------------------------------------------------
+!> @note Notes on the code
+!> @endnote
+!> @todo things that must be checked
+!> @endtodo
+!> @warning Important precautions
+!> @endwarning
+!> @bug If nasty things are found
+!> @endbug
+!-------------------------------------------------------------------------------
       SUBROUTINE BESHANK(HL,JL,NL,Z,LMAX)
-c-----------------------------------------------------------------------
-c  calculates spherical bessel, hankel and neumann functions
-c  for the orders lmin .le. l .le. lmax.
-c  For |z| .lt. l+1 the taylor expansions of jl and nl are used.
-c  For |z| .ge. l+1 the explicit expressions for hl(+), hl(-) are used.
-c-----------------------------------------------------------------------
 C     .. Parameters ..
       DOUBLE COMPLEX CI
       PARAMETER (CI= (0.0D0,1.0D0))

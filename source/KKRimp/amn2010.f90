@@ -1,36 +1,67 @@
-       module mod_amn2010
-      REAL*8,allocatable                           ::     CLEB(:,:)
-      INTEGER,allocatable                          ::     ICLEB(:,:)
-      integer                                      ::     iend,ncleb
-      integer                                      ::     first=1,amnlmaxpot
+!------------------------------------------------------------------------------------
+!> Summary: Module handling the structure constants for the intersite potential
+!> Author:
+!> For details see vinters2010; also used to construct the intercell potential of the host
+!------------------------------------------------------------------------------------
+!> @note Notes on the code
+!> @endnote
+!> @todo things that must be checked
+!> @endtodo
+!> @warning Important precautions
+!> @endwarning
+!> @bug If nasty things are found
+!> @endbug
+!------------------------------------------------------------------------------------
+module mod_amn2010
+REAL*8,allocatable                           ::     CLEB(:,:)
+INTEGER,allocatable                          ::     ICLEB(:,:)
+integer                                      ::     iend,ncleb
+integer                                      ::     first=1,amnlmaxpot
 
-       contains
-      subroutine amn2010(jatom,amat,bmat,alat,gauntcoeff,lpotmax,ntotatom,ratom)
-      use type_gauntcoeff
-      use mod_ymy
-      use mod_amngaunt
-       implicit none
-!       integer lmmaxd,l3d,lm3d
-!       PARAMETER (LMMAXD= (LPOTD+1)**2,L3D=2*LPOTD,LM3D= (L3D+1)**2)
+contains
+
+!-------------------------------------------------------------------------------
+!> Summary: Structure constants for the intersite potential
+!> Author:
+!> Category: electrostatics, potential, KKRimp
+!> Deprecated: False 
+!> For details see vinters2010
+!-------------------------------------------------------------------------------
+!> @note Notes on the code
+!> @endnote
+!> @todo things that must be checked
+!> @endtodo
+!> @warning Important precautions
+!> @endwarning
+!> @bug If nasty things are found
+!> @endbug
+!-------------------------------------------------------------------------------
+subroutine amn2010(jatom,amat,bmat,alat,gauntcoeff,lpotmax,ntotatom,ratom)
+use type_gauntcoeff
+use mod_ymy
+use mod_amngaunt
+implicit none
+! integer lmmaxd,l3d,lm3d
+! PARAMETER (LMMAXD= (LPOTD+1)**2,L3D=2*LPOTD,LM3D= (L3D+1)**2)
 
 !interface
-      integer                               ::     jatom
-      real*8                                ::     amat(ntotatom,(lpotmax+1)**2,(lpotmax+1)**2)
-      real*8                                ::     bmat(ntotatom,(lpotmax+1)**2)
-      real*8                                ::     alat
-      type(gauntcoeff_type),intent(in)      ::     gauntcoeff
-      integer                               ::     lpotmax
-      integer ntotatom
-      real*8                                ::     ratom(3,ntotatom)
+integer                               ::     jatom
+real*8                                ::     amat(ntotatom,(lpotmax+1)**2,(lpotmax+1)**2)
+real*8                                ::     bmat(ntotatom,(lpotmax+1)**2)
+real*8                                ::     alat
+type(gauntcoeff_type),intent(in)      ::     gauntcoeff
+integer                               ::     lpotmax
+integer ntotatom
+real*8                                ::     ratom(3,ntotatom)
 !local 
-      integer                               ::     iatom
-      integer                               ::     lmpotmax
-      real*8                                ::     epi,fpi
-      real*8                                ::     rlength,r1,r2,r3
-      real*8                                ::     dfac(0:lpotmax,0:lpotmax)
-      integer                               ::     lx, ly,ival
-      integer                               ::     lm1,lm3,lm4,l1,l2
-      real*8                                ::     y((2*lpotmax+1)**2)
+integer                               ::     iatom
+integer                               ::     lmpotmax
+real*8                                ::     epi,fpi
+real*8                                ::     rlength,r1,r2,r3
+real*8                                ::     dfac(0:lpotmax,0:lpotmax)
+integer                               ::     lx, ly,ival
+integer                               ::     lm1,lm3,lm4,l1,l2
+real*8                                ::     y((2*lpotmax+1)**2)
 
 ! pi    = 3.14159265359D0
 fpi   = 4.0d0*pi
@@ -126,5 +157,5 @@ end do !iatom=1,ntotatom
 ! bmat=0.0D0
 ! stop
 ! write(*,*) amat
-end subroutine
+end subroutine amn2010
 end module mod_amn2010

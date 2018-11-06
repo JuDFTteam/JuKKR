@@ -2,6 +2,23 @@ C*==initldau.f    processed by SPAG 6.05Rc at 15:27 on  7 Mar 2003
       MODULE mod_initldau
       CONTAINS
 
+!-------------------------------------------------------------------------------
+!> Summary: Calcualtes ULDAU 
+!> Author: Who wrote this subroutine
+!> Category: LDA+u, initialization, kkrimp
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+!-------------------------------------------------------------------------------
+!> @note  NOTES 
+!> @endnote
+!> @todo things that must be checked
+!> @endtodo
+!> @warning Important precautions
+!> @endwarning
+!> @bug If nasty things are found
+!> @endbug
+!-------------------------------------------------------------------------------
+
 
 
       SUBROUTINE INITLDAU(LMAXD,NATYP,NSPIN,VPOT,ZATOM,KVREL,CELL,LDAU)
