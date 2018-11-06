@@ -50,7 +50,17 @@ add_executable(
     source/common/opt.f90
     source/common/test.f90
     source/common/cinit.f90
-    source/common/intcheb_cell.f90
+    source/common/radial_solver_Chebychev/intcheb_cell.f90
+    source/common/radial_solver_Chebychev/cheb.f90
+    source/common/radial_solver_Chebychev/cheb2oldgrid.f90
+    source/common/radial_solver_Chebychev/chebint.f90
+    source/common/radial_solver_Chebychev/rll_global_solutions.F90
+    source/common/radial_solver_Chebychev/rll_local_solutions.F90
+    source/common/radial_solver_Chebychev/rllsll.F90
+    source/common/radial_solver_Chebychev/rllsllsourceterms.f90
+    source/common/radial_solver_Chebychev/sll_global_solutions.F90
+    source/common/radial_solver_Chebychev/sll_local_solutions.F90
+    source/common/radial_solver_Chebychev/create_newmesh.f90
     source/KKRhost/addvirtual14.f90
     source/KKRhost/amemagvec.f90
     source/KKRhost/bastrmat.f90
@@ -79,9 +89,6 @@ add_executable(
     source/KKRhost/cdjlzdz.f90
     source/KKRhost/cdnlzdz.f90
     source/KKRhost/changerep.f90
-    source/KKRhost/cheb.f90
-    source/KKRhost/cheb2oldgrid.f90
-    source/KKRhost/chebint.f90
     source/KKRhost/checkrmat.f90
     source/KKRhost/cint4pts.f90
     source/KKRhost/cintabr.f90
@@ -102,7 +109,6 @@ add_executable(
     source/KKRhost/cpamillsx.f90
     source/KKRhost/cpw91.f90
     source/KKRhost/cradwf.f90
-    source/KKRhost/create_newmesh.f90
     source/KKRhost/crospr.f90
     source/KKRhost/cross.f90
     source/KKRhost/crtstar.f90
@@ -276,10 +282,6 @@ add_executable(
     source/KKRhost/rintsimp.f90
     source/KKRhost/rinvgj.f90
     source/KKRhost/rites.f90
-    source/KKRhost/rll_global_solutions.F90
-    source/KKRhost/rll_local_solutions.F90
-    source/KKRhost/rllsll.F90
-    source/KKRhost/rllsllsourceterms.f90
     source/KKRhost/rmatstr.f90
     source/KKRhost/rnuctab.f90
     source/KKRhost/rotate.f90
@@ -298,8 +300,6 @@ add_executable(
     source/KKRhost/simp3.f90
     source/KKRhost/simpk.f90
     source/KKRhost/sinwk.f90
-    source/KKRhost/sll_global_solutions.F90
-    source/KKRhost/sll_local_solutions.F90
     source/KKRhost/sname.f90
     source/KKRhost/soutk.f90
     source/KKRhost/spatpr.f90
@@ -384,8 +384,17 @@ if(ENABLE_BdG)
         source/common/opt.f90 
         source/common/test.f90 
         source/common/cinit.f90 
-        source/common/intcheb_cell.f90 
         source/common/rotatespinframe.f90 
+        source/common/radial_solver_Chebychev/intcheb_cell.f90 
+        source/common/radial_solver_Chebychev/cheb.f90 
+        source/common/radial_solver_Chebychev/chebint.f90 
+        source/common/radial_solver_Chebychev/rllsllsourceterms.f90 
+        source/common/radial_solver_Chebychev/rllsll.F90 
+        source/common/radial_solver_Chebychev/rll_local_solutions.F90 
+        source/common/radial_solver_Chebychev/sll_local_solutions.F90 
+        source/common/radial_solver_Chebychev/rll_global_solutions.F90 
+        source/common/radial_solver_Chebychev/sll_global_solutions.F90 
+        source/common/radial_solver_Chebychev/create_newmesh.f90 
         source/KKRhost/main_tmat_runner.F90
         source/KKRhost/global_variables.F90 
         source/KKRhost/save_wavefun.F90 
@@ -394,8 +403,6 @@ if(ENABLE_BdG)
         source/KKRhost/initabjij.f90 
         source/KKRhost/tbxccpljij.F90 
         source/KKRhost/tbxccpljijdij.F90 
-        source/KKRhost/create_newmesh.f90 
-        source/KKRhost/cheb.f90 
         source/KKRhost/rhoqtools.F90 
         source/KKRhost/godfrin.F90 
         source/KKRhost/memoryhandling.f90 
@@ -536,10 +543,7 @@ if(ENABLE_BdG)
         source/KKRhost/spin_orbit_compl.f90 
         source/KKRhost/vllmatsra.f90 
         source/KKRhost/beshank.f90 
-        source/KKRhost/rllsllsourceterms.f90 
         source/KKRhost/calcsph.f90 
-        source/KKRhost/rllsll.F90 
-        source/KKRhost/chebint.f90 
         source/KKRhost/csum.f90 
         source/KKRhost/gfree.f90 
         source/KKRhost/gll95.F90 
@@ -561,10 +565,6 @@ if(ENABLE_BdG)
         source/KKRhost/simpk.f90 
         source/KKRhost/soutk.f90 
         source/KKRhost/ssum.f90 
-        source/KKRhost/rll_local_solutions.F90 
-        source/KKRhost/sll_local_solutions.F90 
-        source/KKRhost/rll_global_solutions.F90 
-        source/KKRhost/sll_global_solutions.F90 
         source/KKRhost/cmatmul.f90 
         source/KKRhost/convol.f90
         )
