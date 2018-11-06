@@ -102,7 +102,7 @@ contains
     do ispin = 1, nspintemp
 
       lspin = (lmax+1)*(ispin-1)
-      lsra = (lmax+1)*nvec/(2-korbit) ! factor 1/(2-korbit) ensures correct matrix size for 'NOSOC' test option
+      lsra = (lmax+1)*nvec/(nspin-korbit) ! factor 1/(nspin-korbit) ensures correct matrix size for 'NOSOC' test option
       ! each value of l, the Lippmann-Schwinger equation is solved using
       ! the free-potential wavefunctions and potentials corresponding to l-value
       do lval = 0, lmax

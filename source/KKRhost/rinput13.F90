@@ -1087,7 +1087,7 @@ contains
     ! End of allocation of SOC arrays
     !--------------------------------------------------------------------------------
     if (opt('NEWSOSOL')) then      ! Spin-orbit
-      if (opt('NEWSOSOL') .and. (nspin/=2)) stop ' set NSPIN = 2 for SOC solver in inputcard'
+      if (opt('NEWSOSOL') .and. (nspin/=2) .and. .not.test('NOSOC   ')) stop ' set NSPIN = 2 for SOC solver in inputcard'
       npan_log = 30
       npan_eq = 30
       ncheb = 10

@@ -15,7 +15,7 @@
 
 ----
 
-## *UNRELEASED* (last updated: 2018-11-05)
+## *UNRELEASED* (last updated: 2018-11-06)
 
 **Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release.**
 
@@ -30,6 +30,7 @@ Start of large KKR repository holding *voronoi*, *KKRhost*, *KKRimp*, *KKRsusc*,
 - updated documentation
 - tests structure
 - directory structure following `source`, `docs`, `utils`, `tests`, etc. 
+- change factor (2-korbit) to (nspin-korbit) for NOSOC with NSPIN=1
 
 ### Deprecated
 - makefiles of *PKKprime*, *voronoi*, *KKRimp*, *rhoq*

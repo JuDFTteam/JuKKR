@@ -183,7 +183,7 @@ contains
 
 
     ! .. allocate and initialize arrays
-    call allocate_locals_tmat_newsolver(1, irmdnew, lmpot, nspin/(2-korbit), vins, aux, ipiv, tmat0, tmatll, alpha0, dtmatll, alphall, dalphall, jlk_index, nsra, lmmaxso, nth, lmax, vnspll, &
+    call allocate_locals_tmat_newsolver(1, irmdnew, lmpot, nspin/(nspin-korbit), vins, aux, ipiv, tmat0, tmatll, alpha0, dtmatll, alphall, dalphall, jlk_index, nsra, lmmaxso, nth, lmax, vnspll, &
       vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
 
     vins(1:irmdnew, 1:lmpot, 1) = vinsnew(1:irmdnew, 1:lmpot, ipot)
@@ -210,7 +210,7 @@ contains
 #endif
 
     ! set up the non-spherical ll' matrix for potential VLL' (done in VLLMAT)
-    call vllmat(1, nrmaxd, irmdnew, lmsize, lmmaxso, vnspll0, vins, lmpot, cleb, icleb, iend, nspin/(2-korbit), zat, rnew, use_sratrick, ncleb)
+    call vllmat(1, nrmaxd, irmdnew, lmsize, lmmaxso, vnspll0, vins, lmpot, cleb, icleb, iend, nspin/(nspin-korbit), zat, rnew, use_sratrick, ncleb)
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! LDAU
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -440,7 +440,7 @@ contains
         ! Using spherical potential as reference
         if (use_sratrick==1) then
           tmatsph(:, ith) = czero
-          call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin/(2-korbit), zat, eryd, lmpot, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk(:,:,ith), jlk(:,:,ith), &
+          call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin/(nspin-korbit), zat, eryd, lmpot, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk(:,:,ith), jlk(:,:,ith), &
             hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, tmatsph(:,ith), alphasph, use_sratrick)
 #ifdef CPP_BdG
         if (test('BdG_dev ')) then
@@ -625,7 +625,7 @@ contains
         ! notice that exchange the order of left and right hankel/bessel functions
         if (use_sratrick==1) then
           tmatsph(:, ith) = czero
-          call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin/(2-korbit), zat, eryd, lmpot, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), &
+          call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin/(nspin-korbit), zat, eryd, lmpot, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), &
             hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, alphasph, tmatsph(:,ith), use_sratrick)
         end if
 
