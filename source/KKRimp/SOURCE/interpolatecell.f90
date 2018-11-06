@@ -1,5 +1,39 @@
 module mod_interpolatecell
 contains
+
+!-------------------------------------------------------------------------------
+!> Summary: ! This routine 
+!> 1) distributes panels over the radial mesh of the single site problem. 
+!> 2) Interpolates the potential or shape function of the old mesh points
+!>    to the new Chebyshev panels
+!> 1) The mesh is devided into 3 different parts:
+!> | |  logarithmic   |     equidistant  |      shapefn       |     regions
+!> | |  ------------- | ---------------  | -----------------  |     regions
+!> | |||| |  |    |       |    |    |    |    |    |     |    |     panels
+!> 0 rmin          rlogpan        rmesh(cell%NRMIN_NS)      R_max   limits
+!>
+!>1st region: logarithmic distribution of the panels (like in mesh points in ASA)
+!>2nd region: equistitant distribution of the panels
+!>3rd region: distribution of the panels according to the kinks for the shape function
+!>            (like it is done for the old mesh)
+!>
+!> 2) Interpolation is done using a spline method
+!> 
+!> Author: Who wrote this subroutine
+!> Category: new-mesh, old-mesh,radial grid, shapefunction, potential, kkrimp
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+!-------------------------------------------------------------------------------
+!> @note Notes on the code
+!> @endnote
+!> @todo things that must be checked
+!> @endtodo
+!> @warning Important precautions
+!> @endwarning
+!> @bug If nasty things are found
+!> @endbug
+!-------------------------------------------------------------------------------
+
 subroutine interpolatecell(nstart,vpot,lmvpot,cell,lmaxatom,cellnew,ispin,nspin,config,cmode,testpot)
 use mod_gauntharmonics, only: gauntcoeff
 use type_cell
@@ -299,6 +333,23 @@ write(1337,*) 'exiting interpolecell'
 
 first=0
 end subroutine interpolatecell
+
+!-------------------------------------------------------------------------------
+!> Summary: creates the new mesh
+!> Author: Who wrote this subroutine
+!> Category: new mesh, radial grid, kkrimp
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+!-------------------------------------------------------------------------------
+!> @note Notes on the code
+!> @endnote
+!> @todo things that must be checked
+!> @endtodo
+!> @warning Important precautions
+!> @endwarning
+!> @bug If nasty things are found
+!> @endbug
+!-------------------------------------------------------------------------------
 
 
 subroutine create_newmesh(nintv,ncheb,ri,r)

@@ -1,5 +1,68 @@
+!------------------------------------------------------------------------------------
+!> Summary:  Calculates the irregular solution of the schroedinger equation 
+!> Author: B. Drittler Nov. 1989
+!> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+!>
+!> One can write Latex comments like this \(i\hbar\frac{\partial \psi}{\partial t}=-\mathcal{H}\psi\)
+!> or add labeled equations using the standard latex way
+!> \begin{equation}
+!> \mathbf{A} \mathbf{v}= \eta\mathbf{v}
+!> \end{equation}
+!> **FORd** also accepts markdown style so you can _write with style_ 
+!> 
+!> **IMPORTANT**
+!> The JM-KKR follows the coding conventions noted in this example, one that is
+!> not obvious is that **each level of indentation consists of two spaces**. Please keep this:
+!> _do it for the children_.
+!> So please keep the conventions.
+! These are special boxes for ford, notice that this comment does not appear in the html file.
+! These boxes contain important information and should be added when necessary. ALWAYS remember to close the box
+! BEFORE oppening a new one or they will be nested.
+!------------------------------------------------------------------------------------
+!> @note Notes on the code
+!> @endnote
+!> @todo things that must be checked
+!> @endtodo
+!> @warning Important precautions
+!> @endwarning
+!> @bug If nasty things are found
+!> @endbug
+!------------------------------------------------------------------------------------
+
+
+
       MODULE mod_IRWSOL
+
       CONTAINS
+!-------------------------------------------------------------------------------
+!> Summary:   calculates the irregular solution of the schroedinger equation or
+!>    in semi relativistic approximation for a spherically averaged
+!>    potential and given energy . to achieve greater precision the
+!>    leading power r**-s ( in schroedinger case s = l , in case of sra
+!>    s = sqrt( (l*l+l-1) - 4*z*z/c/c ) ) is analytically separated
+!>    from the wavefunction .
+!>
+!>
+!>  the differential equation is solved with a 5 point adams - bashforth
+!>    and adams - moulton predictor corrector method integrating
+!>   inwards and extended for potentials with kinks
+!> Author: B. Drittler   Nov. 1989
+!> Category: Wavefunction, physical-observables, kkrimp
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+!-------------------------------------------------------------------------------
+!> @note Notes on the code
+!> @endnote
+!> @todo things that must be checked
+!> @endtodo
+!> @warning Important precautions
+!> @endwarning
+!> @bug If nasty things are found
+!> @endbug
+!-------------------------------------------------------------------------------
+
+
+
       SUBROUTINE IRWSOL(EK,FZ,HAMF,MASS,PZ,QZ,SZ,DROR,S,IPAN,IRCUT,
      +                    IRMD,IPAND,LMAXATOM)
       IMPLICIT NONE
