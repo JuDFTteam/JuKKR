@@ -8,22 +8,22 @@ add_executable(
     source/common/version_info.F90
     source/common/DataTypes.f90
     source/common/constants.f90
-    source/KKRhost/wunfiles.F90
-    source/KKRhost/profiling.f90
-    source/KKRhost/mympi.F90
-    source/KKRhost/types.F90
-    source/KKRhost/timing.F90 
-    source/KKRhost/ioinput.f90
-    source/KKRhost/spline_real.f90
-    source/KKRhost/splint_real.f90
-    source/KKRhost/interpolspline.f90 
-    source/KKRhost/gaunt2.f90 
-    source/KKRhost/grule.f90 
-    source/KKRhost/rcstop.f90 
-    source/KKRhost/opt.f90
-    source/KKRhost/test.f90
-    source/KKRhost/cinit.f90 
-    source/KKRhost/intcheb_cell.f90
+    source/common/wunfiles.F90
+    source/common/profiling.f90
+    source/common/mympi.F90
+    source/common/types.F90
+    source/common/timing.F90 
+    source/common/ioinput.f90
+    source/common/spline_real.f90
+    source/common/splint_real.f90
+    source/common/interpolspline.f90 
+    source/common/gaunt2.f90 
+    source/common/grule.f90 
+    source/common/rcstop.f90 
+    source/common/opt.f90
+    source/common/test.f90
+    source/common/cinit.f90 
+    source/common/intcheb_cell.f90
     source/rhoq/gaunt_new.f
     source/rhoq/cspher.f
     source/rhoq/calc_jlk.f90
