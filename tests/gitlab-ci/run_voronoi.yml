@@ -14,7 +14,7 @@ run_voronoi:intel:oldstyle:
     - web
     - master
     - develop
-    - devlop-voronoi
+    - develop-voronoi
 
 run_voronoi:intel:newstyle:
   stage: run_voronoi
@@ -32,4 +32,4 @@ run_voronoi:intel:newstyle:
     - web
     - master
     - develop
-    - devlop-voronoi
+    - develop-voronoi
