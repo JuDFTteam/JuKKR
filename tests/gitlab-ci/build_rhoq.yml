@@ -15,4 +15,4 @@ build_rhoq:intel:
     - web
     - master
     - develop
-    - devlop-rhoq
+    - develop-rhoq

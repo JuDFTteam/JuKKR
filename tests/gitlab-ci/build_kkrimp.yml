@@ -16,7 +16,7 @@ build_kkrimp:intel:hybrid:
     - web
     - master
     - develop
-    - devlop-kkrimp
+    - develop-kkrimp
 
 build_kkrimp:intel:mpi:
   stage: build_kkrimp
@@ -36,4 +36,4 @@ build_kkrimp:intel:mpi:
     - web
     - master
     - develop
-    - devlop-kkrimp
+    - develop-kkrimp

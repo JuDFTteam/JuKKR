@@ -10,4 +10,4 @@ build_pkkprime:compile:
     - web
     - master
     - develop
-    - devlop-pkkprime
+    - develop-pkkprime

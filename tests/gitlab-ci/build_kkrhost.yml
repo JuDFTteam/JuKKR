@@ -16,7 +16,7 @@ build_kkrhost:gnu:debug:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 build_kkrhost:intel:debug:
   stage: build_kkrhost
@@ -30,7 +30,7 @@ build_kkrhost:intel:debug:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 build_kkrhost:intel:openmp_debug:
   stage: build_kkrhost
@@ -44,7 +44,7 @@ build_kkrhost:intel:openmp_debug:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 build_kkrhost:intel:hybrid_debug:
   stage: build_kkrhost
@@ -58,7 +58,7 @@ build_kkrhost:intel:hybrid_debug:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 ## 1.2 production versions ##
 build_kkrhost:intel:hybrid:
@@ -82,4 +82,4 @@ build_kkrhost:intel:hybrid:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost

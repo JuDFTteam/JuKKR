@@ -18,7 +18,7 @@ run_kkrimp_parallel:intel:mpi_1:
     - web
     - master
     - develop
-    - devlop-kkrimp
+    - develop-kkrimp
 
 run_kkrimp_parallel:intel:mpi_8:
   stage: run_kkrimp_parallel
@@ -38,7 +38,7 @@ run_kkrimp_parallel:intel:mpi_8:
     - web
     - master
     - develop
-    - devlop-kkrimp
+    - develop-kkrimp
 
 run_kkrimp_parallel:intel:hybrid_1_1:
   stage: run_kkrimp_parallel
@@ -58,7 +58,7 @@ run_kkrimp_parallel:intel:hybrid_1_1:
     - web
     - master
     - develop
-    - devlop-kkrimp
+    - develop-kkrimp
 
 run_kkrimp_parallel:intel:hybrid_1_8:
   stage: run_kkrimp_parallel
@@ -78,7 +78,7 @@ run_kkrimp_parallel:intel:hybrid_1_8:
     - web
     - master
     - develop
-    - devlop-kkrimp
+    - develop-kkrimp
 
 run_kkrimp_parallel:intel:hybrid_8_1:
   stage: run_kkrimp_parallel
@@ -98,7 +98,7 @@ run_kkrimp_parallel:intel:hybrid_8_1:
     - web
     - master
     - develop
-    - devlop-kkrimp
+    - develop-kkrimp
 
 run_kkrimp_parallel:intel:hybrid_2_4:
   stage: run_kkrimp_parallel
@@ -118,7 +118,7 @@ run_kkrimp_parallel:intel:hybrid_2_4:
     - web
     - master
     - develop
-    - devlop-kkrimp
+    - develop-kkrimp
 
 run_kkrimp_parallel:intel:hybrid_4_2:
   stage: run_kkrimp_parallel
@@ -138,7 +138,7 @@ run_kkrimp_parallel:intel:hybrid_4_2:
     - web
     - master
     - develop
-    - devlop-kkrimp
+    - develop-kkrimp
 
 ###############################################################################
 # now run tests for features of the code (SOC+mpi, SOC+hybrid, Jijs, wf-saving, sratrick)
@@ -161,7 +161,7 @@ run_kkrimp_features:intel:tmatnew-hybrid:
     - web
     - master
     - develop
-    - devlop-kkrimp
+    - develop-kkrimp
 
 run_kkrimp_features:intel:tmatnew-mpi:
   stage: run_kkrimp_features
@@ -181,7 +181,7 @@ run_kkrimp_features:intel:tmatnew-mpi:
     - web
     - master
     - develop
-    - devlop-kkrimp
+    - develop-kkrimp
 
 run_kkrimp_features:intel:tmatnew-nosavewf:
   stage: run_kkrimp_features
@@ -199,7 +199,7 @@ run_kkrimp_features:intel:tmatnew-nosavewf:
     - web
     - master
     - develop
-    - devlop-kkrimp
+    - develop-kkrimp
 
 run_kkrimp_features:intel:tmatnew-nosratrick:
   stage: run_kkrimp_features
@@ -217,7 +217,7 @@ run_kkrimp_features:intel:tmatnew-nosratrick:
     - web
     - master
     - develop
-    - devlop-kkrimp
+    - develop-kkrimp
 
 run_kkrimp_features:intel:tmatnew-Jij:
   stage: run_kkrimp_features
@@ -235,7 +235,7 @@ run_kkrimp_features:intel:tmatnew-Jij:
     - web
     - master
     - develop
-    - devlop-kkrimp
+    - develop-kkrimp
 
 run_kkrimp_features:intel:tmatnew-Jij_nosavewf:
   stage: run_kkrimp_features
@@ -253,7 +253,7 @@ run_kkrimp_features:intel:tmatnew-Jij_nosavewf:
     - web
     - master
     - develop
-    - devlop-kkrimp
+    - develop-kkrimp
 
 run_kkrimp_features:intel:tmatnew-Jij_nosratrick:
   stage: run_kkrimp_features
@@ -271,4 +271,4 @@ run_kkrimp_features:intel:tmatnew-Jij_nosratrick:
     - web
     - master
     - develop
-    - devlop-kkrimp
+    - develop-kkrimp

@@ -18,7 +18,7 @@ verify_kkrhost:intel:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 verify_kkrhost:intel:aiida:
   image: iffregistry.fz-juelich.de/docker-images/aiida-kkr:latest
