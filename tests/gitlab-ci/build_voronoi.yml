@@ -16,4 +16,4 @@ build_voronoi:intel:
     - web
     - master
     - develop
-    - devlop-voronoi
+    - develop-voronoi
