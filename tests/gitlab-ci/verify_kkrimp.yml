@@ -17,4 +17,4 @@ verify_kkrimp:intel:
     - web
     - master
     - develop
-    - devlop-kkrimp
+    - develop-kkrimp
