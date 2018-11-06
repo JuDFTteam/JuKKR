@@ -21,7 +21,7 @@ run_kkrhost:intel:serial_1:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:serial_2:
   stage: run_kkrhost_serial
@@ -39,7 +39,7 @@ run_kkrhost:intel:serial_2:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:serial_3:
   stage: run_kkrhost_serial
@@ -57,7 +57,7 @@ run_kkrhost:intel:serial_3:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 ## 2.2 comparison serial/parallel run ##
 run_kkrhost:intel:parallel_2:
@@ -76,7 +76,7 @@ run_kkrhost:intel:parallel_2:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:MPIatom_7:
   stage: run_kkrhost_parallel
@@ -94,7 +94,7 @@ run_kkrhost:intel:MPIatom_7:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
  
 run_kkrhost:intel:MPIenerg_8:
   stage: run_kkrhost_parallel
@@ -112,7 +112,7 @@ run_kkrhost:intel:MPIenerg_8:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:multi_node_9:
   image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-control:latest
@@ -140,7 +140,7 @@ run_kkrhost:intel:multi_node_9:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
  
 # parallel SOC mode
 run_kkrhost:intel:MPIatom_SOC_7_1:
@@ -159,7 +159,7 @@ run_kkrhost:intel:MPIatom_SOC_7_1:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
  
 run_kkrhost:intel:MPIenerg_SOC_8_1:
   stage: run_kkrhost_parallel
@@ -177,7 +177,7 @@ run_kkrhost:intel:MPIenerg_SOC_8_1:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 
 ## 2.3 special features beyond selfconsistency ##
@@ -198,7 +198,7 @@ run_kkrhost:intel:Jijs_4:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:kkrflex_5:
   stage: run_kkrhost_features
@@ -217,7 +217,7 @@ run_kkrhost:intel:kkrflex_5:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:FERMIOUT_6:
   stage: run_kkrhost_features
@@ -236,7 +236,7 @@ run_kkrhost:intel:FERMIOUT_6:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
  
 run_kkrhost:intel:OPERATOR_10:
   stage: run_kkrhost_features
@@ -253,7 +253,7 @@ run_kkrhost:intel:OPERATOR_10:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:DTM_GMATLL_11:
   stage: run_kkrhost_features
@@ -270,7 +270,7 @@ run_kkrhost:intel:DTM_GMATLL_11:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:qdos_12:
   stage: run_kkrhost_features
@@ -288,7 +288,7 @@ run_kkrhost:intel:qdos_12:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 #run_kkrhost:intel:rhoq_13:
 #  stage: run_kkrhost_features
@@ -316,7 +316,7 @@ run_kkrhost:intel:ASA_14:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:CPA_15:
   stage: run_kkrhost_features
@@ -334,7 +334,7 @@ run_kkrhost:intel:CPA_15:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:Dirac_16:
   stage: run_kkrhost_features
@@ -352,7 +352,7 @@ run_kkrhost:intel:Dirac_16:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:lambda_xc_17:
   stage: run_kkrhost_features
@@ -370,7 +370,7 @@ run_kkrhost:intel:lambda_xc_17:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 #no working test case yet
 #run_kkrhost:intel:noco_18:
@@ -399,7 +399,7 @@ run_kkrhost:intel:decimate_19:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:godfrin_20:
   stage: run_kkrhost_features
@@ -416,7 +416,7 @@ run_kkrhost:intel:godfrin_20:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:XCs_21:
   stage: run_kkrhost_features
@@ -433,7 +433,7 @@ run_kkrhost:intel:XCs_21:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:LDAU_22:
   stage: run_kkrhost_features
@@ -450,7 +450,7 @@ run_kkrhost:intel:LDAU_22:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:DOS_23:
   stage: run_kkrhost_features
@@ -467,7 +467,7 @@ run_kkrhost:intel:DOS_23:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 ## 2.4 integration with aiida ##
 run_kkrhost:intel:aiida-kkr:
@@ -536,7 +536,7 @@ run_kkrhost:intel:Au_bulk_SOC_1_1:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:Fe_slab_SOC_2_1:
   stage: run_kkrhost_features_SOC
@@ -554,7 +554,7 @@ run_kkrhost:intel:Fe_slab_SOC_2_1:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:Si_LLY_SOC_3_1:
   stage: run_kkrhost_features_SOC
@@ -572,7 +572,7 @@ run_kkrhost:intel:Si_LLY_SOC_3_1:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:NOSOC_3_2:
   stage: run_kkrhost_features_SOC
@@ -589,7 +589,7 @@ run_kkrhost:intel:NOSOC_3_2:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:Jijs_SOC_4_1:
   stage: run_kkrhost_features_SOC
@@ -607,7 +607,7 @@ run_kkrhost:intel:Jijs_SOC_4_1:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:kkrflex_SOC_5_1:
   stage: run_kkrhost_features_SOC
@@ -625,7 +625,7 @@ run_kkrhost:intel:kkrflex_SOC_5_1:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:FERMIOUT_SOC_6_1:
   stage: run_kkrhost_features_SOC
@@ -643,7 +643,7 @@ run_kkrhost:intel:FERMIOUT_SOC_6_1:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:qdos_SOC_12_1:
   stage: run_kkrhost_features_SOC
@@ -661,7 +661,7 @@ run_kkrhost:intel:qdos_SOC_12_1:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:ASA_SOC_14_1:
   stage: run_kkrhost_features_SOC
@@ -679,7 +679,7 @@ run_kkrhost:intel:ASA_SOC_14_1:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:CPA_SOC_15_1:
   stage: run_kkrhost_features_SOC
@@ -697,7 +697,7 @@ run_kkrhost:intel:CPA_SOC_15_1:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
 
 run_kkrhost:intel:decimate_SOC_19_1:
   stage: run_kkrhost_features_SOC
@@ -714,4 +714,4 @@ run_kkrhost:intel:decimate_SOC_19_1:
     - web
     - master
     - develop
-    - devlop-kkrhost
+    - develop-kkrhost
