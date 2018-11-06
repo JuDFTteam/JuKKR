@@ -3,15 +3,6 @@
 !> Author:
 !> For details see notes on LDA+U implementation
 !------------------------------------------------------------------------------------
-!> @note Notes on the code
-!> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
-!------------------------------------------------------------------------------------
       MODULE MOD_AVERAGEWLDAU
 
       CONTAINS
@@ -23,15 +14,6 @@
 !> Deprecated: False 
 !> It computes the average of the diagonal elements of the LDA+U potential for each spin
 !> For details see notes on LDA+U implementation
-!-------------------------------------------------------------------------------
-!> @note Notes on the code
-!> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
 !-------------------------------------------------------------------------------
       SUBROUTINE AVERAGEWLDAU(NATOM,NSPIN,LDAU)
       USE nrtype

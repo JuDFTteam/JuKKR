@@ -6,15 +6,6 @@
 !> Deprecated: False ! This needs to be set to True for deprecated subroutines
 !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
 !-------------------------------------------------------------------------------
-!> @note Notes on the code
-!> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
-!-------------------------------------------------------------------------------
 
 
 

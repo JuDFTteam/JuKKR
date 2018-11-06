@@ -9,15 +9,6 @@ C*==initldau.f    processed by SPAG 6.05Rc at 15:27 on  7 Mar 2003
 !> Deprecated: False ! This needs to be set to True for deprecated subroutines
 !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
 !-------------------------------------------------------------------------------
-!> @note  NOTES 
-!> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
-!-------------------------------------------------------------------------------
 
 
 

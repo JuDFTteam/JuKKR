@@ -3,15 +3,6 @@
 !> Author: 
 !> 
 !------------------------------------------------------------------------------------
-!> @note Notes on the code
-!> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
-!------------------------------------------------------------------------------------
 MODULE nrtype
   
   INTEGER, PARAMETER :: WLENGTH = 1      ! For I/O in direct access files; =1 for ifort, =4 for gfort
