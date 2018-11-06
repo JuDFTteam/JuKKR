@@ -6,8 +6,12 @@ add_executable(
     source/common/rotatespinframe.f90
     source/common/DataTypes.f90
     source/common/constants.f90
-    source/voronoi/test.f
-    source/KKRimp/
+    source/common/mympi.F90
+    source/common/profiling.f90
+    source/common/types.F90
+    source/common/wunfiles.F90
+    source/common/test.f90
+    source/common/opt.f90
     source/KKRimp/nrtype.f90
     source/KKRimp/type_gmatbulk.f90
     source/KKRimp/type_tmat.f90
