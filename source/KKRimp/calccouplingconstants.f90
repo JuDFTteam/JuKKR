@@ -1,5 +1,19 @@
+!------------------------------------------------------------------------------------
+!> Summary: Module handling the relativistic exchange interactions
+!> Author:
+!> For details see Ebert and Mankovsky, PRB 79, 045209 (2009) 
+!------------------------------------------------------------------------------------
 module mod_calccouplingconstants
+
 contains 
+
+!-------------------------------------------------------------------------------
+!> Summary: Relativistic exchange interactions
+!> Author:
+!> Category: physical-observables, input-output, KKRimp
+!> Deprecated: False 
+!> For details see Ebert and Mankovsky, PRB 79, 045209 (2009) 
+!-------------------------------------------------------------------------------
 subroutine calcJijmatrix(gmat,tmat,natom,wez,Jijmatrix,Aimatrix)
 use type_tmat
 use type_gmat
@@ -146,10 +160,18 @@ do iatom=1,natom
 
 end do !iatom
 
-end subroutine !calcJijmatrix
+end subroutine calcJijmatrix
 
 
-
+!-------------------------------------------------------------------------------
+!> Summary: Matrix elements of Bxc for the exchange interactions
+!> Author:
+!> Category: physical-observables, KKRimp
+!> Deprecated: False 
+!> The matrix elements of Bxc with Pauli matrices between two regular scattering wavefunctions are computed
+!> This is then transformed from the local frame to the global frame
+!> For details see Ebert and Mankovsky, PRB 79, 045209 (2009) 
+!-------------------------------------------------------------------------------
 subroutine calccouplingdeltat(wavefunction,deltaTmat,cellnew,gauntcoeff,theta,phi,lmmax,lmsize,lmax,lmpot,nrmax)
 use type_wavefunction
 use type_cellnew
@@ -270,10 +292,16 @@ end do !kspin
 deltaTmat=RBpotR_integrated
 
 ! stop
-end subroutine !calcBpotspin
+end subroutine calccouplingdeltat
 
 
-
+!-------------------------------------------------------------------------------
+!> Summary: Pauli matrices transformed from the global to the local frame
+!> Author:
+!> Category: special-functions, physical-observables, KKRimp
+!> Deprecated: False 
+!> 
+!-------------------------------------------------------------------------------
 subroutine calclambda(lambda,theta,phi)
 use mod_rotatespinframe
 implicit none
@@ -290,6 +318,14 @@ do ispin=1,3
 end do !ispin
 end subroutine calclambda
 
+
+!-------------------------------------------------------------------------------
+!> Summary: Initialization of Pauli matrices
+!> Author:
+!> Category: initialization, special-functions, physical-observables, KKRimp
+!> Deprecated: False 
+!> The assignment of the spin indices is provided in two ways
+!-------------------------------------------------------------------------------
 subroutine calc_sigma(sigma)
 implicit none
 double complex :: sigma(2,2,3)
@@ -353,6 +389,13 @@ end if
 end subroutine calc_sigma
 
 
+!-------------------------------------------------------------------------------
+!> Summary: Output of exchange interactions to files
+!> Author:
+!> Category: input-output, physical-observables, KKRimp
+!> Deprecated: False 
+!> 
+!-------------------------------------------------------------------------------
 subroutine calccouplingconstants_writeoutJij(natom,Jijmatrix,Aimatrix,density,ITSCF)
 use type_density
 use  rotaterealspace, only: rotaterealspace_matrix2
