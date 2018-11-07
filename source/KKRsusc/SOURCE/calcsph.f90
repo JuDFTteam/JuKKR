@@ -1,7 +1,17 @@
 module mod_calcsph
-
+!-------------------------------------------------------------------------------
+!> Summary: Calculate wavefunctions for spherical potentials 
+!> Author:
+!> Category: KKRimp, single-site, special-functions 
+!>           
+!-------------------------------------------------------------------------------
 contains
-
+!-------------------------------------------------------------------------------
+!> Summary: Calculate wavefunctions for spherical potentials 
+!> Author:
+!> Category: KKRimp, single-site, special-functions 
+!>           
+!-------------------------------------------------------------------------------
 subroutine calcsph(nsra,cellnew,zatom,use_fullgmat,nspin,ispin,lmax,eryd, &
                    jlk_index,hlk,jlk,hlk2,jlk2,GMATPREFACTOR,gauntcoeff,tmat,idotime )
 !interface
