@@ -1,9 +1,17 @@
 module cellproperties
-
+!-------------------------------------------------------------------------------
+!> Summary: Reads the 'kkrflex_hoststructure' file 
+!> Author:
+!> Category: KKRimp, input-output
+!>           
+!-------------------------------------------------------------------------------
 contains
-
-
-
+!-------------------------------------------------------------------------------
+!> Summary: Reads the 'kkrflex_hoststructure' file 
+!> Author:
+!> Category: KKRimp, input-output
+!>           
+!-------------------------------------------------------------------------------
 subroutine cellproperties_readhoststrucuture
 use mod_version_info
 implicit none

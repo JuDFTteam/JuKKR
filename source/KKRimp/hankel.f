@@ -1,3 +1,19 @@
+!-------------------------------------------------------------------------------
+!> Summary:  This subroutine uses the explicit formulas for the hankel
+!>           functions. for higher l-values these formulas may lead to
+!>           loss of significant figures. This subroutine should be used
+!>           only for core states.
+!> Author: Who wrote this subroutine
+!> Category: Special-functions, kkrimp
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+!-------------------------------------------------------------------------------
+!> @note This subroutine should be used only for core states.
+!> @endnote
+!-------------------------------------------------------------------------------
+
+
+
       SUBROUTINE HANKEL(H,L,ARG)
 c  this subroutine uses the explicit formulas for the hankel
 c  functions. for higher l-values these formulas may lead to

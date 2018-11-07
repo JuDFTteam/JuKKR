@@ -16,15 +16,6 @@
    !> Gaunt2 have to be called first to set up the common block    
    !> GAUNTC.                                                      
    !-------------------------------------------------------------------------------
-   !> @note Notes on the code
-   !> @endnote
-   !> @todo things that must be checked
-   !> @endtodo
-   !> @warning Important precautions
-   !> @endwarning
-   !> @bug If nasty things are found
-   !> @endbug
-   !-------------------------------------------------------------------------------
       SUBROUTINE JMTRX(X1,X2,X3,E,LMAX,JMAT,LCALL)
       use mod_gauntharmonics, only: gauntcoeff
       use mod_ymy

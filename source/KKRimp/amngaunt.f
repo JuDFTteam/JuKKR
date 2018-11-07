@@ -1,10 +1,23 @@
+!------------------------------------------------------------------------------------
+!> Summary: Module handling the Gaunt coefficients for the structure constants used in the intersite potential
+!> Author:
+!> For details see vinters2010
+!------------------------------------------------------------------------------------
       MODULE MOD_AMNGAUNT
+
       CONTAINS
+
+!-------------------------------------------------------------------------------
+!> Summary: Gaunt coefficients for the structure constants used in the intersite potential
+!> Author:
+!> Category: electrostatics, potential, special-functions, KKRimp
+!> Deprecated: False 
+!> For details see vinters2010
+!> This sub calculates the gaunt coefs in the ordering neaded
+!> for calculating the electrostatic AMAT^(nn')_(LL') 
+!>                                              17.09.2001
+!-------------------------------------------------------------------------------
       SUBROUTINE AMNGAUNT(LMAX,CLEB,ICLEB,IEND,W,YR,n,lassld,ncleb,lm3d)
-c *************************************************************
-c * This sub calculates the gaunt coefs in the ordering neaded
-c * for calculating the electrostatic AMAT^(nn')_(LL') 
-c *                                             17.09.2001
       implicit none
 !       include 'gaunt.param'
 !       include 'parameters.file'

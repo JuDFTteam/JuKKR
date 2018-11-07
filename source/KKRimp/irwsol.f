@@ -1,9 +1,15 @@
+!------------------------------------------------------------------------------------
+!> Summary:  Calculates the irregular solution of the schroedinger equation 
+!> Author: B. Drittler Nov. 1989
+!> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+!------------------------------------------------------------------------------------
       MODULE mod_IRWSOL
+
       CONTAINS
    !-------------------------------------------------------------------------------
    !> Summary: Calculates the irregular solution of the Schroedinger equation
    !> Author: B. Drittler Nov 1989
-   !> Category: KKRimp, single-site
+   !> Category: Wavefunction, physical-observables, kkrimp, single-site
    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
    !> 
    !>  calculates the irregular solution of the schroedinger equation or
@@ -16,15 +22,6 @@
    !>  the differential equation is solved with a 5 point adams - bashforth
    !>    and adams - moulton predictor corrector method integrating
    !>    inwards and extended for potentials with kinks
-   !-------------------------------------------------------------------------------
-   !> @note Notes on the code
-   !> @endnote
-   !> @todo things that must be checked
-   !> @endtodo
-   !> @warning Important precautions
-   !> @endwarning
-   !> @bug If nasty things are found
-   !> @endbug
    !-------------------------------------------------------------------------------
       SUBROUTINE IRWSOL(EK,FZ,HAMF,MASS,PZ,QZ,SZ,DROR,S,IPAN,IRCUT,
      +                    IRMD,IPAND,LMAXATOM)

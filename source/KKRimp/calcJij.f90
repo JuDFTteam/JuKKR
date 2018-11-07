@@ -1,3 +1,10 @@
+!-------------------------------------------------------------------------------
+!> Summary: Computes the exchange interactions using the non-relativistic collinear formula
+!> Author:
+!> Category: physical-observables, potential, KKRimp
+!> Deprecated: False 
+!> For details see the LKAG paper; UNFINISHED!!!
+!-------------------------------------------------------------------------------
 subroutine calcJij(Gmat,tmatspinup,tmatspindown)
 
 !
@@ -58,7 +65,13 @@ subroutine calcJij(Gmat,tmatspinup,tmatspindown)
 END SUBROUTINE CALCJIJ
 
 
-
+!-------------------------------------------------------------------------------
+!> Summary: Level-3 BLAS, matrix multiplication
+!> Author:
+!> Category: KKRimp
+!> Deprecated: True 
+!> Made obsolete by matmul and zgemm
+!-------------------------------------------------------------------------------
       SUBROUTINE CMATMUL(N,M,A,B,C)
 C   ********************************************************************
 C   *                                                                  *

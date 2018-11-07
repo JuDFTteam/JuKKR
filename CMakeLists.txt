@@ -27,6 +27,7 @@ option(COMPILE_KKRIMP "Compile KKRimp" ON)
 option(COMPILE_KKRSUSC "Compile KKRsusc" OFF)
 option(COMPILE_PKKPRIME "Compile PKKprime" ON)
 option(COMPILE_VORONOI "Compile voronoi" ON)
+option(COMPILE_RHOQ "Compile rhoq" ON)
 
 
 if(COMPILE_KKRHOST)
@@ -47,5 +48,9 @@ endif()
 
 if(COMPILE_VORONOI)
    include( ./cmake/source_list_voronoi.txt )
+endif()
+
+if(COMPILE_RHOQ)
+   include( ./cmake/source_list_rhoq.txt )
 endif()
 

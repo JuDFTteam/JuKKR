@@ -1,6 +1,20 @@
+!------------------------------------------------------------------------------------
+!> Summary: Module handling the averaged LDA+U potential
+!> Author:
+!> For details see notes on LDA+U implementation
+!------------------------------------------------------------------------------------
       MODULE MOD_AVERAGEWLDAU
+
       CONTAINS
 
+!-------------------------------------------------------------------------------
+!> Summary: Averaged LDA+U potential
+!> Author:
+!> Category: potential, lda+u, KKRimp
+!> Deprecated: False 
+!> It computes the average of the diagonal elements of the LDA+U potential for each spin
+!> For details see notes on LDA+U implementation
+!-------------------------------------------------------------------------------
       SUBROUTINE AVERAGEWLDAU(NATOM,NSPIN,LDAU)
       USE nrtype
       USE type_ldau

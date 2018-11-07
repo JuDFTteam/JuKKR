@@ -3,7 +3,7 @@ build_voronoi:intel:
   script:
     - cd prog && make 
     - mkdir build_voronoi && cd build_voronoi
-    - FC=$(which mpiifort) cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DENABLE_COV=ON -DCOMPILE_KKRHOST=OFF -DCOMPILE_KKRIMP=OFF -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=ON ..
+    - FC=$(which mpiifort) cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DENABLE_COV=ON -DCOMPILE_KKRHOST=OFF -DCOMPILE_KKRIMP=OFF -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=ON -DCOMPILE_RHOQ=OFF ..
     - make -j4
     - cp voronoi.exe ../tests/voronoi.exe
   artifacts:
@@ -16,4 +16,4 @@ build_voronoi:intel:
     - web
     - master
     - develop
-    - devlop-voronoi
+    - develop-voronoi

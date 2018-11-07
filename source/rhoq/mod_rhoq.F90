@@ -215,6 +215,7 @@ end subroutine read_scoef_rhoq
 
 subroutine read_input_rhoq(t_rhoq, uio)
   ! read input such as proble layer mu_0, and parameters such as lmmaxso etc.
+  use mod_ioinput, only: ioinput
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
   character*256, intent(in) :: uio ! unit in which to find inputcard
@@ -813,6 +814,7 @@ subroutine calc_Q_mu_rhoq(lmax, ntotd, npan_tot, &
             & irmdnew, trq_of_r, ncleb_max )
   ! calculate prefactor needed in rhoq calculation:
   ! Q^mu_Lambda,Lamabda' = Int d^3r Tr[ R^mu_Lmabda(\vec{r}) R^left,mu_Lmabda'(\vec{r}) ] where R^left denotes the left solution
+  use mod_gaunt2, only: gaunt2
   implicit none
   integer, intent(in) :: lmax, ntotd, npan_tot
   integer, intent(inout) :: nsra, lmmaxso, irmdnew ! left/right solutions (wave functions)
@@ -1148,6 +1150,8 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
 #else
   use mod_mympi, only: master, myrank, nranks
 #endif
+  use mod_intcheb_cell, only: intcheb_cell
+  use mod_gaunt2, only: gaunt2
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
   integer, intent(in) :: lmmaxso, Nkp, irmdnew, lmax, ncleb_max

@@ -1,6 +1,37 @@
+!------------------------------------------------------------------------------------
+!> Summary: Interpolation of the potential using cubic spline from an old mesh to a new mesh 
+!> Author: People who wrote it
+!> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+!>
+!> One can write Latex comments like this \(i\hbar\frac{\partial \psi}{\partial t}=-\mathcal{H}\psi\)
+!> or add labeled equations using the standard latex way
+!> \begin{equation}
+!> \mathbf{A} \mathbf{v}= \eta\mathbf{v}
+!> \end{equation}
+!> **FORd** also accepts markdown style so you can _write with style_ 
+!> 
+!> **IMPORTANT**
+!> The JM-KKR follows the coding conventions noted in this example, one that is
+!> not obvious is that **each level of indentation consists of two spaces**. Please keep this:
+!> _do it for the children_.
+!> So please keep the conventions.
+! These are special boxes for ford, notice that this comment does not appear in the html file.
+! These boxes contain important information and should be added when necessary. ALWAYS remember to close the box
+! BEFORE oppening a new one or they will be nested.
+!------------------------------------------------------------------------------------
+
       module mod_interpolspline
 
       contains
+
+!-------------------------------------------------------------------------------
+!> Summary: Cubic-spline interpolation of the potential using Spline and Splint subroutines
+!> Author: Who wrote this subroutine
+!> Category: Interpolation, Numerical tools, potential, old-mesh, new-mesh
+!> Deprecated: TRUE ! This needs to be set to True for deprecated subroutines
+!> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+!-------------------------------------------------------------------------------
+
 
       subroutine interpolspline(rmesh,rmeshnew,vpot,vpotnew,
      +                          nrmax,nrmaxnew)
@@ -64,6 +95,29 @@
 
 
 c***********************************************************************
+
+!-------------------------------------------------------------------------------
+!> Summary:  Spline subroutine is take from "Numerical Recipes in Fortran 77" and is used for interpolation
+!> Given arrays x(1:n) and  y(1:n) containing a tabulated function, 
+!> i.e., y i = f(xi), with x1<x2<...<xN , and given values yp1 and ypn 
+!> for the 1rst derivative of the interpolating function at points 
+!> 1 and n, respectively, this routine returns an array y2(1:n) of 
+!> length n which contains the second derivatives of the interpolating 
+!> function at the tabulated points xi. 
+!> If yp1 and/or ypn are equal to 1.e30 or larger, the routine is
+!> signaled to set the corresponding boundary condition for a natural
+!> spline, with zero second derivative on that boundary. 
+!> Parameter: NMAX is the largest anticipated value of n. 
+!> Taken from "Numerical Recipes in Fortran 77", W.H.Press et al.
+!>
+!> Author: Who wrote this subroutine
+!> Category: Numerical tools, Interpolation
+!> Deprecated: TRUE ! This needs to be set to True for deprecated subroutines
+!> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+!-------------------------------------------------------------------------------
+
+
+
       SUBROUTINE spline(NMAX,x,y,n,yp1,ypn,y2) 
       implicit none
       INTEGER n,NMAX 
@@ -123,8 +177,22 @@ c This is the backsubstitution loop of the tridiagonal algorithm.
 
 
 
-
 c***********************************************************************
+
+!-------------------------------------------------------------------------------
+!> Summary:  Splint is taken from the "Numerical Recipes in Fortran 77" and is used for interpolation
+!> Given the arrays xa(1:n) and ya(1:n) of length n, which tabulate a
+!> function (with the xai's in order), and given the array y2a(1:n), which
+!> is the output from spline above, and given a value of x, this routine
+!> returns a cubic-spline interpolated value y and the derivative yderiv.
+!> Taken from "Numerical Recipes in Fortran 77", W.H.Press et al.
+!> Author: Who wrote this subroutine
+!> Category: Numerical tools, Interpolation
+!> Deprecated: TRUE ! This needs to be set to True for deprecated subroutines
+!> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+!-------------------------------------------------------------------------------
+
+
       SUBROUTINE splint(xa,ya,y2a,n,x,y,yderiv)
       implicit none
       INTEGER n

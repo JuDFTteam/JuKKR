@@ -1,7 +1,19 @@
 module mod_change_nrmin
-
+!-------------------------------------------------------------------------------
+!> Summary: Test routine to change the 'nrmin' (presumably the
+!> minimal number of radial grid points)
+!> Author:
+!> Category: KKRimp, radial-grid
+!>           
+!-------------------------------------------------------------------------------
 contains 
-
+!-------------------------------------------------------------------------------
+!> Summary: Test routine to change the 'nrmin' (presumably the
+!> minimal number of radial grid points)
+!> Author:
+!> Category: KKRimp, radial-grid
+!>           
+!-------------------------------------------------------------------------------
 subroutine change_nrmin(natom,cell)
 use type_cell
 implicit none

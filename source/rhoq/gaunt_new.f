@@ -42,6 +42,7 @@ C *  NSPIND = 1                                                       *
 C *                                                                   *
 C *********************************************************************
 C
+      use mod_rcstop, only: rcstop
       IMPLICIT NONE
 C     ..
       DOUBLE COMPLEX CI
@@ -66,9 +67,6 @@ C     .. Local Scalars ..
 C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ABS,DBLE,MOD,REAL,SIGN
-C     ..
-C     .. External Subroutines ..
-      EXTERNAL RCSTOP
 C     ..
 
 !       write(*,*) 'guant',LMAX, LMAX2, lpot

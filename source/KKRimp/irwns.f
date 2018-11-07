@@ -1,5 +1,77 @@
+!------------------------------------------------------------------------------------
+!> Summary: determines the irregular non spherical wavefunctions in the n-th.
+!>          born approximation ( n given by input parameter icst )
+!> Author: 
+!>
+!>      using the wave functions pz and qz ( regular and irregular
+!>       solution ) of the spherically averaged potential , the ir-
+!>       regular wavefunction qns is determined by
+!>
+!>          qns(ir,lm1,lm2) = cr(ir,lm1,lm2)*pz(ir,l1)
+!>
+!>                                   + dr(ir,lm1,lm2)*qz(ir,l1)
+!>
+!>      the matrices cr and dr are determined by integral equations
+!>        containing qns and only the non spherical contributions of
+!>        the potential , stored in vinspll . these integral equations
+!>        are solved iteratively with born approximation up to given n.
+!>
+!>     the original way of writing the cr and dr matrices in the equa-
+!>        tion above caused numerical troubles . therefore here are used
+!>        rescaled cr and dr matrices (compare subroutine wftsca):
+!>
+!>              ~
+!>              cr(ir,lm1,lm2) = sqrt(e)**(l1+l2)
+!>                             * cr(ir,lm1,lm2)/((2*l1-1)!!*(2*l2-1)!!)
+!>
+!>              ~
+!>              dr(ir,lm1,lm2) = sqrt(e)**(l2-l1)
+!>                             * dr(ir,lm1,lm2)*((2*l1-1)!!/(2*l2-1)!!)
+!>
+!>     attention :  the sign of the dr matrix is changed to reduce the
+!>     ===========  number of floating point operations
+!>
+!>     modified for the use of shape functions
+!>
+!>                              (see notes by b.drittler)
+!>
+!>                                b.drittler   mar.  1989
+!>-----------------------------------------------------------------------
+!>     modified by R. Zeller      Aug. 1994
+!> 
+!>
+!> One can write Latex comments like this \(i\hbar\frac{\partial \psi}{\partial t}=-\mathcal{H}\psi\)
+!> or add labeled equations using the standard latex way
+!> \begin{equation}
+!> \mathbf{A} \mathbf{v}= \eta\mathbf{v}
+!> \end{equation}
+!> **FORd** also accepts markdown style so you can _write with style_ 
+!> 
+!> **IMPORTANT**
+!> The JM-KKR follows the coding conventions noted in this example, one that is
+!> not obvious is that **each level of indentation consists of two spaces**. Please keep this:
+!> _do it for the children_.
+!> So please keep the conventions.
+! These are special boxes for ford, notice that this comment does not appear in the html file.
+! These boxes contain important information and should be added when necessary. ALWAYS remember to close the box
+! BEFORE oppening a new one or they will be nested.
+!------------------------------------------------------------------------------------
+
+
+
+
       MODULE MOD_IRWNS
       CONTAINS
+!-------------------------------------------------------------------------------
+!> Summary: Determines the irregular non spherical wavefunctions in the n-th.
+!>          born approximation
+!> Author: 
+!> Category: Wavefunction, physical-observables, kkrimp
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+!-------------------------------------------------------------------------------
+
+
       SUBROUTINE IRWNS(CR,DR,EFAC,QNS,VNSPLL,ICST,IPAN,IRCUT,NSRA,
      +                   PZLM,QZLM,PZEKDR,QZEKDR,CDER,CMAT,DDER,DMAT,
      +                   IRMIND,IRMD,IPAND,LMMAXD)

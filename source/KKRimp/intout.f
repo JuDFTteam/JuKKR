@@ -1,3 +1,11 @@
+!-------------------------------------------------------------------------------
+!> Summary: This subroutine is use for the calculation of the core electron charge density 
+!> Author: Who wrote this subroutine
+!> Category: core electron, kkrimp
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+!-------------------------------------------------------------------------------
+
       SUBROUTINE INTOUT(G,F,V,E,L,NNE,K2,DG,A,B,Z,NSRA)
 
 C     .. Scalar Arguments ..

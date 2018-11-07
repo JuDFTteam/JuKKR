@@ -2,6 +2,15 @@
 
       CONTAINS
 
+!-------------------------------------------------------------------------------
+!> Summary: This subroutine does the interpolation
+!> Author: Who wrote this subroutine
+!> Category: interpolation, potential, kkrimp
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+!-------------------------------------------------------------------------------
+
+
       SUBROUTINE INTERPOLPOT(R0,R1,V0,V1,N0,N1,NLOC)
 c  ******************************************************************
 c  *
@@ -75,6 +84,13 @@ c               write(6,*) i,r1(i),v1(i)
         V1(I) = V1(I)*FACTOR
    50 CONTINUE
       END SUBROUTINE
+!-------------------------------------------------------------------------------
+!> Summary: This subroutine is used to fit a polynomial to a set of data 
+!> Author: Who wrote this subroutine
+!> Category: interpolation, potential
+!> Deprecated: False ! This needs to be set to True for deprecated subroutines
+!> A More detailed explanation with the math, concepts, etc necessary to understand the routine
+!-------------------------------------------------------------------------------
 
 
       SUBROUTINE INTERPOLPOT_LEASQR(R,V,N,NORDER,C)

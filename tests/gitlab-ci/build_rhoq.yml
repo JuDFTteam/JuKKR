@@ -1,0 +1,18 @@
+build_rhoq:intel:
+  stage: build_rhoq
+  script:
+    - mkdir build_rhoq && cd build_rhoq
+    - FC=$(which mpiifort) cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DENABLE_COV=ON -DCOMPILE_KKRHOST=OFF -DCOMPILE_KKRIMP=OFF -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF -DCOMPILE_RHOQ=ON ..
+    - make -j4
+    - cp rhoq.x ../tests/rhoq.x
+  artifacts:
+    paths:
+      - tests/rhoq.x
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - develop-rhoq

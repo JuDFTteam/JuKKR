@@ -1,7 +1,20 @@
+!------------------------------------------------------------------------------------
+!> Summary: Module handling the calculation of the forces
+!> Author:
+!> 
+!------------------------------------------------------------------------------------
 module mod_calcforce
-      DOUBLE PRECISION,allocatable :: FLM(:,:),FLMC(:,:)
+
+DOUBLE PRECISION,allocatable :: FLM(:,:),FLMC(:,:)
+
 contains
 
+!-------------------------------------------------------------------------------
+!> Summary: Forces
+!> Author:
+!> Category: physical-observables, KKRimp
+!> Deprecated: False 
+!-------------------------------------------------------------------------------
 subroutine calcforce(mode,cmom,cmom_interst,lmaxatom,lmaxd,nspin,natom,density,VPOT_OUT, &
                      cell,ins, zatom,nrmaxd,alat)
 use type_density
@@ -55,6 +68,6 @@ else
   stop '[calcforce] mode not known'
 end if
 
-end subroutine
+end subroutine calcforce
 
 end module mod_calcforce
