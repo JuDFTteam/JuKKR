@@ -67,7 +67,7 @@ module mod_main0
   !integers
   public :: kte, kws, kxc, igf, icc, ins, irm, ipe, ipf, ipfe, kcor, kefg, khyp, kpre, nprinc, nsra, lpot, imix, iend, icst, &
     naez, nemb, lmax, ncls, nref, npol, npnt1, npnt2, npnt3, lmmax, nvirt, lmpot, kvmad, itscf, ncheb, nineq, natyp, ifile, &
-    kvrel, nspin, nleft, nright, invmod, khfeld, itdbry, insref, kshape, ielast, ishift, kfrozn, nsymat, nqcalc, kforce, n1semi, &
+    kvrel, nspin, nleft, nright, invmod, khfeld, itdbry, insref, kshape, ielast, ishift, ivshift, kfrozn, nsymat, nqcalc, kforce, n1semi, &
     n2semi, n3semi, nlayer, nlbasis, nrbasis, intervx, intervy, intervz, maxmesh, npan_eq, npan_log, npolsemi, scfsteps, natomimp, &
     iesemicore, idosemicore
   !real(kind=dp)
@@ -84,7 +84,7 @@ module mod_main0
     inipol, ixipol, refpot, ntcell, iqcalc, iofgij, jofgij, atomimp, ijtabsh, ijtabsym, npan_tot, ijtabcalc, npan_eq_at, npan_log_at, &
     ijtabcalc_i, ish, jsh, ilm_map, kfg, atom, ezoa, lmsp, lcore, icleb, ircut, llmsp, lmsp1, kaoez, ifunm, ifunm1, ititle, icheck, &
     ipan_intervall, jend, kmrot, ncpa, itcpamax, noq, iqat, icpa, hostimp, zrel, jwsrel, irshift, nrrel, ntldau, idoldau, itrunldau, &
-    kreadldau, lopt, itldau, lly, ivshift, irrel
+    kreadldau, lopt, itldau, lly, irrel
   !real
   public :: vbc, zperight, zperleft, recbv, bravais, rsymat, a, b, wg, gsh, zat, rmt, rws, vref, vref_temp, mtfac, rmtnew, rmtref, &
     rmtref_temp, rmtrefat, fpradius, socscale, rmesh, s, rr, drdi, dror, cleb, visp, cscl, rnew, ratom, ecore, tleft, tright, socscl, &
@@ -149,7 +149,7 @@ module mod_main0
   integer :: insref = 0            !! INS for reference pot. (usual 0)
   integer :: kshape = 2            !! Exact treatment of WS cell
   integer :: ielast = 0            !! number of energy points in complex energy contour
-  integer :: ishift = 0
+  integer :: ishift = 0            !! Parameter controling the potential shift after mixing
   integer :: kfrozn = 0
   integer :: nsymat = 0
   integer :: nqcalc = 0
@@ -171,6 +171,8 @@ module mod_main0
   integer :: natomimp = 0          !! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
   integer :: iesemicore = 0
   integer :: idosemicore = 0
+  integer :: ivshift = 0           !! for selected potential shift: index of potential to be shifted by VCONST
+
   real (kind=dp) :: tk = 800.0_dp       !! Temperature
   real (kind=dp) :: fcm = 20.0_dp       !! Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
   real (kind=dp) :: e2in = 0.0_dp    
@@ -419,9 +421,6 @@ module mod_main0
   ! LOGICAL THAT CHECKS WHETHER ENERGY MESH FILE EXISTS   ! susc
   logical :: emeshfile                                    ! susc
   ! SUSC (END:   modifications by Manuel and Benedikt)    ! susc
-
-  ! ruess: IVSHIFT test option
-  integer :: ivshift = 0
 
   ! allocations:
   real (kind=dp), dimension (:, :, :), allocatable :: thetas     !! shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion

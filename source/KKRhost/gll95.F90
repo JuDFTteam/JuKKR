@@ -191,9 +191,6 @@ contains
       if (test('REFPOT  ') .and. (t_inc%i_write>0)) write (1337, fmt=*) n2, refpot(abs(atom(n2))), atom(n2)
     end do
 
-    if (test('WAIT    ')) write (6, fmt=*) 'Input I'
-    if (test('WAIT    ')) read (5, fmt=*) i
-
     call grefsy13(gref, gref0, dgtde, lly_g0tr, ipvt, ndim, lly, lmgf0d, ngd1)
     ! Now GREF contains LU(1-gt) (full matrix NGD1xNGD1)
     ! DGTDE contains (1-gt)^-1 * d(1-gt)/dE (Thiess PhD Eq.5.28)

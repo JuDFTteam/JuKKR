@@ -288,6 +288,7 @@ add_executable(
     source/KKRhost/rotgll.F90
     source/KKRhost/rotmat.f90
     source/KKRhost/rrgen.f90
+    source/KKRhost/runoptions.F90
     source/KKRhost/save_wavefun.F90
     source/KKRhost/scalevec.f90
     source/KKRhost/scalpr.f90

@@ -6,7 +6,7 @@
 
 !------------------------------------------------------------------------------------
 !> Summary: Routine to read the information from the input file
-!> Author: Bernd Zimmermann
+!> Author: Phivos Mavropoulos
 !> Routine to read the information from the input file
 !------------------------------------------------------------------------------------
 !> @note VP: there should be some crosscheck of competing options e.g., `XCPL` and 
@@ -96,7 +96,7 @@ contains
     integer, intent (inout) :: npnt2 !! number of E points (EMESHT) for the contour integration
     integer, intent (inout) :: npnt3 !! number of E points (EMESHT) for the contour integration
     integer, intent (inout) :: kfrozn
-    integer, intent (inout) :: ishift
+    integer, intent (inout) :: ishift !! Parameter controling the potential shift after mixing
     integer, intent (inout) :: n1semi !! Number of energy points for the semicore contour
     integer, intent (inout) :: n2semi !! Number of energy points for the semicore contour
     integer, intent (inout) :: n3semi !! Number of energy points for the semicore contour
@@ -106,7 +106,7 @@ contains
     integer, intent (inout) :: itdbry !! Number of SCF steps to remember for the Broyden mixing
     integer, intent (inout) :: nright !! Number of repeated basis for right host to get converged  electrostatic potentials
     integer, intent (inout) :: kforce !! Calculation of the forces
-    integer, intent (inout) :: ivshift
+    integer, intent (inout) :: ivshift !! for selected potential shift: index of potential to be shifted by VCONST
     integer, intent (inout) :: khfield !! 0,1: no / yes external magnetic field
     integer, intent (inout) :: nlbasis !! Number of basis layers of left host (repeated units)
     integer, intent (inout) :: nrbasis !! Number of basis layers of right host (repeated units)
@@ -1906,7 +1906,7 @@ contains
     if (opt('rigid-ef') .or. opt('DECIMATE')) then
       ishift = 2
       write (1337, *) ' Rigid Fermi Energy, ISHIFT is set to ', ishift
-      write (111, *) ' Rigid Fermi Energy, ishift is set to ', ishift
+      write (111, *) ' Rigid Fermi Energy, ISHIFT is set to ', ishift
     end if
     if (test('no-neutr') .or. opt('no-neutr')) then
       ishift = 1
@@ -2347,7 +2347,7 @@ contains
       !------------------------------------------------------------------------------
     end if
     !--------------------------------------------------------------------------------
-    ! LDA+U
+    ! Initialise SOLVER, SOC and CTL parameters in REL case
     !--------------------------------------------------------------------------------
 
     if (opt('qdos    ')) then

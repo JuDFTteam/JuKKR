@@ -706,14 +706,18 @@ contains
       ! INTEGER LRECABMAD,I2,IREC
       ! LOGICAL LPOTSYMM(NATYP,LMPOT)
       lrecabmad = wlength*2*lmpot*lmpot + wlength*2*lmpot
-      open (69, access='direct', recl=lrecabmad, file='abvmad.unformatted', form='unformatted')
+      if (test('madelfil')) open (69, access='direct', recl=lrecabmad, file='abvmad.unformatted', form='unformatted')
       do i1 = 1, natyp
         do lm = 1, lmpot
           lpotsymm(i1, lm) = .false.
         end do
         do i2 = 1, natyp
           irec = i2 + naez*(i1-1)
-          read (69, rec=irec) avmad, bvmad
+          if (test('madelfil')) then
+            read (69, rec=irec) avmad, bvmad
+          else
+            bvmad = t_madel%bvmad(irec,:)
+          end if
           do lm = 1, lmpot
             if (abs(bvmad(lm))>1d-10) lpotsymm(i1, lm) = .true.
           end do
@@ -731,7 +735,7 @@ contains
           end if
         end do
       end do
-      close (69)
+      if (test('madelfil')) close (69)
     end if
 
     if (test('vpotout ')) then     ! bauer
