@@ -19,7 +19,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine dlke0(gllke, alat, naez, cls, nacls, naclsmax, rr, ezoa, atom, bzkp, rcls, ginp)
 
-    use :: mod_runoptions, only: calc_complex_bandstructure
+    use :: mod_runoptions, only: calc_complex_bandstructure, symmetrize_Gmat
     use :: global_variables, only: lmgf0d, almgf0, naclsd, nrd
     use :: mod_datatypes, only: dp
     use :: mod_dlke1, only: dlke1
@@ -72,7 +72,7 @@ contains
     end do
 
 
-    if (opt('symG(k) ')) then
+    if (symmetrize_gmat) then
 
       ! -->   symmetrization
 

@@ -30,6 +30,7 @@ contains
     vnspll,vnspll1,mode)
 
     use :: mod_datatypes, only: dp
+    use :: mod_runoptions, only: set_cheby_nosoc
     use :: mod_cheb, only: getclambdacinv
     use :: mod_spin_orbit_compl, only: spin_orbit_compl
     use :: mod_rotatespinframe, only: rotatematrix
@@ -132,7 +133,7 @@ contains
     ! contruct prefactor of spin-orbit hamiltonian
     hsofac = 0e0_dp
     vnspll1 = (0e0_dp, 0e0_dp)
-    if (test('NOSOC   ') .or. zat<1e-6_dp) then
+    if (set_cheby_nosoc .or. zat<1e-6_dp) then
       vnspll1(1:2*lmmaxd, 1:2*lmmaxd, 1:irmdnew) = vnspll(1:2*lmmaxd, 1:2*lmmaxd, 1:irmdnew)
     else
       do ir = 1, irmdnew

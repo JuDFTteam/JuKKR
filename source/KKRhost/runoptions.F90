@@ -55,7 +55,7 @@ module mod_runoptions
   logical :: stop_1a = .false.                         !!stop after main1a (former: 'STOP1A')
   logical :: stop_1b = .false.                         !!stop after main1b (former: 'STOP1B')
   logical :: stop_1c = .false.                         !!stop after main1c (former: 'STOP1C')
-  logical :: symmetrize_Gmat = .false.                 !!use symmetrization [G(k) + G(-k)]/2 in k-point loop (former: 'symG(k)')
+  logical :: symmetrize_gmat = .false.                 !!use symmetrization [G(k) + G(-k)]/2 in k-point loop (former: 'symG(k)')
   logical :: symmetrize_potential_cubic= .false.       !!keep only symmetric part of potential (L=1,11,21,25,43,47). (former: 'potcubic')
   logical :: symmetrize_potential_madelung = .false.   !!symmetrize potential in consistency to madelung potential (former: 'potsymm')
   logical :: torque_operator_onlyMT = .false.          !!for torque operator: include only the part within the muffin tin (former: 'ONLYMT')
@@ -103,15 +103,22 @@ module mod_runoptions
   logical :: write_lloyd_tralpha_file= .false.         !!write Lloyd array to file  (former: 'wrttral')
   logical :: write_madelung_file = .false.             !!write madelung summation to file 'abvmad.unformatted' instead of keeping it in memory (former: 'madelfil')
   logical :: write_pkkr_input = .false.                !!write out files for Pkkprime-code (former: 'FERMIOUT')
-  logical :: write_pkkr_operators= .false.             !!for Fermi-surface output: calculate various operators in KKR basis. (former: 'OPERATOR')
+  logical :: write_pkkr_operators = .false.            !!for Fermi-surface output: calculate various operators in KKR basis. (former: 'OPERATOR')
   logical :: write_potential_tests = .false.           !!write potential at different steps in main2 to different files (former: 'vintrasp' and 'vpotout')
   logical :: write_rho2ns = .false.                    !!write array rho2ns into file out_rhoval (from main1c) and out_rhotot (from main2) (former: 'RHOVALTW' and 'RHOVALW')
   logical :: write_rhoq_input = .false.                !!write out files needed for rhoq module (Quasiparticle interference) (former: 'rhoqtest')
   logical :: write_tmat_file = .false.                 !!write t-matix to file (former: 'tmatfile')
+  logical :: write_tb_coupling = .false.               !!write couplings in tight-binging reference system to file `couplings.dat` (former: 'godfrin')
 
+  integer :: special_straight_mixing = 0               !!id to specify modified straight mixing scheme: 0=normal, 1=alternating mixing factor (i.e. reduced mixing factor in every odd iteration), 2=charge-neurality based mixing factor (former: 'alt mix' and 'spec mix')
 
-  deleted = 'EigenV', 'SPARSE', 'WIRE', 'iso surf', 'wfct', 'EV', 'ND', 'WAIT', 
-  changed  = 'NEWSOSOL', 'RLL-SLL', 'SUPRCELL', 'full inv', 'godfrin', 'MPIadapt', 'MPIatom', 'MPIenerg', 'NOSOC', 'alt mix', 'atptshft', 'spec mix', 'timings0', 'timings2', 
+  !some old run and test options have been removed:
+  !  'atptshft': replaced by presence or absence of IVSHIFT in inputcard
+  !  'RLL-SLL': now default. See inverse (new) option 'set_cheby_nospeedup'
+  !  'full inv', 'SUPRCELL', 'godfrin': now controlled via keyword <INVMODE> = 0/2/3 (<INVMODE>=1 signals principal-layer technique; defaults are set so that <INVMODE>=0 for bulk and  <INVMODE>=1 for slab systems)
+  !  'timings0', 'timings2', 'verbose1', 'verbose2': incorporated into <VERBOSITY> keyword: 0=old behaviour (default), 1=low, 2=medium, 3=high
+  !  'MPIadapt' and 'MPIatom' and 'MPIenerg': combined into keyword <MPI_SCHEME>: 0 = best, 1 = atoms (default), 2 = energies 
+  !  deleted because of no implementation (or little use): 'EigenV', 'SPARSE', 'WIRE', 'iso surf', 'wfct', 'EV', 'ND', 'WAIT'
 
 #ifdef CPP_MPI
 

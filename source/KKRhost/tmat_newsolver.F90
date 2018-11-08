@@ -45,7 +45,7 @@ contains
 #endif
     use :: mod_datatypes, only: dp
     use :: mod_runoptions, only: calc_exchange_couplings, disable_tmat_sratrick, formatted_files, stop_1b, &
-      write_BdG_tests, write_pkkr_operators, write_rhoq_input, set_cheby_nospeedup
+      write_BdG_tests, write_pkkr_operators, write_rhoq_input, set_cheby_nospeedup, set_cheby_nosoc
     use :: mod_constants, only: czero, cone, cvlight
     use :: global_variables, only: ntotd, ncleb, nrmaxd, mmaxd, nspind, nspotd, iemxd, lmmaxd, lmmaxso, korbit
     use :: mod_wunfiles, only: t_params
@@ -189,7 +189,7 @@ contains
       vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
 
     vins(1:irmdnew, 1:lmpot, 1) = vinsnew(1:irmdnew, 1:lmpot, ipot)
-    if (.not.test('NOSOC   ')) vins(1:irmdnew, 1:lmpot, nspin) = vinsnew(1:irmdnew, 1:lmpot, ipot+nspin-1)
+    if (.not.set_cheby_nosoc) vins(1:irmdnew, 1:lmpot, nspin) = vinsnew(1:irmdnew, 1:lmpot, ipot+nspin-1)
 
     KBdG = 0
 #ifdef CPP_BdG
@@ -335,7 +335,7 @@ contains
         !$omp end critical
 #endif
 
-        if ( .not. test('NOSOC   ')) then
+        if ( .not. set_cheby_nosoc) then
           ! Contruct the spin-orbit coupling hamiltonian and add to potential
           call spinorbit_ham(lmax, lmsize, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpot, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
             vnspll0(:,:,:), vnspll1(:,:,:,ith), '1')
@@ -401,7 +401,7 @@ contains
         hlk2(:, :, ith) = czero
         jlk2(:, :, ith) = czero
         gmatprefactor = czero
-        if (test('NOSOC   ')) then
+        if (set_cheby_nosoc) then
           use_fullgmat = 0
         else
           use_fullgmat = 1

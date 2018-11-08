@@ -37,14 +37,14 @@ contains
     tksemi, tolrdif, emusemi, ebotsemi, fsemicore, lambda_xc, deltae, lrhosym, linipol, lcartesian, imt, cls, lmxc, irns, irws, ntcell, refpot, &
     inipol, ixipol, hostimp, kfg, vbc, zperleft, zperight, bravais, rmt, zat, rws, mtfac, rmtref, rmtnew, rmtrefat, fpradius, tleft, tright, &
     rbasis, socscale, cscl, socscl, solver, i12, i13, i19, i25, i40, txc, drotq, ncpa, itcpamax, cpatol, noq, iqat, icpa, kaoez, conc, kmrot, &
-    qmtet, qmphi, kreadldau, lopt, ueff, jeff, erefldau)
+    qmtet, qmphi, kreadldau, lopt, ueff, jeff, erefldau, invmod, verbosity, MPI_scheme)
 
     use :: mod_profiling, only: memocc
     use :: mod_runoptions, only: calc_DOS_Efermi, calc_GF_Efermi, calc_exchange_couplings, &
       dirac_scale_SpeefOfLight, disable_charge_neutrality, modify_soc_Dirac, relax_SpinAngle_Dirac, search_Efermi, &
     set_kmesh_large, stop_1b, stop_1c, use_BdG, use_Chebychev_solver, use_cond_LB, use_decimation, use_lloyd, use_qdos, &
     use_rigid_Efermi, use_semicore, use_virtual_atoms, write_DOS, write_green_host, write_green_imp, write_kkrimp_input, &
-    write_pkkr_input, write_pkkr_operators, use_ldau, set_cheby_nospeedup
+    write_pkkr_input, write_pkkr_operators, use_ldau, set_cheby_nospeedup, set_cheby_nosoc
     use :: mod_constants, only: czero, cvlight
     use :: mod_wunfiles, only: t_params
     use :: memoryhandling, only: allocate_semi_inf_host, allocate_magnetization, allocate_cell, allocate_cpa, allocate_soc, allocate_ldau
@@ -111,7 +111,7 @@ contains
     integer, intent (inout) :: itdbry !! Number of SCF steps to remember for the Broyden mixing
     integer, intent (inout) :: nright !! Number of repeated basis for right host to get converged  electrostatic potentials
     integer, intent (inout) :: kforce !! Calculation of the forces
-    integer, intent (inout) :: ivshift !! for selected potential shift: index of potential to be shifted by VCONST
+    integer, intent (inout) :: ivshift !! for selected potential shift: atom index of potentials to be shifted by VCONST
     integer, intent (inout) :: khfield !! 0,1: no / yes external magnetic field
     integer, intent (inout) :: nlbasis !! Number of basis layers of left host (repeated units)
     integer, intent (inout) :: nrbasis !! Number of basis layers of right host (repeated units)
@@ -121,6 +121,9 @@ contains
     integer, intent (inout) :: npan_eq !! Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
     integer, intent (inout) :: npan_log !! Number of intervals from nucleus to [R_LOG] Used in conjunction with runopt NEWSOSOL
     integer, intent (inout) :: npolsemi !! Number of poles for the semicore contour
+    integer, intent (inout) :: invmod   !! inversion mode, 0=full inversion, 1= banded matrix, 2= supercell, 3=godfrin
+    integer, intent (inout) :: verbosity  !! verbosity level for timings and output: 0=old default, 1,2,3 = timing and ouput verbosity level the same (low,medium,high)
+    integer, intent (inout) :: MPI_scheme !! scheme for MPI parallelization: 0 = best, 1 = atoms (default), 2 = energies 
     real (kind=dp), intent (inout) :: tk !! Temperature
     real (kind=dp), intent (inout) :: fcm !! Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
     real (kind=dp), intent (inout) :: emin !! Lower value (in Ryd) for the energy contour
@@ -349,19 +352,44 @@ contains
       write (111, *) 'Default INTERFACE= ', linterface
     end if
 
+    call ioinput('<INVMODE>       ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) invmod
+      write (111, *) '<INVMODE>=', invmod
+    else if(invmod==-1) then!invmod was not forced by old runoptions
+      if (linterface) then
+        invmod = 1
+      else
+        invmod = 0
+      end if!linterface
+      write (111, *) 'Default <INVMODE>= ', invmod
+    end if    
+
+    call ioinput('<VERBOSITY>     ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) verbosity
+      write (111, *) '<VERBOSITY>=', verbosity
+    else
+      write (111, *) 'Default <VERBOSITY>= ', verbosity
+    end if
+
+    call ioinput('<MPI_SCHEME>    ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) MPI_scheme
+      write (111, *) '<MPI_SCHEME>=', MPI_scheme
+    else
+      write (111, *) 'Default <MPI_SCHEME>= ', MPI_scheme
+    end if   
+
     ndim = 3
     if (linterface) ndim = 2
-    if (.not. linterface .and. .not. opt('SUPRCELL')) then
-      write (1337, *) '3D-calculation, adding run-option "full inv" for full inversion.'
-      call addopt('full inv')
-    end if
 
     if (write_green_host) then
       write (1337, *) 'WRTGREEN option found'
-      write (1337, *) 'adding run-opt "full inv" for full inversion.'
-      write (1337, *) 'adding run-opt "fix mesh"'
-      call addopt('full inv')
-      call addset_kmesh_large
+      write (1337, *) 'setting <INVMODE>=0 for full inversion.'
+      write (1337, *) 'adding run-opt <set_kmesh_large>'
+      invmod = 0
+      set_kmesh_large = .true.
     end if
 
     write (111, *) 'Bravais vectors in units of ALAT'
@@ -833,9 +861,9 @@ contains
 
     if (use_Chebychev_solver) korbit = 1
 
-    if (test('NOSOC   ')) then
-      write (*, '(A)') 'Warning: detected test option "NOSOC   ": use spin-decoupled radial equations with new solver'
-      write (1337, *) 'Warning: detected test option "NOSOC   ": reset KORBIT to zero but use NEWSOSOL for spin-decoupled matrices with explicit spin-loop'
+    if (set_cheby_nosoc) then
+      write (*, '(A)') 'Warning: detected test option < set_cheby_nosoc >: use spin-decoupled radial equations with new solver'
+      write (1337, *)  'Warning: detected test option < set_cheby_nosoc >: reset KORBIT to zero but use NEWSOSOL for spin-decoupled matrices with explicit spin-loop'
       korbit = 0
     end if
 
@@ -1287,10 +1315,12 @@ contains
     end if
 
 
-    if (test('atptshft')) then
-      write (1337, *) 'read IN IVSHIFT'
-      call ioinput('IVSHIFT         ', uio, 1, 7, ier)
+    call ioinput('IVSHIFT         ', uio, 1, 7, ier)
+    if (ier==0) then
       read (unit=uio, fmt=*) ivshift
+      write (111, *) 'IVSHIFT= ', ivshift
+    else
+      write (111, *) 'Default IVSHIFT= ', ivshift
     end if
 
     ! Initial polarization
@@ -2377,9 +2407,9 @@ contains
       ! WRITE (1337,'(A,1000I5)') 'qdosatoms=',
       ! (t_params%qdos_atomselect(I),I=1,NATYP)
 
-      if (.not. test('MPIatom ')) then
+      if (.not. MPI_scheme==1) then
         ! enforce MPIenerg since this is usually faster for qdos option
-        call addtest('MPIenerg')
+        MPI_scheme==2
       end if
       stop_1c=.true.
     end if
@@ -2460,9 +2490,11 @@ contains
     !--------------------------------------------------------------------------------
     ! Begin Godfrin inversion scheme control                       ! GODFRIN Flaviano
     !--------------------------------------------------------------------------------
-    if (opt('godfrin ')) then
+    if (invmod==3) then
       write (111, *) 'Godfrin inversion scheme parameters'
       write (1337, *) 'Godfrin inversion scheme parameters'
+
+      write_tb_coupling=.true.
 
       t_godfrin%na = naez
       call ioinput('GODFRIN         ', uio, 2, 7, ier)

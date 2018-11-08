@@ -51,7 +51,8 @@ contains
     use :: mod_timing, only: timing_start, timing_pause, timing_stop
 #endif
     use :: mod_types, only: t_inc
-    use :: mod_runoptions, only: print_program_flow, use_Chebychev_solver, use_qdos, use_virtual_atoms, write_green_imp, write_rhoq_input
+    use :: mod_runoptions, only: print_program_flow, use_Chebychev_solver, use_qdos, use_virtual_atoms, &
+      write_green_imp, write_rhoq_input, set_cheby_nosoc
     use :: mod_rhoqtools, only: rhoq_find_kmask, rhoq_saveg, rhoq_write_tau0, rhoq_read_mu0_scoef
     use :: global_variables, only: nembd1, nembd2, nsheld, nclsd, naclsd, lmmaxd, nprincd, nrd, nrefd, lmgf0d, krel, ndim_slabinv, alm, almgf0 
     use :: mod_constants, only: czero, cone, nsymaxd, ci,pi
@@ -356,7 +357,7 @@ contains
         ! ----------------------------------------------------------------------
         ! LLY Lloyd
         ! --------------------------------------------------------------------
-        if (.not. use_Chebychev_solver .or. test('NOSOC   ')) then
+        if (.not. use_Chebychev_solver .or. set_cheby_nosoc) then
           ! $omp single
           do i2 = 1, alm
             do i1 = 1, alm

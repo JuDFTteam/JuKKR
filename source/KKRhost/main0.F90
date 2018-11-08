@@ -143,7 +143,7 @@ module mod_main0
   integer :: nspin = 2             !! Counter for spin directions
   integer :: nleft = 1             !! Number of repeated basis for left host to get converged electrostatic potentials
   integer :: nright = 1            !! Number of repeated basis for right host to get converged electrostatic potentials
-  integer :: invmod = 2            !! Inversion scheme, default: Corner band matrix inversion scheme
+  integer :: invmod = -1           !! inversion mode, 0=full inversion, 1= banded matrix, 2= supercell, 3=godfrin; default signals that inversion mode was not set yet
   integer :: khfeld = 0            !! 0,1: no / yes external magnetic field
   integer :: itdbry = 10           !! Number of SCF steps to remember for the Broyden mixing
   integer :: insref = 0            !! INS for reference pot. (usual 0)
@@ -171,8 +171,9 @@ module mod_main0
   integer :: natomimp = 0          !! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
   integer :: iesemicore = 0
   integer :: idosemicore = 0
-  integer :: ivshift = 0           !! for selected potential shift: index of potential to be shifted by VCONST
-
+  integer :: ivshift = 0           !! for selected potential shift: atom index of potentials to be shifted by VCONST
+  integer :: verbosity = 0         !! verbosity level for timings and output: 0=old default, 1,2,3 = timing and ouput verbosity level the same (low,medium,high)
+  integer :: MPI_scheme = 1        !! scheme for MPI parallelization: 0 = best, 1 = atoms (default), 2 = energies 
   real (kind=dp) :: tk = 800.0_dp       !! Temperature
   real (kind=dp) :: fcm = 20.0_dp       !! Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
   real (kind=dp) :: e2in = 0.0_dp    
@@ -580,7 +581,7 @@ contains
       kfg,vbc,zperleft,zperight,bravais,rmt,zat,rws,mtfac,rmtref,rmtnew,rmtrefat,   &
       fpradius,tleft,tright,rbasis,socscale,cscl,socscl,solver,i12,i13,i19,i25,i40, &
       txc,drotq,ncpa,itcpamax,cpatol,noq,iqat,icpa,kaoez,conc,kmrot,qmtet,qmphi,    &
-      kreadldau,lopt,ueff,jeff,erefldau)
+      kreadldau,lopt,ueff,jeff,erefldau,invmod,verbosity,MPI_scheme)
 
     ! Some consistency checks
     if ((krel<0) .or. (krel>1)) stop ' set KREL=0/1 (non/fully) relativistic mode in the inputcard'
@@ -774,7 +775,7 @@ contains
     if (kvrel>=2) nsra = 3
 
     call testdim(nspin,naez,nemb,natyp,ins,insref,nref,irns,nlayer,krel,nspind,     &
-      nprincd,knosph,irnsd,korbit)
+      nprincd,knosph,irnsd,korbit,invmod)
 
     if (ins>0) open (19, file=i19, status='old', form='formatted')
     if (ifile==13) open (ifile, file=i13, status='old', form='formatted')
@@ -805,7 +806,7 @@ contains
       end if
 
       ! ! enforce MPIatom here
-      ! if (TEST('MPIenerg')) stop 'rhoqtest assumes MPIatom'
+      ! if (MPI_scheme!=1) stop 'rhoqtest assumes MPIatom'
       ! CALL ADDTEST('MPIatom')
 
       if (nranks>1) then
@@ -1284,7 +1285,7 @@ contains
       mixing, qbound, fcm, itdbry, irns, kpre, kshape, kte, kvmad, kxc, lambda_xc, txc, ishift, ixipol, lrhosym, kforce, lmsp, llmsp, rmt, rmtnew, rws, imt, irc, irmin, irws, nfu, &
       hostimp, gsh, ilm_map, imaxsh, idoldau, itrunldau, ntldau, lopt, itldau, ueff, jeff, erefldau, uldau, wldau, phildau, iemxd, irmind, irmd, nspotd, npotd, nembd1, lmmaxd, &
       ipand, nembd2, lmax, ncleb, naclsd, nclsd, lm2d, lmax+1, mmaxd, nrd, nsheld, nsymaxd, naez/nprincd, natomimpd, nspind, irid, nfund, ncelld, lmxspd, ngshd, krel, ntotd, ncheb, &
-      npan_log, npan_eq, npan_log_at, npan_eq_at, r_log, npan_tot, rnew, rpan_intervall, ipan_intervall, nspindd, thetasnew, socscale, tolrdif, lly, deltae, rclsimp)
+      npan_log, npan_eq, npan_log_at, npan_eq_at, r_log, npan_tot, rnew, rpan_intervall, ipan_intervall, nspindd, thetasnew, socscale, tolrdif, lly, deltae, rclsimp, verbosity)
 
     if (write_pkkr_input) then                                                           ! fswrt
       call write_tbkkr_files(lmax, nemb, ncls, natyp, naez, ielast, ins, alat, &        ! fswrt

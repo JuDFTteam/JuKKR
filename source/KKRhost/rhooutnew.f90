@@ -22,7 +22,7 @@ contains
     rho2nsc, corbital, gflle_part, rpan_intervall, ipan_intervall, nspin)
 
     use :: mod_constants, only: cone,czero,pi
-    use :: mod_runoptions, only: calc_gmat_lm_full, use_ldau
+    use :: mod_runoptions, only: calc_gmat_lm_full, use_ldau, set_cheby_nosoc
     use :: mod_profiling
     use :: global_variables
     use :: mod_datatypes, only: dp
@@ -103,7 +103,7 @@ contains
     pnsi = czero
 
     ! set LMSHIFT value which is need to construct CDEN
-    if (test('NOSOC   ')) then
+    if (set_cheby_nosoc) then
       lmshift1(:) = 0 
       lmshift2(:) = 0 
     else

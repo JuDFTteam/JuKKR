@@ -44,7 +44,7 @@ contains
 #endif
     use :: mod_save_wavefun, only: t_wavefunctions, read_wavefunc
     use :: mod_runoptions, only: calc_exchange_couplings, calc_gmat_lm_full, disable_tmat_sratrick, fix_nonco_angles, &
-      use_qdos, write_complex_qdos, write_pkkr_operators, write_DOS_lm, set_cheby_nospeedup
+      use_qdos, write_complex_qdos, write_pkkr_operators, write_DOS_lm, set_cheby_nospeedup, set_cheby_nosocset_cheby_nosoc
     use :: mod_version_info
     use :: global_variables
     use :: mod_constants
@@ -229,7 +229,7 @@ contains
     call memocc(i_stat, product(shape(vins))*kind(vins), 'VINS', 'RHOVALNEW')
     vins = 0d0
     vins(1:irmdnew, 1:lmpotd, 1) = vinsnew(1:irmdnew, 1:lmpotd, ipot)
-    if (.not.test('NOSOC   '))  vins(1:irmdnew, 1:lmpotd, nspin) = vinsnew(1:irmdnew, 1:lmpotd, ipot+nspin-1)
+    if (.not.set_cheby_nosoc)  vins(1:irmdnew, 1:lmpotd, nspin) = vinsnew(1:irmdnew, 1:lmpotd, ipot+nspin-1)
 
     ! set up the non-spherical ll' matrix for potential VLL'
     allocate (vnspll0(lmmaxso,lmmaxso,irmdnew), stat=i_stat)
@@ -485,7 +485,7 @@ contains
 
       ! recalculate wavefuntions, also include left solution
       ! contruct the spin-orbit coupling hamiltonian and add to potential
-      if ( .not. test('NOSOC   ')) then
+      if ( .not. set_cheby_nosoc) then
         call spinorbit_ham(lmax, lmsize, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpotd, theta, phi, ipan_intervall, &
           rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, vnspll0, vnspll1(:,:,:,ith), '1')
       else
@@ -516,7 +516,7 @@ contains
         jlk2(:, :, ith) = czero
         gmatprefactor = czero
         jlk_index = 0
-        if (test('NOSOC   ')) then
+        if (set_cheby_nosoc) then
           use_fullgmat = 0
         else
           use_fullgmat = 1
@@ -559,7 +559,7 @@ contains
       !------------------------------------------------------------------------------
       if ((t_wavefunctions%nwfsavemax>0 .and. (.not. (rllleft_was_read_in .and. sllleft_was_read_in))) .or. (t_wavefunctions%nwfsavemax==0)) then
         ! read/recalc wavefunctions left contruct the TRANSPOSE spin-orbit coupling hamiltonian and add to potential
-        if ( .not. test('NOSOC   ')) then
+        if ( .not. set_cheby_nosoc) then
           call spinorbit_ham(lmax, lmsize, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpotd, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
             vnspll0, vnspll1(:,:,:,ith), 'transpose')
         else
@@ -700,7 +700,7 @@ contains
       !------------------------------------------------------------------------------
       ! Get orbital moment
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      if (.not. test('NOSOC   ')) then
+      if (.not. set_cheby_nosoc) then
         do iorb = 1, 3
           call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, cone, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll(:,:,:,ith), & ! SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
             rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), r2orbc(:,:,:,ith), iorb, gflle_part(:,:,ith), rpan_intervall, ipan_intervall, nspin)
@@ -739,7 +739,7 @@ contains
             muorb(lmaxd1+1, 1:3) = muorb(lmaxd1+1, 1:3) + muorb(lm1, 1:3)
           end do
         end do ! IORB
-      end if ! .not. test('NOSOC   ')
+      end if ! .not. set_cheby_nosoc
 
     end do                         ! IE loop
 #ifdef CPP_OMP
@@ -982,7 +982,7 @@ contains
       deallocate (rhonewtemp, stat=i_stat)
       call memocc(i_stat, i_all, 'RHONEWTEMP', 'RHOVALNEW')
       ! calculate new THETA and PHI for non-colinear
-      if (.not. fix_nonco_angles .and. .not.test('NOSOC   ')) then
+      if (.not. fix_nonco_angles .and. .not.set_cheby_nosoc) then
         rho2ns_temp(1, 1) = rho2int(1)
         rho2ns_temp(2, 2) = rho2int(2)
         rho2ns_temp(1, 2) = rho2int(3)

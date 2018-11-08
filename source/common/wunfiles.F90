@@ -348,7 +348,7 @@ contains
     mmaxd,nr,nsheld,nsymaxd,naezdpd,natomimpd,nspind,irid,nfund,ncelld,lmxspd,ngshd,&
     krel,ntotd,ncheb,npan_log,npan_eq,npan_log_at,npan_eq_at,r_log,npan_tot,rnew,   &
     rpan_intervall,ipan_intervall,nspindd,thetasnew,socscale,tolrdif,lly,deltae,    &
-    rclsimp)
+    rclsimp,verbosity,MPI_scheme)
     ! **********************************************************************
     ! *                                                                    *
     ! *  This subroutine is part of the MAIN0 program in the tbkkr package *
@@ -364,7 +364,7 @@ contains
     use :: mod_runoptions, only: impurity_operator_only, relax_SpinAngle_Dirac, use_Chebychev_solver, use_qdos, &
       write_cpa_projection_files, write_deci_tmat, write_gmat_file, write_green_host, write_green_imp, write_gref_file, &
       write_kkrimp_input, write_lloyd_cdos_file, write_lloyd_dgref_file, write_lloyd_dtmat_file, write_lloyd_files, &
-      write_lloyd_g0tr_file, write_lloyd_tralpha_file, write_pkkr_input, write_pkkr_operators, write_tmat_file
+      write_lloyd_g0tr_file, write_lloyd_tralpha_file, write_pkkr_input, write_pkkr_operators, write_tmat_file, set_cheby_nosoc
 
     implicit none
     ! ..
@@ -457,6 +457,8 @@ contains
     integer, intent (in) :: natomimpd !! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
     integer, intent (in) :: itrunldau !! Iteration index for LDA+U
     integer, intent (in) :: iesemicore
+    integer, intent (in) :: verbosity !! verbosity level for timings and output: 0=old default, 1,2,3 = timing and ouput verbosity level the same (low,medium,high)
+    integer, intent (in) :: MPI_scheme !! scheme for MPI parallelization: 0 = best, 1 = atoms (default), 2 = energies 
     ! .. nembd2 = NAEZ+NEMB, lmaxd1=lmaxd+1, naezdpd=NAEZ/nprincd)
     real (kind=dp), intent (in) :: tk !! Temperature
     real (kind=dp), intent (in) :: fcm
@@ -695,7 +697,7 @@ contains
     t_inc%naclsmax = naclsmax
     t_inc%nshell0 = nshell(0)
     if (use_Chebychev_solver) t_inc%newsosol = .true.
-    if (test('NOSOC   ')) t_inc%nosoc = .true.
+    if (set_cheby_nosoc) t_inc%nosoc = .true.
     if (write_deci_tmat) t_inc%deci_out = .true.
     !--------------------------------------------------------------------------------
     ! t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc
@@ -731,13 +733,13 @@ contains
     if (write_lloyd_g0tr_file .or. write_lloyd_files) t_lloyd%g0tr_to_file = .true.
 
     ! set verbosity level in t_inc%i_write = 0,1,2 for default, verbose1, verbose2
-    t_inc%i_write = 0              ! default: write only output.000.txt and reset file after each iteration
-    if (test('verbose1')) t_inc%i_write = 1 ! write on all processors but only the latest iteration
-    if (test('verbose2')) t_inc%i_write = 2 ! write everything
+    t_inc%i_write = 0                   ! default: write only output.000.txt and reset file after each iteration
+    if (verbosity==2) t_inc%i_write = 1 ! write on all processors but only the latest iteration
+    if (verbosity==3) t_inc%i_write = 2 ! write everything
     ! and t_inc_i_time for timing writeout
     t_inc%i_time = 1               ! default: only timings from master, all iterations
-    if (test('timings0')) t_inc%i_time = 0 ! only timings from master, only the last iteration
-    if (test('timings2')) t_inc%i_time = 2 ! all timing files, all iterations
+    if (verbosity==1) t_inc%i_time = 0 ! only timings from master, only the last iteration
+    if (verbosity==3) t_inc%i_time = 2 ! all timing files, all iterations
     ! writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags
 
     !--------------------------------------------------------------------------------
@@ -752,15 +754,15 @@ contains
     end if
     mpiadapt = 1                   ! 1 means check timings and then reshuffle ranks if necessary
     ! change default behaviour for the corresponding test flags are found
-    if (test('MPIatom ')) then
+    if (MPI_scheme==1) then
       mpiatom = .true.
       mpiadapt = 0                 ! 0 means no change in communication scheme
     end if
-    if (test('MPIenerg')) then
+    if (MPI_scheme==2) then
       mpiatom = .false.
       mpiadapt = 0
     end if
-    if (test('MPIadapt')) then
+    if (MPI_scheme==0) then
       mpiadapt = 2                 ! 2 means force run with MPIatom then with MPIenerg and then compare to choose optimal
     end if
     ! so far changing does not work yet, so turn this off:
@@ -784,7 +786,7 @@ contains
         write (*, *) '   minimal cluster size smaller than 150 atoms!!!' ! fswrt
         write (*, *) '   should be increased to least 200-300 atoms' ! fswrt
       end if                       ! fswrt
-      if (test('MPIenerg')) then   ! fswrt
+      if (MPI_scheme==2) then   ! fswrt
         write (*, *) 'FERMIOUT/WRTGREEN/GREENIMP option chosen' ! fswrt
         write (*, *) 'found unsupported test option MPIenerg' ! fswrt
         stop 'Please choose MPIatom instead' ! fswrt
@@ -806,9 +808,6 @@ contains
       stop                         ! fswrt
     end if                         ! fswrt
 
-    if (test('MPIatom ') .and. test('MPIenerg')) then
-      stop '[wunfiles] Found test options ''MPIenerg'' and ''MPIatom'' which do not work together. Please choose only one of these.'
-    end if
     !--------------------------------------------------------------------------------
     ! MPI communication scheme
     !--------------------------------------------------------------------------------

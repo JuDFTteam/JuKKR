@@ -22,7 +22,7 @@ contains
   !> ICHECK(I,J) points to the block (I,J) of the GF matrix having the
   !> size NPRINCD
   !-------------------------------------------------------------------------------
-  subroutine gfmask(linterface, icheck, icc, invmod, nsh1, nsh2, naez, nshell, naezd, nprincd)
+  subroutine gfmask(icheck, icc, invmod, nsh1, nsh2, naez, nshell, naezd, nprincd)
 
     use :: mod_runoptions, only: print_ickeck, use_cond_LB
 
@@ -30,7 +30,6 @@ contains
 
     integer :: naezd, nprincd
     integer :: icc, invmod, nlayer, naez, nshell
-    logical :: linterface
 
     integer :: icheck(naezd/nprincd, naezd/nprincd)
     integer :: nsh1(*), nsh2(*)
@@ -46,22 +45,6 @@ contains
 
 
     write (1337, 100)
-
-    ! --> set default inversion to SUPERCELL mode = banded matrix + corners
-
-    invmod = 2
-
-    ! --> LINTERFACE = use band diagonal mode
-
-    if (linterface) invmod = 1
-
-    ! --> full inversion is performed ONLY BY EXPLICIT request
-
-    if (opt('full inv')) invmod = 0
-
-    ! ----------------------------------------------------------------------
-    if (opt('godfrin ')) invmod = 3 ! GODFRIN
-    ! ----------------------------------------------------------------------
 
     ! 21.10.2014 GODFRIN Flaviano
     if ((invmod/=0) .and. (mod(naez,nprincd)/=0) .and. (invmod/=3)) then

@@ -40,7 +40,7 @@ contains
     use :: mod_runoptions, only: disable_charge_neutrality, no_madelung, print_program_flow, relax_SpinAngle_Dirac, &
       search_Efermi, simulate_asa, slow_mixing_Efermi, symmetrize_potential_cubic, symmetrize_potential_madelung, &
       use_decimation, use_rigid_Efermi, use_semicore, use_spherical_potential_only, write_deci_tmat, write_kkrimp_input, &
-      write_madelung_file, write_potential_tests, write_rho2ns
+      write_madelung_file, write_potential_tests, write_rho2ns, special_straight_mixing
     use :: global_variables, only: krel, ipand, npotd, natomimpd, lmxspd, iemxd, nspotd, irid, ngshd, linterface, &
       nfund, ncelld, irmd, nembd1, nembd, irmind, lmmaxd, wlength, natypd, naezd, lmpotd, lpotd, lmaxd, nspind, nspotd, &
       ipand, ngshd, irid, nfund, ncelld
@@ -768,8 +768,8 @@ contains
     ! Final construction of the potentials (straight mixing)
     ! -------------------------------------------------------------------------
     mix = mixing
-    if (test('alt mix ')) mix = mixing/real(1+mod(itscf,2), kind=dp)
-    if (test('spec mix')) then
+    if (special_straight_mixing==1) mix = mixing/real(1+mod(itscf,2), kind=dp)
+    if (special_straight_mixing==2) then
       mix = mixing/(1.0d0+1.0d+3*abs(chrgnt)/real(naez*nspin,kind=dp))
     end if
     write (1337, *) 'MIXSTR', mix

@@ -29,9 +29,9 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine testdim(nspin,naez,nemb,natyp,ins,insref,nref,irns,nlayer,krel,nspind, &
-    nprincd,knosph,irnsd,korbit)
+    nprincd,knosph,irnsd,korbit,invmod)
 
-    use :: mod_runoptions, only: calc_complex_bandstructure, use_Chebychev_solver, use_cont, use_virtual_atoms
+    use :: mod_runoptions, only: calc_complex_bandstructure, use_Chebychev_solver, use_cont, use_virtual_atoms, set_cheby_nosoc
     implicit none
 
     integer, intent (in) :: ins    !! 0 (MT), 1(ASA), 2(Full Potential)
@@ -46,6 +46,7 @@ contains
     integer, intent (in) :: korbit !! Spin-orbit/non-spin-orbit (1/0) added to the Schroedinger or SRA equations. Works with FP. KREL and KORBIT cannot be both non-zero.
     integer, intent (in) :: nspind !! KREL+(1-KREL)*(NSPIN+1)
     integer, intent (in) :: nprincd !! Number of principle layers, set to a number >= NRPINC in output of main0
+    integer, intent (in) :: invmod
     ! .. In/Out variables
     integer, intent (inout) :: nemb !! Number of 'embedding' positions
     integer, intent (inout) :: nlayer !! Number of principal layer
@@ -104,7 +105,7 @@ contains
     end if
 
     if (use_Chebychev_solver .and. korbit==0) then
-      if (test('NOSOC   ')) then
+      if (set_cheby_nosoc) then
         write (6, *) 'Using NEWSOSOL for decoupled spin channels.'
       else
         write (6, *) 'Using option NEWSOSOL, change KORBIT in the inputcard from', korbit, 'to 1'
@@ -122,7 +123,7 @@ contains
       write (6, *) 'No usage of embedding points. NEMB is set to ', nemb, '.'
     end if
 
-    if (.not. opt('full inv') .and. .not. opt('godfrin ')) then
+    if (.not. ( (invmod==0) .or. (invmod==3) ) ) then
       ! -------------------------------------------------------------------------
       ! Constants for O(N) algorithm for matrix inversion
       ! -------------------------------------------------------------------------
@@ -130,7 +131,7 @@ contains
       write (1337, 100) nprincd, nlayer
       write (1337, 110)
       ! ignore this test if full inversion is done
-      if (.not. opt('full inv')) then
+      if (.not. (invmod==0)) then
         if (nlayer*nprincd/=naez) then
           write (6, *) 'NLAYER*NPRINCD ( = ', nlayer*nprincd, ').NE.NAEZ ( = ', naez, ')'
           stop_mark = 1

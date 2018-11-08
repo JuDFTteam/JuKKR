@@ -196,6 +196,6 @@ def filter_opt_test_calls():
 
 
 if __name__ == '__main__':
-	automatic_replacement_all_sources()
+	#automatic_replacement_all_sources()
 	#append_use_statement_to_subroutine()
-	#filter_opt_test_calls()
+	filter_opt_test_calls()

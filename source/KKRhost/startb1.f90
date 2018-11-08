@@ -107,7 +107,7 @@ contains
     integer, intent (in) :: ncelld !! Number of cells (shapes) in non-spherical part
     integer, intent (in) :: nspotd !! Number of potentials for storing non-sph. potentials
     integer, intent (in) :: kshape !! Exact treatment of WS cell
-    integer, intent (in) :: ivshift
+    integer, intent (in) :: ivshift !! for selected potential shift: atom index of potentials to be shifted by VCONST
     real (kind=dp), intent (in) :: vconst !! Potential shift
     integer, dimension (natyp), intent (in) :: ntcell !! Index for WS cell
     real (kind=dp), dimension (natyp), intent (in) :: fpradius !! R point at which full-potential treatment starts
@@ -489,15 +489,15 @@ contains
           end if
           ! -------------------------------------------------------------------
           ! First iteration : shift all potentials (only for test purpose)
-          ! in case of test option 'atptshft' shift only potential of atom at
+          ! in case of ivshift>0 shift only potential of atom at
           ! position ivshift
           ! -------------------------------------------------------------------
-          if (test('atptshft') .and. (ih==ivshift)) then
-            write (1337, *) 'atptshft', ih, ivshift, vconst, nr, irmin(ih)
+          if (ih==ivshift) then
+            write (1337, *) 'selected potential shift of atom', ivshift, vconst, nr, irmin(ih)
             do j = 1, irmin(ih)
               vm2z(j, i) = vm2z(j, i) + vconst
             end do
-          else if (.not. test('atptshft') .and. abs(vconst)>eps) then
+          else if (abs(vconst)>eps) then
             write (1337, *) 'shifting potential by VCONST=', vconst
             do j = 1, nr
               vm2z(j, i) = vm2z(j, i) + vconst

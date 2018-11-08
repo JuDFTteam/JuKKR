@@ -40,7 +40,7 @@ contains
 #endif
     use :: mod_datatypes, only: dp
     use :: mod_runoptions, only: calc_gmat_lm_full, fix_nonco_angles, relax_SpinAngle_Dirac, use_Chebychev_solver, &
-      use_decimation, use_qdos, write_DOS, write_complex_qdos, write_density_ascii, write_rho2ns, write_DOS_lm
+      use_decimation, use_qdos, write_DOS, write_complex_qdos, write_density_ascii, write_rho2ns, write_DOS_lm, set_cheby_nosoc
     use :: mod_constants, only: czero, pi
     use :: mod_profiling, only: memocc
     use :: mod_mympi, only: myrank, master
@@ -828,7 +828,7 @@ contains
       ! Write out lm charges and moments
       ! -------------------------------------------------------------------
       withorbmom = krel+korbit
-      if (test('NOSOC   ')) withorbmom = withorbmom+1
+      if (set_cheby_nosoc) withorbmom = withorbmom+1
       call wrmoms(withorbmom, natyp, nspinpot, texts, textl, textns, charge, muorb, lmax, lmaxd1)
 
       ! ----------------------------------------------------------------------
