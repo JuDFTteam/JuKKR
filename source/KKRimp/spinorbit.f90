@@ -184,7 +184,7 @@ module mod_spinorbit
   !-------------------------------------------------------------------------------
   !> Summary: Calculates the relativistic mass depending on the radial position
   !> Author: 
-  !> Category: KKRimp, potential, physical-observable, spin-orbit-coupling
+  !> Category: KKRimp, potential, physical-observables, spin-orbit-coupling
   !> Deprecated: false ! this needs to be set to true for deprecated subroutines
   !>
   !-------------------------------------------------------------------------------

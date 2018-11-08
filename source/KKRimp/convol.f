@@ -110,7 +110,7 @@
 !> Summary: Convolutes potentials with shape functions 
 !> Author:  
 !> Date: 
-!> Category: KKRimp, shape-fucntions, potential
+!> Category: KKRimp, shape-functions, potential
 !> Deprecated: False
 !> 
 !> Calculate convolution of potential with shapefunction.

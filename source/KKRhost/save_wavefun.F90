@@ -18,7 +18,7 @@ module mod_save_wavefun
   !-------------------------------------------------------------------------------
   !> Summary: Definition of the variables used to store and handle the wavefunctions
   !> Author: 
-  !> Category: solver, single-site, KKRhost
+  !> Category: single-site, KKRhost
   !> Deprecated: False 
   !> Definition of the variables used to store and handle the wavefunctions
   !-------------------------------------------------------------------------------
@@ -49,7 +49,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Find how many wavefunctions can be stored and set `isave_wavefun` array to determine which wavefunctions are stored
   !> Author: 
-  !> Category: input-output, memory-management, initialization, KKRhost
+  !> Category: input-output, profiling, initialization, KKRhost
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !> Find how many wavefunctions can be stored and set `isave_wavefun` array to 
   !> determine which wavefunctions are stored
@@ -243,7 +243,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Saves wavefunction of atom iat and energypoint ie if enough memory is given
   !> Author: 
-  !> Category: solver, single-site, KKRhost
+  !> Category: single-site, KKRhost
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !> Saves wavefunction of atom iat and energypoint ie if enough memory is given
   !-------------------------------------------------------------------------------
@@ -290,7 +290,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Reads wavefunction of atom iat and energypoint ie if it was stored
   !> Author: 
-  !> Category: solver, single-site, KKRhost
+  !> Category: single-site, KKRhost
   !> Deprecated: False 
   !> Reads wavefunction of atom iat and energypoint ie if it was stored
   !-------------------------------------------------------------------------------
