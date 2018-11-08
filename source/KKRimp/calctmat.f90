@@ -1,5 +1,18 @@
 module mod_calctmat
-  contains
+!-------------------------------------------------------------------------------
+!> Summary: Calculate the t-matrices for the actual system 
+!> Author: Phivos Mavropoulos, Hubert Ebert, Voicu Popescu
+!> Category: KKRimp, single-site 
+!>           
+!-------------------------------------------------------------------------------
+
+contains
+!-------------------------------------------------------------------------------
+!> Summary: Calculate the t-matrices for the actual system 
+!> Author: Phivos Mavropoulos, Hubert Ebert, Voicu Popescu
+!> Category: KKRimp, single-site 
+!>           
+!-------------------------------------------------------------------------------
 
 SUBROUTINE CALCTMAT(ERYD,VPOT,CELL,ZATOM,LMAXATOM,TMATLL,config,ispin,nspin)!     &
 ! C!           C                IDOLDAU,LOPT,WLDAU)

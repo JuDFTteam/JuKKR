@@ -20,18 +20,9 @@ contains
 !> 2) Interpolation is done using a spline method
 !> 
 !> Author: Who wrote this subroutine
-!> Category: new-mesh, old-mesh,radial grid, shapefunction, potential, kkrimp
+!> Category: new-mesh, old-mesh,radial-grid, shapefunction, potential, kkrimp
 !> Deprecated: False ! This needs to be set to True for deprecated subroutines
 !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
-!-------------------------------------------------------------------------------
-!> @note Notes on the code
-!> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
 !-------------------------------------------------------------------------------
 
 subroutine interpolatecell(nstart,vpot,lmvpot,cell,lmaxatom,cellnew,ispin,nspin,config,cmode,testpot)
@@ -337,18 +328,9 @@ end subroutine interpolatecell
 !-------------------------------------------------------------------------------
 !> Summary: creates the new mesh
 !> Author: Who wrote this subroutine
-!> Category: new mesh, radial grid, kkrimp
+!> Category: new-mesh, radial-grid, kkrimp
 !> Deprecated: False ! This needs to be set to True for deprecated subroutines
 !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
-!-------------------------------------------------------------------------------
-!> @note Notes on the code
-!> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
 !-------------------------------------------------------------------------------
 
 

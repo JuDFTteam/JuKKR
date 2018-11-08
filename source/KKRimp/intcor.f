@@ -7,12 +7,6 @@
 !-------------------------------------------------------------------------------
 !> @note Similar to the intcor.f of  the host kkr code. 
 !> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
 !-------------------------------------------------------------------------------
 
 
