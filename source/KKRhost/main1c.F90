@@ -39,8 +39,8 @@ contains
     use :: mod_timing
 #endif
     use :: mod_datatypes, only: dp
-    use :: mod_runoptions, only: calc_lmdos, fix_nonco_angles, relax_SpinAngle_Dirac, use_Chebychev_solver, &
-      use_decimation, use_qdos, write_DOS, write_complex_qdos, write_density_ascii, write_rho2ns
+    use :: mod_runoptions, only: calc_gmat_lm_full, fix_nonco_angles, relax_SpinAngle_Dirac, use_Chebychev_solver, &
+      use_decimation, use_qdos, write_DOS, write_complex_qdos, write_density_ascii, write_rho2ns, write_DOS_lm
     use :: mod_constants, only: czero, pi
     use :: mod_profiling, only: memocc
     use :: mod_mympi, only: myrank, master
@@ -260,7 +260,7 @@ contains
     end if
 
     ! write parameters file that contains passed parameters for further treatment of gflle
-    if (calc_lmdos) then
+    if (calc_gmat_lm_full) then
       qdosopt = 'n'
       if (use_qdos) then
         qdosopt = 'y'          
@@ -269,7 +269,7 @@ contains
       df(:) = wez(:)/dble(nspin)
       write (67, *) ielast, iemxd, natyp, nspin, lmax, qdosopt, df(1:ielast), ez(1:ielast), korbit
       close (67)
-    end if ! calc_lmdos
+    end if ! calc_gmat_lm_full
 
     ! ------------------------------------------------------------------------
     ! LLY
@@ -663,7 +663,7 @@ contains
 
         ! lmdos writeout
         if (myrank==master) then
-          if (opt('lmdos    ')) then
+          if (write_DOS_lm) then
             do i1 = 1, natyp
               do ispin = 1, nspin
                 ipot = (i1-1)*nspinpot + ispin

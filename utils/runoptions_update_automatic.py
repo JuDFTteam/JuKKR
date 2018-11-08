@@ -1,14 +1,13 @@
 def get_source_files(folder):
 	from os import listdir
 	all_source_files = listdir(folder)
-	try:
-		all_source_files.remove('test')
-	except:
-		pass
-	try:
-		all_source_files.remove('runopt_update_tool')
-	except:
-		pass
+	remove_files = ['test','runopt_update_tool','runoptions_update_automatic.py','out','runoptions_list.txt']
+	for file in remove_files:
+		try:
+			all_source_files.remove(file)
+		except:
+			pass
+
 	return all_source_files
 
 def construct_keywords_dict(filename='runoptions_list.txt'):
@@ -97,7 +96,6 @@ def find_subroutine_blocks(srctxt):
 
 def append_use_statement_to_subroutine():
 	from os.path import sep
-	from re import compile, IGNORECASE
 
 	#manual settings
 	srcfolder='.'
@@ -155,7 +153,44 @@ def append_use_statement_to_subroutine():
 	print 'open '+' '.join(sources_modified)
 
 
+def filter_opt_test_calls():
+	from os.path import sep
+	from re import compile, IGNORECASE
+
+	#manual settings
+	srcfolder='..'
+	outfolder = 'out'
+
+	#initialize variables
+	#WARNINGS=[]
+	#keywords = construct_keywords_dict(filename='runoptions_list.txt')
+	all_source_files = get_source_files(srcfolder)
+
+	sources_modified = []
+
+	c_8_opt_call  = compile(r'opt {0,10}\( {0,10}["'+"'"+'].{8,8}["'+"'"+r'] {0,10}\)', flags=IGNORECASE)
+	c_8_test_call = compile(r'test {0,10}\( {0,10}["'+"'"+'].{8,8}["'+"'"+r'] {0,10}\)', flags=IGNORECASE)
+	c_any_opt_call  = compile(r'opt {0,10}\( {0,10}["'+"'"+'].*["'+"'"+r'] {0,10}\)', flags=IGNORECASE)
+	c_any_test_call = compile(r'test {0,10}\( {0,10}["'+"'"+'].*["'+"'"+r'] {0,10}\)', flags=IGNORECASE)
+
+	o_8_opt_call = open(outfolder+sep+'c_8_opt_call.txt','w')
+	o_8_test_call = open(outfolder+sep+'c_8_test_call.txt','w')
+	o_any_opt_call = open(outfolder+sep+'c_any_opt_call.txt','w')
+	o_any_test_call = open(outfolder+sep+'c_any_test_call.txt','w')
+
+	for srcfile in all_source_files:
+
+		#open source and write backup:q	
+		srctxt = open(srcfolder+sep+srcfile,'r').readlines()
+
+		for iline, line in enumerate(srctxt):
+			if(len(c_8_opt_call.findall(line))>0): o_8_opt_call.write('%-30s: %5i : %s\n'%(srcfile,iline+1,line.strip()))
+			if(len(c_8_test_call.findall(line))>0): o_8_test_call.write('%-30s: %5i : %s\n'%(srcfile,iline+1,line.strip()))
+			if(len(c_any_opt_call.findall(line))>0): o_any_opt_call.write('%-30s: %5i : %s\n'%(srcfile,iline+1,line.strip()))
+			if(len(c_any_test_call.findall(line))>0): o_any_test_call.write('%-30s: %5i : %s\n'%(srcfile,iline+1,line.strip()))
+
 
 if __name__ == '__main__':
 	#automatic_replacement_all_sources()
-	append_use_statement_to_subroutine()
+	#append_use_statement_to_subroutine()
+	filter_opt_test_calls()

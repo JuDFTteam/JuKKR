@@ -156,7 +156,7 @@ contains
     ! Array sizes definitions
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    if (test('flow     ') .and. (t_inc%i_write>0)) write (1337, *) '>>> kkrmat1: loop over k-points'
+    if (print_program_flow .and. (t_inc%i_write>0)) write (1337, *) '>>> kkrmat1: loop over k-points'
 
     citpi = cmi*2.0_dp*pi    ! = -i*2*PI
 

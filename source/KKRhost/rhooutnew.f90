@@ -22,7 +22,7 @@ contains
     rho2nsc, corbital, gflle_part, rpan_intervall, ipan_intervall, nspin)
 
     use :: mod_constants, only: cone,czero,pi
-    use :: mod_runoptions, only: calc_lmdos
+    use :: mod_runoptions, only: calc_gmat_lm_full
     use :: mod_profiling
     use :: global_variables
     use :: mod_datatypes, only: dp
@@ -200,7 +200,7 @@ contains
 
 
     ! IF lmdos or LDAU
-    if (calc_lmdos .or. opt('LDA+U   ')) then ! lmlm-dos
+    if (calc_gmat_lm_full .or. opt('LDA+U   ')) then ! lmlm-dos
       ! Integrate only up to muffin-tin radius.
       ! ! lmlm-dos
       gflle_part = czero           ! lmlm-dos
@@ -230,7 +230,7 @@ contains
           call intcheb_cell(cwr, gflle_part(lm1,lm2), rpan_intervall, ipan_intervall, npan_tot, ncheb, irmdnew)
         end do
       end do
-    end if                         ! calc_lmdos.OR.OPT('LDA+U   ')
+    end if                         ! calc_gmat_lm_full.OR.OPT('LDA+U   ')
 
 
     ! DO IR = 1,IRMDNEW

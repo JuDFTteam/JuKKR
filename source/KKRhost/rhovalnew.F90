@@ -43,7 +43,8 @@ contains
     use :: mod_mympi, only: find_dims_2d, distribute_linear_on_tasks, mympi_main1c_comm_newsosol
 #endif
     use :: mod_save_wavefun, only: t_wavefunctions, read_wavefunc
-    use :: mod_runoptions, only: calc_exchange_couplings, calc_lmdos, disable_tmat_sratrick, fix_nonco_angles, use_qdos, write_complex_qdos, write_pkkr_operators
+    use :: mod_runoptions, only: calc_exchange_couplings, calc_gmat_lm_full, disable_tmat_sratrick, fix_nonco_angles, &
+      use_qdos, write_complex_qdos, write_pkkr_operators, write_DOS_lm
     use :: mod_version_info
     use :: global_variables
     use :: mod_constants
@@ -404,7 +405,7 @@ contains
 #else
     i1_myrank = i1                 ! lmlm-dos ruess
 #endif
-    if ((calc_lmdos) .and. (i1_myrank==1)) then ! lmlm-dos ruess
+    if ((calc_gmat_lm_full) .and. (i1_myrank==1)) then ! lmlm-dos ruess
       lrecgflle = nspin*(1+korbit)*lmmaxso*lmmaxso*ielast*nqdos ! lmlm-dos ruess
       open (91, access='direct', recl=lrecgflle, file='gflle' & ! lmlm-dos ruess
         , form='unformatted', status='replace', err=110, iostat=ierr) ! lmlm-dos ruess
@@ -738,7 +739,7 @@ contains
             muorb(lmaxd1+1, 1:3) = muorb(lmaxd1+1, 1:3) + muorb(lm1, 1:3)
           end do
         end do ! IORB
-      end if ! .not. test('NOSOC    ')
+      end if ! .not. test('NOSOC   ')
 
     end do                         ! IE loop
 #ifdef CPP_OMP
@@ -849,10 +850,10 @@ contains
     call timing_start('main1c - communication')
 #endif
     ! reset NQDOS to avoid endless communication
-    if (.not. opt('lmdos    ')) then
+    if (.not. calc_gmat_lm_full) then
       nqdos = 1
     else
-      if (myrank==master) write (*, *) 'lmlm-dos option, communcation might take a while!', ielast, nqdos
+      if (myrank==master) write (*, *) '< calc_gmat_lm_full > option, communcation might take a while!', ielast, nqdos
     end if
     ! set these arrays to zero to avoid double counting in cases where extra ranks are used
     if (t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1)) then
@@ -912,7 +913,7 @@ contains
       if (.not. use_qdos) then
         ! omp: moved write-out of dos files out of parallel energy loop
         ! Write out lm-dos:                                                     ! lm-dos
-        if (opt('lmdos    ')) then ! qdos ruess
+        if (write_DOS_lm) then ! qdos ruess
           do ie = 1, ielast        ! lm-dos
             iq = 1                 ! lm-dos
             if (ie==1) then        ! lm-dos
@@ -939,7 +940,7 @@ contains
       end if                       ! .not. use_qdos
 
       ! write gflle to file                                                 ! lmlm-dos
-      if (calc_lmdos) then    ! lmlm-dos
+      if (calc_gmat_lm_full) then    ! lmlm-dos
         if (t_inc%i_write>0) then  ! lmlm-dos
           write (1337, *) 'gflle:', shape(gflle), shape(gflle_part), lrecgflle ! lmlm-dos
         end if                     ! lmlm-dos

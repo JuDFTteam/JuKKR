@@ -55,7 +55,7 @@ contains
 #endif
     use :: mod_types, only: t_tgmat, t_inc, t_mpi_c_grid, init_tgmat
     use :: mod_constants
-    use :: mod_runoptions, only: calc_lmdos, set_gmat_to_zero, use_qdos, write_complex_qdos
+    use :: mod_runoptions, only: calc_gmat_lm_full, set_gmat_to_zero, use_qdos, write_complex_qdos
     use :: mod_profiling
     use :: mod_version_info
     use :: global_variables
@@ -498,7 +498,7 @@ contains
       ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Write out gflle
-      if (calc_lmdos) then    ! lmlm-dos
+      if (calc_gmat_lm_full) then    ! lmlm-dos
         if (ispin==1) then         ! lmlm-dos
           ! 4 words = 16 bytes / complex number                                   ! lmlm-dos
           lrecgflle = wlength*4*lmmaxd*lmmaxd*ielast*nqdos ! lmlm-dos
