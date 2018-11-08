@@ -24,11 +24,11 @@ add_executable(
     source/common/test.f90
     source/common/cinit.f90 
     source/common/radial_solver_Chebychev/intcheb_cell.f90 
-    source/rhoq/gaunt_new.f
-    source/rhoq/cspher.f
+    source/rhoq/gaunt_new.f90
+    source/rhoq/cspher.f90
     source/rhoq/calc_jlk.f90
-    source/rhoq/interpol_shape.f
-    source/rhoq/read_shape.f
+    source/rhoq/interpol_shape.f90
+    source/rhoq/read_shape.f90
     source/rhoq/mod_rhoq.F90
     )
 

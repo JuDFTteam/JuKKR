@@ -3,6 +3,7 @@ module mod_rhoq
 #ifdef CPP_MPI
 use mpi
 #endif
+use mod_datatypes, only: dp
 
 implicit none
 
@@ -12,38 +13,38 @@ type type_rhoq
   integer :: Nscoef ! number of impurities in impurity cluster
   integer :: Nlayer ! number of different layers in impurity cluster
   integer, allocatable :: ilay_scoef(:) ! (Nscoef), layer index for all positions in impurity cluster
-  double precision, allocatable :: r_scoef(:,:) ! (3,Nscoef), position vector to all positions in impurity cluster
+  real (kind=dp), allocatable :: r_scoef(:,:) ! (3,Nscoef), position vector to all positions in impurity cluster
 
   ! exclude cluster
   integer :: Nexcl ! number of position which are excluded (positions directly above impurity)
-  double precision, allocatable :: r_excl(:,:) ! (3,Nexcl), position vector to all positions in exclude cluster
+  real (kind=dp), allocatable :: r_excl(:,:) ! (3,Nexcl), position vector to all positions in exclude cluster
   
   ! kmesh
   integer :: nkpt, Nkx, Nky ! total number of kpoints, nkpt=Nkx*Nky
-  double precision :: volbz ! Brillouin zone volume -> integration weight
-  double precision, allocatable :: kpt(:,:) ! (3,nkpt), coordinates of kpoints
-  double precision, allocatable :: volcub(:) ! (nkpt), volume of cube associated with kpoint
+  real (kind=dp) :: volbz ! Brillouin zone volume -> integration weight
+  real (kind=dp), allocatable :: kpt(:,:) ! (3,nkpt), coordinates of kpoints
+  real (kind=dp), allocatable :: volcub(:) ! (nkpt), volume of cube associated with kpoint
 
   ! reduce q-points fo this box
-  double precision :: qbox(3)
+  real (kind=dp) :: qbox(3)
   
   ! geometry etc.
   integer :: mu_0 ! layer index of probe position
   integer :: natyp ! number of atoms in host system
-  double precision, allocatable :: r_basis(:,:) ! (3,natyp), real space positions of all atoms in host system
-  double precision, allocatable :: L_i(:,:) ! (3,Nscoef+1), lattice vectors for all atoms in impurity cluster and the probe layer
+  real (kind=dp), allocatable :: r_basis(:,:) ! (3,natyp), real space positions of all atoms in host system
+  real (kind=dp), allocatable :: L_i(:,:) ! (3,Nscoef+1), lattice vectors for all atoms in impurity cluster and the probe layer
   integer :: lmmaxso ! size in l,m(,s) (if SOC calculation) subblocks
   
   ! Green functions etc.
   logical :: Ghost_k_memsave ! logical switch which determines if Ghost_k is stored in a file or kept in memory
-!   double complex, allocatable :: Ghost(:,:,:) ! (Nlayer,lmmaxso,lmmaxso) 
-!   double complex, allocatable :: Ghost_k(:,:,:,:) ! (Nlayer,nkpt,lmmaxso,lmmaxso) 
-  double complex, allocatable :: G0tauG0_excl(:,:,:) ! (2*Nexcl, lmmaxso, lmmaxso), precalculated maxtrix sum_jk G0ij.tau_jk.G0_ki where j,k in imp cluster and i in exclude cluster
+!   complex (kind=dp), allocatable :: Ghost(:,:,:) ! (Nlayer,lmmaxso,lmmaxso) 
+!   complex (kind=dp), allocatable :: Ghost_k(:,:,:,:) ! (Nlayer,nkpt,lmmaxso,lmmaxso) 
+  complex (kind=dp), allocatable :: G0tauG0_excl(:,:,:) ! (2*Nexcl, lmmaxso, lmmaxso), precalculated maxtrix sum_jk G0ij.tau_jk.G0_ki where j,k in imp cluster and i in exclude cluster
 
   ! these are used later on (not included in Bcast with Narrays parameter)
-  double complex, allocatable :: Dt(:,:)   ! (Nscoef*lmmaxso,Nscoef*lmmaxso) 
-  double complex, allocatable :: Gimp(:,:) ! (Nscoef*lmmaxso,Nscoef*lmmaxso) 
-  double complex, allocatable :: tau(:,:)  ! (Nscoef*lmmaxso,Nscoef*lmmaxso) 
+  complex (kind=dp), allocatable :: Dt(:,:)   ! (Nscoef*lmmaxso,Nscoef*lmmaxso) 
+  complex (kind=dp), allocatable :: Gimp(:,:) ! (Nscoef*lmmaxso,Nscoef*lmmaxso) 
+  complex (kind=dp), allocatable :: tau(:,:)  ! (Nscoef*lmmaxso,Nscoef*lmmaxso) 
 
   ! logical switches
   logical :: exclude_only ! flag to determin if dry run (i.e. without q-loop) should be performed to get only C_M contribution
@@ -65,6 +66,7 @@ subroutine bcast_scalars_rhoq(t_rhoq)
   ! broadcast scalars in t_rhoq over all ranks
   use mpi
   use mod_mympi, only: myrank, master, nranks
+  use mod_datatypes, only: dp
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
   ! local variables
@@ -128,7 +130,7 @@ subroutine init_t_rhoq(t_rhoq)
   if(.not.allocated(t_rhoq%ilay_scoef)) allocate(t_rhoq%ilay_scoef(t_rhoq%Nscoef), stat=ierr)
   if(ierr/=0) stop '[init_t_rhoq] error allocating ilay_scoef in rhoq'
   
-  !double precision
+  !real (kind=dp)
   if(.not.allocated(t_rhoq%r_scoef)) allocate(t_rhoq%r_scoef(3,t_rhoq%Nscoef), stat=ierr)
   if(ierr/=0) stop '[init_t_rhoq] error allocating r_scoef in rhoq'
   if(.not.allocated(t_rhoq%kpt)) allocate(t_rhoq%kpt(3,t_rhoq%nkpt), stat=ierr)
@@ -142,7 +144,7 @@ subroutine init_t_rhoq(t_rhoq)
 
   N = t_rhoq%Nscoef*t_rhoq%lmmaxso
   
-  !double complex
+  !complex (kind=dp)
   if(.not.allocated(t_rhoq%Dt)) allocate(t_rhoq%Dt(N, N), stat=ierr)
   if(ierr/=0) stop '[init_t_rhoq] error allocating Dt in rhoq'
   if(.not.allocated(t_rhoq%Gimp)) allocate(t_rhoq%Gimp(N, N), stat=ierr)
@@ -162,11 +164,12 @@ end subroutine init_t_rhoq
 
 subroutine read_scoef_rhoq(t_rhoq)
   ! read in impurity cluster information and save this in t_rhoq
+  use mod_datatypes, only: dp
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
   !local variables
   integer natomimp, iatom, ierr, Nlayer, tmp
-  double precision, allocatable :: ratomimp(:,:)
+  real (kind=dp), allocatable :: ratomimp(:,:)
   integer, allocatable :: atomimp(:)
 
   open(unit=32452345,file='scoef',iostat=ierr)
@@ -180,7 +183,7 @@ subroutine read_scoef_rhoq(t_rhoq)
   allocate(atomimp(natomimp))
   do iatom=1,natomimp
     read(32452345,*) ratomimp(:,iatom),atomimp(iatom)
-    write(*,'(A,I,A,3F)') 'IMPATOM ',iatom,' :',ratomimp(:,iatom)
+    write(*,'(A,I6,A,3F14.7)') 'IMPATOM ',iatom,' :',ratomimp(:,iatom)
   end do
   close(32452345)
   
@@ -281,12 +284,13 @@ end subroutine read_input_rhoq
 
 subroutine save_kmesh_rhoq(t_rhoq,nkpt,kpt,volcub,volbz, Nkx, Nky)
   ! save kmesh information in t_rhoq
+  use mod_datatypes, only: dp
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
   integer, intent(in) :: nkpt, Nkx, Nky ! total number of kpoints
-  double precision, intent(in) :: volbz ! Brillouin zone volume -> integration weight
-  double precision, intent(in) :: kpt(3,nkpt) ! coordinates in reciprocal space of the kpoints
-  double precision, intent(in) :: volcub(nkpt) ! volume of kpoint cube
+  real (kind=dp), intent(in) :: volbz ! Brillouin zone volume -> integration weight
+  real (kind=dp), intent(in) :: kpt(3,nkpt) ! coordinates in reciprocal space of the kpoints
+  real (kind=dp), intent(in) :: volcub(nkpt) ! volume of kpoint cube
   !local
   integer :: ierr
   
@@ -311,9 +315,10 @@ end subroutine save_kmesh_rhoq
 subroutine save_geometry_rhoq(t_rhoq,r_basis,lmmaxso,natyp)
   ! save geometry information
   ! Attention: t_rhoq has to contain mu_0 etc from inputcard (done with read_input_rhoq)
+  use mod_datatypes, only: dp
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
-  double precision, intent(in)   :: r_basis(3,natyp) ! real space positions of all atoms in host system
+  real (kind=dp), intent(in)   :: r_basis(3,natyp) ! real space positions of all atoms in host system
   integer, intent(in)            :: natyp, lmmaxso ! number of atoms in impcluster, size in l,m(,s) (if SOC calculation) subblocks
   !local
   integer :: ierr
@@ -339,16 +344,17 @@ end subroutine save_geometry_rhoq
 subroutine get_L_vecs_rhoq(t_rhoq)
   ! calculate L_i vectors needed in calculate_rhoq from information of impurity cluster etc.
   ! L_i = R_mu - R_cls - r^cls_i, here R_mu and R_cls are the positions in the host systems basis and r^cls_i is the position inside the impurity cluster
+  use mod_datatypes, only: dp
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
   ! local
   integer :: mu_cls, mu_orig ! layer indices for probe position, cluster center and origin position, respectively
-  double precision :: Chi_mu0(3), Chi_cls(3) ! position in host system according to mu_orig and mu_cls (Chi_mu vector)
-  double precision, allocatable :: rcls_i(:,:) ! size=(3,Nscoef), positions inside the impurity cluster
-  double precision, allocatable :: r_basis(:,:) ! size=(3,natyp), positions in host system
-  double precision, allocatable :: L_i(:,:) ! size=(3,Nscoef), lattice vectors
+  real (kind=dp) :: Chi_mu0(3), Chi_cls(3) ! position in host system according to mu_orig and mu_cls (Chi_mu vector)
+  real (kind=dp), allocatable :: rcls_i(:,:) ! size=(3,Nscoef), positions inside the impurity cluster
+  real (kind=dp), allocatable :: r_basis(:,:) ! size=(3,natyp), positions in host system
+  real (kind=dp), allocatable :: L_i(:,:) ! size=(3,Nscoef), lattice vectors
   integer :: ilayer, irun ! loop parameter
-  double precision, parameter :: eps = 1.0D-6 ! small epsilon -> threashold
+  real (kind=dp), parameter :: eps = 1.0D-6 ! small epsilon -> threashold
   integer :: ierr
   
   ! allocations etc.
@@ -361,7 +367,7 @@ subroutine get_L_vecs_rhoq(t_rhoq)
   irun = 1
   do while(irun==1 .and. ilayer<t_rhoq%natyp)
     ilayer = ilayer+1
-    if(dsqrt(sum(r_basis(:,ilayer)**2))<eps) irun = 0
+    if(sqrt(sum(r_basis(:,ilayer)**2))<eps) irun = 0
   end do
   mu_orig = ilayer
   
@@ -370,7 +376,7 @@ subroutine get_L_vecs_rhoq(t_rhoq)
   irun = 1
   do while(irun==1)
     ilayer = ilayer+1
-    if(dsqrt(sum(rcls_i(:,ilayer)**2))<eps) irun = 0
+    if(sqrt(sum(rcls_i(:,ilayer)**2))<eps) irun = 0
   end do
   mu_cls = t_rhoq%ilay_scoef(ilayer)
   
@@ -381,7 +387,7 @@ subroutine get_L_vecs_rhoq(t_rhoq)
   ! L_i = r^cls_i 
   do ilayer=1,t_rhoq%Nscoef
     L_i(:,ilayer) = rcls_i(:,ilayer)+Chi_cls(:)-r_basis(:,t_rhoq%ilay_scoef(ilayer))
-    write(*,'(A,I,3F)') 'L_i',ilayer, L_i(:,ilayer)
+    write(*,'(A,I5,3F14.7)') 'L_i',ilayer, L_i(:,ilayer)
   end do
   
   ! save result and exit
@@ -407,27 +413,28 @@ subroutine start_excl(t_rhoq)
 #ifdef CPP_MPI
   use mpi
 #endif
+  use mod_datatypes, only: dp
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
   !local variables
   integer natomimp, iatom, itmp1, itmp2, icls1, icls2, lm1, lm2, N, ienergy
   integer :: ierr, N1, N2, irun, ilayer, mu_cls
   integer, allocatable :: ilay_excl(:)
-  double complex, allocatable :: temp(:,:),temp2(:,:)
-  double precision, allocatable :: ratomimp(:,:)
-  double complex, parameter :: C0=(0.0D0,0.0D0), C1=(1.0D0,0.0D0), CI=(0d0,1d0)
-  double complex, allocatable :: Gll0(:,:)     !(ncls*lmmaxso, ncls*lmmaxso)
-  double complex, allocatable :: Gll_3(:,:,:)  !(ncls*lmmaxso, ncls*lmmaxso,3)
-  double complex, allocatable :: dGll(:,:)     !(ncls*lmmaxso, ncls*lmmaxso)
-  double complex, allocatable :: d2Gll(:,:)    !(ncls*lmmaxso, ncls*lmmaxso)
-  double complex, allocatable :: G0ijexcl(:,:) ! (Nexcl*lmmaxso,Nscoef*lmmaxso), real-space GF between position in exclude region and position in impurity cluster
-  double complex, allocatable :: G0jiexcl(:,:) ! (Nexcl*lmmaxso,Nscoef*lmmaxso), like G0ijexcl but propagator from imp cluster to exclude region
-  double precision :: dEimag
-  double complex :: energy(3), dE1, dE2, ctmp1, ctmp2
-  double precision, parameter :: eps = 1.0D-6 ! small epsilon -> threshold
+  complex (kind=dp), allocatable :: temp(:,:),temp2(:,:)
+  real (kind=dp), allocatable :: ratomimp(:,:)
+  complex (kind=dp), parameter :: C0=(0.0D0,0.0D0), C1=(1.0D0,0.0D0), CI=(0d0,1d0)
+  complex (kind=dp), allocatable :: Gll0(:,:)     !(ncls*lmmaxso, ncls*lmmaxso)
+  complex (kind=dp), allocatable :: Gll_3(:,:,:)  !(ncls*lmmaxso, ncls*lmmaxso,3)
+  complex (kind=dp), allocatable :: dGll(:,:)     !(ncls*lmmaxso, ncls*lmmaxso)
+  complex (kind=dp), allocatable :: d2Gll(:,:)    !(ncls*lmmaxso, ncls*lmmaxso)
+  complex (kind=dp), allocatable :: G0ijexcl(:,:) ! (Nexcl*lmmaxso,Nscoef*lmmaxso), real-space GF between position in exclude region and position in impurity cluster
+  complex (kind=dp), allocatable :: G0jiexcl(:,:) ! (Nexcl*lmmaxso,Nscoef*lmmaxso), like G0ijexcl but propagator from imp cluster to exclude region
+  real (kind=dp) :: dEimag
+  complex (kind=dp) :: energy(3), dE1, dE2, ctmp1, ctmp2
+  real (kind=dp), parameter :: eps = 1.0D-6 ! small epsilon -> threshold
 
   logical :: l_exist
-  double precision :: r_offset(3)
+  real (kind=dp) :: r_offset(3)
 
 
 
@@ -440,7 +447,7 @@ subroutine start_excl(t_rhoq)
      allocate(ratomimp(3,natomimp), ilay_excl(natomimp))
      do iatom=1,natomimp
        read(32452345,*) ratomimp(:,iatom), ilay_excl(iatom)
-       if(iatom>t_rhoq%Nscoef) write(*,'(A,I,A,3F,3i)') 'exclude cluster ',iatom,' :',ratomimp(:,iatom), natomimp, t_rhoq%Nscoef, ilay_excl(iatom)
+       if(iatom>t_rhoq%Nscoef) write(*,'(A,I6,A,3F14.7,3i5)') 'exclude cluster ',iatom,' :',ratomimp(:,iatom), natomimp, t_rhoq%Nscoef, ilay_excl(iatom)
      end do
      close(32452345)
      
@@ -459,7 +466,7 @@ subroutine start_excl(t_rhoq)
      irun = 1
      do while(irun==1)
        ilayer = ilayer+1
-       if(dsqrt(sum(t_rhoq%r_scoef(:,ilayer)**2))<eps) irun = 0
+       if(sqrt(sum(t_rhoq%r_scoef(:,ilayer)**2))<eps) irun = 0
      end do
      mu_cls = t_rhoq%ilay_scoef(ilayer)
 
@@ -478,7 +485,7 @@ subroutine start_excl(t_rhoq)
        !write(*,'(I,9F)') ilayer, t_rhoq%r_excl(:,ilayer), t_rhoq%r_basis(:,mu_cls), t_rhoq%r_basis(:,ilay_excl(ilayer+t_rhoq%Nscoef))
        t_rhoq%r_excl(:,ilayer) = t_rhoq%r_excl(:,ilayer) + r_offset -t_rhoq%r_basis(:,ilay_excl(ilayer+t_rhoq%Nscoef))  +t_rhoq%r_basis(:,mu_cls)
        !t_rhoq%r_excl(:,ilayer) = t_rhoq%r_excl(:,ilayer) + r_offset! -t_rhoq%r_basis(:,ilay_excl(ilayer+t_rhoq%Nscoef))  !+t_rhoq%r_basis(:,mu_cls)-
-       write(*,'(I,3F)') ilayer, t_rhoq%r_excl(:,ilayer)
+       write(*,'(I6,3F14.7)') ilayer, t_rhoq%r_excl(:,ilayer)
      end do
      write(*,*) t_rhoq%r_basis(:,mu_cls), r_offset
      
@@ -602,11 +609,11 @@ subroutine start_excl(t_rhoq)
      N2 = t_rhoq%Nexcl*t_rhoq%lmmaxso
 
      ! temp = G0ij^*.tau^*
-     call ZGEMM('n','n',N2,N1,N1,C1,dconjg(G0ijexcl),N2,dconjg(t_rhoq%tau),N1,C0,temp,N2)
+     call ZGEMM('n','n',N2,N1,N1,C1,conjg(G0ijexcl),N2,conjg(t_rhoq%tau),N1,C0,temp,N2)
      
      ! sum_jk [...] = Gij^*.tau^*.Gji^*
      !              = temp.Gji^*
-     call ZGEMM('n','n',N2,N2,N1,C1,temp,N2,dconjg(G0jiexcl),N1,C0,temp2,N2)
+     call ZGEMM('n','n',N2,N2,N1,C1,temp,N2,conjg(G0jiexcl),N1,C0,temp2,N2)
 
      ! now restructure (take only diagonal lm-blocks)
      do icls1=1,t_rhoq%Nexcl
@@ -677,16 +684,17 @@ end subroutine read_Dt_Gimp_rhoq
 ! needed to read in DTMTRX and GMATLL_GES files
 
 subroutine read_DTMTRX( tmat, lmmaxso, ncls)
+  use mod_datatypes, only: dp
   implicit none
   ! .... Arguments ....
   integer,           intent(in)  :: lmmaxso, ncls
-  double complex,    intent(out) :: tmat(ncls*lmmaxso,ncls*lmmaxso) ! tmat file actually too large? not vector but diagonal matrix is stored???
+  complex (kind=dp),    intent(out) :: tmat(ncls*lmmaxso,ncls*lmmaxso) ! tmat file actually too large? not vector but diagonal matrix is stored???
   ! local
   integer :: icls, lm1, lm2, idummy1, idummy2, nClustertest
-  double precision :: Rclstest(3)
-  double complex :: deltamat_dummy
+  real (kind=dp) :: Rclstest(3)
+  complex (kind=dp) :: deltamat_dummy
   !parameter
-  double precision, parameter :: eps = 1.0D-6 ! small epsilon -> threshold
+  real (kind=dp), parameter :: eps = 1.0D-6 ! small epsilon -> threshold
 
 
   !============ BEGIN ===========!
@@ -721,17 +729,18 @@ end subroutine read_DTMTRX
 
 subroutine read_green_ll(ncls,lmmaxso, Gll0)
 
+  use mod_datatypes, only: dp
   implicit none
   integer,          intent(in)  :: lmmaxso, ncls
-  double complex, intent(out) :: Gll0(ncls*lmmaxso, ncls*lmmaxso)
+  complex (kind=dp), intent(out) :: Gll0(ncls*lmmaxso, ncls*lmmaxso)
   ! local
-  double precision :: dEimag
-  double complex :: energy(3), dE1, dE2, ctmp1, ctmp2
-  double complex :: Gll_3(ncls*lmmaxso, ncls*lmmaxso,3), &
+  real (kind=dp) :: dEimag
+  complex (kind=dp) :: energy(3), dE1, dE2, ctmp1, ctmp2
+  complex (kind=dp) :: Gll_3(ncls*lmmaxso, ncls*lmmaxso,3), &
                   &  dGll(ncls*lmmaxso, ncls*lmmaxso),    &
                   & d2Gll(ncls*lmmaxso, ncls*lmmaxso)
   integer :: ienergy, lm1, lm2, id1, id2
-  double complex, parameter :: CI=(0d0,1d0)
+  complex (kind=dp), parameter :: CI=(0d0,1d0)
 
   ! Read the gll_3 (for the three energies)
   open(unit=1283, file='GMATLL_GES', form='formatted', action='read')
@@ -774,12 +783,13 @@ end subroutine read_green_ll
 subroutine calc_tau_rhoq(t_rhoq)
   ! calculate tau from Dt and Gimp according to
   ! tau_i,i' = Dt_i delta_i,i' + Dt_i Gimp_i,i' Dt_i'
+  use mod_datatypes, only: dp
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
   ! locals
-  double complex, allocatable :: temp(:,:)
+  complex (kind=dp), allocatable :: temp(:,:)
   integer :: ierr, N
-  double complex, parameter :: C0=(0.0D0,0.0D0), C1=(1.0D0,0.0D0)
+  complex (kind=dp), parameter :: C0=(0.0D0,0.0D0), C1=(1.0D0,0.0D0)
 
   ! matrix sizes
   N = t_rhoq%Nscoef*t_rhoq%lmmaxso
@@ -815,25 +825,26 @@ subroutine calc_Q_mu_rhoq(lmax, ntotd, npan_tot, &
   ! calculate prefactor needed in rhoq calculation:
   ! Q^mu_Lambda,Lamabda' = Int d^3r Tr[ R^mu_Lmabda(\vec{r}) R^left,mu_Lmabda'(\vec{r}) ] where R^left denotes the left solution
   use mod_gaunt2, only: gaunt2
+  use mod_datatypes, only: dp
   implicit none
   integer, intent(in) :: lmax, ntotd, npan_tot
   integer, intent(inout) :: nsra, lmmaxso, irmdnew ! left/right solutions (wave functions)
 !   integer, intent(in) :: nsra, lmmaxso, irmdnew ! left/right solutions (wave functions)
-  double complex, intent(in) :: Rll(nsra*lmmaxso,lmmaxso,irmdnew), Rllleft(nsra*lmmaxso,lmmaxso,irmdnew) ! wave functions in new mesh
+  complex (kind=dp), intent(in) :: Rll(nsra*lmmaxso,lmmaxso,irmdnew), Rllleft(nsra*lmmaxso,lmmaxso,irmdnew) ! wave functions in new mesh
   integer, intent(in) :: ipan_intervall(0:ntotd)
-  double complex, allocatable, intent(out) :: trq_of_r(:,:,:,:) !(lmmaxso,lmmaxso, 100, irmdnew)
+  complex (kind=dp), allocatable, intent(out) :: trq_of_r(:,:,:,:) !(lmmaxso,lmmaxso, 100, irmdnew)
   integer, intent(out) :: ncleb_max
   
-  double precision, parameter :: c0ll = 1.0d0/sqrt(16.0d0*datan(1.0d0)) ! Y_00 = 1/sqrt(4*pi) needed for theta_00 * Y_00 = 1, other spherical harmonics are in Gaunt coefficients cleb(:,:)
+  real (kind=dp), parameter :: c0ll = 1.0d0/sqrt(16.0d0*atan(1.0d0)) ! Y_00 = 1/sqrt(4*pi) needed for theta_00 * Y_00 = 1, other spherical harmonics are in Gaunt coefficients cleb(:,:)
   
   ! local
   integer :: imt1, lm1, lm2, lm3, ir, j, lm01, lm02, lmshift(2), ispin
   integer :: ncleb, lpot, iend, ierr ! Gaunt coefficients
-  double precision, allocatable :: cleb(:), WG(:), YRG(:,:,:) ! Gaunt coefficients
+  real (kind=dp), allocatable :: cleb(:), WG(:), YRG(:,:,:) ! Gaunt coefficients
   integer, allocatable :: icleb(:,:), loflm(:), JEND(:,:,:) ! Gaunt coefficients
   
   ! parameter
-  double complex, parameter :: C0=( 0.0d0, 0.0d0 ), C1=( 1.0d0, 0.0d0 )
+  complex (kind=dp), parameter :: C0=( 0.0d0, 0.0d0 ), C1=( 1.0d0, 0.0d0 )
   
   
   ! compute gaunt coefficients
@@ -922,13 +933,14 @@ subroutine calc_G0_k(tau0_k, tinv_i, tinv_j, G0_k, mu_i, mu_j, N)
   ! where $t_{mu_i}\equiv t_{i}$.
   !                                       -> expfac
   ! finally construct G0^mu,mu_i (k) * exp(-i k*L_i)
+  use mod_datatypes, only: dp
   implicit none
   integer, intent(in) :: N, mu_i, mu_j
-  double complex, intent(in)  :: tinv_i(N,N), tinv_j(N,N), tau0_k(N,N)
-  double complex, intent(out) :: G0_k(N,N)
+  complex (kind=dp), intent(in)  :: tinv_i(N,N), tinv_j(N,N), tau0_k(N,N)
+  complex (kind=dp), intent(out) :: G0_k(N,N)
   ! local
-  double complex :: temp(N,N)
-  double complex, parameter :: C0=(0.0d0, 0.0d0), Ci=(0.0d0, 1.0d0), C1=(1.0d0, 0.0d0)
+  complex (kind=dp) :: temp(N,N)
+  complex (kind=dp), parameter :: C0=(0.0d0, 0.0d0), Ci=(0.0d0, 1.0d0), C1=(1.0d0, 0.0d0)
   
   ! initialize G0_k
   G0_k = C0
@@ -952,14 +964,15 @@ end subroutine calc_G0_k
 subroutine red_Q(t_rhoq, rb, qvec, iq)
   ! folding Q back into Brillouin zone, i.e. find q such that Q=G+q with a reciprocal lattice vector G
   ! this is done with 
+  use mod_datatypes, only: dp
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
-  double precision, intent(in) :: qvec(2), rb(2,2)
+  real (kind=dp), intent(in) :: qvec(2), rb(2,2)
   integer, intent(out) :: iq
   ! local
-  double precision :: rbt(2,2), irbt(2,2), rq(2), kpt(2), det, qv(2)!, minimum(3)
+  real (kind=dp) :: rbt(2,2), irbt(2,2), rq(2), kpt(2), det, qv(2)!, minimum(3)
   integer :: i, j
-  double precision, parameter :: eps=1.0d-04
+  real (kind=dp), parameter :: eps=1.0d-04
   
   ! compute inverse of transpose of reciprocal Bravais matrix
   ! note that transpose is needed because vectors are stored in rows and not in columns in the code
@@ -999,7 +1012,7 @@ subroutine red_Q(t_rhoq, rb, qvec, iq)
   iq = -1
   do i=1,t_rhoq%Nkpt
     kpt(:) = t_rhoq%kpt(:,i)
-    if(dabs(dsqrt((kpt(1)-qv(1))**2+(kpt(2)-qv(2))**2))<eps) then
+    if(abs(sqrt((kpt(1)-qv(1))**2+(kpt(2)-qv(2))**2))<eps) then
       iq=i
     end if
   end do
@@ -1017,18 +1030,19 @@ end subroutine red_Q
 
 subroutine get_tinv(t_rhoq, tinv)
   use mod_mympi, only: myrank, master
+  use mod_datatypes, only: dp
   implicit none
   ! parameter
-  double complex, parameter :: C0=(0.0d0, 0.0d0), C1=(1.0d0, 0.0d0)
+  complex (kind=dp), parameter :: C0=(0.0d0, 0.0d0), C1=(1.0d0, 0.0d0)
 
   ! input
   type(type_rhoq), intent(in) :: t_rhoq
   ! output
-  double complex, intent(out) :: tinv(:,:,:) !allocated outside with (N,N,Nscoef+1)
+  complex (kind=dp), intent(out) :: tinv(:,:,:) !allocated outside with (N,N,Nscoef+1)
   ! local
   integer :: nref, ie, ielast, ierr, i, irec, lrec, N, lm1
   integer, allocatable :: ipvt(:), refpot(:)
-  double complex, allocatable :: tll(:,:), trefll(:,:,:)
+  complex (kind=dp), allocatable :: tll(:,:), trefll(:,:,:)
 
   !matrix dimensions (depending on lmax)
   N = t_rhoq%lmmaxso
@@ -1142,9 +1156,13 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
         &        ntotd, npan_tot, ncheb, rpan_intervall, ipan_intervall, irmdnew, alat, ncleb_max )
   ! calculate Delta rho^mu(q) = Int{ Delta rho(q, X_mu+r), dr }
   !                           = -1/(2*pi*i) Tr[ Q^mu Int{ Ghost(k) tau Ghost(k+q),dk } - Q^mu,* Int{ Ghost^*(k) tau^* Ghost^*(k-q),dk }]
+#ifdef CPP_OMP
   use omp_lib
+#endif
   use mod_timing
+#ifndef __GFORTRAN__
   use IFPORT ! random numbers
+#endif
 #ifdef CPP_MPI
   use mod_mympi, only: master, myrank, nranks, distribute_linear_on_tasks
 #else
@@ -1152,15 +1170,16 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
 #endif
   use mod_intcheb_cell, only: intcheb_cell
   use mod_gaunt2, only: gaunt2
+  use mod_datatypes, only: dp
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
   integer, intent(in) :: lmmaxso, Nkp, irmdnew, lmax, ncleb_max
-  double complex, intent(inout) :: trq_of_r(lmmaxso,lmmaxso, ncleb_max, irmdnew)
-  double precision, intent(in) :: recbv(3,3), alat
+  complex (kind=dp), intent(inout) :: trq_of_r(lmmaxso,lmmaxso, ncleb_max, irmdnew)
+  real (kind=dp), intent(in) :: recbv(3,3), alat
   
   integer :: ntotd, npan_tot, ncheb, npan_log, npan_eq
   integer npan_lognew,npan_eqnew
-  double precision, intent(in) :: rpan_intervall(0:ntotd)
+  real (kind=dp), intent(in) :: rpan_intervall(0:ntotd)
   integer, intent(in) :: ipan_intervall(0:ntotd)
   
   ! local
@@ -1169,37 +1188,37 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
   integer, save :: mythread
   !$omp threadprivate(mythread)
   
-  double complex, allocatable :: tinv(:,:,:), tau0_k(:,:), G0ij_k(:,:,:,:), G0ji_k(:,:,:,:), tau(:,:,:,:), tmpG0(:,:), rhoq(:), rhoq_excl(:)
+  complex (kind=dp), allocatable :: tinv(:,:,:), tau0_k(:,:), G0ij_k(:,:,:,:), G0ji_k(:,:,:,:), tau(:,:,:,:), tmpG0(:,:), rhoq(:), rhoq_excl(:)
   
-  double complex, allocatable, save :: tmp(:,:), exG0_tmp(:,:), jl(:), tmpsum1(:,:), tmpsum2(:,:), eiqr_lm(:,:), cYlm(:), qint(:,:,:), q_mu(:,:)
+  complex (kind=dp), allocatable, save :: tmp(:,:), exG0_tmp(:,:), jl(:), tmpsum1(:,:), tmpsum2(:,:), eiqr_lm(:,:), cYlm(:), qint(:,:,:), q_mu(:,:)
   !$omp threadprivate(tmp, exG0_tmp, jl, tmpsum1, tmpsum2, eiqr_lm, cYlm, qint, q_mu)
   
-  double complex :: tr_tmpsum1, tr_tmpsum2, kweight, Z
-  double precision, allocatable :: kpt(:,:), L_i(:,:), Qvec(:,:), rnew(:), qvec_tmp(:,:)
+  complex (kind=dp) :: tr_tmpsum1, tr_tmpsum2, kweight, Z
+  real (kind=dp), allocatable :: kpt(:,:), L_i(:,:), Qvec(:,:), rnew(:), qvec_tmp(:,:)
   
-  double precision, allocatable, save :: Ylm(:)
+  real (kind=dp), allocatable, save :: Ylm(:)
   !$omp threadprivate(Ylm)
   
   integer, allocatable :: qvec_index_tmp(:,:), qvec_index(:,:)
-  double precision :: QdotL, tmpk(3), tmpr(3), Rq, costheta, phi, box(3)
+  real (kind=dp) :: QdotL, tmpk(3), tmpr(3), Rq, costheta, phi, box(3)
   integer, allocatable :: ifunm(:), lmsp(:), ntcell(:) ! shape functions
-  double precision, allocatable :: thetasnew(:,:) ! shape functions in Chebychev mesh (new mesh)
+  real (kind=dp), allocatable :: thetasnew(:,:) ! shape functions in Chebychev mesh (new mesh)
   logical, allocatable :: kmask(:)
   integer :: kmask_tmp
   logical :: no_kmask_given
 
   ! parameters
-  double complex, parameter :: C0=(0.0d0, 0.0d0), Ci=(0.0d0, 1.0d0), C1=(1.0d0, 0.0d0)
-  double precision, parameter :: pi = 4.0d0*datan(1.0d0) ! pi/4 = arctan(1)
-  double precision, parameter :: eps = 1.0d-10 ! small epsilon
-  double precision, parameter :: c0ll = 1.0d0/sqrt(16.0d0*datan(1.0d0)) ! Y_00 = 1/sqrt(4*pi) needed for theta_00 * Y_00 = 1, other spherical harmonics are in Gaunt coefficients cleb(:,:)
+  complex (kind=dp), parameter :: C0=(0.0d0, 0.0d0), Ci=(0.0d0, 1.0d0), C1=(1.0d0, 0.0d0)
+  real (kind=dp), parameter :: pi = 4.0d0*atan(1.0d0) ! pi/4 = arctan(1)
+  real (kind=dp), parameter :: eps = 1.0d-10 ! small epsilon
+  real (kind=dp), parameter :: c0ll = 1.0d0/sqrt(16.0d0*atan(1.0d0)) ! Y_00 = 1/sqrt(4*pi) needed for theta_00 * Y_00 = 1, other spherical harmonics are in Gaunt coefficients cleb(:,:)
   
   INTEGER IEND, NCLEB, LMAX_1, LMAX_2, LPOT_2, lm0    
   INTEGER, allocatable :: ICLEB(:,:),JEND(:,:,:),LOFLM(:), IRCUT(:)
-  DOUBLE PRECISION, allocatable :: WG(:),YRG(:,:,:),CLEB(:)
+  real (kind=dp), allocatable :: WG(:),YRG(:,:,:),CLEB(:)
   integer :: irid, irmd, ipand, irmin, irws, ipan, mu_0, nfund
-  double precision, allocatable :: THETAS(:,:), R(:)
-  double precision :: r_log
+  real (kind=dp), allocatable :: THETAS(:,:), R(:)
+  real (kind=dp) :: r_log
   
 #ifdef CPP_MPI
   integer, allocatable :: ntot_pT(:), ioff_pT(:)
@@ -1208,7 +1227,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
   integer, allocatable :: q_rand(:)
   integer, parameter :: Nrandomize=1000
   integer :: tmp_int, iq
-  double precision :: rand_num
+  real (kind=dp) :: rand_num
   
   ! allocate kpoint arrays
   ierr = 0
@@ -1325,7 +1344,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
       
       
           ! set kmask
-          if( kmask_tmp==0 .or. (no_kmask_given .and. dsqrt(dreal(tau0_k(1,1))**2+dimag(tau0_k(1,1))**2)<eps) ) then
+          if( kmask_tmp==0 .or. (no_kmask_given .and. sqrt(real(tau0_k(1,1))**2+aimag(tau0_k(1,1))**2)<eps) ) then
             kmask(q) = .false.
             G0ij_k(1:N,1:N,i,q) = C0
             G0ji_k(1:N,1:N,i,q) = C0
@@ -1644,7 +1663,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
     if((abs(qvec(1,q))-box(1)<=eps).and.(abs(qvec(2,q))-box(2)<=eps)) then
       if(.true.) then !(qvec(1,q)>=0).and.(qvec(2,q)>=0)) then
     !if((abs(qvec(1,q))-box(1)<=eps).and.(abs(qvec(2,q))-box(2)<=eps).and.(abs(qvec(3,q))-box(3)<=eps)) then
-    !  if(dsqrt((qvec(1,q))**2+(qvec(2,q))**2+(qvec(3,q))**2)>box(3)) then
+    !  if(sqrt((qvec(1,q))**2+(qvec(2,q))**2+(qvec(3,q))**2)>box(3)) then
         k = k+1
         qvec_tmp(1:3,k) = qvec(1:3,q)
         qvec_index_tmp(1:2,k) = qvec_index(1:2,q)
@@ -1692,8 +1711,13 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
   !threadprivate ararys:
   !$omp parallel private(ierr)
   
+#ifdef CPP_OMP
   mythread = omp_get_thread_num()
   nthreads = omp_get_num_threads()
+#else
+  mythread = 0
+  nthreads = 1
+#endif
   
   
   allocate( qint(irmdnew, lmmaxso, lmmaxso), stat=ierr)
@@ -1846,13 +1870,13 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
              tmpr(:) = L_i(:,i)
              QdotL = QdotL - (tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3))
              ! multiply with phase
-             exG0_tmp(1:N,1:N) = dconjg(G0ij_k(1:N,1:N,i,k))*exp(-2.0d0*pi*Ci*QdotL) !/alat)
+             exG0_tmp(1:N,1:N) = conjg(G0ij_k(1:N,1:N,i,k))*exp(-2.0d0*pi*Ci*QdotL) !/alat)
              
              
-             ! tmp = dconjg(tau)*dconjg(exG0_k(k+q))
+             ! tmp = conjg(tau)*conjg(exG0_k(k+q))
              tmp(1:N,1:N) = C0
-             call ZGEMM('n','n',N,N,N,C1,dconjg(tau(1:N,1:N,i,j)),N,dconjg(G0ji_k(1:N,1:N,j,kpq)),N,C0,tmp(1:N,1:N),N)
-             ! tmpsum2 = tmpsum2 + dconjg(exG0_k(k))*tmp*kweight
+             call ZGEMM('n','n',N,N,N,C1,conjg(tau(1:N,1:N,i,j)),N,conjg(G0ji_k(1:N,1:N,j,kpq)),N,C0,tmp(1:N,1:N),N)
+             ! tmpsum2 = tmpsum2 + conjg(exG0_k(k))*tmp*kweight
              call ZGEMM('n','n',N,N,N,kweight,exG0_tmp(1:N,1:N),N,tmp(1:N,1:N),N,C1,tmpsum2(1:N,1:N),N)
 
                         
@@ -1875,7 +1899,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
           
      !eiqr_lm generation: exp(-iq*r) = j_l(qr)*Y_L(-q)
      eiqr_lm(:,:) = C0
-     Rq = dsqrt(Qvec(1,q)**2+Qvec(2,q)**2+Qvec(3,q)**2)
+     Rq = sqrt(Qvec(1,q)**2+Qvec(2,q)**2+Qvec(3,q)**2)
      if(Rq>=eps) then
 
         Ylm = 0.0d0
@@ -1883,7 +1907,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
         ! maybe here a factor 2*pi/alat is missing in determination of cos(theta) and phi?
         ! probably this is not the case since Qvec and Rq are in the same units and everything is determined by deviding numbers
         costheta = -Qvec(3,q)/Rq ! =cos(theta)
-        phi = datan2(Qvec(2,q), Qvec(1,q)) + pi
+        phi = atan2(Qvec(2,q), Qvec(1,q)) + pi
         
         do l1=0,LMAX_2
           lm0 = l1**2+1 ! = l1*(l1+1)+m1+1 for m1=-l1
@@ -1900,13 +1924,13 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
             if(m1<0) then
               lm0 = l1* (l1+1) + m1 + 1
               lm01 = l1* (l1+1) + abs(m1) + 1
-              Ylm(lm0) = dsqrt(2.0d0) * (-1.0d0)**m1 * dimag(cYlm(lm01))
+              Ylm(lm0) = sqrt(2.0d0) * (-1.0d0)**m1 * aimag(cYlm(lm01))
             elseif(m1==0) then
               lm0 = l1* (l1+1) + m1 + 1
-              Ylm(lm0) = dreal(cYlm(lm0))
+              Ylm(lm0) = real(cYlm(lm0))
             elseif(m1>0) then
               lm0 = l1* (l1+1) + m1 + 1
-              Ylm(lm0) = dsqrt(2.0d0) * (-1.0d0)**m1 * dreal(cYlm(lm0))
+              Ylm(lm0) = sqrt(2.0d0) * (-1.0d0)**m1 * real(cYlm(lm0))
             end if
           end do
         end do
@@ -2021,8 +2045,8 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
         tmpr(:) = t_rhoq%r_excl(:,i)
         QdotL = tmpr(1)*tmpk(1)+tmpr(2)*tmpk(2)+tmpr(3)*tmpk(3)
         kweight = exp(2.0d0*pi*Ci*QdotL) !/alat)
-        call ZGEMM('n','n',N,N,N,kweight,dconjg(q_mu(1:N,1:N)),N,t_rhoq%G0tauG0_excl(i+t_rhoq%Nexcl,1:N,1:N),N,C1,tmp(1:N,1:N),N)
-        !tmp(1:N,1:N) = tmp(1:N,1:N)+dconjg(q_mu(1:N,1:N))!t_rhoq%G0tauG0_excl(i+t_rhoq%Nexcl,1:N,1:N)
+        call ZGEMM('n','n',N,N,N,kweight,conjg(q_mu(1:N,1:N)),N,t_rhoq%G0tauG0_excl(i+t_rhoq%Nexcl,1:N,1:N),N,C1,tmp(1:N,1:N),N)
+        !tmp(1:N,1:N) = tmp(1:N,1:N)+conjg(q_mu(1:N,1:N))!t_rhoq%G0tauG0_excl(i+t_rhoq%Nexcl,1:N,1:N)
         !tmp(1,1) = tmp(1,1)+kweight
      end do
            
@@ -2050,7 +2074,7 @@ subroutine calc_rhoq(t_rhoq, lmmaxso, Nkp, trq_of_r, recbv, lmax,   &
      tmp = C0
      tmp(1:N,1:N) = tmpsum2(1:N,1:N)
      tmpsum2(1:N,1:N) = C0
-     call ZGEMM('n','n',N,N,N,C1,dconjg(q_mu(1:N,1:N)),N,tmp(1:N,1:N),N,C0,tmpsum2(1:N,1:N),N)
+     call ZGEMM('n','n',N,N,N,C1,conjg(q_mu(1:N,1:N)),N,tmp(1:N,1:N),N,C0,tmpsum2(1:N,1:N),N)
            
      ! take trace
      tr_tmpsum1 = C0
@@ -2174,35 +2198,35 @@ program test
   use mod_timing
   use mod_version_info
   use mod_mympi, only: myrank, master, nranks
+  use mod_datatypes, only: dp
 
   implicit none
   
-  character*256 :: uio ! unit in which to find inputcard
   integer :: nkpt, Nkx, Nky ! total number of kpoints, k-mesh in x/y
   integer :: lmmaxso, natyp
   integer :: naez,ncls,nr,nemb
   integer :: lmax, ntotd, npan_tot, ncheb
   integer :: nsra, irmdnew ! left/right solutions (wave functions)
   integer :: ncleb_max ! numer of lm-indices in cleb array (dimension of trq_of_r)
-  double precision :: alat
-  double precision :: volbz ! Brillouin zone volume -> integration weight
+  real (kind=dp) :: alat
+  real (kind=dp) :: volbz ! Brillouin zone volume -> integration weight
   
-  double precision, allocatable :: kpt(:,:), volcub(:) ! coordinates in reciprocal space of the kpoints and volume of kpoint cube
-  double precision, allocatable :: r_basis(:,:) ! real space positions of all atoms in host system
-  double complex, allocatable   :: Ghost(:,:,:)
-  double precision, allocatable :: rcls(:,:,:),rr(:,:)
+  real (kind=dp), allocatable :: kpt(:,:), volcub(:) ! coordinates in reciprocal space of the kpoints and volume of kpoint cube
+  real (kind=dp), allocatable :: r_basis(:,:) ! real space positions of all atoms in host system
+  complex (kind=dp), allocatable   :: Ghost(:,:,:)
+  real (kind=dp), allocatable :: rcls(:,:,:),rr(:,:)
   integer, allocatable          :: atom(:,:),cls(:),ezoa(:,:),nacls(:)
-  double complex, allocatable   :: Rll(:,:,:), Rllleft(:,:,:) ! wave functions in new mesh
-  double precision, allocatable :: rpan_intervall(:)
+  complex (kind=dp), allocatable   :: Rll(:,:,:), Rllleft(:,:,:) ! wave functions in new mesh
+  real (kind=dp), allocatable :: rpan_intervall(:)
   integer, allocatable          :: ipan_intervall(:)
-  double complex, allocatable   :: trq_of_r(:,:,:,:)
-  double precision, allocatable :: recbv(:,:), bravais(:,:) ! lattice information > Bravais matrix in real and reciprocal space
-  double precision, allocatable :: rnew(:)  ! r mesh
+  complex (kind=dp), allocatable   :: trq_of_r(:,:,:,:)
+  real (kind=dp), allocatable :: recbv(:,:), bravais(:,:) ! lattice information > Bravais matrix in real and reciprocal space
+  real (kind=dp), allocatable :: rnew(:)  ! r mesh
   
-  double precision, parameter :: pi = 4.0d0*datan(1.0d0) ! pi/4 = arctan(1)
+  real (kind=dp), parameter :: pi = 4.0d0*atan(1.0d0) ! pi/4 = arctan(1)
 
-  
   integer :: lm1, lm2, i, j, ir, ierr
+  logical :: lexist
   
 #ifdef CPP_MPI
   ! initialize MPI
@@ -2225,15 +2249,17 @@ program test
   if(myrank==master) then
     
     ! read in scalars
-    uio = 'inputcard'
+    inquire(file='params.txt', exist=lexist)
+    if (.not. lexist) stop 'Error "params.txt" does not exist.'
     open(9999, file='params.txt')
     read(9999,*) lmmaxso, natyp
     read(9999,*) naez, ncls, nr, nemb, lmax
     read(9999,*) alat
     close(9999)
 
-    
 
+    inquire(file='kpts.txt', exist=lexist)
+    if (.not. lexist) stop 'Error "kpts.txt" does not exist.'
     open(9999, file='kpts.txt', form='formatted')
     read(9999,'(3I9)') nkpt, Nkx, Nky
     read(9999,'(E16.7)') volbz
@@ -2251,6 +2277,8 @@ program test
 !     recbv = recbv * (2.0d0*pi)/alat  !* alat !2*pi! * alat
 !     kpt = kpt * (2.0d0*pi)/alat      !* alat !2*pi! * alat
     
+    inquire(file='host.txt', exist=lexist)
+    if (.not. lexist) stop 'Error "host.txt" does not exist.'
     open(9999, file='host.txt')
     allocate( r_basis(3,natyp), Ghost(lmmaxso,lmmaxso,t_rhoq%Nlayer) )
     allocate( rcls(3,ncls,ncls), rr(3,0:nr) )
@@ -2260,6 +2288,8 @@ program test
     read(9999,*) cls(1:naez+nemb), ezoa(1:ncls,1:naez+nemb), nacls(1:ncls)
     close(9999)
     
+    inquire(file='wavefunctions.txt', exist=lexist)
+    if (.not. lexist) stop 'Error "wavefunctions.txt" does not exist.'
     open(9999, file='wavefunctions.txt')
     read(9999,'(100I9)') ntotd, npan_tot, ncheb, nsra, irmdnew
     write(*,*) ntotd, npan_tot, ncheb, nsra, irmdnew, lmmaxso
@@ -2297,7 +2327,7 @@ program test
     call read_scoef_rhoq(t_rhoq)
 
     ! read from inputcard
-    call read_input_rhoq(t_rhoq, uio)
+    call read_input_rhoq(t_rhoq, 'inputcard')
 
     ! save kpt, volcub, volbz nkpt to t_rhoq
     call save_kmesh_rhoq(t_rhoq,nkpt,kpt,volcub,volbz, Nkx, Nky)
