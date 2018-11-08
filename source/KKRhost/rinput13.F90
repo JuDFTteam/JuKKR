@@ -44,7 +44,7 @@ contains
       dirac_scale_SpeefOfLight, disable_charge_neutrality, modify_soc_Dirac, relax_SpinAngle_Dirac, search_Efermi, &
     set_kmesh_large, stop_1b, stop_1c, use_BdG, use_Chebychev_solver, use_cond_LB, use_decimation, use_lloyd, use_qdos, &
     use_rigid_Efermi, use_semicore, use_virtual_atoms, write_DOS, write_green_host, write_green_imp, write_kkrimp_input, &
-    write_pkkr_input, write_pkkr_operators, use_ldau, set_cheby_nospeedup, set_cheby_nosoc
+    write_pkkr_input, write_pkkr_operators, use_ldau, set_cheby_nospeedup, set_cheby_nosoc, write_tb_coupling
     use :: mod_constants, only: czero, cvlight
     use :: mod_wunfiles, only: t_params
     use :: memoryhandling, only: allocate_semi_inf_host, allocate_magnetization, allocate_cell, allocate_cpa, allocate_soc, allocate_ldau
@@ -2409,7 +2409,7 @@ contains
 
       if (.not. MPI_scheme==1) then
         ! enforce MPIenerg since this is usually faster for qdos option
-        MPI_scheme==2
+        MPI_scheme=2
       end if
       stop_1c=.true.
     end if
@@ -2462,7 +2462,7 @@ contains
     end if
 
     ! the following makes saving of the wavefunctions obsolete:
-    if (.not.(set_cheby_nospeedup .or. calc_exchange_couplings .or. write_pkkr_operators) then
+    if (.not.(set_cheby_nospeedup .or. calc_exchange_couplings .or. write_pkkr_operators)) then
         write (1337, *) 'automatically speeding up calculation (use option <set_cheby_nospeedup> to prevent this)'
         write (1337, *) 'this diables wf saving automatically'
         t_wavefunctions%maxmem_number = 0

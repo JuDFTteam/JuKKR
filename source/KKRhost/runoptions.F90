@@ -119,6 +119,7 @@ module mod_runoptions
   !  'timings0', 'timings2', 'verbose1', 'verbose2': incorporated into <VERBOSITY> keyword: 0=old behaviour (default), 1=low, 2=medium, 3=high
   !  'MPIadapt' and 'MPIatom' and 'MPIenerg': combined into keyword <MPI_SCHEME>: 0 = best, 1 = atoms (default), 2 = energies 
   !  deleted because of no implementation (or little use): 'EigenV', 'SPARSE', 'WIRE', 'iso surf', 'wfct', 'EV', 'ND', 'WAIT'
+  
 
 #ifdef CPP_MPI
 
@@ -145,3 +146,5 @@ contains
 
   end subroutine bcast_runoptions
 #endif CPP_MPI
+
+end module mod_runoptions

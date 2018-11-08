@@ -1176,7 +1176,7 @@ contains
     ! end fivos
     ! -------------------------------------------------------------------------
 
-    call gfmask(linterface,icheck,icc,invmod,nsh1,nsh2,naez,nshell(0),naez,nprincd)
+    call gfmask(icheck,icc,invmod,nsh1,nsh2,naez,nshell(0),naez,nprincd)
     ! -------------------------------------------------------------------------
     ! set up transformation matrices between REL/NREL representations
     ! -------------------------------------------------------------------------
@@ -1285,7 +1285,7 @@ contains
       mixing, qbound, fcm, itdbry, irns, kpre, kshape, kte, kvmad, kxc, lambda_xc, txc, ishift, ixipol, lrhosym, kforce, lmsp, llmsp, rmt, rmtnew, rws, imt, irc, irmin, irws, nfu, &
       hostimp, gsh, ilm_map, imaxsh, idoldau, itrunldau, ntldau, lopt, itldau, ueff, jeff, erefldau, uldau, wldau, phildau, iemxd, irmind, irmd, nspotd, npotd, nembd1, lmmaxd, &
       ipand, nembd2, lmax, ncleb, naclsd, nclsd, lm2d, lmax+1, mmaxd, nrd, nsheld, nsymaxd, naez/nprincd, natomimpd, nspind, irid, nfund, ncelld, lmxspd, ngshd, krel, ntotd, ncheb, &
-      npan_log, npan_eq, npan_log_at, npan_eq_at, r_log, npan_tot, rnew, rpan_intervall, ipan_intervall, nspindd, thetasnew, socscale, tolrdif, lly, deltae, rclsimp, verbosity)
+      npan_log, npan_eq, npan_log_at, npan_eq_at, r_log, npan_tot, rnew, rpan_intervall, ipan_intervall, nspindd, thetasnew, socscale, tolrdif, lly, deltae, rclsimp, verbosity, MPI_scheme)
 
     if (write_pkkr_input) then                                                           ! fswrt
       call write_tbkkr_files(lmax, nemb, ncls, natyp, naez, ielast, ins, alat, &        ! fswrt

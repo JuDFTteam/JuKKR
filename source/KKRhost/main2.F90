@@ -78,6 +78,7 @@ contains
     use :: mod_vxcdrv, only: vxcdrv
     use :: mod_rinit, only: rinit 
     use :: mod_convol, only: convol
+    use :: mod_types, only: t_madel
 
     implicit none
 

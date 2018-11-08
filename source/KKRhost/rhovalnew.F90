@@ -44,7 +44,7 @@ contains
 #endif
     use :: mod_save_wavefun, only: t_wavefunctions, read_wavefunc
     use :: mod_runoptions, only: calc_exchange_couplings, calc_gmat_lm_full, disable_tmat_sratrick, fix_nonco_angles, &
-      use_qdos, write_complex_qdos, write_pkkr_operators, write_DOS_lm, set_cheby_nospeedup, set_cheby_nosocset_cheby_nosoc
+      use_qdos, write_complex_qdos, write_pkkr_operators, write_DOS_lm, set_cheby_nospeedup, set_cheby_nosoc
     use :: mod_version_info
     use :: global_variables
     use :: mod_constants
