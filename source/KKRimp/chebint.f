@@ -1,5 +1,17 @@
       MODULE MOD_CHEBINT
+!-------------------------------------------------------------------------------
+!> Summary: Calculates the matrices for the Chebyshev integration
+!> Author:
+!> Category: KKRimp, radial-grid
+!>           
+!-------------------------------------------------------------------------------
         CONTAINS
+!-------------------------------------------------------------------------------
+!> Summary: Calculates the matrices for the Chebyshev integration
+!> Author:
+!> Category: KKRimp, radial-grid
+!>           
+!-------------------------------------------------------------------------------
       SUBROUTINE CHEBINT(CSLC1,CSRC1,SLC1SUM,C1,N)
 C---------------------------------------------------------------------
 C this subroutine calculates the matrices for the Chebyshev integration

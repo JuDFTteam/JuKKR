@@ -7,7 +7,6 @@ add_executable(
     source/common/DataTypes.f90
     source/common/constants.f90
     source/voronoi/test.f
-    source/KKRimp/
     source/KKRimp/nrtype.f90
     source/KKRimp/type_gmatbulk.f90
     source/KKRimp/type_tmat.f90

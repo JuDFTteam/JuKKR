@@ -1,8 +1,19 @@
 module mod_chebyshev
+!-------------------------------------------------------------------------------
+!> Summary: Routines which are needed to use the Chebyshev mesh 
+!> Author:
+!> Category: KKRimp, radial-grid
+!>           
+!-------------------------------------------------------------------------------
 double complex,allocatable :: intweight(:)
 
 contains 
-
+!-------------------------------------------------------------------------------
+!> Summary:  calculates the C matrix according to equation 5.36 in Bauer, PhD
+!> Author:
+!> Category: KKRimp, radial-grid
+!>           
+!-------------------------------------------------------------------------------
 subroutine getCmatrix(Ncheb,Cmatrix)
 ! calculates the C matrix according to
 ! equation 5.36 in Bauer, PhD
@@ -21,7 +32,12 @@ do icheb1=0,ncheb
   end do
 end do
 end subroutine getCmatrix
-
+!-------------------------------------------------------------------------------
+!> Summary:  calculates the C matrix according to equation 5.36 in Bauer, PhD
+!> Author:
+!> Category: KKRimp, radial-grid
+!>           
+!-------------------------------------------------------------------------------
 subroutine getCCmatrix(Ncheb,rmesh,nrmesh,Cmatrix)
 ! calculates the C matrix according to:
 ! equation 5.36 in Bauer, PhD
@@ -43,7 +59,13 @@ do ir=1,nrmesh
 end do
 end subroutine getCCmatrix
 
-
+!-------------------------------------------------------------------------------
+!> Summary: set up the Lambda matrix which differentiates the coefficients of a 
+!> Chebyshev expansion (equation 5.58 of Bauer, PhD) 
+!> Author:
+!> Category: KKRimp, radial-grid
+!>           
+!-------------------------------------------------------------------------------
 subroutine getLambda(Ncheb,Lambda)
 ! set up the Lambda matrix which differentiates the coefficients of an
 ! Chebyshev expansion (equation 5.58 of Bauer, PhD)
@@ -62,6 +84,12 @@ do icheb=1,Ncheb
 end do
 end subroutine
 
+!-------------------------------------------------------------------------------
+!> Summary: calculates a matrix 5.59 of Bauer, PhD 
+!> Author:
+!> Category: KKRimp, radial-grid
+!>           
+!-------------------------------------------------------------------------------
 subroutine getCLambdaCinv(Ncheb,CLambdaCinv)
 implicit none
 ! calculates a matrix 5.59 of Bauer, PhD
@@ -89,7 +117,12 @@ call getCmatrix(Ncheb,Cmatrix)
  CLambdaCinv=matmat_dmdm(Cmatrix,temp1)
 
 end subroutine
-
+!-------------------------------------------------------------------------------
+!> Summary: calculates the C**-1 matrix according to equation 5.39 in Bauer, PhD
+!> Author:
+!> Category: KKRimp, radial-grid
+!>           
+!-------------------------------------------------------------------------------
 subroutine getCinvmatrix(Ncheb,Cinvmatrix)
 ! calculates the C**-1 matrix according to equation 5.39 in Bauer, PhD
 ! Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
@@ -111,7 +144,12 @@ end do
 
 end subroutine getCinvmatrix
 
-
+!-------------------------------------------------------------------------------
+!> Summary: integrates an array arr1 containing function values of the Ncheb
+!> Author:
+!> Category: KKRimp, radial-grid
+!>           
+!-------------------------------------------------------------------------------
 subroutine intcheb_complex(Ncheb,arr1,result1)
 ! integrates an array arr1 containing function values of the Ncheb 
 ! Chebyshev roots and stores the results in result1
@@ -141,7 +179,12 @@ end do
 
 end subroutine
 
-
+!-------------------------------------------------------------------------------
+!> Summary: differentiates a funtion stored in an array fn containing the function values 
+!> Author:
+!> Category: KKRimp, radial-grid
+!>           
+!-------------------------------------------------------------------------------
 subroutine diff_cell(fn,cellnew,dfndr)
 ! differentiates a funtion stored in an array fn containing the function values.
 ! The array fn is divided into panels. Each panel is expanded into Chebyshev
@@ -190,6 +233,12 @@ end subroutine diff_cell
 ! end do
 ! end subroutine diff2_cell
 
+!-------------------------------------------------------------------------------
+!> Summary: differentiates a complex funtion stored in an array fn containing the function values 
+!> Author:
+!> Category: KKRimp, radial-grid
+!>           
+!-------------------------------------------------------------------------------
 subroutine diff_cell_complex(fn,cellnew,dfndr)
 use type_cellnew
 
@@ -219,6 +268,12 @@ end subroutine diff_cell_complex
 
 
 
+!-------------------------------------------------------------------------------
+!> Summary: integrate a function and returns its integral value
+!> Author:
+!> Category: KKRimp, radial-grid
+!>           
+!-------------------------------------------------------------------------------
 subroutine intcheb_cell(fn,cellnew,rho2ns_integrated)
 !***********************************************************************
 ! integrate a function and returns its integral value
@@ -254,7 +309,12 @@ end subroutine intcheb_cell
 
 
 
-
+!-------------------------------------------------------------------------------
+!> Summary: double precision matrix-vector multiplication 
+!> Author:
+!> Category: KKRimp, radial-grid
+!>           
+!-------------------------------------------------------------------------------
       function matvec_dmdm(mat1,vec1)
       implicit none
       real(8), intent(in) :: mat1(:,:),vec1(:)
@@ -268,7 +328,12 @@ end subroutine intcheb_cell
       call DGEMV('N',M,N,1.0D0,mat1,M,vec1,1,0.0D0,matvec_dmdm,1)
       end function matvec_dmdm
 
-
+!-------------------------------------------------------------------------------
+!> Summary: complex matrix-vector multiplication 
+!> Author:
+!> Category: KKRimp, radial-grid
+!>           
+!-------------------------------------------------------------------------------
       function matvec_zmzm(mat1,vec1)
       implicit none
       double complex, intent(in) :: mat1(:,:),vec1(:)
@@ -283,7 +348,12 @@ end subroutine intcheb_cell
       end function matvec_zmzm
 
 
-
+!-------------------------------------------------------------------------------
+!> Summary: double precision matrix-matrix multiplication 
+!> Author:
+!> Category: KKRimp, radial-grid
+!>           
+!-------------------------------------------------------------------------------
       function matmat_dmdm(mat1,mat2)
       implicit none
       real(8), intent(in) :: mat1(:,:),mat2(:,:)
