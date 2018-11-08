@@ -109,8 +109,6 @@ contains
     intrinsic :: max, sqrt
     ! ..
     ! .. External Subroutines ..
-    logical :: test
-    external :: test
     ! ..
     ! .. Save statement
     save :: ifgmat, ifmcpa, jijdone, jxcijint, kijsh, nijcalc

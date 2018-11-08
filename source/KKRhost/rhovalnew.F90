@@ -194,8 +194,6 @@ contains
     ! read in wavefunctions
     logical :: rll_was_read_in, sll_was_read_in, rllleft_was_read_in, sllleft_was_read_in
     ! ..
-    logical :: test, opt
-    external :: test, opt
     character (len=100) :: filename
 
     ! lmsize is original lm-size (without enhancement through soc etc.)

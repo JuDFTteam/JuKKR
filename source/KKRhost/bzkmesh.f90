@@ -50,8 +50,6 @@ contains
     integer :: nxyz(3)
     ! ..
     ! .. External Functions ..
-    logical :: test
-    external :: test
     ! ---------------------------------------------------------------------
 
     ! --> set number of different K-meshes

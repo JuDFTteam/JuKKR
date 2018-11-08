@@ -150,7 +150,6 @@ contains
     integer, allocatable :: kmask(:) ! logical array over all kpts (determine if kpt=1,nofks is in reduced set)
     integer :: mythread
 
-    logical, external :: test, opt
 
     ! NDIM=LMGF0D*NAEZ
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -784,8 +783,6 @@ contains
     integer :: i, info
     integer, dimension (ngd) :: ipvt
     ! ..
-    logical :: test, opt
-    external :: opt, test
 
     do i = 1, ndim
       gtmat(i, i) = cone + gtmat(i, i) ! GTMAT= 1 - G * T

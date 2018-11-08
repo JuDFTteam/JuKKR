@@ -165,8 +165,6 @@ contains
     complex (kind=dp), dimension (:, :, :), allocatable :: taudelt
     complex (kind=dp), dimension (:, :, :, :), allocatable :: gs
     ! .. External Functions
-    logical :: test, opt
-    external :: test, opt
     ! .. Data statement
     data icall/0/
     ! .. Save statement

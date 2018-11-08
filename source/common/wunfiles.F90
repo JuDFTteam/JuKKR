@@ -617,8 +617,6 @@ contains
     real (kind=dp), dimension (natyp) :: theta
     character (len=80) :: tmpdir
     ! .. External Functions
-    logical :: opt, test
-    external :: opt, test
 
     itmpdir = 0
     iltmp = 0
@@ -2648,8 +2646,6 @@ contains
     integer :: i, l, id
 
     ! .. External Functions ..
-    logical :: opt, test
-    external :: opt, test
 
     nsra = t_params%nsra
     ins = t_params%ins
@@ -2931,8 +2927,6 @@ contains
     character (len=10), intent (inout) :: solver
     character (len=80), intent (inout) :: tmpdir
     ! .. External Functions ..
-    logical :: opt, test
-    external :: opt, test
 
     nsra = t_params%nsra
     ins = t_params%ins
@@ -3204,8 +3198,6 @@ contains
     logical, intent (inout) :: lrhosym
     logical, intent (inout) :: linterface
     ! .. External Functions ..
-    logical :: opt, test
-    external :: opt, test
 
     nsra = t_params%nsra
     ins = t_params%ins

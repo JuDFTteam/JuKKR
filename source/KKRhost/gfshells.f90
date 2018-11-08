@@ -55,7 +55,6 @@ contains
     logical :: lsurf
     integer :: nofgij_with_diag
 
-    logical, external :: opt
 
 
     write (1337, 100)

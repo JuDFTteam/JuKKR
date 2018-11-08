@@ -1,7 +1,7 @@
 def get_source_files(folder):
 	from os import listdir
 	all_source_files = listdir(folder)
-	remove_files = ['test','runopt_update_tool','runoptions_update_automatic.py','out','runoptions_list.txt']
+	remove_files = ['test','runopt_update_tool','runoptions_update_automatic.py','out','runoptions_list.txt','vinterface.f90','runoptions.F90','rinput13.F90']
 	for file in remove_files:
 		try:
 			all_source_files.remove(file)
@@ -198,4 +198,49 @@ def filter_opt_test_calls():
 if __name__ == '__main__':
 	#automatic_replacement_all_sources()
 	#append_use_statement_to_subroutine()
-	filter_opt_test_calls()
+	#filter_opt_test_calls()
+
+	from os.path import sep
+	from re import compile, IGNORECASE
+
+	cs=[]
+
+	cs.append(compile(r'logical.*opt', flags=IGNORECASE))
+	cs.append(compile(r'external.*opt', flags=IGNORECASE))
+	cs.append(compile(r'logical.*test', flags=IGNORECASE))
+	cs.append(compile(r'external.*test', flags=IGNORECASE))
+
+
+	#manual settings
+	srcfolder='..'
+	outfolder = '..'
+
+	#initialize variables
+	WARNINGS=[]
+	all_source_files = get_source_files(srcfolder)
+
+	sources_modified = []
+	outfile = open(outfolder+sep+'testopt_all.txt','w')
+	for srcfile in all_source_files:
+
+		#load source and write backup
+		srctxt = open(srcfolder+sep+srcfile,'r').readlines()
+		write_src(outfolder+sep+srcfile+'.bak',srctxt)
+
+		delete_lines = []
+
+		#scan lines which shall be removel
+		for iline, line in enumerate(srctxt):
+			ls = any([c.search(line)!=None for c in cs])
+			if(ls):
+				outfile.write('%-30s: %5i : %s\n'%(srcfile,iline+1,line.strip()))
+				delete_lines.append(iline)
+
+		#remove lines
+		for idel, iline in enumerate(delete_lines):
+			srctxt.pop(iline-idel)
+
+		#write the source file
+		write_src(outfolder+sep+srcfile,srctxt)
+
+	outfile.close()

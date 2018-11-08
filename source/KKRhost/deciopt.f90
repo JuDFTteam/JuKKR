@@ -78,7 +78,6 @@ contains
 
     ! ..                                  ! ruess: for NEWSOSOL running option
     ! .. External Functions ..
-    logical, external :: opt
 
     ! ======================================================================
     write (1337, '(79("="))')

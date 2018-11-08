@@ -49,8 +49,6 @@ contains
     integer :: lm1p, lm2p, lm3p, ir, j, i
     integer :: ircutm(0:ipand)
     ! (for all points r; if r>r_MT (or IR> IRMIN),the density has to
-    external :: test
-    logical :: test
     ! multiplied with the shape functions...
 
     ! ---> remember that the gaunt coeffients for that case are 1/sqrt(4 pi)

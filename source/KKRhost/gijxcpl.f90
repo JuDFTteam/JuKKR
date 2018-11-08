@@ -67,7 +67,6 @@ contains
     logical :: lspher
     character (len=256) :: uio                             ! NCOLIO=256
 
-    logical, external :: opt
     ! ..
     ido = 0
 

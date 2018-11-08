@@ -37,8 +37,6 @@ subroutine main1a_dummy
   integer :: ispin
   integer :: itmpdir
   character (len=80) :: tmpdir
-  logical :: opt
-  logical :: test
   logical :: lrefsys
   integer :: lrectmt
   integer :: lrectra

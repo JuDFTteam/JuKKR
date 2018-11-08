@@ -71,8 +71,6 @@ contains
     real (kind=dp), dimension (natyp) :: theta, phi
     complex (kind=dp), dimension (lmmaxd, lmmaxd) :: tmat0
     ! .. External Functions
-    logical :: opt
-    external :: opt
 
     write (1337, *) 'KKRFLEX WRITEOUT'
     write (1337, *) write_kkrimp_input

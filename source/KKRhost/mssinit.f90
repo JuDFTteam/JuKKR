@@ -67,8 +67,6 @@ contains
     complex (kind=dp), dimension(lmmaxd,lmmaxd) :: w2
     ! --> set up the Delta_t^-1 matrix (MSST) in the LOCAL frame
 
-    logical :: test, opt
-    external :: test, opt
 
     do it = 1, natyp
 

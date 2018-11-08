@@ -109,8 +109,6 @@ contains
     complex (kind=dp) :: cfctor
     complex (kind=dp) :: tralpha1  ! LLY Lloyd
     complex (kind=dp) :: cfctorinv
-    logical :: opt
-    logical :: test
     logical :: lcpaij
 
     character (len=80) :: tmpdir

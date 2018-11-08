@@ -97,8 +97,6 @@ contains
     integer :: ie_num, ierr
     ! ..
     ! .. External Functions ..
-    logical :: test, opt
-    external :: test, opt
 
     naclsmax = 1
     do ic = 1, ncls

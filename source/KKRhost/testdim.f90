@@ -54,8 +54,6 @@ contains
 
     integer :: stop_mark
     integer :: i, j
-    logical :: test, opt
-    external :: test, opt
 
     ! ---> dimension tests
 

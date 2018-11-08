@@ -65,7 +65,6 @@ contains
     integer :: lly                 ! LLY =0 : no Lloyd's formula; <>0: use Lloyd's formula
     ! ..
     ! .. External Functions ..
-    logical, external :: test
     ! ..
     ! .. Intrinsic Functions ..
     intrinsic :: abs

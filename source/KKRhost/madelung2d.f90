@@ -103,7 +103,6 @@ contains
     real (kind=dp), dimension(lmpotd, lmpotd) :: avmad
     ! ..
     ! .. External Functions/Subroutines
-    logical, external :: opt, test
     ! ......................................................................
     iprint = 0
     nclebd = lmxspd*lmpotd

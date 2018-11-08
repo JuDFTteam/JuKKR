@@ -176,7 +176,6 @@ contains
 #endif
 
     ! .. External Functions ..
-    logical, external :: opt, test
     ! ..
     ! .. Data statements ..
     data textl/' s =', ' p =', ' d =', ' f =', ' g =', ' h =', ' i ='/
@@ -963,7 +962,6 @@ contains
     complex (kind=dp), dimension (:, :), allocatable, intent(inout) :: cdos_lly
     integer, intent(out) :: nqdos
     integer :: i_stat, i1, iq
-    logical, external :: opt
 
     if (allocmode==1) then
 

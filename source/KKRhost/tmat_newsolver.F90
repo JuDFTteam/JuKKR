@@ -145,7 +145,6 @@ contains
     integer :: ie_end, ie_num, ie_start
 
     ! rhoqtest
-    logical, external :: test, opt
     integer :: mu0, nscoef
 
     ! BdG
@@ -851,7 +850,6 @@ contains
     ! local
     integer :: i_stat
 
-    logical, external :: test, opt
 
 
     if (allocmode==1) then ! allocate and initialize

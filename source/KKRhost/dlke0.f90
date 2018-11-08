@@ -39,7 +39,6 @@ contains
     complex (kind=dp) :: gllke1(almgf0, lmgf0d)
     real (kind=dp) :: kp(6)
 
-    logical, external :: opt
 
     ! write(6,*) '>>> DLKE0 : Fourier-transforms the ',
     ! +           'GF of reference system'

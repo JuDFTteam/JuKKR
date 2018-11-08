@@ -62,8 +62,6 @@ contains
     logical :: symunitary(nsymaxd), para
     ! ..
     ! .. External Functions ..
-    logical :: test, opt
-    external :: test, opt
 
     ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
     write (1337, '(79("="),/,15X,A)') 'BZKINT0: finding symmetry, setting BZ integration'

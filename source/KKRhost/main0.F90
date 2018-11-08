@@ -526,8 +526,6 @@ contains
 #endif
     ! ..
     ! .. External Functions ..
-    logical :: opt, test
-    external :: opt, test
 
 
 

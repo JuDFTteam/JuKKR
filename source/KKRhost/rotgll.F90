@@ -82,8 +82,6 @@ contains
     character (len=18) :: str18
     ! ..
     ! .. External Functions
-    logical :: test, opt
-    external :: test
     ! ..
     ! .. Data statement
     data icall/1/

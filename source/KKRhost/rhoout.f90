@@ -65,7 +65,6 @@ contains
     ! ..
     complex (kind=dp) :: wr(lmmaxd, lmmaxd, irmind:irmd), wr2(lmmaxd, lmmaxd, irmind:irmd)
     ! ..
-    logical :: opt
 
     ! ---> initialize array for complex charge density
 

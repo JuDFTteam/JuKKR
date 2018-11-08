@@ -82,7 +82,6 @@ contains
     complex (kind=dp), dimension (:, :, :), allocatable :: wr
     complex (kind=dp), dimension (:, :, :), allocatable :: wr1 ! LDAU
     ! .. External routines
-    logical, external :: opt, test
 
     lmsize = lmmaxd/(1+korbit)
 

@@ -201,8 +201,6 @@ contains
     real (kind=dp), dimension (:, :, :, :), allocatable :: rho2nsnm
 
     ! .. External Subroutines
-    logical :: opt
-    logical :: test
 
 
     lmaxd1 = lmax + 1

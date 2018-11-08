@@ -62,7 +62,6 @@ contains
     real (kind=dp), dimension(2) :: vav1, vol1
     real (kind=dp), dimension(irmd) :: v1, v2
 
-    logical, external :: test, opt
 
     intrinsic :: sqrt
 

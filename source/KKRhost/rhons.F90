@@ -114,8 +114,6 @@ contains
       , gflle_part(lmmaxd, lmmaxd)
     ! ..
     ! .. External Functions ..
-    logical :: opt                 ! qdos
-    external :: opt                ! qdos
 
     ! ---> set up efac(lm) = sqrt(e))**l/(2l - 1)!!
 

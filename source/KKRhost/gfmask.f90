@@ -39,7 +39,6 @@ contains
     character (len=80) :: fmtchk
     character (len=35) :: invalg(0:3)
 
-    logical, external :: opt, test
 
     data invalg/'FULL MATRIX                        ', 'BANDED MATRIX (slab)               ', 'BANDED + CORNERS MATRIX (supercell)', 'godfrin module                     '/
 

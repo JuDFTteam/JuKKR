@@ -68,8 +68,6 @@ contains
     character (len=11) :: dosfl
     ! ..
     ! .. External Functions ..
-    logical :: test
-    external :: test
     ! ..
     dosfl0 = 'dos.atom'
     efctor = 1.0e0_dp

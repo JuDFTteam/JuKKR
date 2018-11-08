@@ -42,8 +42,6 @@ contains
     ! ..
     complex (kind=dp) :: arg(3)
     ! ..
-    logical :: opt, test
-    external :: test, opt
 
     ii = 3
     if (calc_complex_bandstructure) ii = 6

@@ -150,7 +150,6 @@ contains
     integer :: irminm, irminp, irns1p, irt1p, irws1, isave, ispin, isum
     integer :: i, ia, icell, icore, ifun, ih, imt1, inew, io, ipan1, ir, irc1, iri
     real (kind=dp) :: a1, b1, ea, efnew, s1, z1
-    logical :: test
     ! ..
     ! .. Local Arrays
     integer, dimension (ncelld) :: npan

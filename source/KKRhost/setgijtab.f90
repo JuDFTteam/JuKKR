@@ -57,7 +57,6 @@ contains
     ! Local scalars
     integer :: i, ido, ii, j, jj, nn, nofgij
     ! external funcitons
-    logical, external :: opt
 
     ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
     write (1337, '(79("="),/,15X,A)') 'SETGIJTAB: setting task-specific Gij pairs'

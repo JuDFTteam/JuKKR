@@ -123,8 +123,6 @@ contains
     ! .. Local Arrays ..
     real (kind=dp), dimension (128) :: wi, xi
     ! .. External Functions
-    logical :: opt
-    external :: opt
     ! ..
     ! ----------------------------------------------------------------------------
     ! OUTPUT

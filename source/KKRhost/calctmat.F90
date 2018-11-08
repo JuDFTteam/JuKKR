@@ -103,7 +103,6 @@ contains
     integer :: ie_end, ie_num, ie_start, i11
     ! ..
     ! .. External Functions ..
-    logical, external :: test
     ! ..
     ! .. Data Statements
     data txts/'spin   UP', 'spin DOWN'/

@@ -104,10 +104,8 @@ contains
     ! .. Local Arrays
     real (kind=dp), dimension (lmpot) :: bvmad !! Structure dependent matrix
     real (kind=dp), dimension (lmpot, lmpot) :: avmad !! Structure dependent matrix
-    logical :: opt
     ! .. Intrinsic Functions ..
     intrinsic :: sqrt
-    logical, external :: test
     ! ----------------------------------------------------------------------------
     write (1337, fmt=100)
     write (1337, fmt=110)

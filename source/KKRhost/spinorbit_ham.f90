@@ -69,8 +69,6 @@ contains
     complex (kind=dp) :: temp
     complex (kind=dp), dimension(2*lmmaxd, 2*lmmaxd) :: lsmh
     real (kind=dp), dimension(0:ncheb, 0:ncheb) :: clambdacinv
-    logical :: test, opt
-    external :: test, opt
 
     ! fill radial potential (used to construct radial derivative of potential)
     vr = 0e0_dp

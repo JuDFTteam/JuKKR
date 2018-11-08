@@ -88,7 +88,6 @@ contains
 #endif
 
     ! for TEST options
-    logical, external :: test
 
     if (t_inc%i_write>0) write (1337, *) 'start computing Operators'
     if (t_inc%i_write>0) write (*, *) 'start computing Operators'

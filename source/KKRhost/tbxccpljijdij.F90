@@ -128,8 +128,6 @@ contains
     character (len=13) :: jfnam
     character (len=35) :: jfnam2
 
-    logical :: test
-    external :: test
 
     allocate (w1(lmmaxd,lmmaxd), stat=i_stat)
     call memocc(i_stat, product(shape(w1))*kind(w1), 'w1', 'tbxccpljijdij')

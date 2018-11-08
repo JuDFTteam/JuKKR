@@ -158,8 +158,6 @@ contains
     complex (kind=dp), dimension (:, :, :), allocatable :: temp
     complex (kind=dp), dimension (:, :, :, :), allocatable :: temp2 ! needed for MPI communication
 #endif
-    logical, external :: opt
-    logical, external :: test
 
     if (myrank==master) write (6, *) 'in tmatimp'
     if (ksra>=1) then

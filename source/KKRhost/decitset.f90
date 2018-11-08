@@ -97,7 +97,6 @@ contains
     integer, allocatable :: zrel(:)
     ! ..
     ! .. External Functions
-    logical, external :: test
     ! .. Data statements
     data chhost/'LEFT ', 'RIGHT'/
     data txts/'spin   UP', 'spin DOWN'/

@@ -196,7 +196,6 @@ contains
 #endif
     integer :: ie_end, ie_num
     ! .. External Functions
-    logical, external :: opt, test          ! qdos
 
     lmaxd1 = lmax + 1
 

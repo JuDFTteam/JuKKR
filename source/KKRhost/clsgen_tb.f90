@@ -98,7 +98,6 @@ contains
     data tol/1.e-7_dp/
     data tol2/1.e-7_dp/
 
-    logical, external :: opt
 
     ! ------------------------------------------------------------------------
     write (1337, *) '>>> CLSGEN_TB: generation of cluster coordinates'

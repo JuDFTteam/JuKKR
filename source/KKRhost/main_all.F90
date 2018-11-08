@@ -71,8 +71,6 @@ program kkrcode
   character (len=3) :: ctemp                               ! name for output file
 
   ! needed to use test('xxxxxxxx'):
-  logical :: test, opt
-  external :: test, opt
 
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! initialize MPI >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

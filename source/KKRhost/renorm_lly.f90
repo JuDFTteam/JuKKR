@@ -59,7 +59,6 @@ contains
     complex (kind=dp) :: chadd(ielast, natypd, nspind), cdos_add !! Integration step for charge/atom/spin
     complex (kind=dp) :: qlly(2), qstar(2)
     real (kind=dp) :: sum0(2), sum1(2)
-    logical, external :: opt, test
 
 
     ! Spin degeneracy, 2 if nspin=1, 1 if nspin=2

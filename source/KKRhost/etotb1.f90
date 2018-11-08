@@ -48,8 +48,6 @@ contains
     character (len=5) :: textns
     character (len=13) :: texts(3)
 
-    logical :: test
-    external :: test
 
     data textl/' s =', ' p =', ' d =', ' f =', ' g =', ' h =', ' i ='/
     data texts/' spin down   ', ' spin  up    ', ' paramagnetic'/

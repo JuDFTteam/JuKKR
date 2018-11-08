@@ -94,15 +94,13 @@ contains
     integer :: ipot, irs1, ispin, it1, it2, l, lm, lm2, m
     integer :: lrecamad, irec, nleftoff, nrightoff, nleftall, nrightall
     real (kind=dp) :: cm1, fpi
-    logical :: opt, test, lread
+    logical :: lread
     real (kind=dp), dimension (lmpot) :: ac
     real (kind=dp), dimension (lmpot) :: cm
     real (kind=dp), dimension (2) :: charge
     real (kind=dp), dimension (naez) :: monopol
     real (kind=dp), dimension (lmpot, lmpot) :: avmad
     real (kind=dp), dimension (lmpot, naez) :: vinters
-
-    external :: opt, test
 
     if (print_program_flow) write (1337, *) '>>>>>> Vinterface'
 

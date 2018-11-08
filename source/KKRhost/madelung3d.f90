@@ -84,7 +84,6 @@ contains
     real (kind=dp), dimension(3,nmaxd)              :: gn, rm
     real (kind=dp), dimension(lmxspd, naezd, naezd) :: madelsmat
 
-    logical, external :: test
     ! ......................................................................
     iprint = 0
     nclebd = lmxspd*lmpotd

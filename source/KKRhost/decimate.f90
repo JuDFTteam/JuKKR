@@ -48,8 +48,6 @@ contains
     ! .. Save statement
     save :: icall, nlayer, itermax, errmax, ichck
     ! .. External Functions
-    logical :: opt
-    external :: opt
 
     icall = icall + 1
     ! ----------------------------------------------------------------------------
