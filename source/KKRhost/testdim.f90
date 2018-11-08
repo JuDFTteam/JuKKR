@@ -85,7 +85,7 @@ contains
       stop_mark = 1
     end if
 
-    if (.not. opt('VIRATOMS')) then
+    if (.not. use_virtual_atoms) then
       if (nref>natyp) then
         write (6, *) 'There are some inconsistencies in the input file./', ' nref(=', nref, ') is greater than natyp (=', natyp, ').'
         stop_mark = 1
@@ -97,12 +97,12 @@ contains
       stop_mark = 1
     end if
 
-    if (.not. opt('NEWSOSOL') .and. korbit==1) then
+    if (.not. use_Chebychev_solver .and. korbit==1) then
       write (6, *) 'Option NEWSOSOL not found, change KORBIT in the inputcard from', korbit, 'to 0'
       stop_mark = 1
     end if
 
-    if (opt('NEWSOSOL') .and. korbit==0) then
+    if (use_Chebychev_solver .and. korbit==0) then
       if (test('NOSOC   ')) then
         write (6, *) 'Using NEWSOSOL for decoupled spin channels.'
       else
@@ -120,12 +120,12 @@ contains
       stop_mark = 1
     end if
 
-    if (opt('COMPLEX ') .and. .not. (opt('EigenV  ') .or. opt('wfct    ') .or. opt('iso surf'))) then
+    if (calc_complex_bandstructure .and. .not. (opt('EigenV  ') .or. opt('wfct    ') .or. opt('iso surf'))) then
       write (6, *) 'Use option ''COMPLEX '' only for eigenvalue determination.'
       stop_mark = 1
     end if
 
-    if (test('CONT    ')) then
+    if (use_cont) then
       nemb = 0
       write (6, *) 'No usage of embedding points. NEMB is set to ', nemb, '.'
     end if

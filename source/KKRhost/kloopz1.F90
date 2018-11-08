@@ -171,15 +171,15 @@ contains
     save :: icall, isumg, cnsymat
 
     ! ----------------------------------------------------------------------------
-    if (test('flow    ')) then
+    if (print_program_flow) then
       write (1337, *) '>>> KLOOPZ1: invert delta_t and do Fourier transformation'
     end if
     icall = icall + 1
 
     ! Reinitialise the ICALL counter for second run of kloopz1                    ! qdos ruess
-    if ((opt('qdos    ') .and. (iqdosrun==1))) icall = 1 ! qdos ruess
+    if ((use_qdos .and. (iqdosrun==1))) icall = 1 ! qdos ruess
 
-    if (opt('FERMIOUT') .and. myrank==master) then ! fswrt
+    if (write_pkkr_input .and. myrank==master) then ! fswrt
       write (6801, '(A)') 'energy(ie):' ! fswrt
       write (6801, '(2ES25.16)') eryd ! fswrt
     end if                         ! fswrt
@@ -213,7 +213,7 @@ contains
 
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! VIRTUAL ATOMS:
-    ! Be careful! in case of  OPT('VIRATOMS')==1 MSSQ is the Tmatrix
+    ! Be careful! in case of  use_virtual_atoms==1 MSSQ is the Tmatrix
     ! not the inverse T-matrix!!
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -230,7 +230,7 @@ contains
     ! ----------------------------------------------------------------------------
 
     ! Write gref to the TBkkr-container-file
-    if (opt('FERMIOUT') .and. myrank==master) then ! fswrt
+    if (write_pkkr_input .and. myrank==master) then ! fswrt
       write (6801, '(A)') 'GINP(ie):' ! fswrt
       do i = 1, ncls               ! fswrt
         do lm2 = 1, lmgf0d         ! fswrt
@@ -273,13 +273,13 @@ contains
     ! ----------------------------------------------------------------------------
     do i = 1, naez
 
-      if (.not. opt('VIRATOMS')) then
+      if (.not. use_virtual_atoms) then
         call zscal(lmmaxd*lmmaxd, cfctor, mssq(1,1,i), 1)
       else
         call zscal(lmmaxd*lmmaxd, cfctorinv, mssq(1,1,i), 1)
-      end if                       ! ( .not. OPT('VIRATOMS') )
+      end if                       ! ( .not. use_virtual_atoms )
 
-      if (.not. opt('NEWSOSOL')) then
+      if (.not. use_Chebychev_solver) then
         if (kmrot==0) then
           do lm2 = 1, lmmaxd
             do lm1 = 1, lm2
@@ -297,7 +297,7 @@ contains
     ! ----------------------------------------------------------------------------
     ! Symmetrise the delta_t^(-1) matrices
     ! ----------------------------------------------------------------------------
-    if (.not. opt('NEWSOSOL')) then
+    if (.not. use_Chebychev_solver) then
       if ((krel==1) .or. (ins/=0)) then
         do iq = 1, naez
           call symetrmat(nsymat, cnsymat, dsymll, symunitary, mssq, isumq(1,iq), mssq(1,1,iq), lmmaxd, nsymaxd)
@@ -328,7 +328,7 @@ contains
     gs(:, :, :, :) = czero
 
     ! copy read-in cpa t-matrix but only after fort.37 was created in first run   !qdos ruess
-    if (opt('readcpa ') .or. (opt('qdos    ') .and. (iqdosrun==1))) then ! qdos ruess
+    if (use_readcpa .or. (use_qdos .and. (iqdosrun==1))) then ! qdos ruess
       mssq(:, :, :) = tqdos(:, :, :) ! lmmaxd,lmmaxd,naez                            !qdos ruess
     end if
 
@@ -372,7 +372,7 @@ contains
       ! in the GLOBAL frame
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       icpaflag = 0
-      if (opt('readcpa ') .or. (opt('qdos    ') .and. iqdosrun>0)) then
+      if (use_readcpa .or. (use_qdos .and. iqdosrun>0)) then
         ! copy read-in cpa t-matrix in second run
         call cpamillsx(itcpa, cpaerr, cpacorr, cpachng, iprint, icpa, naez, nkmq, noq, itoq, conc, mssq, msst, taudelq, dmssq, kmrot, drotq, natyp, naez, lmmaxd)
         mssq(:, :, :) = tqdos(:, :, :) ! lmmaxd,lmmaxd,naez   ! qdos
@@ -383,7 +383,7 @@ contains
         ! ----------------------------------------------------------------------
         ! Symmetrise m-CPA
         ! ----------------------------------------------------------------------
-        if (.not. opt('NEWSOSOL')) then
+        if (.not. use_Chebychev_solver) then
           do iq = 1, naez
             if (icpa(iq)/=0) then
               call symetrmat(nsymat, cnsymat, dsymll, symunitary, mssq, isumq(1,iq), mssq(1,1,iq), lmmaxd, nsymaxd)
@@ -415,7 +415,7 @@ contains
           cpaerrl = cpaerr
           go to 100
         end if                     ! ( CPAERR.LE.CPATOL )
-      end if                       ! (OPT('readcpa ').OR.OPT('qdos    '))
+      end if                       ! (use_readcpa.OR.use_qdos)
       i_all = -product(shape(dmssq))*kind(dmssq)
       deallocate (dmssq, stat=i_stat)
       call memocc(i_stat, i_all, 'DMSSQ', 'kloopz1')
@@ -432,9 +432,9 @@ contains
     ! ----------------------------------------------------------------------------
 
     ! In first qdos run write out t matrix which is read in for the calculation for every k point
-    if (opt('deci-out') .or. (iqdosrun==0)) then ! qdos ruess
+    if (write_deci_tmat .or. (iqdosrun==0)) then ! qdos ruess
       do ih = 1, naez
-        if (.not.test('fileverb') .and. .not.opt('deci-out') ) then
+        if (.not.formatted_files .and. .not.write_deci_tmat ) then
           irec0 = lmmaxd**2*(ih-1) + lmmaxd**2*naez*(ie-1) + lmmaxd**2*t_inc%ielast*naez*(ispin-1)
         else
           write (37, 150) ie, eryd, ih
@@ -442,7 +442,7 @@ contains
         do lm1 = 1, lmmaxd
           do lm2 = 1, lmmaxd
             if (lm1==lm2) then
-              if (.not.test('fileverb') .and. .not.opt('deci-out') ) then
+              if (.not.formatted_files .and. .not.write_deci_tmat ) then
                 irec = irec0 + lm2 + lmmaxd*(lm1-1)
                 write (37, rec=irec) mssq(lm1, lm2, ih)*cfctorinv
               else
@@ -450,14 +450,14 @@ contains
               end if
             else ! lm1/=lm2
               if (abs(mssq(lm1,lm2,ih)/mssq(lm1,lm1,ih))>tolmssq) then
-                if (.not.test('fileverb') .and. .not.opt('deci-out') ) then
+                if (.not.formatted_files .and. .not.write_deci_tmat ) then
                   irec = irec0 + lm2 + lmmaxd*(lm1-1)
                   write (37, rec=irec) mssq(lm1, lm2, ih)*cfctorinv
                 else
                   write (37, 160) lm1, lm2, mssq(lm1, lm2, ih)*cfctorinv
                 end if
               else ! abs(...)<=tolmssq
-                if (.not. opt('deci-out')) then
+                if (.not. write_deci_tmat) then
                   irec = irec0 + lm2 + lmmaxd*(lm1-1)
                   write (37, rec=irec) (0.0_dp, 0.0_dp)
                 end if
@@ -511,7 +511,7 @@ contains
     ! system-matrix (1..NSMAX) and with MSSQ on the rest of the elements
     ! ----------------------------------------------------------------------------
 
-    if (test('Gmat    ') .and. (t_inc%i_write>0)) then
+    if (print_gmat .and. (t_inc%i_write>0)) then
       write (1337, '(/,4X,70("-"),/,4X,A,I4)') 'system G_ii matrix for i = 1,', nsmax
     end if
     do ns = 1, nshell(0)
@@ -550,8 +550,8 @@ contains
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! NS.LT.NSMAX
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      if (.not. opt('VIRATOMS')) then
-        if (.not. test('testgmat')) then
+      if (.not. use_virtual_atoms) then
+        if (.not. set_tmat_noinversion) then
           call zgemm('N', 'N', lmmaxd, lmmaxd, lmmaxd, cone, w1, lmmaxd, gll, lmmaxd, czero, xc, lmmaxd)
 
           if (ldia) then
@@ -566,8 +566,8 @@ contains
             ! ----------------------------------------------------------------
             call zgemm('N', 'N', lmmaxd, lmmaxd, lmmaxd, -cone, xc, lmmaxd, w2, lmmaxd, czero, gll, lmmaxd)
           end if
-        end if                     ! ( .not. TEST('testgmat') ) THEN
-      end if                       ! ( .not. OPT('VIRATOMS') ) THEN
+        end if                     ! ( .not. set_tmat_noinversion ) THEN
+      end if                       ! ( .not. use_virtual_atoms ) THEN
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! LDIA
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -576,14 +576,14 @@ contains
       ! -------------------------------------------------------------------------
       gmatll(1:lmmaxd, 1:lmmaxd, ns) = gll(1:lmmaxd, 1:lmmaxd)*cfctorinv
 
-      if ((ns<=nsmax) .and. (test('Gmat    '))) then
+      if ((ns<=nsmax) .and. (print_gmat)) then
         write (str4, '(I4)') ns
         str10 = '   i =' // str4(1:4)
         call cmatstr(str10, 10, gmatll(1,1,ns), lmmaxd, lmmaxd, 2*krel+1, 2*krel+1, 0, 1.0e-8_dp, 6)
       end if
     end do
     ! ----------------------------------------------------------------------------
-    if (test('Gmat    ') .and. (t_inc%i_write>0)) write (1337, '(/,4X,70("-"))')
+    if (print_gmat .and. (t_inc%i_write>0)) write (1337, '(/,4X,70("-"))')
     ! ----------------------------------------------------------------------------
     ! it calculates the rest of the G n n' matrix from the
     ! knowledge of the representative pairs (shells) using the
@@ -593,7 +593,7 @@ contains
       irec = 1 + ie + t_inc%ielast*(ispin-1) ! added for mpi run
       call rotgll(gmatll, natomimp, ijtabsym, ijtabsh, dsymll, symunitary, igf, rc, crel, rrel, krel, lmmaxd, irec)
     end if
-    ! IF ( OPT('VIRATOMS') ) THEN
+    ! IF ( use_virtual_atoms ) THEN
     ! write(*,*) 'VIRTUAL ATOM OPTION : stop calculation '
     ! stop
     ! END IF
@@ -627,7 +627,7 @@ contains
       end do
     end if
     ! ----------------------------------------------------------------------------
-    if (test('flow    ') .and. (t_inc%i_write>0)) write (1337, *) '<<< KLOOPZ1'
+    if (print_program_flow .and. (t_inc%i_write>0)) write (1337, *) '<<< KLOOPZ1'
 
     i_all = -product(shape(taudelq))*kind(taudelq)
     deallocate (taudelq, stat=i_stat)

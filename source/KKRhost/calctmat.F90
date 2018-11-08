@@ -275,7 +275,7 @@ contains
         irec = ie + ielast*(ispin-1) + ielast*nspin*(i1-1)
         write (69, rec=irec) tmat0
         ! human readable writeout if test option is hit
-        if (test('fileverb')) then
+        if (formatted_files) then
           write (696969, '(i9,20000F15.7)') irec, tmatll(:, :)
         end if
       else
@@ -306,7 +306,7 @@ contains
       end if                       ! LLY
 
       ! ----------------------------------------------------------------------
-      if (test('tmat    ') .and. (t_inc%i_write>0)) then
+      if (print_tmat .and. (t_inc%i_write>0)) then
         write (1337, *)
         write (1337, 100, advance='no') '-----> t matrix for atom: ', i1
         if (krel==0) write (1337, 110, advance='no') txts(ispin)

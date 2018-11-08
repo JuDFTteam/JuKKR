@@ -117,7 +117,7 @@ contains
       ! ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
       ! cccC                                               conductivity
       ! calculation
-      ! ccc         IF (OPT('CONDUCT ')) THEN
+      ! ccc         IF (use_cond_LB) THEN
       ! ccc            DO I=1,NLAYER
       ! ccc               DO J=1,NLAYER
       ! ccc                  ICHECK(I,J)=0
@@ -191,7 +191,7 @@ contains
           end do
         end if
 
-        if (.not. opt('CONDUCT ')) then
+        if (.not. use_cond_LB) then
 
           ! --> loop over the element ICHECK(I,J) with fixed J and I > J
 
@@ -210,7 +210,7 @@ contains
     end if
     ! ======================================================================
 
-    if (test('ICHECK  ')) then
+    if (print_ickeck) then
 
       fmtchk = ' '
       lfchk = 1

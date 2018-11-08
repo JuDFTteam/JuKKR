@@ -102,7 +102,7 @@ contains
 
       cfctor = alat/(8.e0_dp*atan(1.0e0_dp)) ! = ALAT/(2*PI)
       nspinso = nspin
-      if (opt('NEWSOSOL')) nspinso = 1 ! ruess: only combined l-s index for
+      if (use_Chebychev_solver) nspinso = 1 ! ruess: only combined l-s index for
       ! newsolver
       do ispin = 1, nspinso
         do ie = 1, ielast

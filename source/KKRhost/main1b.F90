@@ -224,7 +224,7 @@ contains
       rrel,srrel,nrrel,irrel,lefttinvll,righttinvll,vacflag,nofks,volbz,bzkp,volcub,&
       wez, nembd1, lmmaxd, nsymaxd, nspindd, maxmshd, rclsimp)
 
-    if (test('rhoqtest')) then
+    if (write_rhoq_input) then
       open (9889, access='direct', file='tau0_k', form='unformatted', recl=(lmmaxd*lmmaxd+1)*4) ! lm blocks
     end if
 
@@ -239,14 +239,14 @@ contains
     ! this file is already partly filled with data by main0. More data                !fswrt
     ! will be stored in                                                               !fswrt
     ! -------------------------------------------------------------------------       !fswrt
-    if (opt('FERMIOUT') .and. myrank==master) then                                    !fswrt
+    if (write_pkkr_input .and. myrank==master) then                                    !fswrt
       open (6801, file='TBkkr_container.txt', form='formatted', position='append')    !fswrt
     end if                                                                            !fswrt
     ! -------------------------------------------------------------------------       !fswrt
     ! open file for WRTGREEN option (writes green_host file for                       !fswrt
     ! GMATLL_GES creation in zulapi part) file is filled in ROTGLL called in kloopz   !fswrt
     ! -------------------------------------------------------------------------       !fswrt
-    if (opt('WRTGREEN') .and. myrank==master) then
+    if (write_green_host .and. myrank==master) then
       open (58, file='green_host', form='formatted')
     end if
     !--------------------------------------------------------------------------------
@@ -256,7 +256,7 @@ contains
     ! read in to continue the calculation with the k points specified by
     ! the user in the qvec.dat file
     !--------------------------------------------------------------------------------
-    if (opt('qdos    ')) then                                                         ! qdos ruess
+    if (use_qdos) then                                                         ! qdos ruess
       iqdosrun = 0                                                                    ! qdos ruess
     else                                                                              ! qdos ruess
       iqdosrun = -1                                                                   ! qdos ruess
@@ -270,16 +270,16 @@ contains
       end do                                                                          ! qdos ruess
     end if                                                                            ! qdos ruess
 
-    if ((opt('qdos    ')) .and. (opt('deci-out'))) then
+    if ((use_qdos) .and. (write_deci_tmat)) then
       stop 'ERROR: qdos and deci-out cannot be used simultaniously'
-    else if (opt('qdos    ')) then
-      if (.not. test('fileverb')) then
+    else if (use_qdos) then
+      if (.not. formatted_files) then
         ! wlength needs to take double complex values
         open (37, access='direct', recl=wlength*16, file='tmat.qdos', form='unformatted')
       else
         open (37, file='tmat.qdos', form='formatted') ! qdos ruess
       end if
-    else if (opt('deci-out')) then
+    else if (write_deci_tmat) then
       open (37, file='decifile', form='formatted', position='append') ! ruess: needed in case of deci-out option to prepare decifile
     end if
 
@@ -357,11 +357,11 @@ contains
 
     if (igf/=0) then
 
-      if ((opt('GPLAIN  '))) then
+      if ((write_gmat_plain)) then
         open (8888, file='kkrflex_green.dat')
       end if
 
-      if ((opt('KKRFLEX '))) then
+      if ((write_kkrimp_input)) then
         ! ! Green functions has (lmmaxd*natomimp)**2 double complex (i.e. factor '4') values
         ! RECLENGTH = WLENGTH*4*NATOMIMP*LMMAXD*NATOMIMP*LMMAXD
         ! at the moment kkrflex_green file is only written with single precision (factor'2')
@@ -383,11 +383,11 @@ contains
       !------------------------------------------------------------------------------
       irec = 1
 
-      if ((opt('KKRFLEX '))) then
+      if ((write_kkrimp_input)) then
         if (myrank==master) then
           write (888, rec=irec) ielast, nspin, natomimp, natomimp, lmmaxd, korbit,  &
             (ez(ie), ie=1, ielast), (wez(ie), ie=1, ielast)
-          if ((opt('GPLAIN  '))) then
+          if ((write_gmat_plain)) then
             ! WRITE(8888,'(I5,50000F)') IELAST,NSPIN,NATOMIMP,NATOMIMP,&
             write (8888, *) ielast, nspin, natomimp, natomimp, (lmax+1)**2, (ez(ie), &
               ie=1, ielast), (wez(ie), ie=1, ielast)
@@ -397,7 +397,7 @@ contains
         call mpi_barrier(mpi_comm_world, ierr)
 #endif
       end if
-      ! IF ( (.not. OPT('KKRFLEX ') ) ) THEN                     !no-green
+      ! IF ( (.not. write_kkrimp_input ) ) THEN                     !no-green
       ! WRITE(88,REC=IREC) IELAST,NSPIN,                         !no-green
       ! &         (EZ(IE),IE=1,IELAST),(WEZ(IE),IE=1,IELAST),    !no-green
       ! &         NATOMIMPD*LMMAXD                               !no-green
@@ -406,7 +406,7 @@ contains
 
     ! Value of NQDOS changes to a read-in value if option qdos is applied, otherwise:
     nqdos = 1                                                                       ! qdos ruess
-    if (opt('qdos    ') .and. (iqdosrun==1)) then                                   ! qdos ruess
+    if (use_qdos .and. (iqdosrun==1)) then                                   ! qdos ruess
       ! Read BZ path for qdos calculation:                                          ! qdos ruess
       open (67, file='qvec.dat')                                                    ! qdos ruess
       read (67, *) nqdos                                                            ! qdos ruess
@@ -431,7 +431,7 @@ contains
       nofks(1) = 1                                                                  ! qdos ruess
       volcub(1, 1) = volbz(1)                                                       ! qdos ruess
       nsymat = 1                                                                    ! qdos ruess
-    else if (opt('qdos    ') .and. (iqdosrun==0)) then                              ! qdos ruess
+    else if (use_qdos .and. (iqdosrun==0)) then                              ! qdos ruess
       ! Call the k loop just once with one k point to write out the tmat.qdos file  ! qdos ruess
       allocate (qvec(3,nqdos), stat=i_stat)                                         ! qdos ruess
       call memocc(i_stat, product(shape(qvec))*kind(qvec), 'QVEC', 'main1b')        ! qdos ruess
@@ -449,7 +449,7 @@ contains
 
     ! determine extend of spin loop
     nspin1 = nspin/(1+korbit) ! factor (1+korbit) takes care of NOSOC option
-    if (opt('NEWSOSOL')) then
+    if (use_Chebychev_solver) then
       ! nonco angles
       call read_angles(t_params, natyp, theta_at, phi_at)
     end if
@@ -461,7 +461,7 @@ contains
     ie_start = 0
     ie_end = ielast
 #endif
-    if (test('rhoqtest')) then
+    if (write_rhoq_input) then
       ie_start = 1
       ie_end = 1
     end if
@@ -482,7 +482,7 @@ contains
 #endif
 
         ! write energy into green_host file
-        if (opt('WRTGREEN') .and. myrank==master) then
+        if (write_green_host .and. myrank==master) then
           write (58, '(2e17.9)') ez(ie)
         end if
 
@@ -515,7 +515,7 @@ contains
         dtrefll(:, :, :) = czero
         if (krel==0) then
           do i1 = 1, nref
-            if (.not. opt('NEWSOSOL')) then
+            if (.not. use_Chebychev_solver) then
               call calctref13(eryd, vref(i1), rmtref(i1), lmax, lm1, wn1, wn2, & ! LLY Lloyd
                 alpharef(0,i1), dalpharef(0,i1), lmax+1, lmmaxd)                 ! LLY Lloyd
             else
@@ -524,12 +524,12 @@ contains
             end if
             do i = 1, lm1
               trefll(i, i, i1) = wn1(i, i)
-              if (opt('NEWSOSOL') .and. .not.test('NOSOC   ')) trefll(lm1+i, lm1+i, i1) = wn1(i, i)
+              if (use_Chebychev_solver .and. .not.test('NOSOC   ')) trefll(lm1+i, lm1+i, i1) = wn1(i, i)
               dtrefll(i, i, i1) = wn2(i, i)                              ! LLY
-              if (opt('NEWSOSOL') .and. .not.test('NOSOC   ')) dtrefll(lm1+i, lm1+i, i1) = wn2(i, i) ! LLY
+              if (use_Chebychev_solver .and. .not.test('NOSOC   ')) dtrefll(lm1+i, lm1+i, i1) = wn2(i, i) ! LLY
             end do
 
-            if (test('rhoqtest')) then
+            if (write_rhoq_input) then
               call rhoq_save_refpot(ielast,i1,nref,natyp,refpot(1:natyp),wlength,   &
                 lmmaxd,ie,trefll)
             end if                 ! rhoqtest
@@ -569,7 +569,7 @@ contains
             tmat(:, :) = t_tgmat%tmat(:, :, irec)
           end if
 
-          if (opt('NEWSOSOL')) then
+          if (use_Chebychev_solver) then
             ! read in theta and phi for noncolinear
             theta = theta_at(i1)
             phi = phi_at(i1)
@@ -589,7 +589,7 @@ contains
               tmat(:, :) = t_lloyd%dtmat(:, :, irec)
             end if
 
-            if (opt('NEWSOSOL')) call rotatematrix(tmat, theta, phi, lmgf0d, 0) ! LLY
+            if (use_Chebychev_solver) call rotatematrix(tmat, theta, phi, lmgf0d, 0) ! LLY
 
             dtmatll(1:lmmaxd, 1:lmmaxd, i1) = tmat(1:lmmaxd, 1:lmmaxd) ! LLY
             if (t_lloyd%dtmat_to_file) then
@@ -623,11 +623,11 @@ contains
         !----------------------------------------------------------------------------
         ! qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos qdos
         !----------------------------------------------------------------------------
-        if (opt('readcpa ') .or. (opt('qdos    ') .and. (iqdosrun==1))) then ! qdos ruess: read in cpa t-matrix
+        if (use_readcpa .or. (use_qdos .and. (iqdosrun==1))) then ! qdos ruess: read in cpa t-matrix
           do isite = 1, naez                                                 ! qdos ruess
             tqdos(:, :, isite) = czero                                       ! qdos ruess
 
-            if ( .not. (test('fileverb') .or. opt('deci-out')) ) then
+            if ( .not. (formatted_files .or. write_deci_tmat) ) then
               do lm1 = 1, lmmaxd
                 do lm2 = 1, lmmaxd
                   irec = lm2 + (lm1-1)*lmmaxd + lmmaxd**2*(isite-1) + lmmaxd**2*naez*(ie-1) + lmmaxd**2*ielast*naez*(ispin-1)
@@ -654,7 +654,7 @@ contains
         ! Loop over all QDOS points and change volume for KLOOPZ run accordingly
         ! -------------------------------------------------------------------
         do iq = 1, nqdos           ! qdos ruess
-          if (opt('qdos    ')) bzkp(:, 1, 1) = qvec(:, iq) ! qdos ruess: Set q-point x,y,z
+          if (use_qdos) bzkp(:, 1, 1) = qvec(:, iq) ! qdos ruess: Set q-point x,y,z
 
 #ifdef CPP_TIMING
           call timing_start('main1b - kloopz')
@@ -672,7 +672,7 @@ contains
           ! -------------------------------------------------------------
           ! Skip this part if first part of the qdos is running
           ! -------------------------------------------------------------
-          if (.not. (opt('qdos    ') .and. (iqdosrun==0))) then
+          if (.not. (use_qdos .and. (iqdosrun==0))) then
             if (ncpa/=0) then
               if (icpaflag/=0) then
                 ncpafail = ncpafail + 1
@@ -686,7 +686,7 @@ contains
               if (t_tgmat%gmat_to_file) then
                 write (70, rec=irec) gmat0
                 ! human readable writeout if test option is hit
-                if (test('fileverb')) then
+                if (formatted_files) then
                   write (707070, '(i9,200000F15.7)') irec, gmat0
                 end if
               else
@@ -708,7 +708,7 @@ contains
             ! writeout of host green function for impurity code for single-atom cluster (not captured in rotgll)
             if (natomimp==1) then
               i1 = atomimp(1)
-              if (opt('KKRFLEX ')) then
+              if (write_kkrimp_input) then
                 ilm = 0
                 gimp = czero ! complex*8
                 do lm2 = 1, lmmaxd
@@ -719,12 +719,12 @@ contains
                 end do
                 irec = ielast*(ispin-1) + ie + 1
                 write (888, rec=irec) gimp
-                if (opt('GPLAIN  ')) then
+                if (write_gmat_plain) then
                   ! write(8888,'(50000E)') GIMP
                   write (8888, *) gimp
                 end if
               end if               ! KKRFLEX
-              if (opt('WRTGREEN') .and. myrank==master) then
+              if (write_green_host .and. myrank==master) then
                 do lm2 = 1, lmmaxd
                   do lm1 = 1, lmmaxd
                     ! writeout of green_host for WRTGREEN option
@@ -749,13 +749,13 @@ contains
               end if               ! t_cpa%dmatproj_to_file
             end if                 ! ( LCPAIJ )
 
-          end if                   ! ( .NOT.(OPT('qdos    ').AND.(IQDOSRUN.EQ.0)) )
+          end if                   ! ( .NOT.(use_qdos.AND.(IQDOSRUN.EQ.0)) )
         end do                     ! IQ = 1,NQDOS                                       ! qdos ruess
 
 
         if (lly/=0) then           ! LLY
 
-          if (opt('NEWSOSOL') .and. .not.test('NOSOC   ')) then
+          if (use_Chebychev_solver .and. .not.test('NOSOC   ')) then
             cdos_lly(ie, ispin) = tralpha(ie, ispin) - lly_grtr(ie, ispin)/volbz(1) + 2.0_dp*lly_g0tr(ie) ! LLY
           else
             if (lly/=2) then       ! LLY Lloyd
@@ -765,7 +765,7 @@ contains
             end if                 ! LLY Lloyd
           end if
 
-          if (test('GMAT=0  ')) then ! LLY Lloyd
+          if (set_gmat_to_zero) then ! LLY Lloyd
             cdos_lly(ie, ispin) = tralpha(ie, ispin) ! LLY Lloyd
             if (lly==2) then       ! LLY Lloyd
               cdos_lly(ie, ispin) = tracet(ie, ispin) + tralpharef(ie) ! LLY Lloyd
@@ -789,13 +789,13 @@ contains
 
       end do                       ! IE = 1,IELAST
 #ifdef CPP_TIMING
-      if (.not. opt('GREENIMP')) then
+      if (.not. write_green_imp) then
         if (t_inc%i_time>0) call timing_stop('main1b - calctref13')
         if (t_inc%i_time>0) call timing_stop('main1b - fourier')
         if (t_inc%i_time>0) call timing_stop('main1b - inversion')
         if (t_inc%i_time>0) call timing_stop('main1b - kloopz')
       end if
-      if (t_inc%i_time>0 .and. test('rhoqtest')) then
+      if (t_inc%i_time>0 .and. write_rhoq_input) then
         call timing_stop('main1b - kkrmat01 - writeout_rhoq')
       end if
 #endif
@@ -827,7 +827,7 @@ contains
     ! -------------------------------------------------------------------------
 
     ! close green_host file after write out
-    if (opt('WRTGREEN') .and. myrank==master) then
+    if (write_green_host .and. myrank==master) then
       close (58)
     end if
 
@@ -874,16 +874,16 @@ contains
 
 
 
-    if ((opt('XCPL    ')) .and. (icc<=0)) then
+    if ((calc_exchange_couplings) .and. (icc<=0)) then
 #ifdef CPP_TIMING
       call timing_start('main1b - tbxccpl')
 #endif
       if (nqdos/=1) stop 'QDOS option not compatible with XCPL'
-      if (.not. opt('NEWSOSOL')) then
+      if (.not. use_Chebychev_solver) then
         call tbxccpljij(69,ielast,ez,wez,nspindd,ncpa,naez,natyp,noq,itoq,iqat,     &
           nshell,natomimp,atomimp,ratom,nofgij,nqcalc,iqcalc,ijtabcalc,ijtabsym,    &
           ijtabsh,ish, jsh, dsymll, iprint, natyp, nsheld, lmmaxd, npol)
-      else                         ! .NOT.OPT('NEWSOSOL'))
+      else                         ! .NOT.use_Chebychev_solver)
         call tbxccpljijdij(naez,natyp,lmmaxd,lmgf0d,natomimpd,iemxd,theta_at,phi_at,&
           natomimp,atomimp,nofgij,iqat,rclsimp,ijtabcalc,ijtabcalc_i,ijtabsh,       &
           ijtabsym,ielast, ez, wez, npol, dsymll, noq, itoq, ncpa)
@@ -896,7 +896,7 @@ contains
 
     close (69)
     close (70)
-    if (opt('FERMIOUT') .and. myrank==master) close (6801) ! fswrt
+    if (write_pkkr_input .and. myrank==master) close (6801) ! fswrt
     if (lcpaij .and. t_cpa%dmatproj_to_file) close (71)
 
     close (37)                     ! qdos ruess
@@ -913,7 +913,7 @@ contains
     if (iqdosrun==1) go to 100     ! qdos ruess
 
 
-    if (test('rhoqtest')) then
+    if (write_rhoq_input) then
 #ifdef CPP_MPI
       call mpi_barrier(mpi_comm_world, ierr)
 #endif
@@ -929,7 +929,7 @@ contains
 
     end if
 
-    if (opt('OPERATOR') .and. myrank==master) then
+    if (write_pkkr_operators .and. myrank==master) then
       ! check if impurity files are present (otherwise no imp.
       ! wavefunctions can be calculated)
       operator_imp = .true.
@@ -951,7 +951,7 @@ contains
     ! run for OPERATOR option to precalculate impurity wavefunctions
     ! that are then stored in t_imp (used only if potential_imp,
     ! scoef, shapefun_imp)
-    if (opt('GREENIMP') .or. operator_imp) then
+    if (write_green_imp .or. operator_imp) then
 
       ! consistency checks
       if (.not. (ielast==1 .or. ielast==3)) stop 'Error: GREENIMP option only possible with 1 () or 3 () energy points in contour'
@@ -1000,7 +1000,7 @@ contains
       end do                       ! ie-loop
 
       ! done with GREENIMP option, stopping now
-      if (.not. opt('OPERATOR')) then
+      if (.not. write_pkkr_operators) then
         if (myrank==master) write (*, *) 'done with GREENIMP, stop here!'
 #ifdef CPP_MPI
         call mpi_finalize(ierr)
@@ -1015,7 +1015,7 @@ contains
     ! used in FScode do compute spin expectation values etc. within Boltzmann
     ! formalism
     ! ------------------------------------------------------------------------
-    if (opt('OPERATOR')) then
+    if (write_pkkr_operators) then
 #ifdef CPP_TIMING
       call timing_start('main1b - operator')
 #endif
@@ -1029,7 +1029,7 @@ contains
 
     ! ----------------------------------------------------------------------
 
-    if (test('rhoqtest') .and. (myrank==master)) then
+    if (write_rhoq_input .and. (myrank==master)) then
       open (9999, file='params.txt')
       write (9999, *) 2*lmmaxd, t_params%natyp
       write (9999, *) t_params%naez, t_params%nclsd, t_params%nr, t_params%nembd1, t_params%lmax

@@ -396,7 +396,7 @@ contains
               ! IF ( IVECI2J(1,IREF(I,JQ)).EQ.1.AND.
               ! +               IVECI2J(2,IREF(I,JQ)).EQ.1 ) THEN
               ijtabcalc(nn+jq) = 1
-              if (opt('NEWSOSOL')) then ! Jijtensor
+              if (use_Chebychev_solver) then ! Jijtensor
                 ijtabcalc((jq-1)*natomimp+iq) = 1 ! Jijtensor
                 ijtabcalc_i(nn+jq) = 1 ! Jijtensor
               end if               ! Jijtensor

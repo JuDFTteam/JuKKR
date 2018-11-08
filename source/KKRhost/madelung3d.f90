@@ -105,7 +105,7 @@ contains
 
     lrecabmad = wlength*2*lmpotd*lmpotd + wlength*2*lmpotd
     ! lrecabmad = wlength*kind(0.0_dp)*lmpotd*lmpotd + wlength*kind(0.0_dp)*lmpotd
-    if (test('madelfil')) then
+    if (write_madelung_file) then
       open (69, access='direct', recl=lrecabmad, file='abvmad.unformatted', form='unformatted')
     else
       allocate(t_madel%avmad(naez*naez, lmpotd, lmpotd), stat=ierr)
@@ -125,7 +125,7 @@ contains
           iend,lpotd,lmpotd,lmxspd,nclebd)
 
         irec = iq2 + naez*(iq1-1)
-        if (test('madelfil')) then
+        if (write_madelung_file) then
           write (69, rec=irec) avmad, bvmad
         else
           t_madel%avmad(irec,:,:) = avmad(:,:)
@@ -139,7 +139,7 @@ contains
         ! -----------------------------------------------------------------------
       end do
     end do
-    if (test('madelfil')) close (69)
+    if (write_madelung_file) close (69)
 
     if (iprint<1) return
     ! ======================================================================

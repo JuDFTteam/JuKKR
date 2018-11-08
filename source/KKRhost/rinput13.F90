@@ -351,12 +351,12 @@ contains
       call addopt('full inv')
     end if
 
-    if (opt('WRTGREEN')) then
+    if (write_green_host) then
       write (1337, *) 'WRTGREEN option found'
       write (1337, *) 'adding run-opt "full inv" for full inversion.'
       write (1337, *) 'adding run-opt "fix mesh"'
       call addopt('full inv')
-      call addopt('fix mesh')
+      call addset_kmesh_large
     end if
 
     write (111, *) 'Bravais vectors in units of ALAT'
@@ -826,7 +826,7 @@ contains
     t_inc%kvrel = kvrel
 
 
-    if (opt('NEWSOSOL')) korbit = 1
+    if (use_Chebychev_solver) korbit = 1
 
     if (test('NOSOC   ')) then
       write (*, '(A)') 'Warning: detected test option "NOSOC   ": use spin-decoupled radial equations with new solver'
@@ -853,8 +853,8 @@ contains
     else
       write (111, *) 'Default KBdG= ', kBdG
     end if
-    if (kBdG/=0 .and. .not. opt('useBdG  ')) call addopt('useBdG  ')
-    if (opt('useBdG  ') .and. kBdG/=1) kBdG = 1
+    if (kBdG/=0) use_BdG = .true.
+    if (use_BdG) kBdG = 1
 
 
     ! ----------------------------------------------------------------------------
@@ -1072,8 +1072,8 @@ contains
     !--------------------------------------------------------------------------------
     ! End of allocation of SOC arrays
     !--------------------------------------------------------------------------------
-    if (opt('NEWSOSOL')) then      ! Spin-orbit
-      if (opt('NEWSOSOL') .and. (nspin/=2)) stop ' set NSPIN = 2 for SOC solver in inputcard'
+    if (use_Chebychev_solver) then      ! Spin-orbit
+      if (use_Chebychev_solver .and. (nspin/=2)) stop ' set NSPIN = 2 for SOC solver in inputcard'
       npan_log = 30
       npan_eq = 30
       ncheb = 10
@@ -1338,7 +1338,7 @@ contains
       write (111, *) 'Default IGREENFUN= ', igf
     end if
 
-    if (opt('OPERATOR')) then
+    if (write_pkkr_operators) then
       ! check if impurity files are present (otherwise no imp.
       ! wavefunctions can be calculated)
       operator_imp = .true.
@@ -1351,7 +1351,7 @@ contains
     else
       operator_imp = .false.
     end if
-    if (opt('KKRFLEX ') .or. opt('WRTGREEN') .or. opt('GREENIMP') .or. operator_imp) then
+    if (write_kkrimp_input .or. write_green_host .or. write_green_imp .or. operator_imp) then
       write (1337, *) 'Setting IGREENFUN=1 for KKRFLEX/WRTGREEN/GREENIMP/OPERATOR options'
       igf = 1
     end if
@@ -1364,11 +1364,11 @@ contains
     else
       write (111, *) 'Default ICC= ', icc
     end if
-    if (opt('KKRFLEX ') .or. opt('WRTGREEN') .or. opt('GREENIMP') .or. operator_imp) then
+    if (write_kkrimp_input .or. write_green_host .or. write_green_imp .or. operator_imp) then
       write (1337, *) 'Setting ICC=1 for KKRFLEX/WRTGREEN/GREENIMP/OPERATOR  options'
       icc = 1
     end if
-    if ((opt('XCPL    ')) .or. (opt('CONDUCT '))) icc = -1
+    if ((calc_exchange_couplings) .or. (use_cond_LB)) icc = -1
 
     if (icc/=0 .and. igf==0) igf = 1
     if (icc==0 .and. igf/=0) icc = -1
@@ -1400,7 +1400,7 @@ contains
     write (1337, 190) intervx, intervy, intervz
     write (1337, 330)
 
-    if (opt('GREENIMP')) then
+    if (write_green_imp) then
       write (*, *) 'WARNING! Found option GREENIMP: resetting BZDIVIDE to 1,1,1'
       write (1337, *) 'WARNING! Found option GREENIMP: resetting BZDIVIDE to 1,1,1'
       intervx = 1
@@ -1410,7 +1410,7 @@ contains
 
     ! Energy contour
     npol = 7
-    ! if (OPT('dos     ').OR.OPT('DOS     ')) NPOL = 0
+    ! if (write_DOS) NPOL = 0
     call ioinput('NPOL            ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) npol
@@ -1492,7 +1492,7 @@ contains
     fsemicore = 1.d0
 
     ier = 0
-    if (opt('SEMICORE')) then
+    if (use_semicore) then
       call ioinput('EBOTSEMI        ', uio, 1, 7, ier)
       if (ier/=0) go to 100
       read (unit=uio, fmt=*) ebotsemi
@@ -1614,7 +1614,7 @@ contains
     ! Usage of Lloyd's formula
     lly = 0                        ! LLY Default=0 : do not apply Lloyds
     ! formula
-    if (opt('LLOYD   ') .or. opt('Lloyd   ') .or. opt('lloyd   ')) lly = 1
+    if (use_lloyd) lly = 1
     call ioinput('<LLOYD>         ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) lly
@@ -1636,7 +1636,7 @@ contains
 
     ! reset LLY to zero if certain options are found
     ! note: WRTGREEN depends on choice of LLY or not!
-    if (opt('FERMIOUT') .or. opt('GREENIMP')) then
+    if (write_pkkr_input .or. write_green_imp) then
       write (1337, *) 'found option FERMIOUT/GREENIMP: resetting LLY to 0'
       lly = 0
     end if
@@ -1764,11 +1764,11 @@ contains
       nsteps = 1
       write (1337, *) 'ICC.NE.0, setting NSTEPS to 1'
     end if
-    if (opt('XCPL    ')) then
+    if (calc_exchange_couplings) then
       nsteps = 1
       write (1337, *) 'RUNOPT XCPL used, setting NSTEPS to 1'
     end if
-    if (opt('KKRFLEX ')) then
+    if (write_kkrimp_input) then
       nsteps = 1
       write (1337, *) 'RUNOPT KKRFLEX used, setting NSTEPS to 1'
     end if
@@ -1903,12 +1903,12 @@ contains
     else
       write (111, *) 'Default ISHIFT= ', ishift
     end if
-    if (opt('rigid-ef') .or. opt('DECIMATE')) then
+    if (use_rigid_Efermi .or. use_decimation) then
       ishift = 2
       write (1337, *) ' Rigid Fermi Energy, ISHIFT is set to ', ishift
       write (111, *) ' Rigid Fermi Energy, ISHIFT is set to ', ishift
     end if
-    if (test('no-neutr') .or. opt('no-neutr')) then
+    if (disable_charge_neutrality) then
       ishift = 1
       write (1337, *) 'No charge neutrality required, ISHIFT is set to', ishift
       write (111, *) 'No charge neutrality required, ISHIFT is set to', ishift
@@ -1954,7 +1954,7 @@ contains
     !--------------------------------------------------------------------------------
     ! Determination of properties at Fermi level
     !--------------------------------------------------------------------------------
-    if (opt('GF-EF   ')) then
+    if (calc_GF_Efermi) then
       igf = 1
       if (npol>0) npol = 0
       if (npol<0) then
@@ -1964,7 +1964,7 @@ contains
       npnt2 = 1
     end if
 
-    if (opt('DOS-EF  ')) then
+    if (calc_DOS_Efermi) then
       npol = 0
       npnt2 = 1
     end if
@@ -2016,7 +2016,7 @@ contains
     ipf = 1337
     ipfe = ipf + 3
 
-    if (opt('SEARCHEF')) then
+    if (search_Efermi) then
       imix = 0
       mixing = 0.0d0
       strmix = mixing
@@ -2149,7 +2149,7 @@ contains
     write (1337, 280)((rbasis(j,i),j=1,3), i, refpot(i), i=naez+1, naez+nemb)
 
     ! ------------------------------------------------------------------------
-    if (.not. opt('VIRATOMS')) then
+    if (.not. use_virtual_atoms) then
       do i = 1, naez
         do io = 1, noq(i)
           if (kaoez(io,i)<1) stop 'Error in KAOEZ'
@@ -2162,7 +2162,7 @@ contains
     !--------------------------------------------------------------------------------
     ! Check for DECIMATE consistency
     !--------------------------------------------------------------------------------
-    if (opt('DECIMATE')) then
+    if (use_decimation) then
       if (mod(nprincd,nlbasis)/=0) then
         write (6, *) ' Decimation cannot continue '
         write (6, *) 'NPRINCD=', nprincd, ' NLBASIS=', nlbasis
@@ -2178,7 +2178,7 @@ contains
     !--------------------------------------------------------------------------------
     ! Check for ITERMDIR consistency -- if KMROT=0 suppress it
     !--------------------------------------------------------------------------------
-    if ((opt('ITERMDIR')) .and. (kmrot==0)) then
+    if ((relax_SpinAngle_Dirac) .and. (kmrot==0)) then
       write (1337, *)
       write (1337, *) ' WARNING: ITERMDIR running option used with collinear/', 'parallel Oz starting'
       write (1337, *) '          system (KMROT = 0 ). Please check token', ' RBASISANG in your input'
@@ -2193,7 +2193,7 @@ contains
     ! Check for XCPL consistency
     !--------------------------------------------------------------------------------
     manctl = (kmrot==0) .and. (krel==0) .and. (nspin>1)
-    if ((opt('XCPL    ')) .and. (.not. manctl)) then
+    if ((calc_exchange_couplings) .and. (.not. manctl)) then
       write (1337, *)
       write (1337, *) ' WARNING: XCPL running option requires collinear ', 'magnetic systems'
       write (1337, *) ' in a NON/SCALAR/SCALAR+SOC relativistic mode (KREL=0)'
@@ -2235,7 +2235,7 @@ contains
       !------------------------------------------------------------------------------
       ! For Dirac-ASA
       !------------------------------------------------------------------------------
-      if (opt('SOC     ')) then
+      if (modify_soc_Dirac) then
         call ioinput('SOSCALE         ', uio, 0, 7, ier)
         if (ier==0) then
           read (unit=uio, fmt=*) soscale
@@ -2318,7 +2318,7 @@ contains
       ! CTL-MAN
       !------------------------------------------------------------------------------
 
-      if (opt('CSCALE  ')) then
+      if (dirac_scale_SpeefOfLight) then
         call ioinput('CTLSCALE        ', uio, 0, 7, ier)
         if (ier==0) then
           read (unit=uio, fmt=*) ctlscale
@@ -2350,7 +2350,7 @@ contains
     ! Initialise SOLVER, SOC and CTL parameters in REL case
     !--------------------------------------------------------------------------------
 
-    if (opt('qdos    ')) then
+    if (use_qdos) then
       allocate (t_params%qdos_atomselect(natyp), stat=i_stat) ! INTEGER
       call memocc(i_stat, product(shape(t_params%qdos_atomselect))*kind(t_params%qdos_atomselect), 't_params%qdos_atomselect', 'rinput13')
 
@@ -2378,20 +2378,19 @@ contains
         ! enforce MPIenerg since this is usually faster for qdos option
         call addtest('MPIenerg')
       end if
-      if (.not. test('STOP1C  ')) call addtest('STOP1C  ')
+      stop_1c=.true.
     end if
 
     ! =============================================================         !
     ! fswrt
     ! check and correct some settings automatically for FERMIOUT writeout   !
     ! fswrt
-    if (opt('FERMIOUT') .or. opt('OPERATOR')) then ! fswrt
+    if (write_pkkr_input .or. write_pkkr_operators) then ! fswrt
       if (nsteps/=1) then          ! fswrt
         write (6, 170)             ! fswrt
         nsteps = 1                 ! fswrt
       end if                       ! fswrt
-      if (.not. test('STOP1B  ')) call addtest('STOP1B  ') ! fswrt
-      if (.not. test('STOP1B  ')) stop 'addtest failed for STOP1B' ! fswrt
+      stop_1b = .true.             ! fswrt
     end if                         ! fswrt
     ! =============================================================         !
     ! fswrt
@@ -2430,7 +2429,7 @@ contains
     end if
 
     ! the following makes saving of the wavefunctions obsolete:
-    if (.not. (opt('XCPL    ') .or. opt('OPERATOR') .or. test('norllsll'))) then
+    if (.not. (calc_exchange_couplings .or. write_pkkr_operators .or. calc_cheby_sll)) then
       write (1337, *) 'automatically adding "RLL-SLL " option to speed up calculation (use test option "norllsll" to prevent this)'
       write (1337, *) 'this diables wf saving automatically'
       t_wavefunctions%maxmem_number = 0
@@ -2445,7 +2444,7 @@ contains
     t_wavefunctions%save_rllleft = .false.
     t_wavefunctions%save_sllleft = .false.
 
-    if (opt('OPERATOR')) then
+    if (write_pkkr_operators) then
       write (1337, *) 'Found option "OPERATOR"'
       write (1337, *) 'Overwrite MEMWFSAVE input with big numbers'
       t_wavefunctions%maxmem_number = 5
@@ -2611,76 +2610,5 @@ contains
 
   end subroutine rinput13
 
-
-  !-------------------------------------------------------------------------------
-  !> Summary: Adds a new entry in the run options array `OPTC`
-  !> Author: 
-  !> Category: input-output, KKRhost
-  !> Deprecated: False 
-  !> Adds a new entry in the run options array `OPTC`
-  !-------------------------------------------------------------------------------
-  subroutine addopt(string)
-    use :: mod_wunfiles, only: t_params
-
-    implicit none
-
-    integer, parameter :: noptd = 32
-    character (len=8) :: string
-    integer :: ii
-    logical, external :: opt
-
-    if (.not. opt('        ')) then
-      write (*, *) 'Error in ADDOPT for ', string, ' : No free slots in array OPTC.'
-      stop 'Error in ADDOPT: No free slots in array OPTC.'
-    end if
-
-    if (.not. opt(string)) then
-      ii = 1
-      do while (ii<=noptd)
-        if (t_params%optc(ii)=='        ') then
-          t_params%optc(ii) = string
-          ii = noptd + 1
-        end if
-        ii = ii + 1
-      end do
-    end if
-
-  end subroutine addopt
-
-  !-------------------------------------------------------------------------------
-  !> Summary: Adds a new option in the `TESTC`  array
-  !> Author: 
-  !> Category: input-output, KKRhost 
-  !> Deprecated: False 
-  !> Adds a new option in the `TESTC` array
-  !-------------------------------------------------------------------------------
-  subroutine addtest(string)
-    use :: mod_types, only: t_inc
-    use :: mod_wunfiles, only: t_params
-    implicit none
-    integer, parameter :: ntstd = 64
-    character (len=8) :: string
-    integer :: ii
-    logical, external :: test
-
-    if (t_inc%i_write>0) write (1337, *) 'in ADDTEST: adding option ', string
-
-    if (.not. test('        ')) then
-      write (*, *) 'Error in ADDTEST for ', string, ' : No free slots in array TESTC.'
-      stop 'Error in ADDTEST: No free slots in array TESTC.'
-    end if
-
-    if (.not. test(string)) then
-      ii = 1
-      do while (ii<=ntstd)
-        if (t_params%testc(ii)=='        ') then
-          t_params%testc(ii) = string
-          ii = ntstd + 1
-        end if
-        ii = ii + 1
-      end do
-    end if
-
-  end subroutine addtest
 
 end module rinput

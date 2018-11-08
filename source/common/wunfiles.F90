@@ -634,7 +634,7 @@ contains
     ! -------------------------------------------------------------------------
     ! itermdir
     ! -------------------------------------------------------------------------
-    if (opt('ITERMDIR')) then
+    if (relax_SpinAngle_Dirac) then
       i1 = 0
       emin = 0d0
       t_params%qmtet = qmtet
@@ -669,7 +669,7 @@ contains
     end do
 
     ! find NQDOS (taken from main1b)
-    if (opt('qdos    ')) then
+    if (use_qdos) then
       open (67, file='qvec.dat')
       read (67, *) nqdos
       close (67)
@@ -690,9 +690,9 @@ contains
     t_inc%nclsd = ncls
     t_inc%naclsmax = naclsmax
     t_inc%nshell0 = nshell(0)
-    if (opt('NEWSOSOL')) t_inc%newsosol = .true.
+    if (use_Chebychev_solver) t_inc%newsosol = .true.
     if (test('NOSOC   ')) t_inc%nosoc = .true.
-    if (opt('deci-out')) t_inc%deci_out = .true.
+    if (write_deci_tmat) t_inc%deci_out = .true.
     !--------------------------------------------------------------------------------
     ! t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc
     !--------------------------------------------------------------------------------
@@ -701,10 +701,10 @@ contains
     ! writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags
     !--------------------------------------------------------------------------------
     ! set logical switches in t_tgmat which control if tmat, gmat and gref are written to files or stored in memory
-    if (test('tmatfile')) t_tgmat%tmat_to_file = .true.
-    if (test('gmatfile')) t_tgmat%gmat_to_file = .true.
-    if (test('greffile')) t_tgmat%gref_to_file = .true.
-    if (test('projfile')) t_cpa%dmatproj_to_file = .true.
+    if (write_tmat_file) t_tgmat%tmat_to_file = .true.
+    if (write_gmat_file) t_tgmat%gmat_to_file = .true.
+    if (write_gref_file) t_tgmat%gref_to_file = .true.
+    if (write_cpa_projection_files) t_cpa%dmatproj_to_file = .true.
 
 
     !--------------------------------------------------------------------------------
@@ -715,16 +715,16 @@ contains
     ! bug bug bug bug bug
 
     ! some special run options:
-    if (opt('KKRFLEX ')) t_tgmat%tmat_to_file = .true. ! for KKRFLEX option tmat must be written to file
-    if (opt('qdos    ')) t_tgmat%gmat_to_file = .true. ! for qdos write gmat to file since it scales with NQDOS and can become huge
+    if (write_kkrimp_input) t_tgmat%tmat_to_file = .true. ! for KKRFLEX option tmat must be written to file
+    if (use_qdos) t_tgmat%gmat_to_file = .true. ! for qdos write gmat to file since it scales with NQDOS and can become huge
 
     ! set logical switches in t_lloyd which control if files are written to files or stored in memory
-    ! if(TEST('tmatfile').or.TEST('llyfiles'))
-    if (test('wrtdtmat') .or. test('llyfiles')) t_lloyd%dtmat_to_file = .true.
-    if (test('wrttral ') .or. test('llyfiles')) t_lloyd%tralpha_to_file = .true.
-    if (test('wrtcdos ') .or. test('llyfiles')) t_lloyd%cdos_diff_lly_to_file = .true.
-    if (test('wrtdgref') .or. test('llyfiles')) t_lloyd%dgref_to_file = .true.
-    if (test('wrtgotr ') .or. test('llyfiles')) t_lloyd%g0tr_to_file = .true.
+    ! if(write_tmat_file.or.write_lloyd_files)
+    if (write_lloyd_dtmat_file .or. write_lloyd_files) t_lloyd%dtmat_to_file = .true.
+    if (write_lloyd_tralpha_file .or. write_lloyd_files) t_lloyd%tralpha_to_file = .true.
+    if (write_lloyd_cdos_file .or. write_lloyd_files) t_lloyd%cdos_diff_lly_to_file = .true.
+    if (write_lloyd_dgref_file .or. write_lloyd_files) t_lloyd%dgref_to_file = .true.
+    if (write_lloyd_g0tr_file .or. write_lloyd_files) t_lloyd%g0tr_to_file = .true.
 
     ! set verbosity level in t_inc%i_write = 0,1,2 for default, verbose1, verbose2
     t_inc%i_write = 0              ! default: write only output.000.txt and reset file after each iteration
@@ -762,7 +762,7 @@ contains
     ! so far changing does not work yet, so turn this off:
     mpiadapt = 0
 
-    if (opt('FERMIOUT') .or. opt('WRTGREEN') .or. opt('GREENIMP') .or. opt('OPERATOR')) then ! fswrt
+    if (write_pkkr_input .or. write_green_host .or. write_green_imp .or. write_pkkr_operators) then ! fswrt
       mpiatom = .true.             ! fswrt
       if (scfsteps>1) then         ! fswrt
         write (*, *) 'Warning: Setting SCFSTEPS=1 for FERMIOUT option' ! fswrt
@@ -774,7 +774,7 @@ contains
         stop 'Please choose Nranks<=NATYP' ! fswrt
       end if                       ! fswrt
       naclsmin = minval(nacls(1:ncls)) ! fswrt
-      if (.not. opt('GREENIMP') .and. naclsmin<150) then ! fswrt
+      if (.not. write_green_imp .and. naclsmin<150) then ! fswrt
         write (*, *) ' !!!  WARNING  !!!' ! fswrt
         write (*, *) '   FERMIOUT/WRTGREEN option chosen' ! fswrt
         write (*, *) '   minimal cluster size smaller than 150 atoms!!!' ! fswrt
@@ -785,18 +785,18 @@ contains
         write (*, *) 'found unsupported test option MPIenerg' ! fswrt
         stop 'Please choose MPIatom instead' ! fswrt
       end if                       ! fswrt
-      if (opt('OPERATOR') .and. opt('FERMIOUT')) then ! fswrt
+      if (write_pkkr_operators .and. write_pkkr_input) then ! fswrt
         write (*, *) 'OPERATOR and FERMIOUT cannot be used together' ! fswrt
         stop 'Please chose only one of the two' ! fswrt
       end if                       ! fswrt
-      if (opt('OPERATOR') .and. ielast/=1) then ! fswrt
+      if (write_pkkr_operators .and. ielast/=1) then ! fswrt
         write (*, *) 'OPERATOR option chosen' ! fswrt
         write (*, *) 'energy contour should contain a single point' ! fswrt
         write (*, *) 'on the real axis only' ! fswrt
         stop 'Please correct energy contour' ! fswrt
       end if                       ! fswrt
     end if                         ! fswrt
-    if (.not. opt('OPERATOR') .and. test('IMP_ONLY')) then ! fswrt
+    if (.not. write_pkkr_operators .and. impurity_operator_only) then ! fswrt
       write (*, *) 'test option "IMP_ONLY" can only be used' ! fswrt
       write (*, *) 'in combination with option "OPERATOR"' ! fswrt
       stop                         ! fswrt
@@ -2733,7 +2733,7 @@ contains
       nrrel = t_params%nrrel
       irrel = t_params%irrel
     end if
-    if (opt('DECIMATE')) then
+    if (use_decimation) then
       lefttinvll = t_params%lefttinvll
       righttinvll = t_params%righttinvll
       vacflag = t_params%vacflag
@@ -2742,13 +2742,13 @@ contains
     ! -------------------------------------------------------------------------
     ! K-points
     ! -------------------------------------------------------------------------
-    if (test('kptsfile')) then
+    if (write_kpts_file) then
       open (52, file='kpoints', form='formatted')
       rewind (52)
       write (1337, *) 'kpoints read from kpoints file due to test option "kptsfile"'
     end if
     do l = 1, maxmesh
-      if (test('kptsfile')) then
+      if (write_kpts_file) then
         read (52, fmt='(I8,f15.10)') nofks(l), volbz(l)
         write (1337, *) 'kpts:', nofks(l), volbz(l), t_params%nofks(l), t_params%volbz(l)
       else
@@ -2756,7 +2756,7 @@ contains
         volbz(l) = t_params%volbz(l)
       end if
       do i = 1, nofks(l)
-        if (test('kptsfile')) then
+        if (write_kpts_file) then
           read (52, fmt=*)(bzkp(id,i,l), id=1, 3), volcub(i, l)
         else
           do id = 1, 3
@@ -2770,7 +2770,7 @@ contains
         ! &             (BZKP(ID,I,L),ID=1,3),VOLCUB(I,L),NOFKS(L),VOLBZ(L)
       end do
     end do
-    if (test('kptsfile')) close (52)
+    if (write_kpts_file) close (52)
     ! -------------------------------------------------------------------------
     ! Energy_mesh
     ! -------------------------------------------------------------------------
@@ -2781,7 +2781,7 @@ contains
     ! -------------------------------------------------------------------------
     ! Itermdir
     ! -------------------------------------------------------------------------
-    if (opt('ITERMDIR')) then
+    if (relax_SpinAngle_Dirac) then
       drotq = t_params%drotq
       if (kmrot==0) kmrot = 1
     end if
@@ -3037,11 +3037,11 @@ contains
       vtrel = t_params%vtrel
       btrel = t_params%btrel
     end if
-    if (test('Vspher  ')) vins(irmind:irmd, 2:lmpotd, 1:nspotd) = 0.d0
+    if (use_spherical_potential_only) vins(irmind:irmd, 2:lmpotd, 1:nspotd) = 0.d0
     ! -------------------------------------------------------------------------
     ! Itermdir
     ! -------------------------------------------------------------------------
-    if (opt('ITERMDIR')) then
+    if (relax_SpinAngle_Dirac) then
       qmtet = t_params%qmtet
       qmphi = t_params%qmphi
     end if
@@ -3321,7 +3321,7 @@ contains
     efold = t_params%efold
     chrgold = t_params%chrgold
     cmomhost = t_params%cmomhost
-    if (test('Vspher  ')) vins(irmind:irmd, 2:lmpot, 1:nspotd) = 0.d0
+    if (use_spherical_potential_only) vins(irmind:irmd, 2:lmpot, 1:nspotd) = 0.d0
 
   end subroutine get_params_2
 

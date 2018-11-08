@@ -74,9 +74,9 @@ contains
     external :: opt
 
     write (1337, *) 'KKRFLEX WRITEOUT'
-    write (1337, *) opt('KKRFLEX ')
+    write (1337, *) write_kkrimp_input
 
-    if (opt('KKRFLEX ')) then
+    if (write_kkrimp_input) then
       open (6699, file='kkrflex_tmat', status='unknown')
       call version_print_header(6699, '; '//md5sum_potential//'; '//md5sum_shapefun)
       write (6699, *) '#', natomimp, nspin, ielast, lmmaxd, korbit

@@ -199,7 +199,7 @@ contains
 
 
     ! IF lmdos or LDAU
-    if (opt('lmlm-dos') .or. opt('LDA+U   ')) then ! lmlm-dos
+    if (calc_lmdos .or. opt('LDA+U   ')) then ! lmlm-dos
       ! Integrate only up to muffin-tin radius.
       ! ! lmlm-dos
       gflle_part = czero           ! lmlm-dos
@@ -229,7 +229,7 @@ contains
           call intcheb_cell(cwr, gflle_part(lm1,lm2), rpan_intervall, ipan_intervall, npan_tot, ncheb, irmdnew)
         end do
       end do
-    end if                         ! OPT('lmlm-dos').OR.OPT('LDA+U   ')
+    end if                         ! calc_lmdos.OR.OPT('LDA+U   ')
 
 
     ! DO IR = 1,IRMDNEW

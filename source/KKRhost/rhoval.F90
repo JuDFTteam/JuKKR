@@ -252,7 +252,7 @@ contains
     ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifndef CPP_MPI
-    if (opt('qdos    ')) then      ! qdos
+    if (use_qdos) then      ! qdos
       if (natyp>=100) then         ! qdos
         open (31, file='qdos.'//char(48+i1/100)//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat') ! qdos
       else                         ! qdos
@@ -269,7 +269,7 @@ contains
 100 format (a8, i3, a4, i5)        ! lmdos
 
     ! write out complex qdos for interpolation to the real axis                   ! complex qdos
-    if (test('compqdos')) then     ! complex qdos
+    if (write_complex_qdos) then     ! complex qdos
       if (natyp>=100) then         ! complex qdos
         open (3031, file='cqdos.'//char(48+i1/100)//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat') ! complex qdos
       else                         ! complex qdos
@@ -292,7 +292,7 @@ contains
     lmshift2(3) = lmmaxd
     lmshift2(4) = 0
     nqdos = 1                      ! qdos
-    if (opt('qdos    ')) then      ! qdos
+    if (use_qdos) then      ! qdos
       ! Read BZ path for qdos calculation:                                       ! qdos
       open (67, file='qvec.dat', form='formatted')   ! qdos
       read (67, *) nqdos           ! qdos
@@ -382,7 +382,7 @@ contains
               irec = iq + nqdos*(ie_num-1) + nqdos*t_mpi_c_grid%ntot2*(ispin-1) + nqdos*t_mpi_c_grid%ntot2*nspin*(i1-1)
               gmat0(:, :) = t_tgmat%gmat(:, :, irec)
             end if
-            if (test('GMAT=0  ')) then
+            if (set_gmat_to_zero) then
               write (*, *) 'TEST GMAT=0, setting GMAT to zero'
               gmat0 = czero
             end if
@@ -410,7 +410,7 @@ contains
             ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifndef CPP_MPI
             ! Write out qdos:
-            if (opt('qdos    ')) then ! qdos
+            if (use_qdos) then ! qdos
               dentot = cmplx(0.d0, 0.d0, kind=dp) ! qdos
               do l = 0, lmaxd1     ! qdos
                 dentot = dentot + den(l, ie, iq) ! qdos
@@ -419,7 +419,7 @@ contains
               write (31, 110) ez(ie), real(qvec(1, iq)), real(qvec(2, iq)), real(qvec(3, iq)), -aimag(dentot)/pi, (-aimag(den(l,ie,iq))/pi, l=0, lmaxd1) ! qdos
 110           format (5f10.6, 40e16.8) ! qdos
               ! writeout complex qdos for interpolation                         ! complex qdos
-              if (test('compqdos')) then ! complex qdos
+              if (write_complex_qdos) then ! complex qdos
                 write (3031, 120) eryd, qvec(1, iq), qvec(2, iq), qvec(3, iq), dentot, (denlm(l,ie,iq), l=1, lmmaxd) ! complex qdos
               end if               ! complex qdos
 120           format (6f10.6, 80e16.8) ! qdos
@@ -497,7 +497,7 @@ contains
       ! EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Write out gflle
-      if (opt('lmlm-dos')) then    ! lmlm-dos
+      if (calc_lmdos) then    ! lmlm-dos
         if (ispin==1) then         ! lmlm-dos
           ! 4 words = 16 bytes / complex number                                   ! lmlm-dos
           lrecgflle = wlength*4*lmmaxd*lmmaxd*ielast*nqdos ! lmlm-dos

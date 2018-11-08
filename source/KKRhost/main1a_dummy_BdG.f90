@@ -96,7 +96,7 @@ subroutine main1a_dummy
 
   do i1_run = i1_start, i1_end
 
-    if (test('BdG_dev ')) then
+    if (write_BdG_tests) then
       ! read out inputs for tmat_newsolver to extract first BdG
       if (nranks>1) stop 'test option BdG_dev can only be used in serial!'
       if (i1_run==1) open (887766, file='BdG_tmat_inputs.txt', form='formatted')

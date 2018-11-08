@@ -127,7 +127,7 @@ contains
     ! ***********************************************************************
 
     ! visualise Gij
-    if (test('Gmatij  ')) then
+    if (print_Gij) then
       write (1337, '(/,4X,70("+"),/,4X,A,I4)') 'cluster G_ij matrices for i,j = 1,', natomimp
 
       do iq = 1, natomimp
@@ -174,7 +174,7 @@ contains
               ! test
               ! WRITE(214321,'(4i,2E)') LM1,LM2,IQ,JQ,GCLUST(NLIN)
               ! writeout of green_host for WRTGREEN option
-              if (opt('WRTGREEN') .and. myrank==master) then
+              if (write_green_host .and. myrank==master) then
                 ilm = (iq-1)*lmmaxd + lm1
                 write (58, '((2I5),(2e17.9))') jlm, ilm, gll(lm1, lm2, iq, jq)
               end if
@@ -186,7 +186,7 @@ contains
 
 
 
-      if ((opt('KKRFLEX '))) then
+      if ((write_kkrimp_input)) then
 #ifdef CPP_MPI
         irec = irec
 #else
@@ -195,7 +195,7 @@ contains
         ! force single precision complex writeout to minimize file size etc.
         ! maybe this can be removed in the future
         write (888, rec=irec) cmplx(gclust, kind=sp)
-        if ((opt('GPLAIN  '))) then
+        if ((write_gmat_plain)) then
           write (8888, '(50000E25.16)') gclust
         end if
       end if
@@ -204,7 +204,7 @@ contains
       ! ====  obsolete with the implementation of the MPI-communicated arrays. If I am   !no-green
       ! ====  wrong and the write-out is needed in subsequent parts, construct a         !no-green
       ! ====  test-option around it so that it is only written out in this case.         !no-green
-      ! IF ( .not. OPT('KKRFLEX ') ) THEN                                        !no-green
+      ! IF ( .not. write_kkrimp_input ) THEN                                        !no-green
       ! WRITE(88,REC=ICALL) GCLUST                                             !no-green
       ! endif                                                                   !no-green
 

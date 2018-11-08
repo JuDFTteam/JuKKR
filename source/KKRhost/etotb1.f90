@@ -124,7 +124,7 @@ contains
         write (1337, fmt=240) epotin(iatyp)
       end if
 
-      if (.not. (test('NoMadel '))) then
+      if (.not. (no_madelung)) then
 
         et = et + ecous + excs
         edc = edc + ecous + excs

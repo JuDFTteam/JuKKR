@@ -98,7 +98,7 @@ contains
       end do
     end do
     ! Now the locally-summed charge/energy is in cdos_loc, charge/energy/atom in chadd
-    if (.not. opt('NEWSOSOL') .or. test('NOSOC   ')) then
+    if (.not. use_Chebychev_solver .or. test('NOSOC   ')) then
       do ie = iestart, ieend
         do ispin = 1, nspin
           ! Renormalization factor per energy:
@@ -137,7 +137,7 @@ contains
     !    ENDDO
     !   ENDDO
 
-    if (nspin==1 .or. (opt('NEWSOSOL') .and. .not. test('NOSOC   ')) ) cren(:, 2) = cren(:, 1)
+    if (nspin==1 .or. (use_Chebychev_solver .and. .not. test('NOSOC   ')) ) cren(:, 2) = cren(:, 1)
 
 
     ! Now apply renormalization to energy-integrated density

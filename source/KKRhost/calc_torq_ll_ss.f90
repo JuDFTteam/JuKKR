@@ -76,14 +76,14 @@ contains
 
     do ir = 1, irmd
       ! --->   calculate the non spherically symmetric contribution
-      if (test('ONLYMT  ') .and. (ir>ircut(1))) then
+      if (torque_operator_onlyMT .and. (ir>ircut(1))) then
         rges(ir) = 0
       else
         rges(ir) = rsp(ir)
       end if
     end do
     ! DO 150 IR = IRCUT(1)+1,IRCUT(IPAN)
-    if (.not. test('ONLYSPH ')) then
+    if (.not. torque_operator_onlySph) then
       do j = 1, iend
         lm1p = icleb(j, 1)
         lm2p = icleb(j, 2)

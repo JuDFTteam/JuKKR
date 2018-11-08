@@ -179,7 +179,7 @@ contains
       call memocc(i_stat, product(shape(grefllke))*kind(grefllke), 'GREFLLKE', 'kkrmat01')
     end if
 
-    if (opt('VIRATOMS')) then
+    if (use_virtual_atoms) then
       allocate (gllke0v(alm,alm), stat=i_stat)
       call memocc(i_stat, product(shape(gllke0v))*kind(gllke0v), 'GLLKE0V', 'kkrmat01')
       allocate (gllke0v2(alm,alm), stat=i_stat)
@@ -188,7 +188,7 @@ contains
       call memocc(i_stat, product(shape(gllketv))*kind(gllketv), 'GLLKETV', 'kkrmat01')
       allocate (gllketv_new(lmmaxd,alm), stat=i_stat)
       call memocc(i_stat, product(shape(gllketv_new))*kind(gllketv_new), 'GLLKETV_new', 'kkrmat01')
-    end if                         ! ( OPT('VIRATOMS') ) THEN
+    end if                         ! ( use_virtual_atoms ) THEN
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! End of array allocations
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -197,16 +197,16 @@ contains
     ! K-points loop
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    if (test('rhoqtest')) then
+    if (write_rhoq_input) then
       call rhoq_read_mu0_scoef(iatomimp, mu, nscoef, imin)
       call rhoq_find_kmask(nofks, k_end, bzkp(1:3,1:nofks), kmask, rhoq_kmask)
-    end if                         ! test('rhoqtest')
+    end if                         ! write_rhoq_input
 
 #ifdef CPP_MPI
     ! MPI:
-    if (.not. opt('qdos    ')) then
+    if (.not. use_qdos) then
 
-      if (test('rhoqtest')) then
+      if (write_rhoq_input) then
         ntot1 = k_end
       else
         ntot1 = nofks
@@ -221,19 +221,19 @@ contains
       t_mpi_c_grid%ntot_pt1 = ntot_pt
       t_mpi_c_grid%ioff_pt1 = ioff_pt
 
-    else                           ! .not.opt('qdos    ')
+    else                           ! .not.use_qdos
 
       k_start = 1
       k_end = nofks
 
-    end if                         ! .not.opt('qdos    ')
+    end if                         ! .not.use_qdos
 #else
     k_start = 1
-    if (.not. test('rhoqtest')) k_end = nofks
+    if (.not. write_rhoq_input) k_end = nofks
 #endif
 
     ! k-loop not needed for GREENIMP-case
-    if (opt('GREENIMP')) then
+    if (write_green_imp) then
       if (myrank==master) write (*, *) 'Skipping kloop in kkrmat'
       k_start = 1
       k_end = 0
@@ -291,7 +291,7 @@ contains
       kp(1:3) = bzkp(1:3, kpt)
 
       ! overwrite kpt in case of rhoqtest (take only reduced set of kpts)
-      if (test('rhoqtest')) kp(1:3) = rhoq_kmask(1:3, kpt)
+      if (write_rhoq_input) kp(1:3) = rhoq_kmask(1:3, kpt)
 
       etaikr(1:nsymat, 1:nshell) = volcub(kpt)
       ! -------------------------------------------------------------------------
@@ -355,7 +355,7 @@ contains
         ! ----------------------------------------------------------------------
         ! LLY Lloyd
         ! --------------------------------------------------------------------
-        if (.not. opt('NEWSOSOL') .or. test('NOSOC   ')) then
+        if (.not. use_Chebychev_solver .or. test('NOSOC   ')) then
           ! $omp single
           do i2 = 1, alm
             do i1 = 1, alm
@@ -366,7 +366,7 @@ contains
             end do
           end do
           ! $omp end single
-        else                       ! (.NOT.OPT('NEWSOSOL'))
+        else                       ! (.NOT.use_Chebychev_solver)
           ! $omp single
           do i2 = 1, almgf0
             do i1 = 1, almgf0
@@ -405,7 +405,7 @@ contains
 #ifdef CPP_HYBRID
           ! $omp end do
 #endif
-        end if                     ! (.NOT.OPT('NEWSOSOL'))
+        end if                     ! (.NOT.use_Chebychev_solver)
         ! ----------------------------------------------------------------------
         ! LLY Lloyd At this point DGLLKE contains the Fourier transform of the dGref/dE
         ! ----------------------------------------------------------------------
@@ -478,7 +478,7 @@ contains
       ! Construct the matrix M=[-(t)^-1 + G^r] and store it
       ! in the same matrix GLLKE where G^r was stored.
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      if (.not. opt('VIRATOMS')) then
+      if (.not. use_virtual_atoms) then
         ! $omp single
         do i1 = 1, naez
           do lm1 = 1, lmmaxd
@@ -587,7 +587,7 @@ contains
         ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         ! LLY Lloyd
         ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      else                         ! .not. OPT('VIRATOMS')
+      else                         ! .not. use_virtual_atoms
         ! LLY Lloyd formula not built in yet for viratoms
         gllke0v(1:alm, 1:alm) = gllke(1:alm, 1:alm)
 
@@ -604,7 +604,7 @@ contains
         ! because for a virtual atom t=0, t^-1 undefined.
         ! ----------------------------------------------------------------------
         call gtdyson(gllke0v2, gllke, ndim_slabinv, alm, alm)
-      end if                       ! .not. OPT('VIRATOMS')
+      end if                       ! .not. use_virtual_atoms
       ! -------------------------------------------------------------------------
       ! Global sum on array gs
       ! -------------------------------------------------------------------------
@@ -626,7 +626,7 @@ contains
               gs(lm1, lm2, isym, ns) = gs(lm1, lm2, isym, ns) + etaikr(isym, ns)*g(lm1, lm2)
             end do
           end do
-          if (test('rhoqtest')) then
+          if (write_rhoq_input) then
             call rhoq_saveg(nscoef, rhoq_kmask, kpt, k_end, kp, i, j, mu, imin, iatomimp, lmmaxd, g)
           end if
         end do                     ! isym
@@ -689,7 +689,7 @@ contains
     ! $omp end parallel
 #endif
 
-    if (test('rhoqtest')) then
+    if (write_rhoq_input) then
 #ifdef CPP_TIMING
       call timing_start('main1b - kkrmat01 - writeout_rhoq')
 #endif
@@ -697,7 +697,7 @@ contains
 #ifdef CPP_TIMING
       call timing_stop('main1b - kkrmat01 - writeout_rhoq')
 #endif
-    end if                         ! test('rhoqtest')
+    end if                         ! write_rhoq_input
 
     tracet = czero
     if (lly==2) then
@@ -732,7 +732,7 @@ contains
     ! ----------------------------------------------------------------------------
 
 #ifdef CPP_MPI
-    if (.not. opt('qdos    ')) then
+    if (.not. use_qdos) then
       do ns = 1, nshell
         iwork = lmmaxd*lmmaxd*nsymaxd
         work = czero
@@ -753,10 +753,10 @@ contains
         call mpi_allreduce(tracet, work, iwork, mpi_double_complex, mpi_sum, t_mpi_c_grid%mympi_comm_ie, ierr)
         call zcopy(iwork, work, 1, tracet, 1)
       end if
-    end if                         ! .not.opt('qdos    ')
+    end if                         ! .not.use_qdos
 #endif
 
-    if (test('flow    ') .and. (t_inc%i_write>0)) write (1337, *) '<<< KKRMAT1'
+    if (print_program_flow .and. (t_inc%i_write>0)) write (1337, *) '<<< KKRMAT1'
 
   end subroutine kkrmat01
 

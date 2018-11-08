@@ -45,8 +45,8 @@ contains
     external :: test, opt
 
     ii = 3
-    if (opt('COMPLEX ')) ii = 6
-    if (test('BZKP    ') .and. (t_inc%i_write>0)) write (1337, fmt='(6f12.6)')(bzkp(i), i=1, ii)
+    if (calc_complex_bandstructure) ii = 6
+    if (print_kpoints .and. (t_inc%i_write>0)) write (1337, fmt='(6f12.6)')(bzkp(i), i=1, ii)
 
     tpi = 8.0d0*atan(1.0d0)
     convpu = alat/tpi
@@ -61,7 +61,7 @@ contains
       
       if (atom(m)<0) cycle
 
-      if (opt('ONEBULK ')) then    ! added 1.02.2000, corrected on 25.02.2000
+      if (use_deci_onebulk) then    ! added 1.02.2000, corrected on 25.02.2000
 
         !     if the phase factor exp(ik(r-r')) is included      ~
         !     in the G...so if we resolve the dyson part for the G
@@ -81,7 +81,7 @@ contains
         arg(2) = -ci*tpi*rcls(2, m)
         arg(3) = -ci*tpi*rcls(3, m)
 
-      else ! opt('ONEBULK ')
+      else ! use_deci_onebulk
         
         !     Here we do   --                  nn'
         !                  \                   ii'          ii'
@@ -97,11 +97,11 @@ contains
         arg(2) = -ci*tpi*rr(2, ezoa(m))
         arg(3) = -ci*tpi*rr(3, ezoa(m))
 
-      end if ! opt('ONEBULK ')
+      end if ! use_deci_onebulk
 
       tt = bzkp(1)*arg(1) + bzkp(2)*arg(2) + bzkp(3)*arg(3)
 
-      if (opt('COMPLEX ')) then
+      if (calc_complex_bandstructure) then
         tt = tt + ci*(bzkp(4)*arg(1)+bzkp(5)*arg(2)+bzkp(6)*arg(3))
       end if
 

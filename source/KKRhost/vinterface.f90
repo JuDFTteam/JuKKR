@@ -103,9 +103,9 @@ contains
 
     external :: opt, test
 
-    if (test('flow    ')) write (1337, *) '>>>>>> Vinterface'
+    if (print_program_flow) write (1337, *) '>>>>>> Vinterface'
 
-    if (test('madelfil')) then
+    if (write_madelung_file) then
 
       inquire (file='avmad.unformatted', exist=lread) ! ewald2d
 
@@ -124,7 +124,7 @@ contains
 
     fpi = 4.e0_dp*pi
 
-    if (opt('DECIMATE')) then
+    if (use_decimation) then
       ! -------------------------------------------------------------------------
       ! Setup the charges to put in the ghost layers in the case of
       ! decimation technique to achieve charge neutrality
@@ -166,7 +166,7 @@ contains
         irec = ilay2 + nlayers*(ilay1-1)
         if (npol==0) then
           avmad(:,:) = czero
-        elseif (test('madelfil')) then
+        elseif (write_madelung_file) then
           read (69, rec=irec) avmad
         else
           avmad(:,:) = t_madel%avmad(irec,:,:)
@@ -223,7 +223,7 @@ contains
       ! -------------------------------------------------------------------------
       ! Correction: charge neutrality is imposed (see P. Lang)
       ! -------------------------------------------------------------------------
-      if (opt('DECIMATE')) then
+      if (use_decimation) then
         ! ----------------------------------------------------------------------
         ! 2.  Summation in the LEFT bulk side
         ! ----------------------------------------------------------------------
@@ -237,7 +237,7 @@ contains
             irec = ileft + nleftall*(ilay1-1) + nleftoff
             if (npol==0) then
               avmad(:,:) = czero
-            elseif (test('madelfil')) then
+            elseif (write_madelung_file) then
               read (69, rec=irec) avmad
             else
               avmad(:,:) = t_madel%avmad(irec,:,:)
@@ -273,7 +273,7 @@ contains
             irec = iright + nrightall*(ilay1-1) + nrightoff
             if (npol==0) then
               avmad(:,:) = czero
-            elseif (test('madelfil')) then
+            elseif (write_madelung_file) then
               read (69, rec=irec) avmad
             else
               avmad(:,:) = t_madel%avmad(irec,:,:)
@@ -325,7 +325,7 @@ contains
       ! This part (ICC.GT.0) should be presumably reconsidered for impurity
       ! calculation in host-CPA case
       ! -------------------------------------------------------------------------
-      if (icc>0 .or. opt('KKRFLEX ')) then
+      if (icc>0 .or. write_kkrimp_input) then
         do l = 0, lpot
           do m = -l, l
             lm = l*l + l + m + 1
@@ -336,10 +336,10 @@ contains
       ! -------------------------------------------------------------------------
     end do
     ! ----------------------------------------------------------------------------
-    if (test('madelfil')) close (69)
+    if (write_madelung_file) close (69)
     write (1337, '(15X,45("-"),/)')
     write (1337, '(79("="))')
-    if ((icc==0) .and. (.not. opt('KKRFLEX '))) return
+    if ((icc==0) .and. (.not. write_kkrimp_input)) return
     ! ----------------------------------------------------------------------------
     ! Now Prepare output for Impurity calculation
     ! ----------------------------------------------------------------------------

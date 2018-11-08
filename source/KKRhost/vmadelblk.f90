@@ -112,7 +112,7 @@ contains
     write (1337, fmt=110)
 
     lrecabmad = wlength*2*lmpot*lmpot + wlength*2*lmpot
-    if (test('madelfil')) open (69, access='direct', recl=lrecabmad, file='abvmad.unformatted', form='unformatted')
+    if (write_madelung_file) open (69, access='direct', recl=lrecabmad, file='abvmad.unformatted', form='unformatted')
 
     lmmax = (lmax+1)*(lmax+1)
 
@@ -154,7 +154,7 @@ contains
               if (npol==0) then
                 avmad(:,:) = czero
                 bvmad(:) = czero
-              elseif (test('madelfil')) then
+              elseif (write_madelung_file) then
                 read (69, rec=irec) avmad, bvmad
               else
                  avmad(:,:) = t_madel%avmad(irec,:,:)
@@ -191,7 +191,7 @@ contains
                 if (npol==0) then
                   avmad(:,:) = czero
                   bvmad(:) = czero
-                elseif (test('madelfil')) then
+                elseif (write_madelung_file) then
                   read (69, rec=irec) avmad, bvmad
                 else
                   avmad(:,:) = t_madel%avmad(irec,:,:)
@@ -251,7 +251,7 @@ contains
             ! ----------------------------------------------------------------
             ! SPIN
             ! ----------------------------------------------------------------
-            if (icc/=0 .or. opt('KKRFLEX ')) then
+            if (icc/=0 .or. write_kkrimp_input) then
               lm = l*l + l + m + 1
               write (1337, *) 'ac', iq1, lm, ac
               vinters(lm, iq1) = ac
@@ -264,13 +264,13 @@ contains
       end do
     end do
     ! ----------------------------------------------------------------------------
-    if (test('madelfil')) close(69)
+    if (write_madelung_file) close(69)
     ! ----------------------------------------------------------------------------
     write (1337, *) 'ICC in VMADELBLK', icc
     write (1337, '(25X,30("-"),/)')
     write (1337, '(79("="))')
 
-    if ((icc==0) .and. (.not. opt('KKRFLEX '))) return
+    if ((icc==0) .and. (.not. write_kkrimp_input)) return
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! Now Prepare output for Impurity calculation
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -229,7 +229,7 @@ contains
           stop '     < EMESHT >'
         end if
         ez(npnt) = xi(i)*de + de + ebot - 2*npol*cmplx(0.0d0, etk, kind=dp)
-        if (opt('GF-EF   ')) ez(npnt) = emu + npol*cmplx(0.0d0, etk, kind=dp)
+        if (calc_GF_Efermi) ez(npnt) = emu + npol*cmplx(0.0d0, etk, kind=dp)
         df(npnt) = wi(i)*de
       end do                       ! I -> NPNT2
       if (npnt3>0) call gauleg(xi, wi, npnt3)

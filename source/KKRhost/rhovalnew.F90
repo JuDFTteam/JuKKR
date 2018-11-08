@@ -216,7 +216,7 @@ contains
 
     if (nsra==2) then
       use_sratrick = 1
-      if (test('nosph   ')) use_sratrick = 0
+      if (disable_tmat_sratrick) use_sratrick = 0
     else
       use_sratrick = 0
     end if
@@ -368,7 +368,7 @@ contains
     ! ENDDO
 
     nqdos = 1                      ! qdos ruess
-    if (opt('qdos    ')) then      ! qdos ruess
+    if (use_qdos) then      ! qdos ruess
       ! Read BZ path for qdos calculation:                                ! qdos ruess
       open (67, file='qvec.dat', status='old', iostat=ierr, err=100) ! qdos ruess
       read (67, *) nqdos           ! qdos ruess
@@ -396,14 +396,14 @@ contains
       allocate (denlm(lmsize,ielast,nqdos,nspin/(2-korbit)), stat=i_stat) ! qdos ruess
       call memocc(i_stat, product(shape(denlm))*kind(qvec), 'DENLM', 'RHOVALNEW') ! qdos ruess
 100   if (ierr/=0) stop 'ERROR READING ''qvec.dat''' ! qdos ruess
-    end if                         ! OPT('qdos    ')                                                     ! qdos ruess
+    end if                         ! use_qdos                                                     ! qdos ruess
 
 #ifdef CPP_MPI
     i1_myrank = i1 - t_mpi_c_grid%ioff_pt1(t_mpi_c_grid%myrank_ie) ! lmlm-dos ruess
 #else
     i1_myrank = i1                 ! lmlm-dos ruess
 #endif
-    if ((opt('lmlm-dos')) .and. (i1_myrank==1)) then ! lmlm-dos ruess
+    if ((calc_lmdos) .and. (i1_myrank==1)) then ! lmlm-dos ruess
       lrecgflle = nspin*(1+korbit)*lmmaxso*lmmaxso*ielast*nqdos ! lmlm-dos ruess
       open (91, access='direct', recl=lrecgflle, file='gflle' & ! lmlm-dos ruess
         , form='unformatted', status='replace', err=110, iostat=ierr) ! lmlm-dos ruess
@@ -538,7 +538,7 @@ contains
         ! faster calculation of RLL.
         ! no irregular solutions SLL are needed in self-consistent iterations
         ! because the density depends only on RLL, RLLLEFT and SLLLEFT
-        if (opt('RLL-SLL ') .and. .not. (opt('XCPL    ') .or. opt('OPERATOR'))) then
+        if (opt('RLL-SLL ') .and. .not. (calc_exchange_couplings .or. write_pkkr_operators)) then
           call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), tmatll, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, &
             hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
         else
@@ -603,7 +603,7 @@ contains
         tmattemp = czero
         alphall = czero
         ! faster calculation of RLLLEFT and SLLLEFT.
-        if (opt('RLL-SLL ') .and. .not. (opt('XCPL    ') .or. opt('OPERATOR'))) then
+        if (opt('RLL-SLL ') .and. .not. (calc_exchange_couplings .or. write_pkkr_operators)) then
           call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), tmattemp, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
             jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
           call sll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), sllleft(:,:,:,ith), ncheb, npan_tot, lmmaxso, nvec*lmmaxso, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, &
@@ -754,7 +754,7 @@ contains
     end do
 
 #ifdef CPP_MPI
-    if (opt('qdos    ')) then                                                                                    ! qdos
+    if (use_qdos) then                                                                                    ! qdos
       ! first communicate den array to write out qdos files                                                      ! qdos
       idim = (lmaxd1+1)*ielast*nspin/(2-korbit)*nqdos                                                                       ! qdos
       allocate (workc(0:lmaxd1,ielast,nspin/(2-korbit),nqdos), stat=i_stat)                                                 ! qdos
@@ -802,7 +802,7 @@ contains
             write (32, 120) ez(ie), qvec(1, iq), qvec(2, iq), qvec(3, iq), -aimag(dentot(2))/pi, (-aimag(den(l1,ie,iq,2))/pi, l1=0, lmaxd1) ! qdos
 120         format (5f10.6, 40e16.8)                                                                             ! qdos
 
-            if (test('compqdos')) then                                                                                            ! complex qdos
+            if (write_complex_qdos) then                                                                                            ! complex qdos
               if ((iq==1) .and. (ie_num==1)) then                                                                                 ! complex qdos
                 if (natyp>=100) then                                                                                              ! complex qdos
                   open (31, file='cqdos.'//char(48+i1/100)//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+1)//'.dat') ! complex qdos
@@ -839,7 +839,7 @@ contains
           end do ! IQ             ! qdos
         end do ! IE               ! qdos
       end if ! myrank_at==master  ! qdos
-    end if ! OPT('qdos    ')      ! qdos
+    end if ! use_qdos      ! qdos
 #endif
 
 #ifdef CPP_MPI
@@ -908,7 +908,7 @@ contains
       ! LDAU
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-      if (.not. opt('qdos    ')) then
+      if (.not. use_qdos) then
         ! omp: moved write-out of dos files out of parallel energy loop
         ! Write out lm-dos:                                                     ! lm-dos
         if (opt('lmdos    ')) then ! qdos ruess
@@ -935,10 +935,10 @@ contains
 150         format (a8, i3, a4, i5) ! lm-dos/qdos ruess
           end do                   ! IE
         end if
-      end if                       ! .not. OPT('qdos    ')
+      end if                       ! .not. use_qdos
 
       ! write gflle to file                                                 ! lmlm-dos
-      if (opt('lmlm-dos')) then    ! lmlm-dos
+      if (calc_lmdos) then    ! lmlm-dos
         if (t_inc%i_write>0) then  ! lmlm-dos
           write (1337, *) 'gflle:', shape(gflle), shape(gflle_part), lrecgflle ! lmlm-dos
         end if                     ! lmlm-dos
@@ -980,7 +980,7 @@ contains
       deallocate (rhonewtemp, stat=i_stat)
       call memocc(i_stat, i_all, 'RHONEWTEMP', 'RHOVALNEW')
       ! calculate new THETA and PHI for non-colinear
-      if (.not. test('FIXMOM  ') .and. .not.test('NOSOC   ')) then
+      if (.not. fix_nonco_angles .and. .not.test('NOSOC   ')) then
         rho2ns_temp(1, 1) = rho2int(1)
         rho2ns_temp(2, 2) = rho2int(2)
         rho2ns_temp(1, 2) = rho2int(3)

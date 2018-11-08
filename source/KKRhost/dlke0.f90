@@ -51,7 +51,7 @@ contains
       kp(1) = bzkp(1)
       kp(2) = bzkp(2)
       kp(3) = bzkp(3)
-      if (opt('COMPLEX ')) then
+      if (calc_complex_bandstructure) then
         kp(4) = bzkp(4)
         kp(5) = bzkp(5)
         kp(6) = bzkp(6)
@@ -80,7 +80,7 @@ contains
         kp(1) = -bzkp(1)
         kp(2) = -bzkp(2)
         kp(3) = -bzkp(3)
-        if (opt('COMPLEX ')) then
+        if (calc_complex_bandstructure) then
           kp(4) = -bzkp(4)
           kp(5) = -bzkp(5)
           kp(6) = -bzkp(6)

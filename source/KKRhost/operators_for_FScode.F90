@@ -120,7 +120,7 @@ contains
     theta = t_params%theta
     phi = t_params%phi
 
-    if (.not. test('IMP_ONLY')) then ! test option to disable costly recalculation of host operators
+    if (.not. impurity_operator_only) then ! test option to disable costly recalculation of host operators
 
       if (t_inc%i_write>0) write (1337, *) 'Operators using host wavefunctions'
       if (t_inc%i_write>0) write (*, *) 'Operators using host wavefunctions'
@@ -269,7 +269,7 @@ contains
       call normcoeff_so_spinflux(natyp,t_params%ircut,t_params%lmmaxd/(1+korbit),   &
         pns_so_all,t_inc%kvrel,t_params%drdi,0)
 
-    end if                         ! .not. TEST('IMP_ONLY')
+    end if                         ! .not. impurity_operator_only
 
     !--------------------------------------------------------------------------------
     ! Part 2: operators for imp. wavefunctions

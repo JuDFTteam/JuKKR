@@ -73,10 +73,10 @@ contains
 
     lirr = .true.
     iprint = 0
-    if (test('TAUSTRUC')) iprint = 2
+    if (print_tau_structure) iprint = 2
 
     ! --> test: full BZ integration
-    if (test('fullBZ  ') .or. opt('NEWSOSOL')) then
+    if (use_full_BZ .or. use_Chebychev_solver) then
       nsymat = 1
       lirr = .false.
       write (1337, '(8X,2A,/)') 'Test option < fullBZ > or Run option < NEWSOSOL >: ', ' overriding NSYMAT, generate full BZ k-mesh'

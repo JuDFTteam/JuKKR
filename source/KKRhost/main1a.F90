@@ -132,7 +132,7 @@ contains
       lopt,vtrel,btrel,drdirel,r2drdirel,rmrel,irmind,lmpotd,nspotd,npotd,jwsrel,   &
       zrel,itscf,natomimpd,natomimp,atomimp,iqat,naez,natyp,nref)
 
-    if (test('Vspher  ')) vins(irmind:irmd, 2:lmpotd, 1:nspotd) = 0.d0
+    if (use_spherical_potential_only) vins(irmind:irmd, 2:lmpotd, 1:nspotd) = 0.d0
 
     ! -------------------------------------------------------------------------
     ! End read in variables
@@ -161,11 +161,11 @@ contains
     ! -------------------------------------------------------------------------
     ! ITSCF is initialised to 0 in main0
     lrefsys = .true.
-    if (opt('DECIMATE') .and. (itscf>0)) lrefsys = .false.
-    if (opt('rigid-ef') .and. (itscf>0)) lrefsys = .false.
-    if (test('no-neutr') .and. (itscf>0)) lrefsys = .false.
-    if (opt('no-neutr') .and. (itscf>0)) lrefsys = .false.
-    if (test('lrefsysf') .or. opt('lrefsysf')) lrefsys = .false.
+    if (use_decimation .and. (itscf>0)) lrefsys = .false.
+    if (use_rigid_Efermi .and. (itscf>0)) lrefsys = .false.
+    if (disable_charge_neutrality .and. (itscf>0)) lrefsys = .false.
+    if (disable_charge_neutrality .and. (itscf>0)) lrefsys = .false.
+    if (disable_reference_system) lrefsys = .false.
 
 
     if (t_tgmat%tmat_to_file) then
@@ -189,7 +189,7 @@ contains
 #endif
 
     ! skip this part with GREENIMP option
-    if (opt('GREENIMP') .or. test('IMP_ONLY')) then
+    if (write_green_imp .or. impurity_operator_only) then
       if (myrank==master) write (*, *) 'Skipping atom loop in main1a'
       i1_start = 1
       i1_end = 0
@@ -198,7 +198,7 @@ contains
       call distribute_work_energies(ielast)
     end if
 
-    if (.not. opt('NEWSOSOL')) then
+    if (.not. use_Chebychev_solver) then
       do i1 = i1_start, i1_end
         do ispin = 1, nspin
           ipot = nspin*(i1-1) + ispin
@@ -213,14 +213,14 @@ contains
         end do
       end do
 
-    else ! opt('NEWSOSOL')
+    else ! use_Chebychev_solver
 
       ! !---------------------------------------------------------------------
       ! For calculation of Jij-tensor: create array for additional t-matrices and
       ! set atom-dependent flags which indicate if t-matrix is needed
       ! !---------------------------------------------------------------------
       call init_t_dtmatjij(t_inc, t_dtmatjij)
-      if (opt('XCPL    ')) then
+      if (calc_exchange_couplings) then
         call set_jijcalc_flags(t_dtmatjij, natyp, natomimpd, natomimp, atomimp, iqat)
       end if                       ! OPT('XCPL')
 
@@ -238,7 +238,7 @@ contains
           ipot = nspin*(i1-1) + ispin
 
 #ifdef CPP_BdG
-          if (test('BdG_dev ')) then
+          if (write_BdG_tests) then
             call BdG_write_tmatnewsolver_inputs(nranks, i1, i1_start, ielast, &
               nspin, lmax, nsra, iend, lmpotd, lly, deltae, idoldau, ncleb, &
               ncheb, ntotd, mmaxd, nspind, iemxd, nrmaxd, nspotd, cleb, icleb, &
@@ -271,7 +271,7 @@ contains
 
 #ifdef CPP_MPI
     ! skip this part with GREENIMP option
-    if (.not. (opt('GREENIMP') .or. test('IMP_ONLY'))) then
+    if (.not. (write_green_imp .or. impurity_operator_only)) then
 
       if (.not. t_tgmat%tmat_to_file) then
         do ii = 0, t_mpi_c_grid%nranks_ie - 1
@@ -296,7 +296,7 @@ contains
       ! -------------------------------------------------------------------------
       ! for calculation of Jij-tensor
       ! -------------------------------------------------------------------------
-      if (opt('XCPL    ') .and. opt('NEWSOSOL')) then
+      if (calc_exchange_couplings .and. use_Chebychev_solver) then
         do i1 = 1, t_inc%natyp
           ! initialize t_dtmatJij on other tasks
           ! t_dtmatJij was already allocated for certain atoms within the atom loop
@@ -321,9 +321,9 @@ contains
 
         end do                     ! I1=1,t_inc%NATYP
 
-      end if                       ! OPT('XCPL    ').and.OPT('NEWSOSOL')
+      end if                       ! calc_exchange_couplings.and.use_Chebychev_solver
 
-    end if                         ! .not.opt('GREENIMP')
+    end if                         ! .not.write_green_imp
     ! end skip this part with GREENIMP option
 #endif
     ! -------------------------------------------------------------------------

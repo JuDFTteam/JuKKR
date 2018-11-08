@@ -320,12 +320,12 @@ program kkrcode
     ! rewind output.xxx.txt
     if (t_inc%i_write<2 .and. t_inc%i_write>0) then
       rewind (1337)
-      if (.not. test('noserial')) read (1337, *)    ! skip first line to keep serial number
+      if (.not. disable_print_serialnumber) read (1337, *)    ! skip first line to keep serial number
     end if
     ! rewind timing files if t_inc%i_time<2 (see mod_timing)
     if (t_inc%i_time<2 .and. t_inc%i_time>0) then
       rewind (43234059)
-      if (.not. test('noserial')) read (43234059, *) ! skip first line to keep serial number
+      if (.not. disable_print_serialnumber) read (43234059, *) ! skip first line to keep serial number
     end if
 
     call timing_start('Time in Iteration')
@@ -336,7 +336,7 @@ program kkrcode
     call timing_start('main1a')
     call main1a()
     call timing_stop('main1a')
-    if (test('STOP1A  ')) then
+    if (stop_1a) then
       if (myrank==master) write (*, *) 'Stop after main1a'
 #ifdef CPP_MPI
       call mpi_barrier(mpi_comm_world, ierr)
@@ -350,8 +350,8 @@ program kkrcode
     call timing_start('main1b')
     call main1b()
     call timing_stop('main1b')
-    if (test('STOP1B  ')) then
-      if (.not. opt('WRTGREEN') .and. myrank==master) write (*, *) 'done with WRTGREEN step'
+    if (stop_1b) then
+      if (.not. write_green_host .and. myrank==master) write (*, *) 'done with WRTGREEN step'
       if (myrank==master) write (*, *) 'Stop after main1b'
 #ifdef CPP_MPI
       call mpi_barrier(mpi_comm_world, ierr)
@@ -366,8 +366,8 @@ program kkrcode
     call timing_start('main1c')
     call main1c()
     call timing_stop('main1c')
-    if (test('STOP1C  ')) then
-      if (.not. opt('qdos    ') .and. myrank==master) write (*, *) 'done with qdos steps'
+    if (stop_1c) then
+      if (.not. use_qdos .and. myrank==master) write (*, *) 'done with qdos steps'
       if (myrank==master) write (*, *) 'Stop after main1c'
 #ifdef CPP_MPI
       call mpi_barrier(mpi_comm_world, ierr)

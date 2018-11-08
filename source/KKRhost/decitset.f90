@@ -316,7 +316,7 @@ contains
             end do
             ! ----------------------------------------------------------------------
             ! tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt
-            if (test('tmat    ')) then
+            if (print_tmat) then
               write (1337, *)
               write (1337, 100, advance='no') '      ---> Delta_t  matrix for site: ', iqh
               if (krel==0) write (1337, 110, advance='no') txts(ispin)

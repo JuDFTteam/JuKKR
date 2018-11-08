@@ -141,7 +141,7 @@ contains
       vav0 = vav0 + conc(ih)*nshell(ih)*(vav1(1)+vav1(2))/2.e0_dp
       vol0 = vol0 + conc(ih)*nshell(ih)*(vol1(1)+vol1(2))/2.e0_dp
     end do
-    if (.not. (opt('DECIMATE'))) then
+    if (.not. (use_decimation)) then
       vbc(1) = 0.0e0_dp
       if (abs(vav0)>1e-10_dp) vbc(1) = -vav0/vol0
       if (ishift>0) vbc(1) = vbc(1) + eshift

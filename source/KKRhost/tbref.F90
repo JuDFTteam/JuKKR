@@ -166,7 +166,7 @@ contains
       end if
 
       ! skip this part with GREENIMP option
-      if (opt('GREENIMP')) then
+      if (write_green_imp) then
         if (myrank==master) write (*, *) 'Skipping atom loop in tbref for energy point', ie, 'of', ielast
         i1_start = 1
         i1_end = 0
@@ -182,16 +182,16 @@ contains
           , trefll(1,1,i1), dtrefll(1,1,i1), & ! LLY Lloyd
           alpharef(0,i1), dalpharef(0,i1), lmax+1, lmgf0d) ! LLY Lloyd
 
-        if (test('flow    ') .and. (t_inc%i_write>0)) write (1337, fmt=*) 'tll(ref),  i1 = ', i1
+        if (print_program_flow .and. (t_inc%i_write>0)) write (1337, fmt=*) 'tll(ref),  i1 = ', i1
       end do
 
-      if (test('flow    ') .and. (t_inc%i_write>0)) write (1337, fmt=*) 't-mat(Ref) o.k.', ie
+      if (print_program_flow .and. (t_inc%i_write>0)) write (1337, fmt=*) 't-mat(Ref) o.k.', ie
       ! ----------------------------------------------------------------------
       ! distribute NCLS loop over atom ranks
       call distribute_work_atoms(ncls, i1_start, i1_end, distribute_rest=.false.)
 
       ! overwrite  to skip this part with GREENIMP option
-      if (opt('GREENIMP')) then
+      if (write_green_imp) then
         i1_start = 1
         i1_end = 0
       end if
@@ -205,7 +205,7 @@ contains
         end do
 
         if (ic==0) stop 'Error in CLS(*) array in tbref'
-        if (test('flow    ') .and. (t_inc%i_write>0)) then
+        if (print_program_flow .and. (t_inc%i_write>0)) then
           write (1337, fmt=*) 'CLUSTER ', icls, ' at ATOM ', ic
         end if
 
@@ -275,7 +275,7 @@ contains
         end if                     ! if(t_mpi_c_grid%myrank_ie==0) then
 
         ! human readable writeout if test option is hit
-        if (test('fileverb')) then
+        if (formatted_files) then
           ! test writeout
           do i1 = 0, nranks - 1
             if (myrank==i1) then
@@ -296,7 +296,7 @@ contains
       if (lly/=0) then             ! LLY Lloyd
         if (t_lloyd%dgref_to_file) then ! LLY Lloyd
           write (681, rec=ie) dginp ! dGref/dE         ! LLY Lloyd
-          if (test('fileverb')) then
+          if (formatted_files) then
             write (681681, '(i9,200000ES15.7)') ie, dginp
           end if
         else                       ! LLY Lloyd
@@ -304,7 +304,7 @@ contains
         end if                     ! LLY Lloyd
         if (t_lloyd%g0tr_to_file) then ! LLY Lloyd
           write (682, fmt='(2E24.16)') lly_g0tr_ie ! LLY Lloyd
-          if (test('fileverb')) then
+          if (formatted_files) then
             write (682682, '(i9,200000ES15.7)') ie_num, lly_g0tr_ie
           end if
         else                       ! LLY Lloyd
@@ -312,7 +312,7 @@ contains
         end if                     ! LLY Lloyd
       end if                       ! LLY.NE.0                                 ! LLY Lloyd
 
-      if (test('flow    ') .and. (t_inc%i_write>0)) write (1337, fmt=*) 'G(n,lm,n,lm) (Ref) o.k.'
+      if (print_program_flow .and. (t_inc%i_write>0)) write (1337, fmt=*) 'G(n,lm,n,lm) (Ref) o.k.'
     end do                         ! IE
     ! ----------------------------------------------------------------------------
     if (t_tgmat%gref_to_file) then

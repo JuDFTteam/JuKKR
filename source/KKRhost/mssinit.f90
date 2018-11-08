@@ -96,10 +96,10 @@ contains
         end do
       end do
       ! &               LMMAXD*LMMAXD,INFO)
-      ! ( TEST('testgmat') ) THEN
-      ! ( OPT('VIRATOMS') ) THEN
-      if (.not. opt('VIRATOMS')) then
-        if (.not. test('testgmat')) then
+      ! ( set_tmat_noinversion ) THEN
+      ! ( use_virtual_atoms ) THEN
+      if (.not. use_virtual_atoms) then
+        if (.not. set_tmat_noinversion) then
           call zgetrf(lmmaxd, lmmaxd, msst(1,1,it), lmmaxd, ipvt, info)
 
           do lm1 = 1, lmmaxd
@@ -179,7 +179,7 @@ contains
         end do
       end do
       ! store the Delta_t matrix
-      if (test('tmat    ')) then
+      if (print_tmat) then
         write (1337, *) 'IQ,IT,RF', iq, it, rf
         write (1337, *) 'DELTA_TMATLL (', iq, ' )'
         call cmatstr(' ', 1, mssq(1,1,iq), lmmaxd, lmmaxd, 2*krel+1, 2*krel+1, 0, 1.0e-8_dp, 6)
@@ -191,7 +191,7 @@ contains
     ! fswrt
     ! fswrt
     ! fswrt
-    if (opt('FERMIOUT') .and. myrank==master) then ! fswrt
+    if (write_pkkr_input .and. myrank==master) then ! fswrt
       write (6801, '(A)') 'TMATLL(ie):' ! fswrt
       do iq = 1, naez              ! fswrt
         do lm2 = 1, lmmaxd         ! fswrt
@@ -215,10 +215,10 @@ contains
     do iq = 1, naez
       ! CALL ZGETRI(LMMAXD,MSSQ(1,1,IQ),LMMAXD,IPVT,W1,
       ! &              LMMAXD*LMMAXD,INFO)
-      ! ( .not. TEST('testgmat') ) THEN
-      ! ( .not. OPT('VIRATOMS') ) THEN
-      if (.not. opt('VIRATOMS')) then
-        if (.not. test('testgmat')) then
+      ! ( .not. set_tmat_noinversion ) THEN
+      ! ( .not. use_virtual_atoms ) THEN
+      if (.not. use_virtual_atoms) then
+        if (.not. set_tmat_noinversion) then
           call zgetrf(lmmaxd, lmmaxd, mssq(1,1,iq), lmmaxd, ipvt, info)
 
 
