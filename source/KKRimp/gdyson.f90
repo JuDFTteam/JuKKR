@@ -193,7 +193,7 @@ end subroutine
    !-------------------------------------------------------------------------------
    !> Summary: this subroutine is used to read the reference Green function: kkflex_greennew
    !> Author: Who wrote this subroutine
-   !> Category: Green function, input-output
+   !> Category: Green-function, input-output
    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
    !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
    !-------------------------------------------------------------------------------

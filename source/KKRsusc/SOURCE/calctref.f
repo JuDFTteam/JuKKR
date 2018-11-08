@@ -1,17 +1,6 @@
       MODULE mod_calctref
-!-------------------------------------------------------------------------------
-!> Summary: Calculate t-matrices for the reference system 
-!> Author:
-!> Category: KKRimp, single-site, reference-system 
-!>           
-!-------------------------------------------------------------------------------
       CONTAINS
-!-------------------------------------------------------------------------------
-!> Summary: Calculate t-matrices for the reference system 
-!> Author:
-!> Category: KKRimp, single-site, reference-system 
-!>           
-!-------------------------------------------------------------------------------
+
       SUBROUTINE CALCTREF(ERYD,VREF,RMTREF,LMAX,LMTMAT,TREFLL,
      &                    LMAXDP1,LMMAXD)
       use mod_beshan
