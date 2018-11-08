@@ -1,7 +1,17 @@
 module mod_calctmat_bauernew_testtools
+!-------------------------------------------------------------------------------
+!> Summary: Some debugging helper routines for 'calctmat_bauernew' 
+!> Author: David Bauer
+!> Category: KKRimp, unit_test
+!-------------------------------------------------------------------------------
 
 contains
 
+!-------------------------------------------------------------------------------
+!> Summary: Some debugging helper routines for 'calctmat_bauernew' 
+!> Author: David Bauer
+!> Category: KKRimp, unit_test
+!-------------------------------------------------------------------------------
 subroutine switch_jlk(jlk)
 implicit none
 double complex :: jlk(:,:),temp
@@ -28,7 +38,11 @@ end do !dim2
 
 end subroutine switch_jlk
 
-
+!-------------------------------------------------------------------------------
+!> Summary: Some debugging helper routines for 'calctmat_bauernew' 
+!> Author: David Bauer
+!> Category: KKRimp, unit_test
+!-------------------------------------------------------------------------------
 subroutine switch_vll(vll)
 implicit none
 double complex :: vll(:,:,:),temp

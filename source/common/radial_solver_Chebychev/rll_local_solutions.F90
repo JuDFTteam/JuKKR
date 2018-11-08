@@ -49,7 +49,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Calculation of the local regular solutions
   !> Author: 
-  !> Category: solver, single-site, KKRhost
+  !> Category: single-site, KKRhost
   !> Deprecated: False 
   !> Calculation of the local regular solutions
   !>

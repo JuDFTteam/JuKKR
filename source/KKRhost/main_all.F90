@@ -14,7 +14,7 @@
 !> nanoclusters (KKRImp code). The code has also been modified to produce the
 !> needed information for the treatment of TD-DFT calculations based in the linear
 !> response approach (KKRSusc code).
-!> Category: KKRhost, memory-management, communication
+!> Category: KKRhost, profiling, communication
 ! -----------------------------------------------------------------------------------
 program kkrcode
 

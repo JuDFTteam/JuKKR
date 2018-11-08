@@ -1,5 +1,4 @@
 !=====================================================================
-  
       SUBROUTINE SHAPE(NPOI8,AFACE8,BFACE8,CFACE8,DFACE8, &
                        TOLVDIST, & ! Max. tolerance for distance of two 
                        TOLEULER, & ! Used in calculation of Euler angles
@@ -544,6 +543,7 @@
   110 FORMAT(11X,'BUT IS IDENTICAL TO A PREVIOUS ONE.')
   111 FORMAT(4D20.12)
       END
+
       SUBROUTINE ROTATE(V,VZ,IFACE,NVERT)
       implicit none
 !#@# KKRtags: VORONOI geometry
@@ -616,6 +616,7 @@
     1 CONTINUE
       RETURN
       END
+
       SUBROUTINE EULER(Z,XX,IFACE,TOLEULER)
       implicit none
 !#@# KKRtags: VORONOI geometry
@@ -723,6 +724,7 @@
   100 FORMAT(//13X,'NUMBER OF FACES:',I5,' GREATER THAN DIMENSIONED',I5)
   101 FORMAT(/13X,'FROM EULER,ILLEGAL VECTORS:'/13X,2(' (',3E13.6,' )'))
       END
+
       SUBROUTINE PERP(R0,R1,R2,RD,TOLVDIST,INSIDE)
       implicit none
 !#@# KKRtags: VORONOI geometry
@@ -776,6 +778,7 @@
   200 FORMAT(///33X,'FROM PERP:   IDENTICAL POINTS'/33X,2('(',3E14.6,')'&
      &,3X))
       END
+
       SUBROUTINE CRIT(IFACE,NVERT,V,Z,IPAN,IVTOT,TOLEULER,TOLVDIST,CRT)
       implicit none
 !#@# KKRtags: VORONOI geometry radial-grid
@@ -1022,6 +1025,7 @@
   206 FORMAT(5X,'       VZ(',I2,')  =  (',3F10.4,' )')
   207 FORMAT(/'TETRAHEDRON',14X,'COORDINATES'/11('*'),14X,11('*')/)
       END
+
       SUBROUTINE MESH(CRT,NPAN,NM,XRN,DRN,MESHN,NPOI,KEYPAN,NMIN)
       implicit none
 !#@# KKRtags: VORONOI radial-grid
@@ -1105,9 +1109,10 @@
   104 FORMAT('I',2X,I5,2E24.16,I10,'   I')
   105 FORMAT(50('-'))
       END
+
       SUBROUTINE PINTG(X1,X2,DLT,S,LMAX,ISI,ARG,FD,ITYPE)
       implicit none
-!#@# KKRtags: VORONOI solver radial-grid
+!#@# KKRtags: VORONOI numerical-tools radial-grid
 !-----------------------------------------------------------------------
 !     THIS ROUTINE  ACCOMPLISHES THE  FI-INTEGRATION  OF REAL  SPHERICAL
 !     HARMONICS BY THE REPEATED SIMPSON'S METHOD , OR ANALYTICALLY ACCOR
@@ -1178,6 +1183,7 @@
     2 CONTINUE
       RETURN
       END
+
       SUBROUTINE GAULEG(X1,X2,X,W,N)
       IMPLICIT NONE
 !#@# KKRtags: VORONOI special-functions
@@ -1228,6 +1234,7 @@
    12 CONTINUE
       RETURN
       END
+
       SUBROUTINE RECUR(LMAX,X,THETA,FAC,S)
       implicit none
 !#@# KKRtags: VORONOI special-functions
@@ -1351,6 +1358,7 @@
     7 CONTINUE
       RETURN
       END
+
       SUBROUTINE RECUR0(LMAX,X,THETA,FAC,S)
       implicit none
 !#@# KKRtags: VORONOI special-functions
@@ -1466,6 +1474,7 @@
     7 CONTINUE
       RETURN
       END
+
       SUBROUTINE REDUCE(NMBR,IFMX,IFI,IEXP)
       implicit none
 !#@# KKRtags: VORONOI
@@ -1513,6 +1522,7 @@
      &IVEN'/20X,'INCREASE THE BASIS OF FIRST NUMBERS')
   101 FORMAT(3X,I15,'  NON POSITIVE NUMBER')
       END
+
       SUBROUTINE CCOEF(LMAX,CL,COE)
       implicit none
 !#@# KKRtags: VORONOI special-functions
@@ -1679,6 +1689,7 @@
   204 FORMAT(13X,'FROM CCOEF: INCONSISTENCY DATA-DIMENSION'/&
      &       14X,'LMAX:',2I5/13X,'ICMAX:',2I5)
       END
+
       SUBROUTINE DREAL(LMAX,ALPHA,BETA,GAMMA,ITEMP)
       implicit none
 !#@# KKRtags: VORONOI special-functions
@@ -1893,6 +1904,7 @@
    13 DROT=0.D0
       RETURN
       END
+
       SUBROUTINE INTSIM(FD,RATIO,X1,X2,DLT,XEL)
 !#@# KKRtags: VORONOI undefined
       implicit none
@@ -1951,6 +1963,7 @@
       IF(I.EQ.5) FFF=SQRT(15.D0     )*COS(2.D0*X)*C/6.D0
       RETURN
       END
+
       SUBROUTINE MESH0(CRT,NM,NPAN,NAPROX,NMIN)
       IMPLICIT NONE
 !#@# KKRtags: VORONOI radial-grid initialization
@@ -2005,6 +2018,7 @@
       RETURN
       END
 !=====================================================================
+
       SUBROUTINE POLCHK(NFACE,NVERTICES,XVERT,YVERT,ZVERT,TOLVDIST)
       IMPLICIT NONE
 !#@# KKRtags: VORONOI unit-test sanity-check

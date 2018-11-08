@@ -26,21 +26,16 @@
 !-------------------------------------------------------------------------------
 !> Summary: Calculate the free electron Green function
 !> Author: Who wrote this subroutine
-!> Category: Greenfunction, reference system
+!> Category: structural-greensfunction, reference-system
 !> Deprecated: TRUE ! This needs to be set to True for deprecated subroutines
 !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
 !-------------------------------------------------------------------------------
-
-
-c **********************************************************************
       SUBROUTINE GFREE(RDIFF,E0,GMLL,CLEB,ICLEB,LOFLM,IEND,
      +                 NCLEB,LMAX,LMGF0D,LMAX2P,LMX2SQ)
        USE mod_beshan
        USE mod_ymy
       IMPLICIT NONE
-c **********************************************************************
 C     .. Parameters ..
-!       include 'inc.p'
        INTEGER LMAX
 !       PARAMETER (LMAX=LMAXD)
        INTEGER NCLEB

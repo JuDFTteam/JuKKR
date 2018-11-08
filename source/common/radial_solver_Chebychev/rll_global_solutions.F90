@@ -5,9 +5,9 @@
 !-----------------------------------------------------------------------------------------!
 
 !------------------------------------------------------------------------------------
-!> Summary: Wrapper for the calculation of the irregular solutions
+!> Summary: Wrapper for the calculation of the regular solutions
 !> Author: 
-!> Wrapper for the calculation of the irregular solutions
+!> Wrapper for the calculation of the regular solutions
 !------------------------------------------------------------------------------------
 !> @note preprocessor options: change this definition if used in host/impurity code
 !> this is commented out, since then the logical hostcode is not defined
@@ -19,7 +19,7 @@
 !> This allows one to choose between interface for impurity and host code (different calling lists)
 !> @endnote
 !------------------------------------------------------------------------------------
-module mod_sll_global_solutions
+module mod_rll_global_solutions
 
 contains
 
@@ -27,33 +27,33 @@ contains
 
 #ifndef hostcode
   !-------------------------------------------------------------------------------
-  !> Summary: Wrapper for the calculation of the irregular solutions
+  !> Summary: Wrapper for the calculation of the regular solutions
   !> Author: 
-  !> Category: solver, single-site, KKRhost
+  !> Category: single-site, KKRhost
   !> Deprecated: False 
-  !> Wrapper for the calculation of the irregular solutions for the host code `KKRhost`
+  !> Wrapper for the calculation of the regular solutions for the host code `KKRhost`
   !-------------------------------------------------------------------------------
   !> @note One can comment out the line `#define hostcode` to instead choose the
-  !> calculation of the irregular solutions for the impuirty code.
+  !> calculation of the regular solutions for the impuirty code.
   !> @endnote
   !-------------------------------------------------------------------------------
-  subroutine sll_global_solutions(rpanbound,rmesh,vll,sll,ncheb,npan,lmsize,lmsize2,&
-    nrmax,nvec,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor,cmodesll,idotime)
+  subroutine rll_global_solutions(rpanbound,rmesh,vll,rll,tllp,ncheb,npan,lmsize,   &
+    lmsize2,nrmax,nvec,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor,cmoderll,idotime)
 #else
   !-------------------------------------------------------------------------------
-  !> Summary: Wrapper for the calculation of the irregular solutions
+  !> Summary: Wrapper for the calculation of the regular solutions
   !> Author: 
-  !> Category: solver, single-site, KKRhost
+  !> Category: single-site, KKRhost
   !> Deprecated: False 
-  !> Wrapper for the calculation of the irregular solutions for the impurity code `KKRimp`
+  !> Wrapper for the calculation of the regular solutions for the impurity code `KKRimp`
   !-------------------------------------------------------------------------------
   !> @note One can uncomment out the line `#define hostcode` to instead choose the
-  !> calculation of the irregular solutions for the host code.
+  !> calculation of the regular solutions for the host code.
   !> @endnote
   !-------------------------------------------------------------------------------
-  subroutine sll_global_solutions(rpanbound,rmesh,vll,sll,ncheb,npan,lmsize,lmsize2,&
-    lbessel,nrmax, nvec,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor,cmodesll,         &
-    use_sratrick1)               ! LLY
+  subroutine rll_global_solutions(rpanbound,rmesh,vll,rll,tllp,ncheb,npan,lmsize,   &
+    lmsize2,lbessel,nrmax,nvec,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor,cmoderll,  &
+    use_sratrick1,alphaget)     ! LLY
 #endif
     ! ************************************************************************
     ! for description see rllsll routine
@@ -75,7 +75,7 @@ contains
     use :: mod_constants
     use :: mod_datatypes, only: dp
     use :: mod_chebint
-    use :: mod_sll_local_solutions
+    use :: mod_rll_local_solutions
 
     implicit none
     integer :: ncheb             ! number of chebyshev nodes
@@ -91,7 +91,7 @@ contains
 
     ! running indices
     integer :: lm1, lm2
-    integer :: icheb, ipan, mn
+    integer :: info, icheb, ipan, mn, nm
 
     ! source terms
     complex (kind=dp) :: gmatprefactor ! prefactor of green function
@@ -99,7 +99,7 @@ contains
 #ifndef hostcode
     complex (kind=dp) :: hlk(:, :), jlk(:, :), & ! right sol. source terms
       hlk2(:, :), jlk2(:, :)     ! left sol. source terms
-    ! (tipically bessel and hankel fn)
+    ! (typically bessel and hankel fn)
 #else
     complex (kind=dp) :: hlk(lbessel, nrmax), jlk(lbessel, nrmax), hlk2(lbessel, nrmax), jlk2(lbessel, nrmax)
 #endif
@@ -113,19 +113,22 @@ contains
     integer :: jlk_index(2*lmsize)
 #endif
 
-    character (len=1) :: cmodesll                           ! These define the op(V(r))
+    character (len=1) :: cmoderll                           ! These define the op(V(r))
 
-    ! cmodesll ="1" : op( )=identity
-    ! cmodesll ="T" : op( )=transpose in L
+    ! cmoderll ="1" : op( )=identity
+    ! cmoderll ="T" : op( )=transpose in L
 
-    complex (kind=dp) :: sll(lmsize2, lmsize, nrmax), & ! irr. volterra sol.
+    complex (kind=dp) :: rll(lmsize2, lmsize, nrmax), & ! reg. fredholm sol.
+      tllp(lmsize, lmsize), &    ! t-matrix
       vll(lmsize*nvec, lmsize*nvec, nrmax) ! potential term in 5.7
     ! bauer, phd
+    complex (kind=dp), allocatable :: ull(:, :, :) ! reg. volterra sol.
 
-    complex (kind=dp), allocatable :: work(:, :), cllp(:, :, :), dllp(:, :, :), mihvy(:, :, :), mihvz(:, :, :), &
-      mijvy(:, :, :), mijvz(:, :, :) ! ***************
-    complex (kind=dp), allocatable :: yif(:, :, :, :), & ! source terms (different array
-      zif(:, :, :, :)
+    complex (kind=dp), allocatable :: work(:, :), allp(:, :, :), bllp(:, :, :), & ! eq. 5.9, 5.10 for reg. sol
+      mrnvy(:, :, :), mrnvz(:, :, :), & ! ***************
+      mrjvy(:, :, :), mrjvz(:, :, :) ! eq. 5.19-5.22
+    complex (kind=dp), allocatable :: yrf(:, :, :, :), & ! source terms (different array
+      zrf(:, :, :, :)            ! ordering)
     ! chebyshev arrays
     real (kind=dp) :: c1(0:ncheb, 0:ncheb), rpanbound(0:npan), drpan2
     real (kind=dp) :: cslc1(0:ncheb, 0:ncheb), & ! Integration matrix from left ( C*S_L*C^-1 in eq. 5.53)
@@ -133,9 +136,13 @@ contains
       tau(0:ncheb, 0:npan), &    ! Radial mesh point
       slc1sum(0:ncheb), rmesh(nrmax)
 
+    integer :: ipiv(0:ncheb, lmsize2)
     integer :: ierror, use_sratrick
     integer :: idotime
     integer, parameter :: directsolv = 1
+#ifdef hostcode
+    complex (kind=dp) :: alphaget(lmsize, lmsize) ! LLY
+#endif
 
 #ifdef CPP_HYBRID
     ! openMP variable --sacin 23/04/2015
@@ -153,8 +160,8 @@ contains
     ! problem. The matrix M which needs to be inverted has a special form
     ! if the SRA approximation is used:
 
-    ! matrix A ( C 1)     (same as in eq. 5.68)
-    ! ( B 0)
+    ! matrix A ( C 0)     (same as in eq. 5.68)
+    ! ( B 1)
     ! (C, B are matricies here)
 
     ! inverse of A is   (C^-1    0 )
@@ -172,7 +179,7 @@ contains
     else if (.not. config_testflag('nosph')) then
       use_sratrick = 1
     else
-      stop '[sll-glob] use_sratrick error'
+      stop '[rll-glob] use_sratrick error'
     end if
 #else
     if (lmsize==1) then
@@ -189,7 +196,7 @@ contains
 #ifdef test_run
     idotime = 1
 #endif
-    if (idotime==1) call timing_start('sll-glob')
+    if (idotime==1) call timing_start('rll-glob')
 
 
     do ipan = 1, npan
@@ -201,22 +208,24 @@ contains
 
     call chebint(cslc1, csrc1, slc1sum, c1, ncheb)
 
-    allocate (mihvy(lmsize,lmsize,npan), mihvz(lmsize,lmsize,npan))
-    allocate (mijvy(lmsize,lmsize,npan), mijvz(lmsize,lmsize,npan))
-    allocate (yif(lmsize2,lmsize,0:ncheb,npan))
-    allocate (zif(lmsize2,lmsize,0:ncheb,npan))
+    allocate (mrnvy(lmsize,lmsize,npan), mrnvz(lmsize,lmsize,npan))
+    allocate (mrjvy(lmsize,lmsize,npan), mrjvz(lmsize,lmsize,npan))
+    allocate (yrf(lmsize2,lmsize,0:ncheb,npan))
+    allocate (zrf(lmsize2,lmsize,0:ncheb,npan))
 
     allocate (work(lmsize,lmsize))
-    allocate (cllp(lmsize,lmsize,0:npan), dllp(lmsize,lmsize,0:npan))
+    allocate (allp(lmsize,lmsize,0:npan), bllp(lmsize,lmsize,0:npan))
+
+    allocate (ull(lmsize2,lmsize,nrmax))
 
     if (idotime==1) call timing_start('local')
 
 #ifdef CPP_HYBRID
     ! $OMP PARALLEL DEFAULT (PRIVATE) &
-    ! $OMP& SHARED(tau,npan,drpan2,rpanbound,mihvy,mihvz,mijvy,mijvz,yif) &
-    ! $OMP& SHARED(zif,nvec,lmsize,lmsize2,ncheb,jlk,jlk2,jlk_index) &
-    ! $OMP& SHARED(vll,gmatprefactor,hlk,hlk2,cslc1,csrc1,slc1sum) &
-    ! $OMP& SHARED(cmodesll,use_sratrick, rmesh)
+    ! $OMP& SHARED(tau,npan,drpan2,rpanbound,mrnvy,mrnvz,mrjvy,mrjvz,yrf) &
+    ! $OMP& SHARED(zrf,nvec,lmsize,lmsize2,ncheb,jlk,jlk2,jlk_index,vll) &
+    ! $OMP& SHARED(gmatprefactor,hlk,hlk2,cslc1,csrc1,slc1sum) &
+    ! $OMP& SHARED(cmoderll,use_sratrick, rmesh)
 
     thread_id = omp_get_thread_num()
 #endif
@@ -230,10 +239,10 @@ contains
     do ipan = 1, npan
 
       drpan2 = (rpanbound(ipan)-rpanbound(ipan-1))/2.d0 ! *(b-a)/2 in eq. 5.53, 5.54
-      call sll_local_solutions(vll,tau(0,ipan),drpan2,csrc1, slc1sum,               &
-        mihvy(1,1,ipan),mihvz(1,1,ipan),mijvy(1,1,ipan),mijvz(1,1,ipan),            &
-        yif(1,1,0,ipan),zif(1,1,0,ipan),ncheb,ipan,lmsize,lmsize2,nrmax,nvec,       &
-        jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor,cmodesll,lbessel,use_sratrick1)
+      call rll_local_solutions(vll,tau(0,ipan),drpan2,cslc1,slc1sum,mrnvy(1,1,ipan),& 
+        mrnvz(1,1,ipan),mrjvy(1,1,ipan),mrjvz(1,1,ipan),yrf(1,1,0,ipan),            &
+        zrf(1,1,0,ipan),ncheb,ipan,lmsize,lmsize2,nrmax,nvec,jlk_index,hlk,jlk,hlk2,& 
+        jlk2,gmatprefactor,cmoderll,lbessel,use_sratrick1)
 
     end do                       ! ipan
 #ifdef CPP_HYBRID
@@ -252,48 +261,80 @@ contains
     ! (starting condition: A(0) = 1, B(0) = 0, C(MMAX) = 0 and D(MMAX) = 1)
     ! ***********************************************************************
 
-    ! irregular
+    ! regular
     do lm2 = 1, lmsize
       do lm1 = 1, lmsize
-        dllp(lm1, lm2, npan) = czero
-        cllp(lm1, lm2, npan) = czero
+        bllp(lm1, lm2, 0) = czero
+        allp(lm1, lm2, 0) = czero
       end do
     end do
 
     do lm1 = 1, lmsize
-      dllp(lm1, lm1, npan) = cone
+      allp(lm1, lm1, 0) = cone
     end do
 
-    do ipan = npan, 1, -1
-      call zcopy(lmsize*lmsize, cllp(1,1,ipan), 1, cllp(1,1,ipan-1), 1)
-      call zcopy(lmsize*lmsize, dllp(1,1,ipan), 1, dllp(1,1,ipan-1), 1)
-      call zgemm('n', 'n', lmsize, lmsize, lmsize, cone, mihvz(1,1,ipan), lmsize, cllp(1,1,ipan), lmsize, cone, cllp(1,1,ipan-1), lmsize)
-      call zgemm('n', 'n', lmsize, lmsize, lmsize, cone, mihvy(1,1,ipan), lmsize, dllp(1,1,ipan), lmsize, cone, cllp(1,1,ipan-1), lmsize)
-      call zgemm('n', 'n', lmsize, lmsize, lmsize, -cone, mijvz(1,1,ipan), lmsize, cllp(1,1,ipan), lmsize, cone, dllp(1,1,ipan-1), lmsize)
-      call zgemm('n', 'n', lmsize, lmsize, lmsize, -cone, mijvy(1,1,ipan), lmsize, dllp(1,1,ipan), lmsize, cone, dllp(1,1,ipan-1), lmsize)
+    do ipan = 1, npan
+      call zcopy(lmsize*lmsize, allp(1,1,ipan-1), 1, allp(1,1,ipan), 1)
+      call zcopy(lmsize*lmsize, bllp(1,1,ipan-1), 1, bllp(1,1,ipan), 1)
+      call zgemm('n','n',lmsize,lmsize,lmsize,-cone,mrnvy(1,1,ipan),lmsize,         &
+        allp(1,1,ipan-1),lmsize,cone,allp(1,1,ipan),lmsize)
+      call zgemm('n','n',lmsize,lmsize,lmsize,-cone,mrnvz(1,1,ipan),lmsize,         &
+        bllp(1,1,ipan-1),lmsize,cone,allp(1,1,ipan),lmsize)
+      call zgemm('n','n',lmsize,lmsize,lmsize,cone,mrjvy(1,1,ipan),lmsize,          &
+        allp(1,1,ipan-1),lmsize,cone,bllp(1,1,ipan),lmsize)
+      call zgemm('n','n',lmsize,lmsize,lmsize,cone,mrjvz(1,1,ipan),lmsize,          &
+        bllp(1,1,ipan-1),lmsize,cone,bllp(1,1,ipan),lmsize)
     end do
 
     ! ***********************************************************************
-    ! determine the irregular solution sll by using 5.14
+    ! determine the regular solution ull by using 5.14
     ! ***********************************************************************
     do ipan = 1, npan
       do icheb = 0, ncheb
         mn = ipan*ncheb + ipan - icheb
-        call zgemm('n', 'n', lmsize2, lmsize, lmsize, cone, zif(1,1,icheb,ipan), lmsize2, cllp(1,1,ipan), lmsize, czero, sll(1,1,mn), lmsize2)
-        call zgemm('n', 'n', lmsize2, lmsize, lmsize, cone, yif(1,1,icheb,ipan), lmsize2, dllp(1,1,ipan), lmsize, cone, sll(1,1,mn), lmsize2)
+        call zgemm('n','n',lmsize2,lmsize,lmsize,cone,yrf(1,1,icheb,ipan),lmsize2,  &
+          allp(1,1,ipan-1),lmsize,czero,ull(1,1,mn),lmsize2)
+        call zgemm('n','n',lmsize2,lmsize,lmsize,cone,zrf(1,1,icheb,ipan),lmsize2,  &
+          bllp(1,1,ipan-1),lmsize,cone,ull(1,1,mn),lmsize2)
       end do
     end do
 
     if (idotime==1) call timing_stop('afterlocal')
     if (idotime==1) call timing_start('endstuff')
 
+    ! ***********************************************************************
+    ! next part converts the volterra solution u of equation (5.7) to
+    ! the fredholm solution r by employing eq. 4.122 and 4.120 of bauer, phd
+    ! and the t-matrix is calculated
+    ! ***********************************************************************
+
+    call zgetrf(lmsize, lmsize, allp(1,1,npan), lmsize, ipiv, info) ! invert alpha
+    call zgetri(lmsize, allp(1,1,npan), lmsize, ipiv, work, lmsize*lmsize, info) ! invert alpha -> transformation matrix rll=alpha^-1*rll
+#ifdef hostcode
+    ! get alpha matrix
+    do lm1 = 1, lmsize           ! LLY
+      do lm2 = 1, lmsize         ! LLY
+        alphaget(lm1, lm2) = allp(lm1, lm2, npan) ! LLY
+      end do                     ! LLY
+    end do                       ! LLY
+#endif
+    ! calculation of the t-matrix ! calc t-matrix tll = bll*alpha^-1
+    call zgemm('n','n',lmsize,lmsize,lmsize,cone/gmatprefactor,bllp(1,1,npan),      & 
+      lmsize,allp(1,1,npan),lmsize,czero,tllp,lmsize)
+
+    do nm = 1, nrmax
+      call zgemm('n','n',lmsize2,lmsize,lmsize,cone,ull(1,1,nm),lmsize2,            &
+        allp(1,1,npan),lmsize,czero,rll(1,1,nm),lmsize2)
+    end do
+
     if (idotime==1) call timing_stop('endstuff')
     if (idotime==1) call timing_start('checknan')
     if (idotime==1) call timing_stop('checknan')
-    if (idotime==1) call timing_stop('sll-glob')
+    if (idotime==1) call timing_stop('rll-glob')
 
-    deallocate (work, cllp, dllp, mihvy, mihvz, mijvy, mijvz, yif, zif, stat=ierror)
-    if (ierror/=0) stop '[sll-glob] ERROR in deallocating arrays'
-  end subroutine sll_global_solutions
+    deallocate (work, allp, bllp, mrnvy, mrnvz, mrjvy, mrjvz, yrf, zrf, stat=ierror)
+    if (ierror/=0) stop '[rll-glob] ERROR in deallocating arrays'
 
-end module mod_sll_global_solutions
+  end subroutine rll_global_solutions
+
+end module mod_rll_global_solutions

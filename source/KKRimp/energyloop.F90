@@ -12,7 +12,7 @@ module mod_energyloop
 !-------------------------------------------------------------------------------
 !> Summary: Main energy loop of the program
 !> Author: 
-!> Category: KKRimp, physical-observables, communication (mpi), input-output
+!> Category: KKRimp, physical-observables, communication, input-output
 !> Deprecated: False
 !> 
 !> for all energies in the energy loop:

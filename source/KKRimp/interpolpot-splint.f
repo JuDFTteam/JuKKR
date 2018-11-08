@@ -27,7 +27,7 @@
 !-------------------------------------------------------------------------------
 !> Summary: Cubic-spline interpolation of the potential using Spline and Splint subroutines
 !> Author: Who wrote this subroutine
-!> Category: Interpolation, Numerical tools, potential, old-mesh, new-mesh
+!> Category: Interpolation, Numerical-tools, potential, old-mesh, new-mesh
 !> Deprecated: TRUE ! This needs to be set to True for deprecated subroutines
 !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
 !-------------------------------------------------------------------------------
@@ -111,7 +111,7 @@ c***********************************************************************
 !> Taken from "Numerical Recipes in Fortran 77", W.H.Press et al.
 !>
 !> Author: Who wrote this subroutine
-!> Category: Numerical tools, Interpolation
+!> Category: Numerical-tools, Interpolation
 !> Deprecated: TRUE ! This needs to be set to True for deprecated subroutines
 !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
 !-------------------------------------------------------------------------------
@@ -187,7 +187,7 @@ c***********************************************************************
 !> returns a cubic-spline interpolated value y and the derivative yderiv.
 !> Taken from "Numerical Recipes in Fortran 77", W.H.Press et al.
 !> Author: Who wrote this subroutine
-!> Category: Numerical tools, Interpolation
+!> Category: Numerical-tools, Interpolation
 !> Deprecated: TRUE ! This needs to be set to True for deprecated subroutines
 !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
 !-------------------------------------------------------------------------------

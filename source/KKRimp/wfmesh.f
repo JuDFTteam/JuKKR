@@ -8,7 +8,7 @@
   !-------------------------------------------------------------------------------
   !> Summary: Creation of the radial mesh for the old-solver 
   !> Author: 
-  !> Category: radial-mesh, KKRimp
+  !> Category: radial-grid, KKRimp
   !> Deprecated: False 
   !> Creation of the radial mesh for the old-solver 
   !-------------------------------------------------------------------------------      
