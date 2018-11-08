@@ -2227,6 +2227,7 @@ program test
 
   integer :: lm1, lm2, i, j, ir, ierr
   logical :: lexist
+  character*256 :: uio ! unit in which to find inputcard
   
 #ifdef CPP_MPI
   ! initialize MPI
@@ -2327,7 +2328,8 @@ program test
     call read_scoef_rhoq(t_rhoq)
 
     ! read from inputcard
-    call read_input_rhoq(t_rhoq, 'inputcard')
+    uio = 'inputcard'
+    call read_input_rhoq(t_rhoq, uio)
 
     ! save kpt, volcub, volbz nkpt to t_rhoq
     call save_kmesh_rhoq(t_rhoq,nkpt,kpt,volcub,volbz, Nkx, Nky)
