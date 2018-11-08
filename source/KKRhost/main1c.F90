@@ -29,7 +29,6 @@ contains
   !> Main subroutine regarding the calculation of the electronic density
   !------------------------------------------------------------------------------- 
   subroutine main1c()
-use :: mod_runoptions, only: calc_lmdos, fix_nonco_angles, relax_SpinAngle_Dirac, use_Chebychev_solver, use_decimation, use_qdos, write_DOS, write_complex_qdos, write_density_ascii, write_rho2ns --manopt-- 
 
 #ifdef CPP_MPI
     use :: mpi
@@ -40,6 +39,8 @@ use :: mod_runoptions, only: calc_lmdos, fix_nonco_angles, relax_SpinAngle_Dirac
     use :: mod_timing
 #endif
     use :: mod_datatypes, only: dp
+    use :: mod_runoptions, only: calc_lmdos, fix_nonco_angles, relax_SpinAngle_Dirac, use_Chebychev_solver, &
+      use_decimation, use_qdos, write_DOS, write_complex_qdos, write_density_ascii, write_rho2ns
     use :: mod_constants, only: czero, pi
     use :: mod_profiling, only: memocc
     use :: mod_mympi, only: myrank, master
@@ -938,10 +939,10 @@ use :: mod_runoptions, only: calc_lmdos, fix_nonco_angles, relax_SpinAngle_Dirac
   !> or deallocated (`allocmode/=1`).
   !-------------------------------------------------------------------------------
   subroutine allocate_locals_main1c(allocmode, irmd, lmpotd, korbit, natypd, ielast, nspind, lly, lmaxd1, nqdos, npotd, &
-use :: mod_runoptions, only: use_qdos --manopt-- 
     lmmaxd, lmax, rho2n1, rho2n2, rho2ns, r2nef, cdos0, cdos1, cdos2, cdosat0, cdosat1, cdos_lly, den, denlm, qvec)
 
     use :: mod_datatypes, only: dp
+    use :: mod_runoptions, only: use_qdos
     use :: mod_profiling, only: memocc
     use :: mod_cinit, only: cinit
     implicit none

@@ -21,7 +21,6 @@ contains
   !> Calculate the reference system for the decimation case. 
   !-------------------------------------------------------------------------------
   subroutine tbref(ez,ielast,alatc,vref,iend,lmax,ncls,nineq,nref,cleb,rcls,atom,   &
-use :: mod_runoptions, only: formatted_files, print_program_flow, write_green_imp --manopt-- 
     cls,icleb,loflm,nacls,refpot,rmtref,tolrdif,tmpdir,itmpdir,iltmp,naez,lly)
 
     use :: mod_mympi, only: myrank, nranks, master, distribute_work_atoms
@@ -32,6 +31,7 @@ use :: mod_runoptions, only: formatted_files, print_program_flow, write_green_im
     use :: mod_mympi, only: find_dims_2d
 #endif
     use :: mod_constants
+    use :: mod_runoptions, only: formatted_files, print_program_flow, write_green_imp
     use :: mod_profiling
     use :: global_variables
     use :: mod_datatypes, only: dp

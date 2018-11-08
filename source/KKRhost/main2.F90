@@ -35,9 +35,12 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine main2()
-use :: mod_runoptions, only: disable_charge_neutrality, no_madelung, print_program_flow, relax_SpinAngle_Dirac, search_Efermi, simulate_asa, slow_mixing_Efermi, symmetrize_potential_cubic, symmetrize_potential_madelung, use_decimation, use_rigid_Efermi, use_semicore, use_spherical_potential_only, write_deci_tmat, write_kkrimp_input, write_madelung_file, write_potential_tests, write_rho2ns --manopt-- 
 
     use :: mod_constants, only: pi
+    use :: mod_runoptions, only: disable_charge_neutrality, no_madelung, print_program_flow, relax_SpinAngle_Dirac, &
+      search_Efermi, simulate_asa, slow_mixing_Efermi, symmetrize_potential_cubic, symmetrize_potential_madelung, &
+      use_decimation, use_rigid_Efermi, use_semicore, use_spherical_potential_only, write_deci_tmat, write_kkrimp_input, &
+      write_madelung_file, write_potential_tests, write_rho2ns
     use :: global_variables, only: krel, ipand, npotd, natomimpd, lmxspd, iemxd, nspotd, irid, ngshd, linterface, &
       nfund, ncelld, irmd, nembd1, nembd, irmind, lmmaxd, wlength, natypd, naezd, lmpotd, lpotd, lmaxd, nspind, nspotd, &
       ipand, ngshd, irid, nfund, ncelld

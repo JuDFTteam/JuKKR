@@ -17,8 +17,8 @@ contains
   !> Fourier transformation of the cluster Greens function GINP
   !-------------------------------------------------------------------------------
   subroutine dlke1(gllke, alat, nacls, naclsmax, rr, ezoa, atom, bzkp, ic, ginp, rcls)
-use :: mod_runoptions, only: calc_complex_bandstructure, print_kpoints, use_deci_onebulk --manopt-- 
 
+    use :: mod_runoptions, only: calc_complex_bandstructure, print_kpoints, use_deci_onebulk
     use :: mod_datatypes, only: dp
     use :: global_variables, only: almgf0, nrd, lmgf0d, naezd 
     use :: mod_constants, only: ci

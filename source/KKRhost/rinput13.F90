@@ -31,7 +31,6 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine rinput13(kte, igf, kxc, lly, icc, ins, kws, ipe, ipf, ipfe, icst, imix, lpot, naez, nemb, nref, ncls, npol, lmax, kcor, kefg, &
-use :: mod_runoptions, only: calc_DOS_Efermi, calc_GF_Efermi, calc_cheby_sll, calc_exchange_couplings, dirac_scale_SpeefOfLight, disable_charge_neutrality, modify_soc_Dirac, relax_SpinAngle_Dirac, search_Efermi, set_kmesh_large, stop_1b, stop_1c, use_BdG, use_Chebychev_solver, use_cond_LB, use_decimation, use_lloyd, use_qdos, use_rigid_Efermi, use_semicore, use_virtual_atoms, write_DOS, write_green_host, write_green_imp, write_kkrimp_input, write_pkkr_input, write_pkkr_operators --manopt-- 
     khyp, kpre, kvmad, lmmax, lmpot, ncheb, nleft, ifile, kvrel, nspin, natyp, nineq, npnt1, npnt2, npnt3, kfrozn, ishift, n1semi, n2semi, &
     n3semi, nsteps, insref, kshape, itdbry, nright, kforce, ivshift, khfield, nlbasis, nrbasis, intervx, intervy, intervz, npan_eq, npan_log, &
     npolsemi, tk, fcm, emin, emax, rmax, gmax, alat, r_log, rcutz, rcutxy, eshift, qbound, hfield, mixing, abasis, bbasis, cbasis, vconst, &
@@ -41,6 +40,7 @@ use :: mod_runoptions, only: calc_DOS_Efermi, calc_GF_Efermi, calc_cheby_sll, ca
     qmtet, qmphi, kreadldau, lopt, ueff, jeff, erefldau)
 
     use :: mod_profiling, only: memocc
+    use :: mod_runoptions, only: calc_DOS_Efermi, calc_GF_Efermi, calc_cheby_sll, calc_exchange_couplings, dirac_scale_SpeefOfLight, disable_charge_neutrality, modify_soc_Dirac, relax_SpinAngle_Dirac, search_Efermi, set_kmesh_large, stop_1b, stop_1c, use_BdG, use_Chebychev_solver, use_cond_LB, use_decimation, use_lloyd, use_qdos, use_rigid_Efermi, use_semicore, use_virtual_atoms, write_DOS, write_green_host, write_green_imp, write_kkrimp_input, write_pkkr_input, write_pkkr_operators
     use :: mod_constants, only: czero, cvlight
     use :: mod_wunfiles, only: t_params
     use :: memoryhandling, only: allocate_semi_inf_host, allocate_magnetization, allocate_cell, allocate_cpa, allocate_soc, allocate_ldau

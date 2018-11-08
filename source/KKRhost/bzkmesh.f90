@@ -19,7 +19,8 @@ contains
   !> 
   !-------------------------------------------------------------------------------
   subroutine bzkmesh(nbxin, nbyin, nbzin, maxmesh, lirr, bravais, recbv, nsymat, rsymat, isymindex, symunitary, ielast, ez, kmesh, iprint, krel, kpoibz, maxmshd)
-use :: mod_runoptions, only: print_kmesh, set_kmesh_large, set_kmesh_small, write_kpts_file, write_rhoq_input --manopt-- 
+
+    use :: mod_runoptions, only: print_kmesh, set_kmesh_large, set_kmesh_small, write_kpts_file, write_rhoq_input 
     use :: mod_types, only: t_inc
     use :: mod_wunfiles, only: t_params
     use :: mod_rhoqtools, only: rhoq_write_kmesh

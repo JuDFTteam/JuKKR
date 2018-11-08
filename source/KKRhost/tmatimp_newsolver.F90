@@ -31,7 +31,6 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine tmatimp_newsolver(irm,ksra,lmax,iend,irid,lpot,natyp,ncleb,ipand,irnsd,&
-use :: mod_runoptions, only: disable_tmat_sratrick, write_green_imp, write_pkkr_operators --manopt-- 
     nfund,ihost,ntotd,nspin,lmpot,ncheb,lmmaxd,korbit,nspotd,ielast,irmind,npan_eq, &
     npan_log,natomimp,r_log,vins,vm2z,ipan,irmin,hostimp,ipanimp,irwsimp,atomimp,   &
     irminimp,icleb,ircut,ircutimp,zat,zimp,rmesh,cleb,rimp,rclsimp,eryd,vm2zimp,    &
@@ -44,6 +43,7 @@ use :: mod_runoptions, only: disable_tmat_sratrick, write_green_imp, write_pkkr_
     use :: mod_mympi, only: myrank, master, nranks
 #endif
     use :: mod_types, only: t_inc, t_imp
+    use :: mod_runoptions, only: disable_tmat_sratrick, write_green_imp, write_pkkr_operators
     use :: mod_create_newmesh
     use :: mod_version_info
     use :: mod_wunfiles, only: t_params

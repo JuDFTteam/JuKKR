@@ -45,10 +45,10 @@ contains
   !>                                     V. Popescu - Munich, Dec 04
   !-------------------------------------------------------------------------------
   subroutine deciopt(alat, ins, krel, kvrel, kmrot, nspin, naez, lmmax, bravais, tk, npol, npnt1, npnt2, npnt3, ez, ielast, kaoez, lefttinvll, righttinvll, vacflag, nlbasis, &
-use :: mod_runoptions, only: use_Chebychev_solver --manopt-- 
     nrbasis, cmomhost, vref, rmtref, nref, refpot, lmaxd, lmgf0d, lmmaxd, lm2d, nembd1, iemxd, nspind, lmpotd, natypd, irmd, ipand)
 
     use :: mod_datatypes, only: dp
+    use :: mod_runoptions, only: use_Chebychev_solver
     use :: mod_decitset, only: decitset
     use :: mod_decimaread, only: decimaread
     use :: mod_cmomsread, only: cmomsread

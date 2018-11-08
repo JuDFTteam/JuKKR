@@ -18,8 +18,8 @@ contains
   !> (l,m_l)-representation
   !-------------------------------------------------------------------------------
   subroutine dlke0(gllke, alat, naez, cls, nacls, naclsmax, rr, ezoa, atom, bzkp, rcls, ginp)
-use :: mod_runoptions, only: calc_complex_bandstructure --manopt-- 
 
+    use :: mod_runoptions, only: calc_complex_bandstructure
     use :: global_variables, only: lmgf0d, almgf0, naclsd, nrd
     use :: mod_datatypes, only: dp
     use :: mod_dlke1, only: dlke1

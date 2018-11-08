@@ -30,7 +30,6 @@ contains
   !> exchange constants and the Dzyaloshinskii-Moriya vectors.
   !-------------------------------------------------------------------------------
   subroutine tbxccpljijdij(naezd, natypd, lmmaxd, lmgf0d, natomimpd, iemxd,         & ! dimensions
-use :: mod_runoptions, only: calc_exchange_couplings, calc_exchange_couplings_energy --manopt-- 
     thetas, phis, natomimp, atomimp, nofgijd, iqat, rclsimp,                        & ! imp-cluser
     ijtabcalc, ijtabcalc_i, ijtabsh, ijtabsym,                                      & ! shells
     ielast, ez, wez, npol,                                                          & ! energies
@@ -42,6 +41,7 @@ use :: mod_runoptions, only: calc_exchange_couplings, calc_exchange_couplings_en
     use :: mod_types, only: t_mpi_c_grid
 #endif
     use :: mod_types, only: t_tgmat, t_dtmatjij, t_cpa
+    use :: mod_runoptions, only: calc_exchange_couplings, calc_exchange_couplings_energy
     use :: mod_mympi, only: myrank, master
     use :: mod_version_info
     use :: mod_md5sums

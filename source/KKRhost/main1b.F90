@@ -25,8 +25,7 @@ contains
   !> Deprecated: False 
   !> Main subroutine regarding the claculation of the structural Green's function `gmat`
   !-------------------------------------------------------------------------------  
-  subroutine main1b()
-use :: mod_runoptions, only: calc_exchange_couplings, formatted_files, set_gmat_to_zero, use_Chebychev_solver, use_qdos, use_readcpa, write_deci_tmat, write_gmat_plain, write_green_host, write_green_imp, write_kkrimp_input, write_pkkr_input, write_pkkr_operators, write_rhoq_input --manopt-- 
+  subroutine main1b() 
 
 #ifdef CPP_MPI
     use :: mpi
@@ -36,6 +35,9 @@ use :: mod_runoptions, only: calc_exchange_couplings, formatted_files, set_gmat_
 #endif
     use :: mod_mympi, only: myrank, master
     use :: mod_datatypes, only: dp
+    use :: mod_runoptions, only: calc_exchange_couplings, formatted_files, set_gmat_to_zero, use_Chebychev_solver, &
+      use_qdos, use_readcpa, write_deci_tmat, write_gmat_plain, write_green_host, write_green_imp, write_kkrimp_input, &
+      write_pkkr_input, write_pkkr_operators, write_rhoq_input
     use :: mod_constants, only: czero, cone, pi, nsymaxd
     use :: mod_profiling, only: memocc
     use :: mod_operators_for_fscode, only: operators_for_fscode

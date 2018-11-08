@@ -26,13 +26,13 @@ contains
   !> ported from KKRnano, Oct. 2013)
   !-------------------------------------------------------------------------------
   subroutine gll13(ez, cleb, icleb, loflm, iend, tmatll, dtmatll, atom, refpot, ratom, natom, tolrdif, alat, out_wr, gref0, dgdeout, naclsmax, lly_g0tr, lly)
-use :: mod_runoptions, only: print_program_flow, print_refpot --manopt-- 
 
 
 #ifdef CPP_HYBRID
     use :: omp_lib
 #endif
     use :: mod_types, only: t_inc
+    use :: mod_runoptions, only: print_program_flow, print_refpot
     use :: global_variables, only: lmgf0d, nrefd, ncleb, naclsd, naezd, nembd, lm2d
     use :: mod_datatypes, only: dp
     use :: mod_gfree13, only: gfree13

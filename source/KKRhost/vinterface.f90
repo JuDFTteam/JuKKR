@@ -45,11 +45,11 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine vinterface(cmom,cminst,lpot,nspin,nlayers,natyp,v,zat,r,irws,ircut,    &
-use :: mod_runoptions, only: print_program_flow, use_decimation, write_kkrimp_input, write_madelung_file --manopt-- 
     ipan,kshape,noq,kaoez,iqat,conc,catom,icc,hostimp,nlbasis,nleft,nrbasis,nright, &
     cmomhost,chrgnt,vinters,naez,lmpot)
 
     use :: mod_constants, only: pi, czero
+    use :: mod_runoptions, only: print_program_flow, use_decimation, write_kkrimp_input, write_madelung_file
     use :: global_variables, only: wlength, ipand, nembd1, irmd, npotd
     use :: mod_main0, only: npol
     use :: mod_datatypes, only: dp

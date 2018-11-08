@@ -41,11 +41,11 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine madelung2d(lpot,yrg,wg,naez,alat,vol,bravais,recbv,rbasis,rmax,gmax,   &
-use :: mod_runoptions, only: use_decimation, write_madelung_file --manopt-- 
     nlbasis,nleft,zperleft,tleft,nrbasis,nright,zperight,tright,lmxspd,lassld,      &
     lpotd,lmpotd,nmaxd,ishld,nembd1,wlength)
 
     use :: mod_madelgaunt, only: madelgaunt
+    use :: mod_runoptions, only: use_decimation, write_madelung_file
     use :: mod_madelcoef, only: madelcoef
     use :: mod_madelout, only: madel2out
     use :: mod_ewald2d, only: ewald2d

@@ -439,8 +439,7 @@ contains
   !> Main wrapper to handle input reading, allocation of arrays, and
   !> preparation of all the necessary data structures for a calculation. 
   ! ----------------------------------------------------------------------------
-  subroutine main0()
-use :: mod_runoptions, only: calc_DOS_Efermi, calc_GF_Efermi, relax_SpinAngle_Dirac, set_empty_system, use_Chebychev_solver, use_decimation, use_ewald_2d, use_qdos, use_semicore, use_spherical_potential_only, use_virtual_atoms, write_deci_pot, write_deci_tmat, write_energy_mesh, write_generalized_potential, write_green_host, write_green_imp, write_kkrimp_input, write_kkrsusc_input, write_pkkr_input, write_pkkr_operators, write_potential_tests, write_rhoq_input --manopt-- 
+  subroutine main0() 
 
 #ifdef CPP_OMPSTUFF
     use :: omp_lib ! necessary for omp functions
@@ -449,6 +448,9 @@ use :: mod_runoptions, only: calc_DOS_Efermi, calc_GF_Efermi, relax_SpinAngle_Di
     use :: mpi
 #endif
     use :: mod_mympi, only: nranks
+    use :: mod_runoptions, only: calc_DOS_Efermi, calc_GF_Efermi, relax_SpinAngle_Dirac, set_empty_system, use_Chebychev_solver, &
+      use_decimation, use_ewald_2d, use_qdos, use_semicore, use_spherical_potential_only, use_virtual_atoms, write_deci_pot, &
+      write_deci_tmat, write_energy_mesh, write_generalized_potential, write_green_host, write_green_imp, write_kkrimp_input, write_kkrsusc_input, write_pkkr_input, write_pkkr_operators, write_potential_tests, write_rhoq_input
     use :: mod_version, only: version1, version2, version3, version4
     use :: mod_version_info, only: serialnr, construct_serialnr, version_print_header
     use :: mod_md5sums, only: get_md5sums, md5sum_potential, md5sum_shapefun

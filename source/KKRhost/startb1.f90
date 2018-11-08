@@ -67,13 +67,13 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine startb1(ifile,ipf,ipfe,ipe,krel,kws,lmax,nbeg,nend,alat,rmtnew,rmt,    &
-use :: mod_runoptions, only: print_radial_mesh --manopt-- 
     ititle,imt,irc,vconst,ins,irns,fpradius,nspin, vins,irmin,kshape,ntcell,ircut,  &
     ipan,thetas,ifunm,nfu,llmsp,lmsp,efermi,vbc,dror,rs,s,vm2z,rws,ecore,lcore,     &
     ncore,drdi,r,zat,a,b,irws,iinfo,lmpot,irmind,irm,lmxspd,ipand,irid,irnsd,natyp, &
     ncelld,nfund,nspotd,ivshift,npotd)
 
     use :: mod_constants
+    use :: mod_runoptions, only: print_radial_mesh
     use :: mod_potcut
     use :: mod_calrmt
     use :: mod_rinit

@@ -59,10 +59,10 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine vmadelblk(cmom,cminst,lmax,nspin,naez,v,zat,r,irws,ircut,ipan,kshape,  &
-use :: mod_runoptions, only: write_kkrimp_input, write_madelung_file --manopt-- 
     noq,kaoez,conc,catom,icc,hostimp,vinters,nemb,lmpot,natyp)
 
     use :: mod_constants, only: pi, czero
+    use :: mod_runoptions, only: write_kkrimp_input, write_madelung_file
     use :: global_variables, only: wlength, ipand, irmd, npotd
     use :: mod_main0, only: npol
     use :: mod_datatypes, only: dp

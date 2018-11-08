@@ -29,8 +29,8 @@ contains
   !> adopted for more atoms per site (CPA) V. Popescu Feb. 02
   !-------------------------------------------------------------------------------
   subroutine etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, nspin, natyp, nshell, conc, idoldau, lopt, eu, edcldau)
-use :: mod_runoptions, only: no_madelung --manopt-- 
 
+    use :: mod_runoptions, only: no_madelung
     use :: mod_types, only: t_inc
     use :: mod_datatypes, only: dp
     use :: global_variables, only: natypd, npotd, lmaxd

@@ -19,11 +19,12 @@ contains
   !> 
   !> changes for impurity 20/02/2004 -- v.popescu according to n.papanikolaou
   !-------------------------------------------------------------------------------
-  subroutine bzkint0(nshell, naez, natyp, noq, rbasis, kaoez, icc, bravais, recbv, atomimp, rsymat, isymindex, nsymat, ifilimp, natomimp, &
-use :: mod_runoptions, only: print_tau_structure, use_Chebychev_solver, use_full_BZ --manopt-- 
+  subroutine bzkint0(nshell, naez, natyp, noq, rbasis, kaoez, icc, bravais, recbv, atomimp, rsymat, isymindex, nsymat, ifilimp, natomimp, & 
     nsh1, nsh2, rclsimp, ratom, ijtabsym, ijtabsh, ijtabcalc, iofgij, jofgij, nofgij, ish, jsh, rrot, dsymll, para, qmtet, qmphi, symunitary, &
     hostimp, intervx, intervy, intervz, ielast, ez, kmesh, maxmesh, maxmshd, nsymaxd, krel, lmaxd, lmmaxd, kpoibz, naezd, natypd, natomimpd, &
     nsheld, nembd)
+
+    use :: mod_runoptions, only: print_tau_structure, use_Chebychev_solver, use_full_BZ
     use :: mod_datatypes, only: dp
     use :: mod_gfshells, only: gfshells
     use :: mod_crtstar, only: crtstar

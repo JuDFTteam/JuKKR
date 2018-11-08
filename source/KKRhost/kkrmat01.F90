@@ -35,7 +35,6 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine kkrmat01(bzkp, nofks, gs, volcub, tinvll, rrot, nshell, nsdia, alat, nsymat, naez, cls, nacls, naclsmax, rr, ezoa, atom, nsh1, nsh2, ginp, rbasis, rcls, tinvbup, &
-use :: mod_runoptions, only: print_program_flow, use_Chebychev_solver, use_qdos, use_virtual_atoms, write_green_imp, write_rhoq_input --manopt-- 
     tinvbdown, vacflag, nlbasis, nrbasis, factl, icheck, invmod, ideci, srrel, irrel, nrrel, dtrefll, dtmatll, dginp, refpot, lly_grtr, tracet, cfctor, lly) ! LLY
 #ifdef CPP_MPI
     use :: mpi
@@ -52,6 +51,7 @@ use :: mod_runoptions, only: print_program_flow, use_Chebychev_solver, use_qdos,
     use :: mod_timing, only: timing_start, timing_pause, timing_stop
 #endif
     use :: mod_types, only: t_inc
+    use :: mod_runoptions, only: print_program_flow, use_Chebychev_solver, use_qdos, use_virtual_atoms, write_green_imp, write_rhoq_input
     use :: mod_rhoqtools, only: rhoq_find_kmask, rhoq_saveg, rhoq_write_tau0, rhoq_read_mu0_scoef
     use :: global_variables, only: nembd1, nembd2, nsheld, nclsd, naclsd, lmmaxd, nprincd, nrd, nrefd, lmgf0d, krel, ndim_slabinv, alm, almgf0 
     use :: mod_constants, only: czero, cone, nsymaxd, ci,pi

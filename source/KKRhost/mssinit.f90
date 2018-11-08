@@ -31,10 +31,10 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine mssinit(ncpa,icpastart,tsst,msst,mssq,trefll,drotq,refpot,iqat,itoq,   &
-use :: mod_runoptions, only: print_tmat, set_tmat_noinversion, use_virtual_atoms, write_pkkr_input --manopt-- 
     noq, conc, kmrot, natyp, naez) ! nrefd was taken out of
     ! calling list 1.2.2012
     use :: global_variables
+    use :: mod_runoptions, only: print_tmat, set_tmat_noinversion, use_virtual_atoms, write_pkkr_input
     use :: mod_mympi, only: myrank, master
     use :: mod_datatypes, only: dp
     use :: mod_rotate

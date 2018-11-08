@@ -23,8 +23,8 @@ contains
   !> Guillaume Geranton, September 2014
   !-------------------------------------------------------------------------------
   subroutine calc_torq_ll_ss(lmmax, rll, ircut, ipan, icell, cleb, icleb, iend, ifunm, lmsp, irws, drdi, dens, visp, nspin, iatom, vins, irmin)
-use :: mod_runoptions, only: torque_operator_onlyMT, torque_operator_onlySph --manopt-- 
 
+    use :: mod_runoptions, only: torque_operator_onlyMT, torque_operator_onlySph 
     use :: global_variables, only: irmd, lmpotd, irmind, ipand, natypd, ncleb
     use :: mod_datatypes, only: dp
     use :: mod_csimpk, only: csimpk

@@ -32,7 +32,6 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine tmat_newsolver(ielast,nspin,lmax,zat,socscale,ez,nsra,cleb,icleb,iend, &
-use :: mod_runoptions, only: calc_exchange_couplings, disable_tmat_sratrick, formatted_files, stop_1b, write_BdG_tests, write_pkkr_operators, write_rhoq_input --manopt-- 
     ncheb,npan_tot,rpan_intervall,ipan_intervall,rnew,vinsnew,theta,phi,i1,ipot,    &
     lmpot,lly,deltae,idoldau,lopt,wldau,t_dtmatjij_at,ispin)
 
@@ -45,6 +44,7 @@ use :: mod_runoptions, only: calc_exchange_couplings, disable_tmat_sratrick, for
     use :: mod_timing, only: timing_start, timing_stop, timings_1a
 #endif
     use :: mod_datatypes, only: dp
+    use :: mod_runoptions, only: calc_exchange_couplings, disable_tmat_sratrick, formatted_files, stop_1b, write_BdG_tests, write_pkkr_operators, write_rhoq_input
     use :: mod_constants, only: czero, cone, cvlight
     use :: global_variables, only: ntotd, ncleb, nrmaxd, mmaxd, nspind, nspotd, iemxd, lmmaxd, lmmaxso, korbit
     use :: mod_wunfiles, only: t_params
@@ -810,10 +810,10 @@ use :: mod_runoptions, only: calc_exchange_couplings, disable_tmat_sratrick, for
   !> calculation.
   !-------------------------------------------------------------------------------
   subroutine allocate_locals_tmat_newsolver(allocmode,irmdnew,lmpot,nspin,vins,aux, &
-use :: mod_runoptions, only: calc_exchange_couplings, write_rhoq_input --manopt-- 
     ipiv,tmat0,tmatll,alpha0,dtmatll,alphall,dalphall,jlk_index,nsra,lmmaxso,nth,   &
     lmax,vnspll,vnspll0,vnspll1,hlk,jlk,hlk2,jlk2,tmatsph,rll,sll,rllleft,sllleft)
     use :: mod_datatypes, only: dp
+    use :: mod_runoptions, only: calc_exchange_couplings, write_rhoq_input
     use :: mod_constants, only: czero
     use :: global_variables, only: korbit
     use :: mod_profiling, only: memocc

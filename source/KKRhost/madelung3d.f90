@@ -30,10 +30,10 @@ contains
   !> @endtodo
   !-------------------------------------------------------------------------------
   subroutine madelung3d(lpot,yrg,wg,naez,alat,volume0,bravais,recbv,rbasis,rmax,    &
-use :: mod_runoptions, only: write_madelung_file --manopt-- 
     gmax,naezd,lmxspd,lassld,lpotd, lmpotd,nmaxd,ishld,nembd,wlength)
 
     use :: mod_datatypes, only: dp
+    use :: mod_runoptions, only: write_madelung_file
     use :: mod_madelgaunt, only: madelgaunt
     use :: mod_madelcoef, only: madelcoef
     use :: mod_madelout, only: madel3out

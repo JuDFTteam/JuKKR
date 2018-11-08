@@ -23,7 +23,8 @@ contains
   !> size NPRINCD
   !-------------------------------------------------------------------------------
   subroutine gfmask(linterface, icheck, icc, invmod, nsh1, nsh2, naez, nshell, naezd, nprincd)
-use :: mod_runoptions, only: print_ickeck, use_cond_LB --manopt-- 
+
+    use :: mod_runoptions, only: print_ickeck, use_cond_LB
 
     implicit none
 
