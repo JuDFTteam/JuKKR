@@ -9,7 +9,7 @@ CONTAINS
    !-------------------------------------------------------------------------------
    !> Summary: This subroutine generats the Gauntcoefficients convoluted with shapefunction 
    !> Author: 
-   !> Category: Shape-function, Potential, kkrimp 
+   !> Category: Shape-functions, Potential, kkrimp 
    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
    !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
    !-------------------------------------------------------------------------------
@@ -62,7 +62,7 @@ end if
    !>          m. abramowitz and i.a. stegun, handbook of mathematical functions
    !>          nbs applied mathematics series 55 (1968), pages 887 and 916
    !> Author: Who wrote this subroutine
-   !> Category: Shape-function, Potential 
+   !> Category: Shape-functions, Potential 
    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
    !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
    !-------------------------------------------------------------------------------
