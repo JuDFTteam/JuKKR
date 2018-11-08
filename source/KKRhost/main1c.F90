@@ -826,7 +826,7 @@ contains
       ! Write out lm charges and moments
       ! -------------------------------------------------------------------
       withorbmom = krel+korbit
-      if (test('NOSOC   ')) withorbmom = withorbmom+1
+      if (test('NOSOC   ')) withorbmom = nspin-1 !withorbmom+1
       call wrmoms(withorbmom, natyp, nspinpot, texts, textl, textns, charge, muorb, lmax, lmaxd1)
 
       ! ----------------------------------------------------------------------
