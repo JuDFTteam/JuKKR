@@ -44,7 +44,8 @@ contains
     use :: mod_timing, only: timing_start, timing_stop, timings_1a
 #endif
     use :: mod_datatypes, only: dp
-    use :: mod_runoptions, only: calc_exchange_couplings, disable_tmat_sratrick, formatted_files, stop_1b, write_BdG_tests, write_pkkr_operators, write_rhoq_input
+    use :: mod_runoptions, only: calc_exchange_couplings, disable_tmat_sratrick, formatted_files, stop_1b, &
+      write_BdG_tests, write_pkkr_operators, write_rhoq_input, set_cheby_nospeedup
     use :: mod_constants, only: czero, cone, cvlight
     use :: global_variables, only: ntotd, ncleb, nrmaxd, mmaxd, nspind, nspotd, iemxd, lmmaxd, lmmaxso, korbit
     use :: mod_wunfiles, only: t_params
@@ -483,7 +484,7 @@ contains
         ! faster calculation of RLL.
         ! no irregular solutions are needed in self-consistent iterations
         ! because the t-matrix depends only on RLL
-        if (opt('RLL-SLL ') .and. .not. (calc_exchange_couplings .or. write_pkkr_operators)) then
+        if (.not. set_cheby_nospeedup .and. .not. (calc_exchange_couplings .or. write_pkkr_operators)) then
           call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), tmat0(:,:), ncheb, npan_tot, lmmaxso, nvec*lmmaxso, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
             jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alpha0(:,:))
         else
@@ -641,7 +642,7 @@ contains
         ! faster calculation of RLL.
         ! no left solutions are needed in self-consistent iterations
         ! because the t-matrix depends only on RLL
-        if (opt('RLL-SLL ') .and. .not. (calc_exchange_couplings .or. write_pkkr_operators)) then
+        if (.not. set_cheby_nospeedup .and. .not. ( calc_exchange_couplings .or. write_pkkr_operators)) then
           ! do nothing
         else
           call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), tmat0, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &

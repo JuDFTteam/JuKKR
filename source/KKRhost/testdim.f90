@@ -111,18 +111,9 @@ contains
         stop_mark = 1
       end if
     end if
-    ! ----------------------------------------------------------------------------
-    ! OPT 'WIRE' is only useful with OPT 'full inv' or
-    ! OPT 'SPARSE  ' because of sparsity of
-    ! the KKR matrix ( not tridiagonal like for 2D and 3D systems)
-    ! ----------------------------------------------------------------------------
-    if (opt('WIRE    ') .and. .not. (opt('full inv') .or. opt('SPARSE  '))) then
-      write (6, *) 'Use option ''full inv'' or ''SPARSE  '' ', 'for WIRE calculation.'
-      stop_mark = 1
-    end if
 
-    if (calc_complex_bandstructure .and. .not. (opt('EigenV  ') .or. opt('wfct    ') .or. opt('iso surf'))) then
-      write (6, *) 'Use option ''COMPLEX '' only for eigenvalue determination.'
+    if (calc_complex_bandstructure) then
+      write (6, *) 'Use option < calc_complex_bandstructure > only for eigenvalue determination.'
       stop_mark = 1
     end if
 
@@ -131,7 +122,7 @@ contains
       write (6, *) 'No usage of embedding points. NEMB is set to ', nemb, '.'
     end if
 
-    if (.not. opt('full inv') .and. .not. opt('SPARSE  ') .and. .not. opt('godfrin ')) then
+    if (.not. opt('full inv') .and. .not. opt('godfrin ')) then
       ! -------------------------------------------------------------------------
       ! Constants for O(N) algorithm for matrix inversion
       ! -------------------------------------------------------------------------

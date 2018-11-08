@@ -17,7 +17,8 @@ module mod_runoptions
 
   logical :: calc_DOS_Efermi = .false.                 !!calculate DOS at Fermi energy only (former: 'DOS-EF')
   logical :: calc_GF_Efermi = .false.                  !!calculation of cluster Green function at E Fermi (former: 'GF-EF')
-  logical :: calc_cheby_sll = .false.                  !!always calculate irregular solution in Chebychev solver (even if not needed) (former: 'norllsll')
+  logical :: set_cheby_nospeedup = .false.             !!always calculate irregular solution in Chebychev solver (even if not needed) (former: 'norllsll')
+  logical :: set_cheby_nosoc     = .false.             !!decouple matrices in Chebychev solver neglecting SOC (former: 'NOSOC')
   logical :: calc_complex_bandstructure = .false.      !!complex band structure (former: 'COMPLEX')
   logical :: calc_exchange_couplings = .false.         !!calculate magnetic exchange coupling parameters (former: 'XCPL')
   logical :: calc_exchange_couplings_energy = .false.  !!write energy-resolved Jij-files also if npol/=0 (former: 'Jijenerg')
@@ -90,6 +91,7 @@ module mod_runoptions
   logical :: write_generalized_potential = .false.     !!write potential in general format. Usually prepares for running the VORONOI program. (former: 'GENPOT')
   logical :: write_gmat_file = .false.                 !!write GMAT to file (former: 'gmatfile')
   logical :: write_gref_file = .false.                 !!write GREF to file (former: 'greffile')
+  logical :: write_gmat_ascii = .false.                !!write GMAT to formatted file `gmat.ascii` (former: 'gmatasci')
   logical :: write_kkrimp_input = .false.              !!write out files for KKRimp-code (former: 'KKRFLEX')
   logical :: write_kkrsusc_input = .false.             !!write out files for KKRsusc-code (former: 'KKRSUSC')
   logical :: write_kpts_file = .false.                 !!write and read k-mesh to/from file `kpoints` (former: 'kptsfile')

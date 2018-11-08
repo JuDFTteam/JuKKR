@@ -40,7 +40,11 @@ contains
     qmtet, qmphi, kreadldau, lopt, ueff, jeff, erefldau)
 
     use :: mod_profiling, only: memocc
-    use :: mod_runoptions, only: calc_DOS_Efermi, calc_GF_Efermi, calc_cheby_sll, calc_exchange_couplings, dirac_scale_SpeefOfLight, disable_charge_neutrality, modify_soc_Dirac, relax_SpinAngle_Dirac, search_Efermi, set_kmesh_large, stop_1b, stop_1c, use_BdG, use_Chebychev_solver, use_cond_LB, use_decimation, use_lloyd, use_qdos, use_rigid_Efermi, use_semicore, use_virtual_atoms, write_DOS, write_green_host, write_green_imp, write_kkrimp_input, write_pkkr_input, write_pkkr_operators
+    use :: mod_runoptions, only: calc_DOS_Efermi, calc_GF_Efermi, calc_exchange_couplings, &
+      dirac_scale_SpeefOfLight, disable_charge_neutrality, modify_soc_Dirac, relax_SpinAngle_Dirac, search_Efermi, &
+    set_kmesh_large, stop_1b, stop_1c, use_BdG, use_Chebychev_solver, use_cond_LB, use_decimation, use_lloyd, use_qdos, &
+    use_rigid_Efermi, use_semicore, use_virtual_atoms, write_DOS, write_green_host, write_green_imp, write_kkrimp_input, &
+    write_pkkr_input, write_pkkr_operators, use_ldau, set_cheby_nospeedup
     use :: mod_constants, only: czero, cvlight
     use :: mod_wunfiles, only: t_params
     use :: memoryhandling, only: allocate_semi_inf_host, allocate_magnetization, allocate_cell, allocate_cpa, allocate_soc, allocate_ldau
@@ -1207,7 +1211,7 @@ contains
     ! End of LDA+U array allocation
     !--------------------------------------------------------------------------------
 
-    if (opt('LDA+U   ')) then
+    if (use_ldau) then
 
       ! Check for LDA+U consistency -- if INS=0 suppress it
       if ((ins==0)) then
@@ -1215,9 +1219,7 @@ contains
         write (1337, *) ' WARNING: LDA+U should be used only in NON-SPHERICAL', ' case (INS=1) '
         write (1337, *) ' Running option LDA+U will be ignored'
         write (1337, *)
-        do i = 1, 32
-          if (t_params%optc(i)(1:8)=='LDA+U   ') t_params%optc(i) = '        '
-        end do
+        use_ldau = .false.
       end if
 
       ! -> get number of atoms for lda+u:
@@ -2430,12 +2432,12 @@ contains
     end if
 
     ! the following makes saving of the wavefunctions obsolete:
-    if (.not. (calc_exchange_couplings .or. write_pkkr_operators .or. calc_cheby_sll)) then
-      write (1337, *) 'automatically adding "RLL-SLL " option to speed up calculation (use test option "norllsll" to prevent this)'
-      write (1337, *) 'this diables wf saving automatically'
-      t_wavefunctions%maxmem_number = 0
-      call addopt('RLL-SLL ')
+    if (.not.(set_cheby_nospeedup .or. calc_exchange_couplings .or. write_pkkr_operators) then
+        write (1337, *) 'automatically speeding up calculation (use option <set_cheby_nospeedup> to prevent this)'
+        write (1337, *) 'this diables wf saving automatically'
+        t_wavefunctions%maxmem_number = 0
     end if
+
 
     ! default flags: save only rll from main1a>tmatnewsolver since left
     ! solutions can be calculated always in main1c>rhovalnew and sll is not

@@ -37,7 +37,7 @@ contains
     use :: mod_datatypes, only: dp
     use :: mod_runoptions, only: calc_exchange_couplings, formatted_files, set_gmat_to_zero, use_Chebychev_solver, &
       use_qdos, use_readcpa, write_deci_tmat, write_gmat_plain, write_green_host, write_green_imp, write_kkrimp_input, &
-      write_pkkr_input, write_pkkr_operators, write_rhoq_input
+      write_pkkr_input, write_pkkr_operators, write_rhoq_input, write_gmat_ascii
     use :: mod_constants, only: czero, cone, pi, nsymaxd
     use :: mod_profiling, only: memocc
     use :: mod_operators_for_fscode, only: operators_for_fscode
@@ -232,7 +232,7 @@ contains
     end if
 
 
-    if (test('gmatasci')) open (298347, file='gmat.ascii', form='formatted')
+    if (write_gmat_ascii) open (298347, file='gmat.ascii', form='formatted')
     ! -------------------------------------------------------------------------
     ! End of reading the variables
     ! -------------------------------------------------------------------------
@@ -697,7 +697,7 @@ contains
                 t_tgmat%gmat(:, :, irec) = gmat0
               end if
             end do
-            if (test('gmatasci')) then
+            if (write_gmat_ascii) then
               write (*, *) 'Writing out gmat.ascii'
               do i1 = 1, nshell(0)
                 do lm1 = 1, lmmaxd

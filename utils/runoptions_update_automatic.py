@@ -52,12 +52,15 @@ def automatic_replacement_all_sources():
 	keywords = construct_keywords_dict()
 	all_source_files = get_source_files(srcfolder)
 
+	sources_modified = []
 
 	for srcfile in all_source_files:
 
 		#open source and write backup
 		srctxt = open(srcfolder+sep+srcfile,'r').readlines()
 		write_src(outfolder+sep+srcfile+'.bak',srctxt)
+
+		counter = 0
 
 		for newkey in keywords:
 			for oldkey in keywords[newkey][0]:
@@ -67,6 +70,7 @@ def automatic_replacement_all_sources():
 					newline, replacements = replace_line(line,compiled_regexp,newkey)
 					newsrctxt.append(newline)
 					total_replacements += replacements
+					counter += replacements
 					if (replacements>0):
 						print('%-20s: %i replacements on line %i with keyword %s'%(srcfile,replacements,iline+1,newkey))
 					if (replacements>1):
@@ -75,10 +79,12 @@ def automatic_replacement_all_sources():
 				srctxt = newsrctxt
 
 		write_src(outfolder+sep+srcfile,newsrctxt)
+		if(counter>0): sources_modified.append(srcfile)
 
 	open(outfolder+sep+'WARNINGS.txt','w').write('\n'.join(WARNINGS))
 	print(30*'#')
-	print('In total %i replacements in %i files with %i warnings.'%(total_replacements,len(all_source_files),len(WARNINGS)))
+	print('In total %i replacements in %i files with %i warnings.'%(total_replacements,len(sources_modified),len(WARNINGS)))
+	print 'open '+' '.join(sources_modified)
 
 
 def find_subroutine_blocks(srctxt):
@@ -107,7 +113,6 @@ def append_use_statement_to_subroutine():
 	all_source_files = get_source_files(srcfolder)
 
 	sources_modified = []
-
 
 	for srcfile in all_source_files:
 
@@ -191,6 +196,6 @@ def filter_opt_test_calls():
 
 
 if __name__ == '__main__':
-	#automatic_replacement_all_sources()
+	automatic_replacement_all_sources()
 	#append_use_statement_to_subroutine()
-	filter_opt_test_calls()
+	#filter_opt_test_calls()

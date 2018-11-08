@@ -450,7 +450,8 @@ contains
     use :: mod_mympi, only: nranks
     use :: mod_runoptions, only: calc_DOS_Efermi, calc_GF_Efermi, relax_SpinAngle_Dirac, set_empty_system, use_Chebychev_solver, &
       use_decimation, use_ewald_2d, use_qdos, use_semicore, use_spherical_potential_only, use_virtual_atoms, write_deci_pot, &
-      write_deci_tmat, write_energy_mesh, write_generalized_potential, write_green_host, write_green_imp, write_kkrimp_input, write_kkrsusc_input, write_pkkr_input, write_pkkr_operators, write_potential_tests, write_rhoq_input
+      write_deci_tmat, write_energy_mesh, write_generalized_potential, write_green_host, write_green_imp, write_kkrimp_input, &
+      write_kkrsusc_input, write_pkkr_input, write_pkkr_operators, write_potential_tests, write_rhoq_input, use_ldau
     use :: mod_version, only: version1, version2, version3, version4
     use :: mod_version_info, only: serialnr, construct_serialnr, version_print_header
     use :: mod_md5sums, only: get_md5sums, md5sum_potential, md5sum_shapefun
@@ -1255,7 +1256,7 @@ contains
     ! LDA+U -- initialise
     ! -------------------------------------------------------------------------
 
-    if (opt('LDA+U   ')) then
+    if (use_ldau) then
       call startldau(itrunldau,idoldau,kreadldau,lopt,ueff,jeff,erefldau,natyp,     &
         nspin,wldau,uldau,phildau,irws,ntldau,itldau,irmd,natyp,nspind,mmaxd)
     end if

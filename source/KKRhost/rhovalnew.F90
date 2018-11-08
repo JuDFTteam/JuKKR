@@ -44,7 +44,7 @@ contains
 #endif
     use :: mod_save_wavefun, only: t_wavefunctions, read_wavefunc
     use :: mod_runoptions, only: calc_exchange_couplings, calc_gmat_lm_full, disable_tmat_sratrick, fix_nonco_angles, &
-      use_qdos, write_complex_qdos, write_pkkr_operators, write_DOS_lm
+      use_qdos, write_complex_qdos, write_pkkr_operators, write_DOS_lm, set_cheby_nospeedup
     use :: mod_version_info
     use :: global_variables
     use :: mod_constants
@@ -540,7 +540,7 @@ contains
         ! faster calculation of RLL.
         ! no irregular solutions SLL are needed in self-consistent iterations
         ! because the density depends only on RLL, RLLLEFT and SLLLEFT
-        if (opt('RLL-SLL ') .and. .not. (calc_exchange_couplings .or. write_pkkr_operators)) then
+        if (.not.set_cheby_nospeedup .and. .not. (calc_exchange_couplings .or. write_pkkr_operators)) then
           call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), tmatll, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, &
             hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
         else
@@ -605,7 +605,7 @@ contains
         tmattemp = czero
         alphall = czero
         ! faster calculation of RLLLEFT and SLLLEFT.
-        if (opt('RLL-SLL ') .and. .not. (calc_exchange_couplings .or. write_pkkr_operators)) then
+        if (.not.set_cheby_nospeedup .and. .not. (calc_exchange_couplings .or. write_pkkr_operators)) then
           call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), tmattemp, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
             jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
           call sll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), sllleft(:,:,:,ith), ncheb, npan_tot, lmmaxso, nvec*lmmaxso, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, &
