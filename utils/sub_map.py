@@ -12,15 +12,15 @@ def cat_bar_plot(code,cat,sub_num):
     plt.rc('text', usetex=False)#True)
     plt.rc('font', family='serif')
 
-    font_size=28
-    fig_dpi=800
+    font_size=14 #28
+    fig_dpi=200 #800
     tol=1e-5
 
     prune_key=[]
     percent=[]
     total_num=0
     for key in cat:
-        if key!=code:
+        if key!=code and key!='undefined':
             prune_key.append(key)
             percent.append(sub_num[cat.index(key)])
             total_num=total_num+sub_num[cat.index(key)] 
@@ -29,8 +29,9 @@ def cat_bar_plot(code,cat,sub_num):
     sort_key=[]
     for ii in range(len(indx)-1,-1,-1):
         sort_key.append(prune_key[indx[ii]])
-        sort_per.append(percent[indx[ii]]*100/total_num)
-    print(sum(sort_per))
+        sort_per.append(percent[indx[ii]]*100./total_num)
+        #sort_per.append(percent[indx[ii]]) #*100./total_num)
+    print(code, sum(sort_per))
     x_axis=np.arange(len(sort_per))
     colors=cm.gnuplot(np.linspace(0,1,len(sort_per)))
 
@@ -38,13 +39,15 @@ def cat_bar_plot(code,cat,sub_num):
     ax_per= fig.add_subplot(111)
     ax_per.bar(x_axis,sort_per,color=colors)
     yl = ax_per.get_ylim()
-    ax_per.set_ylim(yl[0]-1, yl[1])
-    plt.axhline(0, color='grey', lw=1)
+    #ax_per.set_ylim(yl[0]-1, yl[1])
+    #plt.axhline(0, color='grey', lw=1)
+    #ax_per.set_yscale('log')
     plt.xticks(x_axis,sort_key,rotation='vertical',fontsize=font_size*0.75)
     plt.yticks(fontsize=font_size*0.75)
     plt.ylabel('percentage of calls',fontsize=font_size)
     for axis in ['bottom','left','right','top']:
         ax_per.spines[axis].set_linewidth(3)
+    #plt.show()
     FigName='call_pct_'+code+'_.pdf'
     fig.savefig(FigName,transparent=False,dpi=fig_dpi,bbox_inches='tight')
     return
@@ -56,8 +59,10 @@ def find_files(src_dir):
     ext=["*.f90","*.F90","*.f","*.F"]
 
     files=[]
-    for ii in range(len(ext)):
-        files=files+glob.glob(src_dir+ext[ii])
+    for dirs in os.walk(src_dir):
+        print src_dir, dirs[0]
+        for ii in range(len(ext)):
+            files=files+glob.glob(dirs[0]+ext[ii])
 
     out_files=[]
     for ii in range(len(files)):
@@ -186,26 +191,28 @@ def category_dict(cat,subroutine,call_type,code='kkrhost'):
 # 
 #####################################################################################
 def main():
-    src_dir='../source/KKRimp/'
-    code='KKRimp'
-    files=find_files(src_dir)
-
-    total_sub=[]
-    total_mod=[]
-    total_cat=[]
-    total_call=[]
-    for filename in files:
-        complete_path=src_dir+filename
-        sub,cat,mod,call_type=extract_from_file(complete_path,code)
-        subroutine_dict(mod,sub,cat,call_type,code)
-        total_sub=total_sub+sub
-        total_mod=total_mod+mod
-        total_cat=total_cat+cat
-        total_call=total_call+call_type
-    cat_dict,unq,sub_num,num_call,unq_call=category_dict(total_cat,total_sub,total_call,code)
-
-    cat_bar_plot(code,unq,sub_num)
-    cat_bar_plot('types_'+code,unq_call,num_call)
+    name_dirs = [['voronoi', 'voronoi'], ['kkrhost', 'KKRhost'], ['kkrimp', 'KKRimp'], ['pkkprime', 'PKKprime'], ['kkrsusc', 'KKRsusc/solver_module_v2'], ['rhoq', 'rhoq'], ['common', 'common']]
+    for code, src_dir in name_dirs:
+        code = code.lower()
+        src_dir = '../source/'+src_dir+'/'
+        files=find_files(src_dir)
+ 
+        total_sub=[]
+        total_mod=[]
+        total_cat=[]
+        total_call=[]
+        for filename in files:
+            complete_path=src_dir+filename
+            sub,cat,mod,call_type=extract_from_file(complete_path,code)
+            subroutine_dict(mod,sub,cat,call_type,code)
+            total_sub=total_sub+sub
+            total_mod=total_mod+mod
+            total_cat=total_cat+cat
+            total_call=total_call+call_type
+        cat_dict,unq,sub_num,num_call,unq_call=category_dict(total_cat,total_sub,total_call,code)
+ 
+        cat_bar_plot(code,unq,sub_num)
+        cat_bar_plot('types_'+code,unq_call,num_call)
     return
 
 if __name__ == '__main__':
