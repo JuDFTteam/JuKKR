@@ -24,7 +24,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Calculates the source terms for the right \(J\), \(H\) and the left solutions \(J2\), \(H2\)
   !> Author: 
-  !> Category: solver, single-site, KKRhost
+  !> Category: single-site, KKRhost
   !> Deprecated: False 
   !> Calculates the source terms for the right \(J\), \(H\) and the left solutions \(J2\), \(H2\)
   !> for caculations in the following approaches:
