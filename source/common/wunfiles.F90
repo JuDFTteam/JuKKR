@@ -361,6 +361,10 @@ contains
 
     use :: mod_types, only: t_inc, t_tgmat, t_lloyd, t_cpa
     use :: mod_mympi, only: nranks, mpiatom, mpiadapt
+    use :: mod_runoptions, only: impurity_operator_only, relax_SpinAngle_Dirac, use_Chebychev_solver, use_qdos, &
+      write_cpa_projection_files, write_deci_tmat, write_gmat_file, write_green_host, write_green_imp, write_gref_file, &
+      write_kkrimp_input, write_lloyd_cdos_file, write_lloyd_dgref_file, write_lloyd_dtmat_file, write_lloyd_files, &
+      write_lloyd_g0tr_file, write_lloyd_tralpha_file, write_pkkr_input, write_pkkr_operators, write_tmat_file
 
     implicit none
     ! ..
@@ -2537,6 +2541,9 @@ contains
     lmmaxd,nsymaxd,nspindd,maxmshd,rclsimp)
     ! get relevant parameters from t_params
     ! ..
+
+    use :: mod_runoptions, only: relax_SpinAngle_Dirac, use_decimation, write_kpts_file 
+
     implicit none
 
     type (type_params), intent (in) :: t_params
@@ -2808,6 +2815,7 @@ contains
     irid,r_log,naez,natyp,lmax)
     ! get relevant parameters from t_params
     ! ..
+    use :: mod_runoptions, only: relax_SpinAngle_Dirac, use_spherical_potential_only
     implicit none
 
     type (type_params), intent (in) :: t_params
@@ -3077,6 +3085,7 @@ contains
     ngshd,naez,irid,nspotd,iemxd)
     ! get relevant parameters from t_params
     ! ..
+    use :: mod_runoptions, only: use_spherical_potential_only
     implicit none
     type (type_params), intent (in) :: t_params
 

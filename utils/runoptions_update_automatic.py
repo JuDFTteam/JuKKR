@@ -1,8 +1,14 @@
 def get_source_files(folder):
 	from os import listdir
 	all_source_files = listdir(folder)
-	all_source_files.remove('test')
-	all_source_files.remove('runopt_update_tool')
+	try:
+		all_source_files.remove('test')
+	except:
+		pass
+	try:
+		all_source_files.remove('runopt_update_tool')
+	except:
+		pass
 	return all_source_files
 
 def construct_keywords_dict(filename='runoptions_list.txt'):
@@ -89,12 +95,7 @@ def find_subroutine_blocks(srctxt):
 
 	return zip(istart,iend)
 
-
-
-
-if __name__ == '__main__':
-	#automatic_replacement_all_sources()
-
+def append_use_statement_to_subroutine():
 	from os.path import sep
 	from re import compile, IGNORECASE
 
@@ -152,3 +153,9 @@ if __name__ == '__main__':
 
 	open(outfolder+sep+'WARNINGS.txt','w').write('\n'.join(WARNINGS))
 	print 'open '+' '.join(sources_modified)
+
+
+
+if __name__ == '__main__':
+	#automatic_replacement_all_sources()
+	append_use_statement_to_subroutine()
