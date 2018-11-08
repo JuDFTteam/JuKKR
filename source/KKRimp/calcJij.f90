@@ -5,15 +5,6 @@
 !> Deprecated: False 
 !> For details see the LKAG paper; UNFINISHED!!!
 !-------------------------------------------------------------------------------
-!> @note Notes on the code
-!> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
-!-------------------------------------------------------------------------------
 subroutine calcJij(Gmat,tmatspinup,tmatspindown)
 
 !
@@ -80,15 +71,6 @@ END SUBROUTINE CALCJIJ
 !> Category: KKRimp
 !> Deprecated: True 
 !> Made obsolete by matmul and zgemm
-!-------------------------------------------------------------------------------
-!> @note Notes on the code
-!> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
 !-------------------------------------------------------------------------------
       SUBROUTINE CMATMUL(N,M,A,B,C)
 C   ********************************************************************

@@ -3,15 +3,6 @@
 !> Author:
 !> This version is used by the routine that constructs the transformations for shifted positions
 !------------------------------------------------------------------------------------
-!> @note Notes on the code
-!> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
-!------------------------------------------------------------------------------------
       MODULE MOD_BESSEL1
 
       CONTAINS
@@ -70,18 +61,12 @@
 !> 
 !> all other variables are for internal use
 !-------------------------------------------------------------------------------
-!> @note Notes on the code
-!> @endnote
-!> @todo things that must be checked
-!> @endtodo
 !> @warning Important precautions
 !>         attention : contrary to abramowitz and stegun the bessel
 !>                     functions of third kind ( hankel functions)
 !>                     are definied as:
 !>                             h(l) = y(l) - i * bj(l)
 !> @endwarning
-!> @bug If nasty things are found
-!> @endbug
 !-------------------------------------------------------------------------------
       SUBROUTINE BESSEL1(BJ,Y,H,ARG,LMX,LMAX,LJ,LY,LH,LCALL)
 C     .. Parameters ..
