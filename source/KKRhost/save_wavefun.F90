@@ -49,7 +49,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Find how many wavefunctions can be stored and set `isave_wavefun` array to determine which wavefunctions are stored
   !> Author: 
-  !> Category: input-output, memory-management, initialization, KKRhost
+  !> Category: input-output, profiling, initialization, KKRhost
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !> Find how many wavefunctions can be stored and set `isave_wavefun` array to 
   !> determine which wavefunctions are stored

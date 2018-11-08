@@ -803,7 +803,7 @@ contains
   !> Summary: Wrapper routine for the allocation/deallocation of the arrays for the t-matrix
   !> calculation 
   !> Author: Philipp Ruessmann
-  !> Category: solver, single-site, memory-management, KKRhost
+  !> Category: solver, single-site, profiling, KKRhost
   !> Deprecated: False 
   !> Wrapper routine for the allocation/deallocation of the arrays for the t-matrix
   !> calculation.
