@@ -45,6 +45,7 @@ contains
   !> in the array IVECI2J (one site is kept only once)
   !-------------------------------------------------------------------------------
   subroutine gijxcpl(ido, naez, rbasis, bravais, linterface, niqcalc, iqcalc, natomimp, rclsimp, atomimp, ijtabcalc, ijtabcalc_i, natomimpd)
+use :: mod_runoptions, only: use_Chebychev_solver --manopt-- 
 
     use :: mod_datatypes, only: dp
     use :: mod_getclusnxyz, only: getclusnxyz

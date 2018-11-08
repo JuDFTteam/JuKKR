@@ -29,6 +29,7 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine testdim(nspin,naez,nemb,natyp,ins,insref,nref,irns,nlayer,krel,nspind, &
+use :: mod_runoptions, only: calc_complex_bandstructure, use_Chebychev_solver, use_cont, use_virtual_atoms --manopt-- 
     nprincd,knosph,irnsd,korbit)
 
     implicit none

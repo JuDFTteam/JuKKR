@@ -45,6 +45,7 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine vinterface(cmom,cminst,lpot,nspin,nlayers,natyp,v,zat,r,irws,ircut,    &
+use :: mod_runoptions, only: print_program_flow, use_decimation, write_kkrimp_input, write_madelung_file --manopt-- 
     ipan,kshape,noq,kaoez,iqat,conc,catom,icc,hostimp,nlbasis,nleft,nrbasis,nright, &
     cmomhost,chrgnt,vinters,naez,lmpot)
 

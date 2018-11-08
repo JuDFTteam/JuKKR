@@ -27,6 +27,7 @@ contains
   !> of the pair-wise Heisenberg exchange interactions.
   !-------------------------------------------------------------------------------
   subroutine setgijtab(linterface,icc,naez,iqat,rbasis,bravais,natomimp,atomimp,    &
+use :: mod_runoptions, only: calc_exchange_couplings, use_cond_LB --manopt-- 
     rclsimp,ijtabcalc,iofgij,jofgij,nqcalc,iqcalc,natomimpd,ijtabcalc_i)
     ! **********************************************************************
     ! * Task-specific settings of Gij elements that need to be calculated  *

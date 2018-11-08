@@ -35,6 +35,7 @@ contains
   !>        - CPA case not implemented - requires BZ integration
   !-------------------------------------------------------------------------------
   subroutine decitset(alat, bravsys, ez, ielast, nlbasis, nrbasis, fileleft, fileright, ins, kvrel, krel, nspin, kmrot, vref, rmtref, nref, refpot, lefttinv, righttinv, vacflag, &
+use :: mod_runoptions, only: print_tmat --manopt-- 
     nembd1, iemxd, irmd, ipand, lmaxd, lmgf0d, lmmaxd, lm2d, nspind)
     use :: mod_datatypes, only: dp
     use :: mod_cmatstr, only: cmatstr

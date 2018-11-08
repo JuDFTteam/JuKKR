@@ -35,6 +35,7 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine kkrmat01(bzkp, nofks, gs, volcub, tinvll, rrot, nshell, nsdia, alat, nsymat, naez, cls, nacls, naclsmax, rr, ezoa, atom, nsh1, nsh2, ginp, rbasis, rcls, tinvbup, &
+use :: mod_runoptions, only: print_program_flow, use_Chebychev_solver, use_qdos, use_virtual_atoms, write_green_imp, write_rhoq_input --manopt-- 
     tinvbdown, vacflag, nlbasis, nrbasis, factl, icheck, invmod, ideci, srrel, irrel, nrrel, dtrefll, dtmatll, dginp, refpot, lly_grtr, tracet, cfctor, lly) ! LLY
 #ifdef CPP_MPI
     use :: mpi

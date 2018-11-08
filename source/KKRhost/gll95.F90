@@ -26,6 +26,7 @@ contains
   !> ported from KKRnano, Oct. 2013)
   !-------------------------------------------------------------------------------
   subroutine gll13(ez, cleb, icleb, loflm, iend, tmatll, dtmatll, atom, refpot, ratom, natom, tolrdif, alat, out_wr, gref0, dgdeout, naclsmax, lly_g0tr, lly)
+use :: mod_runoptions, only: print_program_flow, print_refpot --manopt-- 
 
 
 #ifdef CPP_HYBRID

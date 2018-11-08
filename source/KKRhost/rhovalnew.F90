@@ -21,6 +21,7 @@ contains
   !> Calculation of the density for the new solver
   !-------------------------------------------------------------------------------
   subroutine rhovalnew(ldorhoef, ielast, nsra, nspin, lmax, ez, wez, zat, socscale, cleb, icleb, iend, ifunm, lmsp, ncheb, &
+use :: mod_runoptions, only: calc_exchange_couplings, calc_lmdos, disable_tmat_sratrick, fix_nonco_angles, use_qdos, write_complex_qdos, write_pkkr_operators --manopt-- 
     npan_tot, npan_log, npan_eq, rmesh, irws, rpan_intervall, ipan_intervall, rnew, vinsnew, thetasnew, theta, phi, i1, ipot, &
     den_out, espv, rho2ns, r2nef, muorb, angles_new, idoldau, lopt, wldau, denmatn, natyp, ispin)
 

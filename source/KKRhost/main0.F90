@@ -440,6 +440,7 @@ contains
   !> preparation of all the necessary data structures for a calculation. 
   ! ----------------------------------------------------------------------------
   subroutine main0()
+use :: mod_runoptions, only: calc_DOS_Efermi, calc_GF_Efermi, relax_SpinAngle_Dirac, set_empty_system, use_Chebychev_solver, use_decimation, use_ewald_2d, use_qdos, use_semicore, use_spherical_potential_only, use_virtual_atoms, write_deci_pot, write_deci_tmat, write_energy_mesh, write_generalized_potential, write_green_host, write_green_imp, write_kkrimp_input, write_kkrsusc_input, write_pkkr_input, write_pkkr_operators, write_potential_tests, write_rhoq_input --manopt-- 
 
 #ifdef CPP_OMPSTUFF
     use :: omp_lib ! necessary for omp functions

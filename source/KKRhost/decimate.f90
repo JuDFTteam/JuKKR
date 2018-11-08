@@ -20,6 +20,7 @@ contains
   ! Fortran90
   !-------------------------------------------------------------------------------
   subroutine decimate(gllke, naez, tinvbup, tinvbdown, vacflag, factl, nlbasis, nrbasis)
+use :: mod_runoptions, only: use_deci_onebulk --manopt-- 
 
     use :: global_variables, only: lmmaxd, alm, ndim_slabinv, nprincd 
     use :: mod_datatypes, only: dp

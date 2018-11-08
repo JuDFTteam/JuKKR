@@ -41,6 +41,7 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine rhoval(ihost,ldorhoef,icst,ins,ielast,nsra,ispin,nspin,nspinpot,i1,ez, &
+use :: mod_runoptions, only: calc_lmdos, set_gmat_to_zero, use_qdos, write_complex_qdos --manopt-- 
     wez,drdi,r,vins,visp,zat,ipan,ircut,irmin,thetas,ifunm,lmsp,rho2ns,r2nef,rhoorb,&
     den,denlm,muorb,espv,cleb,loflm,icleb,iend,jend,solver,soctl,ctl,vtrel,btrel,   &
     rmrel,drdirel,r2drdirel,zrel,jwsrel,irshift,itermvdir,qmtet,qmphi,mvevil,       &

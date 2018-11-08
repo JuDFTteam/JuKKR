@@ -37,6 +37,7 @@ contains
   !> @endnote
   ! ----------------------------------------------------------------------------
   subroutine main1a()
+use :: mod_runoptions, only: calc_exchange_couplings, disable_charge_neutrality, disable_reference_system, impurity_operator_only, use_Chebychev_solver, use_decimation, use_rigid_Efermi, use_spherical_potential_only, write_BdG_tests, write_green_imp --manopt-- 
 
 #ifdef CPP_MPI
     use :: mpi

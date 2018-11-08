@@ -23,6 +23,7 @@ contains
   !> the block I, I = 1,NSHELL(0)
   !-------------------------------------------------------------------------------
   subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, iofgij, jofgij, nofgij, ish, jsh, nshell, naez, natyp, noq, rbasis, bravais, ifilimp, ratom, rclsimp, &
+use :: mod_runoptions, only: use_virtual_atoms, write_green_imp, write_kkrimp_input, write_pkkr_operators --manopt-- 
     nsymat, isymindex, rsymat, kaoez, atomimp, rotname, hostimp, lmaxd, lmmaxd, naezd, natypd, natomimpd, nembd, nsheld)
 
     use :: mod_types, only: t_imp

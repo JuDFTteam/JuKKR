@@ -19,6 +19,7 @@ contains
   !> Deprecated: False 
   !> Calculation of the density for the new solver
   subroutine rhooutnew(nsra, lmax, gmatll, ek, lmpot, df, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll, rllleft, sllleft, cden, cdenlm, cdenns, &
+use :: mod_runoptions, only: calc_lmdos --manopt-- 
     rho2nsc, corbital, gflle_part, rpan_intervall, ipan_intervall, nspin)
 
     use :: mod_constants, only: cone,czero,pi

@@ -27,6 +27,7 @@ contains
   !> `normcoeff_*` routines are called
   !-------------------------------------------------------------------------------
   subroutine operators_for_fscode(korbit, operator_imp)
+use :: mod_runoptions, only: impurity_operator_only --manopt-- 
 
 #ifdef CPP_MPI
     use :: mod_types, only: t_inc, t_mpi_c_grid

@@ -23,6 +23,7 @@ contains
   !> polarized calculations muffin tin zero is related to the average of the 2 spins.
   !-------------------------------------------------------------------------------
   subroutine mtzero(lmpot,natyp,conc,nspin,v,vbc,z,r,drdi,imt,ircut,ipan,ntcell,    &
+use :: mod_runoptions, only: use_decimation --manopt-- 
     lmsp,ifunm,thetas,irws,eshift,ishift,nshell,lsurf)
 
     use :: mod_datatypes, only: dp

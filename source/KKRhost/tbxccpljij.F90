@@ -37,6 +37,7 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine tbxccpljij(iftmat, ielast, ez, wez, nspin, ncpa, naez, natyp, noq, itoq, iqat, nshell, natomimp, atomimp, ratom, nofgij, nqcalc, iqcalc, ijtabcalc, ijtabsym, ijtabsh, &
+use :: mod_runoptions, only: calc_exchange_couplings, calc_exchange_couplings_energy --manopt-- 
     ish, jsh, dsymll, iprint, natypd, nsheld, lmmaxd, npol)
 
 #ifdef CPP_MPI

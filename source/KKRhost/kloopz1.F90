@@ -24,6 +24,7 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine kloopz1_qdos(eryd, gmatll, ins, alat, ie, igf, nshell, naez, nofks, volbz, bzkp, volcub, cls, nacls, naclsmax, ncls, rr, rbasis, ezoa, atom, rcls, icc, ginp, ideci, &
+use :: mod_runoptions, only: formatted_files, print_gmat, print_program_flow, set_tmat_noinversion, use_Chebychev_solver, use_qdos, use_readcpa, use_virtual_atoms, write_deci_tmat, write_pkkr_input --manopt-- 
     lefttinvll, righttinvll, vacflag, nlbasis, nrbasis, factl, natomimp, nsymat, dsymll, ratom, rrot, nsh1, nsh2, ijtabsym, ijtabsh, icheck, invmod, refpot, trefll, tsst, msst, &
     cfctor, cfctorinv, crel, rc, rrel, srrel, irrel, nrrel, drotq, symunitary, kmrot, natyp, ncpa, icpa, itcpamax, cpatol, noq, iqat, itoq, conc, iprint, icpaflag, ispin, nspin, &
     tqdos, iqdosrun, &             ! qdos ruess

@@ -59,6 +59,7 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine vmadelblk(cmom,cminst,lmax,nspin,naez,v,zat,r,irws,ircut,ipan,kshape,  &
+use :: mod_runoptions, only: write_kkrimp_input, write_madelung_file --manopt-- 
     noq,kaoez,conc,catom,icc,hostimp,vinters,nemb,lmpot,natyp)
 
     use :: mod_constants, only: pi, czero

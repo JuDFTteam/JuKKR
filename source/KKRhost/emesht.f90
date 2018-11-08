@@ -92,6 +92,7 @@ contains
   !> \(N_\textrm{PNT)=N_\textrm{PNT}^1+N_\textrm{PNT}^2+N_\textrm{PNT}^3\)
   !-------------------------------------------------------------------------------
   subroutine emesht(ez, df, npnt, ebot, emu, efermi, tk, npol, npnt1, npnt2, npnt3, iemxd)
+use :: mod_runoptions, only: calc_GF_Efermi --manopt-- 
 
     use :: mod_datatypes, only: dp
     use :: mod_types, only: t_inc

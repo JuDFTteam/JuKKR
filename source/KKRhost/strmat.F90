@@ -45,6 +45,7 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine strmat(alat,lpot,naez,ngmax,nrmax,nsg,nsr,nshlg,nshlr,gn,rm,qi0,smat,  &
+use :: mod_runoptions, only: use_virtual_atoms --manopt-- 
     vol,iprint,lassld,lmxspd,naezd)
 
 #ifdef CPP_HYBRID

@@ -49,6 +49,7 @@ contains
   !> \end{equation}
   !-------------------------------------------------------------------------------
   subroutine rotgll(gmatll,natomimp,ijtabsym,ijtabsh,dsymll,symunitary,igf,rc,crel, &
+use :: mod_runoptions, only: print_Gij, write_gmat_plain, write_green_host, write_kkrimp_input --manopt-- 
     rrel,krel,lmmaxd,irec)
 
     use :: mod_mympi, only: myrank, master

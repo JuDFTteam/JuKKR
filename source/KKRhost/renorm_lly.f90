@@ -27,6 +27,7 @@ contains
   !> Use it to renormalize the density.
   !-------------------------------------------------------------------------------
   subroutine renorm_lly(cdos_lly, ielast, nspin, natyp, cden, lmaxp1, conc, iestart, ieend, wez, ircut, ipan, ez, zat, rho2ns, r2nef, denef, denefat, espv)
+use :: mod_runoptions, only: use_Chebychev_solver --manopt-- 
 
     use :: mod_datatypes, only: dp
     use :: mod_constants, only: czero, pi

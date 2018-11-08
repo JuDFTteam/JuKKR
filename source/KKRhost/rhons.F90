@@ -81,6 +81,7 @@ contains
   !> @endwarning
   !-------------------------------------------------------------------------------
   subroutine rhons(den,df,drdi,gmat,ek,rho2ns,ipan,ircut,irmin,thetas,ifunm,lmsp,   &
+use :: mod_runoptions, only: calc_lmdos, use_qdos --manopt-- 
     nsra,qns,pns,ar,cr,pz,fz,qz,sz,cleb,icleb,jend,iend,ekl,denlm,gflle_part)
 
     use :: mod_datatypes

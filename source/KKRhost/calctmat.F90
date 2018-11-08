@@ -39,6 +39,7 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine calctmat(icst, ins, ielast, nsra, ispin, nspin, i1, ez, drdi, rmesh, vins, visp, zat, irmin, ipan, &
+use :: mod_runoptions, only: formatted_files, print_tmat --manopt-- 
     ircut, cleb, loflm, icleb, iend, solver, soctl, ctl, vtrel, btrel, rmrel, drdirel, r2drdirel, zrel, jwsrel, idoldau, lopt, wldau, lly, deltae)
   
 #ifdef CPP_MPI

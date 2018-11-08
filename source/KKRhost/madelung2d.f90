@@ -41,6 +41,7 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine madelung2d(lpot,yrg,wg,naez,alat,vol,bravais,recbv,rbasis,rmax,gmax,   &
+use :: mod_runoptions, only: use_decimation, write_madelung_file --manopt-- 
     nlbasis,nleft,zperleft,tleft,nrbasis,nright,zperight,tright,lmxspd,lassld,      &
     lpotd,lmpotd,nmaxd,ishld,nembd1,wlength)
 

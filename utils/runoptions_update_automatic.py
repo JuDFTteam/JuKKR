@@ -99,12 +99,12 @@ if __name__ == '__main__':
 	from re import compile, IGNORECASE
 
 	#manual settings
-	srcfolder='..'
-	outfolder = 'test'
+	srcfolder='.'
+	outfolder = '.'
 
 	#initialize variables
 	WARNINGS=[]
-	keywords = construct_keywords_dict(filename='../runoptions_list.txt')
+	keywords = construct_keywords_dict(filename='runoptions_list.txt')
 	all_source_files = get_source_files(srcfolder)
 
 	sources_modified = []
