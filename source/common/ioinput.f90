@@ -7,7 +7,7 @@
 module mod_ioinput
 
   private
-  public :: ioinput
+  public :: ioinput, convert_to_uppercase
 
 contains
 
@@ -188,5 +188,35 @@ contains
     end do
     return
   end subroutine verify77
+
+
+  !-------------------------------------------------------------------------------
+  !> Summary: Convert a sting to upper case
+  !> Author: Bernd Zimmermann
+  !> Category: KKRhost, input-output
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Convert a sting to upper case.
+  !> 
+  !> Adjusted from https://en.wikibooks.org/wiki/Fortran/strings#Approaches_to_Case_Conversion 
+  !>
+  !-------------------------------------------------------------------------------
+  function convert_to_uppercase(in) result(out)
+
+    implicit none
+
+    character(*), intent(in)  :: in
+    character(len(in))        :: out
+    integer                   :: i, j
+    character(*), parameter   :: upp = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    character(*), parameter   :: low = 'abcdefghijklmnopqrstuvwxyz'
+
+    out = in                            !transfer all characters and left-indent
+    do i = 1, LEN_TRIM(out)             !all non-blanks
+      j = INDEX(low, out(i:i))          !is ith character in low
+    if (j > 0) out(i:i) = upp(j:j)      !yes, then subst with upp
+    end do
+
+  end function convert_to_uppercase
 
 end module mod_ioinput

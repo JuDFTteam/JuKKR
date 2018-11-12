@@ -195,11 +195,8 @@ def filter_opt_test_calls():
 			if(len(c_any_test_call.findall(line))>0): o_any_test_call.write('%-30s: %5i : %s\n'%(srcfile,iline+1,line.strip()))
 
 
-if __name__ == '__main__':
-	#automatic_replacement_all_sources()
-	#append_use_statement_to_subroutine()
-	#filter_opt_test_calls()
 
+def remove_opt_test_definitions():
 	from os.path import sep
 	from re import compile, IGNORECASE
 
@@ -229,7 +226,7 @@ if __name__ == '__main__':
 
 		delete_lines = []
 
-		#scan lines which shall be removel
+		#scan lines which shall be removed
 		for iline, line in enumerate(srctxt):
 			ls = any([c.search(line)!=None for c in cs])
 			if(ls):
@@ -244,3 +241,28 @@ if __name__ == '__main__':
 		write_src(outfolder+sep+srcfile,srctxt)
 
 	outfile.close()
+
+
+
+if __name__ == '__main__':
+	#automatic_replacement_all_sources()
+	#append_use_statement_to_subroutine()
+	#filter_opt_test_calls()
+	#remove_opt_test_definitions()
+
+	keywords = construct_keywords_dict(filename='../runoptions_list.txt')
+
+	out = open('generated_src.txt','w')
+
+	out.write("    if (keyword == '        ') then\n      !do nothing\n")
+
+	for key in keywords:
+		oldkeys = ["keyword == '%-8s'"%(i.upper()) for i in keywords[key][0]]
+
+		out.write('    else if (%s) then\n'%(' .or. '.join(oldkeys)))
+		out.write('      %s = .true.\n'%(key))
+		out.write('      write (1337, *) "Enable runoption %s"\n'%(key))
+
+	out.write('    else\n      write (1337, *) "WARNING: run- or testoption " // keyword_in // " not recognized."\n    end if')
+
+	out.close()

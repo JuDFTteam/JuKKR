@@ -310,8 +310,8 @@ module mod_wunfiles
     integer, dimension (:, :, :), allocatable :: irrel
     logical, dimension (:), allocatable :: vacflag
     logical, dimension (:), allocatable :: symunitary !! unitary/antiunitary symmetry flag
-    character (len=8), dimension (:), allocatable :: optc
-    character (len=8), dimension (:), allocatable :: testc
+    !character (len=8), dimension (:), allocatable :: optc
+    !character (len=8), dimension (:), allocatable :: testc
     character (len=124), dimension (:), allocatable :: txc
 
   end type type_params
@@ -1169,12 +1169,12 @@ contains
     allocate (t_params%txc(6), stat=i_stat) ! CHARACTER*124
     call memocc(i_stat, product(shape(t_params%txc))*kind(t_params%txc), 't_params%TXC', 'init_t_params')
 
-    if (.not. allocated(t_params%testc)) then
-      allocate (t_params%testc(32), stat=i_stat)
-      call memocc(i_stat, product(shape(t_params%testc))*kind(t_params%testc), 't_params%TESTC', 'init_t_params')
-      allocate (t_params%optc(32), stat=i_stat) ! CHARACTER*8
-      call memocc(i_stat, product(shape(t_params%optc))*kind(t_params%optc), 't_params%OPTC', 'init_t_params')
-    end if
+!    if (.not. allocated(t_params%testc)) then
+!      allocate (t_params%testc(32), stat=i_stat)
+!      call memocc(i_stat, product(shape(t_params%testc))*kind(t_params%testc), 't_params%TESTC', 'init_t_params')
+!      allocate (t_params%optc(32), stat=i_stat) ! CHARACTER*8
+!      call memocc(i_stat, product(shape(t_params%optc))*kind(t_params%optc), 't_params%OPTC', 'init_t_params')
+!    end if
     ! -------------------------------------------------------------------------
     ! End allocation of character arrays
     ! -------------------------------------------------------------------------
@@ -1703,10 +1703,10 @@ contains
     ! -------------------------------------------------------------------------
     call mpi_bcast(t_params%txc, 6*124, & ! 6 entries of length 124
       mpi_character, master, mpi_comm_world, ierr) ! CHARACTER*124
-    call mpi_bcast(t_params%testc, 32*8, & ! 32 entries of length 8
-      mpi_character, master, mpi_comm_world, ierr) ! CHARACTER*8
-    call mpi_bcast(t_params%optc, 32*8, & ! 32 entries of length 8
-      mpi_character, master, mpi_comm_world, ierr) ! CHARACTER*8
+    !call mpi_bcast(t_params%testc, 32*8, & ! 32 entries of length 8
+    !  mpi_character, master, mpi_comm_world, ierr) ! CHARACTER*8
+    !call mpi_bcast(t_params%optc, 32*8, & ! 32 entries of length 8
+    !  mpi_character, master, mpi_comm_world, ierr) ! CHARACTER*8
 
     ! -------------------------------------------------------------------------
     ! K-points arrays

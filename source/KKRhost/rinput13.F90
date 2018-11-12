@@ -238,7 +238,7 @@ contains
     ! Local variables
     ! ----------------------------------------------------------------------------
     ! for OPERATOR option
-    logical :: lexist, operator_imp
+    logical :: lexist, operator_imp, oldstyle
     ! IVSHIFT test option
     logical :: test, opt
     external :: test, opt
@@ -303,31 +303,17 @@ contains
 
     nemb = 0
 
+
     !--------------------------------------------------------------------------------
-    ! Read RUNNING options
+    ! Read in runoptions
     !--------------------------------------------------------------------------------
-    call ioinput('RUNOPT          ', uio, 1, 7, ier)
-    if (ier/=0) then
-      write (111, *) 'RUNOPT not found'
-    else
-      read (unit=uio, fmt=130)(t_params%optc(i), i=1, 8)
-      write (111, fmt='(A6)') 'RUNOPT'
-      write (111, fmt=130)(t_params%optc(i), i=1, 8)
+    call read_old_runtestoptions(invmod,verbosity,MPI_scheme,oldstyle)
+    if(.not.oldstyle) then
+        write (1337, *) 'Reading in new style of run-options.'
+        call read_runoptions()
     end if
-    !--------------------------------------------------------------------------------
-    ! Read TEST options
-    !--------------------------------------------------------------------------------
-    call ioinput('TESTOPT         ', uio, 1, 7, ier)
-    if (ier/=0) then
-      write (111, *) 'TESTOPT not found'
-    else
-      read (unit=uio, fmt=130)(t_params%testc(i), i=1, 8)
-      call ioinput('TESTOPT         ', uio, 2, 7, ier)
-      read (unit=uio, fmt=130)(t_params%testc(8+i), i=1, 8)
-      write (111, fmt='(A7)') 'TESTOPT'
-      write (111, fmt=130)(t_params%testc(i), i=1, 8)
-      write (111, fmt=130)(t_params%testc(8+i), i=1, 8)
-    end if
+
+
 
     !--------------------------------------------------------------------------------
     ! Begin lattice structure definition
@@ -687,7 +673,7 @@ contains
       call ioinput('ZPERIODR        ', uio, 1, 7, ier)
       if (ier/=0) then
         write (*, *) 'rimput13: ZPERIODR not found in inputcard'
-        stop 'rimput13: ZPERIODR not found in inputcard'
+        stop 'rinput13: ZPERIODR not found in inputcard'
       else
         read (unit=uio, fmt=*)(zperight(i1), i1=1, 3)
         write (111, fmt='(A9,3E20.12)') 'ZPERIODR=', (zperight(i1), i1=1, 3)
@@ -862,8 +848,8 @@ contains
     if (use_Chebychev_solver) korbit = 1
 
     if (set_cheby_nosoc) then
-      write (*, '(A)') 'Warning: detected test option < set_cheby_nosoc >: use spin-decoupled radial equations with new solver'
-      write (1337, *)  'Warning: detected test option < set_cheby_nosoc >: reset KORBIT to zero but use NEWSOSOL for spin-decoupled matrices with explicit spin-loop'
+      write (*, '(A)') 'Warning: detected test option <set_cheby_nosoc>: use spin-decoupled radial equations with new solver'
+      write (1337, *)  'Warning: detected test option <set_cheby_nosoc>: reset KORBIT to zero but use NEWSOSOL for spin-decoupled matrices with explicit spin-loop'
       korbit = 0
     end if
 
@@ -1558,14 +1544,14 @@ contains
 100   continue
       if (idosemicore==0) then
         write (1337, *)
-        write (1337, *) ' WARNING: SEMICORE used', ' with incomplete/incorrect contour description'
-        write (1337, *) ' Running option SEMICORE will be ignored'
+        write (1337, *) ' WARNING: <use_semicore>', ' with incomplete/incorrect contour description'
+        write (1337, *) ' Running option <use_semicore> will be ignored'
         write (111, *)
-        write (111, *) ' WARNING: SEMICORE used', ' with incomplete/incorrect contour description'
-        write (111, *) ' Running option SEMICORE will be ignored'
-        do i = 1, 32
-          if (t_params%optc(i)(1:8)=='SEMICORE') t_params%optc(i) = '        '
-        end do
+        write (111, *) ' WARNING: <use_semicore> used', ' with incomplete/incorrect contour description'
+        write (111, *) ' Running option <use_semicore> will be ignored'
+
+        use_semicore = .false.
+
       end if
     end if
 
@@ -2213,13 +2199,13 @@ contains
     !--------------------------------------------------------------------------------
     if ((relax_SpinAngle_Dirac) .and. (kmrot==0)) then
       write (1337, *)
-      write (1337, *) ' WARNING: ITERMDIR running option used with collinear/', 'parallel Oz starting'
+      write (1337, *) ' WARNING: <relax_SpinAngle_Dirac> running option used with collinear/', 'parallel Oz starting'
       write (1337, *) '          system (KMROT = 0 ). Please check token', ' RBASISANG in your input'
-      write (1337, *) ' Running option ITERMDIR will be ignored'
+      write (1337, *) ' Running option <relax_SpinAngle_Dirac> will be ignored'
       write (1337, *)
-      do i = 1, 32
-        if (t_params%optc(i)(1:8)=='ITERMDIR') t_params%optc(i) = '        '
-      end do
+
+      relax_SpinAngle_Dirac = .false.
+
     end if
 
     !--------------------------------------------------------------------------------
@@ -2228,20 +2214,13 @@ contains
     manctl = (kmrot==0) .and. (krel==0) .and. (nspin>1)
     if ((calc_exchange_couplings) .and. (.not. manctl)) then
       write (1337, *)
-      write (1337, *) ' WARNING: XCPL running option requires collinear ', 'magnetic systems'
+      write (1337, *) ' WARNING: <calc_exchange_couplings> running option requires collinear ', 'magnetic systems'
       write (1337, *) ' in a NON/SCALAR/SCALAR+SOC relativistic mode (KREL=0)'
-      write (1337, *) ' Running option XCPL will be ignored'
+      write (1337, *) ' Running option <calc_exchange_couplings> will be ignored'
       write (1337, *)
-      do i = 1, 32
-        if (t_params%optc(i)(1:8)=='XCPL    ') t_params%optc(i) = '        '
-      end do
-    end if
 
-    write (1337, 110)(t_params%optc(i), i=1, 8)
-110 format (79('-'), /, ' EXECUTION OPTIONS:', /, 1x, a8, 7('//',a8), /, 79('-'))
-    write (1337, 120)(t_params%testc(i), i=1, 16)
-120 format (79('-'), /, ' TEST OPTIONS:', /, 2(1x,a8,7('//',a8),/), /, 79('-'))
-130 format (8a8)
+      calc_exchange_couplings = .false.
+    end if
 
     !--------------------------------------------------------------------------------
     ! Initialise SOLVER, SOC and CTL parameters in REL case
@@ -2645,5 +2624,87 @@ contains
 
   end subroutine rinput13
 
+
+  subroutine read_old_runtestoptions(invmod,verbosity,MPI_scheme,oldstyle)
+
+    use :: mod_ioinput, only: ioinput, convert_to_uppercase
+    use :: mod_runoptions, only: set_old_runoption
+    use :: mod_profiling, only: memocc
+
+    implicit none
+
+    integer, intent(inout) :: invmod,verbosity,MPI_scheme
+    logical, intent(out)   :: oldstyle
+
+    integer :: i, ier, i_stat, i_all
+    character (len=256) :: uio
+    character (len=8), dimension (:), allocatable :: optc
+    character (len=8), dimension (:), allocatable :: testc
+
+    allocate (testc(32), stat=i_stat)
+    call memocc(i_stat, product(shape(testc))*kind(testc), 'TESTC', 'read_old_runtestoptions')
+    allocate (optc(32), stat=i_stat)
+    call memocc(i_stat, product(shape(optc))*kind(optc), 'OPTC', 'read_old_runtestoptions')
+
+    oldstyle = .false.
+
+    !--------------------------------------------------------------------------------
+    ! Read RUNNING options
+    !--------------------------------------------------------------------------------
+    call ioinput('RUNOPT          ', uio, 1, 7, ier)
+    if (ier==0) then
+      oldstyle = .true.
+      read (unit=uio, fmt=130)(optc(i), i=1, 8)
+
+      !write result as cross-check
+      write (111, fmt='(A6)') 'RUNOPT'
+      write (111, fmt=130)(optc(i), i=1, 8)
+
+      !make keywords uppercase to introduce case insensitivity
+      do i = 1,8
+        call set_old_runoption(optc(i),invmod,verbosity,MPI_scheme)
+      end do
+    end if
+
+    !--------------------------------------------------------------------------------
+    ! Read TEST options
+    !--------------------------------------------------------------------------------
+    call ioinput('TESTOPT         ', uio, 1, 7, ier)
+    if (ier==0) then
+      oldstyle = .true.
+      read (unit=uio, fmt=130)(testc(i), i=1, 8)
+      call ioinput('TESTOPT         ', uio, 2, 7, ier)
+      read (unit=uio, fmt=130)(testc(8+i), i=1, 8)
+
+      !write result as cross-check
+      write (111, fmt='(A7)') 'TESTOPT'
+      write (111, fmt=130)(testc(i), i=1, 8)
+      write (111, fmt=130)(testc(8+i), i=1, 8)
+
+      do i = 1,16
+        call set_old_runoption(optc(i),invmod,verbosity,MPI_scheme)
+      end do
+    end if
+
+    if (oldstyle) then
+      write (1337, *) 'Old style of run- and test-options found.'
+
+      write (1337, 110)(optc(i), i=1, 8)
+      write (1337, 120)(testc(i), i=1, 16)
+    end if
+
+    i_all = -product(shape(optc))*kind(optc)
+    deallocate (optc, stat=i_stat)
+    call memocc(i_stat, i_all, 'OPTC', 'read_old_runtestoptions')
+
+    i_all = -product(shape(testc))*kind(testc)
+    deallocate (testc, stat=i_stat)
+    call memocc(i_stat, i_all, 'TESTC', 'read_old_runtestoptions')
+
+110 format (79('-'), /, ' EXECUTION OPTIONS:', /, 1x, a8, 7('//',a8), /, 79('-'))
+120 format (79('-'), /, ' TEST OPTIONS:', /, 2(1x,a8,7('//',a8),/), /, 79('-'))
+130 format (8a8)
+
+  end subroutine read_old_runtestoptions
 
 end module rinput

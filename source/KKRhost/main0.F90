@@ -555,12 +555,12 @@ contains
     ! -------------------------------------------------------------------------
 
     ! allocate and initialize testc and optc in t_params for run and test options
-    allocate (t_params%optc(32), stat=i_stat) ! CHARACTER*8
-    call memocc(i_stat, product(shape(t_params%optc))*kind(t_params%optc), 't_params%OPTC', 'main0')
-    t_params%optc(1:32) = '        '
-    allocate (t_params%testc(32), stat=i_stat)
-    call memocc(i_stat, product(shape(t_params%testc))*kind(t_params%testc), 't_params%TESTC', 'main0')
-    t_params%testc(1:32) = '        '
+    !allocate (t_params%optc(32), stat=i_stat) ! CHARACTER*8
+    !call memocc(i_stat, product(shape(t_params%optc))*kind(t_params%optc), 't_params%OPTC', 'main0')
+    !t_params%optc(1:32) = '        '
+    !allocate (t_params%testc(32), stat=i_stat)
+    !call memocc(i_stat, product(shape(t_params%testc))*kind(t_params%testc), 't_params%TESTC', 'main0')
+    !t_params%testc(1:32) = '        '
 
     ! -------------------------------------------------------------------------
     ! Reading of the inputcard, and allocation of several arrays
