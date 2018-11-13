@@ -9,6 +9,11 @@ module mod_ioinput
   private
   public :: ioinput
 
+  logical, save :: inputcard_is_read = .false.
+  integer, save :: ncols  = 0!! Number of columns of inputcard
+  integer, save :: nlines = 0!! Number of lines   of inputcard
+  character(len=:), dimension (:), allocatable, save :: linetxt !! Saved inputcard
+
 contains
 
   !-------------------------------------------------------------------------------
@@ -55,9 +60,6 @@ contains
 
     implicit none
 
-    integer :: ncolio, nlinio
-    parameter (ncolio=256, nlinio=5000)
-
     character (len=*), intent(in) :: key_in
     character (len=:), intent(out), allocatable :: value_out
     integer, intent(in) :: skiplines
@@ -67,35 +69,14 @@ contains
     character(len=:), allocatable :: key
     character(len=1) :: testchar
 
-    integer :: nlines, ios, ier, i_start_key, i_check_eq, key_len, iline
-    character(len=ncolio) :: linetxt(nlinio)
+    integer :: ios, ier, i_start_key, i_check_eq, key_len, iline
 
     character(len=*), parameter :: abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_<>'
     integer, parameter :: nlen = len(abc)
 
     ierror = 0
 
-    !--------------------------------------------------------------------------------
-    ! Read in of inputcard
-    !--------------------------------------------------------------------------------
-    ier = 0
-    open (unit=ifile, status='OLD', file='inputcard', iostat=ios)
-    if (ios>0) then
-      write (*, *) 'Error in reading the inputcard file'
-      stop
-    end if
-
-    nlines = 1
-    do
-      read (ifile, fmt='(A256)', iostat=ios) linetxt(nlines)
-      if (ios<0 .or. nlines>=nlinio) exit
-      nlines = nlines + 1
-    end do
-    nlines = nlines - 1
-    ! write(6,*) 'LINES :',npt
-    if (nlines>=nlinio) write (1337, *) 'Not all lines are read in from inputcard'
-    !--------------------------------------------------------------------------------
-
+    call read_inputcard(ifile)
 
     !bring keyword into canonical form (i.e. no blanks and all upper case)
     key = convert_to_uppercase(trim(adjustl(key_in)))
@@ -123,7 +104,7 @@ contains
           !the value is expected skiplines lines below the keyword
           if (iline+skiplines>nlines) then
             write (1337, *) "ERROR in IoInput scanning for '", key, "':"
-            write (1337, *) "No more lines in file! skiplines = ", skiplines
+            write (1337, *) "Not enough lines in inputcard! skiplines = ", skiplines
             ierror = 1
             close (ifile)
             return
@@ -154,7 +135,81 @@ contains
     close (ifile)
     return
 
+100 write(*,*) 'problem'
+    stop
+
   end subroutine ioinput
+
+
+  !-------------------------------------------------------------------------------
+  !> Summary: Read inputcard and save to array
+  !> Author: Bernd Zimmermann
+  !> Category: KKRhost, input-output
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Read inputcard. Automatically determine array sizes to be allocated to fit
+  !>   in whole inputcard. Buffering into a character-array is used.
+  !> 
+  !-------------------------------------------------------------------------------
+  subroutine read_inputcard(ifile)
+
+    implicit none
+    integer, intent(in) :: ifile
+
+    integer :: ier, ios, nlinetmp, ncoltmp, iline
+    character(len=1024) :: line
+
+    if (.not.inputcard_is_read) then
+      write(666,*) 'Reading inputcard'
+      !--------------------------------------------------------------------------------
+      ! open inputcard
+      !--------------------------------------------------------------------------------
+      ier = 0
+      open (unit=ifile, status='OLD', file='inputcard', iostat=ios)
+      if (ios>0) then
+        write (*, *) 'Error reading the inputcard file.'
+        stop
+      end if
+
+      !--------------------------------------------------------------------------------
+      ! determine array sizes
+      !--------------------------------------------------------------------------------
+      nlinetmp = 0
+      ncoltmp  = 0
+      do
+        read (ifile, fmt='(A)', iostat=ios) line
+        if (ios<0 ) exit
+
+        nlinetmp = nlinetmp + 1
+        ncoltmp = max(ncoltmp,len_trim(line))
+      end do
+
+      !--------------------------------------------------------------------------------
+      ! modify module-wide variables and allocate 
+      !--------------------------------------------------------------------------------
+      if(allocated(linetxt)) deallocate(linetxt)
+      nlines = nlinetmp
+      ncols  = ncoltmp
+      allocate(character(len=ncols) :: linetxt(nlines))
+
+      !--------------------------------------------------------------------------------
+      ! read in txt from inputcard 
+      !--------------------------------------------------------------------------------
+      rewind (ifile)
+      do iline = 1, nlines
+        read (ifile, fmt='(A)') linetxt(iline)
+        write(888,'(A)') linetxt(iline)
+      end do
+
+      !--------------------------------------------------------------------------------
+      ! close inputcard and finish up
+      !--------------------------------------------------------------------------------
+      close (ifile)
+      inputcard_is_read = .true.
+    end if
+    
+  end subroutine
+
 
 
   !-------------------------------------------------------------------------------
