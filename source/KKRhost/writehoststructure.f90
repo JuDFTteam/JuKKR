@@ -37,7 +37,7 @@ contains
     ! .. Local variables
     integer :: iatom
     real (kind=dp) :: wght
-    character (len=256) :: uio
+    character (len=:), allocatable :: uio
     integer :: ier, it
     integer, dimension(8) :: itemp1
     real (kind=dp), dimension(4) :: ftemp

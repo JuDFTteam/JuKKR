@@ -51,105 +51,109 @@ contains
   !>  - In this version only files 5000 lines long can be read in
   !> @endwarning
   !-------------------------------------------------------------------------------
-  subroutine ioinput(charkey, char, iline, ifile, ierror)
+  subroutine ioinput(key_in, value_out, skiplines, ifile, ierror)
 
     implicit none
-    integer :: nchar, nabc, ncolio, nlinio
-    parameter (nchar=16, nabc=40, ncolio=256, nlinio=5000)
-    character (len=nchar) :: charkey
-    character (len=ncolio) :: char
-    integer :: iline, ierror, ifile
-    integer :: i, ios, ier, npt, ilen, ipos, ipos1, iklen
-    character (len=ncolio) :: string(nlinio)
-    character (len=ncolio) :: string1
-    character (len=nabc) :: abc
-    character :: atest
-    data abc/'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_<>'/
 
+    integer :: ncolio, nlinio
+    parameter (ncolio=256, nlinio=5000)
+
+    character (len=*), intent(in) :: key_in
+    character (len=:), intent(out), allocatable :: value_out
+    integer, intent(in) :: skiplines
+    integer, intent(in) :: ifile
+    integer, intent(out) :: ierror
+
+    character(len=:), allocatable :: key
+    character(len=1) :: testchar
+
+    integer :: nlines, ios, ier, i_start_key, i_check_eq, key_len, iline
+    character(len=ncolio) :: linetxt(nlinio)
+
+    character(len=*), parameter :: abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_<>'
+    integer, parameter :: nlen = len(abc)
 
     ierror = 0
+
+    !--------------------------------------------------------------------------------
+    ! Read in of inputcard
+    !--------------------------------------------------------------------------------
     ier = 0
-    char(1:50) = '                                                   '
-    open (unit=ifile, status='OLD', file='inputcard', iostat=ios, err=100)
+    open (unit=ifile, status='OLD', file='inputcard', iostat=ios)
     if (ios>0) then
-      write (6, *) 'Error in reading the inputcard file'
+      write (*, *) 'Error in reading the inputcard file'
       stop
     end if
 
-    npt = 1
+    nlines = 1
     do
-      read (ifile, fmt='(A256)', iostat=ios) string(npt)
-      if (ios<0 .or. npt>=nlinio) exit
-      npt = npt + 1
+      read (ifile, fmt='(A256)', iostat=ios) linetxt(nlines)
+      if (ios<0 .or. nlines>=nlinio) exit
+      nlines = nlines + 1
     end do
-    npt = npt - 1
+    nlines = nlines - 1
     ! write(6,*) 'LINES :',npt
-    if (npt>=nlinio) write (1337, *) 'Not all lines are read in from inputcard'
+    if (nlines>=nlinio) write (1337, *) 'Not all lines are read in from inputcard'
+    !--------------------------------------------------------------------------------
 
-    ! 2 lines below where changed
-    ! ILEN = VERIFY(CHARKEY,ABC)
-    ! IKLEN= VERIFY(CHARKEY,' ')
-    ! for linux
-    call verify77(nabc, abc, nchar, charkey, ilen, iklen)
-    ! for linux
-    ! write(6,*) CHARKEY(1:ILEN-1),ILEN,IKLEN
-    if (ilen<1) then
-      write (1337, *) 'Input ERROR!'
-      write (1337, *) 'Cannot evaluate : ', charkey
-      write (1337, *) 'IoInput is returning no value! '
-      return
-    end if
 
-    do i = 1, npt                  ! loop in all line
-      string1 = '   ' // string(i) ! shift by 2 characters
-      ipos = index(string1, charkey(1:ilen-1))
-      ! return the position of occurence
-      if (ipos/=0) then
-        if (ipos<4) then
-          write (6, *) 'CONSISTENCY ERROR IOINPUT!'
-          stop
-        end if
-        ! write(6,*) 'ipos is not zero',CHARKEY//'=','**'
-        ipos1 = index(string1, charkey(1:ilen-1)//achar(61))
-        if (ipos1/=0) then
-          ! return the string after 'CHARKEY='
-          char = string1(ipos1+ilen:)
-          ! write(6,*) CHARKEY,CHAR ! test
+    !bring keyword into canonical form (i.e. no blanks and all upper case)
+    key = convert_to_uppercase(trim(adjustl(key_in)))
+    key_len = len(key)
+
+    do iline = 1, nlines
+
+      !look if keyword (without the '=') exists in line
+      i_start_key = index(linetxt(iline), key)
+
+      if (i_start_key>0) then
+        !the keyword was found in the line
+        !try if the keyword with '=' exists in this line as well; note: achar(61): '='
+        i_check_eq = index(linetxt(iline), key//achar(61))
+
+        if (i_check_eq>0) then
+
+          !yes, it exists: return the string after the keyword (incl. the '=')
+          value_out = linetxt(iline)(i_start_key+key_len+1:)
           close (ifile)
           return
-        else
-          ! return the ILINE line below this CHARKEY
-          if (i+iline<=npt) then
-            ! write(6,*) IPOS,ILEN
 
-            char = string(i+iline)(ipos-3:)
-            if (ipos-4>0) then     ! Changed on 28.01.2000
-              atest = string(i+iline)(ipos-4:ipos-3)
-              if (atest/=' ') then
-                write (1337, *) 'Possible ERROR !!!'
-                write (1337, *) 'Parameter ', charkey, ' maybe read in incorrectrly'
-              end if
-            end if
-            ! write(6,*) CHARKEY,CHAR ! test
+        else!i_check_eq>0
+
+          !the value is expected skiplines lines below the keyword
+          if (iline+skiplines>nlines) then
+            write (1337, *) "ERROR in IoInput scanning for '", key, "':"
+            write (1337, *) "No more lines in file! skiplines = ", skiplines
+            ierror = 1
             close (ifile)
             return
           else
-            write (1337, *) 'IoInput : No more lines in file '
-          end if
-        end if
-      end if
-    end do                         ! i=1,npt
-    ier = 1
-    ierror = ierror + ier
-    ! ccc       if (CHAR(1:20).eq.'                    ') then
-    ! ccc       write(6,*) 'Parameter ........ ',CHARKEY , ' NOT found'
-    ! ccc       write(6,*) 'Check your inputcard'
-    ! ccc       end if
+            value_out = linetxt(iline+skiplines)(i_start_key:)
+
+            !make sanity test: character just before the keyword should be blank
+            if (i_start_key>1) then
+              testchar = linetxt(iline+skiplines)(i_start_key-1:i_start_key)
+              if (testchar /= ' ') then
+                write (1337, *) 'WARNING from IoInput: Possible ERROR!!!'
+                write (1337, *) "Value for '", key, "' maybe read in incorrectly."
+              end if!testchar
+            end if!i_start_key>1
+
+            close (ifile)
+            return
+
+          end if!iline+skiplines
+
+        end if!i_check_eq>0
+
+      end if!i_start_key>0
+
+    end do!iline
+
+    ierror = 1
     close (ifile)
     return
-100 write (6, *) ' Error while reading..... ', charkey
-    write (6, *) ' Check your  inputcard ! '
-    stop
+
   end subroutine ioinput
 
 
@@ -188,5 +192,34 @@ contains
     end do
     return
   end subroutine verify77
+
+  !-------------------------------------------------------------------------------
+  !> Summary: Convert a sting to upper case
+  !> Author: Bernd Zimmermann
+  !> Category: KKRhost, input-output
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Convert a sting to upper case.
+  !> 
+  !> Adjusted from https://en.wikibooks.org/wiki/Fortran/strings#Approaches_to_Case_Conversion 
+  !>
+  !-------------------------------------------------------------------------------
+  function convert_to_uppercase(in) result(out)
+
+    implicit none
+
+    character(*), intent(in)  :: in
+    character(len(in))        :: out
+    integer                   :: i, j
+    character(*), parameter   :: upp = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    character(*), parameter   :: low = 'abcdefghijklmnopqrstuvwxyz'
+
+    out = in                            !transfer all characters and left-indent
+    do i = 1, LEN_TRIM(out)             !all non-blanks
+      j = INDEX(low, out(i:i))          !is ith character in low
+    if (j > 0) out(i:i) = upp(j:j)      !yes, then subst with upp
+    end do
+
+  end function convert_to_uppercase
 
 end module mod_ioinput

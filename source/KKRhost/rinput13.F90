@@ -243,7 +243,7 @@ contains
     real (kind=dp) :: soscale, ctlscale
     real (kind=dp) :: brymix, strmix, tx, ty, tz
     character (len=43) :: tshape
-    character (len=256) :: uio  ! NCOLIO=256
+    character (len=:), allocatable :: uio  ! NCOLIO=256
 
     logical :: lnew !! Logical variable for old/new treatment of left and right host
     logical :: mansoc

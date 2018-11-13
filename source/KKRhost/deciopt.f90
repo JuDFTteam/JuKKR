@@ -73,7 +73,7 @@ contains
     integer :: ierror, il, ie, ispin, nspinso ! ruess: for tmat newsolver
     complex (kind=dp) :: cfctor
     character (len=40) :: fileleft, fileright
-    character (len=256) :: uio                             ! NCOLIO=256
+    character (len=:), allocatable :: uio                             ! NCOLIO=256
 
     ! ..                                  ! ruess: for NEWSOSOL running option
     ! .. External Functions ..
