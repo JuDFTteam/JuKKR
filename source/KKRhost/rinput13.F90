@@ -728,7 +728,7 @@ contains
     end if
 
     ! Angular momentum cutoff
-    call ioinput('LMAX            ', uio, 1, 7, ier)
+    call ioinput('LMAX', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) lmax
       write (111, *) 'LMAX=', lmax

@@ -18,58 +18,60 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Read value of keyword from inputcard
-  !> Author: 
+  !> Author: Bernd Zimmermann
   !> Category: KKRhost, input-output
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
   !> This subroutine is responsible for the I/O with the input file.
   !>
-  !> GIVEN a KEYWORD: CHARKEY it positions the
-  !> reading just after the CHARKEY if this
-  !> includes a '=', or ILINE lines after the
-  !> occurence of THE CHARKEY.
-  !> USAGE :
-  !> To read lmax include in the inputcard (ifile)
+  !> Given a keyword `key_in` the subroutine positions the
+  !> reading just after the keyword if this
+  !> includes a '=', or `skipline` lines after the
+  !> occurence of the keyword.
+  !> Usage:
+  !> To read `LMAX` include in the inputcard
   !>
-  !>     LMAX= 3      CORRECT!
+  !>     `LMAX= 3`                CORRECT!
+  !>  or `LMAX=3`                 CORRECT!
+  !>  or `LMAX=   3  my comment`  CORRECT!
   !>
   !>     or
   !>
-  !>     LMAX         CORRECT!     (iline=1)
-  !>      3
-  !>   (without  the '=' )
+  !>     LMAX                    CORRECT for skipline=1!
+  !>      3                      (note the missing '=')
+  !>   
+  !>     or
+  !>
   !>     LMAX
-  !>  ---------                    (iline=2),etc
+  !>  ---------                  CORRECT for skipline=2!
   !>      3
-  !> be carefull in this case to put the value after the
-  !> keyword example:
+  !>
+  !> Be carefull in the latter case to put the value not too far to the left
+  !> keyword. Example:
   !>
   !>    LMAX
-  !>  3               WRONG!
+  !>   3               WRONG!
   !>
-  !> will NOT work
-  !> Comments etc in the program are ignored.
   !>                                               1.6.99
-  !>
-  !> @warning
-  !>  - The error handler is not working yet in all cases ...
-  !>  - In this version only files 5000 lines long can be read in
-  !> @endwarning
+  !>                               Refactored on 13.11.2018
+  !> @todo
+  !>   `ifile` should be made a module-local parameter. Ensures better readability on calling routines.
+  !> @endtodo
   !-------------------------------------------------------------------------------
   subroutine ioinput(key_in, value_out, skiplines, ifile, ierror)
 
     implicit none
 
-    character (len=*), intent(in) :: key_in
-    character (len=:), intent(out), allocatable :: value_out
-    integer, intent(in) :: skiplines
-    integer, intent(in) :: ifile
-    integer, intent(out) :: ierror
+    character (len=*), intent(in) :: key_in !!string of arbitrary length specifying the keyword. Leading and trailing blanks will be ignored.
+    character (len=:), intent(out), allocatable :: value_out !!string containing the rest of the line (i.e. after the mark as determined by the keyword).
+    integer, intent(in) :: skiplines !!integer specifying which line (after the occurrence of the keyword) is read in (only effective if the keyword is NOT directly wollowed by a '=').
+    integer, intent(in) :: ifile     !!unit of the inputcard
+    integer, intent(out) :: ierror   !!error state. 0 = no error, 1 = error
 
     character(len=:), allocatable :: key
     character(len=1) :: testchar
 
-    integer :: ios, ier, i_start_key, i_check_eq, key_len, iline
+    integer :: i_start_key, i_check_eq, key_len, iline
 
     character(len=*), parameter :: abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_<>'
     integer, parameter :: nlen = len(abc)
@@ -96,7 +98,6 @@ contains
 
           !yes, it exists: return the string after the keyword (incl. the '=')
           value_out = linetxt(iline)(i_start_key+key_len+1:)
-          close (ifile)
           return
 
         else!i_check_eq>0
@@ -106,7 +107,6 @@ contains
             write (1337, *) "ERROR in IoInput scanning for '", key, "':"
             write (1337, *) "Not enough lines in inputcard! skiplines = ", skiplines
             ierror = 1
-            close (ifile)
             return
           else
             value_out = linetxt(iline+skiplines)(i_start_key:)
@@ -120,7 +120,6 @@ contains
               end if!testchar
             end if!i_start_key>1
 
-            close (ifile)
             return
 
           end if!iline+skiplines
@@ -132,39 +131,40 @@ contains
     end do!iline
 
     ierror = 1
-    close (ifile)
     return
-
-100 write(*,*) 'problem'
-    stop
 
   end subroutine ioinput
 
 
   !-------------------------------------------------------------------------------
-  !> Summary: Read inputcard and save to array
+  !> Summary: Read inputcard and store to array
   !> Author: Bernd Zimmermann
   !> Category: KKRhost, input-output
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
-  !> Read inputcard. Automatically determine array sizes to be allocated to fit
-  !>   in whole inputcard. Buffering into a character-array is used.
+  !> Read inputcard once and store into module-local array `linetxt`.
+  !> The most efficient size of `linetxt` is automatically determined. All lines of 
+  !>   the inputcard are read in, but the length of each line is limited by the 
+  !>   constant parameter `maxcol`.
   !> 
+  !> @warning
+  !>   The length of each line is limited by the constant parameter `maxcol`.
+  !> @endwarning
   !-------------------------------------------------------------------------------
   subroutine read_inputcard(ifile)
 
     implicit none
     integer, intent(in) :: ifile
+    integer, parameter :: maxcol = 2048
 
-    integer :: ier, ios, nlinetmp, ncoltmp, iline
-    character(len=1024) :: line
+    integer :: ierror, ios, nlinetmp, ncoltmp, iline
+    character(len=maxcol) :: line
+    character(len=:), allocatable :: linetmp
 
     if (.not.inputcard_is_read) then
-      write(666,*) 'Reading inputcard'
       !--------------------------------------------------------------------------------
       ! open inputcard
       !--------------------------------------------------------------------------------
-      ier = 0
       open (unit=ifile, status='OLD', file='inputcard', iostat=ios)
       if (ios>0) then
         write (*, *) 'Error reading the inputcard file.'
@@ -191,14 +191,23 @@ contains
       nlines = nlinetmp
       ncols  = ncoltmp
       allocate(character(len=ncols) :: linetxt(nlines))
+      allocate(character(len=ncols) :: linetmp)
 
       !--------------------------------------------------------------------------------
       ! read in txt from inputcard 
       !--------------------------------------------------------------------------------
       rewind (ifile)
       do iline = 1, nlines
-        read (ifile, fmt='(A)') linetxt(iline)
-        write(888,'(A)') linetxt(iline)
+        read (ifile, fmt='(A)') linetmp
+        call capitalize_escaped_keywords(linetmp, linetxt(iline), ierror)
+        if (ierror==1) then
+          write(1337,'(A,I,A)') 'Warning capitalizing line ', iline, ' of inputcard.'
+          write(*,   '(A,I,A)') 'Warning capitalizing line ', iline, ' of inputcard.'
+        else if (ierror==2) then
+          write(1337,'(A,I,A)') 'Error capitalizing line ', iline, ' of inputcard.'
+          write(*,   '(A,I,A)') 'Error capitalizing line ', iline, ' of inputcard.'
+          stop
+        end if
       end do
 
       !--------------------------------------------------------------------------------
@@ -210,13 +219,88 @@ contains
     
   end subroutine
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Capitalize all escaped keywords in a string
+  !> Author: Bernd Zimmermann
+  !> Category: KKRhost, input-output
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Capitalized all escaped keywords in a string, i.e. it converts `<lmax>` to `<LMAX>`, but not `lmax`.
+  !>
+  !> `error=0` on sucessful return
+  !> `error=1` signals warnings (i.e. hatd-coded threshold reached)
+  !> `error=2` signals problems with order of escaping characters
+  !>
+  !> @note
+  !>   Can only treat up to `nkeymax` escaped keywords per line and prints a warning if this threshold is reached.
+  !> @endnote
+  !> @warning
+  !>   The routine might get confused if addidional characters `<` or `>`, not used for escaping, are preset in `string`. Some of this is tried to be detected and sugnaled via `error=1`
+  !> @endwarning
+  !-------------------------------------------------------------------------------
+  subroutine capitalize_escaped_keywords(line_in, line_out, ierror)
+
+    implicit none
+
+    character, parameter :: cstart='<', cstop='>'
+    integer, parameter   :: nkeymax = 1000
+
+    character(len=*), intent(in) :: line_in
+    character(len=len(line_in)), intent(out) :: line_out
+    integer,          intent(out) :: ierror
+
+    integer :: nlen, isafe, ipos1, ipos2, nkeys, ikey
+    character(len=:), allocatable :: word
+    integer, dimension(1:nkeymax) :: istart, istop
+
+    !init
+    ierror = 0
+    isafe = 0 !lower bound for scan
+    nkeys = 0
+    nlen  = len_trim(line_in)
+    line_out = line_in
+
+    do while ( (isafe>=0) .and. (nkeys<nkeymax) )
+      ipos1 = index(line_in(isafe+1:nlen),cstart)
+      ipos2 = index(line_in(isafe+1:nlen),cstop)
+      if ((ipos1>0) .and. (ipos2>0) .and. ipos1<ipos2) then
+        nkeys = nkeys + 1
+        istart(nkeys) = isafe + ipos1 + 1 !+1 to remove leading `cstart`
+        istop(nkeys)  = isafe + ipos2 - 1 !-1 to remove trailing `cstop`
+        isafe         = isafe + ipos2 + 1 !count lower bound up
+      else if ((ipos1>0) .and. (ipos2>0)) then
+        ierror = 2
+        write (*,*) "Problem with order of '<' or '>' in 'capitalize_escaped_keywords'."
+        write (*,*) "Are additional '<' or '>' present?"
+        return
+      else
+        isafe  = -1
+      end if
+    end do
+
+    if (nkeys==nkeymax) then
+      ierror = 1
+      write (*,*) "WARNING! Hit 'nkeymax' threshold in 'capitalize_escaped_keywords'."
+      write (*,*) "         Maybe not all keywords have been capitalized."
+    end if
+
+    do ikey = 1, nkeys
+      word = line_in(istart(ikey):istop(ikey))
+      if (is_keyword(word)) then
+        line_out(istart(ikey):istop(ikey)) = convert_to_uppercase(word)
+      end if
+
+    end do!ikey
+
+  end subroutine capitalize_escaped_keywords
+
 
 
   !-------------------------------------------------------------------------------
   !> Summary: Return position of first whitespace and letter
   !> Author: 
   !> Category: KKRhost, input-output
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !> Deprecated: True ! This needs to be set to True for deprecated subroutines
   !>
   !> This sub returns the position of the first space character
   !> in ipos2, and the position of the first letter in the string
@@ -248,6 +332,7 @@ contains
     return
   end subroutine verify77
 
+
   !-------------------------------------------------------------------------------
   !> Summary: Convert a sting to upper case
   !> Author: Bernd Zimmermann
@@ -276,5 +361,39 @@ contains
     end do
 
   end function convert_to_uppercase
+
+
+  !-------------------------------------------------------------------------------
+  !> Summary: Checks if a string is a valid keyword
+  !> Author: Bernd Zimmermann
+  !> Category: KKRhost, input-output
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Checks if a string is a valid keyword, meanig that it only consists of 
+  !> alpha-numeric characters, as well as the dash (-) and underscore (_).
+  !> 
+  !-------------------------------------------------------------------------------
+  function is_keyword(word) result(l_kw)
+    implicit none
+    character(len=*), intent(in) :: word
+    logical :: l_kw
+    integer :: nlen, ii
+    character(len=*), parameter :: abcbig = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_'
+    character :: ch
+
+    l_kw = .true.
+
+    nlen = len(word)
+    do ii = 1, nlen
+      ch = word(ii:ii)
+      if (index(abcbig,ch)==0) then
+        l_kw = .false.
+        return
+      end if
+    end do
+
+    return
+
+  end function is_keyword
 
 end module mod_ioinput
