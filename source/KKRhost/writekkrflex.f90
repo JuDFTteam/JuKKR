@@ -36,6 +36,7 @@ contains
     hostimp,noq,zat,kaoez,conc,cmom,cminst,vinters,nemb,naez)
 
     use :: mod_types, only: t_tgmat
+    use :: mod_runoptions, only: write_kkrimp_input
     use :: mod_wunfiles, only: t_params, read_angles
     use :: mod_version_info
     use :: mod_md5sums
@@ -70,13 +71,11 @@ contains
     real (kind=dp), dimension (natyp) :: theta, phi
     complex (kind=dp), dimension (lmmaxd, lmmaxd) :: tmat0
     ! .. External Functions
-    logical :: opt
-    external :: opt
 
     write (1337, *) 'KKRFLEX WRITEOUT'
-    write (1337, *) opt('KKRFLEX ')
+    write (1337, *) write_kkrimp_input
 
-    if (opt('KKRFLEX ')) then
+    if (write_kkrimp_input) then
       open (6699, file='kkrflex_tmat', status='unknown')
       call version_print_header(6699, '; '//md5sum_potential//'; '//md5sum_shapefun)
       write (6699, *) '#', natomimp, nspin, ielast, lmmaxd, korbit

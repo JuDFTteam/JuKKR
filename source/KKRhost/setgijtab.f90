@@ -43,6 +43,7 @@ contains
     ! **********************************************************************
     use :: mod_gijcond
     use :: mod_gijxcpl
+    use :: mod_runoptions, only: calc_exchange_couplings, use_cond_LB
     implicit none
 
     ! Scalar arguments
@@ -56,7 +57,6 @@ contains
     ! Local scalars
     integer :: i, ido, ii, j, jj, nn, nofgij
     ! external funcitons
-    logical, external :: opt
 
     ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
     write (1337, '(79("="),/,15X,A)') 'SETGIJTAB: setting task-specific Gij pairs'
@@ -65,9 +65,9 @@ contains
 
     ido = 0
     ! ======================================================================
-    if (opt('CONDUCT ')) call gijcond(ido, naez, rbasis, iqat, natomimp, rclsimp, atomimp, ijtabcalc, natomimpd)
+    if (use_cond_LB) call gijcond(ido, naez, rbasis, iqat, natomimp, rclsimp, atomimp, ijtabcalc, natomimpd)
     ! ======================================================================
-    if (opt('XCPL    ')) call gijxcpl(ido, naez, rbasis, bravais, linterface, nqcalc, iqcalc, natomimp, rclsimp, atomimp, ijtabcalc, ijtabcalc_i, natomimpd)
+    if (calc_exchange_couplings) call gijxcpl(ido, naez, rbasis, bravais, linterface, nqcalc, iqcalc, natomimp, rclsimp, atomimp, ijtabcalc, ijtabcalc_i, natomimpd)
     ! ======================================================================
     if (ido==0) then
       icc = 0

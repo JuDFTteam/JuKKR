@@ -143,6 +143,7 @@ module mod_wunfiles
     integer :: natomimpd !! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
     integer :: itrunldau !! Iteration index for LDA+U
     integer :: iesemicore
+    integer :: special_straight_mixing !!id to specify modified straight mixing scheme: 0=normal, 1=alternating mixing factor (i.e. reduced mixing factor in every odd iteration), 2=charge-neurality based mixing factor (former: 'alt mix' and 'spec mix')
     real (kind=dp) :: tk           !! Temperature
     real (kind=dp) :: fcm
     real (kind=dp) :: emin         !! Energies needed in EMESHT
@@ -310,8 +311,8 @@ module mod_wunfiles
     integer, dimension (:, :, :), allocatable :: irrel
     logical, dimension (:), allocatable :: vacflag
     logical, dimension (:), allocatable :: symunitary !! unitary/antiunitary symmetry flag
-    character (len=8), dimension (:), allocatable :: optc
-    character (len=8), dimension (:), allocatable :: testc
+    !character (len=8), dimension (:), allocatable :: optc
+    !character (len=8), dimension (:), allocatable :: testc
     character (len=124), dimension (:), allocatable :: txc
 
   end type type_params
@@ -348,7 +349,7 @@ contains
     mmaxd,nr,nsheld,nsymaxd,naezdpd,natomimpd,nspind,irid,nfund,ncelld,lmxspd,ngshd,&
     krel,ntotd,ncheb,npan_log,npan_eq,npan_log_at,npan_eq_at,r_log,npan_tot,rnew,   &
     rpan_intervall,ipan_intervall,nspindd,thetasnew,socscale,tolrdif,lly,deltae,    &
-    rclsimp)
+    rclsimp,verbosity,MPI_scheme,special_straight_mixing)
     ! **********************************************************************
     ! *                                                                    *
     ! *  This subroutine is part of the MAIN0 program in the tbkkr package *
@@ -361,6 +362,10 @@ contains
 
     use :: mod_types, only: t_inc, t_tgmat, t_lloyd, t_cpa
     use :: mod_mympi, only: nranks, mpiatom, mpiadapt
+    use :: mod_runoptions, only: impurity_operator_only, relax_SpinAngle_Dirac, use_Chebychev_solver, use_qdos, &
+      write_cpa_projection_files, write_deci_tmat, write_gmat_file, write_green_host, write_green_imp, write_gref_file, &
+      write_kkrimp_input, write_lloyd_cdos_file, write_lloyd_dgref_file, write_lloyd_dtmat_file, write_lloyd_files, &
+      write_lloyd_g0tr_file, write_lloyd_tralpha_file, write_pkkr_input, write_pkkr_operators, write_tmat_file, set_cheby_nosoc
 
     implicit none
     ! ..
@@ -453,6 +458,9 @@ contains
     integer, intent (in) :: natomimpd !! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
     integer, intent (in) :: itrunldau !! Iteration index for LDA+U
     integer, intent (in) :: iesemicore
+    integer, intent (in) :: verbosity !! verbosity level for timings and output: 0=old default, 1,2,3 = timing and ouput verbosity level the same (low,medium,high)
+    integer, intent (in) :: MPI_scheme !! scheme for MPI parallelization: 0 = best, 1 = atoms (default), 2 = energies 
+    integer, intent (in) :: special_straight_mixing !!id to specify modified straight mixing scheme: 0=normal, 1=alternating mixing factor (i.e. reduced mixing factor in every odd iteration), 2=charge-neurality based mixing factor (former: 'alt mix' and 'spec mix')
     ! .. nembd2 = NAEZ+NEMB, lmaxd1=lmaxd+1, naezdpd=NAEZ/nprincd)
     real (kind=dp), intent (in) :: tk !! Temperature
     real (kind=dp), intent (in) :: fcm
@@ -611,8 +619,6 @@ contains
     real (kind=dp), dimension (natyp) :: theta
     character (len=80) :: tmpdir
     ! .. External Functions
-    logical :: opt, test
-    external :: opt, test
 
     itmpdir = 0
     iltmp = 0
@@ -634,7 +640,7 @@ contains
     ! -------------------------------------------------------------------------
     ! itermdir
     ! -------------------------------------------------------------------------
-    if (opt('ITERMDIR')) then
+    if (relax_SpinAngle_Dirac) then
       i1 = 0
       emin = 0d0
       t_params%qmtet = qmtet
@@ -669,7 +675,7 @@ contains
     end do
 
     ! find NQDOS (taken from main1b)
-    if (opt('qdos    ')) then
+    if (use_qdos) then
       open (67, file='qvec.dat')
       read (67, *) nqdos
       close (67)
@@ -690,9 +696,9 @@ contains
     t_inc%nclsd = ncls
     t_inc%naclsmax = naclsmax
     t_inc%nshell0 = nshell(0)
-    if (opt('NEWSOSOL')) t_inc%newsosol = .true.
-    if (test('NOSOC   ')) t_inc%nosoc = .true.
-    if (opt('deci-out')) t_inc%deci_out = .true.
+    if (use_Chebychev_solver) t_inc%newsosol = .true.
+    if (set_cheby_nosoc) t_inc%nosoc = .true.
+    if (write_deci_tmat) t_inc%deci_out = .true.
     !--------------------------------------------------------------------------------
     ! t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc
     !--------------------------------------------------------------------------------
@@ -701,10 +707,10 @@ contains
     ! writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags
     !--------------------------------------------------------------------------------
     ! set logical switches in t_tgmat which control if tmat, gmat and gref are written to files or stored in memory
-    if (test('tmatfile')) t_tgmat%tmat_to_file = .true.
-    if (test('gmatfile')) t_tgmat%gmat_to_file = .true.
-    if (test('greffile')) t_tgmat%gref_to_file = .true.
-    if (test('projfile')) t_cpa%dmatproj_to_file = .true.
+    if (write_tmat_file) t_tgmat%tmat_to_file = .true.
+    if (write_gmat_file) t_tgmat%gmat_to_file = .true.
+    if (write_gref_file) t_tgmat%gref_to_file = .true.
+    if (write_cpa_projection_files) t_cpa%dmatproj_to_file = .true.
 
 
     !--------------------------------------------------------------------------------
@@ -715,25 +721,25 @@ contains
     ! bug bug bug bug bug
 
     ! some special run options:
-    if (opt('KKRFLEX ')) t_tgmat%tmat_to_file = .true. ! for KKRFLEX option tmat must be written to file
-    if (opt('qdos    ')) t_tgmat%gmat_to_file = .true. ! for qdos write gmat to file since it scales with NQDOS and can become huge
+    if (write_kkrimp_input) t_tgmat%tmat_to_file = .true. ! for KKRFLEX option tmat must be written to file
+    if (use_qdos) t_tgmat%gmat_to_file = .true. ! for qdos write gmat to file since it scales with NQDOS and can become huge
 
     ! set logical switches in t_lloyd which control if files are written to files or stored in memory
-    ! if(TEST('tmatfile').or.TEST('llyfiles'))
-    if (test('wrtdtmat') .or. test('llyfiles')) t_lloyd%dtmat_to_file = .true.
-    if (test('wrttral ') .or. test('llyfiles')) t_lloyd%tralpha_to_file = .true.
-    if (test('wrtcdos ') .or. test('llyfiles')) t_lloyd%cdos_diff_lly_to_file = .true.
-    if (test('wrtdgref') .or. test('llyfiles')) t_lloyd%dgref_to_file = .true.
-    if (test('wrtgotr ') .or. test('llyfiles')) t_lloyd%g0tr_to_file = .true.
+    ! if(write_tmat_file.or.write_lloyd_files)
+    if (write_lloyd_dtmat_file .or. write_lloyd_files) t_lloyd%dtmat_to_file = .true.
+    if (write_lloyd_tralpha_file .or. write_lloyd_files) t_lloyd%tralpha_to_file = .true.
+    if (write_lloyd_cdos_file .or. write_lloyd_files) t_lloyd%cdos_diff_lly_to_file = .true.
+    if (write_lloyd_dgref_file .or. write_lloyd_files) t_lloyd%dgref_to_file = .true.
+    if (write_lloyd_g0tr_file .or. write_lloyd_files) t_lloyd%g0tr_to_file = .true.
 
     ! set verbosity level in t_inc%i_write = 0,1,2 for default, verbose1, verbose2
-    t_inc%i_write = 0              ! default: write only output.000.txt and reset file after each iteration
-    if (test('verbose1')) t_inc%i_write = 1 ! write on all processors but only the latest iteration
-    if (test('verbose2')) t_inc%i_write = 2 ! write everything
+    t_inc%i_write = 0                   ! default: write only output.000.txt and reset file after each iteration
+    if (verbosity==2) t_inc%i_write = 1 ! write on all processors but only the latest iteration
+    if (verbosity==3) t_inc%i_write = 2 ! write everything
     ! and t_inc_i_time for timing writeout
     t_inc%i_time = 1               ! default: only timings from master, all iterations
-    if (test('timings0')) t_inc%i_time = 0 ! only timings from master, only the last iteration
-    if (test('timings2')) t_inc%i_time = 2 ! all timing files, all iterations
+    if (verbosity==1) t_inc%i_time = 0 ! only timings from master, only the last iteration
+    if (verbosity==3) t_inc%i_time = 2 ! all timing files, all iterations
     ! writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags writeout flags
 
     !--------------------------------------------------------------------------------
@@ -748,21 +754,21 @@ contains
     end if
     mpiadapt = 1                   ! 1 means check timings and then reshuffle ranks if necessary
     ! change default behaviour for the corresponding test flags are found
-    if (test('MPIatom ')) then
+    if (MPI_scheme==1) then
       mpiatom = .true.
       mpiadapt = 0                 ! 0 means no change in communication scheme
     end if
-    if (test('MPIenerg')) then
+    if (MPI_scheme==2) then
       mpiatom = .false.
       mpiadapt = 0
     end if
-    if (test('MPIadapt')) then
+    if (MPI_scheme==0) then
       mpiadapt = 2                 ! 2 means force run with MPIatom then with MPIenerg and then compare to choose optimal
     end if
     ! so far changing does not work yet, so turn this off:
     mpiadapt = 0
 
-    if (opt('FERMIOUT') .or. opt('WRTGREEN') .or. opt('GREENIMP') .or. opt('OPERATOR')) then ! fswrt
+    if (write_pkkr_input .or. write_green_host .or. write_green_imp .or. write_pkkr_operators) then ! fswrt
       mpiatom = .true.             ! fswrt
       if (scfsteps>1) then         ! fswrt
         write (*, *) 'Warning: Setting SCFSTEPS=1 for FERMIOUT option' ! fswrt
@@ -774,37 +780,34 @@ contains
         stop 'Please choose Nranks<=NATYP' ! fswrt
       end if                       ! fswrt
       naclsmin = minval(nacls(1:ncls)) ! fswrt
-      if (.not. opt('GREENIMP') .and. naclsmin<150) then ! fswrt
+      if (.not. write_green_imp .and. naclsmin<150) then ! fswrt
         write (*, *) ' !!!  WARNING  !!!' ! fswrt
         write (*, *) '   FERMIOUT/WRTGREEN option chosen' ! fswrt
         write (*, *) '   minimal cluster size smaller than 150 atoms!!!' ! fswrt
         write (*, *) '   should be increased to least 200-300 atoms' ! fswrt
       end if                       ! fswrt
-      if (test('MPIenerg')) then   ! fswrt
+      if (MPI_scheme==2) then   ! fswrt
         write (*, *) 'FERMIOUT/WRTGREEN/GREENIMP option chosen' ! fswrt
         write (*, *) 'found unsupported test option MPIenerg' ! fswrt
         stop 'Please choose MPIatom instead' ! fswrt
       end if                       ! fswrt
-      if (opt('OPERATOR') .and. opt('FERMIOUT')) then ! fswrt
+      if (write_pkkr_operators .and. write_pkkr_input) then ! fswrt
         write (*, *) 'OPERATOR and FERMIOUT cannot be used together' ! fswrt
         stop 'Please chose only one of the two' ! fswrt
       end if                       ! fswrt
-      if (opt('OPERATOR') .and. ielast/=1) then ! fswrt
+      if (write_pkkr_operators .and. ielast/=1) then ! fswrt
         write (*, *) 'OPERATOR option chosen' ! fswrt
         write (*, *) 'energy contour should contain a single point' ! fswrt
         write (*, *) 'on the real axis only' ! fswrt
         stop 'Please correct energy contour' ! fswrt
       end if                       ! fswrt
     end if                         ! fswrt
-    if (.not. opt('OPERATOR') .and. test('IMP_ONLY')) then ! fswrt
+    if (.not. write_pkkr_operators .and. impurity_operator_only) then ! fswrt
       write (*, *) 'test option "IMP_ONLY" can only be used' ! fswrt
       write (*, *) 'in combination with option "OPERATOR"' ! fswrt
       stop                         ! fswrt
     end if                         ! fswrt
 
-    if (test('MPIatom ') .and. test('MPIenerg')) then
-      stop '[wunfiles] Found test options ''MPIenerg'' and ''MPIatom'' which do not work together. Please choose only one of these.'
-    end if
     !--------------------------------------------------------------------------------
     ! MPI communication scheme
     !--------------------------------------------------------------------------------
@@ -821,6 +824,7 @@ contains
       ntldau,npolsemi,n1semi,n2semi,n3semi,iesemicore,ebotsemi,emusemi,tksemi,      &
       fsemicore,r_log,emin,emax,tk,efermi,alat,cpatol,mixing,qbound,fcm,lambda_xc,  &
       tolrdif,linterface,lrhosym,solver,tmpdir,itmpdir,iltmp,ntotd,ncheb,deltae,    &
+      special_straight_mixing,                                                      &
       t_params)
 
     ! initialize allocatable arrays
@@ -1168,12 +1172,12 @@ contains
     allocate (t_params%txc(6), stat=i_stat) ! CHARACTER*124
     call memocc(i_stat, product(shape(t_params%txc))*kind(t_params%txc), 't_params%TXC', 'init_t_params')
 
-    if (.not. allocated(t_params%testc)) then
-      allocate (t_params%testc(32), stat=i_stat)
-      call memocc(i_stat, product(shape(t_params%testc))*kind(t_params%testc), 't_params%TESTC', 'init_t_params')
-      allocate (t_params%optc(32), stat=i_stat) ! CHARACTER*8
-      call memocc(i_stat, product(shape(t_params%optc))*kind(t_params%optc), 't_params%OPTC', 'init_t_params')
-    end if
+!    if (.not. allocated(t_params%testc)) then
+!      allocate (t_params%testc(32), stat=i_stat)
+!      call memocc(i_stat, product(shape(t_params%testc))*kind(t_params%testc), 't_params%TESTC', 'init_t_params')
+!      allocate (t_params%optc(32), stat=i_stat) ! CHARACTER*8
+!      call memocc(i_stat, product(shape(t_params%optc))*kind(t_params%optc), 't_params%OPTC', 'init_t_params')
+!    end if
     ! -------------------------------------------------------------------------
     ! End allocation of character arrays
     ! -------------------------------------------------------------------------
@@ -1484,6 +1488,7 @@ contains
     call mpi_bcast(t_params%ntperd, 1, mpi_integer, master, mpi_comm_world, ierr)
     ! forgot to bcast kpoibz?
     call mpi_bcast(t_params%kpoibz, 1, mpi_integer, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%special_straight_mixing, 1, mpi_integer, master, mpi_comm_world, ierr)
 
     ! double precision
     call mpi_bcast(t_params%ebotsemi, 1, mpi_double_precision, master, mpi_comm_world, ierr)
@@ -1702,10 +1707,10 @@ contains
     ! -------------------------------------------------------------------------
     call mpi_bcast(t_params%txc, 6*124, & ! 6 entries of length 124
       mpi_character, master, mpi_comm_world, ierr) ! CHARACTER*124
-    call mpi_bcast(t_params%testc, 32*8, & ! 32 entries of length 8
-      mpi_character, master, mpi_comm_world, ierr) ! CHARACTER*8
-    call mpi_bcast(t_params%optc, 32*8, & ! 32 entries of length 8
-      mpi_character, master, mpi_comm_world, ierr) ! CHARACTER*8
+    !call mpi_bcast(t_params%testc, 32*8, & ! 32 entries of length 8
+    !  mpi_character, master, mpi_comm_world, ierr) ! CHARACTER*8
+    !call mpi_bcast(t_params%optc, 32*8, & ! 32 entries of length 8
+    !  mpi_character, master, mpi_comm_world, ierr) ! CHARACTER*8
 
     ! -------------------------------------------------------------------------
     ! K-points arrays
@@ -1734,7 +1739,8 @@ contains
     kpre,kshape,kte,kvmad,kxc,ishift,kforce,idoldau,itrunldau,ntldau,npolsemi,      &
     n1semi,n2semi,n3semi,iesemicore,ebotsemi,emusemi,tksemi,fsemicore,r_log,emin,   &
     emax,tk,efermi,alat,cpatol,mixing,qbound,fcm,lambda_xc,tolrdif,linterface,      &
-    lrhosym,solver,tmpdir,itmpdir,iltmp,ntotd,ncheb,deltae,t_params)
+    lrhosym,solver,tmpdir,itmpdir,iltmp,ntotd,ncheb,deltae,special_straight_mixing, &
+    t_params)
     ! fill scalars into t_params
     implicit none
 
@@ -1829,6 +1835,7 @@ contains
     integer, intent (in) :: natomimpd !! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
     integer, intent (in) :: itrunldau !! Iteration index for LDA+U
     integer, intent (in) :: iesemicore
+    integer, intent (in) :: special_straight_mixing 
     real (kind=dp), intent (in) :: tk !! Temperature
     real (kind=dp), intent (in) :: fcm
     real (kind=dp), intent (in) :: emin !! Energies needed in EMESHT
@@ -1944,6 +1951,7 @@ contains
     t_params%natomimpd = natomimpd
     t_params%itrunldau = itrunldau
     t_params%iesemicore = iesemicore
+    t_params%special_straight_mixing = special_straight_mixing
     ! Double precision
     t_params%tk = tk
     t_params%fcm = fcm
@@ -2537,6 +2545,9 @@ contains
     lmmaxd,nsymaxd,nspindd,maxmshd,rclsimp)
     ! get relevant parameters from t_params
     ! ..
+
+    use :: mod_runoptions, only: relax_SpinAngle_Dirac, use_decimation, write_kpts_file 
+
     implicit none
 
     type (type_params), intent (in) :: t_params
@@ -2642,8 +2653,6 @@ contains
     integer :: i, l, id
 
     ! .. External Functions ..
-    logical :: opt, test
-    external :: opt, test
 
     nsra = t_params%nsra
     ins = t_params%ins
@@ -2733,7 +2742,7 @@ contains
       nrrel = t_params%nrrel
       irrel = t_params%irrel
     end if
-    if (opt('DECIMATE')) then
+    if (use_decimation) then
       lefttinvll = t_params%lefttinvll
       righttinvll = t_params%righttinvll
       vacflag = t_params%vacflag
@@ -2742,13 +2751,13 @@ contains
     ! -------------------------------------------------------------------------
     ! K-points
     ! -------------------------------------------------------------------------
-    if (test('kptsfile')) then
+    if (write_kpts_file) then
       open (52, file='kpoints', form='formatted')
       rewind (52)
       write (1337, *) 'kpoints read from kpoints file due to test option "kptsfile"'
     end if
     do l = 1, maxmesh
-      if (test('kptsfile')) then
+      if (write_kpts_file) then
         read (52, fmt='(I8,f15.10)') nofks(l), volbz(l)
         write (1337, *) 'kpts:', nofks(l), volbz(l), t_params%nofks(l), t_params%volbz(l)
       else
@@ -2756,7 +2765,7 @@ contains
         volbz(l) = t_params%volbz(l)
       end if
       do i = 1, nofks(l)
-        if (test('kptsfile')) then
+        if (write_kpts_file) then
           read (52, fmt=*)(bzkp(id,i,l), id=1, 3), volcub(i, l)
         else
           do id = 1, 3
@@ -2770,7 +2779,7 @@ contains
         ! &             (BZKP(ID,I,L),ID=1,3),VOLCUB(I,L),NOFKS(L),VOLBZ(L)
       end do
     end do
-    if (test('kptsfile')) close (52)
+    if (write_kpts_file) close (52)
     ! -------------------------------------------------------------------------
     ! Energy_mesh
     ! -------------------------------------------------------------------------
@@ -2781,7 +2790,7 @@ contains
     ! -------------------------------------------------------------------------
     ! Itermdir
     ! -------------------------------------------------------------------------
-    if (opt('ITERMDIR')) then
+    if (relax_SpinAngle_Dirac) then
       drotq = t_params%drotq
       if (kmrot==0) kmrot = 1
     end if
@@ -2808,6 +2817,7 @@ contains
     irid,r_log,naez,natyp,lmax)
     ! get relevant parameters from t_params
     ! ..
+    use :: mod_runoptions, only: relax_SpinAngle_Dirac, use_spherical_potential_only
     implicit none
 
     type (type_params), intent (in) :: t_params
@@ -2924,8 +2934,6 @@ contains
     character (len=10), intent (inout) :: solver
     character (len=80), intent (inout) :: tmpdir
     ! .. External Functions ..
-    logical :: opt, test
-    external :: opt, test
 
     nsra = t_params%nsra
     ins = t_params%ins
@@ -3037,11 +3045,11 @@ contains
       vtrel = t_params%vtrel
       btrel = t_params%btrel
     end if
-    if (test('Vspher  ')) vins(irmind:irmd, 2:lmpotd, 1:nspotd) = 0.d0
+    if (use_spherical_potential_only) vins(irmind:irmd, 2:lmpotd, 1:nspotd) = 0.d0
     ! -------------------------------------------------------------------------
     ! Itermdir
     ! -------------------------------------------------------------------------
-    if (opt('ITERMDIR')) then
+    if (relax_SpinAngle_Dirac) then
       qmtet = t_params%qmtet
       qmphi = t_params%qmphi
     end if
@@ -3074,9 +3082,10 @@ contains
     n3semi,zrel,jwsrel,irshift,mixing,lambda_xc,a,b,thetas,drdi,r,zat,rmt,rmtnew,   &
     rws,emin,emax,tk,alat,efold,chrgold,cmomhost,conc,gsh,ebotsemi,emusemi,tksemi,  &
     vins,visp,rmrel,drdirel,vbc,fsold,r2drdirel,ecore,ez,wez,txc,linterface,lrhosym,& 
-    ngshd,naez,irid,nspotd,iemxd)
+    ngshd,naez,irid,nspotd,iemxd,special_straight_mixing)
     ! get relevant parameters from t_params
     ! ..
+    use :: mod_runoptions, only: use_spherical_potential_only
     implicit none
     type (type_params), intent (in) :: t_params
 
@@ -3131,6 +3140,7 @@ contains
     integer, intent (inout) :: scfsteps
     integer, intent (inout) :: npolsemi
     integer, intent (inout) :: iesemicore
+    integer, intent (inout) :: special_straight_mixing
     integer, dimension (naez), intent (inout) :: noq
     integer, dimension (natyp), intent (inout) :: imt
     integer, dimension (natyp), intent (inout) :: irc
@@ -3196,8 +3206,6 @@ contains
     logical, intent (inout) :: lrhosym
     logical, intent (inout) :: linterface
     ! .. External Functions ..
-    logical :: opt, test
-    external :: opt, test
 
     nsra = t_params%nsra
     ins = t_params%ins
@@ -3234,6 +3242,7 @@ contains
     end if
     ! -------------------------------------------------------------------------
     imix = t_params%imix
+    special_straight_mixing = t_params%special_straight_mixing
     mixing = t_params%mixing
     qbound = t_params%qbound
     fcm = t_params%fcm
@@ -3321,7 +3330,7 @@ contains
     efold = t_params%efold
     chrgold = t_params%chrgold
     cmomhost = t_params%cmomhost
-    if (test('Vspher  ')) vins(irmind:irmd, 2:lmpot, 1:nspotd) = 0.d0
+    if (use_spherical_potential_only) vins(irmind:irmd, 2:lmpot, 1:nspotd) = 0.d0
 
   end subroutine get_params_2
 

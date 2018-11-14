@@ -47,8 +47,6 @@ add_executable(
     source/common/gaunt2.f90
     source/common/grule.f90
     source/common/rcstop.f90
-    source/common/opt.f90
-    source/common/test.f90
     source/common/cinit.f90
     source/common/radial_solver_Chebychev/intcheb_cell.f90
     source/common/radial_solver_Chebychev/cheb.f90
@@ -288,6 +286,7 @@ add_executable(
     source/KKRhost/rotgll.F90
     source/KKRhost/rotmat.f90
     source/KKRhost/rrgen.f90
+    source/KKRhost/runoptions.F90
     source/KKRhost/save_wavefun.F90
     source/KKRhost/scalevec.f90
     source/KKRhost/scalpr.f90
@@ -381,8 +380,6 @@ if(ENABLE_BdG)
         source/common/gaunt2.f90 
         source/common/grule.f90 
         source/common/rcstop.f90 
-        source/common/opt.f90 
-        source/common/test.f90 
         source/common/cinit.f90 
         source/common/rotatespinframe.f90 
         source/common/radial_solver_Chebychev/intcheb_cell.f90 

@@ -39,6 +39,8 @@ contains
     use :: mod_timing
 #endif
     use :: mod_datatypes, only: dp
+    use :: mod_runoptions, only: calc_gmat_lm_full, fix_nonco_angles, relax_SpinAngle_Dirac, use_Chebychev_solver, &
+      use_decimation, use_qdos, write_DOS, write_complex_qdos, write_density_ascii, write_rho2ns, write_DOS_lm, set_cheby_nosoc
     use :: mod_constants, only: czero, pi
     use :: mod_profiling, only: memocc
     use :: mod_mympi, only: myrank, master
@@ -174,7 +176,6 @@ contains
 #endif
 
     ! .. External Functions ..
-    logical, external :: opt, test
     ! ..
     ! .. Data statements ..
     data textl/' s =', ' p =', ' d =', ' f =', ' g =', ' h =', ' i ='/
@@ -238,14 +239,14 @@ contains
       close (67)
     end if
 
-    itermvdir = opt('ITERMDIR')
+    itermvdir = relax_SpinAngle_Dirac
     lmomvec = (itermvdir .or. (kmrot/=0))
     nspinpot = krel*2 + (1-krel)*nspin
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! no need to calculate charge correction if no host program, if decimation
     ! or if no energy contour
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ldorhoef = (ihost==1) .and. (.not. opt('DECIMATE')) .and. (npol/=0)
+    ldorhoef = (ihost==1) .and. (.not. use_decimation) .and. (npol/=0)
     ! -------------------------------------------------------------------------
     ! LDA+U
     ! -------------------------------------------------------------------------
@@ -258,16 +259,16 @@ contains
     end if
 
     ! write parameters file that contains passed parameters for further treatment of gflle
-    if (opt('lmlm-dos')) then
+    if (calc_gmat_lm_full) then
       qdosopt = 'n'
-      if (opt('qdos    ')) then
+      if (use_qdos) then
         qdosopt = 'y'          
       end if
       open (67, form='formatted', file='parameters.gflle')
       df(:) = wez(:)/dble(nspin)
       write (67, *) ielast, iemxd, natyp, nspin, lmax, qdosopt, df(1:ielast), ez(1:ielast), korbit
       close (67)
-    end if ! OPT('lmlm-dos')
+    end if ! calc_gmat_lm_full
 
     ! ------------------------------------------------------------------------
     ! LLY
@@ -383,7 +384,7 @@ contains
 
 
     ! interpolate to Chebychev mesh
-    if (opt('NEWSOSOL')) then
+    if (use_Chebychev_solver) then
       ! nonco angles
       call read_angles(t_params, natyp, theta, phi)
 
@@ -394,13 +395,13 @@ contains
 
       call interpolate_poten(lpotd, irmd, irnsd, natyp, ipand, lmpotd, nspotd, ntotd, ntotd*(ncheb+1), nspin, rmesh, irmin, irws, ircut, vins, visp, npan_log_at, npan_eq_at, &
         npan_tot, rnew, ipan_intervall, vinsnew)
-    end if !(.not. opt('NEWSOSOL'))
+    end if !(.not. use_Chebychev_solver)
 
 
     ! find boundaries for atom loop (MPI parallelization level)
 #ifdef CPP_MPI
     ntot1 = t_inc%natyp
-    if (.not. opt('NEWSOSOL')) then
+    if (.not. use_Chebychev_solver) then
 
       call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at, master, ntot1, ntot_pt, ioff_pt, .true.)
 
@@ -467,7 +468,7 @@ contains
           ipot1 = (i1-1)*nspinpot + 1
           
 
-          if (.not. opt('NEWSOSOL')) then
+          if (.not. use_Chebychev_solver) then
 
             iq = iqat(i1)
 
@@ -507,7 +508,7 @@ contains
         ! -------------------------------------------------------------------
 
         ! collect stuff from working arrays
-        if (.not. opt('NEWSOSOL')) then
+        if (.not. use_Chebychev_solver) then
           
           ! -----------------------------------------------------------------------
           ! itermdir/kmrot <> 0
@@ -554,7 +555,7 @@ contains
 
          
         ! test writeout 
-        if (test('RHOVALW ')) then ! Bauer
+        if (write_rho2ns) then ! Bauer
           open (unit=324234, file='out_rhoval')
           write (324234, *) '#IATOM', i1
           write (324234, '(50000F25.16)') rho2ns(:, :, i1, 1)
@@ -566,7 +567,7 @@ contains
       ! end NATYP loop I1
       ! ----------------------------------------------------------------------
 
-      if (.not. opt('NEWSOSOL')) then
+      if (.not. use_Chebychev_solver) then
 
 #ifdef CPP_TIMING
         ! call timing_stop('main1c - rhoval')
@@ -575,7 +576,7 @@ contains
 
 #ifdef CPP_MPI
         ! move writeout of qdos file here
-        if (opt('qdos    ')) then
+        if (use_qdos) then
           ! first communicate den array to write out qdos files
           idim = (lmaxd1+1)*ielast*nqdos*npotd
           allocate (workc(0:lmaxd1,ielast,nqdos,npotd), stat=i_stat)
@@ -609,7 +610,7 @@ contains
                 end do ! IE=1,IELAST
                 close (31)
 
-                if (test('compqdos')) then
+                if (write_complex_qdos) then
                   if (natyp>=100) then
                     open (31, file='cqdos.'//char(48+i1/100)//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat')
                   else
@@ -639,7 +640,7 @@ contains
           end if ! myrank_at==master
 100       format (5f10.6, 40e16.8) ! qdos
 110       format (5f10.6, 80e16.8) ! complex qdos
-        end if ! OPT('qdos    ') 
+        end if ! use_qdos 
 
         ! reset NQDOS number to avoid loo large communication which is not needed anyways for qdos run
         nqdos = 1
@@ -661,7 +662,7 @@ contains
 
         ! lmdos writeout
         if (myrank==master) then
-          if (opt('lmdos    ')) then
+          if (write_DOS_lm) then
             do i1 = 1, natyp
               do ispin = 1, nspin
                 ipot = (i1-1)*nspinpot + ispin
@@ -701,7 +702,7 @@ contains
 
         if (myrank==master) then
           ! rewrite new theta and phi to nonco_angle_out.dat, nonco_angle.dat is the input
-          if (.not. test('FIXMOM  ')) then
+          if (.not. fix_nonco_angles) then
             open (unit=13, file='nonco_angle_out.dat', form='formatted')
             call version_print_header(13)
             do i1 = 1, natyp
@@ -713,14 +714,14 @@ contains
             end do
             close (13)
         
-          end if                     ! .not.test('FIXMOM  ')
+          end if                     ! .not.fix_nonco_angles
         end if                       ! (myrank==master)
 
       end if ! new spin-orbit solver
 
       close (70)                   ! gmat file
       close (30)                   ! close lmdos file
-      if (.not. opt('NEWSOSOL')) then
+      if (.not. use_Chebychev_solver) then
 #ifndef CPP_MPI
         close (31)                   ! close qdos file if no mpi is used, otherwise writeout in the following
 #endif
@@ -799,7 +800,7 @@ contains
         ! -------------------------------------------------------------------
         ! Construct LDA+U interaction matrix for next iteration
         ! -------------------------------------------------------------------
-        if (.not. opt('NEWSOSOL')) then
+        if (.not. use_Chebychev_solver) then
           call wmatldau(ntldau,itldau,nspinpot,denmatc,lopt,ueff,jeff,uldau,wldau,  &
             eu,edc,mmaxd,npotd,natyp,nspin,lmax)
         else
@@ -826,7 +827,7 @@ contains
       ! Write out lm charges and moments
       ! -------------------------------------------------------------------
       withorbmom = krel+korbit
-      if (test('NOSOC   ')) withorbmom = withorbmom+1
+      if (set_cheby_nosoc) withorbmom = withorbmom+1
       call wrmoms(withorbmom, natyp, nspinpot, texts, textl, textns, charge, muorb, lmax, lmaxd1)
 
       ! ----------------------------------------------------------------------
@@ -843,7 +844,7 @@ contains
       ! ----------------------------------------------------------------------
       ! write out DOS files
       ! ----------------------------------------------------------------------
-      if (npol==0 .or. test('DOS     ')) then
+      if (npol==0 .or. write_DOS) then
         call wrldos(den,ez,wez,lmaxd1,iemxd,npotd,ititle,efermi,emin,emax,alat,tk,  &
           nacls1,nspinpot,natyp,conc,ielast,intervx,intervy,intervz,dostot)
       end if
@@ -883,7 +884,7 @@ contains
         lopt,eu,edc,chrgsemicore,rhoorb,ecorerel,nkcore,kapcore,krel,natyp,npotd,   &
         irmd,lmpotd,lmaxd1)
 
-      if (test('den-asci')) then
+      if (write_density_ascii) then
         open (67, file='densitydn.ascii', form='formatted')
         do i1 = 1, natyp
           do lm = 1, lmpotd
@@ -940,6 +941,7 @@ contains
     lmmaxd, lmax, rho2n1, rho2n2, rho2ns, r2nef, cdos0, cdos1, cdos2, cdosat0, cdosat1, cdos_lly, den, denlm, qvec)
 
     use :: mod_datatypes, only: dp
+    use :: mod_runoptions, only: use_qdos
     use :: mod_profiling, only: memocc
     use :: mod_cinit, only: cinit
     implicit none
@@ -960,12 +962,11 @@ contains
     complex (kind=dp), dimension (:, :), allocatable, intent(inout) :: cdos_lly
     integer, intent(out) :: nqdos
     integer :: i_stat, i1, iq
-    logical, external :: opt
 
     if (allocmode==1) then
 
       nqdos = 1
-      if (opt('qdos    ')) then
+      if (use_qdos) then
         ! Read BZ path for qdos calculation:
         open (67, file='qvec.dat')
         read (67, *) nqdos
@@ -1014,7 +1015,7 @@ contains
 
     else ! allocmode/=1
 
-      if (opt('qdos    ')) then
+      if (use_qdos) then
         deallocate (qvec, stat=i_stat)
         call memocc(i_stat, -product(shape(qvec))*kind(qvec), 'QVEC', 'main1c')
       end if

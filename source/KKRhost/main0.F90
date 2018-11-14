@@ -67,7 +67,7 @@ module mod_main0
   !integers
   public :: kte, kws, kxc, igf, icc, ins, irm, ipe, ipf, ipfe, kcor, kefg, khyp, kpre, nprinc, nsra, lpot, imix, iend, icst, &
     naez, nemb, lmax, ncls, nref, npol, npnt1, npnt2, npnt3, lmmax, nvirt, lmpot, kvmad, itscf, ncheb, nineq, natyp, ifile, &
-    kvrel, nspin, nleft, nright, invmod, khfeld, itdbry, insref, kshape, ielast, ishift, kfrozn, nsymat, nqcalc, kforce, n1semi, &
+    kvrel, nspin, nleft, nright, invmod, khfeld, itdbry, insref, kshape, ielast, ishift, ivshift, kfrozn, nsymat, nqcalc, kforce, n1semi, &
     n2semi, n3semi, nlayer, nlbasis, nrbasis, intervx, intervy, intervz, maxmesh, npan_eq, npan_log, npolsemi, scfsteps, natomimp, &
     iesemicore, idosemicore
   !real(kind=dp)
@@ -84,7 +84,7 @@ module mod_main0
     inipol, ixipol, refpot, ntcell, iqcalc, iofgij, jofgij, atomimp, ijtabsh, ijtabsym, npan_tot, ijtabcalc, npan_eq_at, npan_log_at, &
     ijtabcalc_i, ish, jsh, ilm_map, kfg, atom, ezoa, lmsp, lcore, icleb, ircut, llmsp, lmsp1, kaoez, ifunm, ifunm1, ititle, icheck, &
     ipan_intervall, jend, kmrot, ncpa, itcpamax, noq, iqat, icpa, hostimp, zrel, jwsrel, irshift, nrrel, ntldau, idoldau, itrunldau, &
-    kreadldau, lopt, itldau, lly, ivshift, irrel
+    kreadldau, lopt, itldau, lly, irrel
   !real
   public :: vbc, zperight, zperleft, recbv, bravais, rsymat, a, b, wg, gsh, zat, rmt, rws, vref, vref_temp, mtfac, rmtnew, rmtref, &
     rmtref_temp, rmtrefat, fpradius, socscale, rmesh, s, rr, drdi, dror, cleb, visp, cscl, rnew, ratom, ecore, tleft, tright, socscl, &
@@ -143,13 +143,13 @@ module mod_main0
   integer :: nspin = 2             !! Counter for spin directions
   integer :: nleft = 1             !! Number of repeated basis for left host to get converged electrostatic potentials
   integer :: nright = 1            !! Number of repeated basis for right host to get converged electrostatic potentials
-  integer :: invmod = 2            !! Inversion scheme, default: Corner band matrix inversion scheme
+  integer :: invmod = -1           !! inversion mode, 0=full inversion, 1= banded matrix, 2= supercell, 3=godfrin; default signals that inversion mode was not set yet
   integer :: khfeld = 0            !! 0,1: no / yes external magnetic field
   integer :: itdbry = 10           !! Number of SCF steps to remember for the Broyden mixing
   integer :: insref = 0            !! INS for reference pot. (usual 0)
   integer :: kshape = 2            !! Exact treatment of WS cell
   integer :: ielast = 0            !! number of energy points in complex energy contour
-  integer :: ishift = 0
+  integer :: ishift = 0            !! Parameter controling the potential shift after mixing
   integer :: kfrozn = 0
   integer :: nsymat = 0
   integer :: nqcalc = 0
@@ -171,6 +171,10 @@ module mod_main0
   integer :: natomimp = 0          !! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
   integer :: iesemicore = 0
   integer :: idosemicore = 0
+  integer :: ivshift = 0           !! for selected potential shift: atom index of potentials to be shifted by VCONST
+  integer :: verbosity = 0         !! verbosity level for timings and output: 0=old default, 1,2,3 = timing and ouput verbosity level the same (low,medium,high)
+  integer :: MPI_scheme = 1        !! scheme for MPI parallelization: 0 = best, 1 = atoms (default), 2 = energies
+  integer :: special_straight_mixing = 0 !!id to specify modified straight mixing scheme: 0=normal, 1=alternating mixing factor (i.e. reduced mixing factor in every odd iteration), 2=charge-neurality based mixing factor (former: 'alt mix' and 'spec mix')
   real (kind=dp) :: tk = 800.0_dp       !! Temperature
   real (kind=dp) :: fcm = 20.0_dp       !! Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
   real (kind=dp) :: e2in = 0.0_dp    
@@ -420,9 +424,6 @@ module mod_main0
   logical :: emeshfile                                    ! susc
   ! SUSC (END:   modifications by Manuel and Benedikt)    ! susc
 
-  ! ruess: IVSHIFT test option
-  integer :: ivshift = 0
-
   ! allocations:
   real (kind=dp), dimension (:, :, :), allocatable :: thetas     !! shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
   real (kind=dp), dimension (:, :, :), allocatable :: thetasnew  !! shape function interpolated to Chebychev radial mesh
@@ -440,7 +441,7 @@ contains
   !> Main wrapper to handle input reading, allocation of arrays, and
   !> preparation of all the necessary data structures for a calculation. 
   ! ----------------------------------------------------------------------------
-  subroutine main0()
+  subroutine main0() 
 
 #ifdef CPP_OMPSTUFF
     use :: omp_lib ! necessary for omp functions
@@ -449,6 +450,10 @@ contains
     use :: mpi
 #endif
     use :: mod_mympi, only: nranks
+    use :: mod_runoptions, only: calc_DOS_Efermi, calc_GF_Efermi, relax_SpinAngle_Dirac, set_empty_system, use_Chebychev_solver, &
+      use_decimation, use_ewald_2d, use_qdos, use_semicore, use_spherical_potential_only, use_virtual_atoms, write_deci_pot, &
+      write_deci_tmat, write_energy_mesh, write_generalized_potential, write_green_host, write_green_imp, write_kkrimp_input, &
+      write_kkrsusc_input, write_pkkr_input, write_pkkr_operators, write_potential_tests, write_rhoq_input, use_ldau
     use :: mod_version, only: version1, version2, version3, version4
     use :: mod_version_info, only: serialnr, construct_serialnr, version_print_header
     use :: mod_md5sums, only: get_md5sums, md5sum_potential, md5sum_shapefun
@@ -522,8 +527,6 @@ contains
 #endif
     ! ..
     ! .. External Functions ..
-    logical :: opt, test
-    external :: opt, test
 
 
 
@@ -553,12 +556,12 @@ contains
     ! -------------------------------------------------------------------------
 
     ! allocate and initialize testc and optc in t_params for run and test options
-    allocate (t_params%optc(32), stat=i_stat) ! CHARACTER*8
-    call memocc(i_stat, product(shape(t_params%optc))*kind(t_params%optc), 't_params%OPTC', 'main0')
-    t_params%optc(1:32) = '        '
-    allocate (t_params%testc(32), stat=i_stat)
-    call memocc(i_stat, product(shape(t_params%testc))*kind(t_params%testc), 't_params%TESTC', 'main0')
-    t_params%testc(1:32) = '        '
+    !allocate (t_params%optc(32), stat=i_stat) ! CHARACTER*8
+    !call memocc(i_stat, product(shape(t_params%optc))*kind(t_params%optc), 't_params%OPTC', 'main0')
+    !t_params%optc(1:32) = '        '
+    !allocate (t_params%testc(32), stat=i_stat)
+    !call memocc(i_stat, product(shape(t_params%testc))*kind(t_params%testc), 't_params%TESTC', 'main0')
+    !t_params%testc(1:32) = '        '
 
     ! -------------------------------------------------------------------------
     ! Reading of the inputcard, and allocation of several arrays
@@ -577,7 +580,8 @@ contains
       kfg,vbc,zperleft,zperight,bravais,rmt,zat,rws,mtfac,rmtref,rmtnew,rmtrefat,   &
       fpradius,tleft,tright,rbasis,socscale,cscl,socscl,solver,i12,i13,i19,i25,i40, &
       txc,drotq,ncpa,itcpamax,cpatol,noq,iqat,icpa,kaoez,conc,kmrot,qmtet,qmphi,    &
-      kreadldau,lopt,ueff,jeff,erefldau)
+      kreadldau,lopt,ueff,jeff,erefldau,invmod,verbosity,MPI_scheme,                &
+      special_straight_mixing)
 
     ! Some consistency checks
     if ((krel<0) .or. (krel>1)) stop ' set KREL=0/1 (non/fully) relativistic mode in the inputcard'
@@ -683,7 +687,7 @@ contains
     ! After SCALEVEC all basis positions are in cartesian coords.
 
     nvirt = 0
-    if (opt('VIRATOMS')) then
+    if (use_virtual_atoms) then
       write (1337, *) 'Calling ADDVIRATOMS'
       call addviratoms14(linterface,nvirt,naez,naez,natyp,nemb,nemb,rbasis,.true.,  &
         bravais,ncls,nineq,refpot,kaoez,noq,nref,rmtrefat,i25)
@@ -771,7 +775,7 @@ contains
     if (kvrel>=2) nsra = 3
 
     call testdim(nspin,naez,nemb,natyp,ins,insref,nref,irns,nlayer,krel,nspind,     &
-      nprincd,knosph,irnsd,korbit)
+      nprincd,knosph,irnsd,korbit,invmod)
 
     if (ins>0) open (19, file=i19, status='old', form='formatted')
     if (ifile==13) open (ifile, file=i13, status='old', form='formatted')
@@ -790,19 +794,19 @@ contains
       write (1337, '(A,A)') 'Doing calculation with shapefun: ', md5sum_shapefun
     end if
 
-    if (test('rhoqtest')) then
+    if (write_rhoq_input) then
       call rhoq_save_rmesh(natyp,irm,ipand,irmin,irws,ipan,rmesh,ntcell,ircut,r_log,&
         npan_log,npan_eq)
 
       ! check consistency
-      if (opt('GREENIMP') .or. opt('WRTGREEN')) then
+      if (write_green_imp .or. write_green_host) then
         write (*, *) 'warning! rhoqtest cannot be used together with '
         write (*, *) '''GREENIMP'' or ''WRTGREEN'' options'
         stop
       end if
 
       ! ! enforce MPIatom here
-      ! if (TEST('MPIenerg')) stop 'rhoqtest assumes MPIatom'
+      ! if (MPI_scheme!=1) stop 'rhoqtest assumes MPIatom'
       ! CALL ADDTEST('MPIatom')
 
       if (nranks>1) then
@@ -811,14 +815,14 @@ contains
         stop
       end if
 
-    end if                         ! TEST('rhoqtest')
+    end if                         ! write_rhoq_input
 
-    if (test('Vspher  ')) then
+    if (use_spherical_potential_only) then
       write (1337, *) 'TEST OPTION Vspher,', 'keeping only spherical component of potential.'
       vins(irmind:irmd, 2:lmpot, 1:nspotd) = 0.d0
     end if
 
-    if (opt('zeropot ') .or. test('zeropot ')) then
+    if (set_empty_system) then
       write (1337, *) 'Using OPT zeropot, setting potential to zero.'
       write (1337, *) 'Using OPT zeropot, setting nuclear charge to zero.'
       vins(irmind:irmd, 1:lmpot, 1:nspotd) = 0.d0
@@ -836,9 +840,9 @@ contains
     ! update Fermi energy, adjust energy window according to running options
     ! -------------------------------------------------------------------------
     if (npol==0) efermi = e2in
-    if (opt('GF-EF   ') .or. opt('DOS-EF  ')) then
+    if (calc_GF_Efermi .or. calc_DOS_Efermi) then
       emin = e2in
-      if (opt('GF-EF   ')) then
+      if (calc_GF_Efermi) then
         write (1337, fmt=130)
       else
         write (1337, fmt=140)
@@ -847,7 +851,7 @@ contains
 
     if (abs(e2in-emax)>1d-10 .and. npol/=0) emax = e2in
     ! -------------------------------------------------------------------------
-    if (opt('GENPOT  ')) then
+    if (write_generalized_potential) then
       rewind (3)
       call generalpot(3,1,natyp,nspin,zat,alat,rmt,rmtnew,rws,rmesh,drdi,visp,irws, &
         a,b,ins,irns,lpot,vins,qbound,irc,kshape,e2in,vbc,ecore,lcore,ncore,lmpot,  &
@@ -864,7 +868,7 @@ contains
         irmind,lmxspd,kshape,irc,irmin,inipol,ntcell,imaxsh,ilm_map,lmsp,ifunm,     &
         ircut,hfield,gsh,rmesh,thesme,thetas,visp,vins)
     end if
-    if (test('vpotout ')) then     ! ruess
+    if (write_potential_tests) then     ! ruess
       open (unit=54633163, file='test_vpotout_bshift')
       do i1 = 1, natyp*nspin
         write (54633163, *) '# visp of atom ', i1
@@ -881,7 +885,7 @@ contains
     ! -------------------------------------------------------------------------
     para = .true.
     !if (krel+korbit==1) then
-    if (krel==1 .or. opt('NEWSOSOL')) then
+    if (krel==1 .or. use_Chebychev_solver) then
       ! ----------------------------------------------------------------------
       if (nspin==1) then
         ! -------------------------------------------------------------------
@@ -941,7 +945,7 @@ contains
     ! set up energy contour
     !--------------------------------------------------------------------------------
     idosemicore = 0
-    if (opt('SEMICORE')) idosemicore = 1
+    if (use_semicore) idosemicore = 1
 
     call epathtb(ez,dez,e2in,ielast,iesemicore,idosemicore,emin,emax,tk,npol,npnt1, &
       npnt2,npnt3,ebotsemi,emusemi,tksemi,npolsemi,n1semi,n2semi,n3semi,iemxd)
@@ -950,7 +954,7 @@ contains
     ! SUSC (BEGIN: modifications by Manuel and Benedikt)                              
     !--------------------------------------------------------------------------------
     !                                                                                 ! susc
-    if (opt('EMESH   ')) then                                                         ! susc
+    if (write_energy_mesh) then                                                         ! susc
       ! write out the energy mesh and the corresponding                               ! susc
       ! weights to a file called 'emesh.scf'                                          ! susc
       write (*, '("main0: Runflag emesh is set.")')                                   ! susc
@@ -966,7 +970,7 @@ contains
     end if                                                                            ! susc
     !                                                                                 ! susc
     !                                                                                 ! susc
-    if (opt('KKRSUSC ')) then                                                         ! susc
+    if (write_kkrsusc_input) then                                                         ! susc
       ! read in 'emesh.dat' with new energy mesh-points                               ! susc
       inquire (file='emesh.dat', exist=emeshfile)                                     ! susc
       write (*, '("main0: Runflag KKRSUSC is set.")')                                 ! susc
@@ -993,7 +997,7 @@ contains
     ! still missing: check here whether scfsteps is > 1                               ! susc
     ! if scfsteps>1 --> option a) stop program here                                   ! susc
     ! option b) set it to 1 and continue                                              ! susc
-    if (opt('KKRSUSC ') .and. scfsteps>1) then                                        ! susc
+    if (write_kkrsusc_input .and. scfsteps>1) then                                        ! susc
       write (*, '("main0: Runflag KKRSUSC is set ")')                                 ! susc
       write (*, '("but scfsteps = ",i0)') scfsteps                                    ! susc
       write (*, '("       Here we enforce scfsteps = 1")')                            ! susc
@@ -1012,7 +1016,7 @@ contains
     ! -------------------------------------------------------------------------
     ! update energy contour for Fermi-surface generation                       ! fswrt=fermi-surface write
     ! -------------------------------------------------------------------------
-    if (opt('FERMIOUT')) then      ! fswrt
+    if (write_pkkr_input) then      ! fswrt
       if (aimag(ez(1))>0d0) stop 'E has imaginary part' ! fswrt
       ielast = 3                   ! fswrt
       ez(2) = ez(1) + cmplx(1.0d-03, 0.0d0, kind=dp) ! fswrt
@@ -1038,7 +1042,7 @@ contains
     ! calculate Madelung constants (needed only for SCF calculations)
     ! -------------------------------------------------------------------------
     ! fivos      IF ( SCFSTEPS.GT.1 .OR. ICC.GT.0 ) THEN
-    if (npol/=0 .or. opt('DECIMATE')) then ! No madelung calculation in case of DOS., needed for demination nevertheless
+    if (npol/=0 .or. use_decimation) then ! No madelung calculation in case of DOS., needed for demination nevertheless
       ! OPEN(99,FILE='madelinfo.txt')
 
       !> @note Use option 'ewald2d' if the madelung summation is to be carried out in
@@ -1047,7 +1051,7 @@ contains
       !> Reason: the 2d-mode gives wrong results sometimes [e.g. in diamond
       !> structure (110)].
       !> @endnote
-      if (linterface .and. (opt('ewald2d ') .or. opt('DECIMATE'))) then ! ewald2d
+      if (linterface .and. (use_ewald_2d .or. use_decimation)) then ! ewald2d
         write (*, *) 'Calling MADELUNG2D'
         ! -------------------------------------------------------------------
         ! 2D case
@@ -1111,7 +1115,7 @@ contains
 
     ! -------------------------------------------------------------------------
 
-    if (opt('KKRFLEX ')) then
+    if (write_kkrimp_input) then
 
       call writehoststructure(bravais, natyp, rbasis, naez, nemb)
 
@@ -1141,7 +1145,7 @@ contains
     ! -------------------------------------------------------------------------
     ! fivos: write out nshell and nsh1,nsh2 into standard output and in file shells.dat
     ! -------------------------------------------------------------------------
-    if (icc/=0 .and. .not. opt('KKRFLEX ')) then
+    if (icc/=0 .and. .not. write_kkrimp_input) then
       open (58, file='shells.dat')
       write (1337, *) 'Writing out shells (also in shells.dat):'                 ! fivos
       write (1337, *) 'itype,jtype,iat,jat,r(iat),r(jat)'                        ! fivos
@@ -1172,7 +1176,7 @@ contains
     ! end fivos
     ! -------------------------------------------------------------------------
 
-    call gfmask(linterface,icheck,icc,invmod,nsh1,nsh2,naez,nshell(0),naez,nprincd)
+    call gfmask(icheck,icc,invmod,nsh1,nsh2,naez,nshell(0),naez,nprincd)
     ! -------------------------------------------------------------------------
     ! set up transformation matrices between REL/NREL representations
     ! -------------------------------------------------------------------------
@@ -1211,18 +1215,18 @@ contains
     ! -------------------------------------------------------------------------
     ! Treat decimation I/O cases
     ! -------------------------------------------------------------------------
-    if (opt('deci-pot')) then
+    if (write_deci_pot) then
       call outpothost(alat,ins,krel+korbit,kmrot,nspin,naez,natyp,e2in,bravais,     &
         rbasis,qmtet,qmphi,noq,kaoez,iqat,zat,conc,ipan,ircut,solver,socscl,cscl,   &
         irws,rmtnew,rws,rmesh,drdi,visp,irshift,rmrel,drdirel,vtrel,btrel,lmax,     &
         natyp,naez,ipand,irmd)
     end if
-    if (opt('deci-out')) then
+    if (write_deci_tmat) then
       if (nranks>1) stop 'ERROR: deci-out does not work with MPI!'
       call outtmathost(alat,ins,krel+korbit,kmrot,nspin,naez,lmmax,bravais,rbasis,  &
         qmtet,qmphi,e2in,tk,npol,npnt1,npnt2,npnt3)
     end if
-    if (opt('DECIMATE')) then
+    if (use_decimation) then
       call deciopt(alat,ins,krel+korbit,kvrel,kmrot,nspin,naez,lmmax,bravais,tk,    &
         npol,npnt1,npnt2,npnt3,ez,ielast,kaoez,lefttinvll,righttinvll,vacflag,      &
         nlbasis,nrbasis,cmomhost,vref,rmtref,nref,refpot(naez),lmax,lmgf0d,lmmaxd,  &
@@ -1233,7 +1237,7 @@ contains
     ! -------------------------------------------------------------------------
     ! ITERMDIR  -- initialise
     ! -------------------------------------------------------------------------
-    if (opt('ITERMDIR')) then
+    if (relax_SpinAngle_Dirac) then
       write (1337, *)
       write (1337, *) 'Angle mixing scheme will be applied '
       write (1337, *)
@@ -1253,7 +1257,7 @@ contains
     ! LDA+U -- initialise
     ! -------------------------------------------------------------------------
 
-    if (opt('LDA+U   ')) then
+    if (use_ldau) then
       call startldau(itrunldau,idoldau,kreadldau,lopt,ueff,jeff,erefldau,natyp,     &
         nspin,wldau,uldau,phildau,irws,ntldau,itldau,irmd,natyp,nspind,mmaxd)
     end if
@@ -1266,7 +1270,7 @@ contains
     ! -------------------------------------------------------------------------
 
     ! new solver for full-potential, spin-orbit, initialise
-    if (opt('NEWSOSOL')) then
+    if (use_Chebychev_solver) then
       call create_newmesh(natyp,irmd,ipand,irid,ntotd,nfund,ncheb,ntotd*(ncheb+1),  &
         nspin,rmesh,irmin,ipan,ircut,r_log,npan_log,npan_eq,npan_log_at,npan_eq_at, &
         npan_tot,rnew,rpan_intervall,ipan_intervall,ncelld,ntcell,thetas,thetasnew)
@@ -1281,15 +1285,16 @@ contains
       mixing, qbound, fcm, itdbry, irns, kpre, kshape, kte, kvmad, kxc, lambda_xc, txc, ishift, ixipol, lrhosym, kforce, lmsp, llmsp, rmt, rmtnew, rws, imt, irc, irmin, irws, nfu, &
       hostimp, gsh, ilm_map, imaxsh, idoldau, itrunldau, ntldau, lopt, itldau, ueff, jeff, erefldau, uldau, wldau, phildau, iemxd, irmind, irmd, nspotd, npotd, nembd1, lmmaxd, &
       ipand, nembd2, lmax, ncleb, naclsd, nclsd, lm2d, lmax+1, mmaxd, nrd, nsheld, nsymaxd, naez/nprincd, natomimpd, nspind, irid, nfund, ncelld, lmxspd, ngshd, krel, ntotd, ncheb, &
-      npan_log, npan_eq, npan_log_at, npan_eq_at, r_log, npan_tot, rnew, rpan_intervall, ipan_intervall, nspindd, thetasnew, socscale, tolrdif, lly, deltae, rclsimp)
+      npan_log, npan_eq, npan_log_at, npan_eq_at, r_log, npan_tot, rnew, rpan_intervall, ipan_intervall, nspindd, thetasnew, socscale, tolrdif, lly, deltae, rclsimp, verbosity, MPI_scheme, &
+      special_straight_mixing )
 
-    if (opt('FERMIOUT')) then                                                           ! fswrt
+    if (write_pkkr_input) then                                                          ! fswrt
       call write_tbkkr_files(lmax, nemb, ncls, natyp, naez, ielast, ins, alat, &        ! fswrt
         bravais, recbv, rbasis, cls, nacls, rcls, ezoa, atom, rr, nspin, nrd, korbit, & ! fswrt
         nclsd, naclsd)                                                                  ! fswrt
     end if                                                                              ! fswrt
 
-    if (opt('OPERATOR')) then
+    if (write_pkkr_operators) then
       ! check if impurity files are present (otherwise no imp.
       ! wavefunctions can be calculated)
       operator_imp = .true.
@@ -1303,7 +1308,7 @@ contains
       operator_imp = .false.
     end if
 
-    if (opt('GREENIMP') .or. operator_imp) then                                       ! GREENIMP
+    if (write_green_imp .or. operator_imp) then                                       ! GREENIMP
       ! fill array dimensions and allocate arrays in t_imp                            ! GREENIMP
       call init_params_t_imp(t_imp,ipand,natyp,irmd,irid,nfund,nspin,irmind,lmpot)    ! GREENIMP
       call init_t_imp(t_inc, t_imp)                                                   ! GREENIMP
@@ -1324,7 +1329,7 @@ contains
     end if                                                                            ! fxf
 
     ! Check for inputcard consistency in case of qdos option
-    if (opt('qdos    ')) then
+    if (use_qdos) then
       write (1337, *)
       write (1337, *) '     < QDOS > : consistency check '
       if ((npol/=0) .and. (npnt1==0) .and. (npnt3==0)) then

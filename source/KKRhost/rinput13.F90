@@ -6,7 +6,7 @@
 
 !------------------------------------------------------------------------------------
 !> Summary: Routine to read the information from the input file
-!> Author: Bernd Zimmermann
+!> Author: Phivos Mavropoulos
 !> Routine to read the information from the input file
 !------------------------------------------------------------------------------------
 !> @note VP: there should be some crosscheck of competing options e.g., `XCPL` and 
@@ -37,9 +37,14 @@ contains
     tksemi, tolrdif, emusemi, ebotsemi, fsemicore, lambda_xc, deltae, lrhosym, linipol, lcartesian, imt, cls, lmxc, irns, irws, ntcell, refpot, &
     inipol, ixipol, hostimp, kfg, vbc, zperleft, zperight, bravais, rmt, zat, rws, mtfac, rmtref, rmtnew, rmtrefat, fpradius, tleft, tright, &
     rbasis, socscale, cscl, socscl, solver, i12, i13, i19, i25, i40, txc, drotq, ncpa, itcpamax, cpatol, noq, iqat, icpa, kaoez, conc, kmrot, &
-    qmtet, qmphi, kreadldau, lopt, ueff, jeff, erefldau)
+    qmtet, qmphi, kreadldau, lopt, ueff, jeff, erefldau, invmod, verbosity, MPI_scheme, special_straight_mixing)
 
     use :: mod_profiling, only: memocc
+    use :: mod_runoptions, only: read_runoptions, calc_DOS_Efermi, calc_GF_Efermi, calc_exchange_couplings, &
+      dirac_scale_SpeefOfLight, disable_charge_neutrality, modify_soc_Dirac, relax_SpinAngle_Dirac, search_Efermi, &
+    set_kmesh_large, stop_1b, stop_1c, use_BdG, use_Chebychev_solver, use_cond_LB, use_decimation, use_lloyd, use_qdos, &
+    use_rigid_Efermi, use_semicore, use_virtual_atoms, write_DOS, write_green_host, write_green_imp, write_kkrimp_input, &
+    write_pkkr_input, write_pkkr_operators, use_ldau, set_cheby_nospeedup, set_cheby_nosoc, write_tb_coupling
     use :: mod_constants, only: czero, cvlight
     use :: mod_wunfiles, only: t_params
     use :: memoryhandling, only: allocate_semi_inf_host, allocate_magnetization, allocate_cell, allocate_cpa, allocate_soc, allocate_ldau
@@ -96,7 +101,7 @@ contains
     integer, intent (inout) :: npnt2 !! number of E points (EMESHT) for the contour integration
     integer, intent (inout) :: npnt3 !! number of E points (EMESHT) for the contour integration
     integer, intent (inout) :: kfrozn
-    integer, intent (inout) :: ishift
+    integer, intent (inout) :: ishift !! Parameter controling the potential shift after mixing
     integer, intent (inout) :: n1semi !! Number of energy points for the semicore contour
     integer, intent (inout) :: n2semi !! Number of energy points for the semicore contour
     integer, intent (inout) :: n3semi !! Number of energy points for the semicore contour
@@ -106,7 +111,7 @@ contains
     integer, intent (inout) :: itdbry !! Number of SCF steps to remember for the Broyden mixing
     integer, intent (inout) :: nright !! Number of repeated basis for right host to get converged  electrostatic potentials
     integer, intent (inout) :: kforce !! Calculation of the forces
-    integer, intent (inout) :: ivshift
+    integer, intent (inout) :: ivshift !! for selected potential shift: atom index of potentials to be shifted by VCONST
     integer, intent (inout) :: khfield !! 0,1: no / yes external magnetic field
     integer, intent (inout) :: nlbasis !! Number of basis layers of left host (repeated units)
     integer, intent (inout) :: nrbasis !! Number of basis layers of right host (repeated units)
@@ -116,6 +121,10 @@ contains
     integer, intent (inout) :: npan_eq !! Number of intervals from [R_LOG] to muffin-tin radius Used in conjunction with runopt NEWSOSOL
     integer, intent (inout) :: npan_log !! Number of intervals from nucleus to [R_LOG] Used in conjunction with runopt NEWSOSOL
     integer, intent (inout) :: npolsemi !! Number of poles for the semicore contour
+    integer, intent (inout) :: invmod   !! inversion mode, 0=full inversion, 1= banded matrix, 2= supercell, 3=godfrin
+    integer, intent (inout) :: verbosity  !! verbosity level for timings and output: 0=old default, 1,2,3 = timing and ouput verbosity level the same (low,medium,high)
+    integer, intent (inout) :: MPI_scheme !! scheme for MPI parallelization: 0 = best, 1 = atoms (default), 2 = energies 
+    integer, intent (inout) :: special_straight_mixing !! id to specify modified straight mixing scheme: 0=normal, 1=alternating mixing factor (i.e. reduced mixing factor in every odd iteration), 2=charge-neurality based mixing factor (former: 'alt mix' and 'spec mix')
     real (kind=dp), intent (inout) :: tk !! Temperature
     real (kind=dp), intent (inout) :: fcm !! Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
     real (kind=dp), intent (inout) :: emin !! Lower value (in Ryd) for the energy contour
@@ -230,10 +239,7 @@ contains
     ! Local variables
     ! ----------------------------------------------------------------------------
     ! for OPERATOR option
-    logical :: lexist, operator_imp
-    ! IVSHIFT test option
-    logical :: test, opt
-    external :: test, opt
+    logical :: lexist, operator_imp, oldstyle
     ! ..
     ! .. Local Scalars ..
     real (kind=dp), parameter :: eps = 10d-13
@@ -295,31 +301,20 @@ contains
 
     nemb = 0
 
+
     !--------------------------------------------------------------------------------
-    ! Read RUNNING options
+    ! Read in runoptions
     !--------------------------------------------------------------------------------
-    call ioinput('RUNOPT          ', uio, 1, 7, ier)
-    if (ier/=0) then
-      write (111, *) 'RUNOPT not found'
-    else
-      read (unit=uio, fmt=130)(t_params%optc(i), i=1, 8)
-      write (111, fmt='(A6)') 'RUNOPT'
-      write (111, fmt=130)(t_params%optc(i), i=1, 8)
+    write (1337, 310) 
+    write (1337, '(A)' ) '*** Inspecting run- and test-options ***'
+
+    call read_old_runtestoptions(invmod,verbosity,MPI_scheme,oldstyle)
+    if(.not.oldstyle) then
+        write (1337, *) '  <<< Reading in new style of run-options. >>>'
+        call read_runoptions()
     end if
-    !--------------------------------------------------------------------------------
-    ! Read TEST options
-    !--------------------------------------------------------------------------------
-    call ioinput('TESTOPT         ', uio, 1, 7, ier)
-    if (ier/=0) then
-      write (111, *) 'TESTOPT not found'
-    else
-      read (unit=uio, fmt=130)(t_params%testc(i), i=1, 8)
-      call ioinput('TESTOPT         ', uio, 2, 7, ier)
-      read (unit=uio, fmt=130)(t_params%testc(8+i), i=1, 8)
-      write (111, fmt='(A7)') 'TESTOPT'
-      write (111, fmt=130)(t_params%testc(i), i=1, 8)
-      write (111, fmt=130)(t_params%testc(8+i), i=1, 8)
-    end if
+
+
 
     !--------------------------------------------------------------------------------
     ! Begin lattice structure definition
@@ -344,19 +339,44 @@ contains
       write (111, *) 'Default INTERFACE= ', linterface
     end if
 
-    ndim = 3
-    if (linterface) ndim = 2
-    if (.not. linterface .and. .not. opt('SUPRCELL')) then
-      write (1337, *) '3D-calculation, adding run-option "full inv" for full inversion.'
-      call addopt('full inv')
+    call ioinput('<INVMODE>       ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) invmod
+      write (111, *) '<INVMODE>=', invmod
+    else if(invmod==-1) then!invmod was not forced by old runoptions
+      if (linterface) then
+        invmod = 1
+      else
+        invmod = 0
+      end if!linterface
+      write (111, *) 'Default <INVMODE>= ', invmod
+    end if    
+
+    call ioinput('<VERBOSITY>     ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) verbosity
+      write (111, *) '<VERBOSITY>=', verbosity
+    else
+      write (111, *) 'Default <VERBOSITY>= ', verbosity
     end if
 
-    if (opt('WRTGREEN')) then
+    call ioinput('<MPI_SCHEME>    ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) MPI_scheme
+      write (111, *) '<MPI_SCHEME>=', MPI_scheme
+    else
+      write (111, *) 'Default <MPI_SCHEME>= ', MPI_scheme
+    end if   
+
+    ndim = 3
+    if (linterface) ndim = 2
+
+    if (write_green_host) then
       write (1337, *) 'WRTGREEN option found'
-      write (1337, *) 'adding run-opt "full inv" for full inversion.'
-      write (1337, *) 'adding run-opt "fix mesh"'
-      call addopt('full inv')
-      call addopt('fix mesh')
+      write (1337, *) 'setting <INVMODE>=0 for full inversion.'
+      write (1337, *) 'adding run-opt <set_kmesh_large>'
+      invmod = 0
+      set_kmesh_large = .true.
     end if
 
     write (111, *) 'Bravais vectors in units of ALAT'
@@ -654,7 +674,7 @@ contains
       call ioinput('ZPERIODR        ', uio, 1, 7, ier)
       if (ier/=0) then
         write (*, *) 'rimput13: ZPERIODR not found in inputcard'
-        stop 'rimput13: ZPERIODR not found in inputcard'
+        stop 'rinput13: ZPERIODR not found in inputcard'
       else
         read (unit=uio, fmt=*)(zperight(i1), i1=1, 3)
         write (111, fmt='(A9,3E20.12)') 'ZPERIODR=', (zperight(i1), i1=1, 3)
@@ -826,11 +846,11 @@ contains
     t_inc%kvrel = kvrel
 
 
-    if (opt('NEWSOSOL')) korbit = 1
+    if (use_Chebychev_solver) korbit = 1
 
-    if (test('NOSOC   ')) then
-      write (*, '(A)') 'Warning: detected test option "NOSOC   ": use spin-decoupled radial equations with new solver'
-      write (1337, *) 'Warning: detected test option "NOSOC   ": reset KORBIT to zero but use NEWSOSOL for spin-decoupled matrices with explicit spin-loop'
+    if (set_cheby_nosoc) then
+      write (*, '(A)') 'Warning: detected test option <set_cheby_nosoc>: use spin-decoupled radial equations with new solver'
+      write (1337, *)  'Warning: detected test option <set_cheby_nosoc>: reset KORBIT to zero but use NEWSOSOL for spin-decoupled matrices with explicit spin-loop'
       korbit = 0
     end if
 
@@ -853,8 +873,8 @@ contains
     else
       write (111, *) 'Default KBdG= ', kBdG
     end if
-    if (kBdG/=0 .and. .not. opt('useBdG  ')) call addopt('useBdG  ')
-    if (opt('useBdG  ') .and. kBdG/=1) kBdG = 1
+    if (kBdG/=0) use_BdG = .true.
+    if (use_BdG) kBdG = 1
 
 
     ! ----------------------------------------------------------------------------
@@ -1072,8 +1092,8 @@ contains
     !--------------------------------------------------------------------------------
     ! End of allocation of SOC arrays
     !--------------------------------------------------------------------------------
-    if (opt('NEWSOSOL')) then      ! Spin-orbit
-      if (opt('NEWSOSOL') .and. (nspin/=2)) stop ' set NSPIN = 2 for SOC solver in inputcard'
+    if (use_Chebychev_solver) then      ! Spin-orbit
+      if (use_Chebychev_solver .and. (nspin/=2)) stop ' set NSPIN = 2 for SOC solver in inputcard'
       npan_log = 30
       npan_eq = 30
       ncheb = 10
@@ -1206,7 +1226,7 @@ contains
     ! End of LDA+U array allocation
     !--------------------------------------------------------------------------------
 
-    if (opt('LDA+U   ')) then
+    if (use_ldau) then
 
       ! Check for LDA+U consistency -- if INS=0 suppress it
       if ((ins==0)) then
@@ -1214,9 +1234,7 @@ contains
         write (1337, *) ' WARNING: LDA+U should be used only in NON-SPHERICAL', ' case (INS=1) '
         write (1337, *) ' Running option LDA+U will be ignored'
         write (1337, *)
-        do i = 1, 32
-          if (t_params%optc(i)(1:8)=='LDA+U   ') t_params%optc(i) = '        '
-        end do
+        use_ldau = .false.
       end if
 
       ! -> get number of atoms for lda+u:
@@ -1284,10 +1302,12 @@ contains
     end if
 
 
-    if (test('atptshft')) then
-      write (1337, *) 'read IN IVSHIFT'
-      call ioinput('IVSHIFT         ', uio, 1, 7, ier)
+    call ioinput('IVSHIFT         ', uio, 1, 7, ier)
+    if (ier==0) then
       read (unit=uio, fmt=*) ivshift
+      write (111, *) 'IVSHIFT= ', ivshift
+    else
+      write (111, *) 'Default IVSHIFT= ', ivshift
     end if
 
     ! Initial polarization
@@ -1338,7 +1358,7 @@ contains
       write (111, *) 'Default IGREENFUN= ', igf
     end if
 
-    if (opt('OPERATOR')) then
+    if (write_pkkr_operators) then
       ! check if impurity files are present (otherwise no imp.
       ! wavefunctions can be calculated)
       operator_imp = .true.
@@ -1351,7 +1371,7 @@ contains
     else
       operator_imp = .false.
     end if
-    if (opt('KKRFLEX ') .or. opt('WRTGREEN') .or. opt('GREENIMP') .or. operator_imp) then
+    if (write_kkrimp_input .or. write_green_host .or. write_green_imp .or. operator_imp) then
       write (1337, *) 'Setting IGREENFUN=1 for KKRFLEX/WRTGREEN/GREENIMP/OPERATOR options'
       igf = 1
     end if
@@ -1364,11 +1384,11 @@ contains
     else
       write (111, *) 'Default ICC= ', icc
     end if
-    if (opt('KKRFLEX ') .or. opt('WRTGREEN') .or. opt('GREENIMP') .or. operator_imp) then
+    if (write_kkrimp_input .or. write_green_host .or. write_green_imp .or. operator_imp) then
       write (1337, *) 'Setting ICC=1 for KKRFLEX/WRTGREEN/GREENIMP/OPERATOR  options'
       icc = 1
     end if
-    if ((opt('XCPL    ')) .or. (opt('CONDUCT '))) icc = -1
+    if ((calc_exchange_couplings) .or. (use_cond_LB)) icc = -1
 
     if (icc/=0 .and. igf==0) igf = 1
     if (icc==0 .and. igf/=0) icc = -1
@@ -1400,7 +1420,7 @@ contains
     write (1337, 190) intervx, intervy, intervz
     write (1337, 330)
 
-    if (opt('GREENIMP')) then
+    if (write_green_imp) then
       write (*, *) 'WARNING! Found option GREENIMP: resetting BZDIVIDE to 1,1,1'
       write (1337, *) 'WARNING! Found option GREENIMP: resetting BZDIVIDE to 1,1,1'
       intervx = 1
@@ -1410,7 +1430,7 @@ contains
 
     ! Energy contour
     npol = 7
-    ! if (OPT('dos     ').OR.OPT('DOS     ')) NPOL = 0
+    ! if (write_DOS) NPOL = 0
     call ioinput('NPOL            ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) npol
@@ -1492,7 +1512,7 @@ contains
     fsemicore = 1.d0
 
     ier = 0
-    if (opt('SEMICORE')) then
+    if (use_semicore) then
       call ioinput('EBOTSEMI        ', uio, 1, 7, ier)
       if (ier/=0) go to 100
       read (unit=uio, fmt=*) ebotsemi
@@ -1525,14 +1545,14 @@ contains
 100   continue
       if (idosemicore==0) then
         write (1337, *)
-        write (1337, *) ' WARNING: SEMICORE used', ' with incomplete/incorrect contour description'
-        write (1337, *) ' Running option SEMICORE will be ignored'
+        write (1337, *) ' WARNING: <use_semicore>', ' with incomplete/incorrect contour description'
+        write (1337, *) ' Running option <use_semicore> will be ignored'
         write (111, *)
-        write (111, *) ' WARNING: SEMICORE used', ' with incomplete/incorrect contour description'
-        write (111, *) ' Running option SEMICORE will be ignored'
-        do i = 1, 32
-          if (t_params%optc(i)(1:8)=='SEMICORE') t_params%optc(i) = '        '
-        end do
+        write (111, *) ' WARNING: <use_semicore> used', ' with incomplete/incorrect contour description'
+        write (111, *) ' Running option <use_semicore> will be ignored'
+
+        use_semicore = .false.
+
       end if
     end if
 
@@ -1614,7 +1634,7 @@ contains
     ! Usage of Lloyd's formula
     lly = 0                        ! LLY Default=0 : do not apply Lloyds
     ! formula
-    if (opt('LLOYD   ') .or. opt('Lloyd   ') .or. opt('lloyd   ')) lly = 1
+    if (use_lloyd) lly = 1
     call ioinput('<LLOYD>         ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) lly
@@ -1636,7 +1656,7 @@ contains
 
     ! reset LLY to zero if certain options are found
     ! note: WRTGREEN depends on choice of LLY or not!
-    if (opt('FERMIOUT') .or. opt('GREENIMP')) then
+    if (write_pkkr_input .or. write_green_imp) then
       write (1337, *) 'found option FERMIOUT/GREENIMP: resetting LLY to 0'
       lly = 0
     end if
@@ -1764,11 +1784,11 @@ contains
       nsteps = 1
       write (1337, *) 'ICC.NE.0, setting NSTEPS to 1'
     end if
-    if (opt('XCPL    ')) then
+    if (calc_exchange_couplings) then
       nsteps = 1
       write (1337, *) 'RUNOPT XCPL used, setting NSTEPS to 1'
     end if
-    if (opt('KKRFLEX ')) then
+    if (write_kkrimp_input) then
       nsteps = 1
       write (1337, *) 'RUNOPT KKRFLEX used, setting NSTEPS to 1'
     end if
@@ -1783,6 +1803,15 @@ contains
       write (111, *) 'IMIX= ', imix
     else
       write (111, *) 'Default IMIX= ', imix
+    end if
+    if (imix==0) then
+      call ioinput('<SPECIAL_STRAIGHT_MIXING>', uio, 1, 7, ier)
+      if (ier==0) then
+        read (unit=uio, fmt=*) special_straight_mixing
+        write (111, *) '<SPECIAL_STRAIGHT_MIXING>= ', special_straight_mixing
+      else
+        write (111, *) 'Default <SPECIAL_STRAIGHT_MIXING>= ', special_straight_mixing
+      end if
     end if
     if (npol==0) then
       write (1337, *) 'NPOL=0, setting IMIX= 0'
@@ -1903,12 +1932,12 @@ contains
     else
       write (111, *) 'Default ISHIFT= ', ishift
     end if
-    if (opt('rigid-ef') .or. opt('DECIMATE')) then
+    if (use_rigid_Efermi .or. use_decimation) then
       ishift = 2
       write (1337, *) ' Rigid Fermi Energy, ISHIFT is set to ', ishift
-      write (111, *) ' Rigid Fermi Energy, ishift is set to ', ishift
+      write (111, *) ' Rigid Fermi Energy, ISHIFT is set to ', ishift
     end if
-    if (test('no-neutr') .or. opt('no-neutr')) then
+    if (disable_charge_neutrality) then
       ishift = 1
       write (1337, *) 'No charge neutrality required, ISHIFT is set to', ishift
       write (111, *) 'No charge neutrality required, ISHIFT is set to', ishift
@@ -1954,7 +1983,7 @@ contains
     !--------------------------------------------------------------------------------
     ! Determination of properties at Fermi level
     !--------------------------------------------------------------------------------
-    if (opt('GF-EF   ')) then
+    if (calc_GF_Efermi) then
       igf = 1
       if (npol>0) npol = 0
       if (npol<0) then
@@ -1964,7 +1993,7 @@ contains
       npnt2 = 1
     end if
 
-    if (opt('DOS-EF  ')) then
+    if (calc_DOS_Efermi) then
       npol = 0
       npnt2 = 1
     end if
@@ -2016,7 +2045,7 @@ contains
     ipf = 1337
     ipfe = ipf + 3
 
-    if (opt('SEARCHEF')) then
+    if (search_Efermi) then
       imix = 0
       mixing = 0.0d0
       strmix = mixing
@@ -2149,7 +2178,7 @@ contains
     write (1337, 280)((rbasis(j,i),j=1,3), i, refpot(i), i=naez+1, naez+nemb)
 
     ! ------------------------------------------------------------------------
-    if (.not. opt('VIRATOMS')) then
+    if (.not. use_virtual_atoms) then
       do i = 1, naez
         do io = 1, noq(i)
           if (kaoez(io,i)<1) stop 'Error in KAOEZ'
@@ -2162,7 +2191,7 @@ contains
     !--------------------------------------------------------------------------------
     ! Check for DECIMATE consistency
     !--------------------------------------------------------------------------------
-    if (opt('DECIMATE')) then
+    if (use_decimation) then
       if (mod(nprincd,nlbasis)/=0) then
         write (6, *) ' Decimation cannot continue '
         write (6, *) 'NPRINCD=', nprincd, ' NLBASIS=', nlbasis
@@ -2178,37 +2207,30 @@ contains
     !--------------------------------------------------------------------------------
     ! Check for ITERMDIR consistency -- if KMROT=0 suppress it
     !--------------------------------------------------------------------------------
-    if ((opt('ITERMDIR')) .and. (kmrot==0)) then
+    if ((relax_SpinAngle_Dirac) .and. (kmrot==0)) then
       write (1337, *)
-      write (1337, *) ' WARNING: ITERMDIR running option used with collinear/', 'parallel Oz starting'
+      write (1337, *) ' WARNING: <relax_SpinAngle_Dirac> running option used with collinear/', 'parallel Oz starting'
       write (1337, *) '          system (KMROT = 0 ). Please check token', ' RBASISANG in your input'
-      write (1337, *) ' Running option ITERMDIR will be ignored'
+      write (1337, *) ' Running option <relax_SpinAngle_Dirac> will be ignored'
       write (1337, *)
-      do i = 1, 32
-        if (t_params%optc(i)(1:8)=='ITERMDIR') t_params%optc(i) = '        '
-      end do
+
+      relax_SpinAngle_Dirac = .false.
+
     end if
 
     !--------------------------------------------------------------------------------
     ! Check for XCPL consistency
     !--------------------------------------------------------------------------------
     manctl = (kmrot==0) .and. (krel==0) .and. (nspin>1)
-    if ((opt('XCPL    ')) .and. (.not. manctl)) then
+    if ((calc_exchange_couplings) .and. (.not. manctl)) then
       write (1337, *)
-      write (1337, *) ' WARNING: XCPL running option requires collinear ', 'magnetic systems'
+      write (1337, *) ' WARNING: <calc_exchange_couplings> running option requires collinear ', 'magnetic systems'
       write (1337, *) ' in a NON/SCALAR/SCALAR+SOC relativistic mode (KREL=0)'
-      write (1337, *) ' Running option XCPL will be ignored'
+      write (1337, *) ' Running option <calc_exchange_couplings> will be ignored'
       write (1337, *)
-      do i = 1, 32
-        if (t_params%optc(i)(1:8)=='XCPL    ') t_params%optc(i) = '        '
-      end do
-    end if
 
-    write (1337, 110)(t_params%optc(i), i=1, 8)
-110 format (79('-'), /, ' EXECUTION OPTIONS:', /, 1x, a8, 7('//',a8), /, 79('-'))
-    write (1337, 120)(t_params%testc(i), i=1, 16)
-120 format (79('-'), /, ' TEST OPTIONS:', /, 2(1x,a8,7('//',a8),/), /, 79('-'))
-130 format (8a8)
+      calc_exchange_couplings = .false.
+    end if
 
     !--------------------------------------------------------------------------------
     ! Initialise SOLVER, SOC and CTL parameters in REL case
@@ -2235,7 +2257,7 @@ contains
       !------------------------------------------------------------------------------
       ! For Dirac-ASA
       !------------------------------------------------------------------------------
-      if (opt('SOC     ')) then
+      if (modify_soc_Dirac) then
         call ioinput('SOSCALE         ', uio, 0, 7, ier)
         if (ier==0) then
           read (unit=uio, fmt=*) soscale
@@ -2318,7 +2340,7 @@ contains
       ! CTL-MAN
       !------------------------------------------------------------------------------
 
-      if (opt('CSCALE  ')) then
+      if (dirac_scale_SpeefOfLight) then
         call ioinput('CTLSCALE        ', uio, 0, 7, ier)
         if (ier==0) then
           read (unit=uio, fmt=*) ctlscale
@@ -2347,10 +2369,10 @@ contains
       !------------------------------------------------------------------------------
     end if
     !--------------------------------------------------------------------------------
-    ! LDA+U
+    ! Initialise SOLVER, SOC and CTL parameters in REL case
     !--------------------------------------------------------------------------------
 
-    if (opt('qdos    ')) then
+    if (use_qdos) then
       allocate (t_params%qdos_atomselect(natyp), stat=i_stat) ! INTEGER
       call memocc(i_stat, product(shape(t_params%qdos_atomselect))*kind(t_params%qdos_atomselect), 't_params%qdos_atomselect', 'rinput13')
 
@@ -2374,24 +2396,23 @@ contains
       ! WRITE (1337,'(A,1000I5)') 'qdosatoms=',
       ! (t_params%qdos_atomselect(I),I=1,NATYP)
 
-      if (.not. test('MPIatom ')) then
+      if (.not. MPI_scheme==1) then
         ! enforce MPIenerg since this is usually faster for qdos option
-        call addtest('MPIenerg')
+        MPI_scheme=2
       end if
-      if (.not. test('STOP1C  ')) call addtest('STOP1C  ')
+      stop_1c=.true.
     end if
 
     ! =============================================================         !
     ! fswrt
     ! check and correct some settings automatically for FERMIOUT writeout   !
     ! fswrt
-    if (opt('FERMIOUT') .or. opt('OPERATOR')) then ! fswrt
+    if (write_pkkr_input .or. write_pkkr_operators) then ! fswrt
       if (nsteps/=1) then          ! fswrt
         write (6, 170)             ! fswrt
         nsteps = 1                 ! fswrt
       end if                       ! fswrt
-      if (.not. test('STOP1B  ')) call addtest('STOP1B  ') ! fswrt
-      if (.not. test('STOP1B  ')) stop 'addtest failed for STOP1B' ! fswrt
+      stop_1b = .true.             ! fswrt
     end if                         ! fswrt
     ! =============================================================         !
     ! fswrt
@@ -2430,12 +2451,12 @@ contains
     end if
 
     ! the following makes saving of the wavefunctions obsolete:
-    if (.not. (opt('XCPL    ') .or. opt('OPERATOR') .or. test('norllsll'))) then
-      write (1337, *) 'automatically adding "RLL-SLL " option to speed up calculation (use test option "norllsll" to prevent this)'
-      write (1337, *) 'this diables wf saving automatically'
-      t_wavefunctions%maxmem_number = 0
-      call addopt('RLL-SLL ')
+    if (.not.(set_cheby_nospeedup .or. calc_exchange_couplings .or. write_pkkr_operators)) then
+        write (1337, *) 'automatically speeding up calculation (use option <set_cheby_nospeedup> to prevent this)'
+        write (1337, *) 'this diables wf saving automatically'
+        t_wavefunctions%maxmem_number = 0
     end if
+
 
     ! default flags: save only rll from main1a>tmatnewsolver since left
     ! solutions can be calculated always in main1c>rhovalnew and sll is not
@@ -2445,7 +2466,7 @@ contains
     t_wavefunctions%save_rllleft = .false.
     t_wavefunctions%save_sllleft = .false.
 
-    if (opt('OPERATOR')) then
+    if (write_pkkr_operators) then
       write (1337, *) 'Found option "OPERATOR"'
       write (1337, *) 'Overwrite MEMWFSAVE input with big numbers'
       t_wavefunctions%maxmem_number = 5
@@ -2458,9 +2479,11 @@ contains
     !--------------------------------------------------------------------------------
     ! Begin Godfrin inversion scheme control                       ! GODFRIN Flaviano
     !--------------------------------------------------------------------------------
-    if (opt('godfrin ')) then
+    if (invmod==3) then
       write (111, *) 'Godfrin inversion scheme parameters'
       write (1337, *) 'Godfrin inversion scheme parameters'
+
+      write_tb_coupling=.true.
 
       t_godfrin%na = naez
       call ioinput('GODFRIN         ', uio, 2, 7, ier)
@@ -2514,6 +2537,7 @@ contains
       deallocate (imansoc, stat=i_stat)
       call memocc(i_stat, i_all, 'IMANSOC', 'rinput13')
     end if
+
 
     return
     !--------------------------------------------------------------------------------
@@ -2613,74 +2637,100 @@ contains
 
 
   !-------------------------------------------------------------------------------
-  !> Summary: Adds a new entry in the run options array `OPTC`
-  !> Author: 
-  !> Category: input-output, KKRhost
-  !> Deprecated: False 
-  !> Adds a new entry in the run options array `OPTC`
-  !-------------------------------------------------------------------------------
-  subroutine addopt(string)
-    use :: mod_wunfiles, only: t_params
-
-    implicit none
-
-    integer, parameter :: noptd = 32
-    character (len=8) :: string
-    integer :: ii
-    logical, external :: opt
-
-    if (.not. opt('        ')) then
-      write (*, *) 'Error in ADDOPT for ', string, ' : No free slots in array OPTC.'
-      stop 'Error in ADDOPT: No free slots in array OPTC.'
-    end if
-
-    if (.not. opt(string)) then
-      ii = 1
-      do while (ii<=noptd)
-        if (t_params%optc(ii)=='        ') then
-          t_params%optc(ii) = string
-          ii = noptd + 1
-        end if
-        ii = ii + 1
-      end do
-    end if
-
-  end subroutine addopt
-
-  !-------------------------------------------------------------------------------
-  !> Summary: Adds a new option in the `TESTC`  array
-  !> Author: 
+  !> Summary: Read the old-style of run- and testoptions from the inputcard
+  !> Author: Bernd Zimmermann
   !> Category: input-output, KKRhost 
   !> Deprecated: False 
-  !> Adds a new option in the `TESTC` array
+  !>
+  !> Read the old-style of run- and testoptions (i.e. fixed format to 8 characters)
+  !>   from the inputcard
   !-------------------------------------------------------------------------------
-  subroutine addtest(string)
-    use :: mod_types, only: t_inc
-    use :: mod_wunfiles, only: t_params
+  subroutine read_old_runtestoptions(invmod,verbosity,MPI_scheme,oldstyle)
+
+    use :: mod_ioinput, only: ioinput, convert_to_uppercase
+    use :: mod_runoptions, only: set_old_runoption
+    use :: mod_profiling, only: memocc
+
     implicit none
-    integer, parameter :: ntstd = 64
-    character (len=8) :: string
-    integer :: ii
-    logical, external :: test
 
-    if (t_inc%i_write>0) write (1337, *) 'in ADDTEST: adding option ', string
+    integer, intent(inout) :: invmod,verbosity,MPI_scheme
+    logical, intent(out)   :: oldstyle
 
-    if (.not. test('        ')) then
-      write (*, *) 'Error in ADDTEST for ', string, ' : No free slots in array TESTC.'
-      stop 'Error in ADDTEST: No free slots in array TESTC.'
-    end if
+    integer :: i, ier, i_stat, i_all
+    logical :: first
+    character (len=:), allocatable :: uio
+    character (len=8), dimension (:), allocatable :: optc
+    character (len=8), dimension (:), allocatable :: testc
 
-    if (.not. test(string)) then
-      ii = 1
-      do while (ii<=ntstd)
-        if (t_params%testc(ii)=='        ') then
-          t_params%testc(ii) = string
-          ii = ntstd + 1
-        end if
-        ii = ii + 1
+    allocate (testc(32), stat=i_stat)
+    call memocc(i_stat, product(shape(testc))*kind(testc), 'TESTC', 'read_old_runtestoptions')
+    allocate (optc(32), stat=i_stat)
+    call memocc(i_stat, product(shape(optc))*kind(optc), 'OPTC', 'read_old_runtestoptions')
+
+    oldstyle = .false.
+    first    = .true.
+
+    !--------------------------------------------------------------------------------
+    ! Read RUNNING options
+    !--------------------------------------------------------------------------------
+    call ioinput('RUNOPT          ', uio, 1, 7, ier)
+    if (ier==0) then
+      oldstyle = .true.
+      if (first) write (1337, *) 'Old style of run- and test-options found. Testing input:'
+      first = .false.
+
+      read (unit=uio, fmt=130)(optc(i), i=1, 8)
+
+      !write result to inputcard_generated
+      write (111, fmt='(A6)') 'RUNOPT'
+      write (111, fmt=130)(optc(i), i=1, 8)
+
+      !make keywords uppercase to introduce case insensitivity
+      do i = 1,8
+        call set_old_runoption(optc(i),invmod,verbosity,MPI_scheme)
       end do
     end if
 
-  end subroutine addtest
+    !--------------------------------------------------------------------------------
+    ! Read TEST options
+    !--------------------------------------------------------------------------------
+    call ioinput('TESTOPT         ', uio, 1, 7, ier)
+    if (ier==0) then
+      oldstyle = .true.
+      if (first) write (1337, *) 'Old style of run- and test-options found. Testing input:'
+      first = .false.
+
+      read (unit=uio, fmt=130)(testc(i), i=1, 8)
+      call ioinput('TESTOPT         ', uio, 2, 7, ier)
+      read (unit=uio, fmt=130)(testc(8+i), i=1, 8)
+
+      !write result to inputcard_generated
+      write (111, fmt='(A7)') 'TESTOPT'
+      write (111, fmt=130)(testc(i), i=1, 8)
+      write (111, fmt=130)(testc(8+i), i=1, 8)
+
+      do i = 1,16
+        call set_old_runoption(testc(i),invmod,verbosity,MPI_scheme)
+      end do
+    end if
+
+    if (oldstyle) then
+      write (1337, 110)(optc(i), i=1, 8)
+      write (1337, 120)(testc(i), i=1, 16)
+    end if
+
+    i_all = -product(shape(optc))*kind(optc)
+    deallocate (optc, stat=i_stat)
+    call memocc(i_stat, i_all, 'OPTC', 'read_old_runtestoptions')
+
+    i_all = -product(shape(testc))*kind(testc)
+    deallocate (testc, stat=i_stat)
+    call memocc(i_stat, i_all, 'TESTC', 'read_old_runtestoptions')
+
+110 format (79('-'), /, ' EXECUTION OPTIONS:', /, 1x, a8, 7('//',a8), /, 79('-'))
+120 format (79('-'), /, ' TEST OPTIONS:', /, 2(1x,a8,7('//',a8),/), /, 79('-'))
+130 format (8a8)
+
+  end subroutine read_old_runtestoptions
 
 end module rinput

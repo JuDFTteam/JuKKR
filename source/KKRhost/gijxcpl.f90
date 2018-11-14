@@ -47,6 +47,7 @@ contains
   subroutine gijxcpl(ido, naez, rbasis, bravais, linterface, niqcalc, iqcalc, natomimp, rclsimp, atomimp, ijtabcalc, ijtabcalc_i, natomimpd)
 
     use :: mod_datatypes, only: dp
+    use :: mod_runoptions, only: use_Chebychev_solver
     use :: mod_getclusnxyz, only: getclusnxyz
     use :: mod_ioinput, only: ioinput
     implicit none
@@ -66,7 +67,6 @@ contains
     logical :: lspher
     character (len=:), allocatable :: uio                             ! NCOLIO=256
 
-    logical, external :: opt
     ! ..
     ido = 0
 
@@ -396,7 +396,7 @@ contains
               ! IF ( IVECI2J(1,IREF(I,JQ)).EQ.1.AND.
               ! +               IVECI2J(2,IREF(I,JQ)).EQ.1 ) THEN
               ijtabcalc(nn+jq) = 1
-              if (opt('NEWSOSOL')) then ! Jijtensor
+              if (use_Chebychev_solver) then ! Jijtensor
                 ijtabcalc((jq-1)*natomimp+iq) = 1 ! Jijtensor
                 ijtabcalc_i(nn+jq) = 1 ! Jijtensor
               end if               ! Jijtensor

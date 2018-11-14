@@ -19,6 +19,8 @@ contains
   !> 
   !-------------------------------------------------------------------------------
   subroutine bzkmesh(nbxin, nbyin, nbzin, maxmesh, lirr, bravais, recbv, nsymat, rsymat, isymindex, symunitary, ielast, ez, kmesh, iprint, krel, kpoibz, maxmshd)
+
+    use :: mod_runoptions, only: print_kmesh, set_kmesh_large, set_kmesh_small, write_kpts_file, write_rhoq_input 
     use :: mod_types, only: t_inc
     use :: mod_wunfiles, only: t_params
     use :: mod_rhoqtools, only: rhoq_write_kmesh
@@ -48,14 +50,12 @@ contains
     integer :: nxyz(3)
     ! ..
     ! .. External Functions ..
-    logical :: test
-    external :: test
     ! ---------------------------------------------------------------------
 
     ! --> set number of different K-meshes
 
     maxmesh = 1
-    if (test('fix mesh')) then
+    if (set_kmesh_large) then
       do i = 1, ielast
         kmesh(i) = 1
       end do
@@ -73,7 +73,7 @@ contains
       kmesh(1) = maxmesh
     end if
 
-    if (test('fix4mesh')) then
+    if (set_kmesh_small) then
       do i = 1, ielast
         kmesh(i) = maxmesh
       end do
@@ -89,7 +89,7 @@ contains
     nby = nbyin
     nbz = nbzin
 
-    if (test('kptsfile')) open (52, file='kpoints', form='formatted')
+    if (write_kpts_file) open (52, file='kpoints', form='formatted')
 
     ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
     write (1337, 110)
@@ -126,8 +126,8 @@ contains
       if (l==maxmesh) write (1337, 140)
       ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
-      if (test('kptsfile')) write (52, fmt='(I8,F15.10,/,(3F12.8,D20.10))') nofks, volbz, ((bzkp(id,i),id=1,3), volcub(i), i=1, nofks)
-      if (test('rhoqtest') .and. (l==1)) then
+      if (write_kpts_file) write (52, fmt='(I8,F15.10,/,(3F12.8,D20.10))') nofks, volbz, ((bzkp(id,i),id=1,3), volcub(i), i=1, nofks)
+      if (write_rhoq_input .and. (l==1)) then
         call rhoq_write_kmesh(nofks, nxyz, volbz, bzkp, volcub, recbv, bravais)
       end if
 
@@ -145,7 +145,7 @@ contains
 
       ! -->  output of k-mesh
 
-      if (test('k-net   ')) then
+      if (print_kmesh) then
         do ks = 1, nofks
           write (1337, fmt=100)(bzkp(i,ks), i=1, 3), volcub(ks)
         end do
@@ -153,7 +153,7 @@ contains
       ! ---------------------------------------------------------------------
     end do
     ! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-    if (test('kptsfile')) close (52)
+    if (write_kpts_file) close (52)
     ! CLOSE (52)
 100 format (3f12.5, f15.8)
 110 format (5x, '< BZKMESH > : creating k-mesh,', ' write to file kpoints', /)

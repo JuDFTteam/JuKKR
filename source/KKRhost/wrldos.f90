@@ -68,12 +68,9 @@ contains
     character (len=11) :: dosfl
     ! ..
     ! .. External Functions ..
-    logical :: test
-    external :: test
     ! ..
     dosfl0 = 'dos.atom'
     efctor = 1.0e0_dp
-    if (test('EV      ')) efctor = ryd
     do ispin = 1, nspinpot
       do l = 0, lmaxd1
         dostot(l, ispin) = 0.0e0_dp

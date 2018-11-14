@@ -43,6 +43,7 @@ contains
     ! ************************************************************************
     ! 
     use :: mod_datatypes, only: dp
+    use :: mod_runoptions, only: write_tb_coupling
     use :: mod_version_info, only: version_print_header
     use :: mod_dsort, only: dsort
     implicit none
@@ -97,7 +98,6 @@ contains
     data tol/1.e-7_dp/
     data tol2/1.e-7_dp/
 
-    logical, external :: opt
 
     ! ------------------------------------------------------------------------
     write (1337, *) '>>> CLSGEN_TB: generation of cluster coordinates'
@@ -441,7 +441,7 @@ contains
     end do
 
     ! ----------------------------------------------------------------------
-    if (opt('godfrin ')) then
+    if (write_tb_coupling) then
       ! output coupling matrix to file                            ! GODFRIN
       open (file='couplings.dat', unit=123456, status='replace') ! GODFRIN
       write (123456, '("# Couplings between atoms via gref")') ! GODFRIN
@@ -450,7 +450,7 @@ contains
         write (123456, '(1000i1)') icouplmat(ia, 1:naez) ! GODFRIN
       end do                       ! GODFRIN
       close (123456)               ! GODFRIN
-    end if
+    end if!write_tb_coupling
     ! ----------------------------------------------------------------------
 
     ! Calculate number of layers in principal layer

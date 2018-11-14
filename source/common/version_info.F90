@@ -68,17 +68,18 @@ contains
   !-------------------------------------------------------------------------------
   subroutine version_print_header(unit, addition, print_always)
 
+    use :: mod_runoptions, only: disable_print_serialnumber
+
     implicit none
     integer, intent (in) :: unit
     logical, optional, intent (in) :: print_always
     character (len=*), optional, intent (in) :: addition
-    logical, external :: test
     logical :: print_version
 
     print_version = .true.
 
     if (.not. present(print_always)) then
-      if (test('noserial')) then
+      if (disable_print_serialnumber) then
         ! omit printing of serial number to file if test option 'noserial' is given
         print_version = .false.
       end if

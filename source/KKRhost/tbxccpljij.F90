@@ -43,6 +43,7 @@ contains
     use :: mpi
 #endif
     use :: mod_types, only: t_tgmat, t_mpi_c_grid, t_cpa
+    use :: mod_runoptions, only: calc_exchange_couplings, calc_exchange_couplings_energy
     use :: mod_mympi, only: myrank, master
     use :: mod_version_info
     use :: mod_md5sums
@@ -108,8 +109,6 @@ contains
     intrinsic :: max, sqrt
     ! ..
     ! .. External Subroutines ..
-    logical :: test
-    external :: test
     ! ..
     ! .. Save statement
     save :: ifgmat, ifmcpa, jijdone, jxcijint, kijsh, nijcalc
@@ -488,7 +487,7 @@ contains
                 ! because WGTE ~ -1/pi (WGTE = WEZ(IE)/NSPIN)
                 ! Write out energy-resorved integrand and integral
                 ! Phivos Mavropoulos 24.10.2012
-                if (npol==0 .or. test('Jijenerg')) then
+                if (npol==0 .or. calc_exchange_couplings_energy) then
                   fmt2 = '(A,I5.5,A,I5.5,A,I5.5)'
                   write (jfnam2, fmt2) 'Jij_enrg.', it, '.', jt, '.', ns
                   if (ie==1) then
@@ -502,7 +501,7 @@ contains
                   end if
                   write (499, fmt='(6E12.4)') ez(ie), xintegd(it, jt, nseff), jxcijint(it, jt, nseff)/4.d0
                   close (499)
-                end if           ! (npol==0 .or. test('Jijenerg'))
+                end if           ! (npol==0 .or. calc_exchange_couplings_energy)
 #endif
 
               end do             ! I1
@@ -584,7 +583,7 @@ contains
                 ! because WGTE ~ -1/pi (WGTE = WEZ(IE)/NSPIN)
                 ! Write out energy-resorved integrand and integral
                 ! Phivos Mavropoulos 24.10.2012
-                if (npol==0 .or. test('Jijenerg')) then
+                if (npol==0 .or. calc_exchange_couplings_energy) then
                   fmt2 = '(A,I5.5,A,I5.5,A,I5.5)'
                   write (jfnam2, fmt2) 'Jij_enrg.', it, '.', jt, '.', ns
                   open (499, file=jfnam2, status='UNKNOWN')
@@ -592,18 +591,18 @@ contains
                   write (499, fmt='(A)') '# Energy Re,Im ; j(E) Re,Im; J(E) Re,Im '
                   write (499, fmt='(3(A,I5))') '# IT=', it, ' JT=', jt, ' SHELL=', ns
                   write (499, fmt='(A,I6)') '#ENERGIES: ', ielast
-                end if           ! (NPOL==0 .OR. TEST('Jijenerg'))then
+                end if           ! (NPOL==0 .OR. calc_exchange_couplings_energy)then
 
                 do ie = 1, ielast
                   jxcijint(it, jt, nseff) = jxcijint(it, jt, nseff) - wez(ie)*csum_store(it, jt, nseff, ie)/real(nspin, kind=dp)
                   xintegdtmp = csum_store(it, jt, nseff, ie)/(pi*4.d0)
-                  if (npol==0 .or. test('Jijenerg')) then
+                  if (npol==0 .or. calc_exchange_couplings_energy) then
                     write (499, fmt='(6E12.4)') ez(ie), xintegdtmp, jxcijint(it, jt, nseff)/4.d0
-                  end if         ! (NPOL==0 .OR. TEST('Jijenerg'))then
+                  end if         ! (NPOL==0 .OR. calc_exchange_couplings_energy)then
 
                 end do           ! IE
 
-                if (npol==0 .or. test('Jijenerg')) close (499)
+                if (npol==0 .or. calc_exchange_couplings_energy) close (499)
 
               end do             ! I1
             end do               ! J1, loop over occupants

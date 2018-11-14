@@ -73,6 +73,7 @@ contains
     ncelld,nfund,nspotd,ivshift,npotd)
 
     use :: mod_constants
+    use :: mod_runoptions, only: print_radial_mesh
     use :: mod_potcut
     use :: mod_calrmt
     use :: mod_rinit
@@ -106,7 +107,7 @@ contains
     integer, intent (in) :: ncelld !! Number of cells (shapes) in non-spherical part
     integer, intent (in) :: nspotd !! Number of potentials for storing non-sph. potentials
     integer, intent (in) :: kshape !! Exact treatment of WS cell
-    integer, intent (in) :: ivshift
+    integer, intent (in) :: ivshift !! for selected potential shift: atom index of potentials to be shifted by VCONST
     real (kind=dp), intent (in) :: vconst !! Potential shift
     integer, dimension (natyp), intent (in) :: ntcell !! Index for WS cell
     real (kind=dp), dimension (natyp), intent (in) :: fpradius !! R point at which full-potential treatment starts
@@ -149,7 +150,6 @@ contains
     integer :: irminm, irminp, irns1p, irt1p, irws1, isave, ispin, isum
     integer :: i, ia, icell, icore, ifun, ih, imt1, inew, io, ipan1, ir, irc1, iri
     real (kind=dp) :: a1, b1, ea, efnew, s1, z1
-    logical :: test
     ! ..
     ! .. Local Arrays
     integer, dimension (ncelld) :: npan
@@ -169,7 +169,7 @@ contains
     ! Output of radial mesh information
     ! ----------------------------------------------------------------------------
     io = 0
-    if (iinfo/=0 .and. test('RMESH   ')) io = 1
+    if (iinfo/=0 .and. print_radial_mesh) io = 1
     ! ----------------------------------------------------------------------------
     ! Set speed of light
     ! ----------------------------------------------------------------------------
@@ -488,15 +488,15 @@ contains
           end if
           ! -------------------------------------------------------------------
           ! First iteration : shift all potentials (only for test purpose)
-          ! in case of test option 'atptshft' shift only potential of atom at
+          ! in case of ivshift>0 shift only potential of atom at
           ! position ivshift
           ! -------------------------------------------------------------------
-          if (test('atptshft') .and. (ih==ivshift)) then
-            write (1337, *) 'atptshft', ih, ivshift, vconst, nr, irmin(ih)
+          if (ih==ivshift) then
+            write (1337, *) 'selected potential shift of atom', ivshift, vconst, nr, irmin(ih)
             do j = 1, irmin(ih)
               vm2z(j, i) = vm2z(j, i) + vconst
             end do
-          else if (.not. test('atptshft') .and. abs(vconst)>eps) then
+          else if (abs(vconst)>eps) then
             write (1337, *) 'shifting potential by VCONST=', vconst
             do j = 1, nr
               vm2z(j, i) = vm2z(j, i) + vconst

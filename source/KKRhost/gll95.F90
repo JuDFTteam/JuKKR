@@ -32,6 +32,7 @@ contains
     use :: omp_lib
 #endif
     use :: mod_types, only: t_inc
+    use :: mod_runoptions, only: print_program_flow, print_refpot
     use :: global_variables, only: lmgf0d, nrefd, ncleb, naclsd, naezd, nembd, lm2d
     use :: mod_datatypes, only: dp
     use :: mod_gfree13, only: gfree13
@@ -64,7 +65,6 @@ contains
     integer :: lly                 ! LLY =0 : no Lloyd's formula; <>0: use Lloyd's formula
     ! ..
     ! .. External Functions ..
-    logical, external :: test
     ! ..
     ! .. Intrinsic Functions ..
     intrinsic :: abs
@@ -94,7 +94,7 @@ contains
       dgtde(:, :) = czero
     end if
 100 format (6x, 'ERROR: failed to allocate array(s) :', a, /)
-    if (test('flow    ') .and. (t_inc%i_write>0)) write (1337, fmt=*) '>>> GLL95'
+    if (print_program_flow .and. (t_inc%i_write>0)) write (1337, fmt=*) '>>> GLL95'
 
 
 #ifdef CPP_HYBRID
@@ -152,7 +152,7 @@ contains
 #ifdef CPP_HYBRID
     ! $omp end parallel
 #endif
-    if (test('flow    ') .and. (t_inc%i_write>0)) write (1337, fmt=*) 'GFREE o.k.'
+    if (print_program_flow .and. (t_inc%i_write>0)) write (1337, fmt=*) 'GFREE o.k.'
     ! ----------------------------------------------------------------------
 
     ! GREF0 = g:= gfree
@@ -188,11 +188,8 @@ contains
       call zgemm('N', 'N', ndim, lmgf0d, lmgf0d, -cone, gref(1,nlm2), ngd1, tmatll(1,1,refpot(abs(atom(n2)))), lmgf0d, czero, gtref, ngd1)
       call zcopy(ngd1*lmgf0d, gtref, 1, gref(1,nlm2), 1)
       ! Now GREF =  -g*t
-      if (test('REFPOT  ') .and. (t_inc%i_write>0)) write (1337, fmt=*) n2, refpot(abs(atom(n2))), atom(n2)
+      if (print_refpot .and. (t_inc%i_write>0)) write (1337, fmt=*) n2, refpot(abs(atom(n2))), atom(n2)
     end do
-
-    if (test('WAIT    ')) write (6, fmt=*) 'Input I'
-    if (test('WAIT    ')) read (5, fmt=*) i
 
     call grefsy13(gref, gref0, dgtde, lly_g0tr, ipvt, ndim, lly, lmgf0d, ngd1)
     ! Now GREF contains LU(1-gt) (full matrix NGD1xNGD1)
@@ -227,7 +224,7 @@ contains
     ! ----------------------------------------------------------------------
 
 
-    if (test('flow    ') .and. (t_inc%i_write>0)) write (1337, fmt=*) 'GREFSY o.k.'
+    if (print_program_flow .and. (t_inc%i_write>0)) write (1337, fmt=*) 'GREFSY o.k.'
 
     if (out_wr>0) write (out_wr)((gref0(n,m),m=1,lmgf0d), n=1, ngd1)
 
