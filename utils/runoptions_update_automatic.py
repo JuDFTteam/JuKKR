@@ -242,14 +242,7 @@ def remove_opt_test_definitions():
 
 	outfile.close()
 
-
-
-if __name__ == '__main__':
-	#automatic_replacement_all_sources()
-	#append_use_statement_to_subroutine()
-	#filter_opt_test_calls()
-	#remove_opt_test_definitions()
-
+def generate_old_readin_source():
 	keywords = construct_keywords_dict(filename='../runoptions_list.txt')
 
 	out = open('generated_src.txt','w')
@@ -261,8 +254,16 @@ if __name__ == '__main__':
 
 		out.write('    else if (%s) then\n'%(' .or. '.join(oldkeys)))
 		out.write('      %s = .true.\n'%(key))
-		out.write('      write (1337, *) "Enable runoption %s"\n'%(key))
+		out.write('      write (1337, *) "    Enable runoption \'%s\'"\n'%(key))
 
 	out.write('    else\n      write (1337, *) "WARNING: run- or testoption " // keyword_in // " not recognized."\n    end if')
 
 	out.close()
+
+
+if __name__ == '__main__':
+	#automatic_replacement_all_sources()
+	#append_use_statement_to_subroutine()
+	#filter_opt_test_calls()
+	#remove_opt_test_definitions()
+	generate_old_readin_source()

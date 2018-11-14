@@ -307,10 +307,13 @@ contains
     !--------------------------------------------------------------------------------
     ! Read in runoptions
     !--------------------------------------------------------------------------------
+    write (1337, 310) 
+    write (1337, '(A)' ) '*** Inspecting run- and test-options ***'
+
     call read_old_runtestoptions(invmod,verbosity,MPI_scheme,oldstyle)
     if(.not.oldstyle) then
-        write (1337, *) 'Reading in new style of run-options.'
-        call read_runoptions()
+        write (1337, *) '  <<< Reading in new style of run-options. >>>'
+        !call read_runoptions() <<<<< to be implemented
     end if
 
 
@@ -2528,6 +2531,8 @@ contains
       call memocc(i_stat, i_all, 'IMANSOC', 'rinput13')
     end if
 
+    stop 'TESTING: Stopping after rinput!'
+
     return
     !--------------------------------------------------------------------------------
     ! INPUT END
@@ -2637,6 +2642,7 @@ contains
     logical, intent(out)   :: oldstyle
 
     integer :: i, ier, i_stat, i_all
+    logical :: first
     character (len=256) :: uio
     character (len=8), dimension (:), allocatable :: optc
     character (len=8), dimension (:), allocatable :: testc
@@ -2647,6 +2653,7 @@ contains
     call memocc(i_stat, product(shape(optc))*kind(optc), 'OPTC', 'read_old_runtestoptions')
 
     oldstyle = .false.
+    first    = .true.
 
     !--------------------------------------------------------------------------------
     ! Read RUNNING options
@@ -2654,9 +2661,12 @@ contains
     call ioinput('RUNOPT          ', uio, 1, 7, ier)
     if (ier==0) then
       oldstyle = .true.
+      if (first) write (1337, *) 'Old style of run- and test-options found. Testing input:'
+      first = .false.
+
       read (unit=uio, fmt=130)(optc(i), i=1, 8)
 
-      !write result as cross-check
+      !write result to inputcard_generated
       write (111, fmt='(A6)') 'RUNOPT'
       write (111, fmt=130)(optc(i), i=1, 8)
 
@@ -2672,23 +2682,24 @@ contains
     call ioinput('TESTOPT         ', uio, 1, 7, ier)
     if (ier==0) then
       oldstyle = .true.
+      if (first) write (1337, *) 'Old style of run- and test-options found. Testing input:'
+      first = .false.
+
       read (unit=uio, fmt=130)(testc(i), i=1, 8)
       call ioinput('TESTOPT         ', uio, 2, 7, ier)
       read (unit=uio, fmt=130)(testc(8+i), i=1, 8)
 
-      !write result as cross-check
+      !write result to inputcard_generated
       write (111, fmt='(A7)') 'TESTOPT'
       write (111, fmt=130)(testc(i), i=1, 8)
       write (111, fmt=130)(testc(8+i), i=1, 8)
 
       do i = 1,16
-        call set_old_runoption(optc(i),invmod,verbosity,MPI_scheme)
+        call set_old_runoption(testc(i),invmod,verbosity,MPI_scheme)
       end do
     end if
 
     if (oldstyle) then
-      write (1337, *) 'Old style of run- and test-options found.'
-
       write (1337, 110)(optc(i), i=1, 8)
       write (1337, 120)(testc(i), i=1, 16)
     end if

@@ -145,328 +145,329 @@ module mod_runoptions
     !now follows a (long) list of straight forward replacements
     else if (keyword == 'FILEVERB') then
       formatted_files = .true.
-      write (1337, *) "Enable runoption formatted_files"
+      write (1337, *) "    Enable runoption 'formatted_files'"
     else if (keyword == 'LDA+U   ') then
       use_ldau = .true.
-      write (1337, *) "Enable runoption use_ldau"
+      write (1337, *) "    Enable runoption 'use_ldau'"
     else if (keyword == 'FIX MESH') then
       set_kmesh_large = .true.
-      write (1337, *) "Enable runoption set_kmesh_large"
+      write (1337, *) "    Enable runoption 'set_kmesh_large'"
     else if (keyword == 'MADELFIL') then
       write_madelung_file = .true.
-      write (1337, *) "Enable runoption write_madelung_file"
+      write (1337, *) "    Enable runoption 'write_madelung_file'"
     else if (keyword == 'BDG_DEV ') then
       write_BdG_tests = .true.
-      write (1337, *) "Enable runoption write_BdG_tests"
+      write (1337, *) "    Enable runoption 'write_BdG_tests'"
     else if (keyword == 'VIRATOMS') then
       use_virtual_atoms = .true.
-      write (1337, *) "Enable runoption use_virtual_atoms"
+      write (1337, *) "    Enable runoption 'use_virtual_atoms'"
     else if (keyword == 'GMATASCI') then
       write_gmat_ascii = .true.
-      write (1337, *) "Enable runoption write_gmat_ascii"
+      write (1337, *) "    Enable runoption 'write_gmat_ascii'"
     else if (keyword == 'RIGID-EF') then
       use_rigid_Efermi = .true.
-      write (1337, *) "Enable runoption use_rigid_Efermi"
+      write (1337, *) "    Enable runoption 'use_rigid_Efermi'"
     else if (keyword == 'NEWSOSOL') then
       use_Chebychev_solver = .true.
-      write (1337, *) "Enable runoption use_Chebychev_solver"
+      write (1337, *) "    Enable runoption 'use_Chebychev_solver'"
     else if (keyword == 'FERMIOUT') then
       write_pkkr_input = .true.
-      write (1337, *) "Enable runoption write_pkkr_input"
+      write (1337, *) "    Enable runoption 'write_pkkr_input'"
     else if (keyword == 'COMPLEX ') then
       calc_complex_bandstructure = .true.
-      write (1337, *) "Enable runoption calc_complex_bandstructure"
+      write (1337, *) "    Enable runoption 'calc_complex_bandstructure'"
     else if (keyword == 'OPERATOR') then
       write_pkkr_operators = .true.
-      write (1337, *) "Enable runoption write_pkkr_operators"
+      write (1337, *) "    Enable runoption 'write_pkkr_operators'"
     else if (keyword == 'ICHECK  ') then
       print_ickeck = .true.
-      write (1337, *) "Enable runoption print_ickeck"
+      write (1337, *) "    Enable runoption 'print_ickeck'"
     else if (keyword == 'GMATIJ  ') then
       print_Gij = .true.
-      write (1337, *) "Enable runoption print_Gij"
+      write (1337, *) "    Enable runoption 'print_Gij'"
     else if (keyword == 'SOC     ') then
       modify_soc_Dirac = .true.
-      write (1337, *) "Enable runoption modify_soc_Dirac"
+      write (1337, *) "    Enable runoption 'modify_soc_Dirac'"
     else if (keyword == 'WRTTRAL ') then
       write_lloyd_tralpha_file = .true.
-      write (1337, *) "Enable runoption write_lloyd_tralpha_file"
+      write (1337, *) "    Enable runoption 'write_lloyd_tralpha_file'"
     else if (keyword == 'WRTCDOS ') then
       write_lloyd_cdos_file = .true.
-      write (1337, *) "Enable runoption write_lloyd_cdos_file"
+      write (1337, *) "    Enable runoption 'write_lloyd_cdos_file'"
     else if (keyword == 'LMLM-DOS') then
       calc_gmat_lm_full = .true.
-      write (1337, *) "Enable runoption calc_gmat_lm_full"
+      write (1337, *) "    Enable runoption 'calc_gmat_lm_full'"
     else if (keyword == 'SIMULASA') then
       simulate_asa = .true.
-      write (1337, *) "Enable runoption simulate_asa"
+      write (1337, *) "    Enable runoption 'simulate_asa'"
     else if (keyword == 'READCPA ') then
       use_readcpa = .true.
-      write (1337, *) "Enable runoption use_readcpa"
+      write (1337, *) "    Enable runoption 'use_readcpa'"
     else if (keyword == 'BZKP    ') then
       print_kpoints = .true.
-      write (1337, *) "Enable runoption print_kpoints"
+      write (1337, *) "    Enable runoption 'print_kpoints'"
     else if (keyword == 'CONT    ') then
       use_cont = .true.
-      write (1337, *) "Enable runoption use_cont"
+      write (1337, *) "    Enable runoption 'use_cont'"
     else if (keyword == 'TMAT    ') then
       print_tmat = .true.
-      write (1337, *) "Enable runoption print_tmat"
+      write (1337, *) "    Enable runoption 'print_tmat'"
     else if (keyword == 'USEBDG  ') then
       use_BdG = .true.
-      write (1337, *) "Enable runoption use_BdG"
+      write (1337, *) "    Enable runoption 'use_BdG'"
     else if (keyword == 'LREFSYSF') then
       disable_reference_system = .true.
-      write (1337, *) "Enable runoption disable_reference_system"
+      write (1337, *) "    Enable runoption 'disable_reference_system'"
     else if (keyword == 'ITERMDIR') then
       relax_SpinAngle_Dirac = .true.
-      write (1337, *) "Enable runoption relax_SpinAngle_Dirac"
+      write (1337, *) "    Enable runoption 'relax_SpinAngle_Dirac'"
     else if (keyword == 'RHOVALTW' .or. keyword == 'RHOVALW ') then
       write_rho2ns = .true.
-      write (1337, *) "Enable runoption write_rho2ns"
+      write (1337, *) "    Enable runoption 'write_rho2ns'"
     else if (keyword == 'GENPOT  ') then
       write_generalized_potential = .true.
-      write (1337, *) "Enable runoption write_generalized_potential"
+      write (1337, *) "    Enable runoption 'write_generalized_potential'"
     else if (keyword == 'GMAT    ') then
       print_gmat = .true.
-      write (1337, *) "Enable runoption print_gmat"
+      write (1337, *) "    Enable runoption 'print_gmat'"
     else if (keyword == 'WRTDTMAT') then
       write_lloyd_dtmat_file = .true.
-      write (1337, *) "Enable runoption write_lloyd_dtmat_file"
+      write (1337, *) "    Enable runoption 'write_lloyd_dtmat_file'"
     else if (keyword == 'DECI-POT') then
       write_deci_pot = .true.
-      write (1337, *) "Enable runoption write_deci_pot"
+      write (1337, *) "    Enable runoption 'write_deci_pot'"
     else if (keyword == 'ONLYSPH ') then
       torque_operator_onlySph = .true.
-      write (1337, *) "Enable runoption torque_operator_onlySph"
+      write (1337, *) "    Enable runoption 'torque_operator_onlySph'"
     else if (keyword == 'TAUSTRUC') then
       print_tau_structure = .true.
-      write (1337, *) "Enable runoption print_tau_structure"
+      write (1337, *) "    Enable runoption 'print_tau_structure'"
     else if (keyword == 'COMPQDOS') then
       write_complex_qdos = .true.
-      write (1337, *) "Enable runoption write_complex_qdos"
+      write (1337, *) "    Enable runoption 'write_complex_qdos'"
     else if (keyword == 'FULLBZ  ') then
       use_full_BZ = .true.
-      write (1337, *) "Enable runoption use_full_BZ"
+      write (1337, *) "    Enable runoption 'use_full_BZ'"
     else if (keyword == 'SEMICORE') then
       use_semicore = .true.
-      write (1337, *) "Enable runoption use_semicore"
+      write (1337, *) "    Enable runoption 'use_semicore'"
     else if (keyword == 'GMAT=0  ') then
       set_gmat_to_zero = .true.
-      write (1337, *) "Enable runoption set_gmat_to_zero"
+      write (1337, *) "    Enable runoption 'set_gmat_to_zero'"
     else if (keyword == 'DECIMATE') then
       use_decimation = .true.
-      write (1337, *) "Enable runoption use_decimation"
+      write (1337, *) "    Enable runoption 'use_decimation'"
     else if (keyword == 'KKRFLEX ') then
       write_kkrimp_input = .true.
-      write (1337, *) "Enable runoption write_kkrimp_input"
+      write (1337, *) "    Enable runoption 'write_kkrimp_input'"
     else if (keyword == 'GREENIMP') then
       write_green_imp = .true.
-      write (1337, *) "Enable runoption write_green_imp"
+      write (1337, *) "    Enable runoption 'write_green_imp'"
     else if (keyword == 'CONDUCT ') then
       use_cond_LB = .true.
-      write (1337, *) "Enable runoption use_cond_LB"
+      write (1337, *) "    Enable runoption 'use_cond_LB'"
     else if (keyword == 'VINTRASP' .or. keyword == 'VPOTOUT ') then
       write_potential_tests = .true.
-      write (1337, *) "Enable runoption write_potential_tests"
+      write (1337, *) "    Enable runoption 'write_potential_tests'"
     else if (keyword == 'NOSERIAL') then
       disable_print_serialnumber = .true.
-      write (1337, *) "Enable runoption disable_print_serialnumber"
+      write (1337, *) "    Enable runoption 'disable_print_serialnumber'"
     else if (keyword == 'SYMG(K) ') then
       symmetrize_gmat = .true.
-      write (1337, *) "Enable runoption symmetrize_gmat"
+      write (1337, *) "    Enable runoption 'symmetrize_gmat'"
     else if (keyword == 'DEN-ASCI') then
       write_density_ascii = .true.
-      write (1337, *) "Enable runoption write_density_ascii"
+      write (1337, *) "    Enable runoption 'write_density_ascii'"
     else if (keyword == 'RHOQTEST') then
       write_rhoq_input = .true.
-      write (1337, *) "Enable runoption write_rhoq_input"
+      write (1337, *) "    Enable runoption 'write_rhoq_input'"
     else if (keyword == 'EWALD2D ') then
       use_ewald_2d = .true.
-      write (1337, *) "Enable runoption use_ewald_2d"
+      write (1337, *) "    Enable runoption 'use_ewald_2d'"
     else if (keyword == 'DOS     ') then
       write_DOS = .true.
-      write (1337, *) "Enable runoption write_DOS"
+      write (1337, *) "    Enable runoption 'write_DOS'"
     else if (keyword == 'EMESH   ') then
       write_energy_mesh = .true.
-      write (1337, *) "Enable runoption write_energy_mesh"
+      write (1337, *) "    Enable runoption 'write_energy_mesh'"
     else if (keyword == 'CSCALE  ') then
       dirac_scale_SpeefOfLight = .true.
-      write (1337, *) "Enable runoption dirac_scale_SpeefOfLight"
+      write (1337, *) "    Enable runoption 'dirac_scale_SpeefOfLight'"
     else if (keyword == 'KPTSFILE') then
       write_kpts_file = .true.
-      write (1337, *) "Enable runoption write_kpts_file"
+      write (1337, *) "    Enable runoption 'write_kpts_file'"
     else if (keyword == 'SLOW-NEU') then
       slow_mixing_Efermi = .true.
-      write (1337, *) "Enable runoption slow_mixing_Efermi"
+      write (1337, *) "    Enable runoption 'slow_mixing_Efermi'"
     else if (keyword == 'ONEBULK ') then
       use_deci_onebulk = .true.
-      write (1337, *) "Enable runoption use_deci_onebulk"
+      write (1337, *) "    Enable runoption 'use_deci_onebulk'"
     else if (keyword == 'GPLAIN  ') then
       write_gmat_plain = .true.
-      write (1337, *) "Enable runoption write_gmat_plain"
+      write (1337, *) "    Enable runoption 'write_gmat_plain'"
     else if (keyword == 'NO-NEUTR') then
       disable_charge_neutrality = .true.
-      write (1337, *) "Enable runoption disable_charge_neutrality"
+      write (1337, *) "    Enable runoption 'disable_charge_neutrality'"
     else if (keyword == 'STOP1C  ') then
       stop_1c = .true.
-      write (1337, *) "Enable runoption stop_1c"
+      write (1337, *) "    Enable runoption 'stop_1c'"
     else if (keyword == 'STOP1B  ') then
       stop_1b = .true.
-      write (1337, *) "Enable runoption stop_1b"
+      write (1337, *) "    Enable runoption 'stop_1b'"
     else if (keyword == 'STOP1A  ') then
       stop_1a = .true.
-      write (1337, *) "Enable runoption stop_1a"
+      write (1337, *) "    Enable runoption 'stop_1a'"
     else if (keyword == 'K-NET   ') then
       print_kmesh = .true.
-      write (1337, *) "Enable runoption print_kmesh"
+      write (1337, *) "    Enable runoption 'print_kmesh'"
     else if (keyword == 'FIXMOM  ') then
       fix_nonco_angles = .true.
-      write (1337, *) "Enable runoption fix_nonco_angles"
+      write (1337, *) "    Enable runoption 'fix_nonco_angles'"
     else if (keyword == 'FIX4MESH') then
       set_kmesh_small = .true.
-      write (1337, *) "Enable runoption set_kmesh_small"
+      write (1337, *) "    Enable runoption 'set_kmesh_small'"
     else if (keyword == 'NOSPH   ') then
       disable_tmat_sratrick = .true.
-      write (1337, *) "Enable runoption disable_tmat_sratrick"
+      write (1337, *) "    Enable runoption 'disable_tmat_sratrick'"
     else if (keyword == 'REFPOT  ') then
       print_refpot = .true.
-      write (1337, *) "Enable runoption print_refpot"
+      write (1337, *) "    Enable runoption 'print_refpot'"
     else if (keyword == 'LLYFILES') then
       write_lloyd_files = .true.
-      write (1337, *) "Enable runoption write_lloyd_files"
+      write (1337, *) "    Enable runoption 'write_lloyd_files'"
     else if (keyword == 'POTSYMM ') then
       symmetrize_potential_madelung = .true.
-      write (1337, *) "Enable runoption symmetrize_potential_madelung"
+      write (1337, *) "    Enable runoption 'symmetrize_potential_madelung'"
     else if (keyword == 'NOSOC   ') then
       set_cheby_nosoc = .true.
-      write (1337, *) "Enable runoption set_cheby_nosoc"
+      write (1337, *) "    Enable runoption 'set_cheby_nosoc'"
     else if (keyword == 'ZEROPOT ') then
       set_empty_system = .true.
-      write (1337, *) "Enable runoption set_empty_system"
+      write (1337, *) "    Enable runoption 'set_empty_system'"
     else if (keyword == 'TMATFILE') then
       write_tmat_file = .true.
-      write (1337, *) "Enable runoption write_tmat_file"
+      write (1337, *) "    Enable runoption 'write_tmat_file'"
     else if (keyword == 'GODFRIN ') then
       write_tb_coupling = .true.
-      write (1337, *) "Enable runoption write_tb_coupling"
+      write (1337, *) "    Enable runoption 'write_tb_coupling'"
     else if (keyword == 'POTCUBIC') then
       symmetrize_potential_cubic = .true.
-      write (1337, *) "Enable runoption symmetrize_potential_cubic"
+      write (1337, *) "    Enable runoption 'symmetrize_potential_cubic'"
     else if (keyword == 'RMESH   ') then
       print_radial_mesh = .true.
-      write (1337, *) "Enable runoption print_radial_mesh"
+      write (1337, *) "    Enable runoption 'print_radial_mesh'"
     else if (keyword == 'IMP_ONLY') then
       impurity_operator_only = .true.
-      write (1337, *) "Enable runoption impurity_operator_only"
+      write (1337, *) "    Enable runoption 'impurity_operator_only'"
     else if (keyword == 'GREFFILE') then
       write_gref_file = .true.
-      write (1337, *) "Enable runoption write_gref_file"
+      write (1337, *) "    Enable runoption 'write_gref_file'"
     else if (keyword == 'WRTGREEN') then
       write_green_host = .true.
-      write (1337, *) "Enable runoption write_green_host"
+      write (1337, *) "    Enable runoption 'write_green_host'"
     else if (keyword == 'NOMADEL ') then
       no_madelung = .true.
-      write (1337, *) "Enable runoption no_madelung"
+      write (1337, *) "    Enable runoption 'no_madelung'"
     else if (keyword == 'TESTGMAT') then
       set_tmat_noinversion = .true.
-      write (1337, *) "Enable runoption set_tmat_noinversion"
+      write (1337, *) "    Enable runoption 'set_tmat_noinversion'"
     else if (keyword == 'JIJENERG') then
       calc_exchange_couplings_energy = .true.
-      write (1337, *) "Enable runoption calc_exchange_couplings_energy"
+      write (1337, *) "    Enable runoption 'calc_exchange_couplings_energy'"
     else if (keyword == 'GF-EF   ') then
       calc_GF_Efermi = .true.
-      write (1337, *) "Enable runoption calc_GF_Efermi"
+      write (1337, *) "    Enable runoption 'calc_GF_Efermi'"
     else if (keyword == 'PROJFILE') then
       write_cpa_projection_files = .true.
-      write (1337, *) "Enable runoption write_cpa_projection_files"
+      write (1337, *) "    Enable runoption 'write_cpa_projection_files'"
     else if (keyword == 'KKRSUSC ') then
       write_kkrsusc_input = .true.
-      write (1337, *) "Enable runoption write_kkrsusc_input"
+      write (1337, *) "    Enable runoption 'write_kkrsusc_input'"
     else if (keyword == 'XCPL    ') then
       calc_exchange_couplings = .true.
-      write (1337, *) "Enable runoption calc_exchange_couplings"
+      write (1337, *) "    Enable runoption 'calc_exchange_couplings'"
     else if (keyword == 'FLOW    ') then
       print_program_flow = .true.
-      write (1337, *) "Enable runoption print_program_flow"
+      write (1337, *) "    Enable runoption 'print_program_flow'"
     else if (keyword == 'VSPHER  ') then
       use_spherical_potential_only = .true.
-      write (1337, *) "Enable runoption use_spherical_potential_only"
+      write (1337, *) "    Enable runoption 'use_spherical_potential_only'"
     else if (keyword == 'SEARCHEF') then
       search_Efermi = .true.
-      write (1337, *) "Enable runoption search_Efermi"
+      write (1337, *) "    Enable runoption 'search_Efermi'"
     else if (keyword == 'NORLLSLL') then
       set_cheby_nospeedup = .true.
-      write (1337, *) "Enable runoption set_cheby_nospeedup"
+      write (1337, *) "    Enable runoption 'set_cheby_nospeedup'"
     else if (keyword == 'WRTGOTR ') then
       write_lloyd_g0tr_file = .true.
-      write (1337, *) "Enable runoption write_lloyd_g0tr_file"
+      write (1337, *) "    Enable runoption 'write_lloyd_g0tr_file'"
     else if (keyword == 'DECI-OUT') then
       write_deci_tmat = .true.
-      write (1337, *) "Enable runoption write_deci_tmat"
+      write (1337, *) "    Enable runoption 'write_deci_tmat'"
     else if (keyword == 'DOS-EF  ') then
       calc_DOS_Efermi = .true.
-      write (1337, *) "Enable runoption calc_DOS_Efermi"
+      write (1337, *) "    Enable runoption 'calc_DOS_Efermi'"
     else if (keyword == 'QDOS    ') then
       use_qdos = .true.
-      write (1337, *) "Enable runoption use_qdos"
+      write (1337, *) "    Enable runoption 'use_qdos'"
     else if (keyword == 'WRTDGREF') then
       write_lloyd_dgref_file = .true.
-      write (1337, *) "Enable runoption write_lloyd_dgref_file"
+      write (1337, *) "    Enable runoption 'write_lloyd_dgref_file'"
     else if (keyword == 'ONLYMT  ') then
       torque_operator_onlyMT = .true.
-      write (1337, *) "Enable runoption torque_operator_onlyMT"
+      write (1337, *) "    Enable runoption 'torque_operator_onlyMT'"
     else if (keyword == 'LMDOS   ') then
       write_DOS_lm = .true.
-      write (1337, *) "Enable runoption write_DOS_lm"
+      write (1337, *) "    Enable runoption 'write_DOS_lm'"
     else if (keyword == 'LLOYD   ') then
       use_lloyd = .true.
-      write (1337, *) "Enable runoption use_lloyd"
+      write (1337, *) "    Enable runoption 'use_lloyd'"
     else if (keyword == 'GMATFILE') then
       write_gmat_file = .true.
-      write (1337, *) "Enable runoption write_gmat_file"
+      write (1337, *) "    Enable runoption 'write_gmat_file'"
 
     !treat special replacements
     else if (keyword == 'ATPTSHFT') then
-      write (1337, *) "No need to call runoption atptshft any more, giving keyword IVSHIFT is sufficient"
+      write (1337, *) "    No need to call runoption atptshft any more, giving keyword IVSHIFT is sufficient"
     else if (keyword == 'RLL-SLL ') then
-      write (1337, *) "Runoption RLL-SLL is not default (has been removed)"
+      write (1337, *) "    Runoption RLL-SLL is not default (has been removed)"
     else if (keyword == 'FULL INV') then
       invmod = 0
-      write (1337, *) "Setting inversion mode to Full Inversion"
+      write (1337, *) "    Setting inversion mode to Full Inversion"
     else if (keyword == 'SUPRCELL') then
       invmod = 2
-      write (1337, *) "Setting inversion mode to Supercell mode"
+      write (1337, *) "    Setting inversion mode to Supercell mode"
     else if (keyword == 'GODFRIN ') then
       invmod = 3
-      write (1337, *) "Setting inversion mode to Godfrin module"
+      write (1337, *) "    Setting inversion mode to Godfrin module"
     else if (keyword == 'VERBOSE1') then
       verbosity = 2
-      write (1337, *) "Setting verbosity level to medium because of verbose1"
+      write (1337, *) "    Setting verbosity level to medium because of verbose1"
     else if (keyword == 'VERBOSE2') then
       verbosity = 3
-      write (1337, *) "Setting verbosity level to high because of verbose2"
+      write (1337, *) "    Setting verbosity level to high because of verbose2"
     else if (keyword == 'TIMINGS0') then
       verbosity = 1
-      write (1337, *) "Setting verbosity level to low because of timings0"
+      write (1337, *) "    Setting verbosity level to low because of timings0"
     else if (keyword == 'TIMINGS2') then
       verbosity = 3
-      write (1337, *) "Setting verbosity level to high because of timings2"
+      write (1337, *) "    Setting verbosity level to high because of timings2"
     else if (keyword == 'MPIADAPT') then
       MPI_scheme = 0
-      write (1337, *) "Setting MPI_Scheme=0 because of MPIadapt"
+      write (1337, *) "    Setting MPI_Scheme=0 because of MPIadapt"
     else if (keyword == 'MPIATOM ') then
       MPI_scheme = 1
-      write (1337, *) "Setting MPI_Scheme=1 because of MPIatom"
+      write (1337, *) "    Setting MPI_Scheme=1 because of MPIatom"
     else if (keyword == 'MPIENERG') then
       MPI_scheme = 2
-      write (1337, *) "Setting MPI_Scheme=2 because of MPIenerg"
+      write (1337, *) "    Setting MPI_Scheme=2 because of MPIenerg"
     else if (keyword == 'EIGENV  ' .or. keyword == 'SPARSE  ' .or. keyword == 'WIRE    ' .or. keyword == 'ISO SURF' .or. keyword == 'EIGENV  ' .or. keyword == 'WFCT    ' .or. keyword == 'EV      ' .or. keyword == 'ND      ' .or. keyword == 'WAIT    ') then
-      write (1337, *) "Ignoring "
+      write (1337, *) "    ### Ignoring option '" // keyword_in // "' because it is not implemented any more. ###"
 
     !default case: give a warning
     else
-      write (1337, *) "WARNING: run- or testoption " // keyword_in // " not recognized."
+      write (1337, *) "    ### WARNING ###: run- or testoption '" // keyword_in // "' not recognized."
+      write (1337, *) "                     Is there a typo?"
     end if
 
 
