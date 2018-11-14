@@ -38,6 +38,7 @@ Start of large KKR repository holding *voronoi*, *KKRhost*, *KKRimp*, *KKRsusc*,
 ### Deprecated
 - makefiles of *PKKprime*, *voronoi*, *KKRimp*, *rhoq*
 - duplicated files from *KKRhost* in *rhoq*
+- common/test.f90 and common/opt.f90
 
 ### Removed
 - None

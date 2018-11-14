@@ -20,8 +20,6 @@ add_executable(
     source/common/gaunt2.f90 
     source/common/grule.f90 
     source/common/rcstop.f90 
-    source/common/opt.f90
-    source/common/test.f90
     source/common/cinit.f90 
     source/common/radial_solver_Chebychev/intcheb_cell.f90 
     source/rhoq/gaunt_new.f
@@ -30,6 +28,8 @@ add_executable(
     source/rhoq/interpol_shape.f
     source/rhoq/read_shape.f
     source/rhoq/mod_rhoq.F90
+    source/rhoq/opt.f90
+    source/rhoq/test.f90
     )
 
 if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
