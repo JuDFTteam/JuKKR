@@ -143,6 +143,7 @@ module mod_wunfiles
     integer :: natomimpd !! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
     integer :: itrunldau !! Iteration index for LDA+U
     integer :: iesemicore
+    integer :: special_straight_mixing !!id to specify modified straight mixing scheme: 0=normal, 1=alternating mixing factor (i.e. reduced mixing factor in every odd iteration), 2=charge-neurality based mixing factor (former: 'alt mix' and 'spec mix')
     real (kind=dp) :: tk           !! Temperature
     real (kind=dp) :: fcm
     real (kind=dp) :: emin         !! Energies needed in EMESHT
@@ -348,7 +349,7 @@ contains
     mmaxd,nr,nsheld,nsymaxd,naezdpd,natomimpd,nspind,irid,nfund,ncelld,lmxspd,ngshd,&
     krel,ntotd,ncheb,npan_log,npan_eq,npan_log_at,npan_eq_at,r_log,npan_tot,rnew,   &
     rpan_intervall,ipan_intervall,nspindd,thetasnew,socscale,tolrdif,lly,deltae,    &
-    rclsimp,verbosity,MPI_scheme)
+    rclsimp,verbosity,MPI_scheme,special_straight_mixing)
     ! **********************************************************************
     ! *                                                                    *
     ! *  This subroutine is part of the MAIN0 program in the tbkkr package *
@@ -459,6 +460,7 @@ contains
     integer, intent (in) :: iesemicore
     integer, intent (in) :: verbosity !! verbosity level for timings and output: 0=old default, 1,2,3 = timing and ouput verbosity level the same (low,medium,high)
     integer, intent (in) :: MPI_scheme !! scheme for MPI parallelization: 0 = best, 1 = atoms (default), 2 = energies 
+    integer, intent (in) :: special_straight_mixing !!id to specify modified straight mixing scheme: 0=normal, 1=alternating mixing factor (i.e. reduced mixing factor in every odd iteration), 2=charge-neurality based mixing factor (former: 'alt mix' and 'spec mix')
     ! .. nembd2 = NAEZ+NEMB, lmaxd1=lmaxd+1, naezdpd=NAEZ/nprincd)
     real (kind=dp), intent (in) :: tk !! Temperature
     real (kind=dp), intent (in) :: fcm
@@ -822,6 +824,7 @@ contains
       ntldau,npolsemi,n1semi,n2semi,n3semi,iesemicore,ebotsemi,emusemi,tksemi,      &
       fsemicore,r_log,emin,emax,tk,efermi,alat,cpatol,mixing,qbound,fcm,lambda_xc,  &
       tolrdif,linterface,lrhosym,solver,tmpdir,itmpdir,iltmp,ntotd,ncheb,deltae,    &
+      special_straight_mixing,                                                      &
       t_params)
 
     ! initialize allocatable arrays
@@ -1485,6 +1488,7 @@ contains
     call mpi_bcast(t_params%ntperd, 1, mpi_integer, master, mpi_comm_world, ierr)
     ! forgot to bcast kpoibz?
     call mpi_bcast(t_params%kpoibz, 1, mpi_integer, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%special_straight_mixing, 1, mpi_integer, master, mpi_comm_world, ierr)
 
     ! double precision
     call mpi_bcast(t_params%ebotsemi, 1, mpi_double_precision, master, mpi_comm_world, ierr)
@@ -1735,7 +1739,8 @@ contains
     kpre,kshape,kte,kvmad,kxc,ishift,kforce,idoldau,itrunldau,ntldau,npolsemi,      &
     n1semi,n2semi,n3semi,iesemicore,ebotsemi,emusemi,tksemi,fsemicore,r_log,emin,   &
     emax,tk,efermi,alat,cpatol,mixing,qbound,fcm,lambda_xc,tolrdif,linterface,      &
-    lrhosym,solver,tmpdir,itmpdir,iltmp,ntotd,ncheb,deltae,t_params)
+    lrhosym,solver,tmpdir,itmpdir,iltmp,ntotd,ncheb,deltae,special_straight_mixing, &
+    t_params)
     ! fill scalars into t_params
     implicit none
 
@@ -1830,6 +1835,7 @@ contains
     integer, intent (in) :: natomimpd !! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
     integer, intent (in) :: itrunldau !! Iteration index for LDA+U
     integer, intent (in) :: iesemicore
+    integer, intent (in) :: special_straight_mixing 
     real (kind=dp), intent (in) :: tk !! Temperature
     real (kind=dp), intent (in) :: fcm
     real (kind=dp), intent (in) :: emin !! Energies needed in EMESHT
@@ -1945,6 +1951,7 @@ contains
     t_params%natomimpd = natomimpd
     t_params%itrunldau = itrunldau
     t_params%iesemicore = iesemicore
+    t_params%special_straight_mixing = special_straight_mixing
     ! Double precision
     t_params%tk = tk
     t_params%fcm = fcm
@@ -3075,7 +3082,7 @@ contains
     n3semi,zrel,jwsrel,irshift,mixing,lambda_xc,a,b,thetas,drdi,r,zat,rmt,rmtnew,   &
     rws,emin,emax,tk,alat,efold,chrgold,cmomhost,conc,gsh,ebotsemi,emusemi,tksemi,  &
     vins,visp,rmrel,drdirel,vbc,fsold,r2drdirel,ecore,ez,wez,txc,linterface,lrhosym,& 
-    ngshd,naez,irid,nspotd,iemxd)
+    ngshd,naez,irid,nspotd,iemxd,special_straight_mixing)
     ! get relevant parameters from t_params
     ! ..
     use :: mod_runoptions, only: use_spherical_potential_only
@@ -3133,6 +3140,7 @@ contains
     integer, intent (inout) :: scfsteps
     integer, intent (inout) :: npolsemi
     integer, intent (inout) :: iesemicore
+    integer, intent (inout) :: special_straight_mixing
     integer, dimension (naez), intent (inout) :: noq
     integer, dimension (natyp), intent (inout) :: imt
     integer, dimension (natyp), intent (inout) :: irc
@@ -3234,6 +3242,7 @@ contains
     end if
     ! -------------------------------------------------------------------------
     imix = t_params%imix
+    special_straight_mixing = t_params%special_straight_mixing
     mixing = t_params%mixing
     qbound = t_params%qbound
     fcm = t_params%fcm

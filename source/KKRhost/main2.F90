@@ -40,7 +40,7 @@ contains
     use :: mod_runoptions, only: disable_charge_neutrality, no_madelung, print_program_flow, relax_SpinAngle_Dirac, &
       search_Efermi, simulate_asa, slow_mixing_Efermi, symmetrize_potential_cubic, symmetrize_potential_madelung, &
       use_decimation, use_rigid_Efermi, use_semicore, use_spherical_potential_only, write_deci_tmat, write_kkrimp_input, &
-      write_madelung_file, write_potential_tests, write_rho2ns, special_straight_mixing
+      write_madelung_file, write_potential_tests, write_rho2ns
     use :: global_variables, only: krel, ipand, npotd, natomimpd, lmxspd, iemxd, nspotd, irid, ngshd, linterface, &
       nfund, ncelld, irmd, nembd1, nembd, irmind, lmmaxd, wlength, natypd, naezd, lmpotd, lpotd, lmaxd, nspind, nspotd, &
       ipand, ngshd, irid, nfund, ncelld
@@ -102,6 +102,7 @@ contains
     integer :: lrecabmad
     integer :: i_stat, i_all
     integer :: i, j, ie, i1, i2, ih, it, io, lm, ir, irec
+    integer :: special_straight_mixing !!id to specify modified straight mixing scheme: 0=normal, 1=alternating mixing factor (i.e. reduced mixing factor in every odd iteration), 2=charge-neurality based mixing factor (former: 'alt mix' and 'spec mix')
     real (kind=dp) :: df
     real (kind=dp) :: rv
     real (kind=dp) :: mix
@@ -243,7 +244,9 @@ contains
       mixing, lambda_xc, a, b, thetas, drdi, rmesh, zat, rmt, rmtnew, rws, emin, emax, &
       tk, alat, efold, chrgold, cmomhost, conc, gsh, ebotsemi, emusemi, tksemi, vins, &
       visp, rmrel, drdirel, vbc, fsold, r2drdirel, ecore, ez, wez, txc, linterface, &
-      lrhosym, ngshd, naez, irid, nspotd, iemxd)
+      lrhosym, ngshd, naez, irid, nspotd, iemxd, special_straight_mixing)
+
+    write(*,*) 'special_straight_mixing=', special_straight_mixing
 
     ! -------------------------------------------------------------------------
     ! Reading the density parameters stored in t_params

@@ -110,8 +110,6 @@ module mod_runoptions
   logical :: write_tmat_file = .false.                 !!write t-matix to file (former: 'tmatfile')
   logical :: write_tb_coupling = .false.               !!write couplings in tight-binging reference system to file `couplings.dat` (former: 'godfrin')
 
-  integer :: special_straight_mixing = 0               !!id to specify modified straight mixing scheme: 0=normal, 1=alternating mixing factor (i.e. reduced mixing factor in every odd iteration), 2=charge-neurality based mixing factor (former: 'alt mix' and 'spec mix')
-
   !some old run and test options have been removed:
   !  'atptshft': replaced by presence or absence of IVSHIFT in inputcard
   !  'RLL-SLL': now default. See inverse (new) option 'set_cheby_nospeedup'

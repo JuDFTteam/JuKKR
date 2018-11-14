@@ -37,7 +37,7 @@ contains
     tksemi, tolrdif, emusemi, ebotsemi, fsemicore, lambda_xc, deltae, lrhosym, linipol, lcartesian, imt, cls, lmxc, irns, irws, ntcell, refpot, &
     inipol, ixipol, hostimp, kfg, vbc, zperleft, zperight, bravais, rmt, zat, rws, mtfac, rmtref, rmtnew, rmtrefat, fpradius, tleft, tright, &
     rbasis, socscale, cscl, socscl, solver, i12, i13, i19, i25, i40, txc, drotq, ncpa, itcpamax, cpatol, noq, iqat, icpa, kaoez, conc, kmrot, &
-    qmtet, qmphi, kreadldau, lopt, ueff, jeff, erefldau, invmod, verbosity, MPI_scheme)
+    qmtet, qmphi, kreadldau, lopt, ueff, jeff, erefldau, invmod, verbosity, MPI_scheme, special_straight_mixing)
 
     use :: mod_profiling, only: memocc
     use :: mod_runoptions, only: read_runoptions, calc_DOS_Efermi, calc_GF_Efermi, calc_exchange_couplings, &
@@ -124,6 +124,7 @@ contains
     integer, intent (inout) :: invmod   !! inversion mode, 0=full inversion, 1= banded matrix, 2= supercell, 3=godfrin
     integer, intent (inout) :: verbosity  !! verbosity level for timings and output: 0=old default, 1,2,3 = timing and ouput verbosity level the same (low,medium,high)
     integer, intent (inout) :: MPI_scheme !! scheme for MPI parallelization: 0 = best, 1 = atoms (default), 2 = energies 
+    integer, intent (inout) :: special_straight_mixing !! id to specify modified straight mixing scheme: 0=normal, 1=alternating mixing factor (i.e. reduced mixing factor in every odd iteration), 2=charge-neurality based mixing factor (former: 'alt mix' and 'spec mix')
     real (kind=dp), intent (inout) :: tk !! Temperature
     real (kind=dp), intent (inout) :: fcm !! Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
     real (kind=dp), intent (inout) :: emin !! Lower value (in Ryd) for the energy contour
@@ -1803,6 +1804,15 @@ contains
     else
       write (111, *) 'Default IMIX= ', imix
     end if
+    if (imix==0) then
+      call ioinput('<special_straight_mixing>', uio, 1, 7, ier)
+      if (ier==0) then
+        read (unit=uio, fmt=*) special_straight_mixing
+        write (111, *) '<special_straight_mixing>= ', special_straight_mixing
+      else
+        write (111, *) 'Default <special_straight_mixing>= ', special_straight_mixing
+      end if
+    end if
     if (npol==0) then
       write (1337, *) 'NPOL=0, setting IMIX= 0'
       imix = 0
@@ -2527,8 +2537,6 @@ contains
       deallocate (imansoc, stat=i_stat)
       call memocc(i_stat, i_all, 'IMANSOC', 'rinput13')
     end if
-
-    stop 'TESTING: Stopping after rinput!'
 
     return
     !--------------------------------------------------------------------------------

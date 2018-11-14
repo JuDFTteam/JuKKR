@@ -173,7 +173,8 @@ module mod_main0
   integer :: idosemicore = 0
   integer :: ivshift = 0           !! for selected potential shift: atom index of potentials to be shifted by VCONST
   integer :: verbosity = 0         !! verbosity level for timings and output: 0=old default, 1,2,3 = timing and ouput verbosity level the same (low,medium,high)
-  integer :: MPI_scheme = 1        !! scheme for MPI parallelization: 0 = best, 1 = atoms (default), 2 = energies 
+  integer :: MPI_scheme = 1        !! scheme for MPI parallelization: 0 = best, 1 = atoms (default), 2 = energies
+  integer :: special_straight_mixing = 0 !!id to specify modified straight mixing scheme: 0=normal, 1=alternating mixing factor (i.e. reduced mixing factor in every odd iteration), 2=charge-neurality based mixing factor (former: 'alt mix' and 'spec mix')
   real (kind=dp) :: tk = 800.0_dp       !! Temperature
   real (kind=dp) :: fcm = 20.0_dp       !! Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
   real (kind=dp) :: e2in = 0.0_dp    
@@ -579,7 +580,8 @@ contains
       kfg,vbc,zperleft,zperight,bravais,rmt,zat,rws,mtfac,rmtref,rmtnew,rmtrefat,   &
       fpradius,tleft,tright,rbasis,socscale,cscl,socscl,solver,i12,i13,i19,i25,i40, &
       txc,drotq,ncpa,itcpamax,cpatol,noq,iqat,icpa,kaoez,conc,kmrot,qmtet,qmphi,    &
-      kreadldau,lopt,ueff,jeff,erefldau,invmod,verbosity,MPI_scheme)
+      kreadldau,lopt,ueff,jeff,erefldau,invmod,verbosity,MPI_scheme,                &
+      special_straight_mixing)
 
     ! Some consistency checks
     if ((krel<0) .or. (krel>1)) stop ' set KREL=0/1 (non/fully) relativistic mode in the inputcard'
@@ -1283,9 +1285,10 @@ contains
       mixing, qbound, fcm, itdbry, irns, kpre, kshape, kte, kvmad, kxc, lambda_xc, txc, ishift, ixipol, lrhosym, kforce, lmsp, llmsp, rmt, rmtnew, rws, imt, irc, irmin, irws, nfu, &
       hostimp, gsh, ilm_map, imaxsh, idoldau, itrunldau, ntldau, lopt, itldau, ueff, jeff, erefldau, uldau, wldau, phildau, iemxd, irmind, irmd, nspotd, npotd, nembd1, lmmaxd, &
       ipand, nembd2, lmax, ncleb, naclsd, nclsd, lm2d, lmax+1, mmaxd, nrd, nsheld, nsymaxd, naez/nprincd, natomimpd, nspind, irid, nfund, ncelld, lmxspd, ngshd, krel, ntotd, ncheb, &
-      npan_log, npan_eq, npan_log_at, npan_eq_at, r_log, npan_tot, rnew, rpan_intervall, ipan_intervall, nspindd, thetasnew, socscale, tolrdif, lly, deltae, rclsimp, verbosity, MPI_scheme)
+      npan_log, npan_eq, npan_log_at, npan_eq_at, r_log, npan_tot, rnew, rpan_intervall, ipan_intervall, nspindd, thetasnew, socscale, tolrdif, lly, deltae, rclsimp, verbosity, MPI_scheme, &
+      special_straight_mixing )
 
-    if (write_pkkr_input) then                                                           ! fswrt
+    if (write_pkkr_input) then                                                          ! fswrt
       call write_tbkkr_files(lmax, nemb, ncls, natyp, naez, ielast, ins, alat, &        ! fswrt
         bravais, recbv, rbasis, cls, nacls, rcls, ezoa, atom, rr, nspin, nrd, korbit, & ! fswrt
         nclsd, naclsd)                                                                  ! fswrt
