@@ -26,12 +26,13 @@ program kkrcode
   use :: mod_wunfiles, only: bcast_t_params_scalars, bcast_t_params_arrays
   use :: mod_types, only: bcast_t_lly_1, bcast_t_inc_tgmat, save_t_mpi_c_grid
   use :: mod_md5sums, only: mympi_bcast_md5sums
+  use :: mod_runoptions, only: bcast_runoptions
 #else
   use :: mod_mympi, only: mympi_init, myrank, nranks, master
   use :: mod_save_wavefun, only: t_wavefunctions
 #endif
   use :: mod_constants, only: czero, nsymaxd
-  use :: mod_runoptions, only: disable_print_serialnumber, stop_1a, stop_1b, stop_1c, write_green_host, use_qdos, bcast_runoptions
+  use :: mod_runoptions, only: disable_print_serialnumber, stop_1a, stop_1b, stop_1c, write_green_host, use_qdos
   use :: mod_profiling, only: memocc
   use :: mod_types, only: t_inc, t_lloyd, t_cpa, t_mpi_c_grid, t_tgmat
   use :: mod_timing, only: timing_start, timing_stop, timing_init, timings_1a, timings_1b, load_imbalance, print_time_and_date
