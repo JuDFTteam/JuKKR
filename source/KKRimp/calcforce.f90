@@ -3,15 +3,6 @@
 !> Author:
 !> 
 !------------------------------------------------------------------------------------
-!> @note Notes on the code
-!> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
-!------------------------------------------------------------------------------------
 module mod_calcforce
 
 DOUBLE PRECISION,allocatable :: FLM(:,:),FLMC(:,:)
@@ -23,16 +14,6 @@ contains
 !> Author:
 !> Category: physical-observables, KKRimp
 !> Deprecated: False 
-!> 
-!-------------------------------------------------------------------------------
-!> @note Notes on the code
-!> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
 !-------------------------------------------------------------------------------
 subroutine calcforce(mode,cmom,cmom_interst,lmaxatom,lmaxd,nspin,natom,density,VPOT_OUT, &
                      cell,ins, zatom,nrmaxd,alat)

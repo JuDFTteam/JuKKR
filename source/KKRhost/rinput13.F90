@@ -251,7 +251,7 @@ contains
     real (kind=dp) :: soscale, ctlscale
     real (kind=dp) :: brymix, strmix, tx, ty, tz
     character (len=43) :: tshape
-    character (len=256) :: uio  ! NCOLIO=256
+    character (len=:), allocatable :: uio  ! NCOLIO=256
 
     logical :: lnew !! Logical variable for old/new treatment of left and right host
     logical :: mansoc
@@ -750,7 +750,7 @@ contains
     end if
 
     ! Angular momentum cutoff
-    call ioinput('LMAX            ', uio, 1, 7, ier)
+    call ioinput('LMAX', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) lmax
       write (111, *) 'LMAX=', lmax
@@ -2630,6 +2630,15 @@ contains
   end subroutine rinput13
 
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Read the old-style of run- and testoptions from the inputcard
+  !> Author: Bernd Zimmermann
+  !> Category: input-output, KKRhost 
+  !> Deprecated: False 
+  !>
+  !> Read the old-style of run- and testoptions (i.e. fixed format to 8 characters)
+  !>   from the inputcard
+  !-------------------------------------------------------------------------------
   subroutine read_old_runtestoptions(invmod,verbosity,MPI_scheme,oldstyle)
 
     use :: mod_ioinput, only: ioinput, convert_to_uppercase
@@ -2643,7 +2652,7 @@ contains
 
     integer :: i, ier, i_stat, i_all
     logical :: first
-    character (len=256) :: uio
+    character (len=:), allocatable :: uio
     character (len=8), dimension (:), allocatable :: optc
     character (len=8), dimension (:), allocatable :: testc
 

@@ -65,7 +65,7 @@ contains
     real (kind=dp) :: clurad, cluradsq, dq(3), dr(3), drsq, tol
     real (kind=dp) :: cluradxy, cluradxysq, drxysq
     logical :: lspher
-    character (len=256) :: uio                             ! NCOLIO=256
+    character (len=:), allocatable :: uio                             ! NCOLIO=256
 
     ! ..
     ido = 0

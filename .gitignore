@@ -13,6 +13,9 @@ compver
 *.pyc
 build*
 
+# Mac temporary files
+.DS_Store*
+
 # some array dimensions
 inc.p
 
@@ -57,3 +60,4 @@ develop_BdG/*/*/rll_source_hlk_atom_001_energ_001.dat
 develop_BdG/*/*/rll_source_jlk2_atom_001_energ_001.dat
 develop_BdG/*/*/rll_source_jlk_atom_001_energ_001.dat
 develop_BdG/*/*/sll_atom_001_energ_001.dat
+

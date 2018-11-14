@@ -3,15 +3,6 @@
 !> Author: 
 !> 
 !------------------------------------------------------------------------------------
-!> @note Notes on the code
-!> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
-!------------------------------------------------------------------------------------
 program kkrflex
 
 

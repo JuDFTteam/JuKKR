@@ -3,15 +3,6 @@
 !> Author:
 !> For details see vinters2010
 !------------------------------------------------------------------------------------
-!> @note Notes on the code
-!> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
-!------------------------------------------------------------------------------------
       MODULE MOD_AMNGAUNT
 
       CONTAINS
@@ -25,15 +16,6 @@
 !> This sub calculates the gaunt coefs in the ordering neaded
 !> for calculating the electrostatic AMAT^(nn')_(LL') 
 !>                                              17.09.2001
-!-------------------------------------------------------------------------------
-!> @note Notes on the code
-!> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
 !-------------------------------------------------------------------------------
       SUBROUTINE AMNGAUNT(LMAX,CLEB,ICLEB,IEND,W,YR,n,lassld,ncleb,lm3d)
       implicit none

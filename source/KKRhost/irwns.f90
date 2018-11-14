@@ -16,7 +16,7 @@ contains
   !> Born approximation (n given by input parameter icst).
   !> Author: B. Drittler, R. Zeller
   !> Date: Mar. 1989
-  !> Category: KKRhost, single-site, solver
+  !> Category: KKRhost, single-site
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
   !> Using the wave functions pz and qz ( regular and irregular

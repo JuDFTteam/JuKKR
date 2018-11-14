@@ -21,7 +21,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Calculate and write down impurity t-matrix and delta matrix first calculate t-matrix for the host corresponding to imp. cluster
   !> Author: N. H. Long
-  !> Category: solver, single-site, KKRhost 
+  !> Category: single-site, KKRhost 
   !> Deprecated: False 
   !> Calculate and write down impurity t-matrix and delta matrix
   !> first calculate t-matrix for the host corresponding to imp. cluster

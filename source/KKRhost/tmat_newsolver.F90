@@ -18,7 +18,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Calculation of the t-matrix for the new solver
   !> Author: 
-  !> Category: solver, single-site, KKRhost
+  !> Category: single-site, KKRhost
   !> Deprecated: False 
   !> Constructs potential matrix (2x2 for SOC) adding SOC potential with proper form 
   !> of small-component in the case of a scalar-relativistic calculation.
@@ -804,7 +804,7 @@ contains
   !> Summary: Wrapper routine for the allocation/deallocation of the arrays for the t-matrix
   !> calculation 
   !> Author: Philipp Ruessmann
-  !> Category: solver, single-site, memory-management, KKRhost
+  !> Category: single-site, profiling, KKRhost
   !> Deprecated: False 
   !> Wrapper routine for the allocation/deallocation of the arrays for the t-matrix
   !> calculation.
