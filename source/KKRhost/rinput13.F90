@@ -40,7 +40,7 @@ contains
     qmtet, qmphi, kreadldau, lopt, ueff, jeff, erefldau, invmod, verbosity, MPI_scheme)
 
     use :: mod_profiling, only: memocc
-    use :: mod_runoptions, only: calc_DOS_Efermi, calc_GF_Efermi, calc_exchange_couplings, &
+    use :: mod_runoptions, only: read_runoptions, calc_DOS_Efermi, calc_GF_Efermi, calc_exchange_couplings, &
       dirac_scale_SpeefOfLight, disable_charge_neutrality, modify_soc_Dirac, relax_SpinAngle_Dirac, search_Efermi, &
     set_kmesh_large, stop_1b, stop_1c, use_BdG, use_Chebychev_solver, use_cond_LB, use_decimation, use_lloyd, use_qdos, &
     use_rigid_Efermi, use_semicore, use_virtual_atoms, write_DOS, write_green_host, write_green_imp, write_kkrimp_input, &
@@ -239,9 +239,6 @@ contains
     ! ----------------------------------------------------------------------------
     ! for OPERATOR option
     logical :: lexist, operator_imp, oldstyle
-    ! IVSHIFT test option
-    logical :: test, opt
-    external :: test, opt
     ! ..
     ! .. Local Scalars ..
     real (kind=dp), parameter :: eps = 10d-13
@@ -313,7 +310,7 @@ contains
     call read_old_runtestoptions(invmod,verbosity,MPI_scheme,oldstyle)
     if(.not.oldstyle) then
         write (1337, *) '  <<< Reading in new style of run-options. >>>'
-        !call read_runoptions() <<<<< to be implemented
+        call read_runoptions()
     end if
 
 

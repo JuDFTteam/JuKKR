@@ -53,9 +53,9 @@ contains
   !>   3               WRONG!
   !>
   !>                                               1.6.99
-  !>                               Refactored on 13.11.2018
+  !>         Refactored by Bernd Zimmermann on 13.11.2018
   !> @todo
-  !>   `ifile` should be made a module-local parameter. Ensures better readability on calling routines.
+  !>   `ifile` should be made a module-local parameter. Ensures better readability on calling routines. (BZ)
   !> @endtodo
   !-------------------------------------------------------------------------------
   subroutine ioinput(key_in, value_out, skiplines, ifile, ierror)

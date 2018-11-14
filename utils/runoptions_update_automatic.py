@@ -260,10 +260,23 @@ def generate_old_readin_source():
 
 	out.close()
 
+def generate_new_readin_source():
+	keywords = construct_keywords_dict(filename='runoptions_list.txt')
+	out = open('generated_src.txt','w')
+	for key in keywords:
+		oldkeys = ["'<%s>'"%(i) for i in keywords[key][0]]
+		optlistpadd1 = ['%-30s'%(key),'%-34s'%("'<%s>'"%(key))]
+		optlistpadd2 = ['%-12s'%(i) for i in oldkeys]
+		arg = ', '.join(optlistpadd1+optlistpadd2)
+		line = "    call set_runoption(%s)\n"%(arg)
+		out.write(line)
 
+	out.close()
+	
 if __name__ == '__main__':
 	#automatic_replacement_all_sources()
 	#append_use_statement_to_subroutine()
 	#filter_opt_test_calls()
 	#remove_opt_test_definitions()
-	generate_old_readin_source()
+	#generate_old_readin_source()
+	generate_new_readin_source()

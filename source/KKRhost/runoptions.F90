@@ -122,7 +122,181 @@ module mod_runoptions
 
   contains
 
+  !-------------------------------------------------------------------------------
+  !> Summary: Convenience function to set a runoption
+  !> Author: Bernd Zimmermann
+  !> Category: KKRhost
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Read and set runoptions (new style as <keyword>= value)
+  !-------------------------------------------------------------------------------
+  subroutine read_runoptions()
 
+    implicit none
+
+    call set_runoption(formatted_files               , '<formatted_files>'               , '<fileverb>')
+    call set_runoption(use_ldau                      , '<use_ldau>'                      , '<LDA+U>'   )
+    call set_runoption(set_kmesh_large               , '<set_kmesh_large>'               , '<fix mesh>')
+    call set_runoption(write_madelung_file           , '<write_madelung_file>'           , '<madelfil>')
+    call set_runoption(write_BdG_tests               , '<write_BdG_tests>'               , '<BdG_dev>' )
+    call set_runoption(use_virtual_atoms             , '<use_virtual_atoms>'             , '<VIRATOMS>')
+    call set_runoption(write_gmat_ascii              , '<write_gmat_ascii>'              , '<gmatasci>')
+    call set_runoption(use_rigid_Efermi              , '<use_rigid_Efermi>'              , '<rigid-ef>')
+    call set_runoption(use_Chebychev_solver          , '<use_Chebychev_solver>'          , '<NEWSOSOL>')
+    call set_runoption(write_pkkr_input              , '<write_pkkr_input>'              , '<FERMIOUT>')
+    call set_runoption(calc_complex_bandstructure    , '<calc_complex_bandstructure>'    , '<COMPLEX>' )
+    call set_runoption(write_pkkr_operators          , '<write_pkkr_operators>'          , '<OPERATOR>')
+    call set_runoption(print_ickeck                  , '<print_ickeck>'                  , '<ICHECK>'  )
+    call set_runoption(print_Gij                     , '<print_Gij>'                     , '<Gmatij>'  )
+    call set_runoption(modify_soc_Dirac              , '<modify_soc_Dirac>'              , '<SOC>'     )
+    call set_runoption(write_lloyd_tralpha_file      , '<write_lloyd_tralpha_file>'      , '<wrttral>' )
+    call set_runoption(write_lloyd_cdos_file         , '<write_lloyd_cdos_file>'         , '<wrtcdos>' )
+    call set_runoption(calc_gmat_lm_full             , '<calc_gmat_lm_full>'             , '<lmlm-dos>')
+    call set_runoption(simulate_asa                  , '<simulate_asa>'                  , '<simulasa>')
+    call set_runoption(use_readcpa                   , '<use_readcpa>'                   , '<readcpa>' )
+    call set_runoption(print_kpoints                 , '<print_kpoints>'                 , '<BZKP>'    )
+    call set_runoption(use_cont                      , '<use_cont>'                      , '<CONT>'    )
+    call set_runoption(print_tmat                    , '<print_tmat>'                    , '<tmat>'    )
+    call set_runoption(use_BdG                       , '<use_BdG>'                       , '<useBdG>'  )
+    call set_runoption(disable_reference_system      , '<disable_reference_system>'      , '<lrefsysf>')
+    call set_runoption(relax_SpinAngle_Dirac         , '<relax_SpinAngle_Dirac>'         , '<ITERMDIR>')
+    call set_runoption(write_rho2ns                  , '<write_rho2ns>'                  , '<RHOVALTW>', '<RHOVALW>' )
+    call set_runoption(write_generalized_potential   , '<write_generalized_potential>'   , '<GENPOT>'  )
+    call set_runoption(print_gmat                    , '<print_gmat>'                    , '<Gmat>'    )
+    call set_runoption(write_lloyd_dtmat_file        , '<write_lloyd_dtmat_file>'        , '<wrtdtmat>')
+    call set_runoption(write_deci_pot                , '<write_deci_pot>'                , '<deci-pot>')
+    call set_runoption(torque_operator_onlySph       , '<torque_operator_onlySph>'       , '<ONLYSPH>' )
+    call set_runoption(print_tau_structure           , '<print_tau_structure>'           , '<TAUSTRUC>')
+    call set_runoption(write_complex_qdos            , '<write_complex_qdos>'            , '<compqdos>')
+    call set_runoption(use_full_BZ                   , '<use_full_BZ>'                   , '<fullBZ>'  )
+    call set_runoption(use_semicore                  , '<use_semicore>'                  , '<SEMICORE>')
+    call set_runoption(set_gmat_to_zero              , '<set_gmat_to_zero>'              , '<GMAT=0>'  )
+    call set_runoption(use_decimation                , '<use_decimation>'                , '<DECIMATE>')
+    call set_runoption(write_kkrimp_input            , '<write_kkrimp_input>'            , '<KKRFLEX>' )
+    call set_runoption(write_green_imp               , '<write_green_imp>'               , '<GREENIMP>')
+    call set_runoption(use_cond_LB                   , '<use_cond_LB>'                   , '<CONDUCT>' )
+    call set_runoption(write_potential_tests         , '<write_potential_tests>'         , '<vintrasp>', '<vpotout>' )
+    call set_runoption(disable_print_serialnumber    , '<disable_print_serialnumber>'    , '<noserial>')
+    call set_runoption(symmetrize_gmat               , '<symmetrize_gmat>'               , '<symG(k)>' )
+    call set_runoption(write_density_ascii           , '<write_density_ascii>'           , '<den-asci>')
+    call set_runoption(write_rhoq_input              , '<write_rhoq_input>'              , '<rhoqtest>')
+    call set_runoption(use_ewald_2d                  , '<use_ewald_2d>'                  , '<ewald2d>' )
+    call set_runoption(write_DOS                     , '<write_DOS>'                     , '<DOS>'     )
+    call set_runoption(write_energy_mesh             , '<write_energy_mesh>'             , '<EMESH>'   )
+    call set_runoption(dirac_scale_SpeefOfLight      , '<dirac_scale_SpeefOfLight>'      , '<CSCALE>'  )
+    call set_runoption(write_kpts_file               , '<write_kpts_file>'               , '<kptsfile>')
+    call set_runoption(slow_mixing_Efermi            , '<slow_mixing_Efermi>'            , '<slow-neu>')
+    call set_runoption(use_deci_onebulk              , '<use_deci_onebulk>'              , '<ONEBULK>' )
+    call set_runoption(write_gmat_plain              , '<write_gmat_plain>'              , '<GPLAIN>'  )
+    call set_runoption(disable_charge_neutrality     , '<disable_charge_neutrality>'     , '<no-neutr>')
+    call set_runoption(stop_1c                       , '<stop_1c>'                       , '<STOP1C>'  )
+    call set_runoption(stop_1b                       , '<stop_1b>'                       , '<STOP1B>'  )
+    call set_runoption(stop_1a                       , '<stop_1a>'                       , '<STOP1A>'  )
+    call set_runoption(print_kmesh                   , '<print_kmesh>'                   , '<k-net>'   )
+    call set_runoption(fix_nonco_angles              , '<fix_nonco_angles>'              , '<FIXMOM>'  )
+    call set_runoption(set_kmesh_small               , '<set_kmesh_small>'               , '<fix4mesh>')
+    call set_runoption(disable_tmat_sratrick         , '<disable_tmat_sratrick>'         , '<nosph>'   )
+    call set_runoption(print_refpot                  , '<print_refpot>'                  , '<REFPOT>'  )
+    call set_runoption(write_lloyd_files             , '<write_lloyd_files>'             , '<llyfiles>')
+    call set_runoption(symmetrize_potential_madelung , '<symmetrize_potential_madelung>' , '<potsymm>' )
+    call set_runoption(set_cheby_nosoc               , '<set_cheby_nosoc>'               , '<NOSOC>'   )
+    call set_runoption(set_empty_system              , '<set_empty_system>'              , '<zeropot>' )
+    call set_runoption(write_tmat_file               , '<write_tmat_file>'               , '<tmatfile>')
+    call set_runoption(write_tb_coupling             , '<write_tb_coupling>'             , '<godfrin>' )
+    call set_runoption(symmetrize_potential_cubic    , '<symmetrize_potential_cubic>'    , '<potcubic>')
+    call set_runoption(print_radial_mesh             , '<print_radial_mesh>'             , '<RMESH>'   )
+    call set_runoption(impurity_operator_only        , '<impurity_operator_only>'        , '<IMP_ONLY>')
+    call set_runoption(write_gref_file               , '<write_gref_file>'               , '<greffile>')
+    call set_runoption(write_green_host              , '<write_green_host>'              , '<WRTGREEN>')
+    call set_runoption(no_madelung                   , '<no_madelung>'                   , '<NoMadel>' )
+    call set_runoption(set_tmat_noinversion          , '<set_tmat_noinversion>'          , '<testgmat>')
+    call set_runoption(calc_exchange_couplings_energy, '<calc_exchange_couplings_energy>', '<Jijenerg>')
+    call set_runoption(calc_GF_Efermi                , '<calc_GF_Efermi>'                , '<GF-EF>'   )
+    call set_runoption(write_cpa_projection_files    , '<write_cpa_projection_files>'    , '<projfile>')
+    call set_runoption(write_kkrsusc_input           , '<write_kkrsusc_input>'           , '<KKRSUSC>' )
+    call set_runoption(calc_exchange_couplings       , '<calc_exchange_couplings>'       , '<XCPL>'    )
+    call set_runoption(print_program_flow            , '<print_program_flow>'            , '<flow>'    )
+    call set_runoption(use_spherical_potential_only  , '<use_spherical_potential_only>'  , '<Vspher>'  )
+    call set_runoption(search_Efermi                 , '<search_Efermi>'                 , '<SEARCHEF>')
+    call set_runoption(set_cheby_nospeedup           , '<set_cheby_nospeedup>'           , '<norllsll>')
+    call set_runoption(write_lloyd_g0tr_file         , '<write_lloyd_g0tr_file>'         , '<wrtgotr>' )
+    call set_runoption(write_deci_tmat               , '<write_deci_tmat>'               , '<deci-out>')
+    call set_runoption(calc_DOS_Efermi               , '<calc_DOS_Efermi>'               , '<DOS-EF>'  )
+    call set_runoption(use_qdos                      , '<use_qdos>'                      , '<qdos>'    )
+    call set_runoption(write_lloyd_dgref_file        , '<write_lloyd_dgref_file>'        , '<wrtdgref>')
+    call set_runoption(torque_operator_onlyMT        , '<torque_operator_onlyMT>'        , '<ONLYMT>'  )
+    call set_runoption(write_DOS_lm                  , '<write_DOS_lm>'                  , '<lmdos>'   )
+    call set_runoption(use_lloyd                     , '<use_lloyd>'                     , '<LLOYD>'   )
+    call set_runoption(write_gmat_file               , '<write_gmat_file>'               , '<gmatfile>')
+
+  end subroutine read_runoptions
+
+
+  !-------------------------------------------------------------------------------
+  !> Summary: Convenience function to set a runoption
+  !> Author: Bernd Zimmermann
+  !> Category: KKRhost
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Convenience function to set a runoptions. New style as <Keyword>= Value is used.
+  !> In addition to a default keyword, up to two alternative versions can be given to set the runoption.
+  !-------------------------------------------------------------------------------
+  subroutine set_runoption(runop,key,key_alt1,key_alt2)
+    use mod_ioinput, only: ioinput, convert_to_uppercase
+
+    implicit none
+
+    logical,          intent(inout)        :: runop    !!runoption to be set
+    character(len=*), intent(in)           :: key      !!corresponding keyword in inputcard
+    character(len=*), intent(in), optional :: key_alt1 !!alternative keyword in inputcard
+    character(len=*), intent(in), optional :: key_alt2 !!alternative keyword in inputcard
+
+    character(len=:), allocatable :: uio
+    character(len=:), allocatable :: key_upper !! keyword 
+    integer :: ier
+    integer, parameter :: ifile = 7
+
+    key_upper = convert_to_uppercase(trim(adjustl(key)))
+
+    call ioinput(key, uio, 1, ifile, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*) runop
+      write (111, *) key_upper // '= ', runop
+
+    else if(present(key_alt1)) then
+      call ioinput(key_alt1, uio, 1, ifile, ier)
+      if (ier==0) then
+        read (unit=uio, fmt=*) runop
+        write (111, *) key_upper // '= ', runop
+
+      else if(present(key_alt2)) then
+        call ioinput(key_alt2, uio, 1, ifile, ier)
+        if (ier==0) then
+          read (unit=uio, fmt=*) runop
+          write (111, *) key_upper // '= ', runop
+
+        else
+          write (111, *) 'Default ' // key_upper // '= ', runop
+        end if
+      else
+        write (111, *) 'Default ' // key_upper // '= ', runop
+      end if
+    else
+      write (111, *) 'Default ' // key_upper // '= ', runop
+    end if
+
+  end subroutine set_runoption
+
+
+  !-------------------------------------------------------------------------------
+  !> Summary: Sets the runoptions in case the old style (fixed format) is used 
+  !> Author: Bernd Zimmermann
+  !> Category: KKRhost
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> Sets the runoptions in case the old style (fixed format) is used.
+  !> New code behaviour! Case-inseneitivity is introduced.
+  !-------------------------------------------------------------------------------
   subroutine set_old_runoption(keyword_in,invmod,verbosity,MPI_scheme)
 
     use :: mod_ioinput, only: convert_to_uppercase
