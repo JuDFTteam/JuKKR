@@ -246,7 +246,6 @@ contains
       visp, rmrel, drdirel, vbc, fsold, r2drdirel, ecore, ez, wez, txc, linterface, &
       lrhosym, ngshd, naez, irid, nspotd, iemxd, special_straight_mixing)
 
-    write(*,*) 'special_straight_mixing=', special_straight_mixing
 
     ! -------------------------------------------------------------------------
     ! Reading the density parameters stored in t_params

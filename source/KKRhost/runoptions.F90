@@ -227,6 +227,8 @@ module mod_runoptions
     call set_runoption(use_lloyd                     , '<use_lloyd>'                     , '<LLOYD>'   )
     call set_runoption(write_gmat_file               , '<write_gmat_file>'               , '<gmatfile>')
 
+    write (555,*) 'in read_runoptions:', calc_exchange_couplings
+
   end subroutine read_runoptions
 
 
@@ -665,8 +667,8 @@ module mod_runoptions
     implicit none
     integer :: ierr
 
-    call mpi_bcast(t_params%npan_log, 1, mpi_integer, master, mpi_comm_world, ierr)
-    call mpi_bcast(t_params%npan_eq, 1, mpi_integer, master, mpi_comm_world, ierr)
+    !call mpi_bcast(t_params%npan_log, 1, mpi_integer, master, mpi_comm_world, ierr)
+    !call mpi_bcast(t_params%npan_eq, 1, mpi_integer, master, mpi_comm_world, ierr)
 
   end subroutine bcast_runoptions
 #endif CPP_MPI

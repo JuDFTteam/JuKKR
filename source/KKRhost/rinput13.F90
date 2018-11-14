@@ -1805,12 +1805,12 @@ contains
       write (111, *) 'Default IMIX= ', imix
     end if
     if (imix==0) then
-      call ioinput('<special_straight_mixing>', uio, 1, 7, ier)
+      call ioinput('<SPECIAL_STRAIGHT_MIXING>', uio, 1, 7, ier)
       if (ier==0) then
         read (unit=uio, fmt=*) special_straight_mixing
-        write (111, *) '<special_straight_mixing>= ', special_straight_mixing
+        write (111, *) '<SPECIAL_STRAIGHT_MIXING>= ', special_straight_mixing
       else
-        write (111, *) 'Default <special_straight_mixing>= ', special_straight_mixing
+        write (111, *) 'Default <SPECIAL_STRAIGHT_MIXING>= ', special_straight_mixing
       end if
     end if
     if (npol==0) then
@@ -2537,6 +2537,8 @@ contains
       deallocate (imansoc, stat=i_stat)
       call memocc(i_stat, i_all, 'IMANSOC', 'rinput13')
     end if
+
+    write (555,*) 'at the end of rinput:', calc_exchange_couplings
 
     return
     !--------------------------------------------------------------------------------
