@@ -273,10 +273,21 @@ def generate_new_readin_source():
 
 	out.close()
 	
+
+def generate_bcast():
+	keywords = construct_keywords_dict(filename='runoptions_list.txt')
+	out = open('generated_src.txt','w')
+	for key in keywords:
+		line = "    call mpi_bcast(%-30s, 1, mpi_logical, master, mpi_comm_world, ierr)\n"%(key)
+		out.write(line)
+
+	out.close()
+	
 if __name__ == '__main__':
 	#automatic_replacement_all_sources()
 	#append_use_statement_to_subroutine()
 	#filter_opt_test_calls()
 	#remove_opt_test_definitions()
 	#generate_old_readin_source()
-	generate_new_readin_source()
+	#generate_new_readin_source()
+	generate_bcast()
