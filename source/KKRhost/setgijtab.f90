@@ -67,7 +67,6 @@ contains
     ! ======================================================================
     if (use_cond_LB) call gijcond(ido, naez, rbasis, iqat, natomimp, rclsimp, atomimp, ijtabcalc, natomimpd)
     ! ======================================================================
-    write (555,*) 'in setgijtab:', calc_exchange_couplings
     if (calc_exchange_couplings) call gijxcpl(ido, naez, rbasis, bravais, linterface, nqcalc, iqcalc, natomimp, rclsimp, atomimp, ijtabcalc, ijtabcalc_i, natomimpd)
     ! ======================================================================
     if (ido==0) then

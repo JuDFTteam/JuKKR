@@ -14,6 +14,7 @@ module mod_runoptions
   implicit none
 
   public
+  save
 
   logical :: calc_DOS_Efermi = .false.                 !!calculate DOS at Fermi energy only (former: 'DOS-EF')
   logical :: calc_GF_Efermi = .false.                  !!calculation of cluster Green function at E Fermi (former: 'GF-EF')
@@ -226,8 +227,6 @@ module mod_runoptions
     call set_runoption(write_DOS_lm                  , '<write_DOS_lm>'                  , '<lmdos>'   )
     call set_runoption(use_lloyd                     , '<use_lloyd>'                     , '<LLOYD>'   )
     call set_runoption(write_gmat_file               , '<write_gmat_file>'               , '<gmatfile>')
-
-    write (555,*) 'in read_runoptions:', calc_exchange_couplings
 
   end subroutine read_runoptions
 

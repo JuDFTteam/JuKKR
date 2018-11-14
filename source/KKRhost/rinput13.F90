@@ -2538,7 +2538,6 @@ contains
       call memocc(i_stat, i_all, 'IMANSOC', 'rinput13')
     end if
 
-    write (555,*) 'at the end of rinput:', calc_exchange_couplings
 
     return
     !--------------------------------------------------------------------------------
