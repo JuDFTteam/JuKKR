@@ -31,7 +31,7 @@ program kkrcode
   use :: mod_save_wavefun, only: t_wavefunctions
 #endif
   use :: mod_constants, only: czero, nsymaxd
-  use :: mod_runoptions, only: disable_print_serialnumber, stop_1a, stop_1b, stop_1c, write_green_host, use_qdos
+  use :: mod_runoptions, only: disable_print_serialnumber, stop_1a, stop_1b, stop_1c, write_green_host, use_qdos, bcast_runoptions
   use :: mod_profiling, only: memocc
   use :: mod_types, only: t_inc, t_lloyd, t_cpa, t_mpi_c_grid, t_tgmat
   use :: mod_timing, only: timing_start, timing_stop, timing_init, timings_1a, timings_1b, load_imbalance, print_time_and_date
@@ -152,6 +152,8 @@ program kkrcode
 #ifdef CPP_MPI
   ! now communicate type t_inc and t_tgmat switches (this has an implicit barrier, so that all other processes wait for master to finish with main0)
   if (myrank==master) call timing_start('MPI 1')
+  call bcast_runoptions()
+
   call bcast_t_inc_tgmat(t_inc, t_tgmat, t_cpa, master)
 
   ! also communicate logicals from t_lloyd

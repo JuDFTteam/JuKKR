@@ -874,7 +874,6 @@ contains
     end if                         ! LLY/=0                                                       ! LLY
 
 
-
     if ((calc_exchange_couplings) .and. (icc<=0)) then
 #ifdef CPP_TIMING
       call timing_start('main1b - tbxccpl')
