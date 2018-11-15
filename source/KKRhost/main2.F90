@@ -37,6 +37,10 @@ contains
   subroutine main2()
 
     use :: mod_constants, only: pi
+    use :: mod_runoptions, only: disable_charge_neutrality, no_madelung, print_program_flow, relax_SpinAngle_Dirac, &
+      search_Efermi, simulate_asa, slow_mixing_Efermi, symmetrize_potential_cubic, symmetrize_potential_madelung, &
+      use_decimation, use_rigid_Efermi, use_semicore, use_spherical_potential_only, write_deci_tmat, write_kkrimp_input, &
+      write_madelung_file, write_potential_tests, write_rho2ns
     use :: global_variables, only: krel, ipand, npotd, natomimpd, lmxspd, iemxd, nspotd, irid, ngshd, linterface, &
       nfund, ncelld, irmd, nembd1, nembd, irmind, lmmaxd, wlength, natypd, naezd, lmpotd, lpotd, lmaxd, nspind, nspotd, &
       ipand, ngshd, irid, nfund, ncelld
@@ -74,6 +78,7 @@ contains
     use :: mod_vxcdrv, only: vxcdrv
     use :: mod_rinit, only: rinit 
     use :: mod_convol, only: convol
+    use :: mod_types, only: t_madel
 
     implicit none
 
@@ -97,6 +102,7 @@ contains
     integer :: lrecabmad
     integer :: i_stat, i_all
     integer :: i, j, ie, i1, i2, ih, it, io, lm, ir, irec
+    integer :: special_straight_mixing !!id to specify modified straight mixing scheme: 0=normal, 1=alternating mixing factor (i.e. reduced mixing factor in every odd iteration), 2=charge-neurality based mixing factor (former: 'alt mix' and 'spec mix')
     real (kind=dp) :: df
     real (kind=dp) :: rv
     real (kind=dp) :: mix
@@ -196,8 +202,6 @@ contains
     real (kind=dp), dimension (:, :, :, :), allocatable :: rho2nsnm
 
     ! .. External Subroutines
-    logical :: opt
-    logical :: test
 
 
     lmaxd1 = lmax + 1
@@ -240,7 +244,8 @@ contains
       mixing, lambda_xc, a, b, thetas, drdi, rmesh, zat, rmt, rmtnew, rws, emin, emax, &
       tk, alat, efold, chrgold, cmomhost, conc, gsh, ebotsemi, emusemi, tksemi, vins, &
       visp, rmrel, drdirel, vbc, fsold, r2drdirel, ecore, ez, wez, txc, linterface, &
-      lrhosym, ngshd, naez, irid, nspotd, iemxd)
+      lrhosym, ngshd, naez, irid, nspotd, iemxd, special_straight_mixing)
+
 
     ! -------------------------------------------------------------------------
     ! Reading the density parameters stored in t_params
@@ -267,7 +272,7 @@ contains
     ipf = 1337
     nspin = 2*krel + (1-krel)*nspin
     idosemicore = 0
-    if (opt('SEMICORE')) idosemicore = 1
+    if (use_semicore) idosemicore = 1
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!  ITERATION BEGIN  !!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -292,14 +297,14 @@ contains
     ! -------------------------------------------------------------------------
     ! Determine total charge density expanded in spherical harmonics
     ! -------------------------------------------------------------------------
-    if (test('flow    ')) write (1337, *) '>>> RHOTOTB'
+    if (print_program_flow) write (1337, *) '>>> RHOTOTB'
     call rhototb(ipf, natyp, naez, nspin, rho2ns, rhoc, rhoorb, zat, drdi, irws, ircut, &
       nfu, llmsp, thetas, ntcell, kshape, ipan, chrgnt, itscf, nshell, noq, conc, kaoez,&
       chrgatom, irmd, nemb, lmpot)
 
-    if (test('flow    ')) write (1337, *) '<<< RHOTOTB'
+    if (print_program_flow) write (1337, *) '<<< RHOTOTB'
 
-    if (test('RHOVALTW')) then     ! Bauer
+    if (write_rho2ns) then     ! Bauer
       open (unit=324234, file='out_rhotot')
       do i1 = 1, natyp
         write (324234, *) '#IATOM', i1
@@ -322,11 +327,11 @@ contains
     e2shift = min(abs(e2shift), 0.05_dp)*sign(1.0_dp, e2shift)
     efold = emax
     chrgold = chrgnt
-    if (test('no-neutr') .or. opt('no-neutr')) then
+    if (disable_charge_neutrality) then
       write (1337, *) 'test-opt no-neutr: Setting FERMI level shift to zero'
       e2shift = 0.0_dp
     end if
-    if (test('slow-neu') .or. opt('slow-neu')) then
+    if (slow_mixing_Efermi) then
       write (1337, *) 'test-opt slow-neu: FERMI level shift * STRMIX'
       e2shift = e2shift*mixing
     end if
@@ -369,7 +374,7 @@ contains
       ! ----------------------------------------------------------------------
       ! Get correct density
       ! ----------------------------------------------------------------------
-      if (.not. (opt('DECIMATE'))) then
+      if (.not. (use_decimation)) then
         do i1 = 1, natyp
           do lm = 1, lmpot
             call daxpy(irc(i1), df, r2nef(1,lm,i1,ispin), 1, rho2ns(1,lm,i1,ispin), 1)
@@ -385,7 +390,7 @@ contains
     ! -------------------------------------------------------------------------
     ! ITERMDIR
     ! -------------------------------------------------------------------------
-    if ((krel==1) .and. (opt('ITERMDIR'))) then
+    if ((krel==1) .and. (relax_SpinAngle_Dirac)) then
       mvevi = t_params%mvevi
       mvevief = t_params%mvevief
 
@@ -401,7 +406,7 @@ contains
         fact(i) = fact(i-1)*real(i, kind=dp)
       end do
       ! ----------------------------------------------------------------------
-      if (.not. (opt('DECIMATE'))) then
+      if (.not. (use_decimation)) then
         do i1 = 1, natyp
           do lm = 1, nmvec
             do it = 1, 3
@@ -439,7 +444,7 @@ contains
     call vintras(cmom, cminst, lpot, nspin, 1, natyp, rho2ns, vons, rmesh, drdi, irws, &
       ircut, ipan, kshape, ntcell, ilm_map, ifunm, imaxsh, gsh, thetas, lmsp, lmpot, natyp)
 
-    if (test('vintrasp')) then     ! Bauer
+    if (write_potential_tests) then     ! Bauer
       open (unit=786785, file='test_vintraspot')
       do i1 = 1, nspin*natyp
         write (786785, *) '# atom/spin index ', i1
@@ -449,7 +454,7 @@ contains
     end if
 
     ! -------------------------------------------------------------------------
-    ! fivos     IF ( .NOT.TEST('NoMadel ').AND. ( SCFSTEPS.GT.1 )
+    ! fivos     IF ( .NOT.no_madelung.AND. ( SCFSTEPS.GT.1 )
     ! fivos     &     .OR. (ICC .GT. 0 ) )THEN
     ! -------------------------------------------------------------------------
     if (linterface) then
@@ -464,7 +469,7 @@ contains
         lmpot, natyp)
     end if
 
-    if (opt('KKRFLEX ')) then
+    if (write_kkrimp_input) then
       call writekkrflex(natomimp, nspin, ielast, (lpot+1)**2, alat, natyp, kshape, vbc, &
         atomimp, hostimp, noq, zat, kaoez, conc, cmom, cminst, vinters, nemb, naez)
     end if
@@ -472,8 +477,8 @@ contains
     ! -------------------------------------------------------------------------
     ! fivos      END IF
     ! -------------------------------------------------------------------------
-    if (test('Vspher  ')) vons(1:irmd, 2:lmpot, 1:npotd) = 0.0_dp
-    if (test('vpotout ')) then     ! bauer
+    if (use_spherical_potential_only) vons(1:irmd, 2:lmpot, 1:npotd) = 0.0_dp
+    if (write_potential_tests) then     ! bauer
       open (unit=54633163, file='test_vpotout_inter')
       do i1 = 1, natyp*nspin
         write (54633163, *) '# atom ', i1
@@ -491,7 +496,7 @@ contains
     ! hence the CMOMS are calculated site-dependent. In the same format
     ! are read in by <MAIN0> -- < CMOMSREAD >     v.popescu 01/02/2002
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    if (opt('deci-out') .and. (itscf==1)) then
+    if (write_deci_tmat .and. (itscf==1)) then
       open (37, file='decifile', form='formatted', position='append')
       write (37, 150) naez, lmpot
       do ih = 1, naez
@@ -550,7 +555,7 @@ contains
     call vxcdrv(exc, kte, kxc, lpot, nspin, 1, natyp, rho2ns, vxcm, rmesh, drdi, a, &
       irws, ircut, ipan, ntcell, kshape, gsh, ilm_map, imaxsh, ifunm, thetas, lmsp)
 
-    if (test('Vspher  ')) vons(1:irmd, 2:lmpot, 1:npotd) = 0.0_dp
+    if (use_spherical_potential_only) vons(1:irmd, 2:lmpot, 1:npotd) = 0.0_dp
 
     ! Recalculate XC-potential with zero spin density for magn. moment scaling
     vxcnm(:, :, :) = 0.0_dp          ! Initialize
@@ -575,7 +580,7 @@ contains
     exc(:, :) = lambda_xc*exc(:, :) + (1.0_dp-lambda_xc)*excnm(:, :)
 
 
-    if (test('vpotout ')) then     ! bauer
+    if (write_potential_tests) then     ! bauer
       open (unit=57633263, file='test_vpotout_xc')
       do i1 = 1, natyp*nspin
         write (57633263, *) '# atom ', i1
@@ -643,7 +648,7 @@ contains
     ! Convolute potential with shape function for next iteration
     ! -------------------------------------------------------------------------
 
-    if (test('vpotout ')) then     ! bauer
+    if (write_potential_tests) then     ! bauer
       open (unit=12633269, file='test_vpotout_shift')
       do i1 = 1, natyp*nspin
         write (12633269, *) '# atom ', i1
@@ -657,7 +662,7 @@ contains
         do i1 = 1, natyp
           ipot = nspin*(i1-1) + ispin
 
-          if (test('vpotout ')) then ! bauer
+          if (write_potential_tests) then ! bauer
             open (unit=12642269, file='test_convol')
             write (12642269, *) '# atom ', i1
 
@@ -673,7 +678,7 @@ contains
       end do
     end if
 
-    if (test('vpotout ')) then     ! bauer
+    if (write_potential_tests) then     ! bauer
       open (unit=57633269, file='test_vpotout_conv')
       do i1 = 1, natyp*nspin
         write (57633269, *) '# atom ', i1
@@ -686,7 +691,7 @@ contains
     ! Symmetrisation of the potentials
     ! -------------------------------------------------------------------------
     ! Keep only symmetric part of the potential
-    if (test('potcubic')) then
+    if (symmetrize_potential_cubic) then
       write (1337, *) 'Keeping only symmetric part of potential:'
       write (1337, *) 'Components L = 1, 11, 21, 25, 43, 47.'
       do ipot = 1, npotd
@@ -700,20 +705,24 @@ contains
       end do
     end if
 
-    if (test('potsymm ')) then
+    if (symmetrize_potential_madelung) then
       ! declarations needed:
       ! real (kind=dp) AVMAD(LMPOT,LMPOT),BVMAD(LMPOT)
       ! INTEGER LRECABMAD,I2,IREC
       ! LOGICAL LPOTSYMM(NATYP,LMPOT)
       lrecabmad = wlength*2*lmpot*lmpot + wlength*2*lmpot
-      open (69, access='direct', recl=lrecabmad, file='abvmad.unformatted', form='unformatted')
+      if (write_madelung_file) open (69, access='direct', recl=lrecabmad, file='abvmad.unformatted', form='unformatted')
       do i1 = 1, natyp
         do lm = 1, lmpot
           lpotsymm(i1, lm) = .false.
         end do
         do i2 = 1, natyp
           irec = i2 + naez*(i1-1)
-          read (69, rec=irec) avmad, bvmad
+          if (write_madelung_file) then
+            read (69, rec=irec) avmad, bvmad
+          else
+            bvmad = t_madel%bvmad(irec,:)
+          end if
           do lm = 1, lmpot
             if (abs(bvmad(lm))>1d-10) lpotsymm(i1, lm) = .true.
           end do
@@ -731,10 +740,10 @@ contains
           end if
         end do
       end do
-      close (69)
+      if (write_madelung_file) close (69)
     end if
 
-    if (test('vpotout ')) then     ! bauer
+    if (write_potential_tests) then     ! bauer
       open (unit=54633563, file='test_vpotout')
       do i1 = 1, natyp*nspin
         write (54633563, *) '# atom ', i1
@@ -744,7 +753,7 @@ contains
     end if                         ! config_testflag('write_gmatonsite')
 
     ! for simulasa:
-    if (opt('simulasa')) then
+    if (simulate_asa) then
       do ias = 1, npotd
         do ilm_mapp = 1, lmpot
           do ipos = 1, irmd
@@ -760,8 +769,8 @@ contains
     ! Final construction of the potentials (straight mixing)
     ! -------------------------------------------------------------------------
     mix = mixing
-    if (test('alt mix ')) mix = mixing/real(1+mod(itscf,2), kind=dp)
-    if (test('spec mix')) then
+    if (special_straight_mixing==1) mix = mixing/real(1+mod(itscf,2), kind=dp)
+    if (special_straight_mixing==2) then
       mix = mixing/(1.0d0+1.0d+3*abs(chrgnt)/real(naez*nspin,kind=dp))
     end if
     write (1337, *) 'MIXSTR', mix
@@ -823,7 +832,7 @@ contains
     rewind 11
 
     efnew = emax
-    if (opt('rigid-ef') .or. opt('DECIMATE')) efnew = efold
+    if (use_rigid_Efermi .or. use_decimation) efnew = efold
 
     if (ishift==2) then            ! Shift mixed potential to new muffin-tin zero       ! fxf
       vbc(1) = vbc(1) + e2shift    ! fxf
@@ -842,7 +851,7 @@ contains
     ! -------------------------------------------------------------------------
     ! ENERGIES calculation
     ! -------------------------------------------------------------------------
-    if ((kte==1 .and. icc==0) .or. opt('KKRFLEX ')) then
+    if ((kte==1 .and. icc==0) .or. write_kkrimp_input) then
       call etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, nspin, &
         natyp, nshell(1), conc, idoldau, lopt, eu, edc)
     end if
@@ -852,7 +861,7 @@ contains
     ! -------------------------------------------------------------------------
     ! CONVERGENCY TESTS
     ! -------------------------------------------------------------------------
-    if (opt('SEARCHEF') .and. (abs(e2shift)<1d-8)) then
+    if (search_Efermi .and. (abs(e2shift)<1d-8)) then
       t_inc%i_iteration = t_inc%n_iteration
       icont = 0
       go to 100

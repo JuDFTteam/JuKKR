@@ -25,7 +25,8 @@ contains
   subroutine outtmathost(alat,ins,krel,kmrot,nspin,naez,lmmax,bravais,rbasis,qmtet, &
     qmphi,e2in,tk,npol,npnt1,npnt2,npnt3)
 
-    use :: mod_version_info
+    use :: mod_version_info, only: version_print_header
+    use :: mod_runoptions, only: disable_print_serialnumber
     implicit none
     ! ..
     ! .. Input variables
@@ -52,7 +53,7 @@ contains
     write (1337, '(5X,A,/)') '< DECIOPT > : writing header of decimation file'
 
     open (37, file='decifile', status='unknown')
-    call version_print_header(37)
+    call version_print_header(37, disable_print=disable_print_serialnumber)
     write (37, fmt=*) 'INVERSE T-MATRIX AND CMOMS'
     write (37, fmt=100)
     write (37, fmt=110) alat, nspin, naez, lmmax, ins, krel, kmrot

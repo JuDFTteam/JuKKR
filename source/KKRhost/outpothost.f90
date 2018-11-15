@@ -38,7 +38,8 @@ contains
     qmtet,qmphi,noq,kaoez,iqat,zat,conc,ipan,ircut,solver,soc,ctl,irws,rmt,rws,rr,  &
     drdi,visp,irshift,rmrel,drdirel,vtrel,btrel,lmaxd,natypd,naezd,ipand,irmd)
 
-    use :: mod_version_info
+    use :: mod_version_info, only: version_print_header
+    use :: mod_runoptions, only: disable_print_serialnumber
 
     implicit none
     ! .. Input variables 
@@ -104,7 +105,7 @@ contains
     write (1337, '(5X,A,A,/)') '< OUTPOTHOST > : ', 'creating decimate.pot file - host potential'
 
     open (37, file='decimate.pot', status='unknown')
-    call version_print_header(37)
+    call version_print_header(37, disable_print=disable_print_serialnumber)
     write (37, fmt=*) 'Host structure and potential for decimation'
     write (37, fmt=100)
     write (37, fmt=140) krel, ins, nspin, kmrot

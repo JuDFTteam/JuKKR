@@ -19,10 +19,12 @@ contains
   !> 
   !> changes for impurity 20/02/2004 -- v.popescu according to n.papanikolaou
   !-------------------------------------------------------------------------------
-  subroutine bzkint0(nshell, naez, natyp, noq, rbasis, kaoez, icc, bravais, recbv, atomimp, rsymat, isymindex, nsymat, ifilimp, natomimp, &
+  subroutine bzkint0(nshell, naez, natyp, noq, rbasis, kaoez, icc, bravais, recbv, atomimp, rsymat, isymindex, nsymat, ifilimp, natomimp, & 
     nsh1, nsh2, rclsimp, ratom, ijtabsym, ijtabsh, ijtabcalc, iofgij, jofgij, nofgij, ish, jsh, rrot, dsymll, para, qmtet, qmphi, symunitary, &
     hostimp, intervx, intervy, intervz, ielast, ez, kmesh, maxmesh, maxmshd, nsymaxd, krel, lmaxd, lmmaxd, kpoibz, naezd, natypd, natomimpd, &
     nsheld, nembd)
+
+    use :: mod_runoptions, only: print_tau_structure, use_Chebychev_solver, use_full_BZ
     use :: mod_datatypes, only: dp
     use :: mod_gfshells, only: gfshells
     use :: mod_crtstar, only: crtstar
@@ -60,8 +62,6 @@ contains
     logical :: symunitary(nsymaxd), para
     ! ..
     ! .. External Functions ..
-    logical :: test, opt
-    external :: test, opt
 
     ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
     write (1337, '(79("="),/,15X,A)') 'BZKINT0: finding symmetry, setting BZ integration'
@@ -73,10 +73,10 @@ contains
 
     lirr = .true.
     iprint = 0
-    if (test('TAUSTRUC')) iprint = 2
+    if (print_tau_structure) iprint = 2
 
     ! --> test: full BZ integration
-    if (test('fullBZ  ') .or. opt('NEWSOSOL')) then
+    if (use_full_BZ .or. use_Chebychev_solver) then
       nsymat = 1
       lirr = .false.
       write (1337, '(8X,2A,/)') 'Test option < fullBZ > or Run option < NEWSOSOL >: ', ' overriding NSYMAT, generate full BZ k-mesh'

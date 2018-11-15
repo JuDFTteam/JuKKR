@@ -36,8 +36,9 @@ contains
     hostimp,noq,zat,kaoez,conc,cmom,cminst,vinters,nemb,naez)
 
     use :: mod_types, only: t_tgmat
+    use :: mod_runoptions, only: write_kkrimp_input, disable_print_serialnumber
     use :: mod_wunfiles, only: t_params, read_angles
-    use :: mod_version_info
+    use :: mod_version_info, only: version_print_header
     use :: mod_md5sums
     use :: global_variables
     use :: mod_datatypes, only: dp
@@ -70,15 +71,13 @@ contains
     real (kind=dp), dimension (natyp) :: theta, phi
     complex (kind=dp), dimension (lmmaxd, lmmaxd) :: tmat0
     ! .. External Functions
-    logical :: opt
-    external :: opt
 
     write (1337, *) 'KKRFLEX WRITEOUT'
-    write (1337, *) opt('KKRFLEX ')
+    write (1337, *) write_kkrimp_input
 
-    if (opt('KKRFLEX ')) then
+    if (write_kkrimp_input) then
       open (6699, file='kkrflex_tmat', status='unknown')
-      call version_print_header(6699, '; '//md5sum_potential//'; '//md5sum_shapefun)
+      call version_print_header(6699, addition='; '//md5sum_potential//'; '//md5sum_shapefun, disable_print=disable_print_serialnumber)
       write (6699, *) '#', natomimp, nspin, ielast, lmmaxd, korbit
       if (t_tgmat%tmat_to_file) then
         open (69, access='direct', recl=wlength*4*lmmaxd*lmmaxd, file='tmat', form='unformatted')
@@ -116,7 +115,7 @@ contains
       close (6699)
 
       open (91, file='kkrflex_intercell_ref', status='unknown')
-      call version_print_header(91, '; '//md5sum_potential//'; '//md5sum_shapefun)
+      call version_print_header(91, addition='; '//md5sum_potential//'; '//md5sum_shapefun, disable_print=disable_print_serialnumber)
       write (91, *) '# Intercell potential of each atom'
       write (91, *) '# '
       write (91, *) '# NATOMIMP', natomimp
@@ -132,7 +131,7 @@ contains
       close (91)
 
       open (91, file='kkrflex_intercell_cmoms', status='unknown')
-      call version_print_header(91, '; '//md5sum_potential//'; '//md5sum_shapefun)
+      call version_print_header(91, addition='; '//md5sum_potential//'; '//md5sum_shapefun, disable_print=disable_print_serialnumber)
       write (91, *) '# Charge moments of each atom in the unit cell'
       write (91, *) '# Values given are CMOM + CMINST'
       write (91, *) '# First colums is the core charge other'

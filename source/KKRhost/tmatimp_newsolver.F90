@@ -43,6 +43,7 @@ contains
     use :: mod_mympi, only: myrank, master, nranks
 #endif
     use :: mod_types, only: t_inc, t_imp
+    use :: mod_runoptions, only: disable_tmat_sratrick, write_green_imp, write_pkkr_operators
     use :: mod_create_newmesh
     use :: mod_version_info
     use :: mod_wunfiles, only: t_params
@@ -157,8 +158,6 @@ contains
     complex (kind=dp), dimension (:, :, :), allocatable :: temp
     complex (kind=dp), dimension (:, :, :, :), allocatable :: temp2 ! needed for MPI communication
 #endif
-    logical, external :: opt
-    logical, external :: test
 
     if (myrank==master) write (6, *) 'in tmatimp'
     if (ksra>=1) then
@@ -233,7 +232,7 @@ contains
     i1_end_imp = natomimp
 #endif
 
-    if (opt('GREENIMP')) then
+    if (write_green_imp) then
 
       !------------------------------------------------------------------------------
       ! START calculate tmat and radial wavefunctions of host atoms
@@ -287,7 +286,7 @@ contains
         ! set up the non-spherical ll' matrix for potential VLL'
         if (nsra==2) then
           use_sratrick = 1
-          if (test('nosph   ')) use_sratrick = 0
+          if (disable_tmat_sratrick) use_sratrick = 0
         else if (nsra==1) then
           use_sratrick = 0
         end if
@@ -533,7 +532,7 @@ contains
 
       write (*, *) 'skipping host atom loop in tmatimp_newsolver'
 
-    end if                         ! (OPT('GREENIMP'))
+    end if                         ! (write_green_imp)
 
     !--------------------------------------------------------------------------------
     ! START calculate tmat and radial wavefunctions of impurity atoms
@@ -683,7 +682,7 @@ contains
       end if
 
       ! for OPERATOR option save impurity wavefuncitons
-      if (opt('OPERATOR')) then
+      if (write_pkkr_operators) then
         t_imp%rllimp(:, :, :, i1) = rll(:, :, :)
       end if
 
@@ -924,7 +923,7 @@ contains
 #endif
 
     ! collect results and writeout only for GREENIMP option
-    if (opt('GREENIMP') .and. myrank==master) then
+    if (write_green_imp .and. myrank==master) then
 
       do i1 = 1, natomimp
         do lm1 = 1, lmmaxso

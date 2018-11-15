@@ -21,11 +21,12 @@ program tmat_runner
   use :: mod_timing
   use :: mod_md5sums
   use :: memoryhandling
-  use :: mod_version_info
+  use :: mod_version_info, only: version_print_header
   use :: global_variables
   use :: mod_datatypes, only: dp
   use :: mod_mympi, only: mympi_init, myrank, nranks, master, mpiatom, mpiadapt
   use :: mod_save_wavefun, only: t_wavefunctions
+  use :: mod_runoptions, only: disable_print_serialnumber
 
   implicit none
 
@@ -42,7 +43,7 @@ program tmat_runner
 
   ! open output files
   open (1337, file='output.'//trim(ctemp)//'.txt')
-  call version_print_header(1337)
+  call version_print_header(1337, disable_print=disable_print_serialnumber)
 
   t_inc%i_write = 1
   call main0()

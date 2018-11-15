@@ -30,6 +30,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, nspin, natyp, nshell, conc, idoldau, lopt, eu, edcldau)
 
+    use :: mod_runoptions, only: no_madelung
     use :: mod_types, only: t_inc
     use :: mod_datatypes, only: dp
     use :: global_variables, only: natypd, npotd, lmaxd
@@ -47,8 +48,6 @@ contains
     character (len=5) :: textns
     character (len=13) :: texts(3)
 
-    logical :: test
-    external :: test
 
     data textl/' s =', ' p =', ' d =', ' f =', ' g =', ' h =', ' i ='/
     data texts/' spin down   ', ' spin  up    ', ' paramagnetic'/
@@ -124,7 +123,7 @@ contains
         write (1337, fmt=240) epotin(iatyp)
       end if
 
-      if (.not. (test('NoMadel '))) then
+      if (.not. (no_madelung)) then
 
         et = et + ecous + excs
         edc = edc + ecous + excs

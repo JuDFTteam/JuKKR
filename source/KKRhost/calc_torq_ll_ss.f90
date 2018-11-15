@@ -24,6 +24,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine calc_torq_ll_ss(lmmax, rll, ircut, ipan, icell, cleb, icleb, iend, ifunm, lmsp, irws, drdi, dens, visp, nspin, iatom, vins, irmin)
 
+    use :: mod_runoptions, only: torque_operator_onlyMT, torque_operator_onlySph 
     use :: global_variables, only: irmd, lmpotd, irmind, ipand, natypd, ncleb
     use :: mod_datatypes, only: dp
     use :: mod_csimpk, only: csimpk
@@ -48,8 +49,6 @@ contains
     integer :: lm1p, lm2p, lm3p, ir, j, i
     integer :: ircutm(0:ipand)
     ! (for all points r; if r>r_MT (or IR> IRMIN),the density has to
-    external :: test
-    logical :: test
     ! multiplied with the shape functions...
 
     ! ---> remember that the gaunt coeffients for that case are 1/sqrt(4 pi)
@@ -76,14 +75,14 @@ contains
 
     do ir = 1, irmd
       ! --->   calculate the non spherically symmetric contribution
-      if (test('ONLYMT  ') .and. (ir>ircut(1))) then
+      if (torque_operator_onlyMT .and. (ir>ircut(1))) then
         rges(ir) = 0
       else
         rges(ir) = rsp(ir)
       end if
     end do
     ! DO 150 IR = IRCUT(1)+1,IRCUT(IPAN)
-    if (.not. test('ONLYSPH ')) then
+    if (.not. torque_operator_onlySph) then
       do j = 1, iend
         lm1p = icleb(j, 1)
         lm2p = icleb(j, 2)
