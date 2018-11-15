@@ -213,13 +213,13 @@ end subroutine read_scoef_rhoq
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-subroutine read_input_rhoq(t_rhoq, uio)
+subroutine read_input_rhoq(t_rhoq)
   ! read input such as proble layer mu_0, and parameters such as lmmaxso etc.
   use mod_ioinput, only: ioinput
   implicit none
   type(type_rhoq), intent(inout) :: t_rhoq
-  character*256, intent(in) :: uio ! unit in which to find inputcard
   ! local
+  character(len=:), allocatable :: uio ! unit in which to find inputcard
   integer :: ier
   
   call ioinput('mu0_rhoq        ',uio,1,7,ier)
@@ -2177,7 +2177,6 @@ program test
 
   implicit none
   
-  character*256 :: uio ! unit in which to find inputcard
   integer :: nkpt, Nkx, Nky ! total number of kpoints, k-mesh in x/y
   integer :: lmmaxso, natyp
   integer :: naez,ncls,nr,nemb
@@ -2225,7 +2224,6 @@ program test
   if(myrank==master) then
     
     ! read in scalars
-    uio = 'inputcard'
     open(9999, file='params.txt')
     read(9999,*) lmmaxso, natyp
     read(9999,*) naez, ncls, nr, nemb, lmax
@@ -2297,7 +2295,7 @@ program test
     call read_scoef_rhoq(t_rhoq)
 
     ! read from inputcard
-    call read_input_rhoq(t_rhoq, uio)
+    call read_input_rhoq(t_rhoq)
 
     ! save kpt, volcub, volbz nkpt to t_rhoq
     call save_kmesh_rhoq(t_rhoq,nkpt,kpt,volcub,volbz, Nkx, Nky)
