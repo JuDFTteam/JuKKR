@@ -31,9 +31,10 @@ contains
   !-------------------------------------------------------------------------------
   subroutine wrldos(den,ez,wez,lmaxd1,iemxd,npotd,ititle,efermi,e1,e2,alatc,tk,     &
     nacls1,nspinpot,natyp,conc,ielast,intervx,intervy,intervz,dostot)
-    use :: mod_version_info
+    use :: mod_version_info, only: version_print_header
     use :: mod_datatypes
     use :: mod_constants, only: pi, kb, ryd, czero
+    use :: mod_runoptions, only: disable_print_serialnumber
     implicit none
     ! ..
     ! .. Scalar Arguments ..
@@ -81,7 +82,7 @@ contains
       if (i1>=10 .and. i1<100) write (dosfl, fmt='(A8,I2)') dosfl0, i1
       if (i1>=100) write (dosfl, fmt='(A8,I3)') dosfl0, i1
       open (48, file=trim(dosfl), form='formatted')
-      call version_print_header(48)
+      call version_print_header(48, disable_print=disable_print_serialnumber)
       do ispin = 1, nspinpot
         ipot = nspinpot*(i1-1) + ispin
         dossgn = 1.0e0_dp
@@ -110,7 +111,7 @@ contains
     ! Write complex DOS in unit 49:
     !--------------------------------------------------------------------------------
     open (49, file='complex.dos', form='formatted')
-    call version_print_header(49)
+    call version_print_header(49, disable_print=disable_print_serialnumber)
     write (49, *) natyp*nspinpot
     write (49, *) ielast
     write (49, *) lmaxd1
@@ -142,7 +143,7 @@ contains
     ! Write total DOS summed over atoms and spins(complex)
     !--------------------------------------------------------------------------------
     open (49, file='total_cmplx.dos', form='formatted')
-    call version_print_header(49)
+    call version_print_header(49, disable_print=disable_print_serialnumber)
     write (49, fmt='(4A16)') '# Real(E)', '  Im(E)', ' Re(DEN)', ' Im(DEN)'
     do ie = 1, ielast
       doscmplx = czero 

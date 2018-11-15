@@ -41,7 +41,7 @@ contains
 
     use :: mod_profiling, only: memocc
     use :: mod_runoptions, only: read_runoptions, calc_DOS_Efermi, calc_GF_Efermi, calc_exchange_couplings, &
-      dirac_scale_SpeefOfLight, disable_charge_neutrality, modify_soc_Dirac, relax_SpinAngle_Dirac, search_Efermi, &
+      dirac_scale_SpeefOfLight, disable_charge_neutrality, disable_print_serialnumber, modify_soc_Dirac, relax_SpinAngle_Dirac, search_Efermi, &
     set_kmesh_large, stop_1b, stop_1c, use_BdG, use_Chebychev_solver, use_cond_LB, use_decimation, use_lloyd, use_qdos, &
     use_rigid_Efermi, use_semicore, use_virtual_atoms, write_DOS, write_green_host, write_green_imp, write_kkrimp_input, &
     write_pkkr_input, write_pkkr_operators, use_ldau, set_cheby_nospeedup, set_cheby_nosoc, write_tb_coupling
@@ -297,7 +297,7 @@ contains
     iprint = 0
 
     open (111, file='inputcard_generated.txt') ! Write out found or assumed values
-    call version_print_header(111)
+    call version_print_header(111, disable_print=disable_print_serialnumber)
 
     nemb = 0
 

@@ -43,9 +43,9 @@ contains
     use :: mpi
 #endif
     use :: mod_types, only: t_tgmat, t_mpi_c_grid, t_cpa
-    use :: mod_runoptions, only: calc_exchange_couplings, calc_exchange_couplings_energy
+    use :: mod_runoptions, only: calc_exchange_couplings, calc_exchange_couplings_energy, disable_print_serialnumber
     use :: mod_mympi, only: myrank, master
-    use :: mod_version_info
+    use :: mod_version_info, only: version_print_header
     use :: mod_md5sums
     use :: mod_cinit
     use :: mod_cmatmul
@@ -492,7 +492,7 @@ contains
                   write (jfnam2, fmt2) 'Jij_enrg.', it, '.', jt, '.', ns
                   if (ie==1) then
                     open (499, file=jfnam2, status='UNKNOWN')
-                    call version_print_header(499, '; '//md5sum_potential//'; '//md5sum_shapefun)
+                    call version_print_header(499, addition='; '//md5sum_potential//'; '//md5sum_shapefun, disable_print=disable_print_serialnumber)
                     write (499, fmt='(A)') '# Energy Re,Im ; j(E) Re,Im; J(E) Re,Im '
                     write (499, fmt='(3(A,I5))') '# IT=', it, ' JT=', jt, ' SHELL=', ns
                     write (499, fmt='(A,I6)') '#ENERGIES: ', ielast
@@ -587,7 +587,7 @@ contains
                   fmt2 = '(A,I5.5,A,I5.5,A,I5.5)'
                   write (jfnam2, fmt2) 'Jij_enrg.', it, '.', jt, '.', ns
                   open (499, file=jfnam2, status='UNKNOWN')
-                  call version_print_header(499, '; '//md5sum_potential//'; '//md5sum_shapefun)
+                  call version_print_header(499, addition='; '//md5sum_potential//'; '//md5sum_shapefun, disable_print=disable_print_serialnumber)
                   write (499, fmt='(A)') '# Energy Re,Im ; j(E) Re,Im; J(E) Re,Im '
                   write (499, fmt='(3(A,I5))') '# IT=', it, ' JT=', jt, ' SHELL=', ns
                   write (499, fmt='(A,I6)') '#ENERGIES: ', ielast
@@ -722,7 +722,7 @@ contains
 
           ! write(JFNAME,FMT1)JFINTEG, IT
           open (49, file=jfnam)
-          call version_print_header(49, '; '//md5sum_potential//'; '//md5sum_shapefun)
+          call version_print_header(49, addition='; '//md5sum_potential//'; '//md5sum_shapefun, disable_print=disable_print_serialnumber)
           write (49, 190) it, iqat(it)
           ! open(22,FILE=JFNAME)
           ! write(22,99014)IT,IQAT(IT)

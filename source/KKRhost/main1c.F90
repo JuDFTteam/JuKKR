@@ -40,7 +40,8 @@ contains
 #endif
     use :: mod_datatypes, only: dp
     use :: mod_runoptions, only: calc_gmat_lm_full, fix_nonco_angles, relax_SpinAngle_Dirac, use_Chebychev_solver, &
-      use_decimation, use_qdos, write_DOS, write_complex_qdos, write_density_ascii, write_rho2ns, write_DOS_lm, set_cheby_nosoc
+      use_decimation, use_qdos, write_DOS, write_complex_qdos, write_density_ascii, write_rho2ns, write_DOS_lm, &
+      set_cheby_nosoc, disable_print_serialnumber
     use :: mod_constants, only: czero, pi
     use :: mod_profiling, only: memocc
     use :: mod_mympi, only: myrank, master
@@ -596,7 +597,7 @@ contains
                 else
                   open (31, file='qdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat')
                 end if
-                call version_print_header(31)
+                call version_print_header(31, disable_print=disable_print_serialnumber)
                 write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...'
                 ipot = (i1-1)*nspinpot + ispin
                 do ie = 1, ielast   
@@ -616,7 +617,7 @@ contains
                   else
                     open (31, file='cqdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat')
                   end if
-                  call version_print_header(31)
+                  call version_print_header(31, disable_print=disable_print_serialnumber)
                   write (31, '(A)') '#   lmax, natyp, nspin, nqdos, ielast:'
                   write (31, '(5I9)') lmax, natyp, nspin, nqdos, ielast
                   write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...'
@@ -671,7 +672,7 @@ contains
                 else
                   open (30, file='lmdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat')
                 end if
-                call version_print_header(30)
+                call version_print_header(30, disable_print=disable_print_serialnumber)
                 write (30, *) ' '
                 write (30, 120) '# ISPIN=', ispin, ' I1=', i1
 120             format (a8, i3, a4, i5)
@@ -704,7 +705,7 @@ contains
           ! rewrite new theta and phi to nonco_angle_out.dat, nonco_angle.dat is the input
           if (.not. fix_nonco_angles) then
             open (unit=13, file='nonco_angle_out.dat', form='formatted')
-            call version_print_header(13)
+            call version_print_header(13, disable_print=disable_print_serialnumber)
             do i1 = 1, natyp
               ! save to file in converted units (degrees)
               write (13, *) angles_new(1, i1)/(2.0_dp*pi)*360.0_dp, angles_new(2, i1)/(2.0_dp*pi)*360.0_dp

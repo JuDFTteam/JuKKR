@@ -43,7 +43,7 @@ contains
     ! ************************************************************************
     ! 
     use :: mod_datatypes, only: dp
-    use :: mod_runoptions, only: write_tb_coupling
+    use :: mod_runoptions, only: write_tb_coupling, disable_print_serialnumber
     use :: mod_version_info, only: version_print_header
     use :: mod_dsort, only: dsort
     implicit none
@@ -116,7 +116,7 @@ contains
 
     ! open clusters file
     open (8, file='clusters', status='unknown')
-    call version_print_header(8)
+    call version_print_header(8, disable_print=disable_print_serialnumber)
     write (8, 230) naez
     write (8, 260) alat
     write (8, 240)(zat(kaoez(1,iat)), iat=1, naez-nvirt)

@@ -66,24 +66,20 @@ contains
   !> This is called after an open statement of a file that is written, 
   !> prints header line
   !-------------------------------------------------------------------------------
-  subroutine version_print_header(unit, addition, print_always)
-
-    use :: mod_runoptions, only: disable_print_serialnumber
+  subroutine version_print_header(unit, addition, disable_print)
 
     implicit none
     integer, intent (in) :: unit
-    logical, optional, intent (in) :: print_always
+    logical, optional, intent (in) :: disable_print
     character (len=*), optional, intent (in) :: addition
     logical :: print_version
 
     print_version = .true.
 
-    if (.not. present(print_always)) then
-      if (disable_print_serialnumber) then
-        ! omit printing of serial number to file if test option 'noserial' is given
-        print_version = .false.
-      end if
-    end if
+    if (present(disable_print)) then
+    	if (disable_print) print_version = .false.
+    end if!
+
 
     if (print_version) then
       if (.not. present(addition)) then

@@ -41,9 +41,9 @@ contains
     use :: mod_types, only: t_mpi_c_grid
 #endif
     use :: mod_types, only: t_tgmat, t_dtmatjij, t_cpa
-    use :: mod_runoptions, only: calc_exchange_couplings, calc_exchange_couplings_energy
+    use :: mod_runoptions, only: calc_exchange_couplings, calc_exchange_couplings_energy, disable_print_serialnumber
     use :: mod_mympi, only: myrank, master
-    use :: mod_version_info
+    use :: mod_version_info, only: version_print_header
     use :: mod_md5sums
     use :: mod_constants
     use :: mod_profiling
@@ -378,7 +378,7 @@ contains
                   fmt2 = '(4(A,I5.5))'
                   write (jfnam2, fmt2) 'Jij_enrg.', it, '.', jt, '.', i1, '.', i2
                   open (499, file=jfnam2, status='unknown')
-                  call version_print_header(499, '; '//md5sum_potential//'; '//md5sum_shapefun)
+                  call version_print_header(499, addition='; '//md5sum_potential//'; '//md5sum_shapefun, disable_print=disable_print_serialnumber)
                   write (499, fmt='(a)') '# Energy Re,Im ; j(E) Re,Im ; J(E) Re,Im ; d(E) Re,Im ; D(E) Re,Im ; s(E) Re,Im ; S(E) Re,Im ; a(E) Re,Im ; A(E) Re,Im '
                   write (499, fmt='(4(a,i5))') '# IT=', it, ' JT=', jt, ' ISITE=', i1, ' JSITE=', i2
                   write (499, fmt='(a,i6)') '#ENERGIES: ', ielast
@@ -425,7 +425,7 @@ loop:     do lm3 = 1, nstore
 
           write (jfnam, '(A,I5.5)') 'Jij.atom', lm1
           open (49, file=jfnam, form='formatted', action='write')
-          call version_print_header(49, '; '//md5sum_potential//'; '//md5sum_shapefun)
+          call version_print_header(49, addition='; '//md5sum_potential//'; '//md5sum_shapefun, disable_print=disable_print_serialnumber)
           write (49, 100) lm1, iqat(lm1), i1
 
           do lm2 = 1, natypd

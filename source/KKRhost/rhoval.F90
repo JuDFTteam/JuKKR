@@ -55,9 +55,9 @@ contains
 #endif
     use :: mod_types, only: t_tgmat, t_inc, t_mpi_c_grid, init_tgmat
     use :: mod_constants
-    use :: mod_runoptions, only: calc_gmat_lm_full, set_gmat_to_zero, use_qdos, write_complex_qdos
+    use :: mod_runoptions, only: calc_gmat_lm_full, set_gmat_to_zero, use_qdos, write_complex_qdos, disable_print_serialnumber
     use :: mod_profiling
-    use :: mod_version_info
+    use :: mod_version_info, only: version_print_header
     use :: global_variables
     use :: mod_datatypes
     use :: mod_pnsqns
@@ -258,12 +258,12 @@ contains
       else                         ! qdos
         open (31, file='qdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat')  ! qdos
       end if                       ! qdos
-      call version_print_header(31) ! qdos
+      call version_print_header(31, disable_print=disable_print_serialnumber) ! qdos
       write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...' ! qdos
     end if                         ! qdos
 
     open (30, file='lmdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat')      ! lmdos
-    call version_print_header(30)  ! lmdos
+    call version_print_header(30, disable_print=disable_print_serialnumber)  ! lmdos
     write (30, *) ' '              ! lmdos
     write (30, 100) '# ISPIN=', ispin, ' I1=', i1 ! lmdos
 100 format (a8, i3, a4, i5)        ! lmdos
@@ -275,7 +275,7 @@ contains
       else                         ! complex qdos
         open (3031, file='cqdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'//char(48+ispin)//'.dat')  ! complex qdos
       end if                       ! complex qdos
-      call version_print_header(3031) ! complex qdos
+      call version_print_header(3031, disable_print=disable_print_serialnumber) ! complex qdos
       write (3031, '(A)') '# lmax, natyp, nspin, nqdos, ielast:' ! complex qdos
       write (3031, '(5I9)') lmax, natyp, nspin, nqdos, ielast ! complex qdos
       write (3031, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...' ! complex qdos

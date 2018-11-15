@@ -109,7 +109,7 @@ program kkrcode
     write (*, *) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
     open (1337, file='output.'//trim(ctemp)//'.txt')
     ! here version_print_header needs the print_always flag because test options are not read in yet
-    call version_print_header(1337, print_always=.true.)
+    call version_print_header(1337, disable_print=.false.)
 
     ! default value on master (needed for writeout in main0)
     t_inc%i_write = 1
@@ -289,12 +289,12 @@ program kkrcode
     if (myrank==master) close (1337, status='delete')
     if (t_inc%i_write>0) then
       open (1337, file='output.'//trim(ctemp)//'.txt')
-      call version_print_header(1337)
+      call version_print_header(1337, disable_print=disable_print_serialnumber)
     end if
   end if
   if (t_inc%i_write>0 .and. myrank/=master) then
     open (1337, file='output.'//trim(ctemp)//'.txt')
-    call version_print_header(1337)
+    call version_print_header(1337, disable_print=disable_print_serialnumber)
   end if
 
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

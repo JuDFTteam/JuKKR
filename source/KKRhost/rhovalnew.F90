@@ -44,8 +44,9 @@ contains
 #endif
     use :: mod_save_wavefun, only: t_wavefunctions, read_wavefunc
     use :: mod_runoptions, only: calc_exchange_couplings, calc_gmat_lm_full, disable_tmat_sratrick, fix_nonco_angles, &
-      use_qdos, write_complex_qdos, write_pkkr_operators, write_DOS_lm, set_cheby_nospeedup, set_cheby_nosoc
-    use :: mod_version_info
+                                 use_qdos, write_complex_qdos, write_pkkr_operators, write_DOS_lm, set_cheby_nospeedup, &
+                                 set_cheby_nosoc, disable_print_serialnumber
+    use :: mod_version_info, only: version_print_header
     use :: global_variables
     use :: mod_constants
     use :: mod_profiling
@@ -780,12 +781,12 @@ contains
                 open (31, file='qdos.'//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+1)//'.dat')    ! qdos
                 open (32, file='qdos.'//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+2)//'.dat')    ! qdos
               end if                                                                                             ! qdos
-              call version_print_header(31)                                                                      ! qdos
+              call version_print_header(31, disable_print=disable_print_serialnumber)                            ! qdos
               write (31, *) ' '                                                                                  ! qdos
               write (31, 150) '# ISPIN=', 1, ' I1=', i1                                                          ! qdos
               write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...'        ! qdos
               if (nspin>1) then                                                                                  ! qdos
-                call version_print_header(32)                                                                    ! qdos
+                call version_print_header(32, disable_print=disable_print_serialnumber)                          ! qdos
                 write (32, *) ' '                                                                                ! qdos
                 write (32, 150) '# ISPIN=', 2, ' I1=', i1                                                        ! qdos
                 write (32, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...'      ! qdos
@@ -811,13 +812,13 @@ contains
                   open (31, file='cqdos.'//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+1)//'.dat')                  ! complex qdos
                   open (32, file='cqdos.'//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+2)//'.dat')                  ! complex qdos
                 end if                                                                                                            ! complex qdos
-                call version_print_header(31)                                                                                     ! complex qdos
+                call version_print_header(31, disable_print=disable_print_serialnumber)                                           ! complex qdos
                 write (31, *) ' '                                                                                                 ! complex qdos
                 write (31, '(A)') '#   lmax, natyp, nspin, nqdos, ielast:'                                                        ! complex qdos
                 write (31, '(5I9)') lmax, natyp, nspin, nqdos, ielast                                                             ! complex qdos
                 write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...'                       ! complex qdos
                 if (nspin>1) then                                                                                                 ! complex qdos
-                  call version_print_header(32)                                                                                   ! complex qdos
+                  call version_print_header(32, disable_print=disable_print_serialnumber)                                         ! complex qdos
                   write (32, *) ' '                                                                                               ! complex qdos
                   write (32, '(A)') '# lmax, natyp, nspin, nqdos, ielast:'                                                        ! complex qdos
                   write (32, '(5I9)') lmax, natyp, nspin, nqdos, ielast                                                           ! complex qdos
@@ -922,10 +923,10 @@ contains
                 open (29, file='lmdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'//char(48+1)//'.dat') ! lm-dos
                 if (nspin==2) open (30, file='lmdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'//char(48+2)//'.dat') ! lm-dos
               end if               ! lm-dos
-              call version_print_header(29) ! lm-dos
+              call version_print_header(29, disable_print=disable_print_serialnumber) ! lm-dos
               write (29, *) ' '    ! lm-dos
               write (29, 150) '# ISPIN=', 1, ' I1=', i1 ! lm-dos
-              if (nspin==2) call version_print_header(30) ! lm-dos
+              if (nspin==2) call version_print_header(30, disable_print=disable_print_serialnumber) ! lm-dos
               if (nspin==2) write (30, *) ' '    ! lm-dos
               if (nspin==2) write (30, 150) '# ISPIN=', 2, ' I1=', i1 ! lm-dos
             end if                 ! IE==1                                                      ! lm-dos
