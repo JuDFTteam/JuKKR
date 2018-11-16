@@ -201,11 +201,11 @@ contains
         read (ifile, fmt='(A)') linetmp
         call capitalize_escaped_keywords(linetmp, linetxt(iline), ierror)
         if (ierror==1) then
-          write(1337,'(A,I,A)') 'Warning capitalizing line ', iline, ' of inputcard.'
-          write(*,   '(A,I,A)') 'Warning capitalizing line ', iline, ' of inputcard.'
+          write(1337,'(A,I5,A)') 'Warning capitalizing line ', iline, ' of inputcard.'
+          write(*,   '(A,I5,A)') 'Warning capitalizing line ', iline, ' of inputcard.'
         else if (ierror==2) then
-          write(1337,'(A,I,A)') 'Error capitalizing line ', iline, ' of inputcard.'
-          write(*,   '(A,I,A)') 'Error capitalizing line ', iline, ' of inputcard.'
+          write(1337,'(A,I5,A)') 'Error capitalizing line ', iline, ' of inputcard.'
+          write(*,   '(A,I5,A)') 'Error capitalizing line ', iline, ' of inputcard.'
           stop
         end if
       end do
