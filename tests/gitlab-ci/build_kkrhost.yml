@@ -5,7 +5,7 @@
 ## 1.1 debug versions ##
 build_kkrhost:gnu:debug:
   stage: build_kkrhost
-  image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/extended_intel2016_gcc8:latest
+  image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/extended_gcc8:latest
   allow_failure: false
   script:
     - mkdir build_gfortran_debug && cd build_gfortran_debug
