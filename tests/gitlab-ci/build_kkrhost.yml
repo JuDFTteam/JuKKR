@@ -8,6 +8,8 @@ build_kkrhost:gnu:debug:
   image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/extended_gcc8:latest
   allow_failure: false
   script:
+    # first make sure correct cmake etc is used
+    - source /etc/profile
     - mkdir build_gfortran_debug && cd build_gfortran_debug
     - /opt/gcc8/bin/gfortran --version
     - FC=/opt/gcc8/bin/gfortran cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug -DCOMPILE_KKRHOST=ON -DCOMPILE_KKRIMP=OFF -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF -DCOMPILE_RHOQ=OFF ..
