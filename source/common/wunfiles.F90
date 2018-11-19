@@ -459,7 +459,7 @@ contains
     integer, intent (in) :: itrunldau !! Iteration index for LDA+U
     integer, intent (in) :: iesemicore
     integer, intent (in) :: verbosity !! verbosity level for timings and output: 0=old default, 1,2,3 = timing and ouput verbosity level the same (low,medium,high)
-    integer, intent (in) :: MPI_scheme !! scheme for MPI parallelization: 0 = best, 1 = atoms (default), 2 = energies 
+    integer, intent (in) :: MPI_scheme !!!! scheme for MPI parallelization: 0 = automatic (default), 1 = atoms, 2 = energies, 3 = select best of (1,2)
     integer, intent (in) :: special_straight_mixing !!id to specify modified straight mixing scheme: 0=normal, 1=alternating mixing factor (i.e. reduced mixing factor in every odd iteration), 2=charge-neurality based mixing factor (former: 'alt mix' and 'spec mix')
     ! .. nembd2 = NAEZ+NEMB, lmaxd1=lmaxd+1, naezdpd=NAEZ/nprincd)
     real (kind=dp), intent (in) :: tk !! Temperature
@@ -762,7 +762,7 @@ contains
       mpiatom = .false.
       mpiadapt = 0
     end if
-    if (MPI_scheme==0) then
+    if (MPI_scheme==3) then
       mpiadapt = 2                 ! 2 means force run with MPIatom then with MPIenerg and then compare to choose optimal
     end if
     ! so far changing does not work yet, so turn this off:
