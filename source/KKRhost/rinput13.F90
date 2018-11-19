@@ -123,7 +123,7 @@ contains
     integer, intent (inout) :: npolsemi !! Number of poles for the semicore contour
     integer, intent (inout) :: invmod   !! inversion mode, 0=full inversion, 1= banded matrix, 2= supercell, 3=godfrin
     integer, intent (inout) :: verbosity  !! verbosity level for timings and output: 0=old default, 1,2,3 = timing and ouput verbosity level the same (low,medium,high)
-    integer, intent (inout) :: MPI_scheme !! scheme for MPI parallelization: 0 = best, 1 = atoms (default), 2 = energies 
+    integer, intent (inout) :: MPI_scheme !! scheme for MPI parallelization: 0 = automatic (default), 1 = atoms, 2 = energies, 3 = select best of (1,2)
     integer, intent (inout) :: special_straight_mixing !! id to specify modified straight mixing scheme: 0=normal, 1=alternating mixing factor (i.e. reduced mixing factor in every odd iteration), 2=charge-neurality based mixing factor (former: 'alt mix' and 'spec mix')
     real (kind=dp), intent (inout) :: tk !! Temperature
     real (kind=dp), intent (inout) :: fcm !! Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.

@@ -116,7 +116,7 @@ module mod_runoptions
   !  'RLL-SLL': now default. See inverse (new) option 'set_cheby_nospeedup'
   !  'full inv', 'SUPRCELL', 'godfrin': now controlled via keyword <INVMODE> = 0/2/3 (<INVMODE>=1 signals principal-layer technique; defaults are set so that <INVMODE>=0 for bulk and  <INVMODE>=1 for slab systems)
   !  'timings0', 'timings2', 'verbose1', 'verbose2': incorporated into <VERBOSITY> keyword: 0=old behaviour (default), 1=low, 2=medium, 3=high
-  !  'MPIadapt' and 'MPIatom' and 'MPIenerg': combined into keyword <MPI_SCHEME>: 0 = best, 1 = atoms (default), 2 = energies 
+  !  'MPIadapt' and 'MPIatom' and 'MPIenerg': combined into keyword <MPI_SCHEME>: 1 = atoms, 2 = energies, 3 = best of (1 and 2)
   !  deleted because of no implementation (or little use): 'EigenV', 'SPARSE', 'WIRE', 'iso surf', 'wfct', 'EV', 'ND', 'WAIT'
 
   contains
@@ -626,7 +626,7 @@ module mod_runoptions
       verbosity = 3
       write (1337, *) "    Setting verbosity level to high because of timings2"
     else if (keyword == 'MPIADAPT') then
-      MPI_scheme = 0
+      MPI_scheme = 3
       write (1337, *) "    Setting MPI_Scheme=0 because of MPIadapt"
     else if (keyword == 'MPIATOM ') then
       MPI_scheme = 1
