@@ -851,7 +851,7 @@ contains
     ! -------------------------------------------------------------------------
     ! ENERGIES calculation
     ! -------------------------------------------------------------------------
-    if ((kte==1 .and. icc==0) .or. write_kkrimp_input) then
+    if (kte==1) then
       call etotb1(ecou, epotin, espc, espv, exc, kpre, lmax, lpot, lcoremax, nspin, &
         natyp, nshell(1), conc, idoldau, lopt, eu, edc)
     end if
