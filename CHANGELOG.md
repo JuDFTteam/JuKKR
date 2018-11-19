@@ -35,6 +35,7 @@ Start of large KKR repository holding *voronoi*, *KKRhost*, *KKRimp*, *KKRsusc*,
 - mayor refactoring of the treatment of runoptions for *KKRhost* (new, descriptive keywords; no fixed format but style `runoption= T/F`; backwards compatibility is mostly ensured)
 - escaped keywords (like `<ZATOM>` as opposed to `LMAX`) are now allowed to be case-insensitive (in both, `inputcard` and source code).
 - refactoring of `source/common/ioinput.f90` for more simplicity, readability and flexibility
+- total energy is also calculated and written out in case of non-scf calculation
 
 ### Deprecated
 - makefiles of *PKKprime*, *voronoi*, *KKRimp*, *rhoq*
