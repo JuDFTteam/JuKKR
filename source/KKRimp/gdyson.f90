@@ -33,10 +33,9 @@ contains
    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
    !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
    !-------------------------------------------------------------------------------
-   !> @note the calculetd Gree function is stored in Gref and stored then the onsite Green function are stored 
+   !> @note the calculated Green function is stored in Gref and stored then the onsite Green function are stored 
    !> @endnote
    !-------------------------------------------------------------------------------
-
 subroutine gdyson(igmatnewfile,ie,ispin,nspin,natom,lmaxatom,tmatll,use_fullgmat,gmat,gmatonsite,ielast,mpi_iebounds,ITSCF,saveGmat)
 use mod_mathtools, only: linearsolve_dc
 use type_tmat
@@ -166,9 +165,6 @@ end if
 
 end subroutine
 
-! subroutine read_gmat()
-! 
-! end subroutine !read_gmat()
 
    !-------------------------------------------------------------------------------
    !> Summary: this subroutine performs matrix multiplication mat1*mat2
@@ -177,7 +173,6 @@ end subroutine
    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
    !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
    !-------------------------------------------------------------------------------
-
       subroutine matmat_zmzm(mat1,mat2,matout)
       implicit none
       complex(8), intent(in) :: mat1(:,:),mat2(:,:)
@@ -193,14 +188,10 @@ end subroutine
    !-------------------------------------------------------------------------------
    !> Summary: this subroutine is used to read the reference Green function: kkflex_greennew
    !> Author: Who wrote this subroutine
-   !> Category: Green function, input-output
+   !> Category: structural-greensfunction, input-output
    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
    !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
    !-------------------------------------------------------------------------------
-
-
-! call gdyson_readgmat      (use_fullgmat,ielast,ie,Gref,gref1,mpi_iebounds,ITSCF)
-
 subroutine gdyson_readgmat(igmatnewfile,use_fullgmat,ielast,ie,Gref,greftemp,mpi_iebounds,ITSCF,nlmhost,gmat,ispin)
 use mod_config, only: config_runflag
 use type_gmat

@@ -35,7 +35,8 @@ contains
   subroutine wrldaupot(itrunldau,lopt,ueff,jeff,erefldau,natyp,wldau,uldau,phildau, &
     irmd,natypd,nspind,mmaxd,irws)
 
-    use :: mod_version_info
+    use :: mod_version_info, only: version_print_header
+    use :: mod_runoptions, only: disable_print_serialnumber
     implicit none
     ! ..
     integer, intent(in) :: irmd       !! Number of radial mesh points in (0,...,RWS)
@@ -58,7 +59,7 @@ contains
     ! ======================================================================
 
     open (67, file='ldaupot_new', form='FORMATTED')
-    call version_print_header(67)
+    call version_print_header(67, disable_print=disable_print_serialnumber)
     write (1337, 100)
     write (67, 110) itrunldau, '    ITRUNLDAU'
     write (67, 110) natyp, '    NATYP'

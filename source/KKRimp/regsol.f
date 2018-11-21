@@ -19,7 +19,7 @@
       !-------------------------------------------------------------------------------
       !> Summary: Calculates the regular solution of the schroedinger equation or in semi relativistic approximation for a spherically averaged potential and given energy
       !> Author: B. Drittler
-      !> Category: solver, lda+u, KKRimp, KKRhost
+      !> Category: single-site, old-mesh, lda+u, KKRimp, KKRhost
       !> Deprecated: False 
       !> Calculates the regular solution of the schroedinger equation or in semi relativistic 
       !> approximation for a spherically averaged potential and given energy.

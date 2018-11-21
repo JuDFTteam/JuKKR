@@ -25,16 +25,22 @@ Start of large KKR repository holding *voronoi*, *KKRhost*, *KKRimp*, *KKRsusc*,
 ### Added
 - cmake installation scripts
 - add rhoq repo (KKR-QPI)
+- introduced new keywords in *KKRhost*: <INVMODE>, <VERBOSITY> and <MPI_SCHEME>, as well as new style of runoptions.
 
 ### Changed
 - `install.py` script now deals with *KKRhost*, *KKRimp*, *PKKprime*, *voronoi*, and *rhoq*
 - updated documentation
 - restructured tests (see `gitlab-ci.yml` and `tests/gitlab-ci/*.yml` files)
-- directory structure following `source`, `docs`, `utils`, `tests`, etc. 
+- directory structure following `source`, `docs`, `utils`, `tests`, etc.
+- mayor refactoring of the treatment of runoptions for *KKRhost* (new, descriptive keywords; no fixed format but style `runoption= T/F`; backwards compatibility is mostly ensured)
+- escaped keywords (like `<ZATOM>` as opposed to `LMAX`) are now allowed to be case-insensitive (in both, `inputcard` and source code).
+- refactoring of `source/common/ioinput.f90` for more simplicity, readability and flexibility
+- total energy is also calculated and written out in case of non-scf calculation
 
 ### Deprecated
 - makefiles of *PKKprime*, *voronoi*, *KKRimp*, *rhoq*
 - duplicated files from *KKRhost* in *rhoq*
+- common/test.f90 and common/opt.f90
 
 ### Removed
 - None

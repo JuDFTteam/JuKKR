@@ -45,6 +45,7 @@ contains
     lpotd,lmpotd,nmaxd,ishld,nembd1,wlength)
 
     use :: mod_madelgaunt, only: madelgaunt
+    use :: mod_runoptions, only: use_decimation, write_madelung_file
     use :: mod_madelcoef, only: madelcoef
     use :: mod_madelout, only: madel2out
     use :: mod_ewald2d, only: ewald2d
@@ -102,7 +103,6 @@ contains
     real (kind=dp), dimension(lmpotd, lmpotd) :: avmad
     ! ..
     ! .. External Functions/Subroutines
-    logical, external :: opt, test
     ! ......................................................................
     iprint = 0
     nclebd = lmxspd*lmpotd
@@ -120,10 +120,10 @@ contains
     ! ======================================================================
 
     lrecamad = wlength*2*lmpotd*lmpotd
-    if (test('madelfil')) then
+    if (write_madelung_file) then
       open (69, access='direct', recl=lrecamad, file='avmad.unformatted', form='unformatted')
     else
-      if (opt('DECIMATE')) then
+      if (use_decimation) then
         nleftoff = naez*naez
         nrightoff = naez*naez + naez*nleft*nlbasis
         nleftall = nleft*nlbasis
@@ -177,7 +177,7 @@ contains
           nclebd)
 
         irec = iq2 + naez*(iq1-1)
-        if (test('madelfil')) then
+        if (write_madelung_file) then
           write (69, rec=irec) avmad
         else
           t_madel%avmad(irec,:,:) = avmad(:,:)
@@ -191,7 +191,7 @@ contains
     ! ********************************************** loop over atoms in slab
 
     ! ######################################################################
-    if (opt('DECIMATE')) then
+    if (use_decimation) then
 
       nleftoff = naez*naez         ! record offsets
       nrightoff = nleftoff + naez*nleft*nlbasis ! left and right
@@ -240,7 +240,7 @@ contains
               lmxspd,nclebd)
 
             irec = ileft + nleftall*(iq1-1) + nleftoff
-            if (test('madelfil')) then
+            if (write_madelung_file) then
               write (69, rec=irec) avmad
             else
               t_madel%avmad(irec,:,:) = avmad(:,:)
@@ -301,7 +301,7 @@ contains
               lmxspd,nclebd)
 
             irec = iright + nrightall*(iq1-1) + nrightoff
-            if (test('madelfil')) then
+            if (write_madelung_file) then
               write (69, rec=irec) avmad
             else
               t_madel%avmad(irec,:,:) = avmad(:,:)
@@ -323,7 +323,7 @@ contains
     end if
     ! ######################################################################
     
-    if (test('madelfil')) close (69)
+    if (write_madelung_file) close (69)
 
     if (iprint<1) return
     ! ======================================================================

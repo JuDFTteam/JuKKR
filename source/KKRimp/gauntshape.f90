@@ -1,7 +1,6 @@
    !-------------------------------------------------------------------------------
    !> Summary: this is module is used to generat the Gauntcoefficients convoluted with shapefunction 
    !> Author: Who wrote this subroutine
-   !> Category: TAGS for the code they must be written as TAG1, TAG2, ..., TAGN
    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
    !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
    !-------------------------------------------------------------------------------
@@ -10,7 +9,7 @@ CONTAINS
    !-------------------------------------------------------------------------------
    !> Summary: This subroutine generats the Gauntcoefficients convoluted with shapefunction 
    !> Author: 
-   !> Category: Shapefun, Potential, kkrimp 
+   !> Category: Shape-functions, Potential, kkrimp 
    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
    !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
    !-------------------------------------------------------------------------------
@@ -63,7 +62,7 @@ end if
    !>          m. abramowitz and i.a. stegun, handbook of mathematical functions
    !>          nbs applied mathematics series 55 (1968), pages 887 and 916
    !> Author: Who wrote this subroutine
-   !> Category: Shapefun, Potential 
+   !> Category: Shape-functions, Potential 
    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
    !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
    !-------------------------------------------------------------------------------
@@ -236,9 +235,6 @@ end if
    !> @bug If nasty things are found
    !> @endbug
    !-------------------------------------------------------------------------------
-
-
-
       FUNCTION TRIANGLE(L1,L2,L3)
       IMPLICIT NONE
       INTEGER L1,L2,L3
@@ -252,7 +248,7 @@ end if
    !-------------------------------------------------------------------------------
    !> Summary: To get the lmax bounds for every atom
    !> Author: Who wrote this subroutine
-   !> Category: TAGs
+   !> Category:      
    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
    !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
    !-------------------------------------------------------------------------------
@@ -265,8 +261,6 @@ end if
    !> @bug If nasty things are found
    !> @endbug
    !-------------------------------------------------------------------------------
-
-
 subroutine getlmaxbounds(lmaxatom,natom,lmaxbounds)
     implicit none
     integer, intent(in)       :: lmaxatom(natom)

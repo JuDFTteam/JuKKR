@@ -19,6 +19,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine dlke0(gllke, alat, naez, cls, nacls, naclsmax, rr, ezoa, atom, bzkp, rcls, ginp)
 
+    use :: mod_runoptions, only: calc_complex_bandstructure, symmetrize_Gmat
     use :: global_variables, only: lmgf0d, almgf0, naclsd, nrd
     use :: mod_datatypes, only: dp
     use :: mod_dlke1, only: dlke1
@@ -38,7 +39,6 @@ contains
     complex (kind=dp) :: gllke1(almgf0, lmgf0d)
     real (kind=dp) :: kp(6)
 
-    logical, external :: opt
 
     ! write(6,*) '>>> DLKE0 : Fourier-transforms the ',
     ! +           'GF of reference system'
@@ -51,7 +51,7 @@ contains
       kp(1) = bzkp(1)
       kp(2) = bzkp(2)
       kp(3) = bzkp(3)
-      if (opt('COMPLEX ')) then
+      if (calc_complex_bandstructure) then
         kp(4) = bzkp(4)
         kp(5) = bzkp(5)
         kp(6) = bzkp(6)
@@ -71,7 +71,7 @@ contains
     end do
 
 
-    if (opt('symG(k) ')) then
+    if (symmetrize_gmat) then
 
       ! -->   symmetrization
 
@@ -80,7 +80,7 @@ contains
         kp(1) = -bzkp(1)
         kp(2) = -bzkp(2)
         kp(3) = -bzkp(3)
-        if (opt('COMPLEX ')) then
+        if (calc_complex_bandstructure) then
           kp(4) = -bzkp(4)
           kp(5) = -bzkp(5)
           kp(6) = -bzkp(6)

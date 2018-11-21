@@ -38,7 +38,7 @@ contains
   !>  convergence of the Born series. See also subroutines `regsol`, `pnstmat` and `pnsqns`
   !> @endnote
   !-------------------------------------------------------------------------------
-  subroutine calctmat(icst, ins, ielast, nsra, ispin, nspin, i1, ez, drdi, rmesh, vins, visp, zat, irmin, ipan, &
+  subroutine calctmat(icst, ins, ielast, nsra, ispin, nspin, i1, ez, drdi, rmesh, vins, visp, zat, irmin, ipan, & 
     ircut, cleb, loflm, icleb, iend, solver, soctl, ctl, vtrel, btrel, rmrel, drdirel, r2drdirel, zrel, jwsrel, idoldau, lopt, wldau, lly, deltae)
   
 #ifdef CPP_MPI
@@ -47,6 +47,7 @@ contains
     use :: mod_timing, only: timing_start, timing_stop, timings_1a
 #endif
     use :: mod_mympi, only: myrank, nranks, master, distribute_work_energies
+    use :: mod_runoptions, only: formatted_files, print_tmat
     use :: mod_types, only: t_tgmat, t_inc, t_mpi_c_grid, init_tgmat, t_lloyd, init_tlloyd
     use :: mod_datatypes, only: dp
     use :: global_variables, only: iemxd, lmmaxd, irmind, irmd, lmpotd, ncleb, krel, lm2d, lmaxd, ipand, mmaxd, nspind
@@ -102,7 +103,6 @@ contains
     integer :: ie_end, ie_num, ie_start, i11
     ! ..
     ! .. External Functions ..
-    logical, external :: test
     ! ..
     ! .. Data Statements
     data txts/'spin   UP', 'spin DOWN'/
@@ -275,7 +275,7 @@ contains
         irec = ie + ielast*(ispin-1) + ielast*nspin*(i1-1)
         write (69, rec=irec) tmat0
         ! human readable writeout if test option is hit
-        if (test('fileverb')) then
+        if (formatted_files) then
           write (696969, '(i9,20000F15.7)') irec, tmatll(:, :)
         end if
       else
@@ -306,7 +306,7 @@ contains
       end if                       ! LLY
 
       ! ----------------------------------------------------------------------
-      if (test('tmat    ') .and. (t_inc%i_write>0)) then
+      if (print_tmat .and. (t_inc%i_write>0)) then
         write (1337, *)
         write (1337, 100, advance='no') '-----> t matrix for atom: ', i1
         if (krel==0) write (1337, 110, advance='no') txts(ispin)

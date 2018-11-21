@@ -4,7 +4,7 @@ contains
    !-------------------------------------------------------------------------------
    !> Summary: Tries to distribute the energy points equally to all processors
    !> Author:
-   !> Category: KKRimp, communication (mpi)
+   !> Category: KKRimp, communication
    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
    !>
    !-------------------------------------------------------------------------------

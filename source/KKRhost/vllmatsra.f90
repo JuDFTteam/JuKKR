@@ -61,7 +61,6 @@ contains
     integer, dimension (lmsize) :: loflm
     complex (kind=dp) :: mass, mass0
 
-    logical, external :: test
 
 
     ! *******************************************************************************

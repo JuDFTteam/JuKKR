@@ -58,6 +58,7 @@ contains
 #endif
 
     use :: mod_constants
+    use :: mod_runoptions, only: use_virtual_atoms
     use :: mod_datatypes, only: dp
     use :: mod_ymy
     use :: mod_gamfc
@@ -178,7 +179,7 @@ contains
             alpha = lamda*r
             call gamfc(alpha, g, lmx, r)
 
-            ! IF (R>0.3D0 .or. .not. OPT('VIRATOMS') ) THEN         ! added by bauer VIRTAOM
+            ! IF (R>0.3D0 .or. .not. use_virtual_atoms ) THEN         ! added by bauer VIRTAOM
             do l = 0, lmx
               rfac = g(l)/sqrt(pi)
               do m = -l, l
