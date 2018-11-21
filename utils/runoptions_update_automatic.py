@@ -290,4 +290,14 @@ if __name__ == '__main__':
 	#remove_opt_test_definitions()
 	#generate_old_readin_source()
 	#generate_new_readin_source()
-	generate_bcast()
+	#generate_bcast()
+	out = open('generated_dokutable.txt','w')
+	keywords = construct_keywords_dict(filename='runoptions_list.txt')
+	for key in sorted(keywords.keys()):
+		keystr  = '<%s>= F/T'%(key.strip())
+		oldkeys_list = ['<%s>= F/T'%(ok.strip()) for ok in keywords[key][0]]
+		allkeys = [keystr] + oldkeys_list
+		allkeys_str = ' \n    or '.join(allkeys)
+		descr   = keywords[key][1].split('(former')[0].strip()
+		outline = '| <code>%s</code> | %s |\n'%(allkeys_str, descr)
+		out.write(outline)

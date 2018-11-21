@@ -173,7 +173,7 @@ module mod_main0
   integer :: idosemicore = 0
   integer :: ivshift = 0           !! for selected potential shift: atom index of potentials to be shifted by VCONST
   integer :: verbosity = 0         !! verbosity level for timings and output: 0=old default, 1,2,3 = timing and ouput verbosity level the same (low,medium,high)
-  integer :: MPI_scheme = 1        !! scheme for MPI parallelization: 0 = best, 1 = atoms (default), 2 = energies
+  integer :: MPI_scheme = 0        !! scheme for MPI parallelization: 0 = determine automatically (default), 1 = atoms, 2 = energies, 3 = after 2 runs with (1 and 2), select best option.
   integer :: special_straight_mixing = 0 !!id to specify modified straight mixing scheme: 0=normal, 1=alternating mixing factor (i.e. reduced mixing factor in every odd iteration), 2=charge-neurality based mixing factor (former: 'alt mix' and 'spec mix')
   real (kind=dp) :: tk = 800.0_dp       !! Temperature
   real (kind=dp) :: fcm = 20.0_dp       !! Factor for increased linear mixing of magnetic part of potential compared to non-magnetic part.
