@@ -131,7 +131,7 @@ module RadialMeshData_mod
 
   !----------------------------------------------------------------------------
   ! meshn, nfu, llmsp and thetas are optional!
-  subroutine initRadialMesh(self, alat, xrn, drn, nm, imt, irns, meshn, nfu, llmsp, thetas)
+  subroutine initRadialMesh(self, alat, xrn, drn, nm, imt, irns, meshn, nfu, llmsp, thetas, a_log, b_log)
     implicit none
     type(RadialMeshData), intent(inout) :: self
     double precision, intent(in) :: alat
@@ -141,10 +141,12 @@ module RadialMeshData_mod
     integer, intent(in) :: irns
     integer, intent(in), optional :: meshn, nfu, llmsp(:)
     double precision, intent(in), optional :: thetas(:,:)
+    double precision, intent(in) :: a_log
+    double precision, intent(in) :: b_log
 
     call initInterstitialMesh(self, alat, xrn, drn, nm, imt, irns, meshn, nfu, llmsp, thetas)
     ! note radius_mt = xrn(1) * alat
-    call initMuffinTinMesh(self, imt, xrn(1)*alat)
+    call initMuffinTinMesh(self, imt, xrn(1)*alat, a_log, b_log)
 
     call test_mesh_consistency(self)
 
@@ -152,20 +154,23 @@ module RadialMeshData_mod
 
   !---------------------------------------------------------------------------
   ! note radius_mt = xrn(1) * alat - in units of Bohr
-  subroutine initMuffinTinMesh(self, imt, radius_mt)
+  subroutine initMuffinTinMesh(self, imt, radius_mt, a_log, b_log)
     type(RadialMeshData), intent(inout) :: self
     integer, intent(in) :: imt
     double precision, intent(in) :: radius_mt
+    double precision, intent(in) :: a_log
+    double precision, intent(in) :: b_log
 
-    double precision, parameter :: A = 0.025d0
+    !double precision, parameter :: A = 0.025d0
     integer :: ii
 
-    self%A = A
-    self%B = radius_mt / (exp(A * (imt - 1)) - 1.d0)
+    self%A = a_log
+    self%B = b_log
+    !self%B = radius_mt / (exp(a_log * (imt - 1)) - 1.d0)
 
     do ii = 1, imt
-      self%r(ii)    = self%B * (exp(A * (ii - 1)) - 1.d0)
-      self%drdi(ii) = A * self%B * exp(A * (ii - 1))
+      self%r(ii)    = b_log * (exp(a_log * (ii - 1)) - 1.d0)
+      self%drdi(ii) = a_log * b_log * exp(a_log * (ii - 1))
     enddo ! ii
 
     self%rmt = radius_MT
@@ -603,7 +608,7 @@ module RadialMeshData_mod
     type(RadialMeshData), intent(in) :: self
 
     double precision :: rmt_test
-    double precision, parameter :: TOLERANCE = 1.d-8
+    double precision, parameter :: TOLERANCE = 1.d-7
 
     rmt_test = self%B * (exp(self%A * (self%IMT - 1)) - 1.d0)
 

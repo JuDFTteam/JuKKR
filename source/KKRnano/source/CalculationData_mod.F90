@@ -586,6 +586,7 @@ module CalculationData_mod
     type(InterstitialMesh) :: inter_mesh
     double precision :: new_MT_radius
     integer :: num_MT_points, nwarn
+    double precision :: a_log, b_log
 
     nwarn = 0
     do ila = 1, self%num_local_atoms
@@ -608,8 +609,17 @@ module CalculationData_mod
 
       call create(self%mesh_a(ila), irmd, ipand)
 
-      call initRadialMesh(self%mesh_a(ila), params%alat, inter_mesh%xrn, &
-                          inter_mesh%drn, inter_mesh%nm, irmd-irid, irnsd)
+      if (voronano == 0) then
+        a_log = self%mesh_a(ila)%a  
+        b_log = self%mesh_a(ila)%b  
+      else
+        a_log = 0.025d0
+        b_log = inter_mesh%xrn(1)*params%alat / (exp(a_log * ((irmd-irid) - 1)) - 1.d0)
+      endif
+
+      call initRadialMesh(self=self%mesh_a(ila), alat=params%alat, xrn=inter_mesh%xrn, &
+                          drn=inter_mesh%drn, nm=inter_mesh%nm, imt=irmd-irid, irns=irnsd, &
+                          a_log=a_log, b_log=b_log)
 
       ! optional output of shape functions
       if (params%write_shapes == 1 .or. voronano == 1) call store(self%cell_a(ila), inter_mesh, atom_id)

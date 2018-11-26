@@ -267,7 +267,8 @@ module Startb1_mod
       call initRadialMesh(mesh, alat, sfile%mesh(cell_index)%xrn, sfile%mesh(cell_index)%drn, &
                           sfile%mesh(cell_index)%nm, irmd-irid, irns, &
                           irid, sfile%shapes(cell_index)%nfu, sfile%shapes(cell_index)%llmsp, &
-                          sfile%shapes(cell_index)%thetas)
+                          sfile%shapes(cell_index)%thetas, pe(1,ib)%header%a_log_mesh, &
+                          pe(1,ib)%header%b_log_mesh)
       
       if (.not. nowrite) then
       
