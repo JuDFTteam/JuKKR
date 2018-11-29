@@ -61,10 +61,6 @@ contains
     use :: mod_constants, only: nsymaxd 
     implicit none
     ! ..
-    ! .. Parameters
-    integer :: nshell0
-    parameter (nshell0=10000)
-    ! ..
     ! .. Scalar arguments
     integer :: icc, nofgij, natom, nrot, iprint, nsheld
     ! ..
@@ -97,20 +93,15 @@ contains
     if (iprint>1) call printijtab(natom, ijtabcalc)
     ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
-    if (nsheld>=nshell0) then
-      write (6, 110) 'local', 'NSHELL0', nsheld
-      stop
-    end if
-
     if (nofgij<=0) then
       write (6, '(A)') '      ICC set to 0'
       write (6, '(A)') '         maybe you should check your input?'
       icc = 0                      ! Bauer Long 2011-10-11
       return
     end if
-    allocate (nsh1i(nshell0), nsh2i(nshell0), nshelli(nshell0), stat=ns)
+    allocate (nsh1i(nsheld), nsh2i(nsheld), nshelli(nsheld), stat=ns)
     if (ns/=0) stop '   < shellgen2k > allocate NSHELLI arrays'
-    allocate (ratomi(3,nshell0), stat=ns)
+    allocate (ratomi(3,nsheld), stat=ns)
     if (ns/=0) stop '   < shellgen2k > allocate RATOMI array'
     ! ======================================================================
     ! --> initialise number of shells found for this cluster, setup the
@@ -205,10 +196,6 @@ contains
 
         if (.not. lfound) then
           nsnew = nsnew + 1
-          if (nsnew+nshell(0)>nshell0) then
-            write (6, 110) 'local', 'NSHELL0', nsnew + nshell(0)
-            stop
-          end if
           if (nsnew+nshell(0)>nsheld) then
             write (6, 110) 'global', 'NSHELD', nsnew + nshell(0)
             stop
