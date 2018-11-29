@@ -1114,18 +1114,6 @@ contains
       symunitary,hostimp,intervx,intervy,intervz,ielast,ez,kmesh,maxmesh,maxmshd,   &
       krel+korbit,lmax,lmmaxd,kpoibz,naez,natyp,natomimpd,nsheld,nemb)
 
-    !TEST writeout of ish and jsh arrays
-    open(1832,file='test_ish.txt',form='formatted')
-    open(1833,file='test_jsh.txt',form='formatted')
-    do i1 = 1, nsheld
-      do i2 = 1, 2*nsymaxd
-        if (ish(i1,i2)/=0) write(1832,'(3I8)') i1, i2, ish(i1,i2)
-        if (jsh(i1,i2)/=0) write(1833,'(3I8)') i1, i2, jsh(i1,i2)
-      end do
-    end do
-    close(1832)
-    close(1833)
-
     ! -------------------------------------------------------------------------
 
     if (write_kkrimp_input) then
