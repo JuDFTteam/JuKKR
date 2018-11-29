@@ -66,7 +66,7 @@
 !> Summary: Determines the irregular non spherical wavefunctions in the n-th.
 !>          born approximation
 !> Author: 
-!> Category: Wavefunction, physical-observables, kkrimp
+!> Category: single-site, physical-observables, kkrimp
 !> Deprecated: False ! This needs to be set to True for deprecated subroutines
 !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
 !-------------------------------------------------------------------------------

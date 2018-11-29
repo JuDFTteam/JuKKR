@@ -29,7 +29,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Wrapper for the calculation of the irregular solutions
   !> Author: 
-  !> Category: solver, single-site, KKRhost
+  !> Category: single-site, KKRhost
   !> Deprecated: False 
   !> Wrapper for the calculation of the irregular solutions for the host code `KKRhost`
   !-------------------------------------------------------------------------------
@@ -43,7 +43,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Wrapper for the calculation of the irregular solutions
   !> Author: 
-  !> Category: solver, single-site, KKRhost
+  !> Category: single-site, KKRhost
   !> Deprecated: False 
   !> Wrapper for the calculation of the irregular solutions for the impurity code `KKRimp`
   !-------------------------------------------------------------------------------

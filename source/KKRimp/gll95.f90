@@ -33,7 +33,7 @@ CONTAINS
    !> Summary:  solution of the DYSON equation for a cluster of potentials
    !>           (TMATLL) centered at positions RATOM in free space
    !> Author: Who wrote this subroutine
-   !> Category: Green-function, reference-system 
+   !> Category: structural-greensfunction, reference-system 
    !> Deprecated: True ! This needs to be set to True for deprecated subroutines
    !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
    !-------------------------------------------------------------------------------

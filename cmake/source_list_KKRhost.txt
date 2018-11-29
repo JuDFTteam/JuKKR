@@ -36,7 +36,6 @@ add_executable(
     source/common/constants.f90
     source/common/rotatespinframe.f90
     source/common/profiling.f90
-    source/common/wunfiles.F90
     source/common/mympi.F90
     source/common/types.F90
     source/common/timing.F90
@@ -352,6 +351,7 @@ add_executable(
     source/KKRhost/wrldaupot.f90
     source/KKRhost/wrldos.f90
     source/KKRhost/wrmoms.f90
+    source/KKRhost/wunfiles.F90
     source/KKRhost/ylag.f90
     source/KKRhost/ymy.f90
     )
@@ -367,7 +367,6 @@ if(ENABLE_BdG)
         source/common/version.F90
         source/common/version_info.F90
         source/common/profiling.f90 
-        source/common/wunfiles.F90 
         source/common/mympi.F90 
         source/common/DataTypes.f90
         source/common/constants.f90 
@@ -392,6 +391,7 @@ if(ENABLE_BdG)
         source/common/radial_solver_Chebychev/rll_global_solutions.F90 
         source/common/radial_solver_Chebychev/sll_global_solutions.F90 
         source/common/radial_solver_Chebychev/create_newmesh.f90 
+        source/KKRhost/wunfiles.F90
         source/KKRhost/main_tmat_runner.F90
         source/KKRhost/global_variables.F90 
         source/KKRhost/save_wavefun.F90 

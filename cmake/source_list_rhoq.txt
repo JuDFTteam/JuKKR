@@ -8,7 +8,6 @@ add_executable(
     source/common/version_info.F90
     source/common/DataTypes.f90
     source/common/constants.f90
-    source/common/wunfiles.F90
     source/common/profiling.f90
     source/common/mympi.F90
     source/common/types.F90
@@ -22,14 +21,12 @@ add_executable(
     source/common/rcstop.f90 
     source/common/cinit.f90 
     source/common/radial_solver_Chebychev/intcheb_cell.f90 
-    source/rhoq/gaunt_new.f
-    source/rhoq/cspher.f
+    source/rhoq/gaunt_new.f90
+    source/rhoq/cspher.f90
     source/rhoq/calc_jlk.f90
-    source/rhoq/interpol_shape.f
-    source/rhoq/read_shape.f
+    source/rhoq/interpol_shape.f90
+    source/rhoq/read_shape.f90
     source/rhoq/mod_rhoq.F90
-    source/rhoq/opt.f90
-    source/rhoq/test.f90
     )
 
 if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
