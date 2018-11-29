@@ -569,7 +569,7 @@ contains
 
         i_all = -product(shape(csum_store2))*kind(csum_store2)
         deallocate (csum_store2, stat=lm1)
-        call memocc(lm1, iall, 'csum_store2', 'tbxccpljij')
+        call memocc(lm1, i_all, 'csum_store2', 'tbxccpljij')
       end if                     ! myrank==master
 
 

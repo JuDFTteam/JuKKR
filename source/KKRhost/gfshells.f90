@@ -42,13 +42,13 @@ contains
     character (len=10) :: rotname(64)
 
     integer :: atomimp(natomimpd), hostimp(0:natypd)
-    integer :: isymindex(*), kaoez(natypd, naezd+nembd)
-    integer :: noq(naezd), nsh1(*), nsh2(*), nshell(0:nsheld)
+    integer :: isymindex(nsymaxd), kaoez(natypd, naezd+nembd)
+    integer :: noq(naezd), nsh1(nsheld), nsh2(nsheld), nshell(0:nsheld)
     integer :: ish(nsheld, 2*nsymaxd), jsh(nsheld, 2*nsymaxd)
-    integer :: ijtabsym(*), ijtabsh(*), ijtabcalc(*), iofgij(*), jofgij(*)
+    integer :: ijtabsym(nofgij), ijtabsh(nofgij), ijtabcalc(nofgij), iofgij(nofgij), jofgij(nofgij)
 
     real (kind=dp) :: bravais(3, 3), ratom(3, nsheld)
-    real (kind=dp) :: rbasis(3, *), rclsimp(3, natomimpd)
+    real (kind=dp) :: rbasis(3, naezd+nembd), rclsimp(3, natomimpd)
     real (kind=dp) :: rsymat(64, 3, 3)
 
     integer :: nb, i, j, pos, ii, io, ns, in, ndim, nsize, ihost, ierr
@@ -94,13 +94,12 @@ contains
           end if
         end do
       end do
+
       if (use_virtual_atoms) then
         nshell(i) = 1
         nsh1(i) = i
         nsh2(i) = i
       end if
-
-
 
       if (nshell(i)==0) then
         write (6, 120)
@@ -215,8 +214,8 @@ inner:    do j = 1, natomimp
     end if
     ! **********************************************************************
 
-    call shellgen2k(icc, natomimp, rclsimp(1,1), atomimp(1), nofgij, iofgij, jofgij, nsymat, rsymat, isymindex, rotname, nshell, ratom(1,1), nsh1, nsh2, ish, jsh, ijtabsym, &
-      ijtabsh, ijtabcalc, 2, nsheld)
+    call shellgen2k(icc, natomimp, rclsimp, atomimp, nofgij, iofgij, jofgij, nsymat, rsymat, isymindex, rotname, nshell, ratom, nsh1, nsh2, ish, jsh, ijtabsym, &
+      ijtabsh, ijtabcalc, 2, nsheld, natomimpd)
 
     ! after shells have been created reset nofgij to nofgij_with_diag.
     ! Otherwise a segmentation fault occurs in kkrflex (in rotgll: ijtabsh etc too small)

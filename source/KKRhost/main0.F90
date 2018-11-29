@@ -1112,7 +1112,7 @@ contains
       rsymat,isymindex,nsymat,i25,natomimp,nsh1,nsh2,rclsimp,ratom,ijtabsym,ijtabsh,&
       ijtabcalc,iofgij,jofgij,nofgij,ish,jsh,rrot,dsymll1,para,qmtet,qmphi,         &
       symunitary,hostimp,intervx,intervy,intervz,ielast,ez,kmesh,maxmesh,maxmshd,   &
-      krel+korbit,lmax,lmmaxd,kpoibz,naez,natyp,natomimpd,nsheld,nemb)
+      krel+korbit,lmax,lmmaxd,kpoibz,naez,natyp,natomimpd,nsheld,nemb,iemxd)
 
     ! -------------------------------------------------------------------------
 

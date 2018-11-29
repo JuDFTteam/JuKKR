@@ -26,7 +26,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine shellgen2k(icc,natom,rcls,atom,nofgij,iofgij,jofgij,nrot,rsymat,       &
     isymindex,rotname,nshell,ratom,nsh1,nsh2,ish,jsh,ijtabsym,ijtabsh,ijtabcalc,    &
-    iprint,nsheld)
+    iprint,nsheld,natomd)
     ! **********************************************************************
     ! *    Determines the number of different atomic pairs in a cluster by *
     ! * symmetry considerations, assigning a "shell" pointer (used to set  *
@@ -62,17 +62,34 @@ contains
     implicit none
     ! ..
     ! .. Scalar arguments
-    integer :: icc, nofgij, natom, nrot, iprint, nsheld
+    integer, intent(inout) :: icc
+    integer, intent(in) :: natom
+    integer, intent(in) :: nofgij
+    integer, intent(in) :: nrot
+    integer, intent(in) :: iprint
+    integer, intent(in) :: nsheld
+    integer, intent(in) :: natomd
+
     ! ..
     ! .. Array arguments
-    integer, dimension(*), intent(in) :: ijtabcalc !! Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
-    integer :: atom(*), isymindex(*), ijtabsym(*), ijtabsh(*)
-    integer :: nshell(0:nsheld), nsh1(*), nsh2(*)
-    integer :: ish(nsheld, 2*nsymaxd), jsh(nsheld, 2*nsymaxd)
-    integer :: iofgij(*), jofgij(*)
-    real (kind=dp) :: rcls(3, *), rsymat(64, 3, *)
-    real (kind=dp) :: ratom(3, *)
-    character (len=10) :: rotname(*)
+    integer, dimension(nofgij),  intent(in) :: ijtabcalc !! Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
+    integer, dimension(natomd),  intent(in) :: atom
+    integer, dimension(nsymaxd), intent(in) :: isymindex
+    integer, dimension(nofgij),  intent(in) :: iofgij
+    integer, dimension(nofgij),  intent(in) :: jofgij
+    integer, dimension(nofgij), intent(out) :: ijtabsym
+    integer, dimension(nofgij), intent(out) :: ijtabsh
+    integer, dimension(nsheld, 2*nsymaxd), intent(out) :: ish
+    integer, dimension(nsheld, 2*nsymaxd), intent(out) :: jsh
+    integer, dimension(nsheld), intent(inout) :: nsh1
+    integer, dimension(nsheld), intent(inout) :: nsh2
+    integer, dimension(0:nsheld), intent(inout) :: nshell
+    
+    real (kind=dp), dimension(3, natomd), intent(in) :: rcls
+    real (kind=dp), dimension(64, 3, 3), intent(in) :: rsymat
+    real (kind=dp), dimension(3, nsheld), intent(inout) :: ratom
+
+    character (len=10), dimension(64), intent(in) :: rotname
     ! ..
     ! .. Local scalars
     integer :: ai, aj, i, j, k, ns, nsnew, nsgen, id, isym, ii, ij, igij
@@ -90,7 +107,7 @@ contains
 
     ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
     write (1337, 120)
-    if (iprint>1) call printijtab(natom, ijtabcalc)
+    if (iprint>1) call printijtab(natom, nofgij, ijtabcalc)
     ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
     if (nofgij<=0) then
@@ -317,11 +334,12 @@ contains
   !> Deprecated: False 
   !> Print the pointer indicating if a block of the Greens function has to be calculated
   !-------------------------------------------------------------------------------
-  subroutine printijtab(natom, ijtab)
+  subroutine printijtab(natom, nofgij, ijtab)
     implicit none
     ! ..
     integer, intent(in) :: natom !! Number of atoms in the cluster
-    integer, dimension(*), intent(in) :: ijtab !! Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
+    integer, intent(in) :: nofgij
+    integer, dimension(nofgij), intent(in) :: ijtab !! Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
     ! ..
     integer :: i, j, ij
     integer :: lgmax

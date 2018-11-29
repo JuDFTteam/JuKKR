@@ -22,7 +22,7 @@ contains
   subroutine bzkint0(nshell, naez, natyp, noq, rbasis, kaoez, icc, bravais, recbv, atomimp, rsymat, isymindex, nsymat, ifilimp, natomimp, & 
     nsh1, nsh2, rclsimp, ratom, ijtabsym, ijtabsh, ijtabcalc, iofgij, jofgij, nofgij, ish, jsh, rrot, dsymll, para, qmtet, qmphi, symunitary, &
     hostimp, intervx, intervy, intervz, ielast, ez, kmesh, maxmesh, maxmshd, krel, lmaxd, lmmaxd, kpoibz, naezd, natypd, natomimpd, &
-    nsheld, nembd)
+    nsheld, nembd, iemxd)
 
     use :: mod_constants, only: nsymaxd
     use :: mod_runoptions, only: print_tau_structure, use_Chebychev_solver, use_full_BZ
@@ -36,7 +36,7 @@ contains
     implicit none
     ! .. Parameters ..
     integer :: krel, lmaxd, lmmaxd
-    integer :: kpoibz, naezd, natypd, natomimpd, nsheld, nembd
+    integer :: kpoibz, naezd, natypd, natomimpd, nsheld, nembd, iemxd
     ! ..
     ! .. Scalar Arguments ..
     integer :: icc, naez, natomimp, natyp, nsymat, nofgij
@@ -44,10 +44,10 @@ contains
     character (len=40) :: ifilimp
     ! ..
     ! .. Array Arguments ..
-    complex (kind=dp) :: dsymll(lmmaxd, lmmaxd, nsymaxd), ez(*)
+    complex (kind=dp) :: dsymll(lmmaxd, lmmaxd, nsymaxd), ez(iemxd)
     real (kind=dp) :: bravais(3, 3), ratom(3, nsheld), rbasis(3, naezd+nembd), rclsimp(3, natomimpd), recbv(3, 3), rrot(48, 3, nsheld), rsymat(64, 3, 3)
-    integer :: atomimp(natomimpd), isymindex(nsymaxd), kaoez(natypd, naezd+nembd), noq(naezd), kmesh(*), nsh1(*), nsh2(*), nshell(0:nsheld), ijtabsym(*), ijtabsh(*), ijtabcalc(*), &
-      iofgij(*), jofgij(*), ish(nsheld, 2*nsymaxd), jsh(nsheld, 2*nsymaxd)
+    integer :: atomimp(natomimpd), isymindex(nsymaxd), kaoez(natypd, naezd+nembd), noq(naezd), kmesh(iemxd), nsh1(nsheld), nsh2(nsheld), nshell(0:nsheld), ijtabsym(nofgij), ijtabsh(nofgij), ijtabcalc(nofgij), &
+      iofgij(nofgij), jofgij(nofgij), ish(nsheld, 2*nsymaxd), jsh(nsheld, 2*nsymaxd)
 
     integer :: hostimp(0:natypd)
     ! ..
@@ -80,7 +80,7 @@ contains
     if (use_full_BZ .or. use_Chebychev_solver) then
       nsymat = 1
       lirr = .false.
-      write (1337, '(8X,2A,/)') 'Test option < fullBZ > or Run option < NEWSOSOL >: ', ' overriding NSYMAT, generate full BZ k-mesh'
+      write (1337, '(8X,2A,/)') 'Run option <use_full_BZ> or <use_Chebychev_solver>: ', ' overriding NSYMAT, generate full BZ k-mesh'
     end if
 
     ! --> generate BZ k-mesh
