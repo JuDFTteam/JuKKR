@@ -508,6 +508,7 @@ contains
     integer :: i
     integer :: j
     integer :: i1
+    integer :: i2
     integer :: ie
     integer :: lm
     integer :: ns
@@ -1111,7 +1112,19 @@ contains
       rsymat,isymindex,nsymat,i25,natomimp,nsh1,nsh2,rclsimp,ratom,ijtabsym,ijtabsh,&
       ijtabcalc,iofgij,jofgij,nofgij,ish,jsh,rrot,dsymll1,para,qmtet,qmphi,         &
       symunitary,hostimp,intervx,intervy,intervz,ielast,ez,kmesh,maxmesh,maxmshd,   &
-      nsymaxd,krel+korbit,lmax,lmmaxd,kpoibz,naez,natyp,natomimpd,nsheld,nemb)
+      krel+korbit,lmax,lmmaxd,kpoibz,naez,natyp,natomimpd,nsheld,nemb)
+
+    !TEST writeout of ish and jsh arrays
+    open(1832,file='test_ish.txt',form='formatted')
+    open(1833,file='test_jsh.txt',form='formatted')
+    do i1 = 1, nsheld
+      do i2 = 1, 2*nsymaxd
+        if (ish(i1,i2)/=0) write(1832,'(3I8)') i1, i2, ish(i1,i2)
+        if (jsh(i1,i2)/=0) write(1833,'(3I8)') i1, i2, jsh(i1,i2)
+      end do
+    end do
+    close(1832)
+    close(1833)
 
     ! -------------------------------------------------------------------------
 
@@ -1284,7 +1297,7 @@ contains
       nrrel, irrel, lefttinvll, righttinvll, vacflag, a, b, ifunm, ifunm1, intervx, intervy, intervz, ititle, lmsp1, ntcell, thetas, lpotd, lmpotd, nright, nleft, linterface, imix, &
       mixing, qbound, fcm, itdbry, irns, kpre, kshape, kte, kvmad, kxc, lambda_xc, txc, ishift, ixipol, lrhosym, kforce, lmsp, llmsp, rmt, rmtnew, rws, imt, irc, irmin, irws, nfu, &
       hostimp, gsh, ilm_map, imaxsh, idoldau, itrunldau, ntldau, lopt, itldau, ueff, jeff, erefldau, uldau, wldau, phildau, iemxd, irmind, irmd, nspotd, npotd, nembd1, lmmaxd, &
-      ipand, nembd2, lmax, ncleb, naclsd, nclsd, lm2d, lmax+1, mmaxd, nrd, nsheld, nsymaxd, naez/nprincd, natomimpd, nspind, irid, nfund, ncelld, lmxspd, ngshd, krel, ntotd, ncheb, &
+      ipand, nembd2, lmax, ncleb, naclsd, nclsd, lm2d, lmax+1, mmaxd, nrd, nsheld, naez/nprincd, natomimpd, nspind, irid, nfund, ncelld, lmxspd, ngshd, krel, ntotd, ncheb, &
       npan_log, npan_eq, npan_log_at, npan_eq_at, r_log, npan_tot, rnew, rpan_intervall, ipan_intervall, nspindd, thetasnew, socscale, tolrdif, lly, deltae, rclsimp, verbosity, MPI_scheme, &
       special_straight_mixing )
 

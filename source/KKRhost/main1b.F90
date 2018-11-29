@@ -38,7 +38,7 @@ contains
     use :: mod_runoptions, only: calc_exchange_couplings, formatted_files, set_gmat_to_zero, use_Chebychev_solver, &
       use_qdos, use_readcpa, write_deci_tmat, write_gmat_plain, write_green_host, write_green_imp, write_kkrimp_input, &
       write_pkkr_input, write_pkkr_operators, write_rhoq_input, write_gmat_ascii, set_cheby_nosoc
-    use :: mod_constants, only: czero, cone, pi, nsymaxd
+    use :: mod_constants, only: czero, cone, pi
     use :: mod_profiling, only: memocc
     use :: mod_operators_for_fscode, only: operators_for_fscode
     use :: mod_getscratch, only: opendafile
@@ -223,7 +223,7 @@ contains
       nofgij,natomimp,conc,kmesh,maxmesh,nsymat,nqcalc,ratom,rrot,drotq,ijtabcalc,  &
       ijtabcalc_i,ijtabsym,ijtabsh,iqcalc,dsymll,invmod,icheck,symunitary,rc,crel,  &
       rrel,srrel,nrrel,irrel,lefttinvll,righttinvll,vacflag,nofks,volbz,bzkp,volcub,&
-      wez, nembd1, lmmaxd, nsymaxd, nspindd, maxmshd, rclsimp)
+      wez, nembd1, lmmaxd, nspindd, maxmshd, rclsimp)
 
     if (write_rhoq_input) then
       open (9889, access='direct', file='tau0_k', form='unformatted', recl=(lmmaxd*lmmaxd+1)*4) ! lm blocks

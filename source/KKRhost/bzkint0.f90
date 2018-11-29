@@ -21,9 +21,10 @@ contains
   !-------------------------------------------------------------------------------
   subroutine bzkint0(nshell, naez, natyp, noq, rbasis, kaoez, icc, bravais, recbv, atomimp, rsymat, isymindex, nsymat, ifilimp, natomimp, & 
     nsh1, nsh2, rclsimp, ratom, ijtabsym, ijtabsh, ijtabcalc, iofgij, jofgij, nofgij, ish, jsh, rrot, dsymll, para, qmtet, qmphi, symunitary, &
-    hostimp, intervx, intervy, intervz, ielast, ez, kmesh, maxmesh, maxmshd, nsymaxd, krel, lmaxd, lmmaxd, kpoibz, naezd, natypd, natomimpd, &
+    hostimp, intervx, intervy, intervz, ielast, ez, kmesh, maxmesh, maxmshd, krel, lmaxd, lmmaxd, kpoibz, naezd, natypd, natomimpd, &
     nsheld, nembd)
 
+    use :: mod_constants, only: nsymaxd
     use :: mod_runoptions, only: print_tau_structure, use_Chebychev_solver, use_full_BZ
     use :: mod_datatypes, only: dp
     use :: mod_gfshells, only: gfshells
@@ -34,7 +35,7 @@ contains
     use :: mod_symtaumat, only: symtaumat
     implicit none
     ! .. Parameters ..
-    integer :: nsymaxd, krel, lmaxd, lmmaxd
+    integer :: krel, lmaxd, lmmaxd
     integer :: kpoibz, naezd, natypd, natomimpd, nsheld, nembd
     ! ..
     ! .. Scalar Arguments ..
@@ -46,7 +47,7 @@ contains
     complex (kind=dp) :: dsymll(lmmaxd, lmmaxd, nsymaxd), ez(*)
     real (kind=dp) :: bravais(3, 3), ratom(3, nsheld), rbasis(3, naezd+nembd), rclsimp(3, natomimpd), recbv(3, 3), rrot(48, 3, nsheld), rsymat(64, 3, 3)
     integer :: atomimp(natomimpd), isymindex(nsymaxd), kaoez(natypd, naezd+nembd), noq(naezd), kmesh(*), nsh1(*), nsh2(*), nshell(0:nsheld), ijtabsym(*), ijtabsh(*), ijtabcalc(*), &
-      iofgij(*), jofgij(*), ish(nsheld, *), jsh(nsheld, *)
+      iofgij(*), jofgij(*), ish(nsheld, 2*nsymaxd), jsh(nsheld, 2*nsymaxd)
 
     integer :: hostimp(0:natypd)
     ! ..

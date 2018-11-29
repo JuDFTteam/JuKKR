@@ -58,6 +58,7 @@ contains
     ! * RATOM(3,NS) diference vector R_i(NS) - R_j(NS)                     *
     ! *                                                                    *
     ! **********************************************************************
+    use :: mod_constants, only: nsymaxd 
     implicit none
     ! ..
     ! .. Parameters
@@ -71,7 +72,7 @@ contains
     integer, dimension(*), intent(in) :: ijtabcalc !! Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
     integer :: atom(*), isymindex(*), ijtabsym(*), ijtabsh(*)
     integer :: nshell(0:nsheld), nsh1(*), nsh2(*)
-    integer :: ish(nsheld, *), jsh(nsheld, *)
+    integer :: ish(nsheld, 2*nsymaxd), jsh(nsheld, 2*nsymaxd)
     integer :: iofgij(*), jofgij(*)
     real (kind=dp) :: rcls(3, *), rsymat(64, 3, *)
     real (kind=dp) :: ratom(3, *)
@@ -184,6 +185,7 @@ contains
               if (r1<small) then
                 lfound = .true.
                 nshelli(ns) = nshelli(ns) + 1
+                if (nshelli(ns)>2*nsymaxd) stop 'dimension error in shellgen2k: nshelli > 2*nsymaxd'
                 if (ns<=nshell(0)) write (1337, 130) ai, (rcls(ii,i), ii=1, 3), aj, (rcls(ii,j), ii=1, 3), ns
                 ish(ns, nshelli(ns)) = i
                 jsh(ns, nshelli(ns)) = j

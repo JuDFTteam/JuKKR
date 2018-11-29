@@ -25,6 +25,7 @@ contains
   subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, iofgij, jofgij, nofgij, ish, jsh, nshell, naez, natyp, noq, rbasis, bravais, ifilimp, ratom, rclsimp, &
     nsymat, isymindex, rsymat, kaoez, atomimp, rotname, hostimp, lmaxd, lmmaxd, naezd, natypd, natomimpd, nembd, nsheld)
 
+    use :: mod_constants, only: nsymaxd 
     use :: mod_types, only: t_imp
     use :: mod_runoptions, only: use_virtual_atoms, write_green_imp, write_kkrimp_input, write_pkkr_operators
     use :: mod_datatypes, only: dp
@@ -43,7 +44,7 @@ contains
     integer :: atomimp(natomimpd), hostimp(0:natypd)
     integer :: isymindex(*), kaoez(natypd, naezd+nembd)
     integer :: noq(naezd), nsh1(*), nsh2(*), nshell(0:nsheld)
-    integer :: ish(nsheld, *), jsh(nsheld, *)
+    integer :: ish(nsheld, 2*nsymaxd), jsh(nsheld, 2*nsymaxd)
     integer :: ijtabsym(*), ijtabsh(*), ijtabcalc(*), iofgij(*), jofgij(*)
 
     real (kind=dp) :: bravais(3, 3), ratom(3, nsheld)
