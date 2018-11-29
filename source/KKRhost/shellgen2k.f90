@@ -263,28 +263,27 @@ contains
         ! =======================================================================
         do ii = 1, nshell(0)
           ! -----------------------------------------------------------------------
-          do id = 1, nrot
-            isym = isymindex(id)
+          if ( ai==nsh1(ii) .and. aj==nsh2(ii) ) then
+            do id = 1, nrot
+              isym = isymindex(id)
 
-            do k = 1, 3
-              ri(k) = rsymat(isym, k, 1)*ratom(1, ii) + rsymat(isym, k, 2)*ratom(2, ii) + rsymat(isym, k, 3)*ratom(3, ii)
-            end do
+              do k = 1, 3
+                ri(k) = rsymat(isym, k, 1)*ratom(1, ii) + rsymat(isym, k, 2)*ratom(2, ii) + rsymat(isym, k, 3)*ratom(3, ii)
+              end do
 
-            if ( ai==nsh1(ii) .and. aj==nsh2(ii) ) then
+                r1 = (rcls(1,j)-rcls(1,i)-ri(1))**2 + (rcls(2,j)-rcls(2,i)-ri(2))**2 + (rcls(3,j)-rcls(3,i)-ri(3))**2
 
-              r1 = (rcls(1,j)-rcls(1,i)-ri(1))**2 + (rcls(2,j)-rcls(2,i)-ri(2))**2 + (rcls(3,j)-rcls(3,i)-ri(3))**2
-
-              if (r1<small) then
-                ij = (i-1)*natom + j
-                ijtabsh(ij) = ii
-                ijtabsym(ij) = id
-                go to 100
-              end if
-            end if
-          end do
+                if (r1<small) then
+                  ij = (i-1)*natom + j
+                  ijtabsh(ij) = ii
+                  ijtabsym(ij) = id
+                  go to 100
+                end if
+            end do!id
+          end if!ai==nsh1(ii) .and. aj==nsh2(ii)
           ! -----------------------------------------------------------------------
 100       continue
-        end do
+        end do!ii
         ! =======================================================================
       end do
     end do
