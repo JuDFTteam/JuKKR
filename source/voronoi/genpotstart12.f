@@ -210,8 +210,6 @@ c
             IRMTOUT = IRWS(ISITE) - MESHN(ID)
             IRNSOUT = IRNS(ISITE)  ! 22.1.12 Changed from IRNS(ID) to IRNS(IAT)
 
-            write(*,*) 'KSHAPE=', KSHAPE
-
             IF (KSHAPE.EQ.0) THEN
                BOUT = RMAXOUT / (EXP(AOUT*REAL(IRWSOUT-1))-1.0D0)
                DO IR=2,IRWSOUT
@@ -227,7 +225,6 @@ c
                RMAXOUT = ROUT(IRWSOUT)
             ELSE
                BOUT = RMTOUT /  (EXP(AOUT*REAL(IRMTOUT-1))-1.0D0)
-               write(4444,*) 'BOUT1', BOUT
                DO IR=2,IRMTOUT
                   EA = EXP(AOUT*REAL(IR-1))
                   ROUT(IR) = BOUT* (EA-1.0D0)
