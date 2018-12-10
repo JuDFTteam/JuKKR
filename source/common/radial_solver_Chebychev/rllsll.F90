@@ -34,7 +34,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Calculation of the regular and irregular solutions for the host code
   !> Author: 
-  !> Category: solver, single-site, KKRhost
+  !> Category: single-site, KKRhost
   !> Deprecated: False 
   !> Calculation o radial wave functions by the integral equation method of
   !> Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
@@ -85,7 +85,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Calculation of the regular and irregular solutions for the impurity code
   !> Author: 
-  !> Category: solver, single-site, KKRhost
+  !> Category: single-site, KKRhost
   !> Deprecated: False 
   !> Calculation o radial wave functions by the integral equation method of
   !> Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
@@ -823,7 +823,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Helper routine here only for host since `mod_rllsllutils` does not exsist in the host code
   !> Author: 
-  !> Category: solver, sanity-check, KKRhost
+  !> Category: sanity-check, KKRhost
   !> Deprecated: False 
   !> Helper routine here only for host since `mod_rllsllutils` does not exsist in the host code
   !-------------------------------------------------------------------------------
@@ -870,7 +870,7 @@ end module mod_rllsll
 !-------------------------------------------------------------------------------
 !> Summary: Run rllsll-standalone version
 !> Author: P. Rüßmann
-!> Category: KKRhost, solver, single-site, unit-test
+!> Category: KKRhost, single-site, unit-test
 !> Deprecated: False ! This needs to be set to True for deprecated subroutines
 !-------------------------------------------------------------------------------
 !> @note Needs previous run of rllsll with test_prep to generate necessary input 
@@ -997,7 +997,7 @@ end program test_rllsll
 !> Summary: Helper routine to write the regular and irregular solutions to file
 !> Author: 
 !> Author: P. Rüßmann
-!> Category: input-output, solver, KKRhost, single-site, unit-test
+!> Category: input-output, KKRhost, single-site, unit-test
 !> Deprecated: False 
 !>  Helper routine to write the regular and irregular solutions to file
 !-------------------------------------------------------------------------------

@@ -17,7 +17,7 @@ contains
   !-------------------------------------------------------------------------------  
   !> Summary: Performs a straight mixing of the potential 
   !> Author: 
-  !> Category: potential, solver, KKRhost
+  !> Category: potential, KKRhost
   !> Deprecated: False 
   !> Performs a straight mixing between the potential from a previous iteration 
   !> and the one from the current iteration to speed up convergence. 

@@ -14,15 +14,6 @@
    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
    !> 
    !-------------------------------------------------------------------------------
-   !> @note Notes on the code
-   !> @endnote
-   !> @todo things that must be checked
-   !> @endtodo
-   !> @warning Important precautions
-   !> @endwarning
-   !> @bug If nasty things are found
-   !> @endbug
-   !-------------------------------------------------------------------------------
       SUBROUTINE MIXBROYDEN(VPOT,VPOT_OUT,INS,MIXFAC,NSPIN,CELL,LMAXATOM, &
                         NATOM,ITDBRY,IMIX,LMPOTD,IRMD)
 ! c*********************************************************************
@@ -108,15 +99,6 @@
    !>
    !>   modified for non spherical potential
    !>                  b. drittler , aug. 1988
-   !-------------------------------------------------------------------------------
-   !> @note Notes on the code
-   !> @endnote
-   !> @todo things that must be checked
-   !> @endtodo
-   !> @warning Important precautions
-   !> @endwarning
-   !> @bug If nasty things are found
-   !> @endbug
    !-------------------------------------------------------------------------------
       SUBROUTINE MIXBROYDEN_START(VPOT,VPOT_OUT,INS,MIXFAC,NSPIN,CELL,LMAXATOM, &
                         NATOM,ITDBRY,IMIX,NTIRD,LMPOTD,IRMD,iobroy)
@@ -479,15 +461,6 @@ allocate(FM1(NTIRD),G(NTIRD),SM(NTIRD),SM1(NTIRD),VI3(NTIRD),UI2(NTIRD),UI3(NTIR
    !> c     density is also added in.
    !> c                                    s. bluegel , kfa , 1987
    !> c
-   !-------------------------------------------------------------------------------
-   !> @note Notes on the code
-   !> @endnote
-   !> @todo things that must be checked
-   !> @endtodo
-   !> @warning Important precautions
-   !> @endwarning
-   !> @bug If nasty things are found
-   !> @endbug
    !-------------------------------------------------------------------------------
       SUBROUTINE MIXBROYDEN_SHIFT(Y,mode,X,INS,CELL, &
                         NATYP,NSPIN,IMAP,LMAXATOM,LMPOTD,IRMD,NTIRD)

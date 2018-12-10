@@ -14,7 +14,7 @@
   !-------------------------------------------------------------------------------
   !> Summary: Driver for the exchange-correlation potential and energy calculation
   !> Author:
-  !> Category: xc-potential, KKRimpt
+  !> Category: xc-potential, KKRimp
   !> Deprecated: False 
   !> Driver for the exchange-correlation potential and energy calculation. It wraps
   !> all the different exchange-correlation potentials and make sure to call the 

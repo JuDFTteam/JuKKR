@@ -56,15 +56,6 @@
 ! These boxes contain important information and should be added when necessary. ALWAYS remember to close the box
 ! BEFORE oppening a new one or they will be nested.
 !------------------------------------------------------------------------------------
-!> @note Notes on the code
-!> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
-!------------------------------------------------------------------------------------
 
 
 
@@ -75,18 +66,9 @@
 !> Summary: Determines the irregular non spherical wavefunctions in the n-th.
 !>          born approximation
 !> Author: 
-!> Category: Wavefunction, physical-observables, kkrimp
+!> Category: single-site, physical-observables, kkrimp
 !> Deprecated: False ! This needs to be set to True for deprecated subroutines
 !> A More detailed explanation with the math, concepts, etc necessary to understand the routine
-!-------------------------------------------------------------------------------
-!> @note Notes on the code
-!> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
 !-------------------------------------------------------------------------------
 
 

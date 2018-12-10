@@ -44,7 +44,10 @@ contains
     use :: mod_mympi, only: find_dims_2d, distribute_linear_on_tasks, mympi_main1c_comm_newsosol
 #endif
     use :: mod_save_wavefun, only: t_wavefunctions, read_wavefunc
-    use :: mod_version_info
+    use :: mod_runoptions, only: calc_exchange_couplings, calc_gmat_lm_full, disable_tmat_sratrick, fix_nonco_angles, &
+                                 use_qdos, write_complex_qdos, write_pkkr_operators, write_DOS_lm, set_cheby_nospeedup, &
+                                 set_cheby_nosoc, disable_print_serialnumber
+    use :: mod_version_info, only: version_print_header
     use :: global_variables
     use :: mod_constants
     use :: mod_profiling
@@ -193,8 +196,6 @@ contains
     ! read in wavefunctions
     logical :: rll_was_read_in, sll_was_read_in, rllleft_was_read_in, sllleft_was_read_in
     ! ..
-    logical :: test, opt
-    external :: test, opt
     character (len=100) :: filename
 
     ! lmsize is original lm-size (without enhancement through soc etc.)
@@ -217,7 +218,7 @@ contains
 
     if (nsra==2) then
       use_sratrick = 1
-      if (test('nosph   ')) use_sratrick = 0
+      if (disable_tmat_sratrick) use_sratrick = 0
     else
       use_sratrick = 0
     end if
@@ -228,7 +229,7 @@ contains
     call memocc(i_stat, product(shape(vins))*kind(vins), 'VINS', 'RHOVALNEW')
     vins = 0d0
     vins(1:irmdnew, 1:lmpotd, 1) = vinsnew(1:irmdnew, 1:lmpotd, ipot)
-    if (.not.test('NOSOC   '))  vins(1:irmdnew, 1:lmpotd, nspin) = vinsnew(1:irmdnew, 1:lmpotd, ipot+nspin-1)
+    if (.not.set_cheby_nosoc)  vins(1:irmdnew, 1:lmpotd, nspin) = vinsnew(1:irmdnew, 1:lmpotd, ipot+nspin-1)
 
     ! set up the non-spherical ll' matrix for potential VLL'
     allocate (vnspll0(lmmaxso,lmmaxso,irmdnew), stat=i_stat)
@@ -369,7 +370,7 @@ contains
     ! ENDDO
 
     nqdos = 1                      ! qdos ruess
-    if (opt('qdos    ')) then      ! qdos ruess
+    if (use_qdos) then      ! qdos ruess
       ! Read BZ path for qdos calculation:                                ! qdos ruess
       open (67, file='qvec.dat', status='old', iostat=ierr, err=100) ! qdos ruess
       read (67, *) nqdos           ! qdos ruess
@@ -397,14 +398,14 @@ contains
       allocate (denlm(lmsize,ielast,nqdos,nspin/(nspin-korbit)), stat=i_stat) ! qdos ruess
       call memocc(i_stat, product(shape(denlm))*kind(qvec), 'DENLM', 'RHOVALNEW') ! qdos ruess
 100   if (ierr/=0) stop 'ERROR READING ''qvec.dat''' ! qdos ruess
-    end if                         ! OPT('qdos    ')                                                     ! qdos ruess
+    end if                         ! use_qdos                                                     ! qdos ruess
 
 #ifdef CPP_MPI
     i1_myrank = i1 - t_mpi_c_grid%ioff_pt1(t_mpi_c_grid%myrank_ie) ! lmlm-dos ruess
 #else
     i1_myrank = i1                 ! lmlm-dos ruess
 #endif
-    if ((opt('lmlm-dos')) .and. (i1_myrank==1)) then ! lmlm-dos ruess
+    if ((calc_gmat_lm_full) .and. (i1_myrank==1)) then ! lmlm-dos ruess
       lrecgflle = nspin*(1+korbit)*lmmaxso*lmmaxso*ielast*nqdos ! lmlm-dos ruess
       open (91, access='direct', recl=lrecgflle, file='gflle' & ! lmlm-dos ruess
         , form='unformatted', status='replace', err=110, iostat=ierr) ! lmlm-dos ruess
@@ -484,7 +485,7 @@ contains
 
       ! recalculate wavefuntions, also include left solution
       ! contruct the spin-orbit coupling hamiltonian and add to potential
-      if ( .not. test('NOSOC   ')) then
+      if ( .not. set_cheby_nosoc) then
         call spinorbit_ham(lmax, lmsize, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpotd, theta, phi, ipan_intervall, &
           rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, vnspll0, vnspll1(:,:,:,ith), '1')
       else
@@ -515,7 +516,7 @@ contains
         jlk2(:, :, ith) = czero
         gmatprefactor = czero
         jlk_index = 0
-        if (test('NOSOC   ')) then
+        if (set_cheby_nosoc) then
           use_fullgmat = 0
         else
           use_fullgmat = 1
@@ -539,7 +540,7 @@ contains
         ! faster calculation of RLL.
         ! no irregular solutions SLL are needed in self-consistent iterations
         ! because the density depends only on RLL, RLLLEFT and SLLLEFT
-        if (opt('RLL-SLL ') .and. .not. (opt('XCPL    ') .or. opt('OPERATOR'))) then
+        if (.not.set_cheby_nospeedup .and. .not. (calc_exchange_couplings .or. write_pkkr_operators)) then
           call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), tmatll, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, &
             hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
         else
@@ -558,7 +559,7 @@ contains
       !------------------------------------------------------------------------------
       if ((t_wavefunctions%nwfsavemax>0 .and. (.not. (rllleft_was_read_in .and. sllleft_was_read_in))) .or. (t_wavefunctions%nwfsavemax==0)) then
         ! read/recalc wavefunctions left contruct the TRANSPOSE spin-orbit coupling hamiltonian and add to potential
-        if ( .not. test('NOSOC   ')) then
+        if ( .not. set_cheby_nosoc) then
           call spinorbit_ham(lmax, lmsize, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpotd, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
             vnspll0, vnspll1(:,:,:,ith), 'transpose')
         else
@@ -604,7 +605,7 @@ contains
         tmattemp = czero
         alphall = czero
         ! faster calculation of RLLLEFT and SLLLEFT.
-        if (opt('RLL-SLL ') .and. .not. (opt('XCPL    ') .or. opt('OPERATOR'))) then
+        if (.not.set_cheby_nospeedup .and. .not. (calc_exchange_couplings .or. write_pkkr_operators)) then
           call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), tmattemp, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
             jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
           call sll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), sllleft(:,:,:,ith), ncheb, npan_tot, lmmaxso, nvec*lmmaxso, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, &
@@ -699,7 +700,7 @@ contains
       !------------------------------------------------------------------------------
       ! Get orbital moment
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      if (.not. test('NOSOC   ')) then
+      if (.not. set_cheby_nosoc) then
         do iorb = 1, 3
           call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, cone, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll(:,:,:,ith), & ! SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
             rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), r2orbc(:,:,:,ith), iorb, gflle_part(:,:,ith), rpan_intervall, ipan_intervall, nspin)
@@ -738,7 +739,7 @@ contains
             muorb(lmaxd1+1, 1:3) = muorb(lmaxd1+1, 1:3) + muorb(lm1, 1:3)
           end do
         end do ! IORB
-      end if ! .not. test('NOSOC    ')
+      end if ! .not. set_cheby_nosoc
 
     end do                         ! IE loop
 #ifdef CPP_OMP
@@ -755,7 +756,7 @@ contains
     end do
 
 #ifdef CPP_MPI
-    if (opt('qdos    ')) then                                                                                    ! qdos
+    if (use_qdos) then                                                                                    ! qdos
       ! first communicate den array to write out qdos files                                                      ! qdos
       idim = (lmaxd1+1)*ielast*nspin/(nspin-korbit)*nqdos                                                                       ! qdos
       allocate (workc(0:lmaxd1,ielast,nspin/(nspin-korbit),nqdos), stat=i_stat)                                                 ! qdos
@@ -781,12 +782,12 @@ contains
                 open (31, file='qdos.'//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+1)//'.dat')    ! qdos
                 open (32, file='qdos.'//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+2)//'.dat')    ! qdos
               end if                                                                                             ! qdos
-              call version_print_header(31)                                                                      ! qdos
+              call version_print_header(31, disable_print=disable_print_serialnumber)                            ! qdos
               write (31, *) ' '                                                                                  ! qdos
               write (31, 150) '# ISPIN=', 1, ' I1=', i1                                                          ! qdos
               write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...'        ! qdos
               if (nspin>1) then                                                                                  ! qdos
-                call version_print_header(32)                                                                    ! qdos
+                call version_print_header(32, disable_print=disable_print_serialnumber)                          ! qdos
                 write (32, *) ' '                                                                                ! qdos
                 write (32, 150) '# ISPIN=', 2, ' I1=', i1                                                        ! qdos
                 write (32, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...'      ! qdos
@@ -803,7 +804,7 @@ contains
             write (32, 120) ez(ie), qvec(1, iq), qvec(2, iq), qvec(3, iq), -aimag(dentot(2))/pi, (-aimag(den(l1,ie,iq,2))/pi, l1=0, lmaxd1) ! qdos
 120         format (5f10.6, 40e16.8)                                                                             ! qdos
 
-            if (test('compqdos')) then                                                                                            ! complex qdos
+            if (write_complex_qdos) then                                                                                            ! complex qdos
               if ((iq==1) .and. (ie_num==1)) then                                                                                 ! complex qdos
                 if (natyp>=100) then                                                                                              ! complex qdos
                   open (31, file='cqdos.'//char(48+i1/100)//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+1)//'.dat') ! complex qdos
@@ -812,13 +813,13 @@ contains
                   open (31, file='cqdos.'//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+1)//'.dat')                  ! complex qdos
                   open (32, file='cqdos.'//char(48+mod(i1/10,10))//char(48+mod(i1,10))//'.'//char(48+2)//'.dat')                  ! complex qdos
                 end if                                                                                                            ! complex qdos
-                call version_print_header(31)                                                                                     ! complex qdos
+                call version_print_header(31, disable_print=disable_print_serialnumber)                                           ! complex qdos
                 write (31, *) ' '                                                                                                 ! complex qdos
                 write (31, '(A)') '#   lmax, natyp, nspin, nqdos, ielast:'                                                        ! complex qdos
                 write (31, '(5I9)') lmax, natyp, nspin, nqdos, ielast                                                             ! complex qdos
                 write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...'                       ! complex qdos
                 if (nspin>1) then                                                                                                 ! complex qdos
-                  call version_print_header(32)                                                                                   ! complex qdos
+                  call version_print_header(32, disable_print=disable_print_serialnumber)                                         ! complex qdos
                   write (32, *) ' '                                                                                               ! complex qdos
                   write (32, '(A)') '# lmax, natyp, nspin, nqdos, ielast:'                                                        ! complex qdos
                   write (32, '(5I9)') lmax, natyp, nspin, nqdos, ielast                                                           ! complex qdos
@@ -840,7 +841,7 @@ contains
           end do ! IQ             ! qdos
         end do ! IE               ! qdos
       end if ! myrank_at==master  ! qdos
-    end if ! OPT('qdos    ')      ! qdos
+    end if ! use_qdos      ! qdos
 #endif
 
 #ifdef CPP_MPI
@@ -849,10 +850,10 @@ contains
     call timing_start('main1c - communication')
 #endif
     ! reset NQDOS to avoid endless communication
-    if (.not. opt('lmdos    ')) then
+    if (.not. calc_gmat_lm_full) then
       nqdos = 1
     else
-      if (myrank==master) write (*, *) 'lmlm-dos option, communcation might take a while!', ielast, nqdos
+      if (myrank==master) write (*, *) '< calc_gmat_lm_full > option, communcation might take a while!', ielast, nqdos
     end if
     ! set these arrays to zero to avoid double counting in cases where extra ranks are used
     if (t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1)) then
@@ -909,10 +910,10 @@ contains
       ! LDAU
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-      if (.not. opt('qdos    ')) then
+      if (.not. use_qdos) then
         ! omp: moved write-out of dos files out of parallel energy loop
         ! Write out lm-dos:                                                     ! lm-dos
-        if (opt('lmdos    ')) then ! qdos ruess
+        if (write_DOS_lm) then ! qdos ruess
           do ie = 1, ielast        ! lm-dos
             iq = 1                 ! lm-dos
             if (ie==1) then        ! lm-dos
@@ -923,10 +924,10 @@ contains
                 open (29, file='lmdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'//char(48+1)//'.dat') ! lm-dos
                 if (nspin==2) open (30, file='lmdos.'//char(48+i1/10)//char(48+mod(i1,10))//'.'//char(48+2)//'.dat') ! lm-dos
               end if               ! lm-dos
-              call version_print_header(29) ! lm-dos
+              call version_print_header(29, disable_print=disable_print_serialnumber) ! lm-dos
               write (29, *) ' '    ! lm-dos
               write (29, 150) '# ISPIN=', 1, ' I1=', i1 ! lm-dos
-              if (nspin==2) call version_print_header(30) ! lm-dos
+              if (nspin==2) call version_print_header(30, disable_print=disable_print_serialnumber) ! lm-dos
               if (nspin==2) write (30, *) ' '    ! lm-dos
               if (nspin==2) write (30, 150) '# ISPIN=', 2, ' I1=', i1 ! lm-dos
             end if                 ! IE==1                                                      ! lm-dos
@@ -936,10 +937,10 @@ contains
 150         format (a8, i3, a4, i5) ! lm-dos/qdos ruess
           end do                   ! IE
         end if
-      end if                       ! .not. OPT('qdos    ')
+      end if                       ! .not. use_qdos
 
       ! write gflle to file                                                 ! lmlm-dos
-      if (opt('lmlm-dos')) then    ! lmlm-dos
+      if (calc_gmat_lm_full) then    ! lmlm-dos
         if (t_inc%i_write>0) then  ! lmlm-dos
           write (1337, *) 'gflle:', shape(gflle), shape(gflle_part), lrecgflle ! lmlm-dos
         end if                     ! lmlm-dos
@@ -981,7 +982,7 @@ contains
       deallocate (rhonewtemp, stat=i_stat)
       call memocc(i_stat, i_all, 'RHONEWTEMP', 'RHOVALNEW')
       ! calculate new THETA and PHI for non-colinear
-      if (.not. test('FIXMOM  ') .and. .not.test('NOSOC   ')) then
+      if (.not. fix_nonco_angles .and. .not.set_cheby_nosoc) then
         rho2ns_temp(1, 1) = rho2int(1)
         rho2ns_temp(2, 2) = rho2int(2)
         rho2ns_temp(1, 2) = rho2int(3)

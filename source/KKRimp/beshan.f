@@ -3,15 +3,6 @@
 !> Author: R. Zeller
 !> This version is used for reference t-matrices, free-electron Green fuctions and spherical radial wavefunctions
 !------------------------------------------------------------------------------------
-!> @note Notes on the code
-!> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
-!------------------------------------------------------------------------------------
       MODULE mod_BESHAN
 
       CONTAINS
@@ -27,15 +18,6 @@
 !> For |z| .ge. 1 the explicit expressions for hl(+), hl(-) are used.
 !>
 !>                           R. Zeller   Jan. 1990
-!-------------------------------------------------------------------------------
-!> @note Notes on the code
-!> @endnote
-!> @todo things that must be checked
-!> @endtodo
-!> @warning Important precautions
-!> @endwarning
-!> @bug If nasty things are found
-!> @endbug
 !-------------------------------------------------------------------------------
       SUBROUTINE BESHAN(HL,JL,NL,Z,LMAX)
 C     .. Parameters ..

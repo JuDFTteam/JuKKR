@@ -18,7 +18,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Calculation of the t-matrix for the new solver
   !> Author: 
-  !> Category: solver, single-site, KKRhost
+  !> Category: single-site, KKRhost
   !> Deprecated: False 
   !> Constructs potential matrix (2x2 for SOC) adding SOC potential with proper form 
   !> of small-component in the case of a scalar-relativistic calculation.
@@ -44,6 +44,8 @@ contains
     use :: mod_timing, only: timing_start, timing_stop, timings_1a
 #endif
     use :: mod_datatypes, only: dp
+    use :: mod_runoptions, only: calc_exchange_couplings, disable_tmat_sratrick, formatted_files, stop_1b, &
+      write_BdG_tests, write_pkkr_operators, write_rhoq_input, set_cheby_nospeedup, set_cheby_nosoc
     use :: mod_constants, only: czero, cone, cvlight
     use :: global_variables, only: ntotd, ncleb, nrmaxd, mmaxd, nspind, nspotd, iemxd, lmmaxd, lmmaxso, korbit
     use :: mod_wunfiles, only: t_params
@@ -143,7 +145,6 @@ contains
     integer :: ie_end, ie_num, ie_start
 
     ! rhoqtest
-    logical, external :: test, opt
     integer :: mu0, nscoef
 
     ! BdG
@@ -171,7 +172,7 @@ contains
 
     if (nsra==2) then
       use_sratrick = 1
-      if (test('nosph   ')) then
+      if (disable_tmat_sratrick) then
         if (myrank==master .and. ith==0 .and. i1==1 .and. ispin==1) then
           write (*, *) 'Found test option "nosph   ", deactivate SRATRICK'
         end if
@@ -187,13 +188,13 @@ contains
       vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
 
     vins(1:irmdnew, 1:lmpot, 1) = vinsnew(1:irmdnew, 1:lmpot, ipot)
-    if (.not.test('NOSOC   ')) vins(1:irmdnew, 1:lmpot, nspin) = vinsnew(1:irmdnew, 1:lmpot, ipot+nspin-1)
+    if (.not.set_cheby_nosoc) vins(1:irmdnew, 1:lmpot, nspin) = vinsnew(1:irmdnew, 1:lmpot, ipot+nspin-1)
 
     KBdG = 0
 #ifdef CPP_BdG
     ! shift potential by EF to change referece point of energy to Fermi level
     ! should later be done automatically in main0
-    if (test('BdG_dev ')) then
+    if (write_BdG_tests) then
       ! e_shift = complex(0.723775735132693_dp, 0.0_dp)
       ! e_shift = complex(0.724775735132693_dp, 0.0_dp)
 
@@ -247,7 +248,7 @@ contains
     if (lly/=0) call init_tlloyd(t_inc, t_lloyd, t_mpi_c_grid)
 
     ! consistency check
-    if (test('rhoqtest')) then
+    if (write_rhoq_input) then
       if (ielast/=3) stop 'Error: wrong energy contour for rhoqtest'
       ie_start = 1
       ie_end = 1
@@ -261,7 +262,7 @@ contains
       call find_isave_wavefun(t_wavefunctions)
       ! Reset Nwfsavemax to 0 if test option 'STOP1B  ' is found
       ! to prevent unnessesary storing of wavefunctions
-      if (test('STOP1B  ') .and. .not. opt('OPERATOR')) then
+      if (stop_1b .and. .not. write_pkkr_operators) then
         t_wavefunctions%nwfsavemax = 0
       end if
     end if
@@ -321,7 +322,7 @@ contains
         !$omp critical
 #endif
 #ifdef CPP_BdG
-        if (test('BdG_dev ')) then
+        if (write_BdG_tests) then
           write (*, '(A,4ES21.7)') 'shifting energy by e_fermi:', eryd, e_shift
           eryd = eryd + e_shift
         end if
@@ -333,7 +334,7 @@ contains
         !$omp end critical
 #endif
 
-        if ( .not. test('NOSOC   ')) then
+        if ( .not. set_cheby_nosoc) then
           ! Contruct the spin-orbit coupling hamiltonian and add to potential
           call spinorbit_ham(lmax, lmsize, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpot, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
             vnspll0(:,:,:), vnspll1(:,:,:,ith), '1')
@@ -346,7 +347,7 @@ contains
 #endif
 #ifdef CPP_BdG
         ! test writeout of VNSPLL1
-        if (test('BdG_dev ')) then
+        if (write_BdG_tests) then
           open (7352834, file='vnspll_SOC.txt', form='formatted')
           write (7352834, '(A,3I9)') '# LMMAXSO,LMMAXSO,IRMDNEW=', lmmaxso, lmmaxso, irmdnew
           write (7352834, '(2F25.14)') vnspll1(:, :, :, ith)
@@ -377,7 +378,7 @@ contains
 #endif
 #ifdef CPP_BdG
         ! test writeout of VNPSLL
-        if (test('BdG_dev ')) then
+        if (write_BdG_tests) then
           open (7352834, file='vnspll_sra.txt', form='formatted')
           if (nsra==2) then
             write (7352834, '(A,3I9)') '# 2*LMMAXSO,2*LMMAXSO,IRMDNEW=', 2*lmmaxso, 2*lmmaxso, irmdnew
@@ -399,7 +400,7 @@ contains
         hlk2(:, :, ith) = czero
         jlk2(:, :, ith) = czero
         gmatprefactor = czero
-        if (test('NOSOC   ')) then
+        if (set_cheby_nosoc) then
           use_fullgmat = 0
         else
           use_fullgmat = 1
@@ -410,7 +411,7 @@ contains
         !$omp critical
 #endif
 #ifdef CPP_BdG
-        if (test('BdG_dev ')) then
+        if (write_BdG_tests) then
           write (filename, '(A,I0.3,A,I0.3,A)') 'rll_source_jlk_atom_', i1, '_energ_', ie, '.dat'
           open (888888, file=trim(filename), form='formatted')
           write (888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: 4*(LMAX+1)=', 4*(lmax+1), ' IRMDNEW=', irmdnew, ' ; ERYD=', eryd
@@ -443,7 +444,7 @@ contains
           call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin/(nspin-korbit), zat, eryd, lmpot, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk(:,:,ith), jlk(:,:,ith), &
             hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, tmatsph(:,ith), alphasph, use_sratrick)
 #ifdef CPP_BdG
-        if (test('BdG_dev ')) then
+        if (write_BdG_tests) then
           write (filename, '(A,I0.3,A,I0.3,A)') 'tmatsph_atom_', i1, '_energ_', ie, '.dat'
           open (888888, file=trim(filename), form='formatted')
           write (888888, '(A,I9,A,I9,A,I9)') '# dimension: lmmaxso=', lmmaxso, ' lmmaxso=', lmmaxso
@@ -482,7 +483,7 @@ contains
         ! faster calculation of RLL.
         ! no irregular solutions are needed in self-consistent iterations
         ! because the t-matrix depends only on RLL
-        if (opt('RLL-SLL ') .and. .not. (opt('XCPL    ') .or. opt('OPERATOR'))) then
+        if (.not. set_cheby_nospeedup .and. .not. (calc_exchange_couplings .or. write_pkkr_operators)) then
           call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), tmat0(:,:), ncheb, npan_tot, lmmaxso, nvec*lmmaxso, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
             jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alpha0(:,:))
         else
@@ -498,7 +499,7 @@ contains
         !$omp critical
 #endif
 #ifdef CPP_BdG
-        if (test('BdG_dev ')) then
+        if (write_BdG_tests) then
           write (filename, '(A,I0.3,A,I0.3,A)') 'rll_atom_', i1, '_energ_', ie, '.dat'
           open (888888, file=trim(filename), form='formatted')
           write (888888, '(A,I9,A,I9,A,I9)') '# dimension: lmmaxso*nvec=', nvec*lmmaxso, ' lmmaxso=', lmmaxso, ' irmdnew=', irmdnew
@@ -540,7 +541,7 @@ contains
         !$omp critical
 #endif
 #ifdef CPP_BdG
-        if (test('BdG_dev ')) then
+        if (write_BdG_tests) then
           write (filename, '(A,I0.3,A,I0.3,A)') 'tmat_atom_', i1, '_energ_', ie, '.dat'
           open (888888, file=trim(filename), form='formatted')
           write (888888, '(A,I9,A,I9,A,I9)') '# dimension: lmmaxso=', lmmaxso, ' lmmaxso=', lmmaxso
@@ -576,7 +577,7 @@ contains
         end do
       end if                       ! LLY
 
-      if (test('rhoqtest') .and. ie==2) then
+      if (write_rhoq_input .and. ie==2) then
         ! read in mu0 atom index
         open (9999, file='mu0')
         read (9999, *) mu0, nscoef
@@ -586,7 +587,7 @@ contains
       ! Calculate additional t-matrices for Jij-tensor calculation
       if (t_dtmatjij_at%calculate .or. (t_wavefunctions%isave_wavefun(i1,ie)>0 .and.&
          (t_wavefunctions%save_rllleft .or. t_wavefunctions%save_sllleft)) .or.     &
-         ((test('rhoqtest') .and. ie==2) .and. (i1==mu0))) then ! rhoqtest
+         ((write_rhoq_input .and. ie==2) .and. (i1==mu0))) then ! rhoqtest
         ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         ! Calculate the left-hand side solution this needs to be done for the
         ! calculation of t-matrices for Jij tensor or if wavefunctions should be saved
@@ -640,7 +641,7 @@ contains
         ! faster calculation of RLL.
         ! no left solutions are needed in self-consistent iterations
         ! because the t-matrix depends only on RLL
-        if (opt('RLL-SLL ') .and. .not. (opt('XCPL    ') .or. opt('OPERATOR'))) then
+        if (.not. set_cheby_nospeedup .and. .not. ( calc_exchange_couplings .or. write_pkkr_operators)) then
           ! do nothing
         else
           call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), tmat0, ncheb, npan_tot, lmmaxso, nvec*lmmaxso, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
@@ -651,7 +652,7 @@ contains
           sllleft(lmmaxso+1:nvec*lmmaxso, :, :, ith) = sllleft(lmmaxso+1:nvec*lmmaxso, :, :, ith)/cvlight
         end if
 
-        if (test('rhoqtest')) then
+        if (write_rhoq_input) then
 #ifdef CPP_OMP
           write (*, *) 'rhoqtest does not work in OMP version!!'
           write (*, *) 'please use hybrid compilation mode'
@@ -684,7 +685,7 @@ contains
           end do
           close (9999)
 #endif
-        end if                     ! test('rhoqtest')
+        end if                     ! write_rhoq_input
 
         !----------------------------------------------------------------------------
         ! Calculate the left-hand side solution
@@ -712,7 +713,7 @@ contains
 #endif
       if (t_tgmat%tmat_to_file) then
 #ifndef CPP_OMP
-        if (test('rhoqtest')) then
+        if (write_rhoq_input) then
 
           if (ie_num==1 .and. i1==1) then
             write (*, *)           ! status bar
@@ -733,12 +734,12 @@ contains
           ! lmGF0D= (LMAXD+1)**2
           ! caLL ROTATEMATRIX(TMATLL,THETA,PHI,LMGF0D,0)
 
-        end if                     ! test('rhoqtest')
+        end if                     ! write_rhoq_input
 #endif
         irec = ie + ielast*(ispin-1) + ielast*nspin/(1+korbit)*(i1-1)
         write (69, rec=irec) tmatll(:, :)
         ! human readable writeout if test option is hit
-        if (test('fileverb')) then
+        if (formatted_files) then
           write (696969, '(i9,20000F15.7)') irec, tmatll(:, :)
         end if
       else
@@ -754,7 +755,7 @@ contains
         if (t_lloyd%dtmat_to_file) then
           irec = ie + ielast*(ispin-1) + ielast*nspin/(1+korbit)*(i1-1)
           write (691, rec=irec) dtmatll(:, :) ! LLY
-          if (test('fileverb')) then
+          if (formatted_files) then
             write (691691691, '(i9,20000F15.7)') irec, dtmatll(:, :)
           end if
         else
@@ -764,7 +765,7 @@ contains
         if (t_lloyd%tralpha_to_file) then
           irec = ie + ielast*(ispin-1) + ielast*nspin/(1+korbit)*(i1-1)
           write (692, rec=irec) tralpha ! LLY
-          if (test('fileverb')) then
+          if (formatted_files) then
             write (692692692, '(i9,20000F15.7)') irec, tralpha
           end if
         else
@@ -788,7 +789,7 @@ contains
 
 100 format ('                 |')  ! status bar
 110 format ('|')                   ! status bar
-    if (test('rhoqtest') .and. i1==t_params%natyp .and. myrank==master) write (6, *) ! status bar
+    if (write_rhoq_input .and. i1==t_params%natyp .and. myrank==master) write (6, *) ! status bar
     ! finished kpts status bar
 
     ! deallocate arrays
@@ -803,7 +804,7 @@ contains
   !> Summary: Wrapper routine for the allocation/deallocation of the arrays for the t-matrix
   !> calculation 
   !> Author: Philipp Ruessmann
-  !> Category: solver, single-site, memory-management, KKRhost
+  !> Category: single-site, profiling, KKRhost
   !> Deprecated: False 
   !> Wrapper routine for the allocation/deallocation of the arrays for the t-matrix
   !> calculation.
@@ -812,6 +813,7 @@ contains
     ipiv,tmat0,tmatll,alpha0,dtmatll,alphall,dalphall,jlk_index,nsra,lmmaxso,nth,   &
     lmax,vnspll,vnspll0,vnspll1,hlk,jlk,hlk2,jlk2,tmatsph,rll,sll,rllleft,sllleft)
     use :: mod_datatypes, only: dp
+    use :: mod_runoptions, only: calc_exchange_couplings, write_rhoq_input
     use :: mod_constants, only: czero
     use :: global_variables, only: korbit
     use :: mod_profiling, only: memocc
@@ -848,7 +850,6 @@ contains
     ! local
     integer :: i_stat
 
-    logical, external :: test, opt
 
 
     if (allocmode==1) then ! allocate and initialize
@@ -892,7 +893,7 @@ contains
       sll = czero
 
       ! Left regular and irregular wavefunctions (used here only in case of XCPL or saving of left wavefunctions)
-      if (opt('XCPL    ') .or. (t_wavefunctions%save_rllleft .or. t_wavefunctions%save_sllleft .or. test('rhoqtest'))) then
+      if (calc_exchange_couplings .or. (t_wavefunctions%save_rllleft .or. t_wavefunctions%save_sllleft .or. write_rhoq_input)) then
         allocate (rllleft(nsra*lmmaxso,lmmaxso,irmdnew,0:nth-1), stat=i_stat)
         call memocc(i_stat, product(shape(rllleft))*kind(rllleft), 'RLLLEFT', 'allocate_locals_tmat_newsolver')
         rllleft = czero
@@ -906,7 +907,7 @@ contains
         allocate (sllleft(1,1,1,0:nth-1), stat=i_stat)
         call memocc(i_stat, product(shape(sllleft))*kind(sllleft), 'SLLLEFT', 'allocate_locals_tmat_newsolver')
         sllleft = czero
-      end if                       ! ( opt('XCPL    ') .or. ... )
+      end if                       ! ( calc_exchange_couplings .or. ... )
 
       allocate (vins(irmdnew,lmpot,nspin), stat=i_stat)
       call memocc(i_stat, product(shape(vins))*kind(vins), 'VINS', 'allocate_locals_tmat_newsolver')
@@ -970,7 +971,7 @@ contains
       deallocate (sll, stat=i_stat)
       call memocc(i_stat, -product(shape(sll))*kind(sll), 'SLL', 'allocate_locals_tmat_newsolver')
 
-      if (opt('XCPL    ') .or. (t_wavefunctions%save_rllleft .or. t_wavefunctions%save_sllleft .or. test('rhoqtest'))) then
+      if (calc_exchange_couplings .or. (t_wavefunctions%save_rllleft .or. t_wavefunctions%save_sllleft .or. write_rhoq_input)) then
         deallocate (rllleft, stat=i_stat)
         call memocc(i_stat, -product(shape(rllleft))*kind(rllleft), 'RLLLEFT', 'allocate_locals_tmat_newsolver')
         deallocate (sllleft, stat=i_stat)
@@ -980,7 +981,7 @@ contains
         call memocc(i_stat, -product(shape(rllleft))*kind(rllleft), 'RLLLEFT', 'allocate_locals_tmat_newsolver')
         deallocate (sllleft, stat=i_stat)
         call memocc(i_stat, -product(shape(sllleft))*kind(sllleft), 'SLLLEFT', 'allocate_locals_tmat_newsolver')
-      end if                       ! ( opt('XCPL    ') .or. ... )
+      end if                       ! ( calc_exchange_couplings .or. ... )
 
       deallocate (vins, stat=i_stat)
       call memocc(i_stat, -product(shape(vins))*kind(vins), 'VINS', 'allocate_locals_tmat_newsolver')
