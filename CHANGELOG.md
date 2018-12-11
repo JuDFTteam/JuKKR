@@ -19,8 +19,26 @@
 
 **Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release.**
 
-Start of large KKR repository holding *voronoi*, *KKRhost*, *KKRimp*, *KKRsusc*, and *PKKprime* with major refactoring of code structure.
+### Added
+- None
 
+### Changed
+- None
+
+### Deprecated
+- None
+
+### Removed
+- None
+
+### Fixed
+- issue #105
+
+----
+
+## v3.1 (2018-11-21)
+
+Start of large KKR repository holding *voronoi*, *KKRhost*, *KKRimp*, *KKRsusc*, and *PKKprime* with major refactoring of code structure.
 
 ### Added
 - cmake installation scripts
@@ -41,12 +59,6 @@ Start of large KKR repository holding *voronoi*, *KKRhost*, *KKRimp*, *KKRsusc*,
 - makefiles of *PKKprime*, *voronoi*, *KKRimp*, *rhoq*
 - duplicated files from *KKRhost* in *rhoq*
 - common/test.f90 and common/opt.f90
-
-### Removed
-- None
-
-### Fixed
-- issue #105
 
 ----
 
