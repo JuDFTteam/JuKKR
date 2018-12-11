@@ -15,7 +15,7 @@
 
 ----
 
-## *UNRELEASED* (last updated: 2018-11-06)
+## *UNRELEASED* (last updated: 2018-12-11)
 
 **Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release.**
 
@@ -32,7 +32,21 @@
 - None
 
 ### Fixed
-- issue #105
+- None
+
+----
+
+## v3.2 (2018-12-11)
+
+Improved memory consumption for XCPL calculation and small bugfixes.
+
+### Changed
+- None
+- greatly reduced memory consumption for XCPL calculation and improved performance of loops in shellgen2k
+
+### Fixed
+- issue #104 (voronoi-genpot mode broken for ASA)
+- issue #105 (kkrflex_green wirteout for single-atom cluster)
 
 ----
 
