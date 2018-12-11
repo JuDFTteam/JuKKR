@@ -34,7 +34,7 @@ contains
       bcast_t_imp_arrays
 #endif
     use :: mod_mympi, only: myrank, master
-    use :: mod_datatypes, only: dp
+    use :: mod_datatypes, only: dp, sp
     use :: mod_runoptions, only: calc_exchange_couplings, formatted_files, set_gmat_to_zero, use_Chebychev_solver, &
       use_qdos, use_readcpa, write_deci_tmat, write_gmat_plain, write_green_host, write_green_imp, write_kkrimp_input, &
       write_pkkr_input, write_pkkr_operators, write_rhoq_input, write_gmat_ascii, set_cheby_nosoc
@@ -719,7 +719,7 @@ contains
                   end do
                 end do
                 irec = ielast*(ispin-1) + ie + 1
-                write (888, rec=irec) gimp
+                write (888, rec=irec) cmplx(gimp, kind=sp) ! force writeout to be single precision
                 if (write_gmat_plain) then
                   ! write(8888,'(50000E)') GIMP
                   write (8888, *) gimp
