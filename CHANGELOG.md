@@ -15,12 +15,44 @@
 
 ----
 
-## *UNRELEASED* (last updated: 2018-11-06)
+## *UNRELEASED* (last updated: 2018-12-11)
 
 **Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release.**
 
-Start of large KKR repository holding *voronoi*, *KKRhost*, *KKRimp*, *KKRsusc*, and *PKKprime* with major refactoring of code structure.
+### Added
+- None
 
+### Changed
+- None
+
+### Deprecated
+- None
+
+### Removed
+- None
+
+### Fixed
+- None
+
+----
+
+## v3.2 (2018-12-11)
+
+Improved memory consumption for XCPL calculation and small bugfixes.
+
+### Changed
+- None
+- greatly reduced memory consumption for XCPL calculation and improved performance of loops in shellgen2k
+
+### Fixed
+- issue #104 (voronoi-genpot mode broken for ASA)
+- issue #105 (kkrflex_green wirteout for single-atom cluster)
+
+----
+
+## v3.1 (2018-11-21)
+
+Start of large KKR repository holding *voronoi*, *KKRhost*, *KKRimp*, *KKRsusc*, and *PKKprime* with major refactoring of code structure.
 
 ### Added
 - cmake installation scripts
@@ -41,12 +73,6 @@ Start of large KKR repository holding *voronoi*, *KKRhost*, *KKRimp*, *KKRsusc*,
 - makefiles of *PKKprime*, *voronoi*, *KKRimp*, *rhoq*
 - duplicated files from *KKRhost* in *rhoq*
 - common/test.f90 and common/opt.f90
-
-### Removed
-- None
-
-### Fixed
-- None
 
 ----
 
