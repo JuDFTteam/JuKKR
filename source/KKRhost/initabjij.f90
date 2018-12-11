@@ -20,11 +20,13 @@ contains
   subroutine initabjij(iprint, naez, natyp, natomimp, nofgij, nqcalc, nsmax, nshell, iqcalc, atomimp, ish, jsh, ijtabcalc, ijtabsh, ijtabsym, nijcalc, kijsh, nijmax, nshell0, &
     nsheld)
 
+    use :: mod_constants, only: nsymaxd
+
     implicit none
 
     ! Arguments
     integer :: iprint, naez, natomimp, natyp, nijmax, nofgij, nqcalc, nsheld, nshell0, nsmax
-    integer :: atomimp(*), ijtabcalc(*), ijtabsh(*), ijtabsym(*), iqcalc(*), ish(nsheld, *), jsh(nsheld, *), kijsh(nijmax, nshell0), nijcalc(nshell0), nshell(0:nsheld)
+    integer :: atomimp(*), ijtabcalc(*), ijtabsh(*), ijtabsym(*), iqcalc(*), ish(nsheld, 2*nsymaxd), jsh(nsheld, 2*nsymaxd), kijsh(nijmax, nshell0), nijcalc(nshell0), nshell(0:nsheld)
 
     ! Locals
     integer :: i1, ia, idone(naez), iqtojq(nijmax), j1, ja, lm1, lm2, ns

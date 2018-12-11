@@ -52,7 +52,8 @@ contains
     use :: mod_initabjij
     use :: mod_cmatstr
     use :: mod_rotatespinframe, only: rotatematrix
-    use :: mod_constants, only: pi, cone, czero
+    use :: mod_constants, only: pi, cone, czero, nsymaxd
+    use :: mod_profiling, only: memocc
 
     implicit none
     ! .
@@ -67,12 +68,12 @@ contains
     ! .
     ! . Array arguments
     integer :: atomimp(*), ijtabcalc(*), ijtabsh(*), ijtabsym(*), iqat(*), iqcalc(*)
-    integer :: ish(nsheld, *), itoq(natypd, *), jsh(nsheld, *), noq(*), nshell(0:nsheld)
+    integer :: ish(nsheld, *), itoq(natypd, 2*nsymaxd), jsh(nsheld, 2*nsymaxd), noq(*), nshell(0:nsheld)
     complex (kind=dp) :: dsymll(lmmaxd, lmmaxd, *)
     real (kind=dp) :: ratom(3, *)
     ! .
     ! . Local scalars
-    integer :: i1, ia, ifgmat, ifmcpa, iq, irec, ispin, isym, it, j1, ja, jq, jt, l1
+    integer :: i1, ia, ifgmat, ifmcpa, iq, irec, ispin, isym, it, j1, ja, jq, jt, l1, i_all
     integer :: lm1, lm2, lstr, ns, nseff, nshcalc, nsmax, ntcalc, ie, ie_start, ie_end, ie_num
 #ifdef CPP_MPI
     integer :: ierr
@@ -153,11 +154,14 @@ contains
       ! ccc         IF ( NTLOC.LT.NATYP) STOP ' NTLOC'
 
       allocate (kijsh(nijmax,nshell(0)), stat=lm1)
+      call memocc(lm1, product(shape(kijsh))*kind(kijsh), 'kijsh', 'tbxccpljij')
       if (lm1/=0) then
         write (6, 110) 'KIJSH'
         stop
       end if
+
       allocate (nijcalc(nshell(0)), jijdone(natyp,natyp,nshell(0)), stat=lm1)
+      call memocc(lm1, product(shape(nijcalc))*kind(nijcalc), 'nijcalc', 'tbxccpljij')
       if (lm1/=0) then
         write (6, 110) 'JIJDONE/NIJCALC'
         stop
@@ -167,6 +171,7 @@ contains
       ! Only allocate it for MPI-usage. If MPI is not used, two smaller array XINTEGD arrays is needed.
 #ifdef CPP_MPI
       allocate (csum_store(natyp,natyp,nshell(0),ielast), stat=lm1)
+      call memocc(lm1, product(shape(csum_store))*kind(csum_store), 'csum_store', 'tbxccpljij')
       if (lm1/=0) then
         write (6, 110) 'csum_store'
         stop
@@ -174,12 +179,14 @@ contains
 #else
       ! ALLOCATE (XINTEGD1(NATYP,NATYP,IELAST),STAT=LM1)
       allocate (xintegd(natyp,natyp,nshell(0)), stat=lm1)
+      call memocc(lm1, product(shape(xintegd))*kind(xintegd), 'xintegd', 'tbxccpljij')
       if (lm1/=0) then
         write (6, 110) 'XINTEGD'
         stop
       end if
 #endif
       allocate (jxcijint(natyp,natyp,nshell(0)), stat=lm1)
+      call memocc(lm1, product(shape(jxcijint))*kind(jxcijint), 'jxcijint', 'tbxccpljij')
       if (lm1/=0) then
         write (6, 110) 'JXCIJINT'
         stop
@@ -523,6 +530,7 @@ contains
 #ifdef CPP_MPI
       ! allocate
       allocate (csum_store2(natyp,natyp,nshell(0),ielast), stat=lm1)
+      call memocc(lm1, product(shape(csum_store2))*kind(csum_store2), 'csum_store2', 'tbxccpljij')
       if (lm1/=0) then
         write (6, 110) 'csum_store2'
         stop
@@ -559,7 +567,9 @@ contains
           end do
         end do                   ! IE
 
-        deallocate (csum_store2)
+        i_all = -product(shape(csum_store2))*kind(csum_store2)
+        deallocate (csum_store2, stat=lm1)
+        call memocc(lm1, i_all, 'csum_store2', 'tbxccpljij')
       end if                     ! myrank==master
 
 
@@ -754,7 +764,22 @@ contains
     end if                       ! t_mpi_c_grid%myrank_ie==0
 #endif
 
-    deallocate (kijsh, nijcalc, jijdone, jxcijint, stat=lm1)
+    i_all = -product(shape(kijsh))*kind(kijsh)
+    deallocate (kijsh, stat=lm1)
+    call memocc(lm1, i_all, 'kijsh', 'tbxccpljij')
+
+    i_all = -product(shape(nijcalc))*kind(nijcalc)
+    deallocate (nijcalc, stat=lm1)
+    call memocc(lm1, i_all, 'nijcalc', 'tbxccpljij')
+
+    i_all = -product(shape(jijdone))*kind(jijdone)
+    deallocate (jijdone, stat=lm1)
+    call memocc(lm1, i_all, 'jijdone', 'tbxccpljij')
+
+    i_all = -product(shape(jxcijint))*kind(jxcijint)
+    deallocate (jxcijint, stat=lm1)
+    call memocc(lm1, i_all, 'jxcijint', 'tbxccpljij')
+
 100 format (79('='), /, 10x, 'TBXCCPLJIJ : Off-diagonal exchange coupling', ' constants J_ij', /, 79('='), /)
 110 format (6x, 'ERROR: Cannot allocate array(s) :', a, /)
 120 format (4x, a, 4('-'), /, 5x, ' IT/IQ ', 3x, 'R_IQ,JQ', 2x, 'JQ ', ' (J_IT,JT  JT)', /, 15x, ' [ ALAT ] ', 4x, '[ mRy ]', /, 4x, a, 4('-'))

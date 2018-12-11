@@ -22,6 +22,7 @@ module mod_wunfiles
 
   use :: mod_profiling
   use :: mod_datatypes
+  use :: mod_constants, only: nsymaxd
 
   implicit none
 
@@ -127,7 +128,6 @@ module mod_wunfiles
     integer :: intervz  !! Number of intervals in z-direction for k-net in IB of the BZ
     integer :: nlbasis  !! Number of basis layers of left host (repeated units)
     integer :: nrbasis  !! Number of basis layers of right host (repeated units)
-    integer :: nsymaxd
     integer :: wlength  !! Word length for direct access files, compiler dependent ifort/others (1/4)
     integer :: naezdpd
     integer :: maxmesh
@@ -346,7 +346,7 @@ contains
     rmtnew,rws,imt,irc,irmin,irws,nfu,hostimp,gsh,ilm_map,imaxsh,idoldau,itrunldau, &
     ntldau,lopt,itldau,ueff,jeff,erefldau,uldau,wldau,phildau,iemxd,irmind,irm,     &
     nspotd,npotd,nembd1,lmmaxd,ipand,nembd2,lmax,ncleb,naclsd,nclsd,lm2d,lmaxd1,    &
-    mmaxd,nr,nsheld,nsymaxd,naezdpd,natomimpd,nspind,irid,nfund,ncelld,lmxspd,ngshd,&
+    mmaxd,nr,nsheld,naezdpd,natomimpd,nspind,irid,nfund,ncelld,lmxspd,ngshd,        &
     krel,ntotd,ncheb,npan_log,npan_eq,npan_log_at,npan_eq_at,r_log,npan_tot,rnew,   &
     rpan_intervall,ipan_intervall,nspindd,thetasnew,socscale,tolrdif,lly,deltae,    &
     rclsimp,verbosity,MPI_scheme,special_straight_mixing)
@@ -440,7 +440,6 @@ contains
     integer, intent (in) :: n2semi !! Number of energy points for the semicore contour
     integer, intent (in) :: n3semi !! Number of energy points for the semicore contour
     integer, intent (in) :: npan_eq !! Variables for the pannels for the new solver
-    integer, intent (in) :: nsymaxd
     integer, intent (in) :: naezdpd
     integer, intent (in) :: nlbasis !! Number of basis layers of left host (repeated units)
     integer, intent (in) :: nrbasis !! Number of basis layers of right host (repeated units)
@@ -589,8 +588,8 @@ contains
     integer, dimension (natyp), intent (in) :: npan_log_at
     integer, dimension (nofgij), intent (in) :: ijtabcalc_i
     integer, dimension (ngshd, 3), intent (in) :: ilm_map
-    integer, dimension (nsheld, nofgij), intent (in) :: ish
-    integer, dimension (nsheld, nofgij), intent (in) :: jsh
+    integer, dimension (nsheld, 2*nsymaxd), intent (in) :: ish
+    integer, dimension (nsheld, 2*nsymaxd), intent (in) :: jsh
     integer, dimension (naclsd, nembd2), intent (in) :: atom !! Atom at site in cluster
     integer, dimension (naclsd, nembd2), intent (in) :: ezoa !! EZ of atom at site in cluster
     integer, dimension (natyp, lmxspd), intent (in) :: lmsp !! 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
@@ -816,7 +815,7 @@ contains
     ! first fill scalar values
     call fill_t_params_scalars(iemxd,irmind,irm,lmpot,nspotd,npotd,natyp,nembd1,    &
       lmmaxd,naez,ipand,nembd2,nref,lmax,ncleb,naclsd,nclsd,lm2d,lmaxd1,nr,nsheld,  &
-      nsymaxd,naezdpd,natomimpd,nofgij,nspind,nspindd,irid,nfund,ncelld,lmxspd,     &
+      naezdpd,natomimpd,nofgij,nspind,nspindd,irid,nfund,ncelld,lmxspd,             &
       ngshd,krel,mmaxd,ielast,npol,npnt1,npnt2,npnt3,itscf,scfsteps,lly,nsra,ins,   &
       nineq,nspin,ncls,icst,iend,icc,igf,nlbasis,nrbasis,ncpa,itcpamax,kmrot,       &
       maxmesh,nsymat,natomimp,invmod,nqcalc,intervx,intervy,intervz,lpot,nright,    &
@@ -831,7 +830,7 @@ contains
     call init_t_params(t_params)
 
     ! now fill arrays that have just been allocated
-    call fill_t_params_arrays(t_params,iemxd,lmmaxd,naez,nsymaxd,nembd1,nspindd,    &
+    call fill_t_params_arrays(t_params,iemxd,lmmaxd,naez,nembd1,nspindd,            &
       irmind,irm,lmpot,nspotd,npotd,natyp,nr,nembd2,nref,ncleb,nclsd,naclsd,nsheld, &
       ngshd,nfund,irid,ncelld,mmaxd,lm2d,lmxspd,lmaxd1,nspind,ntotd,ncheb,ipand,    &
       lmax,nofgij,naezdpd,natomimpd,ez,wez,drotq,dsymll,lefttinvll,righttinvll,crel,&
@@ -879,7 +878,7 @@ contains
     call memocc(i_stat, product(shape(t_params%wez))*kind(t_params%wez), 't_params%WEZ', 'init_t_params')
     allocate (t_params%drotq(t_params%lmmaxd,t_params%lmmaxd,t_params%naez), stat=i_stat)
     call memocc(i_stat, product(shape(t_params%drotq))*kind(t_params%drotq), 't_params%DROTQ', 'init_t_params')
-    allocate (t_params%dsymll(t_params%lmmaxd,t_params%lmmaxd,t_params%nsymaxd), stat=i_stat)
+    allocate (t_params%dsymll(t_params%lmmaxd,t_params%lmmaxd,nsymaxd), stat=i_stat)
     call memocc(i_stat, product(shape(t_params%dsymll))*kind(t_params%dsymll), 't_params%DSYMLL', 'init_t_params')
     allocate (t_params%lefttinvll(t_params%lmmaxd,t_params%lmmaxd,t_params%nembd1,t_params%nspindd,t_params%iemxd), stat=i_stat)
     call memocc(i_stat, product(shape(t_params%lefttinvll))*kind(t_params%lefttinvll), 't_params%LEFTTINVLL', 'init_t_params')
@@ -1085,9 +1084,9 @@ contains
     call memocc(i_stat, product(shape(t_params%ijtabsym))*kind(t_params%ijtabsym), 't_params%IJTABSYM', 'init_t_params')
     allocate (t_params%ijtabsh(t_params%nofgij), stat=i_stat)
     call memocc(i_stat, product(shape(t_params%ijtabsh))*kind(t_params%ijtabsh), 't_params%IJTABSH', 'init_t_params')
-    allocate (t_params%ish(t_params%nsheld,t_params%nofgij), stat=i_stat)
+    allocate (t_params%ish(t_params%nsheld,2*nsymaxd), stat=i_stat)
     call memocc(i_stat, product(shape(t_params%ish))*kind(t_params%ish), 't_params%ISH', 'init_t_params')
-    allocate (t_params%jsh(t_params%nsheld,t_params%nofgij), stat=i_stat)
+    allocate (t_params%jsh(t_params%nsheld,2*nsymaxd), stat=i_stat)
     call memocc(i_stat, product(shape(t_params%jsh))*kind(t_params%jsh), 't_params%JSH', 'init_t_params')
     allocate (t_params%iqcalc(t_params%naez), stat=i_stat)
     call memocc(i_stat, product(shape(t_params%iqcalc))*kind(t_params%iqcalc), 't_params%IQCALC', 'init_t_params')
@@ -1158,7 +1157,7 @@ contains
     ! -------------------------------------------------------------------------
     ! Allocate the logical arrays
     ! -------------------------------------------------------------------------
-    allocate (t_params%symunitary(t_params%nsymaxd), stat=i_stat) ! LOGICALS
+    allocate (t_params%symunitary(nsymaxd), stat=i_stat) ! LOGICALS
     call memocc(i_stat, product(shape(t_params%symunitary))*kind(t_params%symunitary), 't_params%SYMUNITARY', 'init_t_params')
     allocate (t_params%vacflag(2), stat=i_stat)
     call memocc(i_stat, product(shape(t_params%vacflag))*kind(t_params%vacflag), 't_params%VACFLAG', 'init_t_params')
@@ -1412,7 +1411,6 @@ contains
     call mpi_bcast(t_params%lmaxd1, 1, mpi_integer, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%nr, 1, mpi_integer, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%nsheld, 1, mpi_integer, master, mpi_comm_world, ierr)
-    call mpi_bcast(t_params%nsymaxd, 1, mpi_integer, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%naezdpd, 1, mpi_integer, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%natomimpd, 1, mpi_integer, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%nofgij, 1, mpi_integer, master, mpi_comm_world, ierr)
@@ -1560,7 +1558,7 @@ contains
     call mpi_bcast(t_params%ez, t_params%iemxd, mpi_double_complex, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%wez, t_params%iemxd, mpi_double_complex, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%drotq, t_params%lmmaxd*t_params%lmmaxd*t_params%naez, mpi_double_complex, master, mpi_comm_world, ierr)
-    call mpi_bcast(t_params%dsymll, t_params%lmmaxd*t_params%lmmaxd*t_params%nsymaxd, mpi_double_complex, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%dsymll, t_params%lmmaxd*t_params%lmmaxd*nsymaxd, mpi_double_complex, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%lefttinvll, t_params%lmmaxd*t_params%lmmaxd*t_params%nembd1*t_params%nspindd*t_params%iemxd, mpi_double_complex, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%righttinvll, t_params%lmmaxd*t_params%lmmaxd*t_params%nembd1*t_params%nspindd*t_params%iemxd, mpi_double_complex, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%crel, t_params%lmmaxd*t_params%lmmaxd, mpi_double_complex, master, mpi_comm_world, ierr)
@@ -1663,8 +1661,8 @@ contains
     call mpi_bcast(t_params%ijtabcalc_i, (t_params%nofgij), mpi_integer, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%ijtabsym, (t_params%nofgij), mpi_integer, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%ijtabsh, (t_params%nofgij), mpi_integer, master, mpi_comm_world, ierr)
-    call mpi_bcast(t_params%ish, (t_params%nsheld*t_params%nofgij), mpi_integer, master, mpi_comm_world, ierr)
-    call mpi_bcast(t_params%jsh, (t_params%nsheld*t_params%nofgij), mpi_integer, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%ish, (t_params%nsheld*2*nsymaxd), mpi_integer, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%jsh, (t_params%nsheld*2*nsymaxd), mpi_integer, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%iqcalc, (t_params%naez), mpi_integer, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%icheck, (t_params%naezdpd*t_params%naezdpd), mpi_integer, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%atomimp, (t_params%natomimpd), mpi_integer, master, mpi_comm_world, ierr)
@@ -1699,7 +1697,7 @@ contains
     ! -------------------------------------------------------------------------
     ! LOGICAL arrays
     ! -------------------------------------------------------------------------
-    call mpi_bcast(t_params%symunitary, (t_params%nsymaxd), mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%symunitary, nsymaxd, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%vacflag, 2, mpi_logical, master, mpi_comm_world, ierr)
 
     ! -------------------------------------------------------------------------
@@ -1732,7 +1730,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine fill_t_params_scalars(iemxd,irmind,irm,lmpot,nspotd,npotd,natyp,nembd1,&
     lmmaxd,naez,ipand,nembd2,nref,lmax,ncleb,naclsd,nclsd,lm2d,lmaxd1,nr,nsheld,    &
-    nsymaxd,naezdpd,natomimpd,nofgij,nspind,nspindd,irid,nfund,ncelld,lmxspd,ngshd, &
+    naezdpd,natomimpd,nofgij,nspind,nspindd,irid,nfund,ncelld,lmxspd,ngshd,         &
     krel,mmaxd,ielast,npol,npnt1,npnt2,npnt3,itscf,scfsteps,lly,nsra,ins,nineq,     &
     nspin,ncls,icst,iend,icc,igf,nlbasis,nrbasis,ncpa,itcpamax,kmrot,maxmesh,nsymat,&
     natomimp,invmod,nqcalc,intervx,intervy,intervz,lpot,nright,nleft,imix,itdbry,   &
@@ -1819,7 +1817,6 @@ contains
     integer, intent (in) :: ntldau !! number of atoms on which LDA+U is applied
     integer, intent (in) :: itmpdir
     integer, intent (in) :: maxmesh
-    integer, intent (in) :: nsymaxd
     integer, intent (in) :: naezdpd
     integer, intent (in) :: nspindd !! NSPIND-KORBIT
     integer, intent (in) :: nlbasis !! Number of basis layers of left host (repeated units)
@@ -1936,7 +1933,6 @@ contains
     t_params%nlbasis = nlbasis
     t_params%nrbasis = nrbasis
     t_params%maxmesh = maxmesh
-    t_params%nsymaxd = nsymaxd
     t_params%naezdpd = naezdpd
     t_params%nspindd = nspindd
     t_params%intervx = intervx
@@ -1990,7 +1986,7 @@ contains
   !> Set the values of the t_params arrays with the input values of the arrays.
   !> Fill arrays after they have been allocated in `init_t_params`
   !-------------------------------------------------------------------------------
-  subroutine fill_t_params_arrays(t_params,iemxd,lmmaxd,naez,nsymaxd,nembd1,nspindd,& 
+  subroutine fill_t_params_arrays(t_params,iemxd,lmmaxd,naez,nembd1,nspindd,        & 
     irmind,irm,lmpot,nspotd,npotd,natyp,nr,nembd2,nref,ncleb,nclsd,naclsd,nsheld,   &
     ngshd,nfund,irid,ncelld,mmaxd,lm2d,lmxspd,lmaxd1,nspind,ntotd,ncheb,ipand,lmax, &
     nofgij,naezdpd,natomimpd,ez,wez,drotq,dsymll,lefttinvll,righttinvll,crel,rc,    &
@@ -2041,7 +2037,6 @@ contains
     integer, intent (in) :: lmaxd1
     integer, intent (in) :: nofgij !! number of GF pairs IJ to be calculated as determined from IJTABCALC<>0
     integer, intent (in) :: nspind !! KREL+(1-KREL)*(NSPIN+1)
-    integer, intent (in) :: nsymaxd
     integer, intent (in) :: nspindd !! NSPIND-KORBIT
     integer, intent (in) :: naezdpd
     integer, intent (in) :: npan_eq
@@ -2155,8 +2150,8 @@ contains
     integer, dimension (natyp), intent (in) :: npan_log_at
     integer, dimension (nofgij), intent (in) :: ijtabcalc_i
     integer, dimension (ngshd, 3), intent (in) :: ilm_map
-    integer, dimension (nsheld, nofgij), intent (in) :: ish
-    integer, dimension (nsheld, nofgij), intent (in) :: jsh
+    integer, dimension (nsheld, 2*nsymaxd), intent (in) :: ish
+    integer, dimension (nsheld, 2*nsymaxd), intent (in) :: jsh
     integer, dimension (natyp, lmxspd), intent (in) :: lmsp !! 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
     integer, dimension (naclsd, nembd2), intent (in) :: atom !! Atom at site in cluster
     integer, dimension (naclsd, nembd2), intent (in) :: ezoa !! EZ of atom at site in cluster
@@ -2542,7 +2537,7 @@ contains
     conc,kmesh,maxmesh,nsymat,nqcalc,ratom,rrot,drotq,ijtabcalc,ijtabcalc_i,        &
     ijtabsym,ijtabsh,iqcalc,dsymll,invmod,icheck,symunitary,rc,crel,rrel,srrel,     &
     nrrel,irrel,lefttinvll,righttinvll,vacflag,nofks,volbz,bzkp,volcub,wez,nembd1,  &
-    lmmaxd,nsymaxd,nspindd,maxmshd,rclsimp)
+    lmmaxd,nspindd,maxmshd,rclsimp)
     ! get relevant parameters from t_params
     ! ..
 
@@ -2565,7 +2560,6 @@ contains
     integer, intent (in) :: lmmaxd
     integer, intent (in) :: nsheld
     integer, intent (in) :: kpoibz
-    integer, intent (in) :: nsymaxd
     integer, intent (in) :: nspindd
     integer, intent (in) :: maxmshd
     integer, intent (in) :: nprincd
@@ -2614,8 +2608,8 @@ contains
     integer, dimension (nofgij), intent (inout) :: ijtabsym
     integer, dimension (nofgij), intent (inout) :: ijtabcalc
     integer, dimension (nofgij), intent (inout) :: ijtabcalc_i
-    integer, dimension (nsheld, nofgij), intent (inout) :: ish
-    integer, dimension (nsheld, nofgij), intent (inout) :: jsh
+    integer, dimension (nsheld, 2*nsymaxd), intent (inout) :: ish
+    integer, dimension (nsheld, 2*nsymaxd), intent (inout) :: jsh
     integer, dimension (naclsd, naezd+nembd), intent (inout) :: ezoa
     integer, dimension (naclsd, naezd+nembd), intent (inout) :: atom
     integer, dimension (2, lmmaxd), intent (inout) :: nrrel
@@ -2717,7 +2711,7 @@ contains
     ijtabcalc = t_params%ijtabcalc
     ijtabcalc_i = t_params%ijtabcalc_i
     do i = 1, nshell(0)
-      do l = 1, nofgij
+      do l = 1, 2*nsymaxd
         ish(i, l) = t_params%ish(i, l)
         jsh(i, l) = t_params%jsh(i, l)
       end do
