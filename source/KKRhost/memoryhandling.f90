@@ -1574,6 +1574,8 @@ contains
     kmesh,imaxsh,iqcalc,iofgij,jofgij,ijtabsh,ijtabsym,ijtabcalc,ijtabcalc_i,       &
     ilm_map,gsh)
 
+    use :: mod_constants, only: nsymaxd 
+
     implicit none
 
     integer, intent (in) :: flag   ! Allocate/deallocate (1/-1) arrays
@@ -1631,10 +1633,10 @@ contains
       allocate (ijtabcalc(nofgijd), stat=i_stat)
       call memocc(i_stat, product(shape(ijtabcalc))*kind(ijtabcalc), 'IJTABCALC', 'allocate_green')
       ijtabcalc = 0
-      allocate (ish(nsheld,nofgijd), stat=i_stat)
+      allocate (ish(nsheld,2*nsymaxd), stat=i_stat)
       call memocc(i_stat, product(shape(ish))*kind(ish), 'ISH', 'allocate_green')
       ish = 0
-      allocate (jsh(nsheld,nofgijd), stat=i_stat)
+      allocate (jsh(nsheld,2*nsymaxd), stat=i_stat)
       call memocc(i_stat, product(shape(jsh))*kind(jsh), 'JSH', 'allocate_green')
       jsh = 0
       allocate (ijtabcalc_i(nofgijd), stat=i_stat)
