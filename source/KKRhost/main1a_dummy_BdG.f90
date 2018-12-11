@@ -27,6 +27,7 @@ subroutine main1a_dummy
   use :: mod_main0, only: ielast, natyp, nspin, lmax, nsra, iend, lly, deltae, idoldau, ncheb, cleb, icleb, ez, npan_tot, &
     lopt, ipan_intervall, zat, socscale, rnew, rpan_intervall, wldau
   use :: mod_ioinput, only: ioinput
+  use :: mod_runoptions, only:write_BdG_tests
 
 
   implicit none
@@ -51,7 +52,7 @@ subroutine main1a_dummy
   ! for data import:
   character (len=25) :: dummy
   integer :: ier
-  character (len=256) :: uio                               ! NCOLIO=256
+  character (len=:), allocatable :: uio           ! NCOLIO=256
 
 
   ! BdG specific:

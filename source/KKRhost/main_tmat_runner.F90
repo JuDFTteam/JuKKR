@@ -21,7 +21,7 @@ program tmat_runner
   use :: mod_timing
   use :: mod_md5sums
   use :: memoryhandling
-  use :: mod_version_info, only: version_print_header
+  use :: mod_version_info, only: version_print_header, construct_serialnr
   use :: global_variables
   use :: mod_datatypes, only: dp
   use :: mod_mympi, only: mympi_init, myrank, nranks, master, mpiatom, mpiadapt

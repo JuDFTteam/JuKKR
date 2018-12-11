@@ -391,6 +391,7 @@ if(ENABLE_BdG)
         source/common/radial_solver_Chebychev/rll_global_solutions.F90 
         source/common/radial_solver_Chebychev/sll_global_solutions.F90 
         source/common/radial_solver_Chebychev/create_newmesh.f90 
+        source/KKRhost/runoptions.F90
         source/KKRhost/wunfiles.F90
         source/KKRhost/main_tmat_runner.F90
         source/KKRhost/global_variables.F90 

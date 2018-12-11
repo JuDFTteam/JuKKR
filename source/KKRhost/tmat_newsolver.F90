@@ -151,7 +151,7 @@ contains
     character (len=100) :: filename
     complex (kind=dp) :: e_shift
     integer :: ier, KBdG
-    character (len=256) :: uio
+    character (len=:), allocatable :: uio
     !-------------------------------------------------------------------------------
 
 #ifdef CPP_OMP
