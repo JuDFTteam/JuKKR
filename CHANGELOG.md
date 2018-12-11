@@ -46,7 +46,7 @@ Start of large KKR repository holding *voronoi*, *KKRhost*, *KKRimp*, *KKRsusc*,
 - None
 
 ### Fixed
-- None
+- issue #105
 
 ----
 
