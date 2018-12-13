@@ -61,6 +61,7 @@ add_executable(
     source/common/trarea.f90
     source/common/sphere_nogga.f90
     source/common/lebedev.f90
+    source/common/rclm.f90
     source/KKRhost/addvirtual14.f90
     source/KKRhost/amemagvec.f90
     source/KKRhost/bastrmat.f90
@@ -255,7 +256,6 @@ add_executable(
     source/KKRhost/pointgrp.f90
     source/KKRhost/potcut.f90
     source/KKRhost/projtau.f90
-    source/KKRhost/rclm.f90
     source/KKRhost/readimppot.f90
     source/KKRhost/readldaupot.f90
     source/KKRhost/reg2.f90
@@ -305,8 +305,8 @@ add_executable(
     source/KKRhost/spatpr.f90
     source/KKRhost/spher.f90
     source/KKRhost/sphere_gga.f90
-    source/KKRhost/spin_orbit.f90
-    source/KKRhost/spin_orbit_compl.f90
+    source/common/spin_orbit.f90
+    source/common/spin_orbit_compl.f90
     source/KKRhost/spinorbit_ham.f90
     source/KKRhost/ssite.f90
     source/KKRhost/ssum.f90
@@ -536,8 +536,8 @@ if(ENABLE_BdG)
         source/KKRhost/interpolate_poten.f90 
         source/KKRhost/vllmat.f90 
         source/KKRhost/spinorbit_ham.f90 
-        source/KKRhost/spin_orbit.f90 
-        source/KKRhost/spin_orbit_compl.f90 
+        source/common/spin_orbit.f90 
+        source/common/spin_orbit_compl.f90 
         source/KKRhost/vllmatsra.f90 
         source/KKRhost/beshank.f90 
         source/KKRhost/calcsph.f90 

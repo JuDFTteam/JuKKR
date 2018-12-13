@@ -1,6 +1,7 @@
 # the executable is built from this list of files
 add_executable(
     kkrflex.exe
+    source/common/rclm.f90
     source/common/spin_orbit.f90
     source/common/spin_orbit_compl.f90
     source/common/version.F90
@@ -54,7 +55,6 @@ add_executable(
     source/KKRimp/averagewldau.f
     source/KKRimp/phicalc.f
     source/KKRimp/initldau.F
-    source/KKRimp/rclm.f
     source/KKRimp/calcwldau.f
     source/KKRimp/wavefunctodisc.f90
     source/KKRimp/change_nrmin.f90
