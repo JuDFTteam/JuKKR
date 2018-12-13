@@ -6,6 +6,7 @@ add_executable(
     source/common/rotatespinframe.f90
     source/common/DataTypes.f90
     source/common/constants.f90
+    source/common/wfint.f90
     source/voronoi/test.f
     source/KKRimp/nrtype.f90
     source/KKRimp/type_gmatbulk.f90
@@ -76,8 +77,6 @@ add_executable(
     source/KKRimp/cradwf.f
     source/KKRimp/wfmesh.f
     source/KKRimp/zgeinv1.f
-    source/KKRimp/wfint0.f
-    source/KKRimp/wfint.f
     source/KKRimp/csout.f
     source/KKRimp/wftsca.f
     source/KKRimp/vllns.f

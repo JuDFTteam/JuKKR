@@ -30,6 +30,7 @@ execute_process(COMMAND ln -s ../source/KKRhost/sprkkr_rmesh.dim .)
 # the executable is built from this list of files
 add_executable(
     kkr.x
+    source/common/wfint.f90
     source/common/version.F90
     source/common/version_info.F90
     source/common/DataTypes.f90
@@ -340,7 +341,6 @@ add_executable(
     source/KKRhost/vxcgga.f90
     source/KKRhost/vxclm.f90
     source/KKRhost/vxcspo.f90
-    source/KKRhost/wfint.f90
     source/KKRhost/wfmesh.f90
     source/KKRhost/wftsca.f90
     source/KKRhost/wmatldau.f90
