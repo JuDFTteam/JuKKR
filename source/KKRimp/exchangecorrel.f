@@ -6,6 +6,7 @@
         MODULE MOD_EXCHANGECORRELATION
           use mod_trarea 
           use mod_sphere_nogga
+          use mod_lebedev
         CONTAINS    
 !           include 'XC/vxcdrvnew.f90'
 
@@ -17,7 +18,6 @@
           include 'XC/gradr.f'
           include 'XC/gradrl.f'
           include 'XC/gxcpt.f'
-          include 'XC/lebedev.f'
           include 'XC/mkxcpe.f' 
           include 'XC/sphere_gga.f'
           include 'XC/spher.f'

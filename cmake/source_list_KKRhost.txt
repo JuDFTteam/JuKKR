@@ -60,6 +60,7 @@ add_executable(
     source/common/radial_solver_Chebychev/create_newmesh.f90
     source/common/trarea.f90
     source/common/sphere_nogga.f90
+    source/common/lebedev.f90
     source/KKRhost/addvirtual14.f90
     source/KKRhost/amemagvec.f90
     source/KKRhost/bastrmat.f90
@@ -215,7 +216,6 @@ add_executable(
     source/KKRhost/lattice3d.f90
     source/KKRhost/lattix99.f90
     source/KKRhost/latvec.f90
-    source/KKRhost/lebedev.f90
     source/KKRhost/length.f90
     source/KKRhost/lngstring.f90
     source/KKRhost/madelcoef.f90
