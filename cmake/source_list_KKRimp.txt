@@ -9,7 +9,6 @@ add_executable(
     source/common/trarea.f90
     source/common/sphere_nogga.f90
     source/common/lebedev.f90
-    source/common/regns.f90
     source/voronoi/test.f
     source/KKRimp/nrtype.f90
     source/KKRimp/type_gmatbulk.f90
@@ -85,6 +84,7 @@ add_executable(
     source/KKRimp/wftsca.f
     source/KKRimp/vllns.f
     source/KKRimp/csinwd.f
+    source/KKRimp/regns.f
     source/KKRimp/pnstmat.f
     source/KKRimp/calctmat.f90
     source/KKRimp/calctmatfull.f90

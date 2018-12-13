@@ -61,7 +61,6 @@ add_executable(
     source/common/trarea.f90
     source/common/sphere_nogga.f90
     source/common/lebedev.f90
-    source/common/regns.f90
     source/KKRhost/addvirtual14.f90
     source/KKRhost/amemagvec.f90
     source/KKRhost/bastrmat.f90
@@ -260,6 +259,7 @@ add_executable(
     source/KKRhost/readimppot.f90
     source/KKRhost/readldaupot.f90
     source/KKRhost/reg2.f90
+    source/KKRhost/regns.f90
     source/KKRhost/regsol.f90
     source/KKRhost/relpotcvt.f90
     source/KKRhost/renorm_lly.f90
