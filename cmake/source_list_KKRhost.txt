@@ -58,6 +58,9 @@ add_executable(
     source/common/radial_solver_Chebychev/sll_global_solutions.F90
     source/common/radial_solver_Chebychev/sll_local_solutions.F90
     source/common/radial_solver_Chebychev/create_newmesh.f90
+    source/common/trarea.f90
+    source/common/sphere_nogga.f90
+    source/common/lebedev.f90
     source/KKRhost/addvirtual14.f90
     source/KKRhost/amemagvec.f90
     source/KKRhost/bastrmat.f90
@@ -213,7 +216,6 @@ add_executable(
     source/KKRhost/lattice3d.f90
     source/KKRhost/lattix99.f90
     source/KKRhost/latvec.f90
-    source/KKRhost/lebedev.f90
     source/KKRhost/length.f90
     source/KKRhost/lngstring.f90
     source/KKRhost/madelcoef.f90
@@ -303,9 +305,8 @@ add_executable(
     source/KKRhost/spatpr.f90
     source/KKRhost/spher.f90
     source/KKRhost/sphere_gga.f90
-    source/KKRhost/sphere_nogga.f90
-    source/common/spin_orbit.f90
-    source/common/spin_orbit_compl.f90
+    source/KKRhost/spin_orbit.f90
+    source/KKRhost/spin_orbit_compl.f90
     source/KKRhost/spinorbit_ham.f90
     source/KKRhost/ssite.f90
     source/KKRhost/ssum.f90
@@ -325,7 +326,6 @@ add_executable(
     source/KKRhost/testdim.f90
     source/KKRhost/tmat_newsolver.F90
     source/KKRhost/tmatimp_newsolver.F90
-    source/KKRhost/trarea.f90
     source/KKRhost/vadd.f90
     source/KKRhost/veq.f90
     source/KKRhost/vinterface.f90
