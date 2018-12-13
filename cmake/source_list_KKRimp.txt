@@ -6,7 +6,6 @@ add_executable(
     source/common/rotatespinframe.f90
     source/common/DataTypes.f90
     source/common/constants.f90
-    source/common/timing.F90
     source/voronoi/test.f
     source/KKRimp/nrtype.f90
     source/KKRimp/type_gmatbulk.f90
@@ -149,6 +148,7 @@ add_executable(
     source/KKRimp/umatrix.f90
     source/KKRimp/utrafo.f90
     source/KKRimp/cellproperties.f90
+    source/KKRimp/timing.F90
     source/KKRimp/kkrflex.F90
     )
 
