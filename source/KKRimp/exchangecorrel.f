@@ -20,7 +20,7 @@
           include 'XC/sphere_gga.f'
           include 'XC/sphere_nogga.f'
           include 'XC/spher.f'
-          include 'XC/trarea.f'
+          use mod_trarea
           include 'XC/vosko.f'
           include 'XC/vxcgga.f'
           include 'XC/vxclm.f'    
