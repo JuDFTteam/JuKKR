@@ -59,6 +59,7 @@ add_executable(
     source/common/radial_solver_Chebychev/sll_local_solutions.F90
     source/common/radial_solver_Chebychev/create_newmesh.f90
     source/common/trarea.f90
+    source/common/sphere_nogga.f90
     source/KKRhost/addvirtual14.f90
     source/KKRhost/amemagvec.f90
     source/KKRhost/bastrmat.f90
@@ -304,7 +305,6 @@ add_executable(
     source/KKRhost/spatpr.f90
     source/KKRhost/spher.f90
     source/KKRhost/sphere_gga.f90
-    source/KKRhost/sphere_nogga.f90
     source/KKRhost/spin_orbit.f90
     source/KKRhost/spin_orbit_compl.f90
     source/KKRhost/spinorbit_ham.f90

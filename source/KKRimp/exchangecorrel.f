@@ -4,7 +4,8 @@
 !> This module gathers the different exchange correlation potentials
 !-------------------------------------------------------------------------------
         MODULE MOD_EXCHANGECORRELATION
-          use mod_trarea
+          use mod_trarea 
+          use mod_sphere_nogga
         CONTAINS    
 !           include 'XC/vxcdrvnew.f90'
 
@@ -19,7 +20,6 @@
           include 'XC/lebedev.f'
           include 'XC/mkxcpe.f' 
           include 'XC/sphere_gga.f'
-          include 'XC/sphere_nogga.f'
           include 'XC/spher.f'
           include 'XC/vosko.f'
           include 'XC/vxcgga.f'
