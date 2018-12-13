@@ -103,8 +103,6 @@ wfint0.o \
 wfint0_SO.o \
 csinwd.o \
 csinwd_SO.o \
-spline_complex.o \
-spline_real.o \
 csout.o \
 csout_spline.o \
 vllns.o \
@@ -216,6 +214,7 @@ newsol = tmat_newsolver.o \
 mode90 = rotatespinframe.o \
          ../common/DataTypes.f90 \
          ../common/splint.o \
+         ../common/spline.o \
          vllmatsra.o \
          rllsllsourceterms.o \
          rllsll.o \
