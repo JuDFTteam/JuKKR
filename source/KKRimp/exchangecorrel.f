@@ -24,7 +24,7 @@
           include 'XC/vosko.f'
           include 'XC/vxcgga.f'
           include 'XC/vxclm.f'    
-          include 'XC/vxcspo.f'  
+          !include 'XC/vxcspo.f'  
           include 'XC/rinit.f'
         END MODULE MOD_EXCHANGECORRELATION 
 

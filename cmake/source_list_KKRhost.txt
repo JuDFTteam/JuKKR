@@ -48,6 +48,7 @@ add_executable(
     source/common/grule.f90
     source/common/rcstop.f90
     source/common/cinit.f90
+    source/common/vxcspo.f90
     source/common/radial_solver_Chebychev/intcheb_cell.f90
     source/common/radial_solver_Chebychev/cheb.f90
     source/common/radial_solver_Chebychev/cheb2oldgrid.f90
@@ -340,7 +341,6 @@ add_executable(
     source/KKRhost/vxcdrv.f90
     source/KKRhost/vxcgga.f90
     source/KKRhost/vxclm.f90
-    source/KKRhost/vxcspo.f90
     source/KKRhost/wfmesh.f90
     source/KKRhost/wftsca.f90
     source/KKRhost/wmatldau.f90

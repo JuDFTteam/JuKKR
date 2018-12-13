@@ -29,6 +29,9 @@
       USE TYPE_SHAPEFUN
       USE TYPE_GAUNTSHAPE
       USE MOD_EXCHANGECORRELATION
+      use mod_vxcspo, only: vxcspo
+      !use mod_vxclm, only: vxclm
+      !use mod_vxcgga, only: vxcgga
       IMPLICIT NONE
 
 !       INCLUDE 'inc.p'
