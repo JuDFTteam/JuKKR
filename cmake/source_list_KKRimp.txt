@@ -116,7 +116,7 @@ add_executable(
     source/KKRimp/rhovalfull.f90
     source/KKRimp/gdyson.f90
     source/KKRimp/mpienergy.f90
-    source/KKRimp/interpolpot-splint.f
+    source/KKRimp/interpolpotspline.f
     source/KKRimp/interpolpot.f
     source/KKRimp/interpolatecell.f90
     source/KKRimp/checkinterpolation.f90
