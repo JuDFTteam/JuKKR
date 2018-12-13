@@ -304,8 +304,8 @@ add_executable(
     source/KKRhost/spher.f90
     source/KKRhost/sphere_gga.f90
     source/KKRhost/sphere_nogga.f90
-    source/KKRhost/spin_orbit.f90
-    source/KKRhost/spin_orbit_compl.f90
+    source/common/spin_orbit.f90
+    source/common/spin_orbit_compl.f90
     source/KKRhost/spinorbit_ham.f90
     source/KKRhost/ssite.f90
     source/KKRhost/ssum.f90

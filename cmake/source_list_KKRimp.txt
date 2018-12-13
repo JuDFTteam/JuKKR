@@ -1,11 +1,14 @@
 # the executable is built from this list of files
 add_executable(
     kkrflex.exe
+    source/common/spin_orbit.f90
+    source/common/spin_orbit_compl.f90
     source/common/version.F90
     source/common/version_info.F90
     source/common/rotatespinframe.f90
     source/common/DataTypes.f90
     source/common/constants.f90
+    source/common/cinit.f90
     source/voronoi/test.f
     source/KKRimp/nrtype.f90
     source/KKRimp/type_gmatbulk.f90
@@ -63,7 +66,6 @@ add_executable(
     source/KKRimp/vinters2010.f90
     source/KKRimp/timing.F90
     source/KKRimp/arrayparams.f90
-    source/KKRimp/cinit.f
     source/KKRimp/dsort.f90
     source/KKRimp/clustcomp.f90
     source/KKRimp/gauntshape.f90
