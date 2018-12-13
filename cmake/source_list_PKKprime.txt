@@ -14,6 +14,7 @@
 
 add_executable(
     Pkkr.x
+    source/common/DataTypes.f90
     source/common/mod_verify77.f90
     source/common/findgroup.f90 
     source/common/pointgrp.f90
@@ -48,6 +49,7 @@ endif()
 
 add_executable(
     band.x
+    source/common/DataTypes.f90
     source/common/mod_verify77.f90
     source/common/findgroup.f90 
     source/common/pointgrp.f90
@@ -71,6 +73,7 @@ endif()
 
 add_executable(
     mergerefined.x
+    source/common/DataTypes.f90
     source/common/mod_verify77.f90
     source/common/findgroup.f90 
     source/common/pointgrp.f90
@@ -102,6 +105,7 @@ endif()
 
 add_executable(
     refineBZparts.x
+    source/common/DataTypes.f90
     source/common/mod_verify77.f90
     source/common/findgroup.f90 
     source/common/pointgrp.f90
@@ -117,6 +121,7 @@ endif()
 
 add_executable(
     Amatprecalc.x
+    source/common/DataTypes.f90
     source/common/mod_verify77.f90
     source/common/findgroup.f90 
     source/common/pointgrp.f90
@@ -150,6 +155,7 @@ endif()
 
 add_executable(
     calculate_spinmixing.x
+    source/common/DataTypes.f90
     source/common/mod_verify77.f90
     source/common/findgroup.f90 
     source/common/pointgrp.f90
@@ -185,6 +191,7 @@ endif()
 add_executable(
     visdata.x
     source/common/mod_verify77.f90
+    source/common/DataTypes.f90
     source/common/findgroup.f90 
     source/common/pointgrp.f90
     source/PKKprime/visdata.F90
@@ -219,6 +226,7 @@ endif()
 add_executable(
     vis2int.x
     source/common/mod_verify77.f90
+    source/common/DataTypes.f90
     source/common/findgroup.f90 
     source/common/pointgrp.f90
     source/PKKprime/vis2int.F90
@@ -253,6 +261,7 @@ endif()
 add_executable(
     test.x
     source/common/mod_verify77.f90
+    source/common/DataTypes.f90
     source/common/findgroup.f90 
     source/common/pointgrp.f90
     source/PKKprime/type_inc.F90
