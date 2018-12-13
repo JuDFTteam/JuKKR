@@ -61,7 +61,7 @@ program kkrflex
   use mod_calctmat_bauernew !test
   use mod_change_nrmin
 
-
+  use global_variables, only: ipand
 
 
   use mod_mathtools
@@ -813,9 +813,10 @@ end if
     ! single particle core energies
     call espcb(energyparts%espc,nspin,natom,corestate)
     ! input potential
+    ipand = cell(1)%npand
     call epotinb(energyparts%epotin,nspin,natom,vpot,config%ins, &
                             lmaxatom,zatom,cell,density, &
-                            cell(1)%npand, cell(1)%nrmaxd,2*lmaxd)
+                            ipand, cell(1)%nrmaxd,2*lmaxd)
     ! the electrostatic potential-energies
     call ecoub(cmom,cmom_interst,energyparts%ecou,cell,density,shapefun,gauntshape,lmaxatom,lmaxd,nspin,natom,vpot_out,zatom, &
                           config%ins,cell(1)%nrmaxd,(2*lmaxd+1)**2,2*lmaxd)
