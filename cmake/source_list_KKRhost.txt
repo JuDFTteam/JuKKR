@@ -61,6 +61,9 @@ add_executable(
     source/common/gxcpt.f90
     source/common/corlsd.f90
     source/common/cpw91.f90
+    source/common/gcor91.f90
+    source/common/vosko.f90
+    source/common/exch91.f90
     source/common/radial_solver_Chebychev/intcheb_cell.f90
     source/common/radial_solver_Chebychev/cheb.f90
     source/common/radial_solver_Chebychev/cheb2oldgrid.f90
@@ -167,7 +170,6 @@ add_executable(
     source/KKRhost/espcb.f90
     source/KKRhost/etotb1.f90
     source/KKRhost/ewald2d.f90
-    source/KKRhost/exch91.f90
     source/KKRhost/findgroup.f90
     source/KKRhost/force.f90
     source/KKRhost/forceh.f90
@@ -178,7 +180,6 @@ add_executable(
     source/KKRhost/gaufd.f90
     source/KKRhost/gauleg.f90
     source/KKRhost/gaunt.f90
-    source/KKRhost/gcor91.f90
     source/KKRhost/generalpot.f90
     source/KKRhost/getbr3.f90
     source/KKRhost/getclusnxyz.f90
@@ -339,7 +340,6 @@ add_executable(
     source/KKRhost/vllns.f90
     source/KKRhost/vmadelblk.f90
     source/KKRhost/vmul.f90
-    source/KKRhost/vosko.f90
     source/KKRhost/vxcdrv.f90
     source/KKRhost/wfmesh.f90
     source/KKRhost/wftsca.f90

@@ -32,7 +32,7 @@
       use mod_vxcspo, only: vxcspo
       use mod_vxclm, only: vxclm
       use mod_vxcgga, only: vxcgga
-      use global_variables, only: lmxspd, ipand, lmpotd, irmd, ngshd, irid, nfund, lpotd
+      use global_variables, only: ipand, irmd, ngshd, irid, nfund
       IMPLICIT NONE
 
 !       INCLUDE 'inc.p'
@@ -153,7 +153,8 @@
                       VONS(:,:,:,IATOM),CELL(IATOM)%RMESH,CELL(IATOM)%DRMESHDI,CELL(IATOM)%LOGPARAMS(1), &
                       CELL(IATOM)%NRMAX,CELL(IATOM)%NRCUT,CELL(IATOM)%NPAN, &
                       KSHAPE,GAUNTSHAPE(LMAX)%GSH,GAUNTSHAPE(LMAX)%ILM,GAUNTSHAPE(LMAX)%IMAXSH,IFUNMIAT,SHAPEFUN(IATOM)%THETAS, &
-                      YR,WTYR,IJD,LMSPIAT,THET,YLM,DYLMT1,DYLMT2, &
+                      !YR,WTYR,IJD,LMSPIAT,THET,YLM,DYLMT1,DYLMT2, &
+                      WTYR,IJD,LMSPIAT,THET,YLM,DYLMT1,DYLMT2, &
                       DYLMF1,DYLMF2,DYLMTF)!, &
                       !LMPOTD,2*LMAXD,LMXSPD,nrmaxd,SHAPEFUN(IATOM)%NLMSHAPED,SHAPEFUN(IATOM)%NRSHAPED,GAUNTSHAPE(LMAX)%NGSHD,&
                       !CELL(IATOM)%NPAND) 
