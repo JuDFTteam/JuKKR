@@ -104,9 +104,7 @@ wfint0_SO.o \
 csinwd.o \
 csinwd_SO.o \
 spline_complex.o \
-splint_complex.o \
 spline_real.o \
-splint_real.o \
 csout.o \
 csout_spline.o \
 vllns.o \
@@ -216,6 +214,8 @@ newsol = tmat_newsolver.o \
          gfshells1.o \
 
 mode90 = rotatespinframe.o \
+         ../common/DataTypes.f90 \
+         ../common/splint.o \
          vllmatsra.o \
          rllsllsourceterms.o \
          rllsll.o \
@@ -226,7 +226,7 @@ mode90 = rotatespinframe.o \
 SRC77 = ${files} ${dyson} ${newsol}
 SRC90 = ${mode90}
 
-SRC = ${SRC77} ${SRC90}
+SRC = ${SRC90} ${SRC77}
 
 OBJS = ${SRC:.f=.o}
 .SUFFIXES: .f

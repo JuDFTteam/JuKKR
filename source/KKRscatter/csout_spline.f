@@ -27,6 +27,8 @@ c
 c
 c                                     b. drittler july 1989
 c-----------------------------------------------------------------------
+      use mod_splint, only: splint_complex
+      implicit none
 C     .. Parameters ..
       DOUBLE PRECISION A1,A2
       PARAMETER (A1=1.D0/3.D0,A2=4.D0/3.D0)
@@ -118,7 +120,7 @@ c     spline interpolation
      +                            F(LL,IEN),FDERSP)
             DO I = IST+1,IEN-1,2
                
-              CALL SPLINT(I_SP,FINT_SP(1:NMAX,LL),FDERSP,NMAX,
+              CALL splint_complex(I_SP,FINT_SP(1:NMAX,LL),FDERSP,NMAX,
      +                             REAL(I),FINT(LL,I),FDUM)
             END DO
           END DO

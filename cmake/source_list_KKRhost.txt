@@ -42,7 +42,7 @@ add_executable(
     source/common/ioinput.f90
     source/common/interpolspline.f90
     source/common/spline_real.f90
-    source/common/splint_real.f90
+    source/common/splint.f90
     source/common/gaunt2.f90
     source/common/grule.f90
     source/common/rcstop.f90
@@ -375,7 +375,7 @@ if(ENABLE_BdG)
         source/common/ioinput.f90 
         source/common/interpolspline.f90 
         source/common/spline_real.f90 
-        source/common/splint_real.f90 
+        source/common/splint.f90 
         source/common/gaunt2.f90 
         source/common/grule.f90 
         source/common/rcstop.f90 

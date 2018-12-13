@@ -8,6 +8,8 @@ c ******************************************************
 c * This subroutine reads a jellium potential from the database
 c * file. and interpolates to the new mesh 
 c ******************************************************
+      use mod_splint, only: splint_real
+
       implicit none
 c#@# KKRtags: VORONOI initialization potential core-electrons
       include 'inc.geometry'
@@ -277,7 +279,8 @@ c
             VM2ZOUT(1) = VM2Z(1)
             DO IR = 2,IRWSOUT
                R0 = ROUT(IR)
-               CALL SPLINT(RMESH,VM2Z,VM2ZB,NR,R0,PARSUM,PARSUMDERIV)
+               CALL splint_real(RMESH,VM2Z,VM2ZB,NR,R0,PARSUM,
+     &                          PARSUMDERIV)
                VM2ZOUT(IR) = PARSUM
             END DO
 c

@@ -7,6 +7,7 @@ c ******************************************************
 c * This subroutine reads a general potential format
 c * file. and interpolates to the new mesh 
 c ******************************************************
+      use mod_splint, only: splint_real
       implicit none
 c#@# KKRtags: VORONOI potential initialization input-output
       include 'inc.geometry'
@@ -265,7 +266,8 @@ c
             VM2ZOUT(1) = VM2Z(1)
             DO IR = 2,IRWSOUT
                R0 = ROUT(IR)
-               CALL SPLINT(RMESH,VM2Z,VM2ZB,NR,R0,PARSUM,PARSUMDERIV)
+               CALL splint_real(RMESH,VM2Z,VM2ZB,NR,R0,PARSUM,
+     &                           PARSUMDERIV)
                VM2ZOUT(IR) = PARSUM
             END DO
 c
@@ -277,7 +279,7 @@ c
                   IF (POTLM(LM1)) THEN
                      DO IR = IRC+1,IRWSOUT
                         R0 = ROUT(IR)
-                        CALL SPLINT(RA,WORK(1,LM1),
+                        CALL splint_real(RA,WORK(1,LM1),
      &                       VINSB(1,LM1),IRNSTOT,R0,PARSUM,PARSUMDERIV)
                         VINSOUT(IR,LM1) = PARSUM
                      END DO

@@ -32,6 +32,8 @@ contains
   subroutine generalpot(ifile, natps, natyp, nspin, z, alat, rmt, rmtnew, rws, r, drdi, vm2z, irws, a, b, ins, irns, lpot, vins, qbound, irc, kshape, efermi, vbc, ecore, lcore, &
     ncore, lmpotd, irmd, irmind)
 
+    use mod_splint, only: splint_real
+
     implicit none
 
     integer :: lmpotd, irmd, irmind
@@ -160,7 +162,7 @@ contains
 
         do ir = 1, nr_u
           r0 = rr_u(ir)
-          call splint(ra, vm2za, vm2zb, nr, r0, parsum, parsumderiv)
+          call splint_real(ra, vm2za, vm2zb, nr, r0, parsum, parsumderiv)
           vm2z_u(ir) = parsum
         end do
         if (ins>0) then
@@ -168,7 +170,7 @@ contains
           do lm1 = 1, lmpot
             do ir = irmin_u, nr_u
               r0 = rr_u(ir)
-              call splint(ra(irmind), vinsa(irmind,lm1), vinsb(irmind,lm1), irnstot, r0, parsum, parsumderiv)
+              call splint_real(ra(irmind), vinsa(irmind,lm1), vinsb(irmind,lm1), irnstot, r0, parsum, parsumderiv)
               vins_u(ir, lm1) = parsum
             end do
           end do
@@ -326,60 +328,6 @@ contains
     return
   end subroutine spline
 
-
-  !-------------------------------------------------------------------------------
-  !> Summary: Calculates cubic spline interpolated value and derivative
-  !> Author: 
-  !> Category: KKRhost, numerical-tools
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
-  !> @note Doubling of `splint_real`? @endnote
-  !>
-  !> Given the arrays xa(1:n) and ya(1:n) of length n, which tabulate a
-  !> function (with the xai's in order), and given the array y2a(1:n), which
-  !> is the output from spline above, and given a value of x, this routine
-  !> returns a cubic-spline interpolated value y and the derivative yderiv.
-  !> Taken from "Numerical Recipes in Fortran 77", W.H.Press et al.
-  !-------------------------------------------------------------------------------
-  subroutine splint(xa, ya, y2a, n, x, y, yderiv)
-
-    implicit none
-    real (kind=dp), parameter :: eps = 1.0e-12_dp
-    integer :: n
-    real (kind=dp) :: x, y, yderiv, xa(*), ya(*), y2a(*)
-    integer :: k, khi, klo
-    real (kind=dp) :: a, b, h
-
-    !! We will find the right place in the table by means of bisection.
-    !! This is optimal if sequential calls to this routine are at random
-    !! values of x. If sequential calls are in order, and closely
-    !! spaced, one would do better to store previous values of
-    !! klo and khi and test if they remain appropriate on the
-    !! next call.
-
-    klo = 1
-    khi = n
-100 if (khi-klo>1) then
-      k = (khi+klo)/2
-      if (xa(k)>x) then
-        khi = k
-      else
-        klo = k
-      end if
-      go to 100
-    end if
-    ! klo and khi now bracket the input value of x.
-    h = xa(khi) - xa(klo)
-    ! The xa's must be distinct.
-    if (abs(h)<eps) stop 'Bad XA input in SPLINT'
-    ! Cubic spline polynomial is now evaluated.
-    a = (xa(khi)-x)/h
-    b = (x-xa(klo))/h
-    y = a*ya(klo) + b*ya(khi) + ((a**3-a)*y2a(klo)+(b**3-b)*y2a(khi))*(h**2)/6.e0_dp
-    yderiv = (ya(khi)-ya(klo))/h - ((3.e0_dp*a*a-1.e0_dp)*y2a(klo)-(3.e0_dp*b*b-1.e0_dp)*y2a(khi))*h/6.e0_dp
-
-    return
-  end subroutine splint
 
   !-------------------------------------------------------------------------------
   !> Summary: Remove doubles points in radial mesh
