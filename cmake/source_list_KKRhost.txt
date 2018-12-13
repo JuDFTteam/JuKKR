@@ -111,14 +111,14 @@ add_executable(
     source/KKRhost/cpw91.f90
     source/KKRhost/cradwf.f90
     source/KKRhost/crospr.f90
-    source/KKRhost/cross.f90
+    source/common/cross.f90
     source/KKRhost/crtstar.f90
     source/KKRhost/csimpk.f90
     source/KKRhost/csinwd.f90
     source/KKRhost/csout.f90
     source/KKRhost/csum.f90
     source/KKRhost/cylm02.f90
-    source/KKRhost/ddet33.f90
+    source/common/ddet33.f90
     source/KKRhost/ddot1.f90
     source/KKRhost/decimaread.f90
     source/KKRhost/decimate.f90
@@ -216,7 +216,7 @@ add_executable(
     source/KKRhost/lattice2d.f90
     source/KKRhost/lattice3d.f90
     source/KKRhost/lattix99.f90
-    source/KKRhost/latvec.f90
+    source/common/latvec.f90
     source/KKRhost/length.f90
     source/KKRhost/lngstring.f90
     source/KKRhost/madelcoef.f90
@@ -442,9 +442,9 @@ if(ENABLE_BdG)
         source/KKRhost/clsgen_tb.f90   
         source/KKRhost/cmomsread.f90 
         source/KKRhost/crospr.f90 
-        source/KKRhost/cross.f90 
+        source/common/cross.f90
         source/KKRhost/crtstar.f90 
-        source/KKRhost/ddet33.f90 
+        source/common/ddet33.f90
         source/KKRhost/ddot1.f90 
         source/KKRhost/dscal1.f90 
         source/KKRhost/dsort.f90 
@@ -460,7 +460,7 @@ if(ENABLE_BdG)
         source/KKRhost/lattice2d.f90 
         source/KKRhost/lattice3d.f90 
         source/KKRhost/lattix99.f90 
-        source/KKRhost/latvec.f90 
+        source/common/latvec.f90
         source/KKRhost/length.f90 
         source/KKRhost/nrmliz.f90 
         source/common/pointgrp.f90 
