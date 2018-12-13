@@ -160,7 +160,7 @@ add_executable(
     source/KKRhost/etotb1.f90
     source/KKRhost/ewald2d.f90
     source/KKRhost/exch91.f90
-    source/KKRhost/findgroup.f90
+    source/common/findgroup.f90
     source/KKRhost/force.f90
     source/KKRhost/forceh.f90
     source/KKRhost/forcxc.f90
@@ -253,7 +253,7 @@ add_executable(
     source/KKRhost/phicalc.f90
     source/KKRhost/pnsqns.f90
     source/KKRhost/pnstmat.f90
-    source/KKRhost/pointgrp.f90
+    source/common/pointgrp.f90
     source/KKRhost/potcut.f90
     source/KKRhost/projtau.f90
     source/KKRhost/readimppot.f90
@@ -410,7 +410,7 @@ if(ENABLE_BdG)
         source/KKRhost/symtaumat.f90 
         source/KKRhost/taustruc.f90 
         source/KKRhost/bzkint0.f90 
-        source/KKRhost/findgroup.f90 
+        source/common/findgroup.f90 
         source/KKRhost/calcrotmat.f90 
         source/KKRhost/errortrap.f90 
         source/KKRhost/bzkmesh.f90 
@@ -463,7 +463,7 @@ if(ENABLE_BdG)
         source/KKRhost/latvec.f90 
         source/KKRhost/length.f90 
         source/KKRhost/nrmliz.f90 
-        source/KKRhost/pointgrp.f90 
+        source/common/pointgrp.f90 
         source/KKRhost/potcut.f90 
         source/KKRhost/rinit.f90 
         source/KKRhost/decimaread.f90 
