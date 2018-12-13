@@ -7,6 +7,7 @@ add_executable(
     source/common/DataTypes.f90
     source/common/constants.f90
     source/common/splint.f90
+    source/common/spline.f90
     source/voronoi/test.f
     source/KKRimp/nrtype.f90
     source/KKRimp/type_gmatbulk.f90
@@ -116,7 +117,7 @@ add_executable(
     source/KKRimp/rhovalfull.f90
     source/KKRimp/gdyson.f90
     source/KKRimp/mpienergy.f90
-    source/KKRimp/interpolpot-splint.f
+    source/KKRimp/interpolpotspline.f
     source/KKRimp/interpolpot.f
     source/KKRimp/interpolatecell.f90
     source/KKRimp/checkinterpolation.f90

@@ -33,6 +33,7 @@ contains
     ncore, lmpotd, irmd, irmind)
 
     use mod_splint, only: splint_real
+    use mod_spline, only: spline_real
 
     implicit none
 
@@ -149,12 +150,12 @@ contains
         ! test
 
         maxa = 1.e35_dp
-        call spline(irmd, ra, vm2za, nr, maxa, maxa, vm2zb)
+        call spline_real(irmd, ra, vm2za, nr, maxa, maxa, vm2zb)
         if (ins>0) then
           do lm1 = 1, lmpot
             irnstot = nr - irmin   ! nr has changed irmin is the same
             ! write(6,*) ' Testing ',nr,irmin,irnstot,irmind
-            call spline(irmd-irmind, ra(irmind), vinsa(irmind,lm1), irnstot, maxa, maxa, vinsb(irmind,lm1))
+            call spline_real(irmd-irmind, ra(irmind), vinsa(irmind,lm1), irnstot, maxa, maxa, vinsb(irmind,lm1))
           end do                   ! LM1
         end if
 
@@ -260,73 +261,6 @@ contains
 270 format (10i5)
 280 format (1p, 4d20.13)
   end subroutine generalpot
-
-
-  !-------------------------------------------------------------------------------
-  !> Summary: Second derivative of interpolating function for spline interpolation
-  !> Author: 
-  !> Category: KKRhost, numerical-tools
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
-  !> @note Doubling of interpolspline? @endnote
-  !>
-  !> Given arrays x(1:n) and  y(1:n) containing a tabulated function,
-  !> i.e., y i = f(xi), with x1<x2<...<xN , and given values yp1 and ypn
-  !> for the rst derivative of the interpolating function at points
-  !> 1 and n, respectively, this routine returns an array y2(1:n) of
-  !> length n which contains the second derivatives of the interpolating
-  !> function at the tabulated points xi.
-  !> If yp1 and/or ypn are equal to 1.e30 or larger, the routine is
-  !> signaled to set the corresponding boundary condition for a natural
-  !> spline, with zero second derivative on that boundary.
-  !> Parameter: NMAX is the largest anticipated value of n.
-  !> Taken from "Numerical Recipes in Fortran 77", W.H.Press et al.
-  !-------------------------------------------------------------------------------
-  subroutine spline(nmax, x, y, n, yp1, ypn, y2)
-
-    implicit none
-    integer :: n, nmax
-    real (kind=dp) :: yp1, ypn, x(nmax), y(nmax), y2(nmax)
-    integer :: i, k
-    real (kind=dp) :: p, qn, sig, un, u(nmax)
-
-    if (n>nmax) stop 'SPLINE: N > NMAX.'
-    if (yp1>0.99e30_dp) then
-      ! The lower boundary condition is set either to be "natural"
-      y2(1) = 0.e0_dp
-      u(1) = 0.e0_dp
-    else
-      ! or else to have a specified first derivative.
-      y2(1) = -0.5e0_dp
-      u(1) = (3.e0_dp/(x(2)-x(1)))*((y(2)-y(1))/(x(2)-x(1))-yp1)
-    end if
-
-    do i = 2, n - 1
-      ! This is the decomposition loop of the tridiagonal algorithm. y2 and u
-      ! are used for temporary storage of the decomposed factors.
-      sig = (x(i)-x(i-1))/(x(i+1)-x(i-1))
-      p = sig*y2(i-1) + 2.e0_dp
-      y2(i) = (sig-1.e0_dp)/p
-      u(i) = (6.e0_dp*((y(i+1)-y(i))/(x(i+1)-x(i))-(y(i)-y(i-1))/(x(i)-x(i-1)))/(x(i+1)-x(i-1))-sig*u(i-1))/p
-    end do
-
-    if (ypn>.99e30_dp) then
-      ! The upper boundary condition is set either to be "natural"
-      qn = 0.e0_dp
-      un = 0.e0_dp
-    else
-      ! or else to have a specified 1rst derivative.
-      qn = 0.5e0_dp
-      un = (3.e0_dp/(x(n)-x(n-1)))*(ypn-(y(n)-y(n-1))/(x(n)-x(n-1)))
-    end if
-    y2(n) = (un-qn*u(n-1))/(qn*y2(n-1)+1.e0_dp)
-    do k = n - 1, 1, -1
-      ! This is the backsubstitution loop of the tridiagonal algorithm.
-      y2(k) = y2(k)*y2(k+1) + u(k)
-    end do
-
-    return
-  end subroutine spline
 
 
   !-------------------------------------------------------------------------------

@@ -5,6 +5,7 @@ add_executable(
     source/common/version_info.F90
     source/common/DataTypes.f90
     source/common/splint.f90
+    source/common/spline.f90
     source/voronoi/crospr.f
     source/voronoi/vertex3d.f
     source/voronoi/analyzevert3d.f
@@ -42,7 +43,6 @@ add_executable(
     source/voronoi/sname.f
     source/voronoi/genpotstart12.f
     source/voronoi/length.f
-    source/voronoi/spline.f
     source/voronoi/ritesone.f
     source/voronoi/jellstart12.f
     source/voronoi/pdbplot.f

@@ -8,6 +8,7 @@ c * This subroutine reads a general potential format
 c * file. and interpolates to the new mesh 
 c ******************************************************
       use mod_splint, only: splint_real
+      use mod_spline, only: spline_real
       implicit none
 c#@# KKRtags: VORONOI potential initialization input-output
       include 'inc.geometry'
@@ -245,7 +246,7 @@ c  Ok now interpolate
 c
                    
             MAXA = 1.D35
-            CALL SPLINE(IRMD,RMESH,VM2Z,NR,MAXA,MAXA,VM2ZB)  
+            CALL spline_real(IRMD,RMESH,VM2Z,NR,MAXA,MAXA,VM2ZB)  
             IF (INS.GT.0) THEN
                DO LM1=1,LMPOTD
                   IF (POTLM(LM1)) THEN
@@ -255,8 +256,8 @@ c     map it
                         WORK(I,LM1) = VINS(NR - IRNS1 + I - 1,LM1)
                         RA(I) = RMESH(NR - IRNS1 + I - 1)
                      END DO
-                     CALL SPLINE(IRMD,RA,WORK(1,LM1),IRNSTOT,MAXA,MAXA,
-     &                    VINSB(1,LM1))
+                     CALL spline_real(IRMD,RA,WORK(1,LM1),IRNSTOT,MAXA,
+     &                    MAXA,VINSB(1,LM1))
                   END IF
                ENDDO            ! LM1
             END IF
