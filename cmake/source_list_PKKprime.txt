@@ -14,6 +14,7 @@
 
 add_executable(
     Pkkr.x
+    source/common/mod_verify77.f90
     source/PKKprime/main.f90
     source/PKKprime/type_inc.F90
     source/PKKprime/mod_mympi.F90
@@ -45,6 +46,7 @@ endif()
 
 add_executable(
     band.x
+    source/common/mod_verify77.f90
     source/PKKprime/type_inc.F90
     source/PKKprime/mod_mympi.F90
     source/PKKprime/mod_ioformat.f90
@@ -65,6 +67,7 @@ endif()
 
 add_executable(
     mergerefined.x
+    source/common/mod_verify77.f90
     source/PKKprime/type_inc.F90
     source/PKKprime/mod_mympi.F90
     source/PKKprime/mod_ioformat.f90
@@ -93,6 +96,7 @@ endif()
 
 add_executable(
     refineBZparts.x
+    source/common/mod_verify77.f90
     source/PKKprime/mod_mathtools.f90
     source/PKKprime/mod_vtkxml.f90
     source/PKKprime/mod_ioinput.f90
@@ -105,6 +109,7 @@ endif()
 
 add_executable(
     Amatprecalc.x
+    source/common/mod_verify77.f90
     source/PKKprime/type_inc.F90
     source/PKKprime/mod_mympi.F90
     source/PKKprime/mod_ioformat.f90
@@ -135,6 +140,7 @@ endif()
 
 add_executable(
     calculate_spinmixing.x
+    source/common/mod_verify77.f90
     source/PKKprime/calculate_spinmixing.F90
     source/PKKprime/type_inc.F90
     source/PKKprime/mod_mympi.F90
@@ -166,6 +172,7 @@ endif()
 
 add_executable(
     visdata.x
+    source/common/mod_verify77.f90
     source/PKKprime/visdata.F90
     source/PKKprime/type_inc.F90
     source/PKKprime/mod_mympi.F90
@@ -197,6 +204,7 @@ endif()
 
 add_executable(
     vis2int.x
+    source/common/mod_verify77.f90
     source/PKKprime/vis2int.F90
     source/PKKprime/type_inc.F90
     source/PKKprime/mod_mympi.F90
@@ -228,6 +236,7 @@ endif()
 
 add_executable(
     test.x
+    source/common/mod_verify77.f90
     source/PKKprime/type_inc.F90
     source/PKKprime/mod_mympi.F90
     source/PKKprime/mod_ioformat.f90
