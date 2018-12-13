@@ -1,6 +1,7 @@
       subroutine interpolspline(rmesh,rmeshnew,vpot,vpotnew,
      +                          nrmax,nrmaxnew)
       use mod_splint, only: splint_real
+      use mod_spline, only: spline_real
       implicit none
 !interface
       integer                       :: nrmax
