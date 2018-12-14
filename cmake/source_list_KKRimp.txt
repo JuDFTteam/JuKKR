@@ -1,6 +1,8 @@
 # the executable is built from this list of files
 add_executable(
     kkrflex.exe
+    source/common/mympi.F90 
+    source/common/profiling.f90 
     source/common/version.F90
     source/common/version_info.F90
     source/common/rotatespinframe.f90
