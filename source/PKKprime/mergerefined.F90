@@ -13,7 +13,7 @@ program mergerefined
                           & filemode_ref, filemode_vis, filemode_int,             &
                           & ext_formatted, ext_vtkxml, ext_new, ext_refined, ext_orig
   use mod_mympi,      only: mympi_init, myrank, nranks, master
-  use mod_symmetries, only: pointgrp
+  use mod_pointgrp, only: pointgrp
   use mod_fermisurf_basic,  only: find_kpoints_irredset, save_kpointsfile_vis, save_kpointsfile_int
   use mod_vtkxml,     only: write_pointdata_rot
 #ifdef CPP_MPI
