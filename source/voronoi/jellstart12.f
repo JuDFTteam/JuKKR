@@ -8,6 +8,9 @@ c ******************************************************
 c * This subroutine reads a jellium potential from the database
 c * file. and interpolates to the new mesh 
 c ******************************************************
+      use mod_splint, only: splint_real
+      use mod_spline, only: spline_real
+
       implicit none
 c#@# KKRtags: VORONOI initialization potential core-electrons
       include 'inc.geometry'
@@ -270,14 +273,15 @@ c  Ok now interpolate
 c
                    
             MAXA = 1.D35
-            CALL SPLINE(IRMDJJ,RMESH,VM2Z,NR,MAXA,MAXA,VM2ZB)            
+            CALL spline_real(IRMDJJ,RMESH,VM2Z,NR,MAXA,MAXA,VM2ZB)            
 c
 c OK with spline
 c
             VM2ZOUT(1) = VM2Z(1)
             DO IR = 2,IRWSOUT
                R0 = ROUT(IR)
-               CALL SPLINT(RMESH,VM2Z,VM2ZB,NR,R0,PARSUM,PARSUMDERIV)
+               CALL splint_real(RMESH,VM2Z,VM2ZB,NR,R0,PARSUM,
+     &                          PARSUMDERIV)
                VM2ZOUT(IR) = PARSUM
             END DO
 c

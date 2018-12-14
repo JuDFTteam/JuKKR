@@ -42,8 +42,8 @@ add_executable(
     source/common/timing.F90
     source/common/ioinput.f90
     source/common/interpolspline.f90
-    source/common/spline_real.f90
-    source/common/splint_real.f90
+    source/common/spline.f90
+    source/common/splint.f90
     source/common/gaunt2.f90
     source/common/grule.f90
     source/common/rcstop.f90
@@ -75,6 +75,7 @@ add_executable(
     source/common/radial_solver_Chebychev/sll_global_solutions.F90
     source/common/radial_solver_Chebychev/sll_local_solutions.F90
     source/common/radial_solver_Chebychev/create_newmesh.f90
+    source/common/ymy.f90
     source/KKRhost/addvirtual14.f90
     source/KKRhost/amemagvec.f90
     source/KKRhost/bastrmat.f90
@@ -353,7 +354,6 @@ add_executable(
     source/KKRhost/wrmoms.f90
     source/KKRhost/wunfiles.F90
     source/KKRhost/ylag.f90
-    source/KKRhost/ymy.f90
     )
 
 if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
@@ -391,6 +391,7 @@ if(ENABLE_BdG)
         source/common/radial_solver_Chebychev/rll_global_solutions.F90 
         source/common/radial_solver_Chebychev/sll_global_solutions.F90 
         source/common/radial_solver_Chebychev/create_newmesh.f90 
+        source/common/ymy.f90
         source/KKRhost/wunfiles.F90
         source/KKRhost/main_tmat_runner.F90
         source/KKRhost/global_variables.F90 
@@ -475,7 +476,6 @@ if(ENABLE_BdG)
         source/KKRhost/spatpr.f90 
         source/KKRhost/strmat.F90 
         source/KKRhost/generalpot.f90 
-        source/KKRhost/ymy.f90 
         source/KKRhost/veq.f90 
         source/KKRhost/vadd.f90 
         source/KKRhost/vmul.f90 
