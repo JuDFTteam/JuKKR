@@ -252,15 +252,16 @@ contains
     & rfctor,recbv,nbzdim,                &
     & rotmat,rotname,nsymat,isymindex_out )
 
+    use :: mod_datatypes, only: dp
     use mod_mympi, only: nranks, myrank, master
     use mod_pointgrp, only : pointgrp
     implicit none
 
     integer,          intent(in) :: nbasis, naezd, nembd, nbzdim
-    double precision, intent(in) :: bravais(3,3),rbasis(3,naezd+nembd)
-    double precision, intent(in) :: rfctor,recbv(3,3)
+    real (kind=dp), intent(in) :: bravais(3,3),rbasis(3,naezd+nembd)
+    real (kind=dp), intent(in) :: rfctor,recbv(3,3)
 
-    double precision,     intent(out) :: rotmat(64,3,3)
+    real (kind=dp),     intent(out) :: rotmat(64,3,3)
     character(len=10),    intent(out) :: rotname(64)
     integer,              intent(out) :: nsymat
     integer, allocatable, intent(out) :: isymindex_out(:)
@@ -269,11 +270,12 @@ contains
     integer :: isymindex(NSYMAXD)
 
     ! Local variables
-    double precision :: r(3,4),rotrbas(3,naezd+nembd)
-    double precision :: alat,bravais1(3,3)
+    real (kind=dp) :: r(3,4),rotrbas(3,naezd+nembd)
+    real (kind=dp) :: alat,bravais1(3,3),tol
     integer :: i,j,isym,nsym,i0,ia
     character(len=10) :: charstr(64)
     logical :: llatbas,lbulk
+    tol=1e-5
     !     -------------------------------------------------------------
     nsym = 0
     call pointgrp(rotmat,rotname)
@@ -306,7 +308,7 @@ contains
 
       !In the case of slab/interface geometry look only for
       !symmetry opperations that preserve the z axis..
-      if (lbulk .or. (rotmat(isym,3,3).eq.1) ) then
+      if (lbulk .or. abs(rotmat(isym,3,3)-1.0)<tol ) then
       !do rotation only in case bulk or if slab and z axis is restored..
         do i=1,3            ! Loop on bravais vectors
           do j=1,3         ! Loop on coordinates
@@ -381,27 +383,29 @@ contains
   !>   latvec:.true. if all vectors are lattice vectors
   !-------------------------------------------------------------------------------
   logical function latvec(n,qlat,vec) 
+    
+    use :: mod_datatypes, only: dp
   
-      implicit none 
-      ! Passed parameters:                                                    
-      integer,          intent(in) :: n 
-      double precision, intent(in) :: qlat(3,3),vec(3,n) 
-      ! Local parameters:                                                     
-      integer :: i,m 
-      double precision :: vdiff 
-      double precision, parameter :: tol=1.d-6
-      ! Intrinsic functions:                                                  
-      intrinsic  dabs,dnint
+    implicit none 
+    ! Passed parameters:                                                    
+    integer,          intent(in) :: n 
+    real (kind=dp), intent(in) :: qlat(3,3),vec(3,n) 
+    ! Local parameters:                                                     
+    integer :: i,m 
+    real (kind=dp) :: vdiff 
+    real (kind=dp), parameter :: tol=1.0_dp-6
+    ! Intrinsic functions:                                                  
+    intrinsic  dabs,dnint
 
-      latvec=.false. 
-      do i=1,n
-        do m=1,3
-          vdiff=vec(1,i)*qlat(1,m)+vec(2,i)*qlat(2,m)+vec(3,i)*qlat(3,m) 
-          vdiff=dabs(vdiff-dnint(vdiff)) 
-          if (vdiff.gt.tol) return 
-        enddo 
+    latvec=.false. 
+    do i=1,n
+      do m=1,3
+        vdiff=vec(1,i)*qlat(1,m)+vec(2,i)*qlat(2,m)+vec(3,i)*qlat(3,m) 
+        vdiff=abs(vdiff-nint(vdiff)) 
+        if (vdiff.gt.tol) return 
       enddo 
-      latvec=.true. 
+    enddo 
+    latvec=.true. 
 
   end function latvec
 
