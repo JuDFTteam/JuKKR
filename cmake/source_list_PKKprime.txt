@@ -123,6 +123,7 @@ add_executable(
     source/common/ddet33.f90
     source/common/latvec.f90
     source/common/mod_verify77.f90
+    source/PKKprime/mod_mympi.F90
     source/common/findgroup.f90 
     source/common/pointgrp.f90
     source/PKKprime/mod_mathtools.f90
