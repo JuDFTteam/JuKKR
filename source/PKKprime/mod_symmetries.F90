@@ -193,7 +193,7 @@ contains
 
     do ipt=1,npts
       lpoints(ipt) = singlepoint_in_wedge(nfaces, nvec, dscal, points(:,ipt))
-    end do`!ipt
+    end do!ipt
 
     select case( mode )
     case( 'any' ) ; points_in_wedge = any(lpoints)
