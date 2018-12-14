@@ -653,7 +653,6 @@ contains
                   & lattice%rbasis,lattice%alat,lattice%recbv,inc%nBZdim, &
                   & symmetries%rotmat,symmetries%rotname,                 &
                   & symmetries%nsym_found,symmetries%isym_found           )
-
     !=====
     ! Find symmetry information from the input-file
     !=====
@@ -693,7 +692,7 @@ contains
       write(6,*)
     end if!myrank==master
 
- 1050 FORMAT(5(A10,2X))
+  1050 FORMAT(5(A10,2X))
   end subroutine set_symmetries
 
 
@@ -753,53 +752,14 @@ contains
     !write info to the screen
     write(6,1040) nsym
     do isym=1,nsym
-       istore        = isymindex(isym)
-       charstr(isym) = rotname(istore)
+      istore        = isymindex(isym)
+      charstr(isym) = rotname(istore)
     end do
     write(6,1030) (charstr(isym),isym=1,nsym)
     write(6,*)
 
- 1030 FORMAT(5(A10,2X))
- 1040 FORMAT(' Symmetries set by hand: ',I5)
+  1030 FORMAT(5(A10,2X))
+  1040 FORMAT(' Symmetries set by hand: ',I5)
   end subroutine read_sym_inp
-
-  !-------------------------------------------------------------------------------
-  !> Summary: Checks if a set of vectors are lattice vectors
-  !> Author: 
-  !> Category: PKKprime, geometry
-  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !>
-  !> @note copied from host code @endnote
-  !> Inputs:                                                              
-  !>   n     :number of vectors                                           
-  !>   qlat  :primitive translation vectors in reciprocal space           
-  !>   vec   :double-precision vector                                     
-  !> Outputs:                                                             
-  !>   latvec:.true. if all vectors are lattice vectors
-  !-------------------------------------------------------------------------------
-  logical function latvec(n,qlat,vec) 
-  
-      implicit none 
-      ! Passed parameters:                                                    
-      integer,          intent(in) :: n 
-      double precision, intent(in) :: qlat(3,3),vec(3,n) 
-      ! Local parameters:                                                     
-      integer :: i,m 
-      double precision :: vdiff 
-      double precision, parameter :: tol=1.d-6
-      ! Intrinsic functions:                                                  
-      intrinsic  dabs,dnint
-
-      latvec=.false. 
-      do i=1,n
-       do m=1,3
-         vdiff=vec(1,i)*qlat(1,m)+vec(2,i)*qlat(2,m)+vec(3,i)*qlat(3,m) 
-         vdiff=dabs(vdiff-dnint(vdiff)) 
-         if (vdiff.gt.tol) return 
-       enddo 
-      enddo 
-      latvec=.true. 
-
-  end function latvec
 
 end module mod_symmetries
