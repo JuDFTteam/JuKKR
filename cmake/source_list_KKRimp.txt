@@ -1,11 +1,15 @@
 # the executable is built from this list of files
 add_executable(
     kkrflex.exe
+    source/common/rcstop.f90
     source/common/version.F90
     source/common/version_info.F90
     source/common/rotatespinframe.f90
     source/common/DataTypes.f90
     source/common/constants.f90
+    source/common/ymy.f90
+    source/common/splint.f90
+    source/common/spline.f90
     source/voronoi/test.f
     source/KKRimp/nrtype.f90
     source/KKRimp/type_gmatbulk.f90
@@ -54,7 +58,6 @@ add_executable(
     source/KKRimp/change_nrmin.f90
     source/KKRimp/gauntharmonics.f90
     source/KKRimp/sinwk.f90
-    source/KKRimp/ymy.f
     source/KKRimp/amngaunt.f
     source/KKRimp/amn2010.f90
     source/KKRimp/convol.f
@@ -115,7 +118,7 @@ add_executable(
     source/KKRimp/rhovalfull.f90
     source/KKRimp/gdyson.f90
     source/KKRimp/mpienergy.f90
-    source/KKRimp/interpolpot-splint.f
+    source/KKRimp/interpolpotspline.f
     source/KKRimp/interpolpot.f
     source/KKRimp/interpolatecell.f90
     source/KKRimp/checkinterpolation.f90
