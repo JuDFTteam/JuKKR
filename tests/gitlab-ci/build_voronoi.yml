@@ -17,3 +17,4 @@ build_voronoi:intel:
     - master
     - develop
     - develop-voronoi
+    - GROUP3

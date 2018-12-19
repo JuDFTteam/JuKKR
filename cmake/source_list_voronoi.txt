@@ -1,6 +1,7 @@
 # the executable is built from this list of files
 add_executable(
     voronoi.exe
+    source/common/mod_verify77.f90
     source/common/version.F90
     source/common/version_info.F90
     source/common/DataTypes.f90
