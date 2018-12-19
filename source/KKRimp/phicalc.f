@@ -27,6 +27,7 @@
 
       USE mod_regsol
       USE mod_simpk
+      use global_variables, only: ipand
       implicit none
       REAL*8 CVLIGHT
       PARAMETER (CVLIGHT=274.0720442D0)
@@ -169,7 +170,8 @@ C Or, Normalise in sphere:
 C
 C --> integrate, normalisation factor = WNORM
 C
-      CALL SIMPK(WINT,WNORM,IPAN,IRCUT,DRDI,IPAN)
+      ipand = ipan
+      CALL SIMPK(WINT,WNORM,IPAN,IRCUT,DRDI) !,IPAN)
 C
 C --> normalise PZ,FZ to unit probability in WS cell
 C

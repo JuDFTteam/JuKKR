@@ -11,3 +11,4 @@ build_pkkprime:compile:
     - master
     - develop
     - develop-pkkprime
+    - GROUP3

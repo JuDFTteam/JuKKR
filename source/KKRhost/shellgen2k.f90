@@ -26,7 +26,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine shellgen2k(icc,natom,rcls,atom,nofgij,iofgij,jofgij,nrot,rsymat,       &
     isymindex,rotname,nshell,ratom,nsh1,nsh2,ish,jsh,ijtabsym,ijtabsh,ijtabcalc,    &
-    iprint,nsheld)
+    iprint,nsheld,natomd)
     ! **********************************************************************
     ! *    Determines the number of different atomic pairs in a cluster by *
     ! * symmetry considerations, assigning a "shell" pointer (used to set  *
@@ -58,24 +58,38 @@ contains
     ! * RATOM(3,NS) diference vector R_i(NS) - R_j(NS)                     *
     ! *                                                                    *
     ! **********************************************************************
+    use :: mod_constants, only: nsymaxd 
     implicit none
     ! ..
-    ! .. Parameters
-    integer :: nshell0
-    parameter (nshell0=10000)
-    ! ..
     ! .. Scalar arguments
-    integer :: icc, nofgij, natom, nrot, iprint, nsheld
+    integer, intent(inout) :: icc
+    integer, intent(in) :: natom
+    integer, intent(in) :: nofgij
+    integer, intent(in) :: nrot
+    integer, intent(in) :: iprint
+    integer, intent(in) :: nsheld
+    integer, intent(in) :: natomd
+
     ! ..
     ! .. Array arguments
-    integer, dimension(*), intent(in) :: ijtabcalc !! Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
-    integer :: atom(*), isymindex(*), ijtabsym(*), ijtabsh(*)
-    integer :: nshell(0:nsheld), nsh1(*), nsh2(*)
-    integer :: ish(nsheld, *), jsh(nsheld, *)
-    integer :: iofgij(*), jofgij(*)
-    real (kind=dp) :: rcls(3, *), rsymat(64, 3, *)
-    real (kind=dp) :: ratom(3, *)
-    character (len=10) :: rotname(*)
+    integer, dimension(nofgij),  intent(in) :: ijtabcalc !! Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
+    integer, dimension(natomd),  intent(in) :: atom
+    integer, dimension(nsymaxd), intent(in) :: isymindex
+    integer, dimension(nofgij),  intent(in) :: iofgij
+    integer, dimension(nofgij),  intent(in) :: jofgij
+    integer, dimension(nofgij), intent(out) :: ijtabsym
+    integer, dimension(nofgij), intent(out) :: ijtabsh
+    integer, dimension(nsheld, 2*nsymaxd), intent(out) :: ish
+    integer, dimension(nsheld, 2*nsymaxd), intent(out) :: jsh
+    integer, dimension(nsheld), intent(inout) :: nsh1
+    integer, dimension(nsheld), intent(inout) :: nsh2
+    integer, dimension(0:nsheld), intent(inout) :: nshell
+    
+    real (kind=dp), dimension(3, natomd), intent(in) :: rcls
+    real (kind=dp), dimension(64, 3, 3), intent(in) :: rsymat
+    real (kind=dp), dimension(3, nsheld), intent(inout) :: ratom
+
+    character (len=10), dimension(64), intent(in) :: rotname
     ! ..
     ! .. Local scalars
     integer :: ai, aj, i, j, k, ns, nsnew, nsgen, id, isym, ii, ij, igij
@@ -93,13 +107,8 @@ contains
 
     ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
     write (1337, 120)
-    if (iprint>1) call printijtab(natom, ijtabcalc)
+    if (iprint>1) call printijtab(natom, nofgij, ijtabcalc)
     ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
-
-    if (nsheld>=nshell0) then
-      write (6, 110) 'local', 'NSHELL0', nsheld
-      stop
-    end if
 
     if (nofgij<=0) then
       write (6, '(A)') '      ICC set to 0'
@@ -107,9 +116,9 @@ contains
       icc = 0                      ! Bauer Long 2011-10-11
       return
     end if
-    allocate (nsh1i(nshell0), nsh2i(nshell0), nshelli(nshell0), stat=ns)
+    allocate (nsh1i(nsheld), nsh2i(nsheld), nshelli(nsheld), stat=ns)
     if (ns/=0) stop '   < shellgen2k > allocate NSHELLI arrays'
-    allocate (ratomi(3,nshell0), stat=ns)
+    allocate (ratomi(3,nsheld), stat=ns)
     if (ns/=0) stop '   < shellgen2k > allocate RATOMI array'
     ! ======================================================================
     ! --> initialise number of shells found for this cluster, setup the
@@ -184,6 +193,7 @@ contains
               if (r1<small) then
                 lfound = .true.
                 nshelli(ns) = nshelli(ns) + 1
+                if (nshelli(ns)>2*nsymaxd) stop 'dimension error in shellgen2k: nshelli > 2*nsymaxd'
                 if (ns<=nshell(0)) write (1337, 130) ai, (rcls(ii,i), ii=1, 3), aj, (rcls(ii,j), ii=1, 3), ns
                 ish(ns, nshelli(ns)) = i
                 jsh(ns, nshelli(ns)) = j
@@ -203,10 +213,6 @@ contains
 
         if (.not. lfound) then
           nsnew = nsnew + 1
-          if (nsnew+nshell(0)>nshell0) then
-            write (6, 110) 'local', 'NSHELL0', nsnew + nshell(0)
-            stop
-          end if
           if (nsnew+nshell(0)>nsheld) then
             write (6, 110) 'global', 'NSHELD', nsnew + nshell(0)
             stop
@@ -274,28 +280,27 @@ contains
         ! =======================================================================
         do ii = 1, nshell(0)
           ! -----------------------------------------------------------------------
-          do id = 1, nrot
-            isym = isymindex(id)
+          if ( ai==nsh1(ii) .and. aj==nsh2(ii) ) then
+            do id = 1, nrot
+              isym = isymindex(id)
 
-            do k = 1, 3
-              ri(k) = rsymat(isym, k, 1)*ratom(1, ii) + rsymat(isym, k, 2)*ratom(2, ii) + rsymat(isym, k, 3)*ratom(3, ii)
-            end do
+              do k = 1, 3
+                ri(k) = rsymat(isym, k, 1)*ratom(1, ii) + rsymat(isym, k, 2)*ratom(2, ii) + rsymat(isym, k, 3)*ratom(3, ii)
+              end do
 
-            if ( ai==nsh1(ii) .and. aj==nsh2(ii) ) then
+                r1 = (rcls(1,j)-rcls(1,i)-ri(1))**2 + (rcls(2,j)-rcls(2,i)-ri(2))**2 + (rcls(3,j)-rcls(3,i)-ri(3))**2
 
-              r1 = (rcls(1,j)-rcls(1,i)-ri(1))**2 + (rcls(2,j)-rcls(2,i)-ri(2))**2 + (rcls(3,j)-rcls(3,i)-ri(3))**2
-
-              if (r1<small) then
-                ij = (i-1)*natom + j
-                ijtabsh(ij) = ii
-                ijtabsym(ij) = id
-                go to 100
-              end if
-            end if
-          end do
+                if (r1<small) then
+                  ij = (i-1)*natom + j
+                  ijtabsh(ij) = ii
+                  ijtabsym(ij) = id
+                  go to 100
+                end if
+            end do!id
+          end if!ai==nsh1(ii) .and. aj==nsh2(ii)
           ! -----------------------------------------------------------------------
 100       continue
-        end do
+        end do!ii
         ! =======================================================================
       end do
     end do
@@ -329,11 +334,12 @@ contains
   !> Deprecated: False 
   !> Print the pointer indicating if a block of the Greens function has to be calculated
   !-------------------------------------------------------------------------------
-  subroutine printijtab(natom, ijtab)
+  subroutine printijtab(natom, nofgij, ijtab)
     implicit none
     ! ..
     integer, intent(in) :: natom !! Number of atoms in the cluster
-    integer, dimension(*), intent(in) :: ijtab !! Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
+    integer, intent(in) :: nofgij
+    integer, dimension(nofgij), intent(in) :: ijtab !! Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
     ! ..
     integer :: i, j, ij
     integer :: lgmax

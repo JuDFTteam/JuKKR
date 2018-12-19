@@ -18,6 +18,7 @@
 !>                                              17.09.2001
 !-------------------------------------------------------------------------------
       SUBROUTINE AMNGAUNT(LMAX,CLEB,ICLEB,IEND,W,YR,n,lassld,ncleb,lm3d)
+      use mod_ymy, only: ymy        
       implicit none
 !       include 'gaunt.param'
 !       include 'parameters.file'
@@ -53,7 +54,7 @@ C     .. Save statement ..
       SAVE PI
 C     ..
 C     .. External Subroutines ..
-      EXTERNAL ROTCOEF,YMY
+      EXTERNAL ROTCOEF
 C     ..
 C     .. Intrinsic Functions ..
       INTRINSIC ABS,REAL,SIGN

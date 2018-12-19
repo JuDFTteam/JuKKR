@@ -61,7 +61,10 @@ program kkrflex
   use mod_calctmat_bauernew !test
   use mod_change_nrmin
 
-
+  use global_variables, only: ipand
+#ifdef CPP_MPI
+  use mod_mympi, only: myrank, master
+#endif
 
 
   use mod_mathtools
@@ -182,6 +185,9 @@ mpi_size=1
       CALL MPI_INIT(ierror)
       CALL MPI_COMM_RANK(MPI_COMM_WORLD, my_rank, ierror)
       CALL MPI_COMM_SIZE(MPI_COMM_WORLD, mpi_size, ierror)
+
+      myrank = my_rank
+      master = 0
 #endif
 ! find serial number that is printed to files
 call construct_serialnr()
@@ -813,9 +819,10 @@ end if
     ! single particle core energies
     call espcb(energyparts%espc,nspin,natom,corestate)
     ! input potential
+    ipand = cell(1)%npand
     call epotinb(energyparts%epotin,nspin,natom,vpot,config%ins, &
                             lmaxatom,zatom,cell,density, &
-                            cell(1)%npand, cell(1)%nrmaxd,2*lmaxd)
+                            ipand, cell(1)%nrmaxd,2*lmaxd)
     ! the electrostatic potential-energies
     call ecoub(cmom,cmom_interst,energyparts%ecou,cell,density,shapefun,gauntshape,lmaxatom,lmaxd,nspin,natom,vpot_out,zatom, &
                           config%ins,cell(1)%nrmaxd,(2*lmaxd+1)**2,2*lmaxd)

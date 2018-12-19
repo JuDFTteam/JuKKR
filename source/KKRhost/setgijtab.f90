@@ -112,7 +112,7 @@ contains
 
 100 format (6x, 'brahim ERROR: please increase the global parameter', /, 6x, a, ' to a value >=', i5, /)
 110 format (6x, 'WARNING: Subroutine entered with invalid task ', 'specification', /, 6x, '         ICC will be set to 0 - no Gij calculated - ', 'input check? ', /)
-120 format (6x, 'Number of different sites (NATOMIMP) :', i4, /, 6x, 'Number of pairs set       (NOFGIJ)   :', i4)
+120 format (6x, 'Number of different sites (NATOMIMP) :', i8, /, 6x, 'Number of pairs set       (NOFGIJ)   :', i8)
 130 format (8x, 71('-'))
 140 format (9x, 'pair|', ' I  IQ           position', 9x, 'J  JQ           position')
 150 format (9x, i3, ' |', 2(i3,1x), 3f8.4, 1x, 2(i3,1x), 3f8.4)

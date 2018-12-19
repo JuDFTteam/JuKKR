@@ -278,7 +278,7 @@ c     -----------------------------------------------------------------------
       DATA NMT/349/     ! Number of points in MT-radius
       DATA STARTFP/0.2D0/ ! Radius to start full-potential treatment = STARTFP * RMT
       DATA DENPT/100.D0/  ! "Optimal" density of points between RMT and outer radius (eg 100/a_B)
-      DATA TOLVDIST/1.D-12/ ! Max. tolerance for distance of two vertices
+      DATA TOLVDIST/1.D-10/ ! Max. tolerance for distance of two vertices
       DATA TOLHS/1.D-16/   ! Used in soutine HALFSPACE
       DATA TOLAREA/1.D-10/  ! Max. tolerance for area of polygon face
       DATA TOLEULER/1.D-10/ ! Used in calculation of Euler angles, subr. EULER
@@ -332,6 +332,7 @@ c
      &     NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,    
      &     TLEFT,TRIGHT,LINTERFACE,RCUTZ,RCUTXY,RMTCORE,
      &     LMTREF,RMTREF,SIZEFAC,NFACELIM)
+
 
 
       CALL LATTIX12(LINTERFACE,ALATC,BRAVAIS,RECBV,RR,NR,VOLUC)   
@@ -1028,7 +1029,7 @@ c         IMT(IAT) = IRWS(IAT) - MESHN_ALL(IDSHAPE(IAT))
 
       IF (.NOT.LJELL) THEN
          CALL GENPOTSTART(NSPIN,11,I13,INS,ISITEBEGIN,NSITES,ZATOM,
-     &        SITEAT,IDSHAPE,VOLUMECL,LPOT,AOUT_ALL,RWSCL,RMTCL,
+     &        SITEAT,KSHAPE,IDSHAPE,VOLUMECL,LPOT,AOUT_ALL,RWSCL,RMTCL,
      &        RMTCORE,MESHN_ALL,XRN_ALL,DRN_ALL,
      &        IRWS,IRNS,ALATC,
      &        QBOUND,KXC,TXC,LJELL)
