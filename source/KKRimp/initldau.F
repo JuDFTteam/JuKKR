@@ -39,6 +39,7 @@ C
       USE MOD_RWLDAUPOT
       USE MOD_PHICALC
       use mod_version_info
+      use global_variables, only: ipand
       IMPLICIT NONE
 
       TYPE(LDAU_TYPE),ALLOCATABLE    :: LDAU(:)  ! lda+u variables, intended dimension: (natyp) ! lda+u
@@ -226,8 +227,9 @@ C See Note on integrand above.
                   SG(IR) = WINT(IR) * SL(IR)
                END DO
 C
+               ipand = ipan1
                CALL SIMPK(SG,FCLMB(LF),IPAN1,CELL(I1)%NRCUT(0)
-     &                                ,CELL(I1)%DRMESHDI,IPAN1)
+     &                                ,CELL(I1)%DRMESHDI) !,IPAN1)
 C
                WIG3J = (-1)**NINT(RLOP)*(1D0/SQRT(2D0*RLOP+1D0))
      &                 *CGCRAC(FACT,RLOP,DBLE(LF),RLOP,0D0,0D0,0D0)

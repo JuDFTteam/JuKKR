@@ -42,6 +42,7 @@ MODULE MOD_RHOTOTB
       use mod_simp3
       use mod_simpk
       use mod_config, only: config_testflag
+      use global_variables, only: ipand
       implicit none
 !C     .. Parameters ..
 !       include 'inc.p'
@@ -152,7 +153,8 @@ MODULE MOD_RHOTOTB
               END DO
 
 !--->         integrate over circumscribed sphere
-              CALL SIMPK(RHO,SUM,IPAN1,CELL(IATOM)%NRCUT(:),CELL(IATOM)%DRMESHDI(:),ipan1)
+              ipand = ipan1
+              CALL SIMPK(RHO,SUM,IPAN1,CELL(IATOM)%NRCUT(:),CELL(IATOM)%DRMESHDI(:)) !,ipan1)
 
             END IF !INS==0
 

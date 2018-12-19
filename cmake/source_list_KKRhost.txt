@@ -30,6 +30,7 @@ execute_process(COMMAND ln -s ../source/KKRhost/sprkkr_rmesh.dim .)
 # the executable is built from this list of files
 add_executable(
     kkr.x
+    source/common/wfint.f90
     source/common/version.F90
     source/common/version_info.F90
     source/common/DataTypes.f90
@@ -47,6 +48,22 @@ add_executable(
     source/common/grule.f90
     source/common/rcstop.f90
     source/common/cinit.f90
+    source/common/vxcspo.f90
+    source/common/vxcgga.f90
+    source/common/vxclm.f90
+    source/common/global_variables.F90
+    source/common/simpk.f90
+    source/common/gradrl.f90
+    source/common/gradr.f90
+    source/common/mkxcpe.f90
+    source/common/mkxcpe2.f90
+    source/common/ssum.f90
+    source/common/gxcpt.f90
+    source/common/corlsd.f90
+    source/common/cpw91.f90
+    source/common/gcor91.f90
+    source/common/vosko.f90
+    source/common/exch91.f90
     source/common/radial_solver_Chebychev/intcheb_cell.f90
     source/common/radial_solver_Chebychev/cheb.f90
     source/common/radial_solver_Chebychev/cheb2oldgrid.f90
@@ -103,9 +120,7 @@ add_executable(
     source/KKRhost/coreerr.f90
     source/KKRhost/corehff.f90
     source/KKRhost/corel.f90
-    source/KKRhost/corlsd.f90
     source/KKRhost/cpamillsx.f90
-    source/KKRhost/cpw91.f90
     source/KKRhost/cradwf.f90
     source/KKRhost/crospr.f90
     source/KKRhost/cross.f90
@@ -156,7 +171,6 @@ add_executable(
     source/KKRhost/espcb.f90
     source/KKRhost/etotb1.f90
     source/KKRhost/ewald2d.f90
-    source/KKRhost/exch91.f90
     source/KKRhost/findgroup.f90
     source/KKRhost/force.f90
     source/KKRhost/forceh.f90
@@ -167,7 +181,6 @@ add_executable(
     source/KKRhost/gaufd.f90
     source/KKRhost/gauleg.f90
     source/KKRhost/gaunt.f90
-    source/KKRhost/gcor91.f90
     source/KKRhost/generalpot.f90
     source/KKRhost/getbr3.f90
     source/KKRhost/getclusnxyz.f90
@@ -180,14 +193,10 @@ add_executable(
     source/KKRhost/gijdmat.f90
     source/KKRhost/gijxcpl.f90
     source/KKRhost/gll95.F90
-    source/KKRhost/global_variables.F90
     source/KKRhost/godfrin.F90
-    source/KKRhost/gradr.f90
     source/KKRhost/gradr_d0.f90
-    source/KKRhost/gradrl.f90
     source/KKRhost/greenimp.F90
     source/KKRhost/grefsy.f90
-    source/KKRhost/gxcpt.f90
     source/KKRhost/hankel.f90
     source/KKRhost/hffcore.f90
     source/KKRhost/idreals.f90
@@ -234,8 +243,6 @@ add_executable(
     source/KKRhost/memoryhandling.f90
     source/KKRhost/mixldau.f90
     source/KKRhost/mixstr.f90
-    source/KKRhost/mkxcpe.f90
-    source/KKRhost/mkxcpe2.f90
     source/KKRhost/mssinit.f90
     source/KKRhost/mtzero.f90
     source/KKRhost/mvecglobal.f90
@@ -297,7 +304,6 @@ add_executable(
     source/KKRhost/shape_corr.f90
     source/KKRhost/shellgen2k.f90
     source/KKRhost/simp3.f90
-    source/KKRhost/simpk.f90
     source/KKRhost/sinwk.f90
     source/KKRhost/sname.f90
     source/KKRhost/soutk.f90
@@ -309,7 +315,6 @@ add_executable(
     source/KKRhost/spin_orbit_compl.f90
     source/KKRhost/spinorbit_ham.f90
     source/KKRhost/ssite.f90
-    source/KKRhost/ssum.f90
     source/KKRhost/startb1.f90
     source/KKRhost/startldau.f90
     source/KKRhost/strmat.F90
@@ -336,12 +341,7 @@ add_executable(
     source/KKRhost/vllns.f90
     source/KKRhost/vmadelblk.f90
     source/KKRhost/vmul.f90
-    source/KKRhost/vosko.f90
     source/KKRhost/vxcdrv.f90
-    source/KKRhost/vxcgga.f90
-    source/KKRhost/vxclm.f90
-    source/KKRhost/vxcspo.f90
-    source/KKRhost/wfint.f90
     source/KKRhost/wfmesh.f90
     source/KKRhost/wftsca.f90
     source/KKRhost/wmatldau.f90
