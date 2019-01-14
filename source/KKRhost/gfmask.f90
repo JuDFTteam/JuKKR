@@ -22,13 +22,14 @@ contains
   !> ICHECK(I,J) points to the block (I,J) of the GF matrix having the
   !> size NPRINCD
   !-------------------------------------------------------------------------------
-  subroutine gfmask(linterface, icheck, icc, invmod, nsh1, nsh2, naez, nshell, naezd, nprincd)
+  subroutine gfmask(icheck, icc, invmod, nsh1, nsh2, naez, nshell, naezd, nprincd)
+
+    use :: mod_runoptions, only: print_ickeck, use_cond_LB
 
     implicit none
 
     integer :: naezd, nprincd
     integer :: icc, invmod, nlayer, naez, nshell
-    logical :: linterface
 
     integer :: icheck(naezd/nprincd, naezd/nprincd)
     integer :: nsh1(*), nsh2(*)
@@ -38,28 +39,11 @@ contains
     character (len=80) :: fmtchk
     character (len=35) :: invalg(0:3)
 
-    logical, external :: opt, test
 
     data invalg/'FULL MATRIX                        ', 'BANDED MATRIX (slab)               ', 'BANDED + CORNERS MATRIX (supercell)', 'godfrin module                     '/
 
 
     write (1337, 100)
-
-    ! --> set default inversion to SUPERCELL mode = banded matrix + corners
-
-    invmod = 2
-
-    ! --> LINTERFACE = use band diagonal mode
-
-    if (linterface) invmod = 1
-
-    ! --> full inversion is performed ONLY BY EXPLICIT request
-
-    if (opt('full inv')) invmod = 0
-
-    ! ----------------------------------------------------------------------
-    if (opt('godfrin ')) invmod = 3 ! GODFRIN
-    ! ----------------------------------------------------------------------
 
     ! 21.10.2014 GODFRIN Flaviano
     if ((invmod/=0) .and. (mod(naez,nprincd)/=0) .and. (invmod/=3)) then
@@ -117,7 +101,7 @@ contains
       ! ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
       ! cccC                                               conductivity
       ! calculation
-      ! ccc         IF (OPT('CONDUCT ')) THEN
+      ! ccc         IF (use_cond_LB) THEN
       ! ccc            DO I=1,NLAYER
       ! ccc               DO J=1,NLAYER
       ! ccc                  ICHECK(I,J)=0
@@ -191,7 +175,7 @@ contains
           end do
         end if
 
-        if (.not. opt('CONDUCT ')) then
+        if (.not. use_cond_LB) then
 
           ! --> loop over the element ICHECK(I,J) with fixed J and I > J
 
@@ -210,7 +194,7 @@ contains
     end if
     ! ======================================================================
 
-    if (test('ICHECK  ')) then
+    if (print_ickeck) then
 
       fmtchk = ' '
       lfchk = 1

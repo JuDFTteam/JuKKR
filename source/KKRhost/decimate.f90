@@ -21,6 +21,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine decimate(gllke, naez, tinvbup, tinvbdown, vacflag, factl, nlbasis, nrbasis)
 
+    use :: mod_runoptions, only: use_deci_onebulk
     use :: global_variables, only: lmmaxd, alm, ndim_slabinv, nprincd 
     use :: mod_datatypes, only: dp
     use :: mod_bofm, only: bofm
@@ -47,8 +48,6 @@ contains
     ! .. Save statement
     save :: icall, nlayer, itermax, errmax, ichck
     ! .. External Functions
-    logical :: opt
-    external :: opt
 
     icall = icall + 1
     ! ----------------------------------------------------------------------------
@@ -107,7 +106,7 @@ contains
       ! If 'ONEBULK' is activated then it calculates the xn decimated element
       ! from the x1 element: this is just in the case of equal bulks on the
 
-      if (.not. opt('ONEBULK ')) then
+      if (.not. use_deci_onebulk) then
 
         ! ----------------------------------------------------------------------
         ! Get the matrix BN

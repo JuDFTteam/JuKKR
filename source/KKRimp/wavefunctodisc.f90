@@ -15,7 +15,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Wrapper to write the regular and irregular solutions to disk
   !> Author: David Bauer
-  !> Category: input-output, memory-management, KKRimp
+  !> Category: input-output, profiling, KKRimp
   !> Deprecated: False 
   !> Wrapper to write the regular and irregular solutions to disk in unformatted 
   !> files of a given record length
@@ -79,7 +79,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Wrapper to read the regular and irregular solutions from file
   !> Author: David Bauer
-  !> Category: input-output, memory-management, KKRimp
+  !> Category: input-output, profiling, KKRimp
   !> Deprecated: False 
   !> Wrapper to read the regular and irregular solutions from unformatted 
   !> files of a given record length

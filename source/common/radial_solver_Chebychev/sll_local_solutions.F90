@@ -49,7 +49,7 @@ contains
   !------------------------------------------------------------------------------------
   !> Summary: Calculation of the local irregular solutions
   !> Author: 
-  !> Category: solver, single-site, KKRhost
+  !> Category: single-site, KKRhost
   !> Deprecated: False 
   !> Calculation of the local irregular solutions
   !>
@@ -393,7 +393,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: This subroutine facilitates compile optimization by working witt only two-dimensional arrays
   !> Author: 
-  !> Category: solver, numerical-tools, KKRhost
+  !> Category: numerical-tools, KKRhost
   !> Deprecated: False 
   !> This subroutine facilitates compile optimization by working witt only two-dimensional arrays
   !-------------------------------------------------------------------------------

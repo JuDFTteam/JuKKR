@@ -43,15 +43,17 @@ contains
     use :: mpi
 #endif
     use :: mod_types, only: t_tgmat, t_mpi_c_grid, t_cpa
+    use :: mod_runoptions, only: calc_exchange_couplings, calc_exchange_couplings_energy, disable_print_serialnumber
     use :: mod_mympi, only: myrank, master
-    use :: mod_version_info
+    use :: mod_version_info, only: version_print_header
     use :: mod_md5sums
     use :: mod_cinit
     use :: mod_cmatmul
     use :: mod_initabjij
     use :: mod_cmatstr
     use :: mod_rotatespinframe, only: rotatematrix
-    use :: mod_constants, only: pi, cone, czero
+    use :: mod_constants, only: pi, cone, czero, nsymaxd
+    use :: mod_profiling, only: memocc
 
     implicit none
     ! .
@@ -66,12 +68,12 @@ contains
     ! .
     ! . Array arguments
     integer :: atomimp(*), ijtabcalc(*), ijtabsh(*), ijtabsym(*), iqat(*), iqcalc(*)
-    integer :: ish(nsheld, *), itoq(natypd, *), jsh(nsheld, *), noq(*), nshell(0:nsheld)
+    integer :: ish(nsheld, *), itoq(natypd, 2*nsymaxd), jsh(nsheld, 2*nsymaxd), noq(*), nshell(0:nsheld)
     complex (kind=dp) :: dsymll(lmmaxd, lmmaxd, *)
     real (kind=dp) :: ratom(3, *)
     ! .
     ! . Local scalars
-    integer :: i1, ia, ifgmat, ifmcpa, iq, irec, ispin, isym, it, j1, ja, jq, jt, l1
+    integer :: i1, ia, ifgmat, ifmcpa, iq, irec, ispin, isym, it, j1, ja, jq, jt, l1, i_all
     integer :: lm1, lm2, lstr, ns, nseff, nshcalc, nsmax, ntcalc, ie, ie_start, ie_end, ie_num
 #ifdef CPP_MPI
     integer :: ierr
@@ -108,8 +110,6 @@ contains
     intrinsic :: max, sqrt
     ! ..
     ! .. External Subroutines ..
-    logical :: test
-    external :: test
     ! ..
     ! .. Save statement
     save :: ifgmat, ifmcpa, jijdone, jxcijint, kijsh, nijcalc
@@ -154,11 +154,14 @@ contains
       ! ccc         IF ( NTLOC.LT.NATYP) STOP ' NTLOC'
 
       allocate (kijsh(nijmax,nshell(0)), stat=lm1)
+      call memocc(lm1, product(shape(kijsh))*kind(kijsh), 'kijsh', 'tbxccpljij')
       if (lm1/=0) then
         write (6, 110) 'KIJSH'
         stop
       end if
+
       allocate (nijcalc(nshell(0)), jijdone(natyp,natyp,nshell(0)), stat=lm1)
+      call memocc(lm1, product(shape(nijcalc))*kind(nijcalc), 'nijcalc', 'tbxccpljij')
       if (lm1/=0) then
         write (6, 110) 'JIJDONE/NIJCALC'
         stop
@@ -168,6 +171,7 @@ contains
       ! Only allocate it for MPI-usage. If MPI is not used, two smaller array XINTEGD arrays is needed.
 #ifdef CPP_MPI
       allocate (csum_store(natyp,natyp,nshell(0),ielast), stat=lm1)
+      call memocc(lm1, product(shape(csum_store))*kind(csum_store), 'csum_store', 'tbxccpljij')
       if (lm1/=0) then
         write (6, 110) 'csum_store'
         stop
@@ -175,12 +179,14 @@ contains
 #else
       ! ALLOCATE (XINTEGD1(NATYP,NATYP,IELAST),STAT=LM1)
       allocate (xintegd(natyp,natyp,nshell(0)), stat=lm1)
+      call memocc(lm1, product(shape(xintegd))*kind(xintegd), 'xintegd', 'tbxccpljij')
       if (lm1/=0) then
         write (6, 110) 'XINTEGD'
         stop
       end if
 #endif
       allocate (jxcijint(natyp,natyp,nshell(0)), stat=lm1)
+      call memocc(lm1, product(shape(jxcijint))*kind(jxcijint), 'jxcijint', 'tbxccpljij')
       if (lm1/=0) then
         write (6, 110) 'JXCIJINT'
         stop
@@ -488,12 +494,12 @@ contains
                 ! because WGTE ~ -1/pi (WGTE = WEZ(IE)/NSPIN)
                 ! Write out energy-resorved integrand and integral
                 ! Phivos Mavropoulos 24.10.2012
-                if (npol==0 .or. test('Jijenerg')) then
+                if (npol==0 .or. calc_exchange_couplings_energy) then
                   fmt2 = '(A,I5.5,A,I5.5,A,I5.5)'
                   write (jfnam2, fmt2) 'Jij_enrg.', it, '.', jt, '.', ns
                   if (ie==1) then
                     open (499, file=jfnam2, status='UNKNOWN')
-                    call version_print_header(499, '; '//md5sum_potential//'; '//md5sum_shapefun)
+                    call version_print_header(499, addition='; '//md5sum_potential//'; '//md5sum_shapefun, disable_print=disable_print_serialnumber)
                     write (499, fmt='(A)') '# Energy Re,Im ; j(E) Re,Im; J(E) Re,Im '
                     write (499, fmt='(3(A,I5))') '# IT=', it, ' JT=', jt, ' SHELL=', ns
                     write (499, fmt='(A,I6)') '#ENERGIES: ', ielast
@@ -502,7 +508,7 @@ contains
                   end if
                   write (499, fmt='(6E12.4)') ez(ie), xintegd(it, jt, nseff), jxcijint(it, jt, nseff)/4.d0
                   close (499)
-                end if           ! (npol==0 .or. test('Jijenerg'))
+                end if           ! (npol==0 .or. calc_exchange_couplings_energy)
 #endif
 
               end do             ! I1
@@ -524,6 +530,7 @@ contains
 #ifdef CPP_MPI
       ! allocate
       allocate (csum_store2(natyp,natyp,nshell(0),ielast), stat=lm1)
+      call memocc(lm1, product(shape(csum_store2))*kind(csum_store2), 'csum_store2', 'tbxccpljij')
       if (lm1/=0) then
         write (6, 110) 'csum_store2'
         stop
@@ -560,7 +567,9 @@ contains
           end do
         end do                   ! IE
 
-        deallocate (csum_store2)
+        i_all = -product(shape(csum_store2))*kind(csum_store2)
+        deallocate (csum_store2, stat=lm1)
+        call memocc(lm1, i_all, 'csum_store2', 'tbxccpljij')
       end if                     ! myrank==master
 
 
@@ -584,26 +593,26 @@ contains
                 ! because WGTE ~ -1/pi (WGTE = WEZ(IE)/NSPIN)
                 ! Write out energy-resorved integrand and integral
                 ! Phivos Mavropoulos 24.10.2012
-                if (npol==0 .or. test('Jijenerg')) then
+                if (npol==0 .or. calc_exchange_couplings_energy) then
                   fmt2 = '(A,I5.5,A,I5.5,A,I5.5)'
                   write (jfnam2, fmt2) 'Jij_enrg.', it, '.', jt, '.', ns
                   open (499, file=jfnam2, status='UNKNOWN')
-                  call version_print_header(499, '; '//md5sum_potential//'; '//md5sum_shapefun)
+                  call version_print_header(499, addition='; '//md5sum_potential//'; '//md5sum_shapefun, disable_print=disable_print_serialnumber)
                   write (499, fmt='(A)') '# Energy Re,Im ; j(E) Re,Im; J(E) Re,Im '
                   write (499, fmt='(3(A,I5))') '# IT=', it, ' JT=', jt, ' SHELL=', ns
                   write (499, fmt='(A,I6)') '#ENERGIES: ', ielast
-                end if           ! (NPOL==0 .OR. TEST('Jijenerg'))then
+                end if           ! (NPOL==0 .OR. calc_exchange_couplings_energy)then
 
                 do ie = 1, ielast
                   jxcijint(it, jt, nseff) = jxcijint(it, jt, nseff) - wez(ie)*csum_store(it, jt, nseff, ie)/real(nspin, kind=dp)
                   xintegdtmp = csum_store(it, jt, nseff, ie)/(pi*4.d0)
-                  if (npol==0 .or. test('Jijenerg')) then
+                  if (npol==0 .or. calc_exchange_couplings_energy) then
                     write (499, fmt='(6E12.4)') ez(ie), xintegdtmp, jxcijint(it, jt, nseff)/4.d0
-                  end if         ! (NPOL==0 .OR. TEST('Jijenerg'))then
+                  end if         ! (NPOL==0 .OR. calc_exchange_couplings_energy)then
 
                 end do           ! IE
 
-                if (npol==0 .or. test('Jijenerg')) close (499)
+                if (npol==0 .or. calc_exchange_couplings_energy) close (499)
 
               end do             ! I1
             end do               ! J1, loop over occupants
@@ -723,7 +732,7 @@ contains
 
           ! write(JFNAME,FMT1)JFINTEG, IT
           open (49, file=jfnam)
-          call version_print_header(49, '; '//md5sum_potential//'; '//md5sum_shapefun)
+          call version_print_header(49, addition='; '//md5sum_potential//'; '//md5sum_shapefun, disable_print=disable_print_serialnumber)
           write (49, 190) it, iqat(it)
           ! open(22,FILE=JFNAME)
           ! write(22,99014)IT,IQAT(IT)
@@ -755,7 +764,22 @@ contains
     end if                       ! t_mpi_c_grid%myrank_ie==0
 #endif
 
-    deallocate (kijsh, nijcalc, jijdone, jxcijint, stat=lm1)
+    i_all = -product(shape(kijsh))*kind(kijsh)
+    deallocate (kijsh, stat=lm1)
+    call memocc(lm1, i_all, 'kijsh', 'tbxccpljij')
+
+    i_all = -product(shape(nijcalc))*kind(nijcalc)
+    deallocate (nijcalc, stat=lm1)
+    call memocc(lm1, i_all, 'nijcalc', 'tbxccpljij')
+
+    i_all = -product(shape(jijdone))*kind(jijdone)
+    deallocate (jijdone, stat=lm1)
+    call memocc(lm1, i_all, 'jijdone', 'tbxccpljij')
+
+    i_all = -product(shape(jxcijint))*kind(jxcijint)
+    deallocate (jxcijint, stat=lm1)
+    call memocc(lm1, i_all, 'jxcijint', 'tbxccpljij')
+
 100 format (79('='), /, 10x, 'TBXCCPLJIJ : Off-diagonal exchange coupling', ' constants J_ij', /, 79('='), /)
 110 format (6x, 'ERROR: Cannot allocate array(s) :', a, /)
 120 format (4x, a, 4('-'), /, 5x, ' IT/IQ ', 3x, 'R_IQ,JQ', 2x, 'JQ ', ' (J_IT,JT  JT)', /, 15x, ' [ ALAT ] ', 4x, '[ mRy ]', /, 4x, a, 4('-'))

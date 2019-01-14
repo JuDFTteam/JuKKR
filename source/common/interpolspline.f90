@@ -21,8 +21,8 @@ contains
   subroutine interpolspline(rmesh, rmeshnew, vpot, vpotnew, nrmax, nrmaxnew)
 
     use :: mod_datatypes, only: dp
-    use :: mod_spline_real, only: spline_real
-    use :: mod_splint_real, only: splint_real
+    use :: mod_spline, only: spline_real
+    use :: mod_splint, only: splint_real
     implicit none
 
     ! interface

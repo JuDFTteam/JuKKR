@@ -14,7 +14,7 @@
 !> nanoclusters (KKRImp code). The code has also been modified to produce the
 !> needed information for the treatment of TD-DFT calculations based in the linear
 !> response approach (KKRSusc code).
-!> Category: KKRhost, memory-management, communication
+!> Category: KKRhost, profiling, communication
 ! -----------------------------------------------------------------------------------
 program kkrcode
 
@@ -26,11 +26,13 @@ program kkrcode
   use :: mod_wunfiles, only: bcast_t_params_scalars, bcast_t_params_arrays
   use :: mod_types, only: bcast_t_lly_1, bcast_t_inc_tgmat, save_t_mpi_c_grid
   use :: mod_md5sums, only: mympi_bcast_md5sums
+  use :: mod_runoptions, only: bcast_runoptions
 #else
   use :: mod_mympi, only: mympi_init, myrank, nranks, master
   use :: mod_save_wavefun, only: t_wavefunctions
 #endif
   use :: mod_constants, only: czero, nsymaxd
+  use :: mod_runoptions, only: disable_print_serialnumber, stop_1a, stop_1b, stop_1c, write_green_host, use_qdos
   use :: mod_profiling, only: memocc
   use :: mod_types, only: t_inc, t_lloyd, t_cpa, t_mpi_c_grid, t_tgmat
   use :: mod_timing, only: timing_start, timing_stop, timing_init, timings_1a, timings_1b, load_imbalance, print_time_and_date
@@ -70,8 +72,6 @@ program kkrcode
   character (len=3) :: ctemp                               ! name for output file
 
   ! needed to use test('xxxxxxxx'):
-  logical :: test, opt
-  external :: test, opt
 
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! initialize MPI >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -109,7 +109,7 @@ program kkrcode
     write (*, *) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
     open (1337, file='output.'//trim(ctemp)//'.txt')
     ! here version_print_header needs the print_always flag because test options are not read in yet
-    call version_print_header(1337, print_always=.true.)
+    call version_print_header(1337, disable_print=.false.)
 
     ! default value on master (needed for writeout in main0)
     t_inc%i_write = 1
@@ -153,6 +153,8 @@ program kkrcode
 #ifdef CPP_MPI
   ! now communicate type t_inc and t_tgmat switches (this has an implicit barrier, so that all other processes wait for master to finish with main0)
   if (myrank==master) call timing_start('MPI 1')
+  call bcast_runoptions()
+
   call bcast_t_inc_tgmat(t_inc, t_tgmat, t_cpa, master)
 
   ! also communicate logicals from t_lloyd
@@ -287,12 +289,12 @@ program kkrcode
     if (myrank==master) close (1337, status='delete')
     if (t_inc%i_write>0) then
       open (1337, file='output.'//trim(ctemp)//'.txt')
-      call version_print_header(1337)
+      call version_print_header(1337, disable_print=disable_print_serialnumber)
     end if
   end if
   if (t_inc%i_write>0 .and. myrank/=master) then
     open (1337, file='output.'//trim(ctemp)//'.txt')
-    call version_print_header(1337)
+    call version_print_header(1337, disable_print=disable_print_serialnumber)
   end if
 
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -320,12 +322,12 @@ program kkrcode
     ! rewind output.xxx.txt
     if (t_inc%i_write<2 .and. t_inc%i_write>0) then
       rewind (1337)
-      if (.not. test('noserial')) read (1337, *)    ! skip first line to keep serial number
+      if (.not. disable_print_serialnumber) read (1337, *)    ! skip first line to keep serial number
     end if
     ! rewind timing files if t_inc%i_time<2 (see mod_timing)
     if (t_inc%i_time<2 .and. t_inc%i_time>0) then
       rewind (43234059)
-      if (.not. test('noserial')) read (43234059, *) ! skip first line to keep serial number
+      if (.not. disable_print_serialnumber) read (43234059, *) ! skip first line to keep serial number
     end if
 
     call timing_start('Time in Iteration')
@@ -336,7 +338,7 @@ program kkrcode
     call timing_start('main1a')
     call main1a()
     call timing_stop('main1a')
-    if (test('STOP1A  ')) then
+    if (stop_1a) then
       if (myrank==master) write (*, *) 'Stop after main1a'
 #ifdef CPP_MPI
       call mpi_barrier(mpi_comm_world, ierr)
@@ -350,8 +352,8 @@ program kkrcode
     call timing_start('main1b')
     call main1b()
     call timing_stop('main1b')
-    if (test('STOP1B  ')) then
-      if (.not. opt('WRTGREEN') .and. myrank==master) write (*, *) 'done with WRTGREEN step'
+    if (stop_1b) then
+      if (.not. write_green_host .and. myrank==master) write (*, *) 'done with WRTGREEN step'
       if (myrank==master) write (*, *) 'Stop after main1b'
 #ifdef CPP_MPI
       call mpi_barrier(mpi_comm_world, ierr)
@@ -366,8 +368,8 @@ program kkrcode
     call timing_start('main1c')
     call main1c()
     call timing_stop('main1c')
-    if (test('STOP1C  ')) then
-      if (.not. opt('qdos    ') .and. myrank==master) write (*, *) 'done with qdos steps'
+    if (stop_1c) then
+      if (.not. use_qdos .and. myrank==master) write (*, *) 'done with qdos steps'
       if (myrank==master) write (*, *) 'Stop after main1c'
 #ifdef CPP_MPI
       call mpi_barrier(mpi_comm_world, ierr)
@@ -602,9 +604,9 @@ program kkrcode
   i_all = -product(shape(t_params%lmsp))*kind(t_params%lmsp)
   deallocate (t_params%lmsp, stat=i_stat)
   call memocc(i_stat, i_all, 't_params%LMSP', 'main_all')
-  i_all = -product(shape(t_params%optc))*kind(t_params%optc)
-  deallocate (t_params%optc, stat=i_stat)
-  call memocc(i_stat, i_all, 't_params%OPTC', 'main_all')
+  !i_all = -product(shape(t_params%optc))*kind(t_params%optc)
+  !deallocate (t_params%optc, stat=i_stat)
+  !call memocc(i_stat, i_all, 't_params%OPTC', 'main_all')
   i_all = -product(shape(t_params%bzkp))*kind(t_params%bzkp)
   deallocate (t_params%bzkp, stat=i_stat)
   call memocc(i_stat, i_all, 't_params%BZKP', 'main_all')
@@ -692,9 +694,9 @@ program kkrcode
   i_all = -product(shape(t_params%irmin))*kind(t_params%irmin)
   deallocate (t_params%irmin, stat=i_stat)
   call memocc(i_stat, i_all, 't_params%IRMIN', 'main_all')
-  i_all = -product(shape(t_params%testc))*kind(t_params%testc)
-  deallocate (t_params%testc, stat=i_stat)
-  call memocc(i_stat, i_all, 't_params%TESTC', 'main_all')
+  !i_all = -product(shape(t_params%testc))*kind(t_params%testc)
+  !deallocate (t_params%testc, stat=i_stat)
+  !call memocc(i_stat, i_all, 't_params%TESTC', 'main_all')
   i_all = -product(shape(t_params%volbz))*kind(t_params%volbz)
   deallocate (t_params%volbz, stat=i_stat)
   call memocc(i_stat, i_all, 't_params%VOLBZ', 'main_all')

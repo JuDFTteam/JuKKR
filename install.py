@@ -187,7 +187,7 @@ def run_cmake(compiler, parallelization, flags, verbose, code):
 
    # add code compile flags
    comp_host = 'OFF'
-   comp_imp = 'OFF'
+   comp_imp  = 'OFF'
    comp_susc = 'OFF'
    comp_pkkr = 'OFF'
    comp_voro = 'OFF'
@@ -195,7 +195,7 @@ def run_cmake(compiler, parallelization, flags, verbose, code):
    if code=='kkrhost':
       comp_host = 'ON'
    elif code=='kkrimp':
-      comp_imp = 'ON'
+      comp_imp  = 'ON'
    elif code=='kkrsusc':
       comp_susc = 'ON'
    elif code=='pkkprime':
@@ -240,7 +240,8 @@ def main(argv):
       if len(argv)==0: usage()
       opts, args = getopt.getopt(argv, "ivhdm", ["interactive", "verbose", "help", "debug", "machine=", "compiler=", "parallelization=", "flags=","program="])
       #print(argv, len(argv), opts,args)
-   except getopt.GetoptError:
+   except getopt.GetoptError as e:
+      print("Error: {}\n".format(e))
       usage()
 
    # define defaults

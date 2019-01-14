@@ -25,7 +25,9 @@ contains
   subroutine gfshells(icc, natomimp, nsh1, nsh2, ijtabsym, ijtabsh, ijtabcalc, iofgij, jofgij, nofgij, ish, jsh, nshell, naez, natyp, noq, rbasis, bravais, ifilimp, ratom, rclsimp, &
     nsymat, isymindex, rsymat, kaoez, atomimp, rotname, hostimp, lmaxd, lmmaxd, naezd, natypd, natomimpd, nembd, nsheld)
 
+    use :: mod_constants, only: nsymaxd 
     use :: mod_types, only: t_imp
+    use :: mod_runoptions, only: use_virtual_atoms, write_green_imp, write_kkrimp_input, write_pkkr_operators
     use :: mod_datatypes, only: dp
     use :: mod_impcheck, only: impcheck
     use :: mod_impcoefs, only: impcoefs
@@ -40,13 +42,13 @@ contains
     character (len=10) :: rotname(64)
 
     integer :: atomimp(natomimpd), hostimp(0:natypd)
-    integer :: isymindex(*), kaoez(natypd, naezd+nembd)
-    integer :: noq(naezd), nsh1(*), nsh2(*), nshell(0:nsheld)
-    integer :: ish(nsheld, *), jsh(nsheld, *)
-    integer :: ijtabsym(*), ijtabsh(*), ijtabcalc(*), iofgij(*), jofgij(*)
+    integer :: isymindex(nsymaxd), kaoez(natypd, naezd+nembd)
+    integer :: noq(naezd), nsh1(nsheld), nsh2(nsheld), nshell(0:nsheld)
+    integer :: ish(nsheld, 2*nsymaxd), jsh(nsheld, 2*nsymaxd)
+    integer :: ijtabsym(nofgij), ijtabsh(nofgij), ijtabcalc(nofgij), iofgij(nofgij), jofgij(nofgij)
 
     real (kind=dp) :: bravais(3, 3), ratom(3, nsheld)
-    real (kind=dp) :: rbasis(3, *), rclsimp(3, natomimpd)
+    real (kind=dp) :: rbasis(3, naezd+nembd), rclsimp(3, natomimpd)
     real (kind=dp) :: rsymat(64, 3, 3)
 
     integer :: nb, i, j, pos, ii, io, ns, in, ndim, nsize, ihost, ierr
@@ -54,7 +56,6 @@ contains
     logical :: lsurf
     integer :: nofgij_with_diag
 
-    logical, external :: opt
 
 
     write (1337, 100)
@@ -65,7 +66,7 @@ contains
     ! --> construction of ratom, nsh1 and nsh2 for a self-consistent
     ! calculation
 
-    if (.not. opt('VIRATOMS')) then
+    if (.not. use_virtual_atoms) then
       nshell(0) = natyp
     else
       nshell(0) = naez
@@ -93,13 +94,12 @@ contains
           end if
         end do
       end do
-      if (opt('VIRATOMS')) then
+
+      if (use_virtual_atoms) then
         nshell(i) = 1
         nsh1(i) = i
         nsh2(i) = i
       end if
-
-
 
       if (nshell(i)==0) then
         write (6, 120)
@@ -149,7 +149,7 @@ contains
         atomimp(i) = atomimp(i) + icc - 1
       end do
 
-      if (opt('GREENIMP') .or. opt('OPERATOR')) then
+      if (write_green_imp .or. write_pkkr_operators) then
         ihost = 0
 outer:  do i = 1, natypd
 inner:    do j = 1, natomimp
@@ -214,8 +214,8 @@ inner:    do j = 1, natomimp
     end if
     ! **********************************************************************
 
-    call shellgen2k(icc, natomimp, rclsimp(1,1), atomimp(1), nofgij, iofgij, jofgij, nsymat, rsymat, isymindex, rotname, nshell, ratom(1,1), nsh1, nsh2, ish, jsh, ijtabsym, &
-      ijtabsh, ijtabcalc, 2, nsheld)
+    call shellgen2k(icc, natomimp, rclsimp, atomimp, nofgij, iofgij, jofgij, nsymat, rsymat, isymindex, rotname, nshell, ratom, nsh1, nsh2, ish, jsh, ijtabsym, &
+      ijtabsh, ijtabcalc, 2, nsheld, natomimpd)
 
     ! after shells have been created reset nofgij to nofgij_with_diag.
     ! Otherwise a segmentation fault occurs in kkrflex (in rotgll: ijtabsh etc too small)
@@ -226,7 +226,7 @@ inner:    do j = 1, natomimp
     ! --> now write out the impurity.coefs file for the impurity calculation
     ! n.papanikolaou
 
-    if (icc>0 .or. opt('KKRFLEX ')) call impcoefs(natomimp, naez, atomimp, rclsimp, nshell, nsh1, nsh2, ratom, nsymat, isymindex, rotname, hostimp, natypd, lmaxd, nsheld, nsize)
+    if (icc>0 .or. write_kkrimp_input) call impcoefs(natomimp, naez, atomimp, rclsimp, nshell, nsh1, nsh2, ratom, nsymat, isymindex, rotname, hostimp, natypd, lmaxd, nsheld, nsize)
 
     ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
     write (1337, 130) nshell(0)

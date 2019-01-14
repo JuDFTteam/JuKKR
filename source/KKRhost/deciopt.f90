@@ -48,6 +48,7 @@ contains
     nrbasis, cmomhost, vref, rmtref, nref, refpot, lmaxd, lmgf0d, lmmaxd, lm2d, nembd1, iemxd, nspind, lmpotd, natypd, irmd, ipand)
 
     use :: mod_datatypes, only: dp
+    use :: mod_runoptions, only: use_Chebychev_solver
     use :: mod_decitset, only: decitset
     use :: mod_decimaread, only: decimaread
     use :: mod_cmomsread, only: cmomsread
@@ -73,11 +74,10 @@ contains
     integer :: ierror, il, ie, ispin, nspinso ! ruess: for tmat newsolver
     complex (kind=dp) :: cfctor
     character (len=40) :: fileleft, fileright
-    character (len=256) :: uio                             ! NCOLIO=256
+    character (len=:), allocatable :: uio                             ! NCOLIO=256
 
     ! ..                                  ! ruess: for NEWSOSOL running option
     ! .. External Functions ..
-    logical, external :: opt
 
     ! ======================================================================
     write (1337, '(79("="))')
@@ -102,7 +102,7 @@ contains
 
       cfctor = alat/(8.e0_dp*atan(1.0e0_dp)) ! = ALAT/(2*PI)
       nspinso = nspin
-      if (opt('NEWSOSOL')) nspinso = 1 ! ruess: only combined l-s index for
+      if (use_Chebychev_solver) nspinso = 1 ! ruess: only combined l-s index for
       ! newsolver
       do ispin = 1, nspinso
         do ie = 1, ielast

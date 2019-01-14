@@ -36,7 +36,10 @@ contains
   !-------------------------------------------------------------------------------
   subroutine decitset(alat, bravsys, ez, ielast, nlbasis, nrbasis, fileleft, fileright, ins, kvrel, krel, nspin, kmrot, vref, rmtref, nref, refpot, lefttinv, righttinv, vacflag, &
     nembd1, iemxd, irmd, ipand, lmaxd, lmgf0d, lmmaxd, lm2d, nspind)
+
+
     use :: mod_datatypes, only: dp
+    use :: mod_runoptions, only: print_tmat
     use :: mod_cmatstr, only: cmatstr
     use :: mod_lngstring, only: lngstring
     use :: mod_calctref13, only: calctref13
@@ -94,7 +97,6 @@ contains
     integer, allocatable :: zrel(:)
     ! ..
     ! .. External Functions
-    logical, external :: test
     ! .. Data statements
     data chhost/'LEFT ', 'RIGHT'/
     data txts/'spin   UP', 'spin DOWN'/
@@ -316,7 +318,7 @@ contains
             end do
             ! ----------------------------------------------------------------------
             ! tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt
-            if (test('tmat    ')) then
+            if (print_tmat) then
               write (1337, *)
               write (1337, 100, advance='no') '      ---> Delta_t  matrix for site: ', iqh
               if (krel==0) write (1337, 110, advance='no') txts(ispin)

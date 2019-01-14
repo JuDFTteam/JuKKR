@@ -22,6 +22,7 @@ contains
     rho2nsc, corbital, gflle_part, rpan_intervall, ipan_intervall, nspin)
 
     use :: mod_constants, only: cone,czero,pi
+    use :: mod_runoptions, only: calc_gmat_lm_full, use_ldau, set_cheby_nosoc
     use :: mod_profiling
     use :: global_variables
     use :: mod_datatypes, only: dp
@@ -81,7 +82,6 @@ contains
     complex (kind=dp), dimension (:, :, :), allocatable :: wr
     complex (kind=dp), dimension (:, :, :), allocatable :: wr1 ! LDAU
     ! .. External routines
-    logical, external :: opt, test
 
     lmsize = lmmaxd/(1+korbit)
 
@@ -102,7 +102,7 @@ contains
     pnsi = czero
 
     ! set LMSHIFT value which is need to construct CDEN
-    if (test('NOSOC   ')) then
+    if (set_cheby_nosoc) then
       lmshift1(:) = 0 
       lmshift2(:) = 0 
     else
@@ -199,7 +199,7 @@ contains
 
 
     ! IF lmdos or LDAU
-    if (opt('lmlm-dos') .or. opt('LDA+U   ')) then ! lmlm-dos
+    if (calc_gmat_lm_full .or. use_ldau) then ! lmlm-dos
       ! Integrate only up to muffin-tin radius.
       ! ! lmlm-dos
       gflle_part = czero           ! lmlm-dos
@@ -220,7 +220,7 @@ contains
           cwr(1:irmdnew) = wr1(lm1, lm2, 1:irmdnew) ! lmlm-dos
           ! If LDAU, integrate only up to MT
           do ir = imt1 + 1, irmdnew
-            if (opt('LDA+U   ')) then
+            if (use_ldau) then
               cwr(ir) = czero      ! LDAU
             else
               cwr(ir) = cwr(ir)*thetasnew(ir, 1)*c0ll ! lmlm-dos
@@ -229,7 +229,7 @@ contains
           call intcheb_cell(cwr, gflle_part(lm1,lm2), rpan_intervall, ipan_intervall, npan_tot, ncheb, irmdnew)
         end do
       end do
-    end if                         ! OPT('lmlm-dos').OR.OPT('LDA+U   ')
+    end if                         ! calc_gmat_lm_full .or. use_ldau
 
 
     ! DO IR = 1,IRMDNEW

@@ -1,5 +1,5 @@
       SUBROUTINE GENPOTSTART(NSPIN,IFILE,I13,INS,NBEGIN,NATOMS,ZATOM,
-     &                 SITEAT,IDSHAPE,VOLUMECL,LPOT,
+     &                 SITEAT,KSHAPE,IDSHAPE,VOLUMECL,LPOT,
      &                 AOUT_ALL,RWSCL,RMTCL,RMTCORE,MESHN,XRN,DRN,
      &                 IRWS,IRNS,
      &                 ALATNEW,QBOUND,KXC,TXC,LJELL)
@@ -7,6 +7,8 @@ c ******************************************************
 c * This subroutine reads a general potential format
 c * file. and interpolates to the new mesh 
 c ******************************************************
+      use mod_splint, only: splint_real
+      use mod_spline, only: spline_real
       implicit none
 c#@# KKRtags: VORONOI potential initialization input-output
       include 'inc.geometry'
@@ -244,7 +246,7 @@ c  Ok now interpolate
 c
                    
             MAXA = 1.D35
-            CALL SPLINE(IRMD,RMESH,VM2Z,NR,MAXA,MAXA,VM2ZB)  
+            CALL spline_real(IRMD,RMESH,VM2Z,NR,MAXA,MAXA,VM2ZB)  
             IF (INS.GT.0) THEN
                DO LM1=1,LMPOTD
                   IF (POTLM(LM1)) THEN
@@ -254,8 +256,8 @@ c     map it
                         WORK(I,LM1) = VINS(NR - IRNS1 + I - 1,LM1)
                         RA(I) = RMESH(NR - IRNS1 + I - 1)
                      END DO
-                     CALL SPLINE(IRMD,RA,WORK(1,LM1),IRNSTOT,MAXA,MAXA,
-     &                    VINSB(1,LM1))
+                     CALL spline_real(IRMD,RA,WORK(1,LM1),IRNSTOT,MAXA,
+     &                    MAXA,VINSB(1,LM1))
                   END IF
                ENDDO            ! LM1
             END IF
@@ -265,7 +267,8 @@ c
             VM2ZOUT(1) = VM2Z(1)
             DO IR = 2,IRWSOUT
                R0 = ROUT(IR)
-               CALL SPLINT(RMESH,VM2Z,VM2ZB,NR,R0,PARSUM,PARSUMDERIV)
+               CALL splint_real(RMESH,VM2Z,VM2ZB,NR,R0,PARSUM,
+     &                           PARSUMDERIV)
                VM2ZOUT(IR) = PARSUM
             END DO
 c
@@ -277,7 +280,7 @@ c
                   IF (POTLM(LM1)) THEN
                      DO IR = IRC+1,IRWSOUT
                         R0 = ROUT(IR)
-                        CALL SPLINT(RA,WORK(1,LM1),
+                        CALL splint_real(RA,WORK(1,LM1),
      &                       VINSB(1,LM1),IRNSTOT,R0,PARSUM,PARSUMDERIV)
                         VINSOUT(IR,LM1) = PARSUM
                      END DO
