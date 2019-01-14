@@ -26,6 +26,7 @@ Removed a lot of code duplicates among different
 
 ### Changed
 - more routines and modules in source/common directory
+- use shared library for pkkprime file among different apps
 
 ### Deprecated
 - removed code duplicates
