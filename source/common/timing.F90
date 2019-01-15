@@ -52,7 +52,7 @@ contains
     write (ctemp, '(I03.3)') my_rank
     if (t_inc%i_time>0) then
       open (unit=43234059, file='out_timing.'//trim(ctemp)//'.txt')
-      call version_print_header(43234059, print_always=.true.)
+      call version_print_header(43234059, disable_print=.false.)
     end if
     init = 1
   end subroutine timing_init

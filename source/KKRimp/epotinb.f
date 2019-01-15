@@ -163,7 +163,7 @@ c--->   now integrate er to get epotin
 c
         IF (IPAN1.GT.1) THEN
           CALL SIMPK(ER,TEMP,CELL(IATOM)%NPAN,CELL(IATOM)%NRCUT,
-     +               CELL(IATOM)%DRMESHDI,IPAND)
+     +               CELL(IATOM)%DRMESHDI)!,IPAND)
         ELSE
           CALL SIMP3(ER,TEMP,1,IRS1,CELL(IATOM)%DRMESHDI(1))
         END IF
@@ -213,7 +213,7 @@ c
    60           CONTINUE
    70         CONTINUE
               CALL SIMPK(ER,TEMP,IPAN1,IRCUTM,
-     +                   CELL(IATOM)%DRMESHDI,IPAND)
+     +                   CELL(IATOM)%DRMESHDI) !,IPAND)
 c
               EPOTIN(IATOM) = EPOTIN(IATOM) + TEMP
               ENS(L1,IATOM) = TEMP

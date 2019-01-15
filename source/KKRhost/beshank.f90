@@ -21,7 +21,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Spherical Bessel and Hanke functions
   !> Author: 
-  !> Category: KKRhost, special-functions, single-site, solver
+  !> Category: KKRhost, special-functions, single-site
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
   !> Calculates spherical Bessel, Hankel and Neumann (not returned) functions
@@ -100,7 +100,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Spherical Bessel and Hanke functions for small component
   !> Author: 
-  !> Category: KKRhost, special-functions, single-site, solver
+  !> Category: KKRhost, special-functions, single-site
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
   !> Takes the spherical bessel etc functions stored in an array up to LMAX

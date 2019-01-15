@@ -5,8 +5,7 @@
      +                   QZLM,PZEKDR,QZEKDR,EK,ADER,AMAT,BDER,BMAT,NSRA,
      +                   IRMIND,IRMD,IPAND,LMMAXATOM)
       USE mod_zgeinv1
-      USE mod_wfint0
-      USE mod_wfint
+      USE mod_wfint, only: wfint, wfint0
       USE mod_csout
       USE mod_csinwd
 
@@ -124,10 +123,10 @@ c 1    CONTINUE
 c---> set up integrands for i-th born approximation
         IF (I.EQ.0) THEN
           CALL WFINT0(ADER,BDER,PZLM,QZEKDR,PZEKDR,VNSPLL,NSRA,IRMIND,
-     +                  IRMD,LMMAXATOM)
+     +                  IRMD,LMMAXATOM, irmind, irmd)
         ELSE
           CALL WFINT(PNS,ADER,BDER,QZEKDR,PZEKDR,VNSPLL,NSRA,IRMIND,
-     +                 IRMD,LMMAXATOM)
+     +                 IRMD,LMMAXATOM, irmind, irmd)
         END IF
 c---> call integration subroutines
         CALL CSINWD(ADER,AMAT,LMMAXATOM**2,IRMIND,IRMD,IPAN,IRCUT)
@@ -178,10 +177,10 @@ c Volterra equation
 c---> set up integrands for i-th born approximation
         IF (I.EQ.0) THEN
           CALL WFINT0(ADER,BDER,PZLM,QZEKDR,PZEKDR,VNSPLL,NSRA,IRMIND,
-     +                  IRMD,LMMAXATOM)
+     +                  IRMD,LMMAXATOM, irmind, irmd)
         ELSE
           CALL WFINT(PNS,ADER,BDER,QZEKDR,PZEKDR,VNSPLL,NSRA,IRMIND,
-     +                 IRMD,LMMAXATOM)
+     +                 IRMD,LMMAXATOM, irmind, irmd)
         END IF
 c---> call integration subroutines
         CALL CSOUT(ADER,AMAT,LMMAXATOM**2,IRMIND,IRMD,IPAN,IRCUT)

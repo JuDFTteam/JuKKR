@@ -656,7 +656,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: MPI communication for the new solver in the `main1c` subroutine 
   !> Author: 
-  !> Category: communication, solver, KKRhost 
+  !> Category: communication, KKRhost 
   !> Deprecated: False
   !> MPI communication for the new solver in the `main1c` subroutine 
   !-------------------------------------------------------------------------------
@@ -808,7 +808,7 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: MPI communication for the new solver in the `main1c` subroutine 
   !> Author: 
-  !> Category: communication, solver, KKRhost 
+  !> Category: communication, KKRhost 
   !> Deprecated: False
   !> MPI communication for the new solver in the `main1c` subroutine 
   !-------------------------------------------------------------------------------

@@ -9,7 +9,7 @@
    !-------------------------------------------------------------------------------
    !> Summary: Calculates the irregular solution of the Schroedinger equation
    !> Author: B. Drittler Nov 1989
-   !> Category: Wavefunction, physical-observables, kkrimp, single-site
+   !> Category: single-site, physical-observables, kkrimp, single-site
    !> Deprecated: False ! This needs to be set to True for deprecated subroutines
    !> 
    !>  calculates the irregular solution of the schroedinger equation or

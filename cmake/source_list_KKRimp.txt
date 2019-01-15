@@ -1,11 +1,42 @@
 # the executable is built from this list of files
 add_executable(
     kkrflex.exe
+    source/common/rclm.f90
+    source/common/spin_orbit.f90
+    source/common/spin_orbit_compl.f90
+    source/common/mympi.F90 
+    source/common/profiling.f90 
+    source/common/rcstop.f90
     source/common/version.F90
     source/common/version_info.F90
     source/common/rotatespinframe.f90
     source/common/DataTypes.f90
     source/common/constants.f90
+    source/common/cinit.f90
+    source/common/trarea.f90
+    source/common/sphere_nogga.f90
+    source/common/lebedev.f90
+    source/common/wfint.f90
+    source/common/vxcspo.f90
+    source/common/vxcgga.f90
+    source/common/vxclm.f90
+    source/common/global_variables.F90
+    source/common/simpk.f90
+    source/common/gradrl.f90
+    source/common/gradr.f90
+    source/common/mkxcpe.f90
+    source/common/mkxcpe2.f90
+    source/common/ssum.f90
+    source/common/types.F90
+    source/common/gxcpt.f90
+    source/common/corlsd.f90
+    source/common/cpw91.f90
+    source/common/gcor91.f90
+    source/common/vosko.f90
+    source/common/exch91.f90
+    source/common/ymy.f90
+    source/common/splint.f90
+    source/common/spline.f90
     source/voronoi/test.f
     source/KKRimp/nrtype.f90
     source/KKRimp/type_gmatbulk.f90
@@ -34,7 +65,6 @@ add_executable(
     source/KKRimp/beshank.f
     source/KKRimp/wrapper.f90
     source/KKRimp/simp3.f90
-    source/KKRimp/simpk.f90
     source/KKRimp/regsol.f
     source/KKRimp/soutk.f90
     source/KKRimp/DIRAC/DiracConfig.f90
@@ -48,22 +78,18 @@ add_executable(
     source/KKRimp/averagewldau.f
     source/KKRimp/phicalc.f
     source/KKRimp/initldau.F
-    source/KKRimp/rclm.f
     source/KKRimp/calcwldau.f
     source/KKRimp/wavefunctodisc.f90
     source/KKRimp/change_nrmin.f90
     source/KKRimp/gauntharmonics.f90
     source/KKRimp/sinwk.f90
-    source/KKRimp/ymy.f
     source/KKRimp/amngaunt.f
     source/KKRimp/amn2010.f90
     source/KKRimp/convol.f
     source/KKRimp/shftvout.f90
     source/KKRimp/vintras.f90
     source/KKRimp/vinters2010.f90
-    source/KKRimp/timing.F90
     source/KKRimp/arrayparams.f90
-    source/KKRimp/cinit.f
     source/KKRimp/dsort.f90
     source/KKRimp/clustcomp.f90
     source/KKRimp/gauntshape.f90
@@ -76,8 +102,6 @@ add_executable(
     source/KKRimp/cradwf.f
     source/KKRimp/wfmesh.f
     source/KKRimp/zgeinv1.f
-    source/KKRimp/wfint0.f
-    source/KKRimp/wfint.f
     source/KKRimp/csout.f
     source/KKRimp/wftsca.f
     source/KKRimp/vllns.f
@@ -115,7 +139,7 @@ add_executable(
     source/KKRimp/rhovalfull.f90
     source/KKRimp/gdyson.f90
     source/KKRimp/mpienergy.f90
-    source/KKRimp/interpolpot-splint.f
+    source/KKRimp/interpolpotspline.f
     source/KKRimp/interpolpot.f
     source/KKRimp/interpolatecell.f90
     source/KKRimp/checkinterpolation.f90
@@ -149,6 +173,7 @@ add_executable(
     source/KKRimp/umatrix.f90
     source/KKRimp/utrafo.f90
     source/KKRimp/cellproperties.f90
+    source/KKRimp/timing.F90
     source/KKRimp/kkrflex.F90
     )
 

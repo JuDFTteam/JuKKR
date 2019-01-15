@@ -1,7 +1,3 @@
-module mod_complexdos3
-
-contains
-
 program complexdos
   use :: mod_datatypes, only: dp
   implicit none
@@ -43,6 +39,7 @@ program complexdos
   open (51, file='new3_eV_EF.dos', form='formatted')
   read (49, *) text2               ! dummy readin of header, may be replaced
                                    ! later
+  if (text2(1:10)/='# serial: ' ) rewind(49)
   read (49, *) npot
   read (49, *) iemax
   read (49, *) lmax
@@ -106,5 +103,3 @@ program complexdos
 120 format (a80)
 130 format (8(2e12.4))
 end program complexdos
-
-end module mod_complexdos3

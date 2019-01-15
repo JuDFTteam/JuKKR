@@ -31,8 +31,6 @@ contains
     integer :: isymindex(*)
 
     integer :: i, id, ns, k, j, isym
-    logical :: test
-    external :: test
 
 
     do ns = 1, nshell
@@ -43,8 +41,6 @@ contains
         end do
       end do
     end do
-
-    if (test('ND      ')) write (1337, fmt='((I3,3(/,3f6.2)))')(k, ((nd(k,i,j),j=1,3),i=1,3), k=1, irot)
 
     return
 

@@ -15,7 +15,7 @@ contains
   !> Summary: Calculates the irregular solution of the Schroedinger (or SRA) equation
   !> Author: B. Drittler
   !> Date: Nov. 1989
-  !> Category: KKRhost, single-site, solver
+  !> Category: KKRhost, single-site
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
   !> Calculates the irregular solution of the Schroedinger equation or

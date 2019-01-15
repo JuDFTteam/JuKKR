@@ -8,7 +8,8 @@
 program sxydiff
 
   use mod_read,       only: read_kpointsfile_vis
-  use mod_symmetries, only: pointgrp, rotate_kpoints
+  use mod_pointgrp,   only: pointgrp
+  use mod_symmetries, only: rotate_kpoints
   use mod_parutils,   only: parallel_quicksort
   use mod_mympi,      only: mympi_init, myrank, nranks, master
   use mpi

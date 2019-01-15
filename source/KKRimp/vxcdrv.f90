@@ -29,6 +29,10 @@
       USE TYPE_SHAPEFUN
       USE TYPE_GAUNTSHAPE
       USE MOD_EXCHANGECORRELATION
+      use mod_vxcspo, only: vxcspo
+      use mod_vxclm, only: vxclm
+      use mod_vxcgga, only: vxcgga
+      use global_variables, only: ipand, irmd, ngshd, irid, nfund
       IMPLICIT NONE
 
 !       INCLUDE 'inc.p'
@@ -119,16 +123,25 @@
 
 
 
-        IF (CELL(IATOM)%KXC.LT.3) THEN
+        ! these values will be used in vxclm from global_variables module, so we set them here for each atom
+        irmd = nrmaxd
+        nfund = SHAPEFUN(IATOM)%NLMSHAPED
+        irid = SHAPEFUN(IATOM)%NRSHAPED
+        ngshd = GAUNTSHAPE(LMAX)%NGSHD
+        ipand = CELL(IATOM)%NPAND
 
+        IF (CELL(IATOM)%KXC.LT.3) THEN
+          
 
           CALL VXCLM(EXC,KTE,CELL(IATOM)%KXC,LPOT,NSPIN,IATOM,RHO2IAT, &
                      VONS(:,:,:,IATOM),CELL(IATOM)%RMESH,CELL(IATOM)%DRMESHDI,&
                      CELL(IATOM)%NRMAX,CELL(IATOM)%NRCUT,CELL(IATOM)%NPAN,&
                      KSHAPE,GAUNTSHAPE(LMAX)%GSH,GAUNTSHAPE(LMAX)%ILM,GAUNTSHAPE(LMAX)%IMAXSH,IFUNMIAT,SHAPEFUN(IATOM)%THETAS,&
-                     YR_NOGGA,WTYR_NOGGA,IJD,LMSPIAT,&
-                     LMPOTD,2*LMAXD,LMXSPD,nrmaxd,SHAPEFUN(IATOM)%NLMSHAPED,SHAPEFUN(IATOM)%NRSHAPED,GAUNTSHAPE(LMAX)%NGSHD,&
-                     CELL(IATOM)%NPAND) 
+                     YR_NOGGA,WTYR_NOGGA,IJD,LMSPIAT)!,&
+!                    lmpotd, lpotd, lmxspd, irmd , nfund                   , irid                   , ngshd, 
+                     !LMPOTD,2*LMAXD,LMXSPD,nrmaxd,SHAPEFUN(IATOM)%NLMSHAPED,SHAPEFUN(IATOM)%NRSHAPED,GAUNTSHAPE(LMAX)%NGSHD,&
+!                    ipand
+                     !CELL(IATOM)%NPAND) 
 
 
 !      +                 LMPOTD,LPOTD,LMXSPD,IRMD,NFUND,IRID,NGSHD,IPAND)
@@ -140,10 +153,11 @@
                       VONS(:,:,:,IATOM),CELL(IATOM)%RMESH,CELL(IATOM)%DRMESHDI,CELL(IATOM)%LOGPARAMS(1), &
                       CELL(IATOM)%NRMAX,CELL(IATOM)%NRCUT,CELL(IATOM)%NPAN, &
                       KSHAPE,GAUNTSHAPE(LMAX)%GSH,GAUNTSHAPE(LMAX)%ILM,GAUNTSHAPE(LMAX)%IMAXSH,IFUNMIAT,SHAPEFUN(IATOM)%THETAS, &
-                      YR,WTYR,IJD,LMSPIAT,THET,YLM,DYLMT1,DYLMT2, &
-                      DYLMF1,DYLMF2,DYLMTF, &
-                      LMPOTD,2*LMAXD,LMXSPD,nrmaxd,SHAPEFUN(IATOM)%NLMSHAPED,SHAPEFUN(IATOM)%NRSHAPED,GAUNTSHAPE(LMAX)%NGSHD,&
-                      CELL(IATOM)%NPAND) 
+                      !YR,WTYR,IJD,LMSPIAT,THET,YLM,DYLMT1,DYLMT2, &
+                      WTYR,IJD,LMSPIAT,THET,YLM,DYLMT1,DYLMT2, &
+                      DYLMF1,DYLMF2,DYLMTF)!, &
+                      !LMPOTD,2*LMAXD,LMXSPD,nrmaxd,SHAPEFUN(IATOM)%NLMSHAPED,SHAPEFUN(IATOM)%NRSHAPED,GAUNTSHAPE(LMAX)%NGSHD,&
+                      !CELL(IATOM)%NPAND) 
 !      +                 LMPOTD,LPOTD,LMXSPD,IRMD,NFUND,IRID,NGSHD,IPAND)
         END IF
       END DO
