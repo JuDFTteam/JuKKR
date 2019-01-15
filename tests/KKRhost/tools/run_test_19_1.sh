@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-mkdir tests/KKRhost/test_run19.1_mpi_2_4
-cd tests/KKRhost/test_run19.1_mpi_2_4
+mkdir test_run19.1_mpi_2_4
+cd test_run19.1_mpi_2_4
 ln -s ../test_inputs/test_19.1*/* .
 rm bulk
 cp -r ../test_inputs/test_19.1*/bulk .
@@ -12,3 +12,4 @@ cd ../
 rm decifile_bulk_scf; ln -s bulk/decifile decifile_bulk_scf
 export OMP_NUM_THREADS=2
 mpirun -np 4 ../../kkr.x | tee out_kkr
+cd ..

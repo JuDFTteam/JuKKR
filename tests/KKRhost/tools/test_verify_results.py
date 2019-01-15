@@ -285,11 +285,11 @@ class Test_features():
            # check bulk run with SOC
            num, text = read_file(path0+fname)
            num_ref, text_ref = read_file(path0+'/ref/'+fname)
-           assert std(num-num_ref)<10**-14
+           assert std(num-num_ref)<10**-13
            # check slab run without SOC
            num, text = read_file(path00+fname)
            num_ref, text_ref = read_file(path00+'/ref/'+fname)
-           assert std(num-num_ref)<10**-14
+           assert std(num-num_ref)<10**-13
 
 
 class Test_SOC():

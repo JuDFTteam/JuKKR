@@ -253,7 +253,7 @@ run_kkrhost:intel:FERMIOUT_6:
 run_kkrhost:intel:OPERATOR_10:
   stage: run_kkrhost_features
   script:
-      - tests/KKRhost/tools/run_test_10.sh
+      - cd tests/KKRhost/ && ./tools/run_test_10.sh
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -271,7 +271,7 @@ run_kkrhost:intel:OPERATOR_10:
 run_kkrhost:intel:DTM_GMATLL_11:
   stage: run_kkrhost_features
   script:
-      - tests/KKRhost/tools/run_test_11.sh
+      - cd tests/KKRhost/ && ./tools/run_test_11.sh
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -308,7 +308,7 @@ run_kkrhost:intel:qdos_12:
 #run_kkrhost:intel:rhoq_13:
 #  stage: run_kkrhost_features
 #  script:
-#      - tests/KKRhost/tools/run_test_13.sh
+#      - cd tests/KKRhost/ && ./tools/run_test_13.sh
 #  artifacts:
 #    paths:
 #      - tests/KKRhost/test_run*
@@ -406,7 +406,7 @@ run_kkrhost:intel:lambda_xc_17:
 run_kkrhost:intel:decimate_19:
   stage: run_kkrhost_features
   script:
-      - tests/KKRhost/tools/run_test_19.sh
+      - cd tests/KKRhost/ && ./tools/run_test_19.sh
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -424,7 +424,7 @@ run_kkrhost:intel:decimate_19:
 run_kkrhost:intel:godfrin_20:
   stage: run_kkrhost_features
   script:
-    - tests/KKRhost/tools/run_test_20.sh
+    - cd tests/KKRhost/ && ./tools/run_test_20.sh
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -442,7 +442,7 @@ run_kkrhost:intel:godfrin_20:
 run_kkrhost:intel:XCs_21:
   stage: run_kkrhost_features
   script:
-    - tests/KKRhost/tools/run_test_21.sh
+    - cd tests/KKRhost/ && ./tools/run_test_21.sh
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -460,7 +460,7 @@ run_kkrhost:intel:XCs_21:
 run_kkrhost:intel:LDAU_22:
   stage: run_kkrhost_features
   script:
-    - tests/KKRhost/tools/run_test_22.sh
+    - cd tests/KKRhost/ && ./tools/run_test_22.sh
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -478,7 +478,7 @@ run_kkrhost:intel:LDAU_22:
 run_kkrhost:intel:DOS_23:
   stage: run_kkrhost_features
   script:
-    - tests/KKRhost/tools/run_test_23.sh
+    - cd tests/KKRhost/ && ./tools/run_test_23.sh
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -604,7 +604,7 @@ run_kkrhost:intel:Si_LLY_SOC_3_1:
 run_kkrhost:intel:NOSOC_3_2:
   stage: run_kkrhost_features_SOC
   script:
-    - tests/KKRhost/tools/run_test_03_2.sh
+    - cd tests/KKRhost/ && ./tools/run_test_03_2.sh
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -736,7 +736,7 @@ run_kkrhost:intel:CPA_SOC_15_1:
 run_kkrhost:intel:decimate_SOC_19_1:
   stage: run_kkrhost_features_SOC
   script:
-      - tests/KKRhost/tools/run_test_19_1.sh
+      - cd tests/KKRhost/ && ./tools/run_test_19_1.sh
   artifacts:
     paths:
       - tests/KKRhost/test_run*
