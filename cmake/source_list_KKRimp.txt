@@ -1,6 +1,9 @@
 # the executable is built from this list of files
 add_executable(
     kkrflex.exe
+    source/common/rclm.f90
+    source/common/spin_orbit.f90
+    source/common/spin_orbit_compl.f90
     source/common/mympi.F90 
     source/common/profiling.f90 
     source/common/rcstop.f90
@@ -9,6 +12,10 @@ add_executable(
     source/common/rotatespinframe.f90
     source/common/DataTypes.f90
     source/common/constants.f90
+    source/common/cinit.f90
+    source/common/trarea.f90
+    source/common/sphere_nogga.f90
+    source/common/lebedev.f90
     source/common/wfint.f90
     source/common/vxcspo.f90
     source/common/vxcgga.f90
@@ -71,7 +78,6 @@ add_executable(
     source/KKRimp/averagewldau.f
     source/KKRimp/phicalc.f
     source/KKRimp/initldau.F
-    source/KKRimp/rclm.f
     source/KKRimp/calcwldau.f
     source/KKRimp/wavefunctodisc.f90
     source/KKRimp/change_nrmin.f90
@@ -83,9 +89,7 @@ add_executable(
     source/KKRimp/shftvout.f90
     source/KKRimp/vintras.f90
     source/KKRimp/vinters2010.f90
-    source/KKRimp/timing.F90
     source/KKRimp/arrayparams.f90
-    source/KKRimp/cinit.f
     source/KKRimp/dsort.f90
     source/KKRimp/clustcomp.f90
     source/KKRimp/gauntshape.f90
@@ -169,6 +173,7 @@ add_executable(
     source/KKRimp/umatrix.f90
     source/KKRimp/utrafo.f90
     source/KKRimp/cellproperties.f90
+    source/KKRimp/timing.F90
     source/KKRimp/kkrflex.F90
     )
 

@@ -285,8 +285,8 @@ def main(argv):
           if opt=="--program":
              code = arg
              if code not in codeslist:
-                print("your input is not a valid code name. Please chose a valid scheme.")
-                print("Supported codes: {}".format(codelist))
+                print("your input ({}) is not a valid code name. Please chose a valid scheme.".format(code))
+                print("Supported codes: {}".format(codeslist))
 
       if opt in ("-d", "--debug"):
           flags.append("CMAKE_BUILD_TYPE=Debug")

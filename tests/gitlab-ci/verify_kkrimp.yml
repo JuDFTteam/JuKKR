@@ -18,3 +18,4 @@ verify_kkrimp:intel:
     - master
     - develop
     - develop-kkrimp
+    - GROUP3
