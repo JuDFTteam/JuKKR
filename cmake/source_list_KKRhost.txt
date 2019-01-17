@@ -75,17 +75,24 @@ add_executable(
     source/common/radial_solver_Chebychev/sll_global_solutions.F90
     source/common/radial_solver_Chebychev/sll_local_solutions.F90
     source/common/radial_solver_Chebychev/create_newmesh.f90
+    source/common/radial_solver_Chebychev/vllmat.f90
+    source/common/radial_solver_Chebychev/vllmatsra.f90
+    source/common/radial_solver_Chebychev/calcsph.f90
     source/common/trarea.f90
     source/common/sphere_nogga.f90
     source/common/lebedev.f90
     source/common/rclm.f90
     source/common/ymy.f90
     source/common/findgroup.f90
+    source/common/spin_orbit.f90
+    source/common/spin_orbit_compl.f90
+    source/common/spinorbit_ham.f90
+    source/common/runoptions.F90
+    source/common/beshank.f90
     source/KKRhost/addvirtual14.f90
     source/KKRhost/amemagvec.f90
     source/KKRhost/bastrmat.f90
     source/KKRhost/beshan.f90
-    source/KKRhost/beshank.f90
     source/KKRhost/bofm.f90
     source/KKRhost/brydbm.f90
     source/KKRhost/brysh1.f90
@@ -102,7 +109,6 @@ add_executable(
     source/KKRhost/calcgf.f90
     source/KKRhost/calcmvec.f90
     source/KKRhost/calcrotmat.f90
-    source/KKRhost/calcsph.f90
     source/KKRhost/calctmat.F90
     source/KKRhost/calctref.f90
     source/KKRhost/calrmt.f90
@@ -295,7 +301,6 @@ add_executable(
     source/KKRhost/rotgll.F90
     source/KKRhost/rotmat.f90
     source/KKRhost/rrgen.f90
-    source/KKRhost/runoptions.F90
     source/KKRhost/save_wavefun.F90
     source/KKRhost/scalevec.f90
     source/KKRhost/scalpr.f90
@@ -312,9 +317,6 @@ add_executable(
     source/KKRhost/spatpr.f90
     source/KKRhost/spher.f90
     source/KKRhost/sphere_gga.f90
-    source/common/spin_orbit.f90
-    source/common/spin_orbit_compl.f90
-    source/KKRhost/spinorbit_ham.f90
     source/KKRhost/ssite.f90
     source/KKRhost/startb1.f90
     source/KKRhost/startldau.f90

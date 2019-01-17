@@ -11,16 +11,17 @@ SUBROUTINE RHOOUTNEW(gauntcoeff,DF,GMATIN,EK,cellnew,wavefunction,RHO2NSC, &
                          ISPIN,NSPINDEN,imt1,cden,cdenlm,cdenns,shapefun,corbital, &
                         gflle_part )                                              ! lda+u
 
-use type_gauntcoeff
-use type_cellnew
-use type_wavefunction
-USE mod_physic_params,only: cvlight
-use mod_basistransform
+use type_gauntcoeff, only: gauntcoeff_type
+use type_cellnew, only: cell_typenew
+use type_wavefunction, only: wavefunction_type
+USE mod_physic_params, only: cvlight
+use mod_basistransform, only: 
 use mod_mathtools, only: transpose
 use mod_config, only: config_testflag
-use type_shapefun
+use type_shapefun, only: shapefun_type
 use mod_orbitalmoment, only: calc_orbitalmoment
-use mod_chebyshev   ! lda+u
+use mod_intcheb_cell, only: intcheb_cell   ! lda+u
+use mod_timing, only: timing_start, timing_pause, timing_stop
 
 !       CALL RHOOUTNEW(density%den(:,ispin,ie),DF,GMATll,EK,RLL(:,:,:,1),SLL(:,:,:,1),density%RHO2NS(:,:,ispin),shapefun%thetas,shapefun%lmused,cell%npan, &
 !                     1,shapefun%lm2index,CDENNS,config%NSRA,gauntcoeff%CLEB,gauntcoeff%ICLEB,gauntcoeff%IEND &
@@ -267,14 +268,16 @@ use mod_chebyshev   ! lda+u
 
 ! Phivos lda+u: Place here r-integration of wr(lms1,lms2,ir) to obtain cnll(lms1,lms2).    ! lda+u
 ! Integrate only up to muffin-tin radius.                                                  ! lda+u
+        call timing_start('int_rhoo')
         gflle_part(:,:) = czero                                                            ! lda+u
         do lm2 = 1,lmsize                                                                  ! lda+u
            do lm1 = 1,lmsize                                                               ! lda+u
               cwr(1:imt1) = wr(lm1,lm2,1:imt1)                                             ! lda+u
               cwr(imt1+1:irmd) = czero                                                     ! lda+u
-              call intcheb_cell(cwr,cellnew,gflle_part(lm1,lm2))                           ! lda+u
+              call intcheb_cell(cwr,gflle_part(lm1,lm2), cellnew%rpan_intervall, cellnew%ipan_intervall, cellnew%npan_tot, cellnew%ncheb, cellnew%nrmaxnew)                           ! lda+u
            enddo                                                                           ! lda+u
         enddo                                                                              ! lda+u
+        call timing_pause('int_rhoo')
 
 
 ! Change by Phivos 12.6.2012: this part was within previous IR-loop, now moved here        ! lda+u
@@ -293,6 +296,7 @@ use mod_chebyshev   ! lda+u
 
 
      END DO !IR
+        call timing_stop('int_rhoo')
 
 
 ! c

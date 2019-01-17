@@ -30,6 +30,7 @@ contains
     vnspll,vnspll1,mode)
 
     use :: mod_datatypes, only: dp
+    use :: mod_constants, only: czero
     use :: mod_runoptions, only: set_cheby_nosoc
     use :: mod_cheb, only: getclambdacinv
     use :: mod_spin_orbit_compl, only: spin_orbit_compl
@@ -69,6 +70,8 @@ contains
     complex (kind=dp) :: temp
     complex (kind=dp), dimension(2*lmmaxd, 2*lmmaxd) :: lsmh
     real (kind=dp), dimension(0:ncheb, 0:ncheb) :: clambdacinv
+
+    vnspll1(:,:,:) = czero
 
     ! fill radial potential (used to construct radial derivative of potential)
     vr = 0e0_dp

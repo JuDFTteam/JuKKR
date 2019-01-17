@@ -15,11 +15,11 @@ contains
 !>           
 !-------------------------------------------------------------------------------
 subroutine checkinterpolation(cell,cellnew,vpotin,config)!,lmpot)
-use type_cell
-use type_cellnew
-use type_config
-use mod_interpolatecell
-use mod_cheb2oldgridc
+use type_cell, only: cell_type
+use type_cellnew, only: cell_typenew
+use type_config, only: config_type
+use mod_interpolatecell, only: interpolatecell
+use mod_cheb2oldgrid, only: cheb2oldgrid
 
 implicit none
 type(cell_type)    :: cell
@@ -48,7 +48,9 @@ testpot2=testpot
 ! allocate ( testpot_out2(cellnew%nrmaxnew) )
 
 print *,'Interpol new->old'
-call cheb2oldgridc(cell,cellnew,cellnew%ncheb,1,testpot2,testpot_out)
+! replace with version from common
+!call cheb2oldgridc(cell,cellnew,cellnew%ncheb,1,testpot2,testpot_out)
+call cheb2oldgrid(cell%nrmax, cellnew%nrmaxnew, 1, cell%rmesh, cellnew%ncheb, cellnew%npan_tot, cellnew%rpan_intervall, cellnew%ipan_intervall, testpot2, testpot_out, cell%nrmax)
 
 testpot_out2=testpot_out
 

@@ -26,44 +26,44 @@ subroutine energyloop(my_rank,mpi_size,ITSCF,cell, vpot, shapefun,zatom,natom,ns
 #ifdef CPP_MPI
        use mpi
 #endif
-      use nrtype
-      use mod_rhoval
-      use mod_rhoval_new
-      use mod_rhovalfull
-      use type_cell
-      use type_cellnew
-      use type_cellorbit
-      use type_density
-      use type_tmat
-      use type_gmat
-      use type_config
-      use type_gmatonsite
-      use type_shapefun
-      use type_energyparts
-      use type_wavefunction
-      use type_ldau    ! lda+u
-      use mod_read_spinorbit
-      use mod_calctmat
-      use mod_calctmatfull
-      use mod_calctmat_bauernew
-      use mod_gdyson
-      use mod_interpolatecell
-      use mod_rotatespin
-      use mod_rotatespinframe
-      use mod_checknan
+      use nrtype, only: dp, dpc, pi, wlength
+      use mod_rhoval, only: rhoval
+      use mod_rhoval_new, only: rhoval_new
+      use mod_rhovalfull, only: rhovalfull
+      use type_cell, only: cell_type
+      use type_cellnew, only: cell_typenew
+      use type_cellorbit, only: cell_typeorbit
+      use type_density, only: density_type
+      use type_tmat, only: tmat_type
+      use type_gmat, only: gmat_type
+      use type_config, only: config_type
+      use type_gmatonsite, only: gmatonsite_type
+      use type_shapefun, only: shapefun_type
+      use type_energyparts, only: energyparts_type
+      use type_wavefunction, only: wavefunction_type
+      use type_ldau, only: ldau_type    ! lda+u
+      use mod_read_spinorbit, only: read_spinorbit
+      use mod_calctmat, only: calctmat
+      use mod_calctmatfull, only: calctmatfull
+      use mod_calctmat_bauernew, only: calctmat_bauernew
+      use mod_gdyson, only: gdyson, gdyson_read_kgrefsoc
+      use mod_interpolatecell, only: interpolatecell
+      use mod_rotatespin, only: rotatespin
+      use mod_rotatespinframe, only: rotatematrix, rotatevector
+      use mod_checknan, only: checknan
 !       use mod_config, only: config_testflag
-      use mod_config
-      use mod_timing
-      use mod_complexdos3
+      use mod_config, only: config_runflag, config_testflag
+      use mod_timing, only: timing_start, timing_stop, timing_pause
+      use mod_complexdos3, only: complexdos3
       use mod_log, only: log_write
-      use mod_read_angle
-      use mod_mixbroydenspin
-      use mod_wavefunctodisc
+      use mod_read_angle, only: read_angle, check_angle
+      use mod_mixbroydenspin, only: mixbroydenspinangle, mixbroydenspin
+      use mod_wavefunctodisc, only: wavefunctodisc_read, wavefunctodisc_write
       use mod_gauntharmonics, only: gauntcoeff
       use mod_mpienergy, only: mpienergy_distribute
       use mod_calccouplingconstants, only: calcJijmatrix,calccouplingconstants_writeoutJij
-      use mod_checkinterpolation
-      use mod_version_info
+      use mod_checkinterpolation, only: checkinterpolation
+      use mod_version_info, only: version_print_header
       implicit none
       integer                         :: ITSCF
       type(cell_type)                 ::  cell(natom)
@@ -577,10 +577,12 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
                  calcleft=.true.  ! calculate only right solution of WF is not stored
               end if
 ! Pass  array wldaumat into subroutine, to be added to vpotll in the subroutine ! lda+u
+              call timing_start('calctmat')
               call calctmat_bauernew (cell(IATOM),tmat(iatom,ispin),lmaxatom(iatom),ez(IE),ZATOM(iatom), &
                    cellnew(iatom),wavefunction(iatom,ispin),ispin,nspin,config%kspinorbit, &
                    use_fullgmat,density(IATOM)%theta,density(IATOM)%phi,config%ncoll,config%nsra,config,idotime, &
                    ie,ldau(iatom),iatom,cellorbit,calcleft)        ! lda+u
+              call timing_pause('calctmat')
 
 
               if ( iatom > config%wavefunc_recalc_threshhold ) then
@@ -616,6 +618,7 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
 
       end if
     end do !iatom
+    call timing_stop('calctmat')
     call timing_stop('vpot->tmat')
 
     if ( config_testflag('stopcalctmat') ) then

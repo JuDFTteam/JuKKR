@@ -18,9 +18,9 @@ contains
   !> irregular solutions.
   !-------------------------------------------------------------------------------
   subroutine calcwronskian(rll,sll,leftrll,leftsll,cellnew)
-    use mod_mathtools
-    use type_cellnew
-    use mod_chebyshev, only: getCLambdaCinv
+    use mod_mathtools, only: matmat1T, matmatT1, matvec_dzdz
+    use type_cellnew, only:  cell_typenew
+    use mod_cheb, only: getCLambdaCinv
     implicit none
   
     double complex ::  rll(:,:,:)

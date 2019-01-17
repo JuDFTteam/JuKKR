@@ -14,7 +14,7 @@ contains
     use nrtype, only: pi
     use type_density, only: density_type
     use type_cell, only: cell_type
-    use mod_chebyshev, only: intcheb_complex
+    use mod_cheb, only: intcheb_complex
     use mod_rotatespinframe, only: rotatematrix, spinmode
     use mod_config, only: config_testflag
     use mod_mathtools, only: rotvector

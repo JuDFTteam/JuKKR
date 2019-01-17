@@ -15,7 +15,9 @@
 module mod_cheb
 
   private
-  public :: getcmatrix, getcinvmatrix, getccmatrix, getlambda, getclambdacinv, getclambda2cinv, diffcheb
+  public :: getcmatrix, getcinvmatrix, getccmatrix, getlambda, getclambdacinv, getclambda2cinv, diffcheb,  intcheb_complex
+
+  double complex,allocatable :: intweight(:)
 
 contains
 
@@ -227,6 +229,42 @@ contains
     call getclambdacinv(ncheb, clambdacinv(0:ncheb,0:ncheb))
     call matvec_dmdm(ncheb, clambdacinv(0:ncheb,0:ncheb), fn(0:ncheb), dfndr(0:ncheb))
   end subroutine diffcheb
+
+
+!-------------------------------------------------------------------------------
+!> Summary: integrates an array arr1 containing function values of the Ncheb
+!> Author:
+!> Category: KKRimp, radial-grid
+!>           
+!-------------------------------------------------------------------------------
+  subroutine intcheb_complex(Ncheb,arr1,result1)
+    ! integrates an array arr1 containing function values of the Ncheb 
+    ! Chebyshev roots and stores the results in result1
+    use nrtype, only: pi
+    implicit none
+    integer, intent(in)         :: ncheb
+    double complex, intent(in)  :: arr1(0:Ncheb)
+    double complex, intent(out) :: result1
+    integer :: icheb1,icheb2
+    
+    if (.not. allocated(intweight)) then
+      allocate(intweight(0:ncheb))
+      intweight=1.0D0
+      do icheb1=0,ncheb
+        do icheb2=2,ncheb,2
+          intweight(icheb1)=intweight(icheb1)+(-2.0D0/(icheb2**2-1.0D0))*dcos(icheb2*pi*(icheb1+0.5D0)/(Ncheb+1))
+        end do
+        intweight(icheb1)=intweight(icheb1)*2.0D0/(Ncheb+1)
+      end do
+    end if
+    
+    if (ubound(intweight,1)/=Ncheb) stop 'error1234'
+    result1=(0.0D0,0.0D0)
+    do icheb1=0,ncheb
+      result1=result1+intweight(icheb1)*arr1(icheb1)
+    end do
+
+  end subroutine intcheb_complex
 
 
   ! helper functions:
