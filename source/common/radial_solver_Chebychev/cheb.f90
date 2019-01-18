@@ -240,7 +240,7 @@ contains
   subroutine intcheb_complex(Ncheb,arr1,result1)
     ! integrates an array arr1 containing function values of the Ncheb 
     ! Chebyshev roots and stores the results in result1
-    use nrtype, only: pi
+    use mod_constants, only: pi
     implicit none
     integer, intent(in)         :: ncheb
     double complex, intent(in)  :: arr1(0:Ncheb)

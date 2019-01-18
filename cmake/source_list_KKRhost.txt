@@ -338,8 +338,6 @@ add_executable(
     source/KKRhost/veq.f90
     source/KKRhost/vinterface.f90
     source/KKRhost/vintras.f90
-    source/KKRhost/vllmat.f90
-    source/KKRhost/vllmatsra.f90
     source/KKRhost/vllns.f90
     source/KKRhost/vmadelblk.f90
     source/KKRhost/vmul.f90
