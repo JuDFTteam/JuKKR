@@ -20,10 +20,12 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Subroutine that constructs SOC potential for the new solver
   !> Author:
-  !> Category: spin-orbit-coupling, potential, KKRhost 
+  !> Category: spin-orbit-coupling, potential, KKRhost, KKRimp
   !> Deprecated: False 
   !> Subroutine that constructs SOC potential for the new solverfrom radial derivative 
   !> of `vins` and adds this to `vnspll` (output is `vnspll1=vnspll+V_SOC`)
+  !> 
+  !> @note Chebychev mesh is used for the integration using a matrix-matrix multiplication (equation 5.53-5.54 of Bauer, Phd thesis) @endnote
   !-------------------------------------------------------------------------------
   subroutine spinorbit_ham(lmax,lmmaxd,vins,rnew,eryd,zat,cvlight,socscale,nspin,   &
     lmpotd,theta,phi,ipan_intervall,rpan_intervall,npan_tot,ncheb,irmdnew,nrmaxd,   &

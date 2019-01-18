@@ -23,46 +23,6 @@ use mod_orbitalmoment, only: calc_orbitalmoment
 use mod_intcheb_cell, only: intcheb_cell   ! lda+u
 use mod_timing, only: timing_start, timing_pause, timing_stop
 
-!       CALL RHOOUTNEW(density%den(:,ispin,ie),DF,GMATll,EK,RLL(:,:,:,1),SLL(:,:,:,1),density%RHO2NS(:,:,ispin),shapefun%thetas,shapefun%lmused,cell%npan, &
-!                     1,shapefun%lm2index,CDENNS,config%NSRA,gauntcoeff%CLEB,gauntcoeff%ICLEB,gauntcoeff%IEND &
-!                    ,CDENLM, & ! lm-dos
-!                     gauntcoeff%NCLEB,LMAXD,LMMAXATOM,(2*LMAXD+1)**2,cellnew%nrmaxnew,1,IRID, &
-!                     shapefun%nlmshaped)
-! c-----------------------------------------------------------------------
-! c
-! c     calculates the charge density from r(irmin) to r(irc)
-! c      in case of a non spherical input potential .
-! c
-! c     fills the array cden for the complex density of states
-! c
-! c     attention : the gaunt coeffients are stored in index array
-! c                   (see subroutine gaunt)
-! c
-! c     the structured part of the greens-function (gmat) is symmetric in
-! c       its lm-indices , therefore only one half of the matrix is
-! c       calculated in the subroutine for the back-symmetrisation .
-! c       the gaunt coeffients are symmetric too (since the are calculated
-! c       using the real spherical harmonics) . that is why the lm2- and
-! c       the lm02- loops are only only going up to lm1 or lm01 and the
-! c       summands are multiplied by a factor of 2 in the case of lm1 .ne.
-! c       lm2 or lm01 .ne. lm02 .
-! c
-! c             (see notes by b.drittler)
-! c
-! c                               b.drittler   aug. 1988
-! c-----------------------------------------------------------------------
-! C     .. Parameters ..
-! !       INCLUDE 'inc.p'
-! C
-! C *********************************************************************
-! C * For KREL = 1 (relativistic mode)                                  *
-! C *                                                                   *
-! C *  NPOTD = 2 * NATYPD                                               *
-! C *  LMMAXD = 2 * (LMAXD+1)^2                                         *
-! C *  NSPIND = 1                                                       *
-! C *                                                                   *
-! C *********************************************************************
-! C
       IMPLICIT NONE
       TYPE(GAUNTCOEFF_TYPE)  :: GAUNTCOEFF
       TYPE(CELL_TYPENEW)  :: CELLNEW
@@ -70,9 +30,7 @@ use mod_timing, only: timing_start, timing_pause, timing_stop
       INTEGER LMAXD,LMAXATOM
       INTEGER LMMAXATOM
       INTEGER LMSIZE,LMSIZE2
-!       parameter (lmmaxd= (krel+1) * (lmaxd+1)**2)
       INTEGER LMPOTD
-!       PARAMETER (LMPOTD= (LPOTD+1)**2)
       INTEGER IRMD
 ! C     ..
 ! C     .. Scalar Arguments ..
@@ -87,16 +45,10 @@ use mod_timing, only: timing_start, timing_pause, timing_stop
       DOUBLE COMPLEX CDENNS(IRMD,NSPINDEN), &
                      GMAT(LMSIZE,LMSIZE), &
                      GMATIN(LMSIZE,LMSIZE), &
-!                      PNS(LMSIZE,LMSIZE,IRMD,2), &
                     QNSI(LMSIZE,LMSIZE),RLLTEMP(LMSIZE,LMSIZE), &
-!                      QNS(LMSIZE,LMSIZE,IRMD,2) &
                     CDENLM(IRMD,LMMAXATOM,NSPINDEN), & ! lm-dos
                     RHO2NSC(IRMD,LMPOTD,NSPINDEN), &
                     gflle_part(lmsize,lmsize) ! lda+u
-
-!       DOUBLE PRECISION  &
-!                        THETAS(IRID,NFUND)
-!       INTEGER IFUNM(*),LMSP(*)
 ! C     ..
 ! C     .. Local Scalars ..
       DOUBLE COMPLEX CLTDF,CONE,CZERO
@@ -104,7 +56,6 @@ use mod_timing, only: timing_start, timing_pause, timing_stop
       INTEGER IFUN,IR,J,L1,LM1,LM2,LM3,M1
 ! C     ..
 ! C     .. Local Arrays ..
-!       DOUBLE COMPLEX WR(LMSIZE,LMSIZE,IRMD)
       DOUBLE COMPLEX,allocatable ::  WR(:,:,:), &
                                      cwr(:) ! lda+u
 
@@ -117,16 +68,12 @@ use mod_timing, only: timing_start, timing_pause, timing_stop
       INTEGER     :: NSPINSTART,NSPINSTOP,NSPINDEN
 
       DOUBLE COMPLEX :: Loperator(lmsize,lmsize,3)
-
 ! C     ..
 ! C     .. External Subroutines ..
       EXTERNAL ZGEMM
 ! C     ..
 ! C     .. Intrinsic Functions ..
       INTRINSIC ATAN,DIMAG,SQRT
-! C     ..
-! C     .. Save statement ..
-!       SAVE
 ! C     ..
 ! C     .. Data statements ..
       DATA CZERO/ (0.0D0,0.0D0)/
@@ -158,9 +105,6 @@ use mod_timing, only: timing_start, timing_pause, timing_stop
      if (corbital/=0) then
         CALL calc_orbitalmoment(lmaxatom,Loperator)
      end if
-
-!    write(*,*) 'lmsize',lmsize,nspinstart,nspinstop
-
 
 ! C     C0LL = 1/sqrt(4*pi)
      C0LL = 1.0d0/SQRT(16.0D0*ATAN(1.0D0))
@@ -268,7 +212,6 @@ use mod_timing, only: timing_start, timing_pause, timing_stop
 
 ! Phivos lda+u: Place here r-integration of wr(lms1,lms2,ir) to obtain cnll(lms1,lms2).    ! lda+u
 ! Integrate only up to muffin-tin radius.                                                  ! lda+u
-        call timing_start('int_rhoo')
         gflle_part(:,:) = czero                                                            ! lda+u
         do lm2 = 1,lmsize                                                                  ! lda+u
            do lm1 = 1,lmsize                                                               ! lda+u
@@ -277,7 +220,6 @@ use mod_timing, only: timing_start, timing_pause, timing_stop
               call intcheb_cell(cwr,gflle_part(lm1,lm2), cellnew%rpan_intervall, cellnew%ipan_intervall, cellnew%npan_tot, cellnew%ncheb, cellnew%nrmaxnew)                           ! lda+u
            enddo                                                                           ! lda+u
         enddo                                                                              ! lda+u
-        call timing_pause('int_rhoo')
 
 
 ! Change by Phivos 12.6.2012: this part was within previous IR-loop, now moved here        ! lda+u
@@ -296,7 +238,6 @@ use mod_timing, only: timing_start, timing_pause, timing_stop
 
 
      END DO !IR
-        call timing_stop('int_rhoo')
 
 
 ! c

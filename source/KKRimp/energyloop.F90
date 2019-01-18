@@ -81,8 +81,6 @@ subroutine energyloop(my_rank,mpi_size,ITSCF,cell, vpot, shapefun,zatom,natom,ns
       complex(kind=dpc)               ::  ez(ielast),wez(ielast)
       integer                         :: ielast
       type(config_type)             ::  config
-!       real(kind=dp)                   ::  rho2ns(cell%nrmax,(2*lmaxatom+1)**2,nspin,natom), espv(0:lmaxatom+1,2)
-!       double complex                  ::  den(0:lmaxatom+1) !,ez(iemxd), &
       integer                         ::  ie,ispin,iatom,ialpha
       integer                         ::  lm1
       type(tmat_type),allocatable    :: tmat(:,:) !(lmmaxd,lmmaxd)
@@ -96,13 +94,11 @@ subroutine energyloop(my_rank,mpi_size,ITSCF,cell, vpot, shapefun,zatom,natom,ns
       type(gmat_type)               :: gmat
       integer                        :: ilval,ilm,ilm2,ilmatom,lmsmax !lda+u
       integer                        :: nlmhost
-!       integer                        :: kgrefsoc
 
       integer                        :: ispinfac,ierror
 
       integer                        :: writeout_ie
       integer                        :: nspinden
-! write(*,*) 'test'
       double precision,allocatable    :: Jijmatrix(:,:,:,:)
       double precision,allocatable    :: Jijmatrix_temp(:,:,:,:)
       double precision,allocatable    :: Aimatrix(:,:)
@@ -204,11 +200,6 @@ if (itscf<=3) then
 else
   idotime=0
 end if
-
-! nlmhost=0
-! do iatom=1,natom
-!   nlmhost=nlmhost+(lmaxatom(iatom)+1)**2 * (gmat%kgrefsoc+1)
-! end do !iatom=1,natom
 
 
 if (ITSCF==1) then
@@ -340,15 +331,10 @@ if (config%ncoll==1) then
 
 end if ! (config%ncoll==1)
 
-!     density(1)%theta= 3.1415926D0/4.0D0 !/4.0D0
-!     density(1)%phi=0.0D0! 3.1415926D0/4.0D0
-
-
 do iatom=1,natom
   if (ITSCF==1) then
     allocate ( density(iatom)%rho2ns(cell(iatom)%nrmax,(2*lmaxatom(iatom)+1)**2,2), &
                density(iatom)%rho2ns_complex(cell(iatom)%nrmax,(2*lmaxatom(iatom)+1)**2,nspinden), &
-!                density(iatom)%espv(0:lmaxatom(iatom)+1,2), &
                density(iatom)%den(0:lmaxatom(iatom)+2,nspin,ielast), &
                density(iatom)%denlm((lmaxatom(iatom)+1)**2,nspin,ielast), &
                density(iatom)%ncharge(0:lmaxatom(iatom)+1,nspin ), &
@@ -467,17 +453,6 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
   end if 
 
 
-
-! stop
-! #ifndef MPI
-!   writeout_step = 1+(mpi_iebounds(2,my_rank)-mpi_iebounds(1,my_rank))/4
-!   if (mod(ie,writeout_step)==0 .or. ie==mpi_iebounds(2,my_rank)) then 
-!     write(*,'(A,I4,A,I4,A)') '[energyloop] Energy ie=',writeout_ie,' to',ie,' done'
-!     writeout_ie=ie
-!   end if
-! #endif
-
-
   ! ###################################
   ! # Start the spin loop
   ! ###################################
@@ -519,8 +494,6 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
         end if
 
 
-
-
       if (use_fullgmat==1 .and. .not. config_testflag('tmatnew')) then
         tmat(iatom,ispin)%tmat=(0.0D0,0.0D0)
         write(1337,*) 'call CALCTMATFULL'
@@ -552,10 +525,6 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
 
               call interpolatecell(cell(iatom)%nrcut(1)+1,shapefun(iatom)%thetas(:,:),(4*lmaxatom(iatom)+1)**2,CELL(IATOM), lmaxatom(iatom),cellnew(iatom),ispin,nspin,config,'shapefun',testpotdummy)
 
-
-
-
-
               call interpolatecell(1,VPOT(:,:,ISPIN,IATOM),(2*lmaxatom(iatom)+1)**2,CELL(IATOM),lmaxatom(iatom),cellnew(iatom),ispin,nspin,config,'potential',testpotdummy)
               if (use_fullgmat==1) then
                  call interpolatecell(1,VPOT(:,:,2,IATOM),(2*lmaxatom(iatom)+1)**2,CELL(IATOM),lmaxatom(iatom),cellnew(iatom),2,nspin,config,'potential',testpotdummy)
@@ -576,13 +545,11 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
               else
                  calcleft=.true.  ! calculate only right solution of WF is not stored
               end if
-! Pass  array wldaumat into subroutine, to be added to vpotll in the subroutine ! lda+u
-              call timing_start('calctmat')
+              ! Pass  array wldaumat into subroutine, to be added to vpotll in the subroutine ! lda+u
               call calctmat_bauernew (cell(IATOM),tmat(iatom,ispin),lmaxatom(iatom),ez(IE),ZATOM(iatom), &
                    cellnew(iatom),wavefunction(iatom,ispin),ispin,nspin,config%kspinorbit, &
                    use_fullgmat,density(IATOM)%theta,density(IATOM)%phi,config%ncoll,config%nsra,config,idotime, &
                    ie,ldau(iatom),iatom,cellorbit,calcleft)        ! lda+u
-              call timing_pause('calctmat')
 
 
               if ( iatom > config%wavefunc_recalc_threshhold ) then
@@ -618,8 +585,6 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
 
       end if
     end do !iatom
-    call timing_stop('calctmat')
-    call timing_stop('vpot->tmat')
 
     if ( config_testflag('stopcalctmat') ) then
       stop '[energyloop] stop after calctmat because of test flag'
@@ -809,11 +774,6 @@ do iatom=1,natom
        if (.not. config_testflag('tmatnew') ) then
 
         allocate(rho2ns_temp(cell(iatom)%nrmax,(2*lmaxatom(iatom)+1)**2,2))
-
-!         write(*,*) ubound(density(iatom)%rho2ns)
-!         write(*,*) ubound(rho2ns_temp)
-!         write(*,*) cell(iatom)%nrmax*(2*lmaxatom(iatom)+1)**2*2
-
   
         CALL MPI_REDUCE(density(iatom)%rho2ns, rho2ns_temp, cell(iatom)%nrmax*(2*lmaxatom(iatom)+1)**2*2, &
                         MPI_DOUBLE_PRECISION, MPI_SUM, 0,MPI_COMM_WORLD, ierror)
@@ -824,15 +784,11 @@ do iatom=1,natom
        else if ( config_testflag('tmatnew') ) then
 
         allocate(rho2ns_complex_temp(cell(iatom)%nrmax,(2*lmaxatom(iatom)+1)**2,nspinden))
-!        write(*,*) '1','iatom= ',iatom
         CALL MPI_REDUCE(density(iatom)%rho2ns_complex, rho2ns_complex_temp, cell(iatom)%nrmax*(2*lmaxatom(iatom)+1)**2*nspinden, &
                         MPI_DOUBLE_COMPLEX, MPI_SUM, 0,MPI_COMM_WORLD, ierror)
         density(iatom)%rho2ns_complex=rho2ns_complex_temp
-!        write(*,*) '2','iatom= ',iatom
   
-  !        if (my_rank==0) write(*,*) density(iatom)%espv 
         deallocate(rho2ns_complex_temp)!(cell(iatom)%nrmax,(2*lmaxatom(iatom)+1)**2,2))
-!        write(*,*) '3','iatom= ',iatom
 
 !-----------------------------------------------------------------------------------     ! lda+u
 !  mpi-reduce green-function parts                                                       ! lda+u
@@ -842,7 +798,6 @@ do iatom=1,natom
                         MPI_DOUBLE_COMPLEX, MPI_SUM, 0,MPI_COMM_WORLD, ierror)           ! lda+u
        density(iatom)%gfint=gfint_temp                                                   ! lda+u
        deallocate(gfint_temp)                                                            ! lda+u
-!         write(*,*) '4','iatom= ',iatom
 
        allocate(gflle_temp(lmsmax,lmsmax,ielast))                                        ! lda+u
        CALL MPI_REDUCE(density(iatom)%gflle, gflle_temp, ielast*lmsmax**2, &             ! lda+u
@@ -850,7 +805,6 @@ do iatom=1,natom
        density(iatom)%gflle=gflle_temp                                                   ! lda+u
        deallocate(gflle_temp)                                                            ! lda+u
 !-----------------------------------------------------------------------------------     ! lda+u
-!         write(*,*) '5','iatom= ',iatom
 
        end if
 
@@ -896,8 +850,6 @@ do iatom=1,natom
          density(iatom)%ncharge=ncharge_temp(0:lmaxatom(iatom)+1,:)
        end do !ispin=1,nspin
 ! 
-! write(*,*) 'include den and denlm'
-! !         write(my_rank+1000,'(5000F)') dimag(density(iatom)%den)
        allocate(den_temp(0:lmaxatom(iatom)+2,nspin,ielast))
        CALL MPI_REDUCE(density(iatom)%den, den_temp, (1+lmaxatom(iatom)+2)*nspin*ielast, &
                        MPI_DOUBLE_COMPLEX, MPI_SUM, 0,MPI_COMM_WORLD, ierror)
@@ -909,7 +861,6 @@ do iatom=1,natom
                        MPI_DOUBLE_COMPLEX, MPI_SUM, 0,MPI_COMM_WORLD, ierror)
        density(iatom)%denlm=denlm_temp
        deallocate(denlm_temp)
-! !         write(my_rank+2000,'(5000F)') dimag(density(iatom)%den)
 
 end do
 
@@ -928,7 +879,6 @@ end do
 
        end if
   
-!         write(*,*) '7','iatom= ',iatom
 
 allocate(espv_temp(0:lmaxd+1,NSPIN,NATOM))
 CALL MPI_REDUCE(energyparts%espv, espv_temp, (lmaxd+2)*NSPIN*NATOM, &
@@ -955,13 +905,6 @@ call log_write('<<<<<<<<<<<<<<<<<<< calcJij <<<<<<<<<<<<<<<<<<<')
 
 end if
 
-!      do lm1=1,(2*lmaxatom(1)+1)**2
-!        Do ispin=1,ubound(density(1)%RHO2NS_COMPLEX,3)
-!          write(7990+ispin,'(5000E)') density(1)%RHO2NS_COMPLEX(:,lm1,ispin)
-!        END DO
-!      end do
-
-
 if (config%ncoll==1) then
   do iatom=1,natom
     call rotatespin(density(iatom),cell(iatom),lmaxatom(iatom),config,iatom)
@@ -983,8 +926,6 @@ if (config%ncoll==1) then
     write(23452327,'(5000F)') density(iatom)%magmoment
   end do !iatom
 
-
-
 else
 
   if ( config_testflag('tmatnew') ) then
@@ -997,65 +938,6 @@ else
     end do
   end if
 end if
-
-
-
-
-
-
-! write(*,*) 'test'
-!c
-!c---> gather the parts in the last energy loop
-!c     be carefull!!! this is for the temperature!!!
-
-! do ispin=1,nspin
-!   do iatom=1,natom
-!     do ilval=0,lmaxatom(iatom)+1
-!             energyparts%espv(ilval,ispin,iatom) = energyparts%espv(ilval,ispin,iatom) - &
-!                                dreal(ez(ielast))*dimag(density(iatom)%ncharge(ilval,ispin))
-! 
-!     end do
-!   end do
-! end do 
-
-
-
-
-
-! c           write(6,'(13x,2e12.6)') e
-! c           write(6,'(13x,i3,1x,e12.6)') l,espv(l,i1,ispin)
-
-
-
-!   if(config_runflag('ldos')) then
-!     do iatom=1,natom
-!       do ispin=1,nspin
-!         OPEN(UNIT=30, &
-!             FILE="out_ldos.atom="//char(48+IATOM/10)//char(48+mod(IATOM,10))//"_spin"//char(48+ISPIN)//".dat")
-!         do ie=1,ielast
-!           WRITE(30,'(300G24.16)') DREAL(EZ(IE)),(-DIMAG(DENSITY(IATOM)%DEN(ilval,ISPIN,IE))/PI,ilval=0,LMAXATOM(IATOM)+1)
-!         end do !ie
-!         close(30)
-!       end do !ispin
-!     end do !iatom
-!   end if !lmdos
-! 
-! 
-! 
-!   if(config_runflag('lmdos')) then
-!     do iatom=1,natom
-!       do ispin=1,nspin
-!         OPEN(UNIT=30, &
-!             FILE="out_lmdos.atom="//char(48+IATOM/10)//char(48+mod(IATOM,10))//"_spin"//char(48+ISPIN)//".dat")
-!         do ie=1,ielast
-!           WRITE(30,'(300G24.16)') DREAL(EZ(IE)),(-DIMAG(DENSITY(IATOM)%DENLM(LM1,ISPIN,IE))/PI,LM1=1,(LMAXATOM(IATOM)+1)**2)
-!         end do !ie
-!         close(30)
-!       end do !ispin
-!     end do !iatom
-!   end if !lmdos
-
-
 
 
   if(config_runflag('ldos').or.config_runflag('lmdos')) then

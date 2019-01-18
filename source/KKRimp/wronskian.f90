@@ -61,8 +61,6 @@ contains
     allocate(fn(nrmax),fn2(nrmax),dfndr(nrmax),dfn2dr(nrmax))
     allocate(fn3(nrmax),fn4(nrmax),dfn3dr(nrmax),dfn4dr(nrmax))
   
-    ! if (lmsize/=lmsize2) stop '[calcwronskian] error lmsize/=lmsize2'
-  
   
     ! ############################################################3
     ! Differentiate the wave functions
@@ -101,51 +99,17 @@ contains
       end do 
     end do
   
-    ! if (lmsize2==2*lmsize) then
-    !   allocate(temp1(lmsize,lmsize))
-    ! !   print *,lmsize
-    ! !   stop 'sdf'
-    ! 
-    !   do ir=1,nrmax
-    !     temp1=dleftslldr(:lmsize,:,ir)
-    !     dleftslldr(:lmsize,:,ir)=dleftslldr(lmsize+1:,:,ir) !-leftsll(lmsize+1:,:,ir) !/cellnew%rmeshnew(ir)
-    !     dleftslldr(lmsize+1:,:,ir)=temp1 ! +leftsll(:lmsize,:,ir)/cellnew%rmeshnew(ir))*1.0D0
-    !     temp1=drlldr(:lmsize,:,ir)
-    !     drlldr(:lmsize,:,ir)=drlldr(lmsize+1:,:,ir) !-rll(lmsize+1:,:,ir)!/cellnew%rmeshnew(ir)
-    !     drlldr(lmsize+1:,:,ir)=temp1 ! +rll(:lmsize,:,ir)/cellnew%rmeshnew(ir))*1.0D0
-    !   end do 
-    ! end if
-  
-  
   
     do ir=1,nrmax
-    !   write(2212,'(50000E)') rll(:,:,ir)
-    !   write(2212,'(50000E)') dslldr(:,:,ir)
-    !   write(2212,'(50000E)') sll(:,:,ir)
-    !   write(2212,'(50000E)') drlldr(:,:,ir)
-    !   write(*,*) 'q',ubound(dleftslldr),ubound(rll)
       wronskian(:,:,ir)= matmatT1( dleftslldr(:,:,ir),rll(:,:,ir)  )
       wronskian2(:,:,ir)= matmat1T( rll(:,:,ir),leftsll(:,:,ir)  )
-    !   write(2212,'(50000E)') wronskian(:,:,ir)
-    !   write(*,*) 'p',ubound(leftsll),ubound(drlldr)
       wronskian(:,:,ir)= wronskian(:,:,ir) - matmatT1(leftsll(:,:,ir),drlldr(:,:,ir))
       wronskian2(:,:,ir)= wronskian2(:,:,ir) - matmat1T(sll(:,:,ir),leftrll(:,:,ir))
   
-    !   write(2212,'(50000E)') wronskian(:,:,ir)
-    !   stop
     end do 
-  
-    ! write(2222,'(50000E)') rll(1,1,:)
-    ! write(2223,'(50000E)') drlldr(1,1,:)
-    ! write(2224,'(50000E)') sll(1,1,:)*drlldr(1,1,:)-dslldr(1,1,:)*rll(1,1,:)
-    ! write(2225,'(50000E)') sll(1,1,:)*rll(lmsize+1,1,:)-sll(lmsize+1,1,:)*rll(1,1,:)
-    ! write(2226,'(50000E)') rll(lmsize+1,1,:)
-    ! write(2227,'(50000E)') drlldr(1,1,:)
-  
   
     open(unit=3246762,file='test_wronskian')
     open(unit=3246763,file='test_wronskian2')
-    ! open(unit=3246764,file='test_wronskian_sra')
   
     do ilm1=1,lmsize
       do ilm2=1, lmsize
@@ -158,15 +122,6 @@ contains
         write(3246763,'(50000E)') wronskian2(ilm2,ilm1,:)
       end do
     end do
-  
-  
-    ! if (lmsize2==2*lmsize) then
-    !   do ilm1=1,lmsize
-    !     do ilm2=1, lmsize
-    !       write(3246764,'(50000E)') sll(ilm1,ilm2,:)*rll(lmsize+ilm1,ilm2,:)-sll(lmsize+ilm1,ilm2,:)*rll(ilm1,ilm2,:)
-    !     end do
-    !   end do
-    ! end if
   
     close(3246762)
     close(3246763)

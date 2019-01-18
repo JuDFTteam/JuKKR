@@ -208,38 +208,12 @@ else
   leftsol=0
 end if
 
-! lmsize= ubound(wavefunction%Rll,1)
-! print *,'lmsize, lmmax',lmsize,lmmax
-
 bpot(:,:,1) = (cellnew%vpotnew(:,:,1)-cellnew%vpotnew(:,:,2)) *0.5D0 ! not quite sure if this factor should appear here
                                                               !        check the reference of Ebert
 
-
-
-
-
-! do ir=1,nrmax
-! write(7776,'(50000E)') bpot(ir,:,1)
-! end do
-
-! replace with version from common
-!call vllmat(bpotll,bpot,lmax,lmmax,lmpot,1, &
-!            cellnew%nrmaxnew,gauntcoeff,0.0D0,cellnew%rmeshnew,lmmax,0,2,1,'NS')
 call vllmat(1, cellnew%nrmaxnew, cellnew%nrmaxnew, lmmax, lmsize, bpotll, bpot, lmpot, gauntcoeff%cleb, gauntcoeff%icleb, gauntcoeff%iend, 2, 0.0_dp, cellnew%rmeshnew, 0, gauntcoeff%ncleb)
 
-!   do ir=1,nrmax
-!  write(7777,'(50000E)') bpotll(:,:,ir)
-! end do
 call calclambda(lambda,theta,phi)
-! print *,theta,phi
-! print *,lambda(1,:,1)
-! print *,lambda(2,:,1)
-! 
-! print *,lambda(1,:,2)
-! print *,lambda(2,:,2)
-! 
-! print *,lambda(1,:,3)
-! print *,lambda(2,:,3)
 
 
 ! ##########################################################################################3
@@ -280,8 +254,6 @@ do kspin=1,3
     do ilm2=1,lmsize
 !       write(*,*) ilm1,ilm2,lmsize
       fntemp = RBpotR(ilm1,ilm2,:)
-      ! replace with version from common
-      !call intcheb_cell(fntemp, cellnew, RBpotR_integrated(ilm1,ilm2,kspin))
       call intcheb_cell(fntemp, RBpotR_integrated(ilm1,ilm2,kspin), cellnew%rpan_intervall, cellnew%ipan_intervall, cellnew%npan_tot, cellnew%ncheb, cellnew%nrmaxnew)
     end do
   end do
@@ -289,12 +261,6 @@ do kspin=1,3
 ! stop
 end do !kspin
 
-!   do kspin=1,3
-! !     write(*,*) 'spin ',kspin
-!     do ilm1=1,lmsize
-!       write(7700-1+kspin,'(50000E)') RBpotR_integrated(ilm1,:,kspin)
-!     end do !ilm1
-!   end do !kspin
 deltaTmat=RBpotR_integrated
 
 ! stop

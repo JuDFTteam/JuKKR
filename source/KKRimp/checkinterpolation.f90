@@ -26,7 +26,6 @@ type(cell_type)    :: cell
 type(cell_typenew) :: cellnew
 double precision   :: vpotin(cell%nrmax,1)
 type(config_type)  :: config
-! integer             :: lmpot
 !local
 double precision,allocatable   :: testpot(:,:)
 double complex,allocatable   :: testpot2(:,:)
@@ -34,7 +33,7 @@ double complex               :: testpot_out(cell%nrmax)
 double precision               :: testpot_out2(cell%nrmax)
 double precision   :: rms
 integer            :: ir
-! do ilm = 1 , 
+
 testpot_out=0.0D0
 testpot_out2=0.0D0
 print *,'Interpol old->new'
@@ -44,12 +43,7 @@ print *,'allocate ',ubound(testpot,1),ubound(testpot,2)
 allocate (testpot2(ubound(testpot,1),ubound(testpot,2)))
 testpot2=testpot
 
-! allocate ( testpot_out(cellnew%nrmaxnew) )
-! allocate ( testpot_out2(cellnew%nrmaxnew) )
-
 print *,'Interpol new->old'
-! replace with version from common
-!call cheb2oldgridc(cell,cellnew,cellnew%ncheb,1,testpot2,testpot_out)
 call cheb2oldgrid(cell%nrmax, cellnew%nrmaxnew, 1, cell%rmesh, cellnew%ncheb, cellnew%npan_tot, cellnew%rpan_intervall, cellnew%ipan_intervall, testpot2, testpot_out, cell%nrmax)
 
 testpot_out2=testpot_out

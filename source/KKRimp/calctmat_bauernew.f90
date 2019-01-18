@@ -140,30 +140,17 @@ end if
 ! set up the calculation of the VLL matrix
 !  according to formula 4.12 of Bauer,PhD Thesis
 !#######################################################
-call timing_start('vllmat')
 IF (NSRA<=2) then ! non/scalar-relativistic case (+SOC)
 
   allocate(Vpotll(2*lmsize,2*lmsize,cellnew%nrmaxnew), stat=istat)
   if (istat/=0) stop 'Error allocating Vpotll in calctmat_bauernew'
   Vpotll = czero
 
-  !if ( config_testflag('nosph') .or. nsra==5 ) then ! set up VLL by omitting the spherical
-  !                                                      ! potential
-  !  call VLLMAT(Vpotll,cellnew%Vpotnew(:,:,:),LMAXATOM,(LMAXATOM+1)**2,LMPOT,1, &
-  !              cellnew%nrmaxnew,gauntcoeff(lmaxatom),zatom,cellnew%rmeshnew,lmsize,use_fullgmat,NSPIN,ISPIN,'NS')
-  !else                                                  ! use all components of Vpot
-  !  call VLLMAT(Vpotll,cellnew%Vpotnew(:,:,:),LMAXATOM,(LMAXATOM+1)**2,LMPOT,1, &
-  !              cellnew%nrmaxnew,gauntcoeff(lmaxatom),zatom,cellnew%rmeshnew,lmsize,use_fullgmat,NSPIN,ISPIN,'NOSPH')
-  !end if
-
-  ! The following replaces the old implementation (above) and is taken from KKRhost version (now in common)
   if ( config_testflag('nosph') ) then
     use_sratrick = 0
   else
     use_sratrick = 1
   endif
-
-  !write(*,*) 'allocate vnspll0'
 
   allocate(vins(cellnew%nrmaxnew, lmpot, nspin), vnspll0(lmsize, lmsize, cellnew%nrmaxnew), stat=istat)
   if (istat/=0) stop 'Error allocating vins in calctmat_bauernew'
@@ -180,7 +167,6 @@ else if (nsra==3) then ! use the full Dirac solver by Pascal Kordt, PhD thesis
   call PotentialMatrixArray(lmaxatom,lmaxatom,zatom,cellnew%rmeshnew,cellnew%nrmaxnew,eryd,cellnew%vpotnew,Vpotll) ! cellnew%vpotnew(ir,lm1,ispin)
 
 end if
-call timing_stop('vllmat')
 
 !----------------------------------------------------------------------------------- ! lda+u
 ! Add wldau to vpotll                                                                ! lda+u
@@ -195,20 +181,17 @@ if (ldau%lopt.ge.0.and.ie.ge.ldau%ieldaustart.and.ie.le.ldau%ieldauend) then    
    if (use_fullgmat.eq.1) then    ! 2x2 in spin space                                ! lda+u
       
       do ir = 1,imt1                                                                 ! lda+u
-         !vpotll(lmlo:lmhi,lmlo:lmhi,ir) = vpotll(lmlo:lmhi,lmlo:lmhi,ir) + ldau%wldau(1:mmax,1:mmax,1)                ! lda+u
          vnspll0(lmlo:lmhi,lmlo:lmhi,ir) = vnspll0(lmlo:lmhi,lmlo:lmhi,ir) + ldau%wldau(1:mmax,1:mmax,1)                ! lda+u
       enddo                                                                          ! lda+u
       lmlo = lmlo + lmmax                                                            ! lda+u
       lmhi = lmhi + lmmax                                                            ! lda+u
       do ir = 1,imt1                                                                 ! lda+u
-         !vpotll(lmlo:lmhi,lmlo:lmhi,ir) = vpotll(lmlo:lmhi,lmlo:lmhi,ir) + ldau%wldau(1:mmax,1:mmax,2)        ! lda+u
          vnspll0(lmlo:lmhi,lmlo:lmhi,ir) = vnspll0(lmlo:lmhi,lmlo:lmhi,ir) + ldau%wldau(1:mmax,1:mmax,2)        ! lda+u
       enddo                                                                          ! lda+u
 
    else       ! 1x1 in spin space                                                    ! lda+u 
 
       do ir = 1,imt1
-         !vpotll(lmlo:lmhi,lmlo:lmhi,ir) = vpotll(lmlo:lmhi,lmlo:lmhi,ir) + ldau%wldau(1:mmax,1:mmax,ispin)            ! lda+u
          vnspll0(lmlo:lmhi,lmlo:lmhi,ir) = vnspll0(lmlo:lmhi,lmlo:lmhi,ir) + ldau%wldau(1:mmax,1:mmax,ispin)            ! lda+u
       enddo                                                                          ! lda+u
    endif  
@@ -220,7 +203,6 @@ endif                                                                           
 if ( config_testflag('vlldebug') ) then
   do ir=1,cellnew%nrmaxnew
       write(1233,'(50000E)') Vnspll0(:,:,ir)
-      !write(1233,'(50000E)') Vpotll(:,:,ir)
       if (kspinorbit==1) write(11233,'(50000E)') Vpotll2(:,:,ir)
   end do
 end if
@@ -232,14 +214,10 @@ end if
 ! in case of spin-orbit coupling V_LL ist not any more symmetric in L-space. Thus,
 ! the left- and right solutions need to be calculated explicitly. We transpose the
 ! potential in L-space in order to calculate the the left solution.
-  !write(*,*) 'kspinorbit', kspinorbit
 if (kspinorbit==1) then
 
-!write(*,*) 1
   allocate(Vpotll2(2*lmsize,2*lmsize,cellnew%nrmaxnew))
-!write(*,*) 2
   allocate(vnspll1(lmsize,lmsize,cellnew%nrmaxnew))
-!write(*,*) 3
   allocate(vnspll2(lmsize,lmsize,cellnew%nrmaxnew))
   vpotll2 = czero
   vnspll1 = czero
@@ -247,22 +225,12 @@ if (kspinorbit==1) then
 
   write(1337,*) 'spinorbit index','','atom',iatom,cellorbit%use_spinorbit(iatom)
   if (cellorbit%use_spinorbit(iatom)==1) then
-call timing_start('HSOC')
 
-    ! old version before merger with KKRhost: (now use spinorbit_ham from common)
-    !call spinorbit(lmaxatom,zatom, eryd,cellnew,cellnew%nrmaxnew,nspin,Vpotll,theta,phi,ncoll,'1')
-    !call spinorbit(lmaxatom,zatom, eryd,cellnew,cellnew%nrmaxnew,nspin,Vpotll2,theta,phi,ncoll,'transpose')
-    ! new version:
-
-    !write(*,*) lmmax, lmsize, lmaxatom
-    !write(*,*) shape(vnspll0)
-    !write(*,*) shape(vnspll1)
     ! for right solution
     call spinorbit_ham(lmaxatom, lmmax, vins, cellnew%rmeshnew, eryd, zatom, cvlight, 1.0_dp, nspin, &
       lmpot, theta, phi, cellnew%ipan_intervall, cellnew%rpan_intervall, cellnew%npan_tot, &
       cellnew%ncheb, cellnew%nrmaxnew, cellnew%nrmaxnew, vnspll0, vnspll1, '1')
 
-    !write(*,*) shape(vnspll2)
     ! for left solution
     call spinorbit_ham(lmaxatom, lmmax, vins, cellnew%rmeshnew, eryd, zatom, cvlight, 1.0_dp, nspin, &
       lmpot, theta, phi, cellnew%ipan_intervall, cellnew%rpan_intervall, cellnew%npan_tot, &
@@ -274,14 +242,11 @@ call timing_start('HSOC')
     vnspll2 = vnspll0
 
   end if
-call timing_stop('HSOC')
 
 end if
 
 if ( config_testflag('vlldebug') ) then
   do ir=1,cellnew%nrmaxnew
-      !write(1234,'(50000E)') Vpotll(:,:,ir)
-      !if (kspinorbit==1) write(11234,'(50000E)') Vpotll2(:,:,ir)
       write(1234,'(50000E)') vnspll1(:,:,ir)
       if (kspinorbit==1) write(11234,'(50000E)') vnspll2(:,:,ir)
   end do
@@ -302,14 +267,10 @@ end if
 
 if (nsra==2) then
 
-call timing_start('vllmatsra')
   if ( config_testflag('nosph') .or. nsra==5 ) then
-    ! replaced with version in common
-    !call vllmatsra(Vpotll,cellnew%rmeshnew,eryd,lmaxatom,0,'Ref=0')
     call vllmatsra(vnspll1, Vpotll, cellnew%rmeshnew, lmsize, cellnew%nrmaxnew, cellnew%nrmaxnew, &
       eryd, lmaxatom, 0, 'Ref=0')
   else
-    !call vllmatsra(Vpotll,cellnew%rmeshnew,eryd,lmaxatom,0,'Ref=Vsph')
     call vllmatsra(vnspll1, Vpotll, cellnew%rmeshnew, lmsize, cellnew%nrmaxnew, cellnew%nrmaxnew, &
       eryd, lmaxatom, 0, 'Ref=Vsph')
   end if
@@ -317,17 +278,14 @@ call timing_start('vllmatsra')
   if (kspinorbit==1) then    ! do the same with the potential matrix
                              ! used for the left solution
     if ( config_testflag('nosph') .or. nsra==5 ) then
-      !call vllmatsra(Vpotll2,cellnew%rmeshnew,eryd,lmaxatom,0,'Ref=0')
       call vllmatsra(vnspll2, Vpotll2, cellnew%rmeshnew, lmsize, cellnew%nrmaxnew, cellnew%nrmaxnew, &
         eryd, lmaxatom, 0, 'Ref=0')
     else
-      !call vllmatsra(Vpotll2,cellnew%rmeshnew,eryd,lmaxatom,0,'Ref=Vsph')
       call vllmatsra(vnspll2, Vpotll2, cellnew%rmeshnew, lmsize, cellnew%nrmaxnew, cellnew%nrmaxnew, &
         eryd, lmaxatom, 0, 'Ref=Vsph')
     end if
 
   end if
-call timing_stop('vllmatsra')
 
 end if
 
@@ -370,9 +328,6 @@ end if
 !#######################################################
 
 ! calculate the Bessel and Hankel functions
-! replace with version from common:
-call timing_start('rllsource')
-!call rllsllsourceterms( nsra,wavefunction%nvec,eryd,cellnew%rmeshnew,cellnew%nrmaxnew,lmaxatom,lmsize,use_fullgmat,jlk_index,hlk,jlk,hlk2,jlk2,GMATPREFACTOR)
 allocate(jlk_index(wavefunction%nvec*lmsize), &
   hlk(1:nsra*(1+kspinorbit)*(lmaxatom+1),cellnew%nrmaxnew), &
   jlk(1:nsra*(1+kspinorbit)*(lmaxatom+1),cellnew%nrmaxnew), &
@@ -384,12 +339,10 @@ jlk = czero
 hlk = czero
 jlk2 = czero
 hlk2 = czero
-!write(*,*) 'rllsource', nsra, wavefunction%nvec, cellnew%nrmaxnew, cellnew%nrmaxnew, lmaxatom, lmsize, use_fullgmat, shape(jlk)
 ! this is needed since rllsllsourceterms uses this from global variables
 korbit = kspinorbit
 call rllsllsourceterms(nsra, wavefunction%nvec, eryd, cellnew%rmeshnew, cellnew%nrmaxnew, cellnew%nrmaxnew, &
   lmaxatom, lmsize, use_fullgmat, jlk_index, hlk, jlk, hlk2, jlk2, GMATPREFACTOR)
-call timing_stop('rllsource')
 
 ! might be deleted in the future
 if ( config_testflag('kappamutest')) then
@@ -444,17 +397,12 @@ end if
 !#######################################################
 
 if ( .not. config_testflag('nosph') .and. nsra/=5 ) then
-call timing_start('calcsph')
-      ! replace with version from common
-      !call calcsph(nsra,cellnew,zatom,use_fullgmat,nspin,ispin,lmaxatom,eryd, &
-      !  jlk_index,hlk,jlk,hlk2,jlk2,GMATPREFACTOR,gauntcoeff(lmaxatom) ,tmatsph ,idotime)
       allocate(tmatsph(nspin*(lmaxatom+1)), stat=istat)
       tmatsph = czero
       if(istat/=0) stop 'Error allocating tmatsph in calctmat_bauernew'
       call calcsph(nsra, cellnew%nrmaxnew, cellnew%nrmaxnew, lmaxatom, nspin/(2-kspinorbit), zatom, eryd, &
         lmpot, lmsize, cellnew%rmeshnew, vins, cellnew%ncheb, cellnew%npan_tot, cellnew%rpan_intervall, jlk_index, &
         hlk, jlk, hlk2, jlk2, gmatprefactor, tmatsph, tmattemp, use_sratrick)
-call timing_stop('calcsph')
 end if
 
 if ( config_testflag('writesourceterms')) then
@@ -526,17 +474,10 @@ end if
 !#######################################################! 
 ! calculate the right-hand side solution of the single-site wave functions
 !#######################################################! 
-call timing_start('rllsll')
-! replace with version from common:
-!call RLLSLL(cellnew%rpan_intervall,cellnew%rmeshnew,VPOTLL,&
-!  wavefunction%RLL(:,:,:,1),wavefunction%SLL(:,:,:,1),tmat%tmat, &
-!  cellnew%ncheb,cellnew%npan_tot,lmsize,lmsize2,cellnew%nrmaxnew,wavefunction%nvec,jlk_index,hlk,jlk,hlk2,jlk2,GMATPREFACTOR,'1','1','0',idotime)
 tmat%tmat = czero
-!write(*,*) shape(Vpotll)
 call rllsll(cellnew%rpan_intervall, cellnew%rmeshnew, Vpotll, wavefunction%RLL(:,:,:,1), wavefunction%SLL(:,:,:,1), &
   tmat%tmat, cellnew%ncheb, cellnew%npan_tot, lmsize, lmsize2, nsra*(1+kspinorbit)*(lmaxatom+1), cellnew%nrmaxnew, nsra, &
   jlk_index, hlk, jlk, hlk2, jlk2, GMATPREFACTOR, '1', '1', '0', use_sratrick, tmattemp)
-call timing_stop('rllsll')
 
 if (nsra==2) then ! for nummerical reasons a factor of cvlight has been added to the equations
                   ! which needs to be removed now
@@ -599,40 +540,26 @@ if ((kspinorbit==1).and.calcleft) then
 
   wavefunction%SLLleft=(0.0D0,0.0D0)
   wavefunction%RLLleft=(0.0D0,0.0D0)
-call timing_start('rllsource')
 
-  ! replace with version from common
-  !deallocate(jlk_index,hlk,jlk,hlk2,jlk2)
   jlk_index = czero
   hlk = czero
   jlk = czero
   jlk2 = czero
   hlk2 = czero
-  !call rllsllsourceterms(nsra,wavefunction%nvec,(eryd),cellnew%rmeshnew,cellnew%nrmaxnew,lmaxatom,lmsize,use_fullgmat,jlk_index,hlk,jlk,hlk2,jlk2,GMATPREFACTOR)
   call rllsllsourceterms(nsra, wavefunction%nvec, eryd, cellnew%rmeshnew, cellnew%nrmaxnew, cellnew%nrmaxnew, &
     lmaxatom, lmsize, use_fullgmat, jlk_index, hlk, jlk, hlk2, jlk2, GMATPREFACTOR)
    
-call timing_stop( 'rllsource')
   
   if ( .not. config_testflag('nosph') .and. nsra/=5 ) then
-call timing_start('calcsph')
-      !call calcsph(nsra,cellnew,zatom,use_fullgmat,nspin,ispin,lmaxatom,(eryd), &
-      !  jlk_index,hlk2,jlk2,hlk,jlk,GMATPREFACTOR,gauntcoeff(lmaxatom) ,tmatsph ,idotime)
       call calcsph(nsra, cellnew%nrmaxnew, cellnew%nrmaxnew, lmaxatom, nspin/(2-kspinorbit), zatom, eryd, &
         lmpot, lmsize, cellnew%rmeshnew, vins, cellnew%ncheb, cellnew%npan_tot, cellnew%rpan_intervall, jlk_index, &
         hlk2, jlk2, hlk, jlk, gmatprefactor, tmatsph, tmattemp, use_sratrick)
-call timing_stop( 'calcsph')
   end if
 
-call timing_start('rllsll')
-  !call RLLSLL(cellnew%rpan_intervall,cellnew%rmeshnew,VPOTLL2,&
-  !  wavefunction%RLLleft(:,:,:,1),wavefunction%SLLleft(:,:,:,1),tmattemp, &
-  !  cellnew%ncheb,cellnew%npan_tot,lmsize,lmsize2,cellnew%nrmaxnew,wavefunction%nvec,jlk_index,hlk2,jlk2,hlk,jlk,GMATPREFACTOR,'1','1','0',idotime)
   call rllsll(cellnew%rpan_intervall, cellnew%rmeshnew, Vpotll2, wavefunction%RLLleft(:,:,:,1), wavefunction%SLLleft(:,:,:,1), &
     tmattemp, cellnew%ncheb, cellnew%npan_tot, lmsize, lmsize2, nsra*(1+kspinorbit)*(lmaxatom+1), cellnew%nrmaxnew, nsra, &
     ! ------------>    watch out here changed the order for left and right solution <-----------
     jlk_index, hlk2, jlk2, hlk, jlk, GMATPREFACTOR, '1', '1', '0', use_sratrick, tmattemp)
-call timing_stop( 'rllsll')
   if (nsra==2) then
     wavefunction%RLLleft(lmsize+1:,:,:,1)=wavefunction%RLLleft(lmsize+1:,:,:,1)/(cvlight)
     wavefunction%SLLleft(lmsize+1:,:,:,1)=wavefunction%SLLleft(lmsize+1:,:,:,1)/(cvlight)
@@ -719,9 +646,13 @@ if ( config_testflag('checknan') ) then
 end if
 
 ! clean up allocations
-deallocate(Vpotll, tmattemp, tmatsph, vins, jlk_index, hlk, jlk, hlk2, jlk2, stat=istat)
-  
+deallocate(Vpotll, tmattemp, vins, jlk_index, hlk, jlk, hlk2, jlk2, stat=istat)
 if (istat/=0) stop 'Error deallocating arrays in calctmat_bauernew'
+if ( .not. config_testflag('nosph') .and. nsra/=5 ) then
+  deallocate(tmatsph, stat=istat)
+  if (istat/=0) stop 'Error deallocating arrays in calctmat_bauernew'
+end if
+  
 
 
 end subroutine calctmat_bauernew
