@@ -211,7 +211,7 @@ end if
 bpot(:,:,1) = (cellnew%vpotnew(:,:,1)-cellnew%vpotnew(:,:,2)) *0.5D0 ! not quite sure if this factor should appear here
                                                               !        check the reference of Ebert
 
-call vllmat(1, cellnew%nrmaxnew, cellnew%nrmaxnew, lmmax, lmsize, bpotll, bpot, lmpot, gauntcoeff%cleb, gauntcoeff%icleb, gauntcoeff%iend, 2, 0.0_dp, cellnew%rmeshnew, 0, gauntcoeff%ncleb)
+call vllmat(1, cellnew%nrmaxnew, cellnew%nrmaxnew, lmmax, lmmax, bpotll, bpot, lmpot, gauntcoeff%cleb, gauntcoeff%icleb, gauntcoeff%iend, 2, 0.0_dp, cellnew%rmeshnew, 0, gauntcoeff%ncleb)
 
 call calclambda(lambda,theta,phi)
 
