@@ -26,15 +26,15 @@ contains
     ! ************************************************************************
     ! for description see rllsll routine
     ! ************************************************************************
-    use :: mod_timing            ! timing routine
+    use :: mod_timing, only: timing_start, timing_stop  ! timing routine
 #ifdef CPP_HYBRID
     use :: omp_lib               ! omp functions
 #endif
 
-    use :: mod_constants
+    use :: mod_constants, only: cone, czero
     use :: mod_datatypes, only: dp
-    use :: mod_chebint
-    use :: mod_rll_local_solutions
+    use :: mod_chebint, only: chebint
+    use :: mod_rll_local_solutions, only: rll_local_solutions
 
     implicit none
     integer :: ncheb             ! number of chebyshev nodes

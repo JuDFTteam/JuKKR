@@ -767,9 +767,9 @@ end module mod_rllsll
 !-------------------------------------------------------------------------------
 program test_rllsll
 
-  use :: mod_timing
-  use :: mod_constants
-  use :: mod_datatypes, only :: dp
+  use :: mod_timing, only: 
+  use :: mod_constants, only: 
+  use :: mod_datatypes, only: dp
 
   implicit none
 

@@ -26,7 +26,7 @@ contains
   subroutine spin_orbit_compl(lmax, lmmaxd, l_s)
 
     use :: mod_spin_orbit, only: spin_orbit_one_l
-    use :: mod_cinit
+    use :: mod_cinit, only: cinit
     use :: mod_constants, only: ci
     implicit none
 
