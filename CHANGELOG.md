@@ -15,7 +15,7 @@
 
 ----
 
-## *UNRELEASED* (last updated: 2018-12-19)
+## *UNRELEASED* (last updated: 2019-01-22)
 
 **Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release.**
 
@@ -26,16 +26,18 @@ Removed a lot of code duplicates among different
 
 ### Changed
 - more routines and modules in source/common directory
-- use shared library for pkkprime file among different apps
+- use static library for pkkprime file among different apps
+- use static library for kkrhost routines
+- use routines from common/radial_solver_Chebychev in KKRimp as well
 
 ### Deprecated
-- removed code duplicates
+- None
 
 ### Removed
-- None
+- removed code duplicates
 
 ### Fixed
-- None
+- header handling in complexdos3 tool
 
 ----
 
