@@ -9,11 +9,10 @@
 #   * calculate_spinmixing.x
 #   * visdata.x
 #   * vis2int.x
-#   * vis2int.x
 #   * test.x
 
-add_executable(
-    Pkkr.x
+# here we define a shared library which is used by all executables of the Pkkprime package (see list above)
+add_library(lib_pkkr SHARED
     source/common/DataTypes.f90
     source/common/latvec.f90
     source/common/ddet33.f90
@@ -22,7 +21,6 @@ add_executable(
     source/common/mod_verify77.f90
     source/common/findgroup.f90 
     source/common/pointgrp.f90
-    source/PKKprime/main.f90
     source/PKKprime/type_inc.F90
     source/PKKprime/mod_mympi.F90
     source/PKKprime/mod_ioformat.f90
@@ -47,285 +45,103 @@ add_executable(
     source/PKKprime/mod_scattering.F90
     source/PKKprime/mod_routines.F90
 )
+
+
+# main Pkkprime executable
+add_executable(
+    Pkkr.x
+    source/PKKprime/main.f90
+)
+target_link_libraries(Pkkr.x lib_pkkr)
 if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
     target_link_libraries(Pkkr.x ${lapackblas_libraries})
 endif()
 
+
+# band structure tool
 add_executable(
     band.x
-    source/common/DataTypes.f90
-    source/common/ddet33.f90
-    source/common/latvec.f90
-    source/common/cross.f90
-    source/common/constants.f90
-    source/common/mod_verify77.f90
-    source/common/findgroup.f90 
-    source/common/pointgrp.f90
-    source/PKKprime/type_inc.F90
-    source/PKKprime/mod_mympi.F90
-    source/PKKprime/mod_ioformat.f90
-    source/PKKprime/mod_ioinput.f90
-    source/PKKprime/mod_mathtools.f90
-    source/PKKprime/mod_parutils.f90
-    source/PKKprime/type_data.F90
-    source/PKKprime/mod_eigvects.f90
-    source/PKKprime/mod_dlke.f90
-    source/PKKprime/mod_kkrmat.F90
-    source/PKKprime/mod_read.F90
     source/PKKprime/mod_bandstr.F90
     source/PKKprime/bands.f90
 )
+target_link_libraries(band.x lib_pkkr)
 if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
     target_link_libraries(band.x ${lapackblas_libraries})
 endif()
 
+
+# merge FS subcalculations
 add_executable(
     mergerefined.x
-    source/common/DataTypes.f90
-    source/common/constants.f90
-    source/common/cross.f90
-    source/common/ddet33.f90
-    source/common/latvec.f90
-    source/common/mod_verify77.f90
-    source/common/findgroup.f90 
-    source/common/pointgrp.f90
-    source/PKKprime/type_inc.F90
-    source/PKKprime/mod_mympi.F90
-    source/PKKprime/mod_ioformat.f90
-    source/PKKprime/mod_ioinput.f90
-    source/PKKprime/mod_mathtools.f90
-    source/PKKprime/mod_parutils.f90
-    source/PKKprime/mod_vtkxml.f90
-    source/PKKprime/timing.F90
-    source/PKKprime/mod_iohelp.F90
-    source/PKKprime/type_data.F90
-    source/PKKprime/mod_eigvects.f90
-    source/PKKprime/mod_dlke.f90
-    source/PKKprime/mod_spintools.f90
-    source/PKKprime/mod_kkrmat.F90
-    source/PKKprime/mod_symmetries.F90
-    source/PKKprime/mod_read.F90
-    source/PKKprime/mod_fermisurf_basic.F90
-    source/PKKprime/mod_fermisurf_3D.F90
-    source/PKKprime/mod_fermisurf_2D.F90
-    source/PKKprime/mod_fermisurf.F90
     source/PKKprime/mergerefined.F90
 )
+target_link_libraries(mergerefined.x lib_pkkr)
 if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
     target_link_libraries(mergerefined.x ${lapackblas_libraries})
 endif()
 
+
+# refine parts of the FS
 add_executable(
     refineBZparts.x
-    source/common/DataTypes.f90
-    source/common/constants.f90
-    source/common/cross.f90
-    source/common/ddet33.f90
-    source/common/latvec.f90
-    source/common/mod_verify77.f90
-    source/PKKprime/mod_mympi.F90
-    source/common/findgroup.f90 
-    source/common/pointgrp.f90
-    source/PKKprime/mod_mathtools.f90
-    source/PKKprime/mod_vtkxml.f90
-    source/PKKprime/mod_ioinput.f90
-    source/PKKprime/mod_ioformat.f90
     source/PKKprime/refineBZparts.f90
 )
+target_link_libraries(refineBZparts.x lib_pkkr)
 if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
     target_link_libraries(refineBZparts.x ${lapackblas_libraries})
 endif()
 
+
+# precalculate A-matrix (can then be read in)
 add_executable(
     Amatprecalc.x
-    source/common/DataTypes.f90
-    source/common/constants.f90
-    source/common/ddet33.f90
-    source/common/cross.f90
-    source/common/latvec.f90
-    source/common/mod_verify77.f90
-    source/common/findgroup.f90 
-    source/common/pointgrp.f90
-    source/PKKprime/type_inc.F90
-    source/PKKprime/mod_mympi.F90
-    source/PKKprime/mod_ioformat.f90
-    source/PKKprime/mod_ioinput.f90
-    source/PKKprime/mod_mathtools.f90
-    source/PKKprime/mod_parutils.f90
-    source/PKKprime/mod_vtkxml.f90
-    source/PKKprime/timing.F90
-    source/PKKprime/mod_iohelp.F90
-    source/PKKprime/type_data.F90
-    source/PKKprime/mod_eigvects.f90
-    source/PKKprime/mod_dlke.f90
-    source/PKKprime/mod_spintools.f90
-    source/PKKprime/mod_kkrmat.F90
-    source/PKKprime/mod_symmetries.F90
-    source/PKKprime/mod_read.F90
-    source/PKKprime/mod_fermisurf_basic.F90
-    source/PKKprime/mod_fermisurf_3D.F90
-    source/PKKprime/mod_fermisurf_2D.F90
-    source/PKKprime/mod_fermisurf.F90
-    source/PKKprime/mod_calconfs.F90
-    source/PKKprime/mod_scattering.F90
     source/PKKprime/Amatprecalc.f90
 )
+target_link_libraries(Amatprecalc.x lib_pkkr)
 if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
     target_link_libraries(Amatprecalc.x ${lapackblas_libraries})
 endif()
 
+
+# compute spin-mixing
 add_executable(
     calculate_spinmixing.x
-    source/common/DataTypes.f90
-    source/common/ddet33.f90
-    source/common/cross.f90
-    source/common/latvec.f90
-    source/common/constants.f90
-    source/common/mod_verify77.f90
-    source/common/findgroup.f90 
-    source/common/pointgrp.f90
     source/PKKprime/calculate_spinmixing.F90
-    source/PKKprime/type_inc.F90
-    source/PKKprime/mod_mympi.F90
-    source/PKKprime/mod_ioformat.f90
-    source/PKKprime/mod_ioinput.f90
-    source/PKKprime/mod_mathtools.f90
-    source/PKKprime/mod_parutils.f90
-    source/PKKprime/mod_vtkxml.f90
-    source/PKKprime/timing.F90
-    source/PKKprime/mod_iohelp.F90
-    source/PKKprime/type_data.F90
-    source/PKKprime/mod_eigvects.f90
-    source/PKKprime/mod_dlke.f90
-    source/PKKprime/mod_spintools.f90
-    source/PKKprime/mod_kkrmat.F90
-    source/PKKprime/mod_symmetries.F90
-    source/PKKprime/mod_read.F90
-    source/PKKprime/mod_fermisurf_basic.F90
-    source/PKKprime/mod_fermisurf_3D.F90
-    source/PKKprime/mod_fermisurf_2D.F90
-    source/PKKprime/mod_fermisurf.F90
-    source/PKKprime/mod_calconfs.F90
-    source/PKKprime/mod_scattering.F90
-    source/PKKprime/mod_routines.F90
 )
+target_link_libraries(calculate_spinmixing.x lib_pkkr)
 if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
     target_link_libraries(calculate_spinmixing.x ${lapackblas_libraries})
 endif()
 
+
+# 
 add_executable(
     visdata.x
-    source/common/constants.f90
-    source/common/ddet33.f90
-    source/common/cross.f90
-    source/common/latvec.f90
-    source/common/mod_verify77.f90
-    source/common/DataTypes.f90
-    source/common/findgroup.f90 
-    source/common/pointgrp.f90
     source/PKKprime/visdata.F90
-    source/PKKprime/type_inc.F90
-    source/PKKprime/mod_mympi.F90
-    source/PKKprime/mod_ioformat.f90
-    source/PKKprime/mod_ioinput.f90
-    source/PKKprime/mod_mathtools.f90
-    source/PKKprime/mod_parutils.f90
-    source/PKKprime/mod_vtkxml.f90
-    source/PKKprime/timing.F90
-    source/PKKprime/mod_iohelp.F90
-    source/PKKprime/type_data.F90
-    source/PKKprime/mod_eigvects.f90
-    source/PKKprime/mod_dlke.f90
-    source/PKKprime/mod_spintools.f90
-    source/PKKprime/mod_kkrmat.F90
-    source/PKKprime/mod_symmetries.F90
-    source/PKKprime/mod_read.F90
-    source/PKKprime/mod_fermisurf_basic.F90
-    source/PKKprime/mod_fermisurf_3D.F90
-    source/PKKprime/mod_fermisurf_2D.F90
-    source/PKKprime/mod_fermisurf.F90
-    source/PKKprime/mod_calconfs.F90
-    source/PKKprime/mod_scattering.F90
-    source/PKKprime/mod_routines.F90
 )
+target_link_libraries(visdata.x lib_pkkr)
 if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
     target_link_libraries(visdata.x ${lapackblas_libraries})
 endif()
 
+
+# convert visualize to integration set
 add_executable(
     vis2int.x
-    source/common/constants.f90
-    source/common/latvec.f90
-    source/common/ddet33.f90
-    source/common/cross.f90
-    source/common/mod_verify77.f90
-    source/common/DataTypes.f90
-    source/common/findgroup.f90 
-    source/common/pointgrp.f90
     source/PKKprime/vis2int.F90
-    source/PKKprime/type_inc.F90
-    source/PKKprime/mod_mympi.F90
-    source/PKKprime/mod_ioformat.f90
-    source/PKKprime/mod_ioinput.f90
-    source/PKKprime/mod_mathtools.f90
-    source/PKKprime/mod_parutils.f90
-    source/PKKprime/mod_vtkxml.f90
-    source/PKKprime/timing.F90
-    source/PKKprime/mod_iohelp.F90
-    source/PKKprime/type_data.F90
-    source/PKKprime/mod_eigvects.f90
-    source/PKKprime/mod_dlke.f90
-    source/PKKprime/mod_spintools.f90
-    source/PKKprime/mod_kkrmat.F90
-    source/PKKprime/mod_symmetries.F90
-    source/PKKprime/mod_read.F90
-    source/PKKprime/mod_fermisurf_basic.F90
-    source/PKKprime/mod_fermisurf_3D.F90
-    source/PKKprime/mod_fermisurf_2D.F90
-    source/PKKprime/mod_fermisurf.F90
-    source/PKKprime/mod_calconfs.F90
-    source/PKKprime/mod_scattering.F90
-    source/PKKprime/mod_routines.F90
 )
+target_link_libraries(vis2int.x lib_pkkr)
 if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
     target_link_libraries(vis2int.x ${lapackblas_libraries})
 endif()
 
+
+# some tests
 add_executable(
     test.x
-    source/common/constants.f90
-    source/common/latvec.f90
-    source/common/cross.f90
-    source/common/ddet33.f90
-    source/common/mod_verify77.f90
-    source/common/DataTypes.f90
-    source/common/findgroup.f90 
-    source/common/pointgrp.f90
-    source/PKKprime/type_inc.F90
-    source/PKKprime/mod_mympi.F90
-    source/PKKprime/mod_ioformat.f90
-    source/PKKprime/mod_ioinput.f90
-    source/PKKprime/mod_mathtools.f90
-    source/PKKprime/mod_parutils.f90
-    source/PKKprime/mod_vtkxml.f90
-    source/PKKprime/timing.F90
-    source/PKKprime/mod_iohelp.F90
-    source/PKKprime/type_data.F90
-    source/PKKprime/mod_eigvects.f90
-    source/PKKprime/mod_dlke.f90
-    source/PKKprime/mod_spintools.f90
-    source/PKKprime/mod_kkrmat.F90
-    source/PKKprime/mod_symmetries.F90
-    source/PKKprime/mod_read.F90
-    source/PKKprime/mod_fermisurf_basic.F90
-    source/PKKprime/mod_fermisurf_3D.F90
-    source/PKKprime/mod_fermisurf_2D.F90
-    source/PKKprime/mod_fermisurf.F90
-    source/PKKprime/mod_calconfs.F90
-    source/PKKprime/mod_scattering.F90
-    source/PKKprime/mod_routines.F90
     source/PKKprime/test.F90
 )
+target_link_libraries(test.x lib_pkkr)
 if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
     target_link_libraries(test.x ${lapackblas_libraries})
 endif()

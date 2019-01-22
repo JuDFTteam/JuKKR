@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-mkdir tests/KKRhost/test_run11_mpi_1_8
-cd tests/KKRhost/test_run11_mpi_1_8
+mkdir test_run11_mpi_1_8
+cd test_run11_mpi_1_8
 ln -s ../test_inputs/test_11_*/* .
 rm DTM GMAT
 cp -r ../test_inputs/test_11_*/{DTM,GMAT} .
@@ -17,6 +17,6 @@ rm -f gmat tmat gref *for* inputcard_generated.txt
 cd ../GMAT
 mpirun -np 8 ../../../kkr.x | tee out_kkr
 rm -f gmat tmat gref *for* inputcard_generated.txt
-cd ../
+cd ../../
 
 

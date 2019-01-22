@@ -37,6 +37,20 @@ add_executable(
     source/common/ymy.f90
     source/common/splint.f90
     source/common/spline.f90
+    source/common/radial_solver_Chebychev/intcheb_cell.f90
+    source/common/radial_solver_Chebychev/cheb.f90
+    source/common/radial_solver_Chebychev/cheb2oldgrid.f90
+    source/common/radial_solver_Chebychev/chebint.f90
+    source/common/radial_solver_Chebychev/rllsll.F90
+    source/common/radial_solver_Chebychev/rllsllsourceterms.f90
+    source/common/radial_solver_Chebychev/create_newmesh.f90
+    source/common/radial_solver_Chebychev/vllmat.f90
+    source/common/radial_solver_Chebychev/vllmatsra.f90
+    source/common/radial_solver_Chebychev/calcsph.f90
+    source/common/spinorbit_ham.f90
+    source/common/runoptions.F90
+    source/common/ioinput.f90
+    source/common/beshank.f90
     source/voronoi/test.f
     source/KKRimp/nrtype.f90
     source/KKRimp/type_gmatbulk.f90
@@ -62,7 +76,6 @@ add_executable(
     source/KKRimp/log.f90
     source/KKRimp/mathtools.f90
     source/KKRimp/config.f90
-    source/KKRimp/beshank.f
     source/KKRimp/wrapper.f90
     source/KKRimp/simp3.f90
     source/KKRimp/regsol.f
@@ -114,20 +127,11 @@ add_executable(
     source/KKRimp/csimpk.f
     source/KKRimp/pnsqns.f
     source/KKRimp/BasisTransform.f90
-    source/KKRimp/chebyshev.f90
-    source/KKRimp/cheb2oldgridc.f90
-    source/KKRimp/chebint.f
     source/KKRimp/mixbroydenspin.f90
     source/KKRimp/rotaterealspace.f90
     source/KKRimp/rotatespin.f90
     source/KKRimp/orbitalmoment.f90
-    source/KKRimp/spinorbit.f90
-    source/KKRimp/vllmatsra.f90
-    source/KKRimp/vllmat_new.f
     source/KKRimp/calccouplingconstants.f90
-    source/KKRimp/rllslltools.f90
-    source/KKRimp/rllsllsourceterms.f90
-    source/KKRimp/rllsll.F90
     source/KKRimp/complexdos3.f90
     source/KKRimp/rholm.f
     source/KKRimp/rhoin.f90
@@ -143,7 +147,6 @@ add_executable(
     source/KKRimp/interpolpot.f
     source/KKRimp/interpolatecell.f90
     source/KKRimp/checkinterpolation.f90
-    source/KKRimp/calcsph.f90
     source/KKRimp/wronskian.f90
     source/KKRimp/calctmat_bauernew_testtools.f90
     source/KKRimp/calctmat_bauernew.f90

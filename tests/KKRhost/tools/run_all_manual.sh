@@ -83,30 +83,24 @@ echo ""
 echo "###########################################"
 echo "run:intel:OPERATOR_10:"
 echo ""
-cd ../../
-if [[ ! -d tests/KKRhost/test_run10_mpi_1_8 ]]; then
-  tests/KKRhost/tools/run_test_10.sh
+if [[ ! -d test_run10_mpi_1_8 ]]; then
+  ./tools/run_test_10.sh
 fi
-cd tests/KKRhost
 
 echo "###########################################"
 echo "run:intel:DTM_GMATLL_11:"
 echo ""
-cd ../../
-if [[ ! -d tests/KKRhost/test_run11_mpi_1_8 ]]; then
-  tests/KKRhost/tools/run_test_11.sh
+if [[ ! -d test_run11_mpi_1_8 ]]; then
+  ./tools/run_test_11.sh
 fi
-cd tests/KKRhost
 
 echo "###########################################"
 echo "run:intel:rhoq_13:"
 echo ""
-cd ../../
-if [[ ! -d tests/KKRhost/test_run13 ]]; then
-  #tests/KKRhost/tools/run_test_13.sh
+if [[ ! -d test_run13 ]]; then
+  #./tools/run_test_13.sh
   echo 'test deactivated'
 fi
-cd tests/KKRhost
 
 
 echo "###########################################"
@@ -138,47 +132,37 @@ echo ""
 echo "###########################################"
 echo "run:intel:decimate_19:"
 echo ""
-cd ../../
-if [[ ! -d tests/KKRhost/test_run19_mpi_2_4 ]]; then
-  tests/KKRhost/tools/run_test_19.sh
+if [[ ! -d test_run19_mpi_2_4 ]]; then
+  ./tools/run_test_19.sh
 fi
-cd tests/KKRhost
 
 echo "###########################################"
 echo "run:intel:godfrin_20:"
 echo ""
-cd ../../
-if [[ ! -d tests/KKRhost/test_run20_hybrid_1_3 ]]; then
-  tests/KKRhost/tools/run_test_20.sh
+if [[ ! -d test_run20_hybrid_1_3 ]]; then
+  ./tools/run_test_20.sh
 fi
-cd tests/KKRhost
 
 echo "###########################################"
 echo "run:intel:XCs_21:"
 echo ""
-cd ../../
-if [[ ! -d tests/KKRhost/test_run21_hybrid_1_3 ]]; then
-  tests/KKRhost/tools/run_test_21.sh
+if [[ ! -d test_run21_hybrid_1_3 ]]; then
+  ./tools/run_test_21.sh
 fi
-cd tests/KKRhost
 
 echo "###########################################"
 echo "run:intel:LDA+U_22:"
 echo ""
-cd ../../
-if [[ ! -d tests/KKRhost/test_run22_hybrid_1_3 ]]; then
-  tests/KKRhost/tools/run_test_22.sh
+if [[ ! -d test_run22_hybrid_1_3 ]]; then
+  ./tools/run_test_22.sh
 fi
-cd tests/KKRhost
 
 echo "###########################################"
 echo "run:intel:DOS_23:"
 echo ""
-cd ../../
-if [[ ! -d tests/KKRhost/test_run23_hybrid_1_3 ]]; then
-  tests/KKRhost/tools/run_test_23.sh
+if [[ ! -d test_run23_hybrid_1_3 ]]; then
+  ./tools/run_test_23.sh
 fi
-cd tests/KKRhost
 
 
 #SOC tests
@@ -201,11 +185,9 @@ echo ""
 echo "###########################################"
 echo "run:intel:NOSOC_3_2:"
 echo ""
-cd ../../
-if [[ ! -d tests/KKRhost/test_run03.2_hybrid_1_3 ]]; then
-  tests/KKRhost/tools/run_test_03_2.sh
+if [[ ! -d test_run03.2_hybrid_1_3 ]]; then
+  ./tools/run_test_03_2.sh
 fi
-cd tests/KKRhost
 
 echo "###########################################"
 echo "run:intel:Jijs_SOC_4_1:"
@@ -241,9 +223,7 @@ echo ""
 echo "###########################################"
 echo "run:intel:decimate_SOC_19_1:"
 echo ""
-cd ../../
-if [[ ! -d tests/KKRhost/test_run19.1_mpi_2_4 ]]; then
-  tests/KKRhost/tools/run_test_19_1.sh
+if [[ ! -d test_run19.1_mpi_2_4 ]]; then
+  ./tools/run_test_19_1.sh
 fi
-cd tests/KKRhost
 

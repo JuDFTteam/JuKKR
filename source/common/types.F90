@@ -12,7 +12,7 @@
 !------------------------------------------------------------------------------------
 module mod_types
 
-  use :: mod_datatypes
+  use :: mod_datatypes, only: dp
   use :: mod_constants, only: czero
 
   implicit none
