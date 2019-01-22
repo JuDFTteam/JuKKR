@@ -12,7 +12,7 @@
 #   * test.x
 
 # here we define a shared library which is used by all executables of the Pkkprime package (see list above)
-add_library(lib_pkkr SHARED
+add_library(lib_pkkr STATIC
     source/common/DataTypes.f90
     source/common/latvec.f90
     source/common/ddet33.f90
@@ -45,6 +45,8 @@ add_library(lib_pkkr SHARED
     source/PKKprime/mod_scattering.F90
     source/PKKprime/mod_routines.F90
 )
+# disable cmake auto add pf 'lib' prefix to .so file
+SET_TARGET_PROPERTIES(lib_pkkr PROPERTIES PREFIX "")
 
 
 # main Pkkprime executable
