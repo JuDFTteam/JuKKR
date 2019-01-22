@@ -762,6 +762,6 @@ module mod_runoptions
     call mpi_bcast(write_gmat_file               , 1, mpi_logical, master, mpi_comm_world, ierr)
 
   end subroutine bcast_runoptions
-#endif CPP_MPI
+#endif
 
 end module mod_runoptions
