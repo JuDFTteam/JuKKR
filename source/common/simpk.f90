@@ -30,9 +30,9 @@ contains
   !-------------------------------------------------------------------------------
   subroutine simpk(f, fint, ipan, ircut, drdi)
 
-    use :: global_variables
+    use :: global_variables, only: ipand
     use :: mod_datatypes, only: dp
-    use :: mod_ssum
+    use :: mod_ssum, only: ssum
 
     integer, intent (in) :: ipan   ! < Number of panels in non-MT-region
     integer, dimension (0:ipand), intent (in) :: ircut ! < R points of panel borders

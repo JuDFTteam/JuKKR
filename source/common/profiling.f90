@@ -14,7 +14,6 @@
 !------------------------------------------------------------------------------------
 module mod_profiling
 
-  use :: mod_datatypes
   implicit none
 
 contains
@@ -56,6 +55,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine memocc(istat, isize, array, routine)
     use :: mod_types, only: t_inc
+    use mod_datatypes, only: di
     implicit none
     character (len=*), intent (in) :: array
     character (len=*), intent (in) :: routine
