@@ -9,73 +9,32 @@
 !> Author: 
 !> Wrapper for the calculation of the irregular solutions
 !------------------------------------------------------------------------------------
-!> @note preprocessor options: change this definition if used in host/impurity code
-!> this is commented out, since then the logical hostcode is not defined
-!> and thus `#indef hostcode` returns true and `#ifdef hostcode` false 
-!>
-!> * **Host code**: leave the line `#define hostcode` **uncommented**.
-!> * **Impurity code**: **comment** the line`#define hostcode`.
-!>
-!> This allows one to choose between interface for impurity and host code (different calling lists)
-!> @endnote
-!------------------------------------------------------------------------------------
 module mod_sll_global_solutions
 
 contains
 
-#define hostcode 
-
-#ifndef hostcode
   !-------------------------------------------------------------------------------
   !> Summary: Wrapper for the calculation of the irregular solutions
   !> Author: 
-  !> Category: solver, single-site, KKRhost
-  !> Deprecated: False 
-  !> Wrapper for the calculation of the irregular solutions for the host code `KKRhost`
-  !-------------------------------------------------------------------------------
-  !> @note One can comment out the line `#define hostcode` to instead choose the
-  !> calculation of the irregular solutions for the impuirty code.
-  !> @endnote
-  !-------------------------------------------------------------------------------
-  subroutine sll_global_solutions(rpanbound,rmesh,vll,sll,ncheb,npan,lmsize,lmsize2,&
-    nrmax,nvec,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor,cmodesll,idotime)
-#else
-  !-------------------------------------------------------------------------------
-  !> Summary: Wrapper for the calculation of the irregular solutions
-  !> Author: 
-  !> Category: solver, single-site, KKRhost
+  !> Category: single-site, KKRhost
   !> Deprecated: False 
   !> Wrapper for the calculation of the irregular solutions for the impurity code `KKRimp`
-  !-------------------------------------------------------------------------------
-  !> @note One can uncomment out the line `#define hostcode` to instead choose the
-  !> calculation of the irregular solutions for the host code.
-  !> @endnote
   !-------------------------------------------------------------------------------
   subroutine sll_global_solutions(rpanbound,rmesh,vll,sll,ncheb,npan,lmsize,lmsize2,&
     lbessel,nrmax, nvec,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor,cmodesll,         &
     use_sratrick1)               ! LLY
-#endif
     ! ************************************************************************
     ! for description see rllsll routine
     ! ************************************************************************
-#ifndef hostcode
-    use :: mod_beshank           ! calculates bessel and hankel func.
-    use :: mod_chebint           ! chebyshev integration routines
-    use :: mod_config, only: config_testflag ! reads if testflags are present
-    use :: mod_rllslltools, only: inverse ! inverse matrix routine
-    use :: mod_physic_params, only: cvlight ! speed of light
-    use :: sourceterms
-    use :: mod_chebyshev
-#endif
-    use :: mod_timing            ! timing routine
+    use :: mod_timing, only: timing_start, timing_stop  ! timing routine
 #ifdef CPP_HYBRID
     use :: omp_lib               ! omp functions
 #endif
 
-    use :: mod_constants
+    use :: mod_constants, only: czero, cone
     use :: mod_datatypes, only: dp
-    use :: mod_chebint
-    use :: mod_sll_local_solutions
+    use :: mod_chebint, only: chebint
+    use :: mod_sll_local_solutions, only: sll_local_solutions
 
     implicit none
     integer :: ncheb             ! number of chebyshev nodes
@@ -85,9 +44,7 @@ contains
     integer :: nvec              ! spinor integer
     ! nvec=1 non-rel, nvec=2 for sra and dirac
     integer :: nrmax             ! total number of rad. mesh points
-#ifdef hostcode
     integer :: lbessel, use_sratrick1 ! dimensions etc., needed only for host code interface
-#endif
 
     ! running indices
     integer :: lm1, lm2
@@ -96,22 +53,9 @@ contains
     ! source terms
     complex (kind=dp) :: gmatprefactor ! prefactor of green function
     ! non-rel: = kappa = sqrt e
-#ifndef hostcode
-    complex (kind=dp) :: hlk(:, :), jlk(:, :), & ! right sol. source terms
-      hlk2(:, :), jlk2(:, :)     ! left sol. source terms
-    ! (tipically bessel and hankel fn)
-#else
     complex (kind=dp) :: hlk(lbessel, nrmax), jlk(lbessel, nrmax), hlk2(lbessel, nrmax), jlk2(lbessel, nrmax)
-#endif
 
-#ifndef hostcode
-    integer :: jlk_index(:)      ! mapping array l = jlk_index(lm)
-    ! in: lm-index
-    ! corresponding l-index used hlk,..
-    ! hlk(l) = jlk_index(lm)
-#else
     integer :: jlk_index(2*lmsize)
-#endif
 
     character (len=1) :: cmodesll                           ! These define the op(V(r))
 
@@ -166,26 +110,14 @@ contains
     ! implemented which should lead to an additional speed-up.
     ! ***********************************************************************
 
-#ifndef hostcode
-    if (config_testflag('nosph') .or. lmsize==1) then
-      use_sratrick = 0
-    else if (.not. config_testflag('nosph')) then
-      use_sratrick = 1
-    else
-      stop '[sll-glob] use_sratrick error'
-    end if
-#else
     if (lmsize==1) then
       use_sratrick = 0
     else
       use_sratrick = use_sratrick1
     end if
-#endif
 
-#ifdef hostcode
     ! turn timing output off if in the host code
     idotime = 0
-#endif
 #ifdef test_run
     idotime = 1
 #endif

@@ -45,6 +45,7 @@ contains
 
     use :: mod_datatypes, only: dp
     use :: global_variables
+    use :: mod_runoptions, only: use_ldau
     use :: mod_constants, only: czero,cone,pi
     implicit none
     ! lm-dos
@@ -64,7 +65,6 @@ contains
     ! ..
     complex (kind=dp) :: wr(lmmaxd, lmmaxd, irmind:irmd), wr2(lmmaxd, lmmaxd, irmind:irmd)
     ! ..
-    logical :: opt
 
     ! ---> initialize array for complex charge density
 
@@ -145,7 +145,7 @@ contains
             do lm2 = 1, lmmaxd     ! LDAU
               cwr(i, lm1, lm2) = cwr(i, lm1, lm2)*thetas(i-imt1, 1)*c0ll ! LDAU
               ! lmlm-dos
-              if (opt('LDA+U   ')) then ! lm-dos
+              if (use_ldau) then ! lm-dos
                 cwr(i, lm1, lm2) = czero
               end if
             end do                 ! L1

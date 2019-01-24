@@ -38,7 +38,6 @@ c     eim=pi*Kb*Tk
       if (text(1:10)/='# serial: ' ) rewind(49)
       OPEN (50,FILE='new3.dos',FORM='formatted')
       OPEN (51,FILE='new3_eV_EF.dos',FORM='formatted')
-      READ (49,*) TEXT2 !dummy readin of header, may be replaced later
       READ (49,*) NPOT
       READ (49,*) IEMAX
       READ (49,*) LMAX

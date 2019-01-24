@@ -75,8 +75,7 @@
       SUBROUTINE IRWNS(CR,DR,EFAC,QNS,VNSPLL,ICST,IPAN,IRCUT,NSRA,
      +                   PZLM,QZLM,PZEKDR,QZEKDR,CDER,CMAT,DDER,DMAT,
      +                   IRMIND,IRMD,IPAND,LMMAXD)
-      USE MOD_WFINT0
-      USE MOD_WFINT
+      USE MOD_WFINT, only: wfint, wfint0
       USE MOD_CSINWD
       IMPLICIT NONE
 c-----------------------------------------------------------------------
@@ -152,10 +151,10 @@ C     ..
 c---> set up integrands for i-th born approximation
         IF (I.EQ.0) THEN
           CALL WFINT0(CDER,DDER,QZLM,QZEKDR,PZEKDR,VNSPLL,NSRA,IRMIND,
-     +                  IRMD,LMMAXD)
+     +                  IRMD,LMMAXD, irmind, irmd)
         ELSE
           CALL WFINT(QNS,CDER,DDER,QZEKDR,PZEKDR,VNSPLL,NSRA,IRMIND,
-     +                 IRMD,LMMAXD)
+     +                 IRMD,LMMAXD, irmind, irmd)
         END IF
 c---> call integration subroutines
         CALL CSINWD(CDER,CMAT,LMMAXD**2,IRMIND,IRMD,IPAN,IRCUT)

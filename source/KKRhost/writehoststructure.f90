@@ -22,7 +22,8 @@ contains
   !> of the host structure to be used by the KKRimp program
   !-------------------------------------------------------------------------------
   subroutine writehoststructure(bravais, nrbasis, rbasis, naezd, nembd)
-    use :: mod_version_info
+    use :: mod_version_info, only: version_print_header
+    use :: mod_runoptions, only: disable_print_serialnumber
     use :: mod_md5sums
     use :: mod_datatypes, only: dp
     use :: mod_ioinput
@@ -37,13 +38,13 @@ contains
     ! .. Local variables
     integer :: iatom
     real (kind=dp) :: wght
-    character (len=256) :: uio
+    character (len=:), allocatable :: uio
     integer :: ier, it
     integer, dimension(8) :: itemp1
     real (kind=dp), dimension(4) :: ftemp
 
     open (unit=3463453, file='kkrflex_hoststructure.dat')
-    call version_print_header(3463453, '; '//md5sum_potential//'; '//md5sum_shapefun)
+    call version_print_header(3463453, addition='; '//md5sum_potential//'; '//md5sum_shapefun, disable_print=disable_print_serialnumber)
 
     write (3463453, '(100A)') '[bravais]'
     write (3463453, '(100A)') '#   x   y   z - component'

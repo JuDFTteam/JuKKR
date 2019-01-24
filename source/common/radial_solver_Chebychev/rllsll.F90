@@ -4,7 +4,6 @@
 ! of the MIT license as expressed in the LICENSE.md file in more detail.                  !
 !-----------------------------------------------------------------------------------------!
 
-#define hostcode
 ! #define test_run
 ! #define test_prep
 
@@ -13,12 +12,7 @@
 !> Author: 
 !> Wrapper module for the calculation of the regular and irregular solutions 
 !------------------------------------------------------------------------------------
-!> @note preprocessor options: change this definition if used in host/impurity code
-!> this is commented out, since then the logical hostcode is not defined
-!> and thus `#indef hostcode` returns true and `#ifdef hostcode` false 
-!>
-!> * **Host code**: leave the line `#define hostcode` **uncommented**.
-!> * **Impurity code**: **comment** the line`#define hostcode`.
+!> @note preprocessor options: 
 !> * **test_runs**: **uncomment** the line `#define test_run` to prepare for test
 !> * **test_prep**: **uncomment** the line `#define test_prep` to write out the solutions to file
 !> @endnote
@@ -30,62 +24,10 @@ module mod_rllsll
 
 contains
 
-#ifndef hostcode
-  !-------------------------------------------------------------------------------
-  !> Summary: Calculation of the regular and irregular solutions for the host code
-  !> Author: 
-  !> Category: solver, single-site, KKRhost
-  !> Deprecated: False 
-  !> Calculation o radial wave functions by the integral equation method of
-  !> Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
-  !> which has been extended for KKR using non-sperical potentials.
-  !> Further information can be found in David Bauer,
-  !> [Development of a relativistic full-potential first-principles multiple scattering
-  !> Green function method applied to complex magnetic textures of nano structures
-  !> at surfaces](http://darwin.bth.rwth-aachen.de/opus3/volltexte/2014/4925/), PhD Thesis, 2014
-  !>
-  !> This routine solves the following two equations:
-  !> \begin{equation}
-  !> ULL(r) = J(r) - PRE J(r) \int_0^r\left( dr' r'^2 H2(r') op(V(r')) ULL(r') \right) +PRE H(r) \int_0^r\left( dr' r'^2 J2(r') op(V(r')) ULL(r') \right)
-  !> \end{equation}
-  !> \begin{equation}
-  !> SLL(r) = H(r) - PRE H(r) \int_0^r\left( dr' r'^2 H2(r') * op(V(r')) * RLL(r') \right)+ PRE J(r) \int_0^r\left( dr' r'^2 H2(r') op(V(r')) SLL(r') \right)
-  !> \end{equation}
-  !> where the integral \(\int_0^r()\) runs from 0 to \(r\)
-  !> *
-  !> Green function prefacor \(PRE=GMATPREFACTOR\) (scalar value) tipically \(\kappa\) 
-  !> for non-relativistic and \(M_0\) \(\kappa\) for SRA
-  !> 
-  !> The discretization of the Lippmann-Schwinger equation results in a matrix
-  !> equation which is solved in this routine. Further information is given
-  !> in section 5.2.3, page 90 of Bauer, PhD
-  !> Source terms :
-  !> right solution:  \(J\), \(H\) `(nvec*lmsize,lmsize)` or `(lmsize,nvec*lmsize)`
-  !> left solution:  \(J2\), \(H2\) `(lmsize,nvec*lmsize)` or `(nvec*lmsize,lmsize)`
-  !> Example:
-  !> The source term \(J\) is for `LMSIZE=3` and `NVEC=2` given by:
-  !> \begin{equation}
-  !> J=
-  !> \begin{bmatrix} jlk(jlk_index(1)) & 0 & 0 \\ 0 & jlk(jlk_index(2)) & 0 \\0 & 0 & jlk(jlk_index(3)) \\ jlk(jlk_index(4)) & 0 & 0 \\0 & jlk(jlk_index(5)) & 0 \\0 & 0 & jlk(jlk_index(6)) \end{bmatrix}
-  !> \end{equation}
-  !> first 3 rows are for the large and the last 3 rows for the small component
-  !> 
-  !> Operator \(op()\) can be chosen to be a unity or a transpose operation
-  !> The unity operation is used to calculate the right solution
-  !> The transpose operation is used to calculate the left solutionf the regular and irregular solutions
-  !-------------------------------------------------------------------------------
-  !> @note One can comment out the line `#define hostcode` to instead choose the
-  !> calculation of the regular solutions for the impuirty code.
-  !> @endnote
-  !-------------------------------------------------------------------------------
-  subroutine rllsll(rpanbound,rmesh,vll,rll,sll,tllp,ncheb,npan,lmsize,lmsize2,     &
-    nrmax,nvec,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor,cmoderll,cmodesll,         &
-    cmodetest,idotime)
-#else
   !-------------------------------------------------------------------------------
   !> Summary: Calculation of the regular and irregular solutions for the impurity code
   !> Author: 
-  !> Category: solver, single-site, KKRhost
+  !> Category: single-site, KKRhost
   !> Deprecated: False 
   !> Calculation o radial wave functions by the integral equation method of
   !> Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
@@ -124,15 +66,10 @@ contains
   !> Operator \(op()\) can be chosen to be a unity or a transpose operation
   !> The unity operation is used to calculate the right solution
   !> The transpose operation is used to calculate the left solutionf the regular and irregular solutions
-  !-------------------------------------------------------------------------------
-  !> @note OOne can uncomment out the line `#define hostcode` to instead choose the
-  !> calculation of the regular solutions for the host code.
-  !> @endnote
   !-------------------------------------------------------------------------------
   subroutine rllsll(rpanbound,rmesh,vll,rll,sll,tllp,ncheb,npan,lmsize,lmsize2,     &
     lbessel,nrmax,nvec,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor,cmoderll,cmodesll, &
     cmodetest,use_sratrick1,alphaget) ! LLY
-#endif
       ! RMESH      - radial mesh
       ! RPANBOUND  - panel bounds RPANBOUND(0) left  panel border of panel 1
       ! RPANBOUND(1) right panel border of panel 1
@@ -143,17 +80,7 @@ contains
       ! LMSIZE2    - number of rows   for the source matrix J etc...
       ! NRMAX      - total number of radial points (NPAN*(NCHEB+1))
       ! NVEC       - number of LMSIZE*LMSIZE blocks in J (LMSIZE2=NVEC*LMSIZE)
-#ifndef hostcode
-    use :: mod_beshank           ! calculates bessel and hankel func.
-    use :: mod_chebint           ! chebyshev integration routines
-    use :: mod_config, only: config_testflag ! reads if testflags are present
-    use :: mod_rllslltools, only: inverse ! inverse matrix routine
-    use :: mod_physic_params, only: cvlight ! speed of light
-    use :: sourceterms
-    use :: mod_chebyshev
-#else
     use :: mod_chebint, only: chebint
-#endif
     use :: mod_timing, only: timing_start, timing_pause, timing_stop ! timing routine
 #ifdef CPP_HYBRID
     use :: omp_lib ! omp functions
@@ -168,9 +95,7 @@ contains
     integer :: lmsize2           !! lmsize * nvec
     integer :: nvec              !! spinor integer: nvec=1 non-rel, nvec=2 for sra and dirac
     integer :: nrmax             !! total number of rad. mesh points
-#ifdef hostcode
-    integer :: lbessel, use_sratrick1 ! dimensions etc., needed only for host code interface
-#endif
+    integer :: lbessel, use_sratrick1 ! dimensions etc.
 
     ! running indices
     integer :: ivec, ivec2
@@ -179,21 +104,8 @@ contains
 
     ! source terms
     complex (kind=dp) :: gmatprefactor !! prefactor of green function (non-rel: = kappa = sqrt e, rel: including mass correction)
-#ifndef hostcode
-    complex (kind=dp) :: hlk(:, :), jlk(:, :), & !! right sol. source terms
-      hlk2(:, :), jlk2(:, :)                     !! left sol. source terms (typically bessel and hankel fn)
-#else
     complex (kind=dp) :: hlk(lbessel, nrmax), jlk(lbessel, nrmax), hlk2(lbessel, nrmax), jlk2(lbessel, nrmax)
-#endif
-
-#ifndef hostcode
-    integer :: jlk_index(:)      !! mapping array l = jlk_index(lm)
-                                 !! in: lm-index
-                                 !! corresponding l-index used hlk,..
-                                 !! hlk(l) = jlk_index(lm)
-#else
     integer :: jlk_index(nvec*lmsize)
-#endif
 
     character (len=1) :: cmoderll, cmodesll, cmodetest  !! These define the op(V(r)) in the eqs. above
                                                         !! (comment in the beginning of this subroutine)
@@ -240,9 +152,7 @@ contains
     integer :: ierror, use_sratrick
     integer :: idotime
     integer, parameter :: directsolv = 1
-#ifdef hostcode
     complex (kind=dp) :: alphaget(lmsize, lmsize) ! LLY
-#endif
 
 #ifdef CPP_HYBRID
     ! openMP variable -- Sachin 23/04/2015
@@ -263,26 +173,14 @@ contains
     ! initialization
 
     ! determine if SRA-trick is used or not
-#ifndef hostcode
-    if (config_testflag('nosph') .or. lmsize==1) then
-      use_sratrick = 0
-    else if (.not. config_testflag('nosph')) then
-      use_sratrick = 1
-    else
-      stop '[rllsll] use_sratrick error'
-    end if
-#else
     if (lmsize==1) then
       use_sratrick = 0
     else
       use_sratrick = use_sratrick1
     end if
-#endif
 
-#ifdef hostcode
     ! turn timing output off if in the host code
     idotime = 0
-#endif
     if (idotime==1) call timing_start('rllsll')
 
     do ipan = 1, npan
@@ -605,13 +503,8 @@ contains
         end if
       else if (use_sratrick==1) then
         nplm = (ncheb+1)*lmsize
-#ifdef hostcode
         call inverse(nplm, slv1)
         call inverse(nplm, srv1)
-#else
-        call inverse(nplm, slv1, work2, ipiv2)
-        call inverse(nplm, srv1, work2, ipiv2)
-#endif
 
         call zgemm('n', 'n', nplm, lmsize, nplm, cone, slv1, nplm, yrll1, nplm, czero, yrlltmp, nplm)
         yrll1 = yrlltmp
@@ -789,14 +682,12 @@ contains
 
     call zgetrf(lmsize, lmsize, allp(1,1,npan), lmsize, ipiv, info) ! invert alpha
     call zgetri(lmsize, allp(1,1,npan), lmsize, ipiv, work, lmsize*lmsize, info) ! invert alpha -> transformation matrix rll=alpha^-1*rll
-#ifdef hostcode
     ! get alpha matrix
     do lm1 = 1, lmsize           ! LLY
       do lm2 = 1, lmsize         ! LLY
         alphaget(lm1, lm2) = allp(lm1, lm2, npan) ! LLY
       end do                     ! LLY
     end do                       ! LLY
-#endif
     ! calculation of the t-matrix
     call zgemm('n', 'n', lmsize, lmsize, lmsize, cone/gmatprefactor, bllp(1,1,npan), & ! calc t-matrix tll = bll*alpha^-1
       lmsize, allp(1,1,npan), lmsize, czero, tllp, lmsize)
@@ -819,11 +710,10 @@ contains
 
 
 
-#ifdef hostcode
   !-------------------------------------------------------------------------------
   !> Summary: Helper routine here only for host since `mod_rllsllutils` does not exsist in the host code
   !> Author: 
-  !> Category: solver, sanity-check, KKRhost
+  !> Category: sanity-check, KKRhost
   !> Deprecated: False 
   !> Helper routine here only for host since `mod_rllsllutils` does not exsist in the host code
   !-------------------------------------------------------------------------------
@@ -843,7 +733,6 @@ contains
     call zgetri(nmat, mat, nmat, ipiv, work, nmat*nmat, info)
     if (info/=0) stop '[inverse] error INFO'
   end subroutine inverse
-#endif
 
   ! subroutine iterativesol (NCHEB,LMSIZE2,LMSIZE,MMAT,BMAT)
   ! implicit none
@@ -870,7 +759,7 @@ end module mod_rllsll
 !-------------------------------------------------------------------------------
 !> Summary: Run rllsll-standalone version
 !> Author: P. Rüßmann
-!> Category: KKRhost, solver, single-site, unit-test
+!> Category: KKRhost, single-site, unit-test
 !> Deprecated: False ! This needs to be set to True for deprecated subroutines
 !-------------------------------------------------------------------------------
 !> @note Needs previous run of rllsll with test_prep to generate necessary input 
@@ -878,9 +767,9 @@ end module mod_rllsll
 !-------------------------------------------------------------------------------
 program test_rllsll
 
-  use :: mod_timing
-  use :: mod_constants
-  use :: mod_datatypes, only :: dp
+  use :: mod_timing, only: 
+  use :: mod_constants, only: 
+  use :: mod_datatypes, only: dp
 
   implicit none
 
@@ -997,7 +886,7 @@ end program test_rllsll
 !> Summary: Helper routine to write the regular and irregular solutions to file
 !> Author: 
 !> Author: P. Rüßmann
-!> Category: input-output, solver, KKRhost, single-site, unit-test
+!> Category: input-output, KKRhost, single-site, unit-test
 !> Deprecated: False 
 !>  Helper routine to write the regular and irregular solutions to file
 !-------------------------------------------------------------------------------

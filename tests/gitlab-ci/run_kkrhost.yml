@@ -22,6 +22,7 @@ run_kkrhost:intel:serial_1:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:serial_2:
   stage: run_kkrhost_serial
@@ -40,6 +41,7 @@ run_kkrhost:intel:serial_2:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:serial_3:
   stage: run_kkrhost_serial
@@ -58,6 +60,7 @@ run_kkrhost:intel:serial_3:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 ## 2.2 comparison serial/parallel run ##
 run_kkrhost:intel:parallel_2:
@@ -77,6 +80,7 @@ run_kkrhost:intel:parallel_2:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:MPIatom_7:
   stage: run_kkrhost_parallel
@@ -95,6 +99,7 @@ run_kkrhost:intel:MPIatom_7:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
  
 run_kkrhost:intel:MPIenerg_8:
   stage: run_kkrhost_parallel
@@ -113,6 +118,7 @@ run_kkrhost:intel:MPIenerg_8:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:multi_node_9:
   image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-control:latest
@@ -141,6 +147,7 @@ run_kkrhost:intel:multi_node_9:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
  
 # parallel SOC mode
 run_kkrhost:intel:MPIatom_SOC_7_1:
@@ -160,6 +167,7 @@ run_kkrhost:intel:MPIatom_SOC_7_1:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
  
 run_kkrhost:intel:MPIenerg_SOC_8_1:
   stage: run_kkrhost_parallel
@@ -178,6 +186,7 @@ run_kkrhost:intel:MPIenerg_SOC_8_1:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 
 ## 2.3 special features beyond selfconsistency ##
@@ -199,6 +208,7 @@ run_kkrhost:intel:Jijs_4:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:kkrflex_5:
   stage: run_kkrhost_features
@@ -218,6 +228,7 @@ run_kkrhost:intel:kkrflex_5:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:FERMIOUT_6:
   stage: run_kkrhost_features
@@ -237,11 +248,12 @@ run_kkrhost:intel:FERMIOUT_6:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
  
 run_kkrhost:intel:OPERATOR_10:
   stage: run_kkrhost_features
   script:
-      - tests/KKRhost/tools/run_test_10.sh
+      - cd tests/KKRhost/ && ./tools/run_test_10.sh
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -254,11 +266,12 @@ run_kkrhost:intel:OPERATOR_10:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:DTM_GMATLL_11:
   stage: run_kkrhost_features
   script:
-      - tests/KKRhost/tools/run_test_11.sh
+      - cd tests/KKRhost/ && ./tools/run_test_11.sh
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -271,6 +284,7 @@ run_kkrhost:intel:DTM_GMATLL_11:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:qdos_12:
   stage: run_kkrhost_features
@@ -289,11 +303,12 @@ run_kkrhost:intel:qdos_12:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 #run_kkrhost:intel:rhoq_13:
 #  stage: run_kkrhost_features
 #  script:
-#      - tests/KKRhost/tools/run_test_13.sh
+#      - cd tests/KKRhost/ && ./tools/run_test_13.sh
 #  artifacts:
 #    paths:
 #      - tests/KKRhost/test_run*
@@ -317,6 +332,7 @@ run_kkrhost:intel:ASA_14:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:CPA_15:
   stage: run_kkrhost_features
@@ -335,6 +351,7 @@ run_kkrhost:intel:CPA_15:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:Dirac_16:
   stage: run_kkrhost_features
@@ -353,6 +370,7 @@ run_kkrhost:intel:Dirac_16:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:lambda_xc_17:
   stage: run_kkrhost_features
@@ -371,6 +389,7 @@ run_kkrhost:intel:lambda_xc_17:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 #no working test case yet
 #run_kkrhost:intel:noco_18:
@@ -387,7 +406,7 @@ run_kkrhost:intel:lambda_xc_17:
 run_kkrhost:intel:decimate_19:
   stage: run_kkrhost_features
   script:
-      - tests/KKRhost/tools/run_test_19.sh
+      - cd tests/KKRhost/ && ./tools/run_test_19.sh
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -400,11 +419,12 @@ run_kkrhost:intel:decimate_19:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:godfrin_20:
   stage: run_kkrhost_features
   script:
-    - tests/KKRhost/tools/run_test_20.sh
+    - cd tests/KKRhost/ && ./tools/run_test_20.sh
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -417,11 +437,12 @@ run_kkrhost:intel:godfrin_20:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:XCs_21:
   stage: run_kkrhost_features
   script:
-    - tests/KKRhost/tools/run_test_21.sh
+    - cd tests/KKRhost/ && ./tools/run_test_21.sh
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -434,11 +455,12 @@ run_kkrhost:intel:XCs_21:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:LDAU_22:
   stage: run_kkrhost_features
   script:
-    - tests/KKRhost/tools/run_test_22.sh
+    - cd tests/KKRhost/ && ./tools/run_test_22.sh
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -451,11 +473,12 @@ run_kkrhost:intel:LDAU_22:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:DOS_23:
   stage: run_kkrhost_features
   script:
-    - tests/KKRhost/tools/run_test_23.sh
+    - cd tests/KKRhost/ && ./tools/run_test_23.sh
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -468,6 +491,7 @@ run_kkrhost:intel:DOS_23:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 ## 2.4 integration with aiida ##
 run_kkrhost:intel:aiida-kkr:
@@ -537,6 +561,7 @@ run_kkrhost:intel:Au_bulk_SOC_1_1:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:Fe_slab_SOC_2_1:
   stage: run_kkrhost_features_SOC
@@ -555,6 +580,7 @@ run_kkrhost:intel:Fe_slab_SOC_2_1:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:Si_LLY_SOC_3_1:
   stage: run_kkrhost_features_SOC
@@ -573,11 +599,12 @@ run_kkrhost:intel:Si_LLY_SOC_3_1:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:NOSOC_3_2:
   stage: run_kkrhost_features_SOC
   script:
-    - tests/KKRhost/tools/run_test_03_2.sh
+    - cd tests/KKRhost/ && ./tools/run_test_03_2.sh
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -590,6 +617,7 @@ run_kkrhost:intel:NOSOC_3_2:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:Jijs_SOC_4_1:
   stage: run_kkrhost_features_SOC
@@ -608,6 +636,7 @@ run_kkrhost:intel:Jijs_SOC_4_1:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:kkrflex_SOC_5_1:
   stage: run_kkrhost_features_SOC
@@ -626,6 +655,7 @@ run_kkrhost:intel:kkrflex_SOC_5_1:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:FERMIOUT_SOC_6_1:
   stage: run_kkrhost_features_SOC
@@ -644,6 +674,7 @@ run_kkrhost:intel:FERMIOUT_SOC_6_1:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:qdos_SOC_12_1:
   stage: run_kkrhost_features_SOC
@@ -662,6 +693,7 @@ run_kkrhost:intel:qdos_SOC_12_1:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:ASA_SOC_14_1:
   stage: run_kkrhost_features_SOC
@@ -680,6 +712,7 @@ run_kkrhost:intel:ASA_SOC_14_1:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:CPA_SOC_15_1:
   stage: run_kkrhost_features_SOC
@@ -698,11 +731,12 @@ run_kkrhost:intel:CPA_SOC_15_1:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 run_kkrhost:intel:decimate_SOC_19_1:
   stage: run_kkrhost_features_SOC
   script:
-      - tests/KKRhost/tools/run_test_19_1.sh
+      - cd tests/KKRhost/ && ./tools/run_test_19_1.sh
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -715,3 +749,4 @@ run_kkrhost:intel:decimate_SOC_19_1:
     - master
     - develop
     - develop-kkrhost
+    - GROUP3

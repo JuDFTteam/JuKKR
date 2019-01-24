@@ -64,18 +64,13 @@ contains
     ! .. Local Scalars
     integer :: ir, j, lm1, lm2, lm3
     ! ..
-    do lm1 = 1, lmmaxd
-      do lm2 = 1, lm1
-        do ir = irmind, irm
-          vnspll(lm1, lm2, ir) = 0.0e0_dp
-        end do
-      end do
-    end do
+    vnspll(1:lmmaxd, 1:lmmaxd, irmind:irm) = 0.0e0_dp
 
     do j = 1, iend
       lm1 = icleb(j, 1)
       lm2 = icleb(j, 2)
       lm3 = icleb(j, 3)
+      !> @warning In the old version of KKRimp the following is only done for lm1<=lmmaxd && lm2<=lmmaxd && lm3>1 @endwarning
       do ir = irmind, irm
         vnspll(lm1, lm2, ir) = vnspll(lm1, lm2, ir) + cleb(j, 1)*vins(ir, lm3)
       end do
@@ -91,6 +86,7 @@ contains
       end do
     end do
 
+    !> @warning The following part is commented out in the old version of KKRimp routine! @endwarning
     do lm1 = 1, lmmaxd
       do ir = irmind, irm
         vnspll(lm1, lm1, ir) = vnspll(lm1, lm1, ir) + vins(ir, 1)

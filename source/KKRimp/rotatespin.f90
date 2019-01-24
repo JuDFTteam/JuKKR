@@ -14,7 +14,7 @@ contains
     use nrtype, only: pi
     use type_density, only: density_type
     use type_cell, only: cell_type
-    use mod_chebyshev, only: intcheb_complex
+    use mod_cheb, only: intcheb_complex
     use mod_rotatespinframe, only: rotatematrix, spinmode
     use mod_config, only: config_testflag
     use mod_mathtools, only: rotvector
@@ -42,10 +42,6 @@ contains
     
     write(*,*) 'Rotation of the charge density'
     write(*,*) 'The integrated charge density is:'
-    ! write(*,*) 'rho_up_up ',density%rho2ns_integrated(1)
-    ! write(*,*) 'rho_dn_dn ',density%rho2ns_integrated(2)
-    ! write(*,*) 'rho_up_dn ',density%rho2ns_integrated(3)
-    ! write(*,*) 'rho_dn_up ',density%rho2ns_integrated(4)
     
     
     rho2ns_temp(1,1)=density%rho2ns_integrated(1)
@@ -123,58 +119,6 @@ contains
     totxymagmoment2=SQRT(magmoment2(1)**2+magmoment2(2)**2)
     
 
-    !if (.false.) then
-    !
-    !  ! #######################################
-    !  ! VERSION UNTIL 2012/04/2012
-    !  ! ######################################
-    !  if(abs(totxymagmoment) > 1.d-5 .and. density%magmomentfixed/=1)then
-    !  
-    !    if(abs(magmoment(3)) < 1.d-5)then
-    !      density%theta=pi/2.0D0
-    !    else
-    !      density%theta=acos(magmoment(3)/totmagmoment)
-    !    endif 
-    !    write(*,*)   'new theta1 [deg]',density%theta*180/pi
-    !    write(1337,*)'new theta1 [deg]',density%theta*180/pi
-    !    
-    !    if(totxymagmoment < 1.d-5)then
-    !      density%phi=0.0D0 !phiold
-    !      write(*,*) 'implement method here'
-    !      write(*,*) 'stop'
-    !      stop
-    !    else   
-    !      density%phi=datan2(magmoment(2),magmoment(1))
-    !    endif
-    !    write(*,*)   'new phi1 [deg]',density%phi*180/pi
-    !    write(1337,*)'new phi1 [deg]',density%phi*180/pi
-    !    write(1337,*) 'the charge and spin density is been rotated'
-    !  
-    !    write(*,*) 'the charge and spin density is been rotated'
-    !  !   call rotrho2ns(density%rho2ns_complex,density%rho2ns,cellnew%nrmaxnew,lmpot,4,theta,phi)
-    !  !     call rotatevector(density%rho2ns_complex,density%rho2ns,cell%nrmax,lmpot,density%theta,density%phi,theta_old,phi_old)
-    !  
-    !    write(23452324,'(5000F)') density%theta*180/pi,density%phi*180/pi
-    !  
-    !  else
-    !    if (density%magmomentfixed==1) then
-    !      write(*,*) 'no rotation magnetic moment is fixed by config'
-    !    else
-    !      write(*,*) 'no rotation needed'
-    !    end if
-    !    density%rho2ns(:,:,1)= dimag ( density%rho2ns_complex(:,:,1) )
-    !    density%rho2ns(:,:,2)= dimag ( density%rho2ns_complex(:,:,2) )
-    !    write(23452324,'(5000F)') theta_old*180/pi,phi_old*180/pi
-    !  
-    !  end if
-    !  ! #######################################
-    !  ! ######################################
-    !
-    !else
-    
-    ! #######################################
-    ! TEST VERSION
-    ! ######################################
     if (density%magmomentfixed/=1) then
       write(1337,*) 'Version that rotates all moments'
         density%theta=acos(magmoment(3)/totmagmoment)
@@ -197,11 +141,7 @@ contains
       write(*,*) 'no rotation magnetic moment is fixed by config'
       density%rho2ns(:,:,1)= dimag ( density%rho2ns_complex(:,:,1) )
       density%rho2ns(:,:,2)= dimag ( density%rho2ns_complex(:,:,2) )
-    ! density%dorotate=1
     end if
-    ! call rotatevector(density%rho2ns_complex,density%rho2ns,cell%nrmax,lmpot,density%theta,density%phi,theta_old,phi_old)
-
-    !end if
     
     if (.not. config_testflag('noscatteringmoment')) then
         density%phi=density%phi2

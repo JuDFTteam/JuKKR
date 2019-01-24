@@ -15,32 +15,69 @@
 
 ----
 
-## *UNRELEASED* (last updated: 2018-11-06)
+## *UNRELEASED* (last updated: 2019-01-22)
 
 **Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release.**
 
-Start of large KKR repository holding *voronoi*, *KKRhost*, *KKRimp*, *KKRsusc*, and *PKKprime* with major refactoring of code structure.
+Removed a lot of code duplicates among different
 
+### Added
+- None
+
+### Changed
+- more routines and modules in source/common directory
+- use static library for pkkprime file among different apps
+- use static library for kkrhost routines
+- use routines from common/radial_solver_Chebychev in KKRimp as well
+
+### Deprecated
+- None
+
+### Removed
+- removed code duplicates
+
+### Fixed
+- header handling in complexdos3 tool
+
+----
+
+## v3.2 (2018-12-11)
+
+Improved memory consumption for XCPL calculation and small bugfixes.
+
+### Changed
+- None
+- greatly reduced memory consumption for XCPL calculation and improved performance of loops in shellgen2k
+
+### Fixed
+- issue #104 (voronoi-genpot mode broken for ASA)
+- issue #105 (kkrflex_green wirteout for single-atom cluster)
+
+----
+
+## v3.1 (2018-11-21)
+
+Start of large KKR repository holding *voronoi*, *KKRhost*, *KKRimp*, *KKRsusc*, and *PKKprime* with major refactoring of code structure.
 
 ### Added
 - cmake installation scripts
 - add rhoq repo (KKR-QPI)
+- introduced new keywords in *KKRhost*: <INVMODE>, <VERBOSITY> and <MPI_SCHEME>, as well as new style of runoptions.
 
 ### Changed
 - `install.py` script now deals with *KKRhost*, *KKRimp*, *PKKprime*, *voronoi*, and *rhoq*
 - updated documentation
 - restructured tests (see `gitlab-ci.yml` and `tests/gitlab-ci/*.yml` files)
-- directory structure following `source`, `docs`, `utils`, `tests`, etc. 
+- directory structure following `source`, `docs`, `utils`, `tests`, etc.
+- mayor refactoring of the treatment of runoptions for *KKRhost* (new, descriptive keywords; no fixed format but style `runoption= T/F`; backwards compatibility is mostly ensured)
+- escaped keywords (like `<ZATOM>` as opposed to `LMAX`) are now allowed to be case-insensitive (in both, `inputcard` and source code).
+- refactoring of `source/common/ioinput.f90` for more simplicity, readability and flexibility
+- total energy is also calculated and written out in case of non-scf calculation
 
 ### Deprecated
 - makefiles of *PKKprime*, *voronoi*, *KKRimp*, *rhoq*
 - duplicated files from *KKRhost* in *rhoq*
-
-### Removed
-- None
-
-### Fixed
-- None
+- common/test.f90 and common/opt.f90
 
 ----
 

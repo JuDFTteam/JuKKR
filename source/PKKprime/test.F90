@@ -10,7 +10,8 @@ program TEST
   use type_inc,       only: inc_type
   use type_data,      only: lattice_type, cluster_type, tgmatrx_type
   use mod_read,       only: read_inc, read_TBkkrdata
-  use mod_symmetries, only: pointgrp, rotate_kpoints
+  use mod_pointgrp,   only: pointgrp
+  use mod_symmetries, only: rotate_kpoints
   use mod_read,       only: read_kpointsfile_int
   use mod_symmetries, only: symmetries_type, set_symmetries, rotate_kpoints
   use mod_mympi,      only: mympi_init, myrank, nranks, master

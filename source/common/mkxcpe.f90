@@ -26,7 +26,7 @@ contains
   !-------------------------------------------------------------------------------  
   subroutine mkxcpe(nspin,ir,np,l1max,rv,rholm,vxcp,excp,thet,ylm,dylmt1,dylmt2,    &
     dylmf1,dylmf2,dylmtf,drrl,ddrrl,drrul,ddrrul,irmd,lmpotd)
-    use :: mod_gxcpt
+    use :: mod_gxcpt, only: gxcpt
     ! ..
     implicit none
     ! .. Parameters ..

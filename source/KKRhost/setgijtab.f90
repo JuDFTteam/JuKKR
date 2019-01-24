@@ -43,6 +43,7 @@ contains
     ! **********************************************************************
     use :: mod_gijcond
     use :: mod_gijxcpl
+    use :: mod_runoptions, only: calc_exchange_couplings, use_cond_LB
     implicit none
 
     ! Scalar arguments
@@ -56,7 +57,6 @@ contains
     ! Local scalars
     integer :: i, ido, ii, j, jj, nn, nofgij
     ! external funcitons
-    logical, external :: opt
 
     ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
     write (1337, '(79("="),/,15X,A)') 'SETGIJTAB: setting task-specific Gij pairs'
@@ -65,9 +65,9 @@ contains
 
     ido = 0
     ! ======================================================================
-    if (opt('CONDUCT ')) call gijcond(ido, naez, rbasis, iqat, natomimp, rclsimp, atomimp, ijtabcalc, natomimpd)
+    if (use_cond_LB) call gijcond(ido, naez, rbasis, iqat, natomimp, rclsimp, atomimp, ijtabcalc, natomimpd)
     ! ======================================================================
-    if (opt('XCPL    ')) call gijxcpl(ido, naez, rbasis, bravais, linterface, nqcalc, iqcalc, natomimp, rclsimp, atomimp, ijtabcalc, ijtabcalc_i, natomimpd)
+    if (calc_exchange_couplings) call gijxcpl(ido, naez, rbasis, bravais, linterface, nqcalc, iqcalc, natomimp, rclsimp, atomimp, ijtabcalc, ijtabcalc_i, natomimpd)
     ! ======================================================================
     if (ido==0) then
       icc = 0
@@ -112,7 +112,7 @@ contains
 
 100 format (6x, 'brahim ERROR: please increase the global parameter', /, 6x, a, ' to a value >=', i5, /)
 110 format (6x, 'WARNING: Subroutine entered with invalid task ', 'specification', /, 6x, '         ICC will be set to 0 - no Gij calculated - ', 'input check? ', /)
-120 format (6x, 'Number of different sites (NATOMIMP) :', i4, /, 6x, 'Number of pairs set       (NOFGIJ)   :', i4)
+120 format (6x, 'Number of different sites (NATOMIMP) :', i8, /, 6x, 'Number of pairs set       (NOFGIJ)   :', i8)
 130 format (8x, 71('-'))
 140 format (9x, 'pair|', ' I  IQ           position', 9x, 'J  JQ           position')
 150 format (9x, i3, ' |', 2(i3,1x), 3f8.4, 1x, 2(i3,1x), 3f8.4)

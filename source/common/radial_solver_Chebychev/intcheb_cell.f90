@@ -6,8 +6,14 @@
 
 module mod_intcheb_cell
   
+  use :: mod_datatypes, only: dp
+
   private
   public :: intcheb_cell
+
+  ! integration weights, allocated here to store weights. This way we do not
+  ! need to recalculation the weights for each run of intcheb_cell
+  real (kind=dp), allocatable :: intweight(:)
 
 contains
 
@@ -72,16 +78,19 @@ contains
     complex (kind=dp), intent (in) :: arr1(0:ncheb) !! values to be integrated
     complex (kind=dp), intent (out) :: result1 !! result of integral
     ! local
-    real (kind=dp) :: intweight(0:ncheb)
     integer :: icheb1, icheb2
-
-    intweight = 1.0e0_dp
-    do icheb1 = 0, ncheb
-      do icheb2 = 2, ncheb, 2
-        intweight(icheb1) = intweight(icheb1) + (-2.0e0_dp/(icheb2**2-1.0e0_dp))*cos(icheb2*pi*(icheb1+0.5e0_dp)/(ncheb+1))
+    
+    ! check if intweights are computed already, otherwise calculate them here
+    if (.not. allocated(intweight)) then
+      allocate(intweight(0:ncheb))
+      intweight = 1.0e0_dp
+      do icheb1 = 0, ncheb
+        do icheb2 = 2, ncheb, 2
+          intweight(icheb1) = intweight(icheb1) + (-2.0e0_dp/(icheb2**2-1.0e0_dp))*cos(icheb2*pi*(icheb1+0.5e0_dp)/(ncheb+1))
+        end do
+        intweight(icheb1) = intweight(icheb1)*2.0e0_dp/(ncheb+1)
       end do
-      intweight(icheb1) = intweight(icheb1)*2.0e0_dp/(ncheb+1)
-    end do
+    end if
 
     result1 = czero
     do icheb1 = 0, ncheb

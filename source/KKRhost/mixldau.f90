@@ -39,7 +39,7 @@ contains
     integer :: iat, is, m1, m2, mmax
     integer :: ier
     real (kind=dp) :: xmix, xmix2, rmserr
-    character (len=256) :: uio                             ! NCOLIO=256
+    character (len=:), allocatable :: uio                             ! NCOLIO=256
 
     ! First calculate rms error in interaction matrix
     do iat = 1, natyp

@@ -148,8 +148,8 @@ def subroutine_dict(mod,sub,cat,call_type,code='kkrhost'):
 
     yaml = YAML()
     yaml.indent(mapping=4, sequence=6, offset=3)
-    with open('KKR_dictionary_'+code+'_.yml', 'a') as outfile:
-        yaml.dump(mod_dict, outfile)
+    #with open('KKR_dictionary_'+code+'_.yml', 'a') as outfile:
+    #    yaml.dump(mod_dict, outfile)
     return mod_dict
 
 #####################################################################################
@@ -183,8 +183,8 @@ def category_dict(cat,subroutine,call_type,code='kkrhost'):
         cat_dict['category'][unq[ii]]['subroutines']=cat_to_sub[ii]
     yaml = YAML()
     yaml.indent(mapping=4, sequence=6, offset=3)
-    with open('KKR_cat_dictionary_'+code+'_.yml', 'w') as outfile:
-        yaml.dump(cat_dict, outfile)
+    #with open('KKR_cat_dictionary_'+code+'_.yml', 'w') as outfile:
+    #    yaml.dump(cat_dict, outfile)
     return cat_dict,unq,sub_num,num_call,unq_call
 
 #####################################################################################
@@ -192,6 +192,7 @@ def category_dict(cat,subroutine,call_type,code='kkrhost'):
 #####################################################################################
 def main():
     name_dirs = [['voronoi', 'voronoi'], ['kkrhost', 'KKRhost'], ['kkrimp', 'KKRimp'], ['pkkprime', 'PKKprime'], ['kkrsusc', 'KKRsusc/solver_module_v2'], ['rhoq', 'rhoq'], ['common', 'common']]
+    out_dicts = {}
     for code, src_dir in name_dirs:
         code = code.lower()
         src_dir = '../source/'+src_dir+'/'
@@ -210,11 +211,73 @@ def main():
             total_cat=total_cat+cat
             total_call=total_call+call_type
         cat_dict,unq,sub_num,num_call,unq_call=category_dict(total_cat,total_sub,total_call,code)
+        out_dicts[code] = cat_dict
  
-        cat_bar_plot(code,unq,sub_num)
-        cat_bar_plot('types_'+code,unq_call,num_call)
-    return
+        #cat_bar_plot(code,unq,sub_num)
+        #cat_bar_plot('types_'+code,unq_call,num_call)
+    return out_dicts
 
 if __name__ == '__main__':
-    main()
+    d = main()
 
+    # extract names of subroutines
+    subs = {}
+    for code in d.keys():
+        dd = d[code]
+        l = []
+        for k, v in dd['category'].iteritems():
+            l+=v['subroutines']
+        subs[code] = set(l)
+
+        print code, len(set(l))
+
+shared  = list(subs['kkrhost'].intersection(subs['kkrimp']))
+#shared += list(subs['kkrhost'].intersection(subs['kkrnano']))
+shared += list(subs['kkrhost'].intersection(subs['kkrsusc']))
+shared += list(subs['kkrhost'].intersection(subs['pkkprime']))
+shared += list(subs['kkrhost'].intersection(subs['voronoi']))
+
+#shared += list(subs['kkrimp'].intersection(subs['kkrnano']))
+shared += list(subs['kkrimp'].intersection(subs['kkrsusc']))
+shared += list(subs['kkrimp'].intersection(subs['pkkprime']))
+shared += list(subs['kkrimp'].intersection(subs['voronoi']))
+
+#shared += list(subs['kkrnano'].intersection(subs['kkrsusc']))
+#shared += list(subs['kkrnano'].intersection(subs['pkkprime']))
+#shared += list(subs['kkrnano'].intersection(subs['voro']))
+
+shared += list(subs['kkrsusc'].intersection(subs['pkkprime']))
+shared += list(subs['kkrsusc'].intersection(subs['voronoi']))
+
+shared += list(subs['pkkprime'].intersection(subs['voronoi']))
+
+print len(shared)
+print len(set(shared))
+
+from numpy import sort
+
+all_shared = []
+
+l = []
+
+for i in sort(list(set(shared))):
+    i_in = 0
+    codes = []
+    for ii in subs.keys():
+        if i in subs[ii]:
+            i_in+=1
+            codes.append(ii)
+    all_shared.append(('{:>26} {} {}\n'.format(i, i_in, codes)).replace("[","").replace("]","").replace("'","").replace(",",""))
+    l.append(i_in)
+
+m0 = range(len(l))
+m = [x for _,x in sorted(zip(l,m0))]
+from numpy import array
+m = array(m0)[m][::-1]
+
+out = []
+out += ['\n\nTotal number of common subroutines (at least used twice): %i\n\n'%len(all_shared)]
+out += ['                     Name  #   codes that use this subroutine\n']
+for i in m:
+   out += [all_shared[i]]
+open('common_subroutines_sorted.txt','w').writelines(out)

@@ -17,6 +17,7 @@ build_kkrimp:intel:hybrid:
     - master
     - develop
     - develop-kkrimp
+    - GROUP3
 
 build_kkrimp:intel:mpi:
   stage: build_kkrimp
@@ -37,3 +38,4 @@ build_kkrimp:intel:mpi:
     - master
     - develop
     - develop-kkrimp
+    - GROUP3

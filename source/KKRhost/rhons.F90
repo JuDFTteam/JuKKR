@@ -84,6 +84,7 @@ contains
     nsra,qns,pns,ar,cr,pz,fz,qz,sz,cleb,icleb,jend,iend,ekl,denlm,gflle_part)
 
     use :: mod_datatypes
+    use :: mod_runoptions, only: calc_gmat_lm_full, use_qdos, use_ldau
     use :: global_variables
     use :: mod_rhoin
     use :: mod_rhoout
@@ -113,8 +114,6 @@ contains
       , gflle_part(lmmaxd, lmmaxd)
     ! ..
     ! .. External Functions ..
-    logical :: opt                 ! qdos
-    external :: opt                ! qdos
 
     ! ---> set up efac(lm) = sqrt(e))**l/(2l - 1)!!
 
@@ -147,15 +146,14 @@ contains
       call csimpk(cden(1,l), den(l), ipan, ircut, drdi)
     end do
 
-    do lm1 = 1, lmmaxd             ! lm-dos
+    do lm1 = 1, lmmaxd                                          ! lm-dos
       call csimpk(cdenlm(1,lm1), denlm(lm1), ipan, ircut, drdi) ! lm-dos
-      if (opt('lmlm-dos') .or. opt('qdos    ') .or. & ! lmlm-dos  &
-        opt('LDA+U   ')) then      ! LDAU
-        do lm2 = 1, lmmaxd         ! lmlm-dos
-          call csimpk(cwr(1,lm1,lm2), gflle_part(lm1,lm2), & ! lmlm-dos  &
-            ipan, ircut, drdi)     ! lmlm-dos
+      if (calc_gmat_lm_full .or. use_qdos .or. use_ldau) then   ! lmlm-dos & LDAU
+        do lm2 = 1, lmmaxd                                      ! lmlm-dos
+          call csimpk(cwr(1,lm1,lm2), gflle_part(lm1,lm2), &    ! lmlm-dos &
+            ipan, ircut, drdi)                                  ! lmlm-dos
         end do
-      end if                       ! lmlm-dos
+      end if                                                    ! lmlm-dos
     end do
 
     ! Energy depends on EK and NSRA:                            ! lm-dos
@@ -165,7 +163,7 @@ contains
     ! Therefore the following is a good approximation           ! lm-dos
     ! for energies of a few Ryd:                                ! lm-dos
 #ifndef CPP_MPI
-    if (.not. opt('qdos    ')) then
+    if (.not. use_qdos) then
       energ = ek**2                ! lm-dos
       write (30, 100) real(energ, kind=dp), (-aimag(denlm(lm))/pi, lm=1, lmmaxd)
 100   format (30e12.4)

@@ -4,7 +4,7 @@ c Sorts the array SINFI(N) in ascending order using straight insertion.
 c The arrays Z(N), Y(N), and Z(N) follow.
 c On output, arrays SINFI, X, Y, and Z return sorted.
       implicit none
-c#@# KKRtags: VORONOI solver
+c#@# KKRtags: VORONOI numerical-tools
       INTEGER N,I,J
       REAL*8           SINFI(*),X(*),Y(*),Z(*),TMPS,TMPX,TMPY,TMPZ
 
