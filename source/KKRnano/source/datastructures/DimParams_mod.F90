@@ -190,7 +190,7 @@ module DimParams_mod
 
     ! derived dimension parameters
     self%lmmaxd = (self%lmaxd+1)**2
-    self%lmmaxd_noco = (1+self%korbit)*(self%lmaxd+1)**2 !NOCO   
+    self%lmmaxd_noco = (1+self%korbit)*(self%lmaxd+1)**2 !NOCO, matrix sizes msut be doubled if korbit==1   
 
     self%lmaxd1 = self%lmaxd+1
     self%mmaxd  = 2*self%lmaxd + 1

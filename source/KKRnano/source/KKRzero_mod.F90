@@ -124,6 +124,7 @@ module KKRzero_mod
     call parse(dims, "global.conf", altfile="input.conf")
 
 #ifndef USE_OLD_MESH
+    ! This is related to the issue kkr/jukkr#53 in the IFF GitLab
     if (dims%korbit /= 0) then
       warn(6,"For NOCO calculations (korbit = 1) usage of makefile option 'TYPE=voronoi_mesh' is advised") 
     endif
@@ -154,7 +155,7 @@ module KKRzero_mod
 !   in case of a LDA+U calculation - read file 'ldauinfo' and write 'wldau.unf', if it does not exist already
     if (params%LDAU) call ldauinfo_read(dims%lmaxd, dims%nspind, arrays%zat, dims%naez)
 
-!   in case of a NOCO calculation - read file 'nonco_angle.dat'
+!   NOCO calculations require NSPIND==2
     if (dims%korbit == 1) then
        if(dims%nspind .NE. 2) die_here('NSPIND=2 in global.conf is mandatory for SOC calculations')
     else

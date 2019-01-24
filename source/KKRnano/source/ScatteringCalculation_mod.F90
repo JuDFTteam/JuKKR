@@ -114,7 +114,7 @@ implicit none
     double complex, allocatable :: GrefN_buffer(:,:,:,:,:) !< GrefN for all local atoms
 
     lmmaxd = (dims%lmaxd+1)**2
-    lmmaxd_noco = lmmaxd * (dims%korbit+1) ! NOCO
+    lmmaxd_noco = lmmaxd * (dims%korbit+1) ! NOCO, matrix size is doubled if korbit==1
 
     atomdata  => getAtomData(calc, 1)
     i1 = atomdata%atom_index
@@ -241,7 +241,7 @@ implicit none
   !------------------------------------------------------------------------------
   !     beginning of SMPID-parallel section
   !------------------------------------------------------------------------------
-        spinloop: do ISPIN = 1, dims%NSPIND-dims%KORBIT
+  spinloop: do ISPIN = 1, dims%NSPIND-dims%KORBIT ! No spin parallelization if NOCO calculation is performed
           if (isWorkingSpinRank(mp, ispin)) then
 
             PRSPIN = 1; if (dims%SMPID == 1) PRSPIN = ISPIN
@@ -257,6 +257,7 @@ implicit none
 
 !              omp_threads = omp_get_num_threads()   !DEBUGGING
 !              write(*,*) 'OMP_threads', omp_threads !DEBUGGING 
+              ! Calculate the t-matrices for NOCO calculation
               if (dims%korbit == 1) then ! NOCO
                 call tmat_newsolver(ie,dims%nspind,dims%lmaxd,atomdata%Z_nuclear,params%socscale,  &
                                     emesh%ez,params%nsra,calc%gaunts%cleb(:,1),calc%gaunts%icleb, &
@@ -536,6 +537,7 @@ implicit none
     enddo ! iorbit
 
     allocate(uTu_sum(lmmaxd_noco,lmmaxd_noco), uT(lmmaxd_noco,lmmaxd_noco))
+    ! No symmtetrization is performed in case of a NOCO calculation
     if (korbit == 0) then ! NOCO
       !------------------------------------------------- SYMMETRISE TmatN
       uTu_sum(:,:) = TmatN(:,:) ! copy, since the 1st entry is the unity operation, start loop from 2
@@ -567,7 +569,8 @@ implicit none
     
     ! convert inverted delta_t-matrices to p.u.
     ! also a symmetrisation of the matrix is performed
-
+    
+    ! No symmtetrization is performed in case of a NOCO calculation
     if (korbit .NE. 1) then
       do lm2 = 1, lmmaxd
         do lm1 = 1, lm2

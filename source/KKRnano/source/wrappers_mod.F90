@@ -61,8 +61,6 @@ use Warnings_mod, only: launch_warning
     double precision, intent(out)   :: moment_x        ! NOCO
     double precision, intent(out)   :: moment_y        ! NOCO
     double precision, intent(out)   :: moment_z        ! NOCO
-!    logical, intent(in)             :: soc            ! NOCO
-!    double precision, intent(in)    :: socscale       ! NOCO
     double precision, intent(out)   :: muorb(0:,:)     ! NOCO
     integer, intent(in)             :: iemxd           ! NOCO
     type(InputParams), intent(in)   :: params          ! NOCO
@@ -77,6 +75,7 @@ use Warnings_mod, only: launch_warning
     CHECKASSERT( 2*lmaxd == atomdata%potential%lpot )
 
     !-------------------------------------- NOCO ---------------------
+    ! Computes the valence charge density with the Bauer solver
     if (korbit == 1) then
 
         ! store angles from iteration before to compare

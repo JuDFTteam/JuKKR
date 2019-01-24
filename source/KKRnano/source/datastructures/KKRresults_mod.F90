@@ -85,7 +85,7 @@ module KKRresults_mod
     integer :: lmaxd_noco, lmmaxd_noco ! NOCO
     double complex, parameter :: CZERO=(0.d0, 0.d0)
 
-    lmmaxd_noco = lmmaxd*(korbit+1) ! NOCO
+    lmmaxd_noco = lmmaxd*(korbit+1) ! NOCO, matrix size must be doubled if korbit==1
 
     self%lmmaxd = lmmaxd
     self%lmmaxd_noco = lmmaxd_noco ! NOCO

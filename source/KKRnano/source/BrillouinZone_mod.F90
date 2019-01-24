@@ -103,6 +103,7 @@ module BrillouinZone_mod
     iprint = 0 ; if (test('TAUSTRUC')) iprint = 2
 
     ! test: full Brillouin zone integration
+    ! Brillouin zone symmetries should not be used in NOCO calculations
     if (fullbz .OR. korbit == 1) then
       nsymat = 1 ! limit the number of applied symmetries to the 1st one (which is always unity)
       lirr = .false.

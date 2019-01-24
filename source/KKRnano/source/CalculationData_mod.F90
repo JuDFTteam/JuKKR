@@ -513,6 +513,7 @@ module CalculationData_mod
         ! <<< fill shdata with values from old mesh <<<
         ! <<< use old mesh<<<
 #endif
+        ! In case of a NOCO calculation the Chebychev mesh must also be constructed
         if (dims%korbit == 1) then ! NOCO
           npan_tot_cheb = self%mesh_a(ila)%ipand-1+params%npan_eq+params%npan_log  ! number of overall intervals in Chebychev mesh  
           irmd_cheb     = npan_tot_cheb*(params%ncheb+1)                              ! number of radial mesh points in Chebychev mesh

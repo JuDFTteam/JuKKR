@@ -1567,6 +1567,7 @@ module ProcessKKRresults_mod
 
     if (compute_total_energy >= 0) then
       open(71, access='direct', recl=lrecres1, file='bin.results1', form='unformatted', action='read', status='old')
+      ! Write out updated non-collinear angles and magnetic moments
       if (korbit == 1) open(13,file='nonco_angle_out.dat',form='formatted') ! NOCO
       if (korbit == 1) open(14,file='nonco_moment_out.txt',form='formatted') ! NOCO
     
@@ -1581,6 +1582,8 @@ module ProcessKKRresults_mod
         endif
        
         call wrmoms(nspin, charge, muorb, i1, lmax, lmax+1, i1 == 1, i1 == natoms)! first=(i1 == 1), last=(i1 == natoms))
+
+      ! Write out updated non-collinear angles and magnetic moments
         if (korbit == 1) then ! NOCO
 
            delta_angle = acos(sin(theta_noco)*sin(theta_noco_old)*cos(phi_noco-phi_noco_old)+ &

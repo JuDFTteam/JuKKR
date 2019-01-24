@@ -92,6 +92,7 @@ module kloopz1_mod
     
     assert( all(shape(dsymLL) == [N,N,nsymat]) )
     assert( all(shape(GmatN) == [N,N,num_local_atoms]) )
+    ! matrix size must be doubled if korbit==1
     assert( all(shape(Ginp_local) == [N/(korbit+1),N/(korbit+1),1+Lly,naclsd,num_local_atoms]) )
     assert( all(shape(tmatLL) == [N,N,num_trunc_atoms,1+Lly]) )
 
