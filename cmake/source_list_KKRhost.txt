@@ -26,10 +26,9 @@ endif()
 # some static dimensions used in Dirac solver
 execute_process(COMMAND ln -s ../source/KKRhost/sprkkr_rmesh.dim .)
 
-
-# the executable is built from this list of files
-add_executable(
-    kkr.x
+# these are the source files of KKRhost, create kkr_library to be able to conveniently reuse parts of if in BdG development version
+add_library(lib_kkrhost STATIC
+    source/common/wfint.f90
     source/common/version.F90
     source/common/version_info.F90
     source/common/DataTypes.f90
@@ -41,12 +40,28 @@ add_executable(
     source/common/timing.F90
     source/common/ioinput.f90
     source/common/interpolspline.f90
-    source/common/spline_real.f90
-    source/common/splint_real.f90
+    source/common/spline.f90
+    source/common/splint.f90
     source/common/gaunt2.f90
     source/common/grule.f90
     source/common/rcstop.f90
     source/common/cinit.f90
+    source/common/vxcspo.f90
+    source/common/vxcgga.f90
+    source/common/vxclm.f90
+    source/common/global_variables.F90
+    source/common/simpk.f90
+    source/common/gradrl.f90
+    source/common/gradr.f90
+    source/common/mkxcpe.f90
+    source/common/mkxcpe2.f90
+    source/common/ssum.f90
+    source/common/gxcpt.f90
+    source/common/corlsd.f90
+    source/common/cpw91.f90
+    source/common/gcor91.f90
+    source/common/vosko.f90
+    source/common/exch91.f90
     source/common/radial_solver_Chebychev/intcheb_cell.f90
     source/common/radial_solver_Chebychev/cheb.f90
     source/common/radial_solver_Chebychev/cheb2oldgrid.f90
@@ -58,11 +73,24 @@ add_executable(
     source/common/radial_solver_Chebychev/sll_global_solutions.F90
     source/common/radial_solver_Chebychev/sll_local_solutions.F90
     source/common/radial_solver_Chebychev/create_newmesh.f90
+    source/common/radial_solver_Chebychev/vllmat.f90
+    source/common/radial_solver_Chebychev/vllmatsra.f90
+    source/common/radial_solver_Chebychev/calcsph.f90
+    source/common/trarea.f90
+    source/common/sphere_nogga.f90
+    source/common/lebedev.f90
+    source/common/rclm.f90
+    source/common/ymy.f90
+    source/common/findgroup.f90
+    source/common/spin_orbit.f90
+    source/common/spin_orbit_compl.f90
+    source/common/spinorbit_ham.f90
+    source/common/runoptions.F90
+    source/common/beshank.f90
     source/KKRhost/addvirtual14.f90
     source/KKRhost/amemagvec.f90
     source/KKRhost/bastrmat.f90
     source/KKRhost/beshan.f90
-    source/KKRhost/beshank.f90
     source/KKRhost/bofm.f90
     source/KKRhost/brydbm.f90
     source/KKRhost/brysh1.f90
@@ -79,7 +107,6 @@ add_executable(
     source/KKRhost/calcgf.f90
     source/KKRhost/calcmvec.f90
     source/KKRhost/calcrotmat.f90
-    source/KKRhost/calcsph.f90
     source/KKRhost/calctmat.F90
     source/KKRhost/calctref.f90
     source/KKRhost/calrmt.f90
@@ -102,19 +129,17 @@ add_executable(
     source/KKRhost/coreerr.f90
     source/KKRhost/corehff.f90
     source/KKRhost/corel.f90
-    source/KKRhost/corlsd.f90
     source/KKRhost/cpamillsx.f90
-    source/KKRhost/cpw91.f90
     source/KKRhost/cradwf.f90
     source/KKRhost/crospr.f90
-    source/KKRhost/cross.f90
+    source/common/cross.f90
     source/KKRhost/crtstar.f90
     source/KKRhost/csimpk.f90
     source/KKRhost/csinwd.f90
     source/KKRhost/csout.f90
     source/KKRhost/csum.f90
     source/KKRhost/cylm02.f90
-    source/KKRhost/ddet33.f90
+    source/common/ddet33.f90
     source/KKRhost/ddot1.f90
     source/KKRhost/decimaread.f90
     source/KKRhost/decimate.f90
@@ -155,8 +180,6 @@ add_executable(
     source/KKRhost/espcb.f90
     source/KKRhost/etotb1.f90
     source/KKRhost/ewald2d.f90
-    source/KKRhost/exch91.f90
-    source/KKRhost/findgroup.f90
     source/KKRhost/force.f90
     source/KKRhost/forceh.f90
     source/KKRhost/forcxc.f90
@@ -166,7 +189,6 @@ add_executable(
     source/KKRhost/gaufd.f90
     source/KKRhost/gauleg.f90
     source/KKRhost/gaunt.f90
-    source/KKRhost/gcor91.f90
     source/KKRhost/generalpot.f90
     source/KKRhost/getbr3.f90
     source/KKRhost/getclusnxyz.f90
@@ -179,14 +201,10 @@ add_executable(
     source/KKRhost/gijdmat.f90
     source/KKRhost/gijxcpl.f90
     source/KKRhost/gll95.F90
-    source/KKRhost/global_variables.F90
     source/KKRhost/godfrin.F90
-    source/KKRhost/gradr.f90
     source/KKRhost/gradr_d0.f90
-    source/KKRhost/gradrl.f90
     source/KKRhost/greenimp.F90
     source/KKRhost/grefsy.f90
-    source/KKRhost/gxcpt.f90
     source/KKRhost/hankel.f90
     source/KKRhost/hffcore.f90
     source/KKRhost/idreals.f90
@@ -212,8 +230,7 @@ add_executable(
     source/KKRhost/lattice2d.f90
     source/KKRhost/lattice3d.f90
     source/KKRhost/lattix99.f90
-    source/KKRhost/latvec.f90
-    source/KKRhost/lebedev.f90
+    source/common/latvec.f90
     source/KKRhost/length.f90
     source/KKRhost/lngstring.f90
     source/KKRhost/madelcoef.f90
@@ -226,15 +243,12 @@ add_executable(
     source/KKRhost/main1b.F90
     source/KKRhost/main1c.F90
     source/KKRhost/main2.F90
-    source/KKRhost/main_all.F90
     source/KKRhost/mapblock.f90
     source/KKRhost/md5sums.F90
     source/KKRhost/mdirnewang.f90
     source/KKRhost/memoryhandling.f90
     source/KKRhost/mixldau.f90
     source/KKRhost/mixstr.f90
-    source/KKRhost/mkxcpe.f90
-    source/KKRhost/mkxcpe2.f90
     source/KKRhost/mssinit.f90
     source/KKRhost/mtzero.f90
     source/KKRhost/mvecglobal.f90
@@ -250,10 +264,9 @@ add_executable(
     source/KKRhost/phicalc.f90
     source/KKRhost/pnsqns.f90
     source/KKRhost/pnstmat.f90
-    source/KKRhost/pointgrp.f90
+    source/common/pointgrp.f90
     source/KKRhost/potcut.f90
     source/KKRhost/projtau.f90
-    source/KKRhost/rclm.f90
     source/KKRhost/readimppot.f90
     source/KKRhost/readldaupot.f90
     source/KKRhost/reg2.f90
@@ -285,7 +298,6 @@ add_executable(
     source/KKRhost/rotgll.F90
     source/KKRhost/rotmat.f90
     source/KKRhost/rrgen.f90
-    source/KKRhost/runoptions.F90
     source/KKRhost/save_wavefun.F90
     source/KKRhost/scalevec.f90
     source/KKRhost/scalpr.f90
@@ -296,19 +308,13 @@ add_executable(
     source/KKRhost/shape_corr.f90
     source/KKRhost/shellgen2k.f90
     source/KKRhost/simp3.f90
-    source/KKRhost/simpk.f90
     source/KKRhost/sinwk.f90
     source/KKRhost/sname.f90
     source/KKRhost/soutk.f90
     source/KKRhost/spatpr.f90
     source/KKRhost/spher.f90
     source/KKRhost/sphere_gga.f90
-    source/KKRhost/sphere_nogga.f90
-    source/KKRhost/spin_orbit.f90
-    source/KKRhost/spin_orbit_compl.f90
-    source/KKRhost/spinorbit_ham.f90
     source/KKRhost/ssite.f90
-    source/KKRhost/ssum.f90
     source/KKRhost/startb1.f90
     source/KKRhost/startldau.f90
     source/KKRhost/strmat.F90
@@ -325,22 +331,14 @@ add_executable(
     source/KKRhost/testdim.f90
     source/KKRhost/tmat_newsolver.F90
     source/KKRhost/tmatimp_newsolver.F90
-    source/KKRhost/trarea.f90
     source/KKRhost/vadd.f90
     source/KKRhost/veq.f90
     source/KKRhost/vinterface.f90
     source/KKRhost/vintras.f90
-    source/KKRhost/vllmat.f90
-    source/KKRhost/vllmatsra.f90
     source/KKRhost/vllns.f90
     source/KKRhost/vmadelblk.f90
     source/KKRhost/vmul.f90
-    source/KKRhost/vosko.f90
     source/KKRhost/vxcdrv.f90
-    source/KKRhost/vxcgga.f90
-    source/KKRhost/vxclm.f90
-    source/KKRhost/vxcspo.f90
-    source/KKRhost/wfint.f90
     source/KKRhost/wfmesh.f90
     source/KKRhost/wftsca.f90
     source/KKRhost/wmatldau.f90
@@ -353,9 +351,17 @@ add_executable(
     source/KKRhost/wrmoms.f90
     source/KKRhost/wunfiles.F90
     source/KKRhost/ylag.f90
-    source/KKRhost/ymy.f90
-    )
+)
+# disable cmake auto add pf 'lib' prefix to .so file
+SET_TARGET_PROPERTIES(lib_kkrhost PROPERTIES PREFIX "")
 
+
+# the executable is built from this list of files
+add_executable(
+    kkr.x
+    source/KKRhost/main_all.F90
+    )
+target_link_libraries(kkr.x lib_kkrhost)
 if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
     target_link_libraries(kkr.x ${lapackblas_libraries})
 endif()
@@ -364,208 +370,10 @@ if(ENABLE_BdG)
     # for wf testing (BdG)
     add_executable(
         kkr_BdG_radial.x
-        source/common/version.F90
-        source/common/version_info.F90
-        source/common/profiling.f90 
-        source/common/mympi.F90 
-        source/common/DataTypes.f90
-        source/common/constants.f90 
-        source/common/timing.F90 
-        source/common/types.F90 
-        source/common/ioinput.f90 
-        source/common/interpolspline.f90 
-        source/common/spline_real.f90 
-        source/common/splint_real.f90 
-        source/common/gaunt2.f90 
-        source/common/grule.f90 
-        source/common/rcstop.f90 
-        source/common/cinit.f90 
-        source/common/rotatespinframe.f90 
-        source/common/radial_solver_Chebychev/intcheb_cell.f90 
-        source/common/radial_solver_Chebychev/cheb.f90 
-        source/common/radial_solver_Chebychev/chebint.f90 
-        source/common/radial_solver_Chebychev/rllsllsourceterms.f90 
-        source/common/radial_solver_Chebychev/rllsll.F90 
-        source/common/radial_solver_Chebychev/rll_local_solutions.F90 
-        source/common/radial_solver_Chebychev/sll_local_solutions.F90 
-        source/common/radial_solver_Chebychev/rll_global_solutions.F90 
-        source/common/radial_solver_Chebychev/sll_global_solutions.F90 
-        source/common/radial_solver_Chebychev/create_newmesh.f90 
-        source/KKRhost/wunfiles.F90
         source/KKRhost/main_tmat_runner.F90
-        source/KKRhost/global_variables.F90 
-        source/KKRhost/save_wavefun.F90 
-        source/KKRhost/md5sums.F90 
-        source/KKRhost/jijhelp.f90 
-        source/KKRhost/initabjij.f90 
-        source/KKRhost/tbxccpljij.F90 
-        source/KKRhost/tbxccpljijdij.F90 
-        source/KKRhost/rhoqtools.F90 
-        source/KKRhost/godfrin.F90 
-        source/KKRhost/memoryhandling.f90 
-        source/KKRhost/rinput13.F90
-        source/KKRhost/getbr3.f90 
-        source/KKRhost/write_tbkkr_files.f90 
-        source/KKRhost/gaunt.f90 
-        source/KKRhost/symtaumat.f90 
-        source/KKRhost/taustruc.f90 
-        source/KKRhost/bzkint0.f90 
-        source/KKRhost/findgroup.f90 
-        source/KKRhost/calcrotmat.f90 
-        source/KKRhost/errortrap.f90 
-        source/KKRhost/bzkmesh.f90 
-        source/KKRhost/bzirr3d.f90 
-        source/KKRhost/madelung3d.f90 
-        source/KKRhost/madelung2d.f90 
-        source/KKRhost/madelout.f90 
-        source/KKRhost/idreals.f90 
-        source/KKRhost/deciopt.f90 
-        source/KKRhost/impcheck.f90 
-        source/KKRhost/impcoefs.f90 
-        source/KKRhost/setgijtab.f90 
-        source/KKRhost/gijxcpl.f90 
-        source/KKRhost/gijcond.f90 
-        source/KKRhost/getclusnxyz.f90 
-        source/KKRhost/decitset.f90    
-        source/KKRhost/decitmat.f90 
-        source/KKRhost/outpothost.f90  
-        source/KKRhost/decipothead.f90 
-        source/KKRhost/getscratch.f90 
-        source/KKRhost/decipotbas.f90  
-        source/KKRhost/outtmathost.f90 
-        source/KKRhost/lngstring.f90 
-        source/KKRhost/startldau.f90   
-        source/KKRhost/readldaupot.f90 
-        source/KKRhost/epathtb.f90 
-        source/KKRhost/addvirtual14.f90   
-        source/KKRhost/calrmt.f90     
-        source/KKRhost/clsgen_tb.f90   
-        source/KKRhost/cmomsread.f90 
-        source/KKRhost/crospr.f90 
-        source/KKRhost/cross.f90 
-        source/KKRhost/crtstar.f90 
-        source/KKRhost/ddet33.f90 
-        source/KKRhost/ddot1.f90 
-        source/KKRhost/dscal1.f90 
-        source/KKRhost/dsort.f90 
-        source/KKRhost/dswap1.f90 
-        source/KKRhost/emesht.f90 
-        source/KKRhost/erfcex.f90 
-        source/KKRhost/errmsg.f90 
-        source/KKRhost/gamfc.f90 
-        source/KKRhost/gaufd.f90  
-        source/KKRhost/gauleg.f90 
-        source/KKRhost/gfmask.f90 
-        source/KKRhost/gfshells.f90 
-        source/KKRhost/lattice2d.f90 
-        source/KKRhost/lattice3d.f90 
-        source/KKRhost/lattix99.f90 
-        source/KKRhost/latvec.f90 
-        source/KKRhost/length.f90 
-        source/KKRhost/nrmliz.f90 
-        source/KKRhost/pointgrp.f90 
-        source/KKRhost/potcut.f90 
-        source/KKRhost/rinit.f90 
-        source/KKRhost/decimaread.f90 
-        source/KKRhost/rrgen.f90 
-        source/KKRhost/scalevec.f90 
-        source/KKRhost/scalpr.f90 
-        source/KKRhost/shellgen2k.f90 
-        source/KKRhost/sname.f90 
-        source/KKRhost/spatpr.f90 
-        source/KKRhost/strmat.F90 
-        source/KKRhost/generalpot.f90 
-        source/KKRhost/ymy.f90 
-        source/KKRhost/veq.f90 
-        source/KKRhost/vadd.f90 
-        source/KKRhost/vmul.f90 
-        source/KKRhost/testdim.f90 
-        source/KKRhost/startb1.f90 
-        source/KKRhost/madelcoef.f90 
-        source/KKRhost/madelgaunt.f90 
-        source/KKRhost/ewald2d.f90 
-        source/KKRhost/fplaneg.f90 
-        source/KKRhost/fplaner.f90 
-        source/KKRhost/shape_corr.f90 
-        source/KKRhost/wfmesh.f90 
-        source/KKRhost/regsol.f90 
-        source/KKRhost/beshan.f90 
-        source/KKRhost/drvbastrans.f90 
-        source/KKRhost/relpotcvt.f90 
-        source/KKRhost/drvreltmat.f90 
-        source/KKRhost/calccgc.f90 
-        source/KKRhost/ikmlin.f90 
-        source/KKRhost/strsmat.f90 
-        source/KKRhost/bastrmat.f90 
-        source/KKRhost/ikapmue.f90 
-        source/KKRhost/cmatstr.f90 
-        source/KKRhost/checkrmat.f90 
-        source/KKRhost/rinvgj.f90 
-        source/KKRhost/ssite.f90 
-        source/KKRhost/cintabr.f90 
-        source/KKRhost/sumupint.f90 
-        source/KKRhost/dirac_bs.f90 
-        source/KKRhost/dirbslag.f90 
-        source/KKRhost/dirbsmid.f90 
-        source/KKRhost/dirbsrad.f90 
-        source/KKRhost/dirbsrze.f90 
-        source/KKRhost/dirbsstp.f90 
-        source/KKRhost/cjlz.f90 
-        source/KKRhost/cnlz.f90 
-        source/KKRhost/cdjlzdz.f90 
-        source/KKRhost/cdnlzdz.f90 
-        source/KKRhost/cint4pts.f90 
-        source/KKRhost/cinthff.f90 
-        source/KKRhost/ylag.f90 
-        source/KKRhost/rnuctab.f90 
-        source/KKRhost/dirac_op.f90 
-        source/KKRhost/dirac_soc.f90 
-        source/KKRhost/dirac_soc2.f90 
-        source/KKRhost/changerep.f90 
-        source/KKRhost/writehoststructure.f90 
-        source/KKRhost/readimppot.f90 
-        source/KKRhost/tmatimp_newsolver.F90 
-        source/KKRhost/greenimp.F90 
-        source/KKRhost/calctref.f90 
-        source/KKRhost/main0.F90
-        source/KKRhost/tmat_newsolver.F90 
         source/KKRhost/main1a_dummy_BdG.f90 
-        source/KKRhost/calctmat.F90 
-        source/KKRhost/initldau.f90 
-        source/KKRhost/phicalc.f90 
-        source/KKRhost/interpolate_poten.f90 
-        source/KKRhost/vllmat.f90 
-        source/KKRhost/spinorbit_ham.f90 
-        source/KKRhost/spin_orbit.f90 
-        source/KKRhost/spin_orbit_compl.f90 
-        source/KKRhost/vllmatsra.f90 
-        source/KKRhost/beshank.f90 
-        source/KKRhost/calcsph.f90 
-        source/KKRhost/csum.f90 
-        source/KKRhost/gfree.f90 
-        source/KKRhost/gll95.F90 
-        source/KKRhost/grefsy.f90 
-        source/KKRhost/ioben.f90 
-        source/KKRhost/mapblock.f90 
-        source/KKRhost/cradwf.f90 
-        source/KKRhost/csinwd.f90 
-        source/KKRhost/csout.f90 
-        source/KKRhost/hankel.f90 
-        source/KKRhost/irwsol.f90 
-        source/KKRhost/regns.f90 
-        source/KKRhost/trarea.f90
-        source/KKRhost/tbref.F90 
-        source/KKRhost/wfint.f90 
-        source/KKRhost/wftsca.f90 
-        source/KKRhost/pnstmat.f90 
-        source/KKRhost/vllns.f90 
-        source/KKRhost/simpk.f90 
-        source/KKRhost/soutk.f90 
-        source/KKRhost/ssum.f90 
-        source/KKRhost/cmatmul.f90 
-        source/KKRhost/convol.f90
         )
-
+    target_link_libraries(kkr_BdG_radial.x lib_kkrhost)
     if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
         target_link_libraries(kkr_BdG_radial.x ${lapackblas_libraries})
     endif()

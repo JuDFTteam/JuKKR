@@ -33,6 +33,7 @@
      +                 LMPOTD,LPOTD,LMXSPD,IRMD,NFUND,IRID,NGSHD,IPAND)
        USE MOD_SIMP3
        USE MOD_SIMPK
+       use mod_vxcspo, only: vxcspo
        IMPLICIT NONE
 !       EXTERNAL DAXPY,SIMP3,SIMPK,VOSKO,VXCSPO
 

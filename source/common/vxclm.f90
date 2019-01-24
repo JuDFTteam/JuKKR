@@ -66,11 +66,11 @@ contains
     kshape,gsh,ilm,imaxsh,ifunm,thetas,yr,wtyr,ijend,lmsp)
 
     use :: mod_datatypes, only: dp
-    use :: global_variables
-    use :: mod_vosko
-    use :: mod_vxcspo
-    use :: mod_simpk
-    use :: mod_simp3
+    use :: global_variables, only: lmxspd, ipand, lmpotd, ngshd, irmd, irid, nfund, lpotd
+    use :: mod_vosko, only: vosko
+    use :: mod_vxcspo, only: vxcspo
+    use :: mod_simpk, only: simpk
+    use :: mod_simp3, only: simp3
     use :: mod_constants, only: pi
     implicit none
     ! ..

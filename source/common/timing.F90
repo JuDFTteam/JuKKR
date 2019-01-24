@@ -43,7 +43,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine timing_init(my_rank)
     use :: mod_types, only: t_inc
-    use :: mod_version_info
+    use :: mod_version_info, only: version_print_header
     implicit none
     integer, intent(in) :: my_rank
     character (len=3) :: ctemp

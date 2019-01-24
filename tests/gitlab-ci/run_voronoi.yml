@@ -15,6 +15,7 @@ run_voronoi:intel:oldstyle:
     - master
     - develop
     - develop-voronoi
+    - GROUP3
 
 run_voronoi:intel:newstyle:
   stage: run_voronoi
@@ -33,3 +34,4 @@ run_voronoi:intel:newstyle:
     - master
     - develop
     - develop-voronoi
+    - GROUP3

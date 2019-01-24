@@ -36,7 +36,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine ymy(v1, v2, v3, r, ylm, lmax)
 
-    use :: mod_rcstop
+    use :: mod_rcstop, only: rcstop
     use :: mod_constants, only : pi
     implicit none
     ! .. Parameters ..

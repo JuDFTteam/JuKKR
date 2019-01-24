@@ -14,7 +14,7 @@ module type_wavefunction
     double complex,allocatable  :: sll(:,:,:,:), rll(:,:,:,:)
     double complex,allocatable  :: sllleft(:,:,:,:), rllleft(:,:,:,:)
 
-    integer                     :: deallocate
+    integer                     :: deallocate = 0
     integer                     :: rll_saved
     integer                     :: sll_saved
     integer                     :: rllleft_saved
