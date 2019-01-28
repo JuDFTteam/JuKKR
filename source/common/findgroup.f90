@@ -7,8 +7,8 @@
 module mod_findgroup
   
   interface findgroup
-    procedure findgroup_host
-    procedure findgroup_pkkprime
+    module procedure findgroup_host
+    module procedure findgroup_pkkprime
   end interface findgroup
 
   private
