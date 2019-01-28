@@ -15,7 +15,7 @@
 
 ----
 
-## *UNRELEASED* (last updated: 2019-01-22)
+## *UNRELEASED* (last updated: 2019-01-24)
 
 **Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release.**
 
@@ -38,6 +38,7 @@ Removed a lot of code duplicates among different
 
 ### Fixed
 - header handling in complexdos3 tool
+- position of chebint in rhooutnew of KKRimp (probably) corrected
 
 ----
 
