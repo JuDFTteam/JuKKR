@@ -241,7 +241,7 @@ program kkrcode
 
   ! allocate timing arrays
   if (mpiadapt>0) then
-    allocate (timings_1a(t_inc%ielast,t_inc%natyp), stat=i_stat)
+    allocate (timings_1a(t_inc%ielast,natypd), stat=i_stat)
     call memocc(i_stat, product(shape(timings_1a))*kind(timings_1a), 'timings_1a', 'main_all')
     allocate (timings_1b(t_inc%ielast), stat=i_stat)
     call memocc(i_stat, product(shape(timings_1b))*kind(timings_1b), 'timings_1b', 'main_all')
@@ -253,7 +253,7 @@ program kkrcode
   end if                           ! MPIadapt>0
 
   ! create_subcomms_2d: first find maximal dimensions
-  call find_dims_2d(nranks, t_inc%natyp, t_inc%ielast, dims, mpiatom)
+  call find_dims_2d(nranks, natypd, t_inc%ielast, dims, mpiatom)
   ! save in dims
   t_mpi_c_grid%dims = dims
 
@@ -414,7 +414,7 @@ program kkrcode
     ! adapt MPI communicator grid to tackle load imbalance better
     if (mpiadapt>0) then
       ! create_subcomms_2d: first find maximal dimensions
-      call find_dims_2d(nranks, t_inc%natyp, t_inc%ielast, dims, mpiatom)
+      call find_dims_2d(nranks, natypd, t_inc%ielast, dims, mpiatom)
       ! save in dims
       t_mpi_c_grid%dims = dims
 
@@ -962,4 +962,3 @@ program kkrcode
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 end program kkrcode
-

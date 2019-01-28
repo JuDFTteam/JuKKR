@@ -13,7 +13,7 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Set flags determining if wavefunctions and t-matrix elements for Jijs are computed
-  !> Author: 
+  !> Author:
   !> Category: KKRhost, physical-observables
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
@@ -25,12 +25,12 @@ contains
     use :: mod_save_wavefun, only: t_wavefunctions
 
     implicit none
-    type (type_dtmatjijdij), intent (inout) :: t_dtmatjij(t_inc%natyp)
     integer, intent (in) :: natypd, natomimpd, natomimp, atomimp(natomimpd), iqat(natypd)
+    type (type_dtmatjijdij), intent (inout) :: t_dtmatjij(natypd)
 
     integer :: i1, iq
 
-    do iq = 1, t_inc%natyp
+    do iq = 1, natypd
       do i1 = 1, natomimp
         if (iqat(iq)==atomimp(i1)) then
           t_dtmatjij(iq)%calculate = .true.
@@ -56,7 +56,7 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Compute \[\Delta t]\-matrix for Jijs
-  !> Author: 
+  !> Author:
   !> Category: KKRhost, physical-observables, single-site
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
@@ -65,7 +65,7 @@ contains
     ncleb, rnew, dtmat)
     ! subroutine
     ! calc_dtmatJij(NTOTD,NRMAXD,NSRA,IRMDNEW,NSPIN,VINS,RLLLEFT,RLL,RPAN_INTERVALL,IPAN_INTERVALL,NPAN_TOT,NCHEB,CLEB,ICLEB,IEND,NCLEB,RNEW,dtmat)
-    
+
     use :: mod_datatypes, only: dp
     use :: mod_vllmat, only: vllmat
     use :: mod_intcheb_cell, only: intcheb_cell
@@ -167,7 +167,7 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Calculate Pauli matrices
-  !> Author: 
+  !> Author:
   !> Category: KKRhost, numerical-tools
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>

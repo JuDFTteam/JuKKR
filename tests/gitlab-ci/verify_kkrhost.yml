@@ -13,6 +13,7 @@ verify_kkrhost:intel:
       - all_test_results.tar.gz
     expire_in: 1 day
   only: 
+    - BdG
     - schedules
     - triggers
     - web

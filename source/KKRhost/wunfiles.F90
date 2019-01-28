@@ -15,7 +15,7 @@
 !------------------------------------------------------------------------------------
 !> @note Jonatan Chico: 02.01.2018 Modifications to ensure compatibility for the removal of
 !> the inc.p file. Also added the memory profiling calls to the allocation/deallocation
-!> of the arrays. 
+!> of the arrays.
 !> @endnote
 !------------------------------------------------------------------------------------
 module mod_wunfiles
@@ -28,9 +28,9 @@ module mod_wunfiles
 
   !-------------------------------------------------------------------------------
   !> Summary: Type holding information of parameters for the communication of data
-  !> Author: 
+  !> Author:
   !> Category: communication, KKRhost
-  !> Deprecated: False 
+  !> Deprecated: False
   !> Type holding information of parameters for the communication of data
   !-------------------------------------------------------------------------------
   ! define type that replace wunfiles here, later define bcast routine
@@ -324,8 +324,8 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: This routine takes the read parameters from the `inputcard` and stores them in the `t_params` type to be distributed via MPI
   !> Author: Philipp Rüssmann and many others ...
-  !> Category: communication, input-output, KKRhost 
-  !> Deprecated: False 
+  !> Category: communication, input-output, KKRhost
+  !> Deprecated: False
   !> This routine was oiginally meant to write unformated files to then
   !> be read by other executables, now it does the same job via storing types instead
   !> reducing I/O and allowing for MPI communication.
@@ -627,7 +627,6 @@ contains
     t_inc%n_iteration = scfsteps
     ! put information for save_wavefun also in:
     t_inc%nsra = nsra
-    t_inc%lmmaxso = 2*(lmax+1)**2
     irmdnew = 0
     do i1 = 1, natyp
       if (npan_tot(i1)*(ncheb+1)>irmdnew) then
@@ -686,13 +685,8 @@ contains
     ! t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc
     !--------------------------------------------------------------------------------
     ! fill t_inc
-    t_inc%lmmaxd = lmmaxd
-    t_inc%nspin = nspin
     t_inc%ielast = ielast
     t_inc%nqdos = nqdos
-    t_inc%natyp = natyp
-    t_inc%lmgf0d = (lmax+1)**2     ! see main1b
-    t_inc%nclsd = ncls
     t_inc%naclsmax = naclsmax
     t_inc%nshell0 = nshell(0)
     if (use_Chebychev_solver) t_inc%newsosol = .true.
@@ -855,9 +849,9 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Allocate initial parameters to be broadcasted via mpi
-  !> Author: Philipp Ruessmann 
-  !> Category: memory-management, profiling, KKRhost 
-  !> Deprecated: False 
+  !> Author: Philipp Ruessmann
+  !> Category: memory-management, profiling, KKRhost
+  !> Deprecated: False
   !> Allocate initial parameters to be broadcasted via mpi. allocate arrays, has to
   !> be done after `bcast t_params_scalars` for myrank<>master otherwise are the parameters not set
   !-------------------------------------------------------------------------------
@@ -1199,10 +1193,10 @@ contains
 #ifdef CPP_MPI
   !-------------------------------------------------------------------------------
   !> Summary: Broadcast scalar parameters via MPI
-  !> Author: Philipp Ruessmann 
-  !> Category: communication, KKRhost 
+  !> Author: Philipp Ruessmann
+  !> Category: communication, KKRhost
   !> Deprecated: False !
-  !> Broadcast scalar parameters via MPI. Broadcast scalar parameters, deal with arrays later 
+  !> Broadcast scalar parameters via MPI. Broadcast scalar parameters, deal with arrays later
   !-------------------------------------------------------------------------------
   subroutine bcast_t_params_scalars(t_params)
 
@@ -1539,9 +1533,9 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Broadcast arrays via MPI
   !> Author: Philipp Ruessmann
-  !> Category: communication, KKRhost 
-  !> Deprecated: False 
-  !> Broadcast arrays via MP. Broadcast arrays from t_params 
+  !> Category: communication, KKRhost
+  !> Deprecated: False
+  !> Broadcast arrays via MP. Broadcast arrays from t_params
   !-------------------------------------------------------------------------------
   subroutine bcast_t_params_arrays(t_params)
 
@@ -1723,9 +1717,9 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Set the values of the `t_params` scalars with the input values
-  !> Author: Philipp Ruessmann 
-  !> Category: initialization, communication, KKRhost 
-  !> Deprecated: False 
+  !> Author: Philipp Ruessmann
+  !> Category: initialization, communication, KKRhost
+  !> Deprecated: False
   !> Set the values of the `t_params` scalars with the input values
   !-------------------------------------------------------------------------------
   subroutine fill_t_params_scalars(iemxd,irmind,irm,lmpot,nspotd,npotd,natyp,nembd1,&
@@ -1832,7 +1826,7 @@ contains
     integer, intent (in) :: natomimpd !! Size of the cluster for impurity-calculation output of GF should be 1, if you don't do such a calculation
     integer, intent (in) :: itrunldau !! Iteration index for LDA+U
     integer, intent (in) :: iesemicore
-    integer, intent (in) :: special_straight_mixing 
+    integer, intent (in) :: special_straight_mixing
     real (kind=dp), intent (in) :: tk !! Temperature
     real (kind=dp), intent (in) :: fcm
     real (kind=dp), intent (in) :: emin !! Energies needed in EMESHT
@@ -1981,12 +1975,12 @@ contains
   !-------------------------------------------------------------------------------
   !> Summary: Set the values of the t_params arrays with the input values of the arrays
   !> Author: Who wrote this subroutine
-  !> Category: initialization, communication, KKRhost 
-  !> Deprecated: False 
+  !> Category: initialization, communication, KKRhost
+  !> Deprecated: False
   !> Set the values of the t_params arrays with the input values of the arrays.
   !> Fill arrays after they have been allocated in `init_t_params`
   !-------------------------------------------------------------------------------
-  subroutine fill_t_params_arrays(t_params,iemxd,lmmaxd,naez,nembd1,nspindd,        & 
+  subroutine fill_t_params_arrays(t_params,iemxd,lmmaxd,naez,nembd1,nspindd,        &
     irmind,irm,lmpot,nspotd,npotd,natyp,nr,nembd2,nref,ncleb,nclsd,naclsd,nsheld,   &
     ngshd,nfund,irid,ncelld,mmaxd,lm2d,lmxspd,lmaxd1,nspind,ntotd,ncheb,ipand,lmax, &
     nofgij,naezdpd,natomimpd,ez,wez,drotq,dsymll,lefttinvll,righttinvll,crel,rc,    &
@@ -2301,9 +2295,9 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Set the values of the local variables according to the stored `t_params` so that they can be passed between different control modules, specifically for `main1a`
-  !> Author: Philipp Ruessmann 
-  !> Category: communication, KKRhost 
-  !> Deprecated: False 
+  !> Author: Philipp Ruessmann
+  !> Category: communication, KKRhost
+  !> Deprecated: False
   !> Set the values of the local variables according to the stored `t_params`
   !> so that they can be passed between different control modules, specifically for `main1a`
   !-------------------------------------------------------------------------------
@@ -2523,9 +2517,9 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Set the values of the local variables according to the stored `t_params` so that they can be passed between different control modules, specifically for `main1b`
-  !> Author: Philipp Ruessmann 
-  !> Category: communication, KKRhost 
-  !> Deprecated: False 
+  !> Author: Philipp Ruessmann
+  !> Category: communication, KKRhost
+  !> Deprecated: False
   !> Set the values of the local variables according to the stored `t_params`
   !> so that they can be passed between different control modules, specifically for `main1b`
   !-------------------------------------------------------------------------------
@@ -2541,7 +2535,7 @@ contains
     ! get relevant parameters from t_params
     ! ..
 
-    use :: mod_runoptions, only: relax_SpinAngle_Dirac, use_decimation, write_kpts_file 
+    use :: mod_runoptions, only: relax_SpinAngle_Dirac, use_decimation, write_kpts_file
 
     implicit none
 
@@ -2793,15 +2787,15 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Set the values of the local variables according to the stored `t_params` so that they can be passed between different control modules, specifically for `main1c`
-  !> Author: Philipp Ruessmann 
-  !> Category: communication, KKRhost 
-  !> Deprecated: False 
+  !> Author: Philipp Ruessmann
+  !> Category: communication, KKRhost
+  !> Deprecated: False
   !> Set the values of the local variables according to the stored `t_params`
   !> so that they can be passed between different control modules, specifically for `main1c`
   !-------------------------------------------------------------------------------
-  subroutine get_params_1c(t_params,krel,naezd,natypd,ncleb,lm2d,ncheb,ipand,lmpotd,& 
+  subroutine get_params_1c(t_params,krel,naezd,natypd,ncleb,lm2d,ncheb,ipand,lmpotd,&
     lmaxd,lmxspd,nfund,npotd,ntotd,mmaxd,iemxd,irmd,nsra,ins,nspin,nacls1,icst,     &
-    kmrot,iqat,idoldau,irws,ipan,ircut,iend,icleb,loflm,jend,ifunm1,lmsp1,nfu,llmsp,& 
+    kmrot,iqat,idoldau,irws,ipan,ircut,iend,icleb,loflm,jend,ifunm1,lmsp1,nfu,llmsp,&
     lcore,ncore,ntcell,irmin,ititle,intervx,intervy,intervz,lly,itmpdir,iltmp,      &
     npan_eq,ipan_intervall,npan_log,npan_tot,ntldau,lopt,itldau,ielast,iesemicore,  &
     npol,irshift,jwsrel,zrel,itrunldau,qmtet,qmphi,conc,alat,zat,drdi,rmesh,a,b,    &
@@ -3061,9 +3055,9 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Set the values of the local variables according to the stored `t_params` so that they can be passed between different control modules, specifically for `main2`
-  !> Author: Philipp Ruessmann 
-  !> Category: communication, KKRhost 
-  !> Deprecated: False 
+  !> Author: Philipp Ruessmann
+  !> Category: communication, KKRhost
+  !> Deprecated: False
   !> Set the values of the local variables according to the stored `t_params`
   !> so that they can be passed between different control modules, specifically for `main2`
   !-------------------------------------------------------------------------------
@@ -3075,7 +3069,7 @@ contains
     npnt3,itscf,scfsteps,iesemicore,kaoez,iqat,noq,lly,npolsemi,n1semi,n2semi,      &
     n3semi,zrel,jwsrel,irshift,mixing,lambda_xc,a,b,thetas,drdi,r,zat,rmt,rmtnew,   &
     rws,emin,emax,tk,alat,efold,chrgold,cmomhost,conc,gsh,ebotsemi,emusemi,tksemi,  &
-    vins,visp,rmrel,drdirel,vbc,fsold,r2drdirel,ecore,ez,wez,txc,linterface,lrhosym,& 
+    vins,visp,rmrel,drdirel,vbc,fsold,r2drdirel,ecore,ez,wez,txc,linterface,lrhosym,&
     ngshd,naez,irid,nspotd,iemxd,special_straight_mixing)
     ! get relevant parameters from t_params
     ! ..
@@ -3330,9 +3324,9 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Store the values of the local variables related to the energy mesh, in the `t_params` data types
-  !> Author: Philipp Ruessmann 
-  !> Category: communication, KKRhost 
-  !> Deprecated: False 
+  !> Author: Philipp Ruessmann
+  !> Category: communication, KKRhost
+  !> Deprecated: False
   !> Store the values of the local variables related to the energy mesh,
   !> in the `t_params` data types
   !-------------------------------------------------------------------------------
@@ -3388,11 +3382,11 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Store the values of the local variables related to the SCF parameters in the `t_params` data types
-  !> Author: Philipp Ruessmann 
-  !> Category: communication, KKRhost 
-  !> Deprecated: False 
+  !> Author: Philipp Ruessmann
+  !> Category: communication, KKRhost
+  !> Deprecated: False
   !> Store the values of the local variables related to the SCF parameters
-  !> in the `t_params` data types. Save information that is needed in next iteration 
+  !> in the `t_params` data types. Save information that is needed in next iteration
   !> and that is changeing, i.e. potential etc.
   !-------------------------------------------------------------------------------
   subroutine save_scfinfo(t_params,vins,visp,ecore,vbc,rmrel,drdirel,r2drdirel,zrel,&
@@ -3452,11 +3446,11 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Store the values of the local variables related to the electronic density in the `t_params` data types
-  !> Author: Philipp Ruessmann 
-  !> Category: communication, physical-observables, KKRhost 
-  !> Deprecated: False 
+  !> Author: Philipp Ruessmann
+  !> Category: communication, physical-observables, KKRhost
+  !> Deprecated: False
   !> Store the values of the local variables related to the electronic density
-  !> in the `t_params` data types. Save density after it has been calculated in 
+  !> in the `t_params` data types. Save density after it has been calculated in
   !> `main1c`, is further processed in `main2`
   !-------------------------------------------------------------------------------
   subroutine save_density(t_params,rho2ns,r2nef,rhoc,denef,denefat,espv,ecore,      &
@@ -3513,9 +3507,9 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Set the values of the local variables related to the electronic density in the `t_params` data types
-  !> Author: Philipp Ruessmann 
-  !> Category: communication, physical-observables, KKRhost 
-  !> Deprecated: False 
+  !> Author: Philipp Ruessmann
+  !> Category: communication, physical-observables, KKRhost
+  !> Deprecated: False
   !> Set the values of the local variables related to the electronic density
   !> in the `t_params` data types. Store the values of the density in `main2`
   !-------------------------------------------------------------------------------
@@ -3574,9 +3568,9 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Read the angles variables associated with the angles of magnetic moments in a non-collinear calculation
-  !> Author: Philipp Ruessmann 
-  !> Category: input-output, dirac, KKRhost 
-  !> Deprecated: False 
+  !> Author: Philipp Ruessmann
+  !> Category: input-output, dirac, KKRhost
+  !> Deprecated: False
   !>  Read the angles variables associated with the angles of magnetic
   !> moments in a non-collinear calculation. Read `nonco_angles`.
   !-------------------------------------------------------------------------------

@@ -24,7 +24,7 @@ contains
   !> Author: Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
   !> and many others ...
   !> Category: single-site, potential, KKRhost
-  !> Deprecated: False 
+  !> Deprecated: False
   !> Main subroutine for the calculation of the t-matrix
   !>
   !> Calls routines that compute singe-site wavefunctions and t-matrices.
@@ -299,7 +299,7 @@ contains
       ! for calculation of Jij-tensor
       ! -------------------------------------------------------------------------
       if (calc_exchange_couplings .and. use_Chebychev_solver) then
-        do i1 = 1, t_inc%natyp
+        do i1 = 1, natypd
           ! initialize t_dtmatJij on other tasks
           ! t_dtmatJij was already allocated for certain atoms within the atom loop
           ! (in tmat_newsolver). This initialization cannot be made before tmat_newsolver,
@@ -358,14 +358,14 @@ contains
 
 #ifdef CPP_BdG
   !-------------------------------------------------------------------------------
-  !> Summary: Write out inputs for tmat_newsolver (BdG develop) 
-  !> Author: Philipp Ruessmann  
-  !> Deprecated: False 
+  !> Summary: Write out inputs for tmat_newsolver (BdG develop)
+  !> Author: Philipp Ruessmann
+  !> Deprecated: False
   !> Category: input-output, unit-test, KKRhost
   !>
-  !> @note JC: not sure how this exactly works bur variables do not seem to need 
-  !> declaration before being run. Maybe it is a good idea to add it.                    
-  !> @endnote                                                                       
+  !> @note JC: not sure how this exactly works bur variables do not seem to need
+  !> declaration before being run. Maybe it is a good idea to add it.
+  !> @endnote
   !-------------------------------------------------------------------------------
   subroutine BdG_write_tmatnewsolver_inputs(nranks, i1, i1_start, ielast, &
     nspin, lmax, nsra, iend, lmpotd, lly, deltae, idoldau, ncleb, &

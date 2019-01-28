@@ -6,7 +6,7 @@
 
 !------------------------------------------------------------------------------------
 !> Summary: Wrapper module for the handling of the wavefunctions
-!> Author: 
+!> Author:
 !> Wrapper module for the handling of the wavefunctions
 !------------------------------------------------------------------------------------
 module mod_save_wavefun
@@ -17,9 +17,9 @@ module mod_save_wavefun
 
   !-------------------------------------------------------------------------------
   !> Summary: Definition of the variables used to store and handle the wavefunctions
-  !> Author: 
+  !> Author:
   !> Category: single-site, KKRhost
-  !> Deprecated: False 
+  !> Deprecated: False
   !> Definition of the variables used to store and handle the wavefunctions
   !-------------------------------------------------------------------------------
   type :: type_wavefunctions
@@ -48,10 +48,10 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Find how many wavefunctions can be stored and set `isave_wavefun` array to determine which wavefunctions are stored
-  !> Author: 
+  !> Author:
   !> Category: input-output, profiling, initialization, KKRhost
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !> Find how many wavefunctions can be stored and set `isave_wavefun` array to 
+  !> Find how many wavefunctions can be stored and set `isave_wavefun` array to
   !> determine which wavefunctions are stored
   !-------------------------------------------------------------------------------
   subroutine find_isave_wavefun(t_wavefunctions)
@@ -64,6 +64,7 @@ contains
 #ifdef CPP_MPI
     use :: mod_types, only: t_mpi_c_grid
 #endif
+    use global_variables, only: natypd, lmmaxso
 
     implicit none
 
@@ -86,7 +87,7 @@ contains
 #endif
     t_wavefunctions%nth = nth
 
-    nat = t_inc%natyp
+    nat = natypd
     ne = t_inc%ielast
 #ifdef CPP_MPI
     ! local parameter for myrank
@@ -112,7 +113,7 @@ contains
       ! <<<<<<<  set some parameters  <<<<<<<!
       ! >>>>>>>  find numer of wavefunctions that can be stored and allocate store arrays  >>>>>>>!
       ! memory demand for one atom and one energy point in Mbyte
-      delta_mem = real(t_inc%nsra*t_inc%lmmaxso*t_inc%lmmaxso*t_inc%irmdnew*nth*16, kind=dp)/(1024.0d0**2)
+      delta_mem = real(t_inc%nsra*lmmaxso*lmmaxso*t_inc%irmdnew*nth*16, kind=dp)/(1024.0d0**2)
 
       ! number of wavefunction (rll, sll, rllleft, sllleft) that are needed to be stored
       nsave = 0
@@ -170,19 +171,19 @@ contains
       ! allocate store arrays in t_wavefunctions
       if (t_wavefunctions%nwfsavemax>0) then
         if (t_wavefunctions%save_rll) then
-          allocate (t_wavefunctions%rll(t_wavefunctions%nwfsavemax,t_inc%nsra*t_inc%lmmaxso,t_inc%lmmaxso,t_inc%irmdnew,0:nth-1), stat=ierr)
+          allocate (t_wavefunctions%rll(t_wavefunctions%nwfsavemax,t_inc%nsra*lmmaxso,lmmaxso,t_inc%irmdnew,0:nth-1), stat=ierr)
           if (ierr/=0) stop '[find_isave_wavefun] Error allocating rll'
         end if
         if (t_wavefunctions%save_sll) then
-          allocate (t_wavefunctions%rllleft(t_wavefunctions%nwfsavemax,t_inc%nsra*t_inc%lmmaxso,t_inc%lmmaxso,t_inc%irmdnew,0:nth-1), stat=ierr)
+          allocate (t_wavefunctions%rllleft(t_wavefunctions%nwfsavemax,t_inc%nsra*lmmaxso,lmmaxso,t_inc%irmdnew,0:nth-1), stat=ierr)
           if (ierr/=0) stop '[find_isave_wavefun] Error allocating rllleft'
         end if
         if (t_wavefunctions%save_rllleft) then
-          allocate (t_wavefunctions%sll(t_wavefunctions%nwfsavemax,t_inc%nsra*t_inc%lmmaxso,t_inc%lmmaxso,t_inc%irmdnew,0:nth-1), stat=ierr)
+          allocate (t_wavefunctions%sll(t_wavefunctions%nwfsavemax,t_inc%nsra*lmmaxso,lmmaxso,t_inc%irmdnew,0:nth-1), stat=ierr)
           if (ierr/=0) stop '[find_isave_wavefun] Error allocating sll'
         end if
         if (t_wavefunctions%save_sllleft) then
-          allocate (t_wavefunctions%sllleft(t_wavefunctions%nwfsavemax,t_inc%nsra*t_inc%lmmaxso,t_inc%lmmaxso,t_inc%irmdnew,0:nth-1), stat=ierr)
+          allocate (t_wavefunctions%sllleft(t_wavefunctions%nwfsavemax,t_inc%nsra*lmmaxso,lmmaxso,t_inc%irmdnew,0:nth-1), stat=ierr)
           if (ierr/=0) stop '[find_isave_wavefun] Error allocating sllleft'
         end if
       end if
@@ -242,7 +243,7 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Saves wavefunction of atom iat and energypoint ie if enough memory is given
-  !> Author: 
+  !> Author:
   !> Category: single-site, KKRhost
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !> Saves wavefunction of atom iat and energypoint ie if enough memory is given
@@ -289,9 +290,9 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Reads wavefunction of atom iat and energypoint ie if it was stored
-  !> Author: 
+  !> Author:
   !> Category: single-site, KKRhost
-  !> Deprecated: False 
+  !> Deprecated: False
   !> Reads wavefunction of atom iat and energypoint ie if it was stored
   !-------------------------------------------------------------------------------
   subroutine read_wavefunc(t_wavefunctions,rll,rllleft,sll,sllleft,iat,ie,nsra,     &
@@ -347,9 +348,9 @@ contains
 #ifdef CPP_MPI
   !-------------------------------------------------------------------------------
   !> Summary: Broadcast parameters for memory demand from master to all other ranks
-  !> Author: 
+  !> Author:
   !> Category: communication, KKRhost
-  !> Deprecated: False 
+  !> Deprecated: False
   !> Broadcast parameters for memory demand from master to all other ranks
   !-------------------------------------------------------------------------------
   subroutine bcast_params_savewf(t_wavefunctions)
