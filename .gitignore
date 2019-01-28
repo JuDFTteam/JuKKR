@@ -12,6 +12,7 @@ version.f90
 compver
 *.pyc
 build*
+develop/
 
 # Mac temporary files
 .DS_Store*
