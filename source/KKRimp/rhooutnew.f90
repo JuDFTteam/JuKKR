@@ -1,331 +1,284 @@
-MODULE MOD_RHOOUTNEW
-CONTAINS
+module mod_rhooutnew
+
+contains
+
 !-------------------------------------------------------------------------
 !> Summary: Calculation of valence charge density, new solver
 !> Category: physical-observables, KKRimp
 !>
+!> @warning Changed behavior of intcheb call for LDA+U run since this was
+!> probably included in ir loop by accident! @endwarning
 !-------------------------------------------------------------------------
-SUBROUTINE RHOOUTNEW(gauntcoeff,DF,GMATIN,EK,cellnew,wavefunction,RHO2NSC, &
-                          NSRA, &
-                      LMAXD,LMAXATOM,LMMAXATOM,LMSIZE,LMSIZE2,LMPOTD,IRMD,&
-                         ISPIN,NSPINDEN,imt1,cden,cdenlm,cdenns,shapefun,corbital, &
-                        gflle_part )                                              ! lda+u
+subroutine rhooutnew(gauntcoeff, df, gmatin, ek, cellnew, wavefunction, rho2nsc, &
+                     nsra, lmaxd, lmaxatom, lmmaxatom, lmsize, lmsize2, lmpotd, irmd,&
+                     ispin, nspinden, imt1, cden, cdenlm, cdenns, shapefun, corbital, &
+                     gflle_part)                                              ! lda+u
 
-use type_gauntcoeff, only: gauntcoeff_type
-use type_cellnew, only: cell_typenew
-use type_wavefunction, only: wavefunction_type
-USE mod_physic_params, only: cvlight
-use mod_basistransform, only: 
-use mod_mathtools, only: transpose
-use mod_config, only: config_testflag
-use type_shapefun, only: shapefun_type
-use mod_orbitalmoment, only: calc_orbitalmoment
-use mod_intcheb_cell, only: intcheb_cell   ! lda+u
-use mod_timing, only: timing_start, timing_pause, timing_stop
+  use mod_datatypes, only: dp
+  use mod_constants, only: czero, cone, pi
+  use type_gauntcoeff, only: gauntcoeff_type
+  use type_cellnew, only: cell_typenew
+  use type_wavefunction, only: wavefunction_type
+  use mod_physic_params, only: cvlight
+  use mod_mathtools, only: transpose
+  use mod_config, only: config_testflag
+  use type_shapefun, only: shapefun_type
+  use mod_orbitalmoment, only: calc_orbitalmoment
+  use mod_intcheb_cell, only: intcheb_cell   ! lda+u
+  use mod_timing, only: timing_start, timing_pause, timing_stop
 
-      IMPLICIT NONE
-      TYPE(GAUNTCOEFF_TYPE)  :: GAUNTCOEFF
-      TYPE(CELL_TYPENEW)  :: CELLNEW
-      TYPE(WAVEFUNCTION_TYPE)  :: WAVEFUNCTION
-      INTEGER LMAXD,LMAXATOM
-      INTEGER LMMAXATOM
-      INTEGER LMSIZE,LMSIZE2
-      INTEGER LMPOTD
-      INTEGER IRMD
-! C     ..
-! C     .. Scalar Arguments ..
-      DOUBLE COMPLEX DF,EK
-      INTEGER IMT1,NSRA
-      type(shapefun_type),intent(in)            :: shapefun
-      integer        :: corbital
+  implicit none
+  type(gauntcoeff_type) :: gauntcoeff
+  type(cell_typenew) :: cellnew
+  type(wavefunction_type) :: wavefunction
+  integer :: lmaxd, lmaxatom
+  integer :: lmmaxatom
+  integer :: lmsize, lmsize2
+  integer :: lmpotd
+  integer :: irmd
+! ..
+! .. Scalar Arguments ..
+  complex (kind=dp) :: df, ek
+  integer :: imt1, nsra
+  type(shapefun_type),intent(in) :: shapefun
+  integer :: corbital
+! ..
+! .. Array Arguments ..
+  complex (kind=dp) :: cden(irmd,0:lmaxd,nspinden)
+  complex (kind=dp) :: cdenns(irmd,nspinden)
+  complex (kind=dp) :: gmat(lmsize,lmsize)
+  complex (kind=dp) :: gmatin(lmsize,lmsize)
+  complex (kind=dp) :: qnsi(lmsize,lmsize), rlltemp(lmsize,lmsize)
+  complex (kind=dp) :: cdenlm(irmd,lmmaxatom,nspinden) ! lm-dos
+  complex (kind=dp) :: rho2nsc(irmd,lmpotd,nspinden)
+  complex (kind=dp) :: gflle_part(lmsize,lmsize) ! lda+u
+! ..
+! .. Local Scalars ..
+  complex (kind=dp) :: cltdf
+  real (kind=dp) :: c0ll
+  integer :: ifun, ir, j, l1, lm1, lm2, lm3, m1
+  integer :: ispin, jspin, ierr
+! ..
+! .. Local Arrays ..
+  complex (kind=dp), allocatable :: wr(:,:,:)
+  complex (kind=dp), allocatable :: cwr(:) ! lda+u
+  integer :: spinindex1(4) !=(/1,2,1,2 /)
+  integer :: spinindex2(4) !=(/1,2,2,1 /)
+  integer :: lmshift1(4)
+  integer :: lmshift2(4)
+  integer :: nspinstart, nspinstop, nspinden
+  complex (kind=dp) :: loperator(lmsize,lmsize,3)
+! ..
+! .. External Subroutines ..
+  external :: zgemm
+! ..
+! .. Intrinsic Functions ..
+  intrinsic :: sqrt
 
-! C     ..
-! C     .. Array Arguments ..
-      DOUBLE COMPLEX :: CDEN(IRMD,0:LMAXD,NSPINDEN)
-      DOUBLE COMPLEX CDENNS(IRMD,NSPINDEN), &
-                     GMAT(LMSIZE,LMSIZE), &
-                     GMATIN(LMSIZE,LMSIZE), &
-                    QNSI(LMSIZE,LMSIZE),RLLTEMP(LMSIZE,LMSIZE), &
-                    CDENLM(IRMD,LMMAXATOM,NSPINDEN), & ! lm-dos
-                    RHO2NSC(IRMD,LMPOTD,NSPINDEN), &
-                    gflle_part(lmsize,lmsize) ! lda+u
-! C     ..
-! C     .. Local Scalars ..
-      DOUBLE COMPLEX CLTDF,CONE,CZERO
-      DOUBLE PRECISION C0LL
-      INTEGER IFUN,IR,J,L1,LM1,LM2,LM3,M1
-! C     ..
-! C     .. Local Arrays ..
-      DOUBLE COMPLEX,allocatable ::  WR(:,:,:), &
-                                     cwr(:) ! lda+u
+  allocate ( wr(lmsize,lmsize,irmd), cwr(irmd), stat=ierr ) ! cwr for lda+u
+  if (ierr/=0) stop 'Error allocating wr, cwr in rhooutnew'
 
-      INTEGER          :: ISPIN,JSPIN
+  gmat = gmatin
 
-      INTEGER     :: SPININDEX1(4) !=(/1,2,1,2 /)
-      INTEGER     :: SPININDEX2(4) !=(/1,2,2,1 /)
-      INTEGER     :: LMSHIFT1(4)
-      INTEGER     :: LMSHIFT2(4)
-      INTEGER     :: NSPINSTART,NSPINSTOP,NSPINDEN
-
-      DOUBLE COMPLEX :: Loperator(lmsize,lmsize,3)
-! C     ..
-! C     .. External Subroutines ..
-      EXTERNAL ZGEMM
-! C     ..
-! C     .. Intrinsic Functions ..
-      INTRINSIC ATAN,DIMAG,SQRT
-! C     ..
-! C     .. Data statements ..
-      DATA CZERO/ (0.0D0,0.0D0)/
-      DATA CONE/ (1.0D0,0.0D0)/
-! C     ..
-! c
-
-      ALLOCATE ( WR(LMSIZE,LMSIZE,IRMD), &
-                 cwr(irmd) )                    ! lda+u
-
-      GMAT=GMATIN
-
-      IF (NSPINDEN==4) THEN
-        NSPINSTART=1
-        NSPINSTOP=NSPINDEN
-        SPININDEX1   =(/1,2,1,2 /)
-        SPININDEX2   =(/1,2,2,1 /)
-        LMSHIFT1=LMMAXATOM*(SPININDEX1-1) 
-        LMSHIFT2=LMMAXATOM*(SPININDEX2-1) 
-      ELSE
-        NSPINSTART=ISPIN
-        NSPINSTOP=ISPIN
-        SPININDEX1   =(/1,1,0,0 /)
-        SPININDEX2   =(/1,1,0,0 /)
-        LMSHIFT1=LMMAXATOM*(SPININDEX1-1)
-        LMSHIFT2=LMMAXATOM*(SPININDEX2-1) 
-     END IF
+  if (nspinden==4) then
+    nspinstart = 1
+    nspinstop = nspinden
+    spinindex1 = (/1,2,1,2 /)
+    spinindex2 = (/1,2,2,1 /)
+    lmshift1 = lmmaxatom*(spinindex1-1) 
+    lmshift2 = lmmaxatom*(spinindex2-1) 
+  else
+    nspinstart = ispin
+    nspinstop = ispin
+    spinindex1 =(/1,1,0,0 /)
+    spinindex2 =(/1,1,0,0 /)
+    lmshift1 = lmmaxatom*(spinindex1-1)
+    lmshift2 = lmmaxatom*(spinindex2-1) 
+  end if
      
-     if (corbital/=0) then
-        CALL calc_orbitalmoment(lmaxatom,Loperator)
-     end if
+  if (corbital/=0) then
+     call calc_orbitalmoment(lmaxatom,loperator)
+  end if
 
-! C     C0LL = 1/sqrt(4*pi)
-     C0LL = 1.0d0/SQRT(16.0D0*ATAN(1.0D0))
-! c
-! c
-! c---> initialize array for complex charge density
-! c
+  c0ll = 1.0_dp/sqrt(4.0_dp*pi)
 
+  !
+  !---> initialize array for complex charge density
+  !
+  do jspin = nspinstart,nspinstop
+     cden(:,:,jspin) = czero
+     cdenlm(:,:,jspin) = czero
+  end do !jspin
 
-     DO JSPIN=NSPINSTART,NSPINSTOP
-        CDEN(:,:,JSPIN) = CZERO
-        CDENLM(:,:,JSPIN) = CZERO
-     END DO !JSPIN
+  !------------------------------------------------------------------
+  !
+  !---> set up array ek*qns(lm1,lm2) + { gmat(lm3,lm2)*pns(lm1,lm3) }
+  !                                      summed over lm3
+  !---> set up of wr(lm1,lm2) = { pns(lm1,lm3)*qns(lm2,lm3) }
+  !                                               summed over lm3
+  do ir = 1, irmd
+    ! ########################################################3
+    !
+    ! WATCH OUT CHECK IF A FACTOR OF M_0 needs to be added into the Greensfunction
+    !
+    ! #########################################################3
+    if (allocated(wavefunction%sllleft)) then
+      qnsi(:,:) = wavefunction%sllleft(1:lmsize,1:lmsize,ir,1)
+    else
+      qnsi(:,:) = wavefunction%sll(1:lmsize,1:lmsize,ir,1)
+    end if
 
-! C------------------------------------------------------------------
-! c
-! c---> set up array ek*qns(lm1,lm2) + { gmat(lm3,lm2)*pns(lm1,lm3) }
-! c                                      summed over lm3
-! c---> set up of wr(lm1,lm2) = { pns(lm1,lm3)*qns(lm2,lm3) }
-! c                                               summed over lm3
+    if (allocated(wavefunction%sllleft)) then
+      rlltemp = wavefunction%rllleft(1:lmsize,1:lmsize,ir,1)
+    else
+      rlltemp = wavefunction%rll(1:lmsize,1:lmsize,ir,1)
+    end if
 
+    ! changed the second mode to transpose - bauer
+    call zgemm('n','t',lmsize,lmsize,lmsize,cone,rlltemp, lmsize,gmat,lmsize,ek,qnsi,lmsize)
 
-     DO    IR = 1,IRMD
+    rlltemp(:,:) = wavefunction%rll(1:lmsize,1:lmsize,ir,1)
 
-
-! ########################################################3
-!
-! WATCH OUT CHECK IF A FACTOR OF M_0 needs to be added into the Greensfunction
-!
-! #########################################################3
-        IF (allocated(WAVEFUNCTION%SLLleft)) then
-           QNSI(:,:)=WAVEFUNCTION%SLLleft(1:LMSIZE,1:LMSIZE,IR,1)
-        else
-           QNSI(:,:)=WAVEFUNCTION%SLL(1:LMSIZE,1:LMSIZE,IR,1)
-        end if
-
-        IF (allocated(WAVEFUNCTION%SLLleft)) then
-           RLLTEMP=WAVEFUNCTION%RLLleft(1:LMSIZE,1:LMSIZE,IR,1)
-        else
-           RLLTEMP=WAVEFUNCTION%RLL(1:LMSIZE,1:LMSIZE,IR,1)
-        end if
-
-        ! changed the second mode to transpose - bauer
-        CALL ZGEMM('N','T',LMSIZE,LMSIZE,LMSIZE,CONE,RLLTEMP, &
-                  LMSIZE,GMAT,LMSIZE,EK,QNSI,LMSIZE)
-
-        RLLTEMP(:,:)=WAVEFUNCTION%RLL(1:LMSIZE,1:LMSIZE,IR,1)
-
-        CALL ZGEMM('N','T',LMSIZE,LMSIZE,LMSIZE,CONE,RLLTEMP, &
-                    LMSIZE,QNSI,LMSIZE,CZERO,WR(1,1,IR),LMSIZE)
+    call zgemm('n','t',lmsize,lmsize,lmsize,cone,rlltemp, lmsize,qnsi,lmsize,czero,wr(1,1,ir),lmsize)
 
 
+    if (nsra.eq.2 .and. (.not. config_testflag('nosmallcomp')) ) then
 
-        IF (NSRA.EQ.2 .and. (.not. config_testflag('nosmallcomp')) ) THEN
+      if (allocated(wavefunction%sllleft)) then
+         qnsi(:,:) = -wavefunction%sllleft(lmsize+1:2*lmsize,1:lmsize,ir,1) ! attention to the
+                                                                            ! additional minus sign
+         ! ##########################################################################################
+         ! Drittler assumes that for the left solution, is given by the right solution with an
+         ! additional minus sign. This minus sign is contained inside the equations to calculate
+         ! the electronic density. While calculating the left solution, the minus sign is already 
+         ! included in the left solution. To make calculations consistant a factor of -1 is included
+         ! which cancels out by the routines of Drittler
+         ! ##########################################################################################
+      else
+         qnsi(:,:) = wavefunction%sll(lmsize+1:2*lmsize,1:lmsize,ir,1)
+      end if
+      if (allocated(wavefunction%rllleft)) then
+         rlltemp = -wavefunction%rllleft(lmsize+1:2*lmsize,1:lmsize,ir,1) ! attention to the
+                                                                          ! additional minus sign
+         ! ##########################################################################################
+         ! Drittler assumes that for the left solution, is given by the right solution with an
+         ! additional minus sign. This minus sign is contained inside the equations to calculate
+         ! the electronic density. While calculating the left solution, the minus sign is already 
+         ! included in the left solution. To make calculations consistant a factor of -1 is included
+         ! which cancels out by the routines of Drittler
+         ! ##########################################################################################
+      else
+         rlltemp = wavefunction%rll(lmsize+1:2*lmsize,1:lmsize,ir,1)
+      end if
 
-           if (allocated(WAVEFUNCTION%SLLleft)) then
-              QNSI(:,:)= - WAVEFUNCTION%SLLleft(LMSIZE+1:2*LMSIZE,1:LMSIZE,IR,1) ! Attention to the
-                                                                                 ! additional minus sign
-              ! ##########################################################################################
-              ! Drittler assumes that for the left solution, is given by the right solution with an
-              ! additional minus sign. This minus sign is contained inside the equations to calculate
-              ! the electronic density. While calculating the left solution, the minus sign is already 
-              ! included in the left solution. To make calculations consistant a factor of -1 is included
-              ! which cancels out by the routines of Drittler
-              ! ##########################################################################################
-           else
-              QNSI(:,:)=WAVEFUNCTION%SLL(LMSIZE+1:2*LMSIZE,1:LMSIZE,IR,1)
-           end if
-           if (allocated(WAVEFUNCTION%RLLleft)) then
-              RLLTEMP= - WAVEFUNCTION%RLLleft(LMSIZE+1:2*LMSIZE,1:LMSIZE,IR,1) ! Attention to the
-                                                                               ! additional minus sign
-              ! ##########################################################################################
-              ! Drittler assumes that for the left solution, is given by the right solution with an
-              ! additional minus sign. This minus sign is contained inside the equations to calculate
-              ! the electronic density. While calculating the left solution, the minus sign is already 
-              ! included in the left solution. To make calculations consistant a factor of -1 is included
-              ! which cancels out by the routines of Drittler
-              ! ##########################################################################################
-           else
-              RLLTEMP=WAVEFUNCTION%RLL(LMSIZE+1:2*LMSIZE,1:LMSIZE,IR,1)
-           end if
+      ! changed the second mode to transpose - bauer
+      call zgemm('n','t',lmsize,lmsize,lmsize,cone,rlltemp, &
+                 lmsize,gmat,lmsize,ek,qnsi,lmsize)
 
+      rlltemp = wavefunction%rll(lmsize+1:2*lmsize,1:lmsize,ir,1)!/cvlight
 
+      call zgemm('n','t',lmsize,lmsize,lmsize,cone,rlltemp, &
+                  lmsize,qnsi,lmsize,cone,wr(1,1,ir),lmsize)
 
+    end if
 
+    if (corbital/=0) then
+      call zgemm('n','n',lmsize,lmsize,lmsize,cone,loperator(:,:,corbital), &
+                 lmsize,wr(:,:,ir),lmsize,czero,rlltemp,lmsize)
+      wr(:,:,ir) = rlltemp
+    end if
 
-!          changed the second mode to transpose - bauer
-           CALL ZGEMM('N','T',LMSIZE,LMSIZE,LMSIZE,CONE,RLLTEMP, &
-                      LMSIZE,GMAT,LMSIZE,EK,QNSI,LMSIZE)
-
-           RLLTEMP=WAVEFUNCTION%RLL(LMSIZE+1:2*LMSIZE,1:LMSIZE,IR,1)!/CVLIGHT
-
-           CALL ZGEMM('N','T',LMSIZE,LMSIZE,LMSIZE,CONE,RLLTEMP, &
-                       LMSIZE,QNSI,LMSIZE,CONE,WR(1,1,IR),LMSIZE)
-        END IF
-
-
-        if (corbital/=0) then
-
-           CALL ZGEMM('N','N',LMSIZE,LMSIZE,LMSIZE,CONE,Loperator(:,:,corbital), &
-                      LMSIZE,WR(:,:,IR),LMSIZE,CZERO,RLLTEMP,LMSIZE)
-           WR(:,:,IR)=RLLTEMP
-        end if
+  end do !ir
 
 
-! Phivos lda+u: Place here r-integration of wr(lms1,lms2,ir) to obtain cnll(lms1,lms2).    ! lda+u
-! Integrate only up to muffin-tin radius.                                                  ! lda+u
-        gflle_part(:,:) = czero                                                            ! lda+u
-        do lm2 = 1,lmsize                                                                  ! lda+u
-           do lm1 = 1,lmsize                                                               ! lda+u
-              cwr(1:imt1) = wr(lm1,lm2,1:imt1)                                             ! lda+u
-              cwr(imt1+1:irmd) = czero                                                     ! lda+u
-              call intcheb_cell(cwr,gflle_part(lm1,lm2), cellnew%rpan_intervall, cellnew%ipan_intervall, cellnew%npan_tot, cellnew%ncheb, cellnew%nrmaxnew)                           ! lda+u
-           enddo                                                                           ! lda+u
-        enddo                                                                              ! lda+u
+  ! Phivos lda+u: Place here r-integration of wr(lms1,lms2,ir) to obtain cnll(lms1,lms2).    ! lda+u
+  ! Integrate only up to muffin-tin radius.                                                  ! lda+u
+  ! @note This was included in ir loop above which is probably not what was inteded. @endnote
+  gflle_part(:,:) = czero                                                                    ! lda+u
+  do lm2 = 1,lmsize                                                                          ! lda+u
+    do lm1 = 1,lmsize                                                                        ! lda+u
+      cwr(1:imt1) = wr(lm1,lm2,1:imt1)                                                       ! lda+u
+      cwr(imt1+1:irmd) = czero                                                               ! lda+u
+      call intcheb_cell(cwr,gflle_part(lm1,lm2), cellnew%rpan_intervall, cellnew%ipan_intervall, cellnew%npan_tot, cellnew%ncheb, cellnew%nrmaxnew)                           ! lda+u
+    enddo                                                                                    ! lda+u
+  enddo                                                                                      ! lda+u
 
+  ! Change by Phivos 12.6.2012: this part was within previous IR-loop, now moved here        ! lda+u
+  ! in order to calculate the complex density just before this averaging.                    ! lda+u
+  ! @note this is a new ir loop because the above intcheb call needs to be done
+  ! before this summation @endnote
+  do ir = 1, irmd
+    do jspin = nspinstart,nspinstop
+      do lm1 = 1,lmmaxatom
+        do lm2 = 1,lm1 - 1
+          wr(lm1+lmshift1(jspin),lm2+lmshift2(jspin),ir) = wr(lm1+lmshift1(jspin),lm2+lmshift2(jspin),ir) + wr(lm2+lmshift1(jspin),lm1+lmshift2(jspin),ir)
+        enddo
+      enddo
+    end do !jspin
+  end do !ir
 
-! Change by Phivos 12.6.2012: this part was within previous IR-loop, now moved here        ! lda+u
-! in order to calculate the complex density just before this averaging.                    ! lda+u
+  !
+  !---> first calculate only the spherically symmetric contribution
+  !
+  do l1 = 0,lmaxatom
+    do m1 = -l1,l1
+      lm1 = l1* (l1+1) + m1 + 1
+      do ir = 1,irmd
+        !
+        !---> fill array for complex density of states
+        !
+        do jspin = nspinstart,nspinstop
+          cden(ir,l1,jspin) = cden(ir,l1,jspin) + wr(lm1+lmshift1(jspin),lm1+lmshift2(jspin),ir)
+          cdenlm(ir,lm1,jspin) = wr(lm1+lmshift1(jspin),lm1+lmshift2(jspin),ir) ! lm-dos
+        end do
+      end do !ir
+    end do !m1
+    !
+    !---> remember that the gaunt coeffients for that case are 1/sqrt(4 pi)
+    !
+    do jspin = nspinstart,nspinstop
+      do ir = 1,irmd
+        rho2nsc(ir,1,jspin) = rho2nsc(ir,1,jspin) + c0ll*(cden(ir,l1,jspin)*df)
+      end do
+      do ir = imt1 + 1,irmd
+        cden(ir,l1,jspin) = cden(ir,l1,jspin)*cellnew%shapefun(ir,1)*c0ll
+        do m1 = -l1,l1                                                            ! lm-dos
+          lm1 = l1* (l1+1) + m1 + 1                                               ! lm-dos
+          cdenlm(ir,lm1,jspin) = cdenlm(ir,lm1,jspin)*cellnew%shapefun(ir,1)*c0ll ! lm-dos
+        enddo                                                                     ! lm-dos
+      end do
+    end do
+  end do ! l1 = 0,lmaxatom
 
+  do jspin = nspinstart,nspinstop
+    cdenns(:,jspin) = 0.0_dp
+  end do
 
-        DO JSPIN=NSPINSTART,NSPINSTOP
-           DO LM1 = 1,LMMAXATOM
-              DO LM2 = 1,LM1 - 1
-                 WR(LM1+LMSHIFT1(JSPIN),LM2+LMSHIFT2(JSPIN),IR) = &
-                      WR(LM1+LMSHIFT1(JSPIN),LM2+LMSHIFT2(JSPIN),IR) + WR(LM2+LMSHIFT1(JSPIN),LM1+LMSHIFT2(JSPIN),IR)
-              ENDDO
-           ENDDO
-        END DO !JSPIN
+  do j = 1,gauntcoeff%iend
+    lm1 = gauntcoeff%icleb(j,1)
+    lm2 = gauntcoeff%icleb(j,2)
+    lm3 = gauntcoeff%icleb(j,3)
+    cltdf = df*gauntcoeff%cleb(j,1)
+    !
+    !---> calculate the non spherically symmetric contribution
+    !
+    do jspin = nspinstart,nspinstop
+      do ir = 1,irmd
+        rho2nsc(ir,lm3,jspin) = rho2nsc(ir,lm3,jspin) + (cltdf*wr(lm1+lmshift1(jspin),lm2+lmshift2(jspin),ir))
+      end do
+      if (shapefun%lmused(lm3)==1) then
+        ifun = shapefun%lm2index(lm3) !ifunm(lm3)
+        do ir = imt1 + 1,irmd
+          cdenns(ir,jspin) = cdenns(ir,jspin) + gauntcoeff%cleb(j,1)*wr(lm1+lmshift1(jspin),lm2+lmshift2(jspin),ir)*cellnew%shapefun(ir,ifun)
+        end do
+      end if
+    end do
 
+  end do !j
 
+  deallocate(wr, cwr, stat=ierr)
+  if (ierr/=0) stop 'Error deallocating wr, cwr in rhooutnew'
 
-     END DO !IR
+  end subroutine rhooutnew
 
-
-! c
-! c---> first calculate only the spherically symmetric contribution
-! c
-
-     DO L1 = 0,LMAXATOM
-
-        DO M1 = -L1,L1
-           LM1 = L1* (L1+1) + M1 + 1
-           DO IR = 1,IRMD
-              ! c
-              ! c---> fill array for complex density of states
-              ! c
-              DO JSPIN=NSPINSTART,NSPINSTOP
-                 CDEN(IR,L1,JSPIN) = CDEN(IR,L1,JSPIN)  &
-                      + WR(LM1+LMSHIFT1(JSPIN),LM1+LMSHIFT2(JSPIN),IR)
-                 CDENLM(IR,LM1,JSPIN) = &
-                      WR(LM1+LMSHIFT1(JSPIN),LM1+LMSHIFT2(JSPIN),IR) ! lm-dos
-              END DO
-
-           END DO !IR
-        END DO !M1
-
-        ! c
-        ! c---> remember that the gaunt coeffients for that case are 1/sqrt(4 pi)
-        ! c
-
-        DO JSPIN=NSPINSTART,NSPINSTOP
-
-           DO IR = 1,IRMD
-              RHO2NSC(IR,1,JSPIN) = RHO2NSC(IR,1,JSPIN)  &
-                                + C0LL*(CDEN(IR,L1,JSPIN)*DF)
-           END DO
-
-           DO IR = IMT1 + 1,IRMD
-              CDEN(IR,L1,JSPIN) = CDEN(IR,L1,JSPIN)*cellnew%shapefun(IR,1)*C0LL
-
-              DO M1 = -L1,L1                                         ! lm-dos
-                 LM1 = L1* (L1+1) + M1 + 1                           ! lm-dos
-                 CDENLM(IR,LM1,JSPIN) = CDENLM(IR,LM1,JSPIN)*cellnew%shapefun(IR,1)*C0LL ! lm-dos
-              ENDDO                                                  ! lm-dos
-           END DO
-
-        END DO
-
-
-     END DO ! L1 = 0,LMAXATOM
-
-
-
-     DO JSPIN=NSPINSTART,NSPINSTOP
-        CDENNS(:,JSPIN) = 0.0D0
-     END DO
-
-
-
-
-     DO J = 1,gauntcoeff%IEND
-        LM1 = gauntcoeff%ICLEB(J,1)
-        LM2 = gauntcoeff%ICLEB(J,2)
-        LM3 = gauntcoeff%ICLEB(J,3)
-        CLTDF = DF*gauntcoeff%CLEB(J,1)
-! c
-! c---> calculate the non spherically symmetric contribution
-! c
-        DO JSPIN=NSPINSTART,NSPINSTOP
-           DO IR = 1,IRMD
-              RHO2NSC(IR,LM3,JSPIN) = RHO2NSC(IR,LM3,JSPIN)  &
-                        + (CLTDF*WR(LM1+LMSHIFT1(JSPIN), &
-                                         LM2+LMSHIFT2(JSPIN),IR)) !&
-           END DO
-! c
-           IF (shapefun%LMused(lm3)==1) THEN
-              IFUN = shapefun%lm2index(lm3) !IFUNM(LM3)
-              DO IR = IMT1 + 1,IRMD
-                 CDENNS(IR,JSPIN) = CDENNS(IR,JSPIN) &
-                      + gauntcoeff%CLEB(J,1)*WR(LM1+LMSHIFT1(JSPIN),LM2+LMSHIFT2(JSPIN),IR)* &
-                      cellnew%shapefun(IR,IFUN)
-              END DO
-           END IF
-        END DO
-
-
-      END DO !J
-
-      deallocate(wr,cwr)
-
-      END SUBROUTINE
-
-END MODULE MOD_RHOOUTNEW
+end module mod_rhooutnew
