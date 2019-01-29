@@ -20,7 +20,7 @@ program kkrcode
 
 #ifdef CPP_MPI
   use :: mpi
-  use :: mod_mympi, only: mympi_init, myrank, nranks, master, find_dims_2d, distribute_linear_on_tasks, create_newcomms_group_ie, mpiatom, mpiadapt, check_communication_pattern
+  use :: mod_mympi, only: mympi_init, myrank, nranks, master, find_dims_2d, distribute_linear_on_tasks, create_newcomms_group_ie, mpiatom, mpiadapt, check_communication_pattern, bcast_global_variables
   use :: mod_save_wavefun, only: t_wavefunctions, bcast_params_savewf
   use :: godfrin, only: t_godfrin, bcast_params_godfrin ! GODFRIN Flaviano
   use :: mod_wunfiles, only: bcast_t_params_scalars, bcast_t_params_arrays

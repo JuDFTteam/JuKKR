@@ -401,7 +401,7 @@ contains
 
     ! find boundaries for atom loop (MPI parallelization level)
 #ifdef CPP_MPI
-    ntot1 = t_inc%natyp
+    ntot1 = natypd
     if (.not. use_Chebychev_solver) then
 
       call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at, master, ntot1, ntot_pt, ioff_pt, .true.)

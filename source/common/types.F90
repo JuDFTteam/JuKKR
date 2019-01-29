@@ -901,6 +901,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine gather_lly_dtmat(t_mpi_c_grid, t_lloyd, lmmaxd, mympi_comm)
 
+    use global_variables, only: nspind, lmmaxd, natypd
     use :: mpi
     implicit none
 
@@ -954,6 +955,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine gather_tmat(t_inc, t_tgmat, t_mpi_c_grid, ntot_pt, ioff_pt, mytot, mympi_comm, nranks)
 
+    use global_variables, only: nspind, lmmaxd, natypd
     use :: mpi
     implicit none
 
@@ -1005,6 +1007,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine gather_gmat(t_inc, t_tgmat, ntot_pt, ioff_pt, mytot, nranks)
 
+    use global_variables, only: nspind, lmmaxd
     use :: mpi
     implicit none
 
@@ -1096,6 +1099,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine bcast_t_imp_arrays(t_imp, t_inc, master)
 
+    use global_variables, only: lmmaxso
     use :: mpi
     implicit none
 
