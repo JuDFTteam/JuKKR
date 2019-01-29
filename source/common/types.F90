@@ -901,7 +901,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine gather_lly_dtmat(t_mpi_c_grid, t_lloyd, lmmaxd, mympi_comm)
 
-    use global_variables, only: nspind, lmmaxd, natypd
+    use global_variables, only: nspind, natypd
     use :: mpi
     implicit none
 
