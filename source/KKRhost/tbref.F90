@@ -32,10 +32,10 @@ contains
 #endif
     use :: mod_constants
     use :: mod_runoptions, only: formatted_files, print_program_flow, write_green_imp
-    use :: mod_profiling
-    use :: global_variables
+    use :: mod_profiling, only: memocc
+    use :: global_variables, only: lmgf0d, wlength, naezd, nembd, lm2d, nclsd, naclsd, ncleb, iemxd
     use :: mod_datatypes, only: dp
-    use :: mod_calctref13
+    use :: mod_calctref13, only: calctref13
     use :: mod_getscratch, only: opendafile
     use :: mod_gll13, only: gll13
 
