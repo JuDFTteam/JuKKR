@@ -29,7 +29,7 @@ contains
 
 #ifdef CPP_MPI
     use :: mpi
-    use :: mod_mympi, only: find_dims_2d, distribute_linear_on_tasks, mpiadapt
+    use :: mod_mympi, only: mpiadapt, distribute_work_atoms
     use :: mod_types, only: t_mpi_c_grid, save_t_mpi_c_grid, get_ntot_pt_ioff_pt_2d, init_params_t_imp, init_t_imp, bcast_t_imp_scalars, &
       bcast_t_imp_arrays
 #endif
@@ -86,6 +86,8 @@ contains
     integer :: iltmp
     integer :: nmesh
     integer :: nqdos               !! number of qdos points
+    integer :: nq_start            !! start of q-points parallelization
+    integer :: nq_end              !! end number for q-point parallelization
     integer :: isite               ! qdos ruess
     integer :: ideci
     integer :: ispin
@@ -432,6 +434,7 @@ contains
       nofks(1) = 1                                                                  ! qdos ruess
       volcub(1, 1) = volbz(1)                                                       ! qdos ruess
       nsymat = 1                                                                    ! qdos ruess
+      
     else if (use_qdos .and. (iqdosrun==0)) then                              ! qdos ruess
       ! Call the k loop just once with one k point to write out the tmat.qdos file  ! qdos ruess
       allocate (qvec(3,nqdos), stat=i_stat)                                         ! qdos ruess
@@ -458,9 +461,12 @@ contains
 #ifdef CPP_MPI
     ie_start = t_mpi_c_grid%ioff_pt2(t_mpi_c_grid%myrank_at)
     ie_end = t_mpi_c_grid%ntot_pt2(t_mpi_c_grid%myrank_at)
+    call distribute_work_atoms(nqdos, nq_start, nq_end)
 #else
     ie_start = 0
     ie_end = ielast
+    nq_start = 1
+    nq_end = nqdos
 #endif
     if (write_rhoq_input) then
       ie_start = 1
@@ -654,7 +660,7 @@ contains
         ! -------------------------------------------------------------------
         ! Loop over all QDOS points and change volume for KLOOPZ run accordingly
         ! -------------------------------------------------------------------
-        do iq = 1, nqdos           ! qdos ruess
+        do iq = nq_start, nq_end           ! qdos ruess
           if (use_qdos) bzkp(:, 1, 1) = qvec(:, iq) ! qdos ruess: Set q-point x,y,z
 
 #ifdef CPP_TIMING
