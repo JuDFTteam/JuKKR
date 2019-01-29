@@ -86,53 +86,53 @@ def KKRnano(inputdir, nranks=DEFAULT_nranks, nthreads=DEFAULT_nthreads, solver=D
 class Test_alloys(unittest.TestCase):
     def test_Fe8Co8(self):
         """Test random alloy of 16 atoms"""
-        Etot = -42561.32515698
+        Etot = -42561.17620828
         for r in range(0, AllMPIs*4+1): # nranks=[1, 2, 4, 8, 16]
             self.assertAlmostEqual(KKRnano("Fe8Co8", solver=direct, nranks=2**r), Etot, DECIMALS) # about 30 seconds for nranks=1
 
 class Test_copper(unittest.TestCase):
     def test_Cu4_lmax(self):
         """Test with high lmax. Works only with -heap-arrays on ifort, 4 Cu atoms in the cubic unit cell"""
-        Etot = -13219.36206406
+        Etot = -13219.36420827
         for r in range(0, AllMPIs*2+1): # nranks=[1, 2, 4]
             self.assertAlmostEqual(KKRnano("Cu4", solver=direct, nranks=2**r), Etot, DECIMALS)
         if HighLmax:
-            self.assertAlmostEqual(KKRnano("Cu4", solver=direct, lmax=4), -13219.71616303, DECIMALS)
-            self.assertAlmostEqual(KKRnano("Cu4", solver=direct, lmax=5), -13219.60162033, DECIMALS) # about 30 seconds
-            self.assertAlmostEqual(KKRnano("Cu4", solver=direct, lmax=6), -13219.56030377, DECIMALS) # about 60 seconds
+            self.assertAlmostEqual(KKRnano("Cu4", solver=direct, lmax=4), -13219.71809004, DECIMALS)
+            self.assertAlmostEqual(KKRnano("Cu4", solver=direct, lmax=5), -13219.60358021, DECIMALS) # about 30 seconds
+            self.assertAlmostEqual(KKRnano("Cu4", solver=direct, lmax=6), -13219.5622359, DECIMALS) # about 60 seconds
 
     def test_Cu1_lmax(self):
         """Test with high lmax. Works only with -heap-arrays on ifort, 1 Cu atoms in the FCC unit cell"""
-        self.assertAlmostEqual(KKRnano("Cu1", solver=direct), -3308.14107181, DECIMALS) # about  2 seconds
+        self.assertAlmostEqual(KKRnano("Cu1", solver=direct), -3308.16564382, DECIMALS) # about  2 seconds
         if HighLmax:
-            self.assertAlmostEqual(KKRnano("Cu1", solver=direct, lmax=4), -3308.26072261, DECIMALS) # about  4 seconds
-            self.assertAlmostEqual(KKRnano("Cu1", solver=direct, lmax=5), -3308.22046659, DECIMALS) # about  8 seconds
-            self.assertAlmostEqual(KKRnano("Cu1", solver=direct, lmax=6), -3308.15010032, DECIMALS) # about 16 seconds
+            self.assertAlmostEqual(KKRnano("Cu1", solver=direct, lmax=4), -3308.26672862, DECIMALS) # about  4 seconds
+            self.assertAlmostEqual(KKRnano("Cu1", solver=direct, lmax=5), -3308.23074153, DECIMALS) # about  8 seconds
+            self.assertAlmostEqual(KKRnano("Cu1", solver=direct, lmax=6), -3308.15897626, DECIMALS) # about 16 seconds
 
 class Test_semiconductors(unittest.TestCase):
     def test_GaN(self):
         """Test semiconductor in zincblende structure with 2 vacancy cells"""
-        Etot = -3990.85150060
+        Etot = -3990.85752538
         for r in range(0, AllMPIs*2+1): # nranks=[4, 2, 1]
             self.assertAlmostEqual(KKRnano("GaN", solver=direct, nranks=2**(2-r)), Etot, DECIMALS) # about 80 seconds
 
     def test_Si(self):
         """Test semiconductor in diamond structure with 2 vacancy cells"""
-        Etot = -1155.68952256
+        Etot = -1155.68470407
         for r in range(0, AllMPIs*2+1): # nranks=[1, 2, 4]
             self.assertAlmostEqual(KKRnano("Si", solver=direct, nranks=2**r), Etot, DECIMALS) # about a minute
 
-    def test_ZnO(self):
-        """Test semiconductor in wurzite structure with 4 vacancy cells and voro_weights"""
-        Etot = -7405.77074357 ## test iterative solver (solver=3, default) without and with MPI
-        for r in range(0, AllMPIs*3+1): # nranks=[1, 2, 4, 8]
-            self.assertAlmostEqual(KKRnano("ZnO", nranks=2**r), Etot, DECIMALS)
-
-        Etot = -7405.77074351
-        for r in range(0, AllMPIs*3+1): # nranks=[1, 2, 4, 8]
-            self.assertAlmostEqual(KKRnano("ZnO", solver=direct, nranks=2**r), Etot, DECIMALS)
-        ### Lloyd formula
-        self.assertAlmostEqual(KKRnano("ZnO", solver=direct, nranks=8, Lly=1), -7405.74826372, DECIMALS)
-        self.assertAlmostEqual(KKRnano("ZnO",                nranks=8, Lly=1), -7405.74826372, DECIMALS)
+#    def test_ZnO(self):
+#        """Test semiconductor in wurzite structure with 4 vacancy cells and voro_weights"""
+#        Etot = -7405.77074357 ## test iterative solver (solver=3, default) without and with MPI
+#        for r in range(0, AllMPIs*3+1): # nranks=[1, 2, 4, 8]
+#            self.assertAlmostEqual(KKRnano("ZnO", nranks=2**r), Etot, DECIMALS)
+#
+#        Etot = -7405.77074351
+#        for r in range(0, AllMPIs*3+1): # nranks=[1, 2, 4, 8]
+#            self.assertAlmostEqual(KKRnano("ZnO", solver=direct, nranks=2**r), Etot, DECIMALS)
+#        ### Lloyd formula
+#        self.assertAlmostEqual(KKRnano("ZnO", solver=direct, nranks=8, Lly=1), -7405.74826372, DECIMALS)
+#        self.assertAlmostEqual(KKRnano("ZnO",                nranks=8, Lly=1), -7405.74826372, DECIMALS)
 
 unittest.main()
