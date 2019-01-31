@@ -1,39 +1,13 @@
 #!/bin/sh
-# rm -f  atominfo
-# rm -f  rbasis
+rm -f  bin.* ## delete all binary files
 rm -f  global.conf
-# rm -f  lcutoff
 rm -f  input.conf
 rm -f  potential
+rm -f  shapefun
 rm -f  rbasis.xyz
 rm -f  voro_weights
-rm -f  shapefun
-rm -f  nonco_angle.dat
-
-# rm -f  *.unf ## deprecated
-# rm -f  vpotnew*
-# rm -f  meshes.*
-# rm -f  pot.*
-# rm -f  energy_mesh*
-# rm -f  forces
-# rm -f  DOS.*
-# rm -f  Jij.*
-# rm -f  log.*
-# rm -f  mesh.*
-# rm -f  atoms
-# rm -f  results1 results2
-# rm -f  out
-# rm -f  ebalance
-# rm -f  complex.dos
-# rm -f  kpoints_full
-# rm -f  meshes
-# rm -f  loggs
-# rm -f  last
-# rm -f  OUT
-
+rm -f  nonco_angle.dat nonco_angle_out.dat nonco_moment_out.txt
 rm -f  time-info
 rm -f  kpoints
-
-rm -f  gmon.out
-rm -f  bin.* ## delete all binary files
-rm -f  nonco_angle_out.dat
+rm -f  log.0*
+rm -f  gmon.out ## profiling information

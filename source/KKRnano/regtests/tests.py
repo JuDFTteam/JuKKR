@@ -20,6 +20,7 @@ DEFAULT_Lly = 0 ## Lly=0/1 deactivate/activate Lloyd's formula
 ShowMD5 = True
 AllMPIs = 1 # 1=Yes, 0=No
 HighLmax = True
+testNocoSOC = True
 
 def run_it(cmd):
     """Run cmd, suppressing output. Returns output from stdout and exit code"""
@@ -134,5 +135,14 @@ class Test_semiconductors(unittest.TestCase):
 #        ### Lloyd formula
 #        self.assertAlmostEqual(KKRnano("ZnO", solver=direct, nranks=8, Lly=1), -7405.74826372, DECIMALS)
 #        self.assertAlmostEqual(KKRnano("ZnO",                nranks=8, Lly=1), -7405.74826372, DECIMALS)
+
+class Test_nocosocmaterials(unittest.TestCase):
+    def test_MnGeB20(self):
+        """Test chiral magnet MnGe B20 structure (8 atoms in unit cell)"""
+        Etot = -26017.23757851
+        if testNocoSOC:
+            self.assertAlmostEqual(KKRnano("MnGeB20", solver=direct, nranks=8), Etot, DECIMALS) # takes longer than other tests 
+            self.assertAlmostEqual(KKRnano("MnGeB20", solver=iterative, nranks=4), Etot, DECIMALS) # takes longer than other tests
+
 
 unittest.main()
