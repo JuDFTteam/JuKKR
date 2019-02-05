@@ -785,12 +785,20 @@ contains
               call version_print_header(31, disable_print=disable_print_serialnumber)                            ! qdos
               write (31, *) ' '                                                                                  ! qdos
               write (31, 150) '# ISPIN=', 1, ' I1=', i1                                                          ! qdos
-              write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...'        ! qdos
+              if (write_DOS_lm) then 
+                write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s, px, pz, py, dx2-y2, dxz, dz2, dyz, dxy, ..., ns'  ! lm-qdos
+              else
+                write (31, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...,ns'   ! qdos
+              end if
               if (nspin>1) then                                                                                  ! qdos
                 call version_print_header(32, disable_print=disable_print_serialnumber)                          ! qdos
                 write (32, *) ' '                                                                                ! qdos
                 write (32, 150) '# ISPIN=', 2, ' I1=', i1                                                        ! qdos
-                write (32, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...'      ! qdos
+                if (write_DOS_lm) then 
+                  write (32, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s, px, pz, py, dx2-y2, dxz, dz2, dyz, dxy, ..., ns'  ! lm-qdos
+                else
+                  write (32, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...,ns' ! qdos
+                end if
               end if                                                                                             ! qdos
             end if ! IQ.EQ.1                                                                                     ! qdos
             do jspin = 1, nspin/(nspin-korbit)                                                                                  ! qdos
@@ -800,8 +808,13 @@ contains
               end do                                                                                             ! qdos
             end do                                                                                               ! qdos
             ! write qdos.nn.s.dat                                                                                ! qdos
-            write (31, 120) ez(ie), qvec(1, iq), qvec(2, iq), qvec(3, iq), -aimag(dentot(1))/pi, (-aimag(den(l1,ie,iq,1))/pi, l1=0, lmaxd1) ! qdos
-            write (32, 120) ez(ie), qvec(1, iq), qvec(2, iq), qvec(3, iq), -aimag(dentot(2))/pi, (-aimag(den(l1,ie,iq,2))/pi, l1=0, lmaxd1) ! qdos
+            if (write_DOS_lm) then
+              write (31, 120) ez(ie), qvec(1, iq), qvec(2, iq), qvec(3, iq), -aimag(dentot(1))/pi, (-aimag(denlm(l1,ie,iq,1))/pi, l1=1, lmsize), -aimag(den(lmaxd1,ie,iq,1))/pi ! lm-dos
+              write (32, 120) ez(ie), qvec(1, iq), qvec(2, iq), qvec(3, iq), -aimag(dentot(2))/pi, (-aimag(denlm(l1,ie,iq,2))/pi, l1=1, lmsize), -aimag(den(lmaxd1,ie,iq,2))/pi ! lm-dos
+            else
+              write (31, 120) ez(ie), qvec(1, iq), qvec(2, iq), qvec(3, iq), -aimag(dentot(1))/pi, (-aimag(den(l1,ie,iq,1))/pi, l1=0, lmaxd1) ! qdos
+              write (32, 120) ez(ie), qvec(1, iq), qvec(2, iq), qvec(3, iq), -aimag(dentot(2))/pi, (-aimag(den(l1,ie,iq,2))/pi, l1=0, lmaxd1) ! qdos
+            end if
 120         format (5f10.6, 40e16.8)                                                                             ! qdos
 
             if (write_complex_qdos) then                                                                                            ! complex qdos

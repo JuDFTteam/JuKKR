@@ -417,6 +417,7 @@ DO IATOM= 1, NATOM
        CELL(IATOM)%LOGPARAMS(2) = CELL(IATOM)%RCORE / & 
                                         (EXP(CELL(IATOM)%LOGPARAMS(1)*DBLE(NRCORE1-1))-1.0D0)
    ELSEIF (INS==0) THEN
+      CELL(IATOM)%NRCORE = CELL(IATOM)%NRMAX ! susc ! line added to fix bug in ASA calculation, Julen and Benedikt 2014/08
    ELSE
       STOP 'INS/=1,0'
    END IF !INS==1
