@@ -39,6 +39,8 @@ Removed a lot of code duplicates among different
 ### Fixed
 - header handling in complexdos3 tool
 - position of chebint in rhooutnew of KKRimp (probably) corrected
+- bug in SRA-trick usage (issue #108)
+- bug FERMIOUT option (issue #109)
 
 ----
 
@@ -119,7 +121,7 @@ Major code refactoring getting rid of the `inc.p` files which eliminates the nee
 ### Changed
 - convert all files to Fortran 90, including putting everything into modules
 - polish code using NAG compiler, gfortran and ifort with debug options
-- change 'NOSOC' test option such that now is explicitly does a spin-loop with decoupled (i.e. a factor 2 smaller) matrices. The old behavior can be triggered by setting the '<SOCSCL>' values to 0.
+- change `NOSOC` test option such that now is explicitly does a spin-loop with decoupled (i.e. a factor 2 smaller) matrices. The old behavior can be triggered by setting the `<SOCSCL>` values to 0.
 
 ### Deprecated
 - `inc.p` dependecy for array dimensions

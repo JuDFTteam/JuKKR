@@ -282,7 +282,7 @@ contains
         end do
         mytot = t_mpi_c_grid%ntot_pt1(t_mpi_c_grid%myrank_ie)
         call gather_tmat(t_inc,t_tgmat,t_mpi_c_grid,ntot_all,ioff_all,mytot,        &
-          t_mpi_c_grid%mympi_comm_ie,t_mpi_c_grid%nranks_ie)
+          t_mpi_c_grid%mympi_comm_ie,t_mpi_c_grid%nranks_ie, nspin, lmmaxd, natypd)
       end if
 
       if (lly/=0 .and. .not. t_lloyd%dtmat_to_file) then

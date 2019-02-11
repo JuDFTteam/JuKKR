@@ -953,9 +953,8 @@ contains
   !> Deprecated: False
   !> Subroutine to communicate single site t-matrix over ranks
   !-------------------------------------------------------------------------------
-  subroutine gather_tmat(t_inc, t_tgmat, t_mpi_c_grid, ntot_pt, ioff_pt, mytot, mympi_comm, nranks)
+  subroutine gather_tmat(t_inc, t_tgmat, t_mpi_c_grid, ntot_pt, ioff_pt, mytot, mympi_comm, nranks, nspind, lmmaxd, natypd)
 
-    use global_variables, only: nspind, lmmaxd, natypd
     use :: mpi
     implicit none
 
@@ -965,6 +964,7 @@ contains
     integer, intent (in) :: nranks
     integer, intent (in) :: mytot, mympi_comm
     integer, dimension(0:nranks-1), intent (in) :: ntot_pt, ioff_pt
+    integer, intent(in) :: nspind, lmmaxd, natypd !! array dimensions
 
     integer :: ihelp
     integer :: nspin
