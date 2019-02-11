@@ -458,17 +458,23 @@ contains
       call read_angles(t_params, natyp, theta_at, phi_at)
     end if
 
-#ifdef CPP_MPI
-    ie_start = t_mpi_c_grid%ioff_pt2(t_mpi_c_grid%myrank_at)
-    ie_end = t_mpi_c_grid%ntot_pt2(t_mpi_c_grid%myrank_at)
-    call distribute_work_atoms(nqdos, nq_start, nq_end)
-#else
+    ! find boundaries of qdos and energy loops
     ie_start = 0
     ie_end = ielast
     nq_start = 1
     nq_end = nqdos
+#ifdef CPP_MPI
+    ie_start = t_mpi_c_grid%ioff_pt2(t_mpi_c_grid%myrank_at)
+    ie_end = t_mpi_c_grid%ntot_pt2(t_mpi_c_grid%myrank_at)
+    if(use_qdos) then
+      call distribute_work_atoms(nqdos, nq_start, nq_end)
+      if (t_inc%i_write>0) then
+        write(1337,'(A,I9,A,I9,A,I9)') 'rank', myrank, ' does q-points: ', nq_start, ' to ', nq_end
+      endif
+    endif
 #endif
     if (write_rhoq_input) then
+      ! overwrite energy loop automatically
       ie_start = 1
       ie_end = 1
     end if
