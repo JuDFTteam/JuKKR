@@ -80,8 +80,8 @@ contains
     integer, intent (in) :: lmpot  !! (LPOT+1)**2
     integer, intent (in) :: ncheb  !! Number of Chebychev pannels for the new solver
     integer, intent (in) :: korbit !! Spin-orbit/non-spin-orbit (1/0) added to the Schroedinger or SRA equations. Works with FP. KREL and KORBIT cannot be both non-zero.
-    integer, intent (in) :: lmmax0d !! (KREL+KORBIT+1)(LMAX+1)^2
-    integer, intent (in) :: lmmaxd
+    integer, intent (in) :: lmmax0d !! (LMAX+1)^2
+    integer, intent (in) :: lmmaxd !! (KREL+KORBIT+1)*(LMAX+1)^2
     integer, intent (in) :: nspotd !! Number of potentials for storing non-sph. potentials
     integer, intent (in) :: ielast
     integer, intent (in) :: irmind !! IRM-IRNSD

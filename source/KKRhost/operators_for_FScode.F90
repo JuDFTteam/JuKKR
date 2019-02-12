@@ -254,19 +254,19 @@ contains
 
       ! done with preparations, call normcoeff routines that construct operators
       if (myrank==master) write (*, *) 'Computing spin operator'
-      call normcoeff_so(natyp, t_params%ircut,t_params%lmmaxd/(1+korbit),pns_so_all,&
+      call normcoeff_so(natyp, t_params%ircut, lmmaxd/(1+korbit),pns_so_all,&
         t_params%thetas,t_params%ntcell,t_params%ifunm,t_params%ipan,t_params%lmsp, &
         t_inc%kvrel,t_params%cleb,t_params%icleb,t_params%iend,t_params%drdi,       &
         t_params%irws,1+korbit,0)
 
       if (myrank==master) write (*, *) 'Computing torq operator'
-      call normcoeff_so_torq(natyp,t_params%ircut,t_params%lmmaxd/(1+korbit),       &
+      call normcoeff_so_torq(natyp,t_params%ircut, lmmaxd/(1+korbit),       &
         pns_so_all,t_params%ntcell,t_params%ifunm,t_params%ipan,t_params%lmsp,      &
         t_inc%kvrel,t_params%cleb,t_params%icleb,t_params%iend,t_params%drdi,       &
         t_params%irws,t_params%visp,nspind,t_params%vins,t_params%irmin,0)
 
       if (myrank==master) write (*, *) 'Computing spinflux operator'
-      call normcoeff_so_spinflux(natyp,t_params%ircut,t_params%lmmaxd/(1+korbit),   &
+      call normcoeff_so_spinflux(natyp,t_params%ircut, lmmaxd/(1+korbit),   &
         pns_so_all,t_inc%kvrel,t_params%drdi,0)
 
     end if                         ! .not. impurity_operator_only

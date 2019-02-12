@@ -113,7 +113,7 @@ contains
     real (kind=dp), dimension(irmd, lmpotd, 2), intent(inout) :: v
     ! Local Scalars ..
     real (kind=dp), parameter :: zero = 0.0_dp, zero1=1.0e-12_dp
-    integer :: ifun,ipan1,ipot,ir,irc0,irc1,irh,irs1,ispin,j,l,l1max,lm,lm2,lmmax,m,mesh,nspin2
+    integer :: ifun,ipan1,ipot,ir,irc0,irc1,irh,irs1,ispin,j,l,l1max,lm,lm2,lmmax0d,m,mesh,nspin2
     real (kind=dp) :: chgden,dx,elmxc,fpi,r1,r2,rpoint,spiden,vlmxc,vxc1,vxc2,vxc3
     ! Local Arrays ..
     real (kind=dp), dimension(ijend)            :: excij
@@ -133,7 +133,7 @@ contains
     !write (1337, fmt=*) ' GGA CALCULATION '
       WRITE (1337,FMT=*) ' GGA CALCULATION ',irmd,ijend,lmpotd,lpotd
     fpi = 4.0_dp*pi
-    lmmax = (lmax+1)*(lmax+1)
+    lmmax0d = (lmax+1)*(lmax+1)
 
     ! loop over given representive atoms
 
@@ -167,7 +167,7 @@ contains
         end do
       end do
 
-      do lm = 1, lmmax
+      do lm = 1, lmmax0d
         do ir = 1, irc1
           estor(ir, lm) = 0.0d0
         end do
@@ -179,7 +179,7 @@ contains
     dx = a
 
     if (nspin==2) then
-      do lm = 1, lmmax
+      do lm = 1, lmmax0d
         do ir = 2, mesh
           r1 = r(ir)
           r2 = r1*r1
@@ -195,7 +195,7 @@ contains
         rhol(1, 2, lm) = rhol(2, 2, lm)
       end do
     else
-      do lm = 1, lmmax
+      do lm = 1, lmmax0d
         do ir = 2, mesh
           r1 = r(ir)
           r2 = r1*r1
@@ -219,7 +219,7 @@ contains
       ! calculate the ex.-cor. potential
       nspin2 = 2
       do ispin = 1, nspin2
-        do lm = 1, lmmax
+        do lm = 1, lmmax0d
           rholm(lm, ispin) = rhol(ir, ispin, lm)
         end do
       end do
@@ -231,11 +231,11 @@ contains
         ! PBE functional
       else if (kxc==4) then
         call mkxcpe2(ir,ijend,rpoint,rholm,vxc,excij,ylm,dylmt1,dylmf1,dylmf2,      &
-          dylmtf,drrl,ddrrl,drrul,ddrrul,irmd,lmpotd,lmmax,.false.)
+          dylmtf,drrl,ddrrl,drrul,ddrrul,irmd,lmpotd,lmmax0d,.false.)
         ! PBEsol functional
       else if (kxc==5) then
         call mkxcpe2(ir,ijend,rpoint,rholm,vxc,excij,ylm,dylmt1,dylmf1,dylmf2,      &
-          dylmtf,drrl,ddrrl,drrul,ddrrul,irmd,lmpotd,lmmax,.true.)
+          dylmtf,drrl,ddrrl,drrul,ddrrul,irmd,lmpotd,lmmax0d,.true.)
       else
         write (1337, *) ' KXC ???'
         stop
@@ -246,7 +246,7 @@ contains
       do ispin = 1, nspin
         ! determine the corresponding potential number
         ipot = ispin
-        do lm = 1, lmmax
+        do lm = 1, lmmax0d
           vlmxc = ddot(ijend, vxc(1,ispin), 1, wtyr(1,lm), 1)
           v(ir, lm, ipot) = v(ir, lm, ipot) + vlmxc
           ! store the ex.-c. potential of ir=2 and =3 for the extrapolation

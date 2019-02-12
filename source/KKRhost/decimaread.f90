@@ -35,7 +35,7 @@ contains
   !>                                                                  
   !> IENERGY <> 0 reads in the matrices/energy at IENERGY -> returned
   !-------------------------------------------------------------------------------
-  subroutine decimaread(ez, tk, nptp1, nptp2, nptp3, npol, ispin, lefttinvll, righttinvll, vacflag, ienergy, nlbasis, nrbasis, naez, kaoez, kmrot, ins, nspin, lmmax, ielast, &
+  subroutine decimaread(ez, tk, nptp1, nptp2, nptp3, npol, ispin, lefttinvll, righttinvll, vacflag, ienergy, nlbasis, nrbasis, naez, kaoez, kmrot, ins, nspin, lmmax0d, ielast, &
     fileleft, fileright, krel, natypd, lmmaxd, nembd1) ! ,KORBIT)
 
     use :: mod_datatypes, only: dp
@@ -48,7 +48,7 @@ contains
     ! ..
     ! .. Scalar arguments
     integer :: nptp1, nptp2, nptp3, npol, ispin, ienergy
-    integer :: nlbasis, nrbasis, naez, kmrot, ins, nspin, lmmax, ielast
+    integer :: nlbasis, nrbasis, naez, kmrot, ins, nspin, lmmax0d, ielast
     real (kind=dp) :: tk
     character (len=40) :: fileleft, fileright
     ! ..
@@ -112,8 +112,8 @@ contains
           ! ......................................................................
           if ((krell/=krel) .or. (kmrotl/=kmrot) .or. (insl/=ins) .or. (nspinl/=nspin) .or. (lmmaxl/=lmmax) .or. (naezl/=nathost)) then
             write (6, '(/,5X,2A)') 'ERROR: ', 'host not compatible with your input/sytem'
-            write (6, '(14X,6(A6),/,8X,42("-"))') '  KREL', ' KMROT', '   INS', ' NSPIN', ' LMMAX', ' BASIS'
-            write (6, '(8X,A6,6I6)') 'syst: ', krel, kmrot, ins, nspin, lmmax, nathost
+            write (6, '(14X,6(A6),/,8X,42("-"))') '  KREL', ' KMROT', '   INS', ' NSPIN', ' LMMAX0D', ' BASIS'
+            write (6, '(8X,A6,6I6)') 'syst: ', krel, kmrot, ins, nspin, lmmax0d, nathost
             write (6, '(8X,A6,6I6,/)') 'host: ', krell, kmrotl, insl, nspinl, lmmaxl, naezl
             stop '       < DECIMAREAD > '
           end if
@@ -218,12 +218,10 @@ contains
 
             if (ihost==1) then
               do lm1 = 1, lmmaxd   ! (KREL+KORBIT+1)*LMMAX
-                ! CALL ZCOPY((KREL+KORBIT+1)*LMMAX,W1(1,LM1),1,
                 call zcopy(lmmaxd, w1(1,lm1), 1, lefttinvll(1,lm1,ih1), 1)
               end do
             else
               do lm1 = 1, lmmaxd   ! (KREL+KORBIT+1)*LMMAX
-                ! CALL ZCOPY((KREL+KORBIT+1)*LMMAX,W1(1,LM1),1,
                 call zcopy(lmmaxd, w1(1,lm1), 1, righttinvll(1,lm1,ih1), 1)
               end do
             end if
@@ -241,7 +239,7 @@ contains
 120 continue
     stop '        Error reading hostfile'
 
-130 format (10x, 'ALAT=', f9.6, ' NSPIN=', i2, '  NAEZ=', i3, ' LMMAX=', i3, ' INS=', i1, ' KREL=', i1, ' KMROT=', i1)
+130 format (10x, 'ALAT=', f9.6, ' NSPIN=', i2, '  NAEZ=', i3, ' LMMAX0D=', i3, ' INS=', i1, ' KREL=', i1, ' KMROT=', i1)
 140 format (10x, 'BRAVAIS ', /, 10x, 3f8.4, /, 10x, 3f8.4, /, 10x, 3f8.4)
 150 format (10x, 3f8.4)
 160 format (10x, 3f8.4, 2f9.4)

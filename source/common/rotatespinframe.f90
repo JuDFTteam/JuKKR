@@ -37,18 +37,18 @@ contains
   !>   * mode=1: 'glob->loc'
   !> @endnote
   !-------------------------------------------------------------------------------
-  subroutine rotatematrix(mat, theta, phi, lmmax, mode)
+  subroutine rotatematrix(mat, theta, phi, lmsize, mode)
     implicit none
     ! interface
-    integer, intent (in) :: lmmax
+    integer, intent (in) :: lmsize
     integer, intent (in) :: mode
     real (kind=dp), intent (in) :: phi
     real (kind=dp), intent (in) :: theta
-    complex (kind=dp), dimension (2*lmmax, 2*lmmax), intent (inout) :: mat
+    complex (kind=dp), dimension (2*lmsize, 2*lmsize), intent (inout) :: mat
     ! local
-    complex (kind=dp), dimension (2*lmmax, 2*lmmax) :: umat
-    complex (kind=dp), dimension (2*lmmax, 2*lmmax) :: udeggamat
-    complex (kind=dp), dimension (2*lmmax, 2*lmmax) :: mattemp
+    complex (kind=dp), dimension (2*lmsize, 2*lmsize) :: umat
+    complex (kind=dp), dimension (2*lmsize, 2*lmsize) :: udeggamat
+    complex (kind=dp), dimension (2*lmsize, 2*lmsize) :: mattemp
 
     ! ***********************************************************************
     ! create the rotation matrix:
@@ -60,7 +60,7 @@ contains
     ! ***********************************************************************
 
 
-    call create_umatrix(theta, phi, lmmax, umat, udeggamat)
+    call create_umatrix(theta, phi, lmsize, umat, udeggamat)
     ! ***********************************************************************
     ! calculate matrix in the global frame:
 
@@ -69,11 +69,11 @@ contains
 
 
     if (mode==0) then              ! 'loc->glob'
-      call zgemm('N', 'N', 2*lmmax, 2*lmmax, 2*lmmax, (1e0_dp,0e0_dp), mat, 2*lmmax, udeggamat, 2*lmmax, (0e0_dp,0e0_dp), mattemp, 2*lmmax)
-      call zgemm('N', 'N', 2*lmmax, 2*lmmax, 2*lmmax, (1e0_dp,0e0_dp), umat, 2*lmmax, mattemp, 2*lmmax, (0e0_dp,0e0_dp), mat, 2*lmmax)
+      call zgemm('N', 'N', 2*lmsize, 2*lmsize, 2*lmsize, (1e0_dp,0e0_dp), mat, 2*lmsize, udeggamat, 2*lmsize, (0e0_dp,0e0_dp), mattemp, 2*lmsize)
+      call zgemm('N', 'N', 2*lmsize, 2*lmsize, 2*lmsize, (1e0_dp,0e0_dp), umat, 2*lmsize, mattemp, 2*lmsize, (0e0_dp,0e0_dp), mat, 2*lmsize)
     else if (mode==1) then         ! 'glob->loc'
-      call zgemm('N', 'N', 2*lmmax, 2*lmmax, 2*lmmax, (1e0_dp,0e0_dp), mat, 2*lmmax, umat, 2*lmmax, (0e0_dp,0e0_dp), mattemp, 2*lmmax)
-      call zgemm('N', 'N', 2*lmmax, 2*lmmax, 2*lmmax, (1e0_dp,0e0_dp), udeggamat, 2*lmmax, mattemp, 2*lmmax, (0e0_dp,0e0_dp), mat, 2*lmmax)
+      call zgemm('N', 'N', 2*lmsize, 2*lmsize, 2*lmsize, (1e0_dp,0e0_dp), mat, 2*lmsize, umat, 2*lmsize, (0e0_dp,0e0_dp), mattemp, 2*lmsize)
+      call zgemm('N', 'N', 2*lmsize, 2*lmsize, 2*lmsize, (1e0_dp,0e0_dp), udeggamat, 2*lmsize, mattemp, 2*lmsize, (0e0_dp,0e0_dp), mat, 2*lmsize)
     else
       stop '[rotatematrix] mode not known'
     end if
@@ -160,28 +160,28 @@ contains
   !> \end{equation}
   !> `Udegga = transpose(complex conjug ( U ) )`
   !-------------------------------------------------------------------------------
-  subroutine create_wmatrix(theta, phi, theta_old, phi_old, lmmax, wmat1, wmat2)
+  subroutine create_wmatrix(theta, phi, theta_old, phi_old, lmsize wmat1, wmat2)
     implicit none
     ! interface
     real (kind=dp), intent (in) :: phi
     real (kind=dp), intent (in) :: theta
     real (kind=dp), intent (in) :: phi_old
     real (kind=dp), intent (in) :: theta_old
-    integer, intent (in) :: lmmax
-    complex (kind=dp), intent (out) :: wmat1(2*lmmax, 2*lmmax)
-    complex (kind=dp), intent (out) :: wmat2(2*lmmax, 2*lmmax)
+    integer, intent (in) :: lmsize
+    complex (kind=dp), intent (out) :: wmat1(2*lmsize, 2*lmsize)
+    complex (kind=dp), intent (out) :: wmat2(2*lmsize, 2*lmsize)
     ! local
-    complex (kind=dp) :: umat1(2*lmmax, 2*lmmax)
-    complex (kind=dp) :: udeggamat1(2*lmmax, 2*lmmax)
-    complex (kind=dp) :: umat2(2*lmmax, 2*lmmax)
-    complex (kind=dp) :: udeggamat2(2*lmmax, 2*lmmax)
+    complex (kind=dp) :: umat1(2*lmsize, 2*lmsize)
+    complex (kind=dp) :: udeggamat1(2*lmsize, 2*lmsize)
+    complex (kind=dp) :: umat2(2*lmsize, 2*lmsize)
+    complex (kind=dp) :: udeggamat2(2*lmsize, 2*lmsize)
 
-    call create_umatrix(theta_old, phi_old, lmmax, umat1, udeggamat1)
+    call create_umatrix(theta_old, phi_old, lmsize, umat1, udeggamat1)
 
-    call create_umatrix(theta, phi, lmmax, umat2, udeggamat2)
+    call create_umatrix(theta, phi, lmsize, umat2, udeggamat2)
 
-    call zgemm('N', 'N', 2*lmmax, 2*lmmax, 2*lmmax, (1e0_dp,0e0_dp), udeggamat2, 2*lmmax, umat1, 2*lmmax, (0e0_dp,0e0_dp), wmat1, 2*lmmax)
-    call zgemm('N', 'N', 2*lmmax, 2*lmmax, 2*lmmax, (1e0_dp,0e0_dp), udeggamat1, 2*lmmax, umat2, 2*lmmax, (0e0_dp,0e0_dp), wmat2, 2*lmmax)
+    call zgemm('N', 'N', 2*lmsize, 2*lmsize, 2*lmsize, (1e0_dp,0e0_dp), udeggamat2, 2*lmsize, umat1, 2*lmsize, (0e0_dp,0e0_dp), wmat1, 2*lmsize)
+    call zgemm('N', 'N', 2*lmsize, 2*lmsize, 2*lmsize, (1e0_dp,0e0_dp), udeggamat1, 2*lmsize, umat2, 2*lmsize, (0e0_dp,0e0_dp), wmat2, 2*lmsize)
 
 
   end subroutine create_wmatrix
@@ -198,7 +198,7 @@ contains
   !> \end{equation}
   !> `Udegga = transpose(complex conjug ( U ) )`
   !-------------------------------------------------------------------------------
-  subroutine create_umatrix(theta, phi, lmmax, umat, udeggamat)
+  subroutine create_umatrix(theta, phi, lmsize, umat, udeggamat)
 
     use :: mod_constants, only: ci, czero
 
@@ -206,9 +206,9 @@ contains
     ! interface
     real (kind=dp), intent (in) :: phi
     real (kind=dp), intent (in) :: theta
-    integer, intent (in) :: lmmax
-    complex (kind=dp), intent (out) :: umat(2*lmmax, 2*lmmax)
-    complex (kind=dp), intent (out) :: udeggamat(2*lmmax, 2*lmmax)
+    integer, intent (in) :: lmsize
+    complex (kind=dp), intent (out) :: umat(2*lmsize, 2*lmsize)
+    complex (kind=dp), intent (out) :: udeggamat(2*lmsize, 2*lmsize)
     ! local
     complex (kind=dp) :: umat11, umat12, umat21, umat22
     complex (kind=dp) :: udeggamat11, udeggamat12, udeggamat21, udeggamat22
@@ -229,11 +229,11 @@ contains
     end if
 
     umat = czero
-    do ival = 1, lmmax
+    do ival = 1, lmsize
       umat(ival, ival) = umat11
-      umat(ival, lmmax+ival) = umat12
-      umat(lmmax+ival, ival) = umat21
-      umat(lmmax+ival, lmmax+ival) = umat22
+      umat(ival, lmsize+ival) = umat12
+      umat(lmsize+ival, ival) = umat21
+      umat(lmsize+ival, lmsize+ival) = umat22
     end do
 
     if (spinmode=='regular') then
@@ -251,11 +251,11 @@ contains
     end if
 
     udeggamat = czero
-    do ival = 1, lmmax
+    do ival = 1, lmsize
       udeggamat(ival, ival) = udeggamat11
-      udeggamat(ival, lmmax+ival) = udeggamat12
-      udeggamat(lmmax+ival, ival) = udeggamat21
-      udeggamat(lmmax+ival, lmmax+ival) = udeggamat22
+      udeggamat(ival, lmsize+ival) = udeggamat12
+      udeggamat(lmsize+ival, ival) = udeggamat21
+      udeggamat(lmsize+ival, lmsize+ival) = udeggamat22
     end do
 
   end subroutine create_umatrix

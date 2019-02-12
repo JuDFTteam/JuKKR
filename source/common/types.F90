@@ -339,7 +339,6 @@ contains
 
     if (.not. allocated(t_cpa%dmatts)) then
       if (.not. t_cpa%dmatproj_to_file) then
-        ! allocate tmat(lmmax,lmmax,NATYP,irec_max) for irec_max=nenergy*nspin
         allocate(t_cpa%dmatts(lmmaxd,lmmaxd,natypd,nenergy*nspin),stat=i_stat)
         if (i_stat/=0) stop 'Problem allocating t_cpa%dmatts'
       else
@@ -351,7 +350,6 @@ contains
 
     if (.not. allocated(t_cpa%dtilts)) then
       if (.not. t_cpa%dmatproj_to_file) then
-        ! allocate tmat(lmmax,lmmax,NATYP,irec_max) for irec_max=nenergy*nspin
         allocate(t_cpa%dtilts(lmmaxd,lmmaxd,natypd,nenergy*nspin),stat=i_stat)
         if (i_stat/=0) stop 'Problem allocating t_cpa%dtilts'
       else

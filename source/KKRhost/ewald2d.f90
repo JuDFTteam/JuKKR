@@ -74,7 +74,7 @@ contains
     real (kind=dp) :: alpha, beta, bound, con, con1, dot1, dq1, dq2, dq3, dqdotg, expbsq, fpi, g1, g2, g3, ga, lamda, r, r0, r1, r2, r3, rfac, s, signrz, stest0, tpi
     complex (kind=dp) :: aprefmm, aprefpp, bfac, factexp, simag
     real (kind=dp) :: exponent, crit
-    integer :: i, im, ir, l, lm, lmax, lmmax, m, icall, ngmax1
+    integer :: i, im, ir, l, lm, lmax, lmmax0d, m, icall, ngmax1
     ! ..
     ! .. Local arrays ..
     real (kind=dp) :: dfac(0:2*lassld+1), g(0:lassld), gal(0:lassld), gi(0:4), gr(0:4), pref0(0:lassld), signrzl(0:lassld), ylm(lmxspd), ylmpref(0:lassld), &
@@ -107,7 +107,7 @@ contains
     end do
 
     lmax = 2*lpot
-    lmmax = (lmax+1)**2
+    lmmax0d = (lmax+1)**2
 
     pref0(2) = sqrt(5e0_dp/pi)/2e0_dp/2e0_dp
     pref0(4) = 3e0_dp*sqrt(9e0_dp/pi)/16e0_dp/9e0_dp
@@ -122,7 +122,7 @@ contains
 
     ! Initialise
 
-    do lm = 1, lmmax
+    do lm = 1, lmmax0d
       stest(lm) = 0e0_dp
       stestnew(lm) = 0e0_dp
     end do
@@ -265,7 +265,7 @@ contains
         ! ------------------------------------------------------------------
         if (im==(ngmax1-nsg(nshlg))) then
           ! keep the value before the last shell to test convergence
-          do lm = 1, lmmax
+          do lm = 1, lmmax0d
             s0(lm) = stestnew(lm)
           end do
         end if
@@ -274,7 +274,7 @@ contains
 
       ! Check convergence
 
-      do lm = 1, lmmax
+      do lm = 1, lmmax0d
         stest0 = abs(s0(lm)-stestnew(lm))
         if (s<stest0) s = stest0
       end do
@@ -304,7 +304,7 @@ contains
 
       if (s>bound .and. ngmax1==ngmax) write (1337, fmt=110) abs(s), bound, iq1, iq2
 
-      do lm = 1, lmmax
+      do lm = 1, lmmax0d
         stest(lm) = stestnew(lm)
       end do
       ! ******************************************************************
@@ -394,7 +394,7 @@ contains
         ! ----------------------------------------------------------------------
         if (i==(ngmax1-nsg(nshlg))) then
           ! keep the value before the last shell to test convergence
-          do lm = 1, lmmax
+          do lm = 1, lmmax0d
             s0(lm) = stest(lm)
           end do
         end if
@@ -405,7 +405,7 @@ contains
       ! --> Check convergence
 
       s = 0e0_dp
-      do lm = 2, lmmax
+      do lm = 2, lmmax0d
         stest0 = abs(s0(lm)-stest(lm))
         if (s<stest0) s = stest0
       end do
@@ -413,7 +413,7 @@ contains
     end if
     ! **********************************************************************
 
-    do lm = 1, lmmax
+    do lm = 1, lmmax0d
       if (abs(aimag(stest(lm)))>bound) then
         write (6, *) ' ERROR: Imaginary contribution', ' to REAL lattice sum', aimag(stest(lm)), bound
         stop

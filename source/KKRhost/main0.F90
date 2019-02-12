@@ -66,7 +66,7 @@ module mod_main0
   ! ------------- > scalars > ------------- 
   !integers
   public :: kte, kws, kxc, igf, icc, ins, irm, ipe, ipf, ipfe, kcor, kefg, khyp, kpre, nprinc, nsra, lpot, imix, iend, icst, &
-    naez, nemb, lmax, ncls, nref, npol, npnt1, npnt2, npnt3, lmmax, nvirt, lmpot, kvmad, itscf, ncheb, nineq, natyp, ifile, &
+    naez, nemb, lmax, ncls, nref, npol, npnt1, npnt2, npnt3, lmmax0d, nvirt, lmpot, kvmad, itscf, ncheb, nineq, natyp, ifile, &
     kvrel, nspin, nleft, nright, invmod, khfeld, itdbry, insref, kshape, ielast, ishift, ivshift, kfrozn, nsymat, nqcalc, kforce, n1semi, &
     n2semi, n3semi, nlayer, nlbasis, nrbasis, intervx, intervy, intervz, maxmesh, npan_eq, npan_log, npolsemi, scfsteps, natomimp, &
     iesemicore, idosemicore
@@ -130,7 +130,7 @@ module mod_main0
   integer :: npnt1 = 3             !! number of E points (EMESHT) for the contour integration going up
   integer :: npnt2 = 10            !! number of E points (EMESHT) for the contour integration goind parallel to the real axis
   integer :: npnt3 = 4             !! number of E points (EMESHT) for the contour integration going down
-  integer :: lmmax = 16            !! (LMAX+1)^2
+  integer :: lmmax0d = 16          !! (LMAX+1)^2 wihtout spin doubling
   integer :: nvirt = 0
   integer :: lmpot = 16            !! (LPOT+1)**2
   integer :: kvmad = 0
@@ -569,7 +569,7 @@ contains
     !! @endnote
     ! -------------------------------------------------------------------------
     call rinput13(kte,igf,kxc,lly,icc,ins,kws,ipe,ipf,ipfe,icst,imix,lpot,naez,nemb,&
-      nref,ncls,npol,lmax,kcor,kefg,khyp,kpre,kvmad,lmmax,lmpot,ncheb,nleft,ifile,  &
+      nref,ncls,npol,lmax,kcor,kefg,khyp,kpre,kvmad,lmmax0d,lmpot,ncheb,nleft,ifile,  &
       kvrel,nspin,natyp,nineq,npnt1,npnt2,npnt3,kfrozn,ishift,n1semi,n2semi,n3semi, &
       scfsteps,insref,kshape,itdbry,nright,kforce,ivshift,khfeld,nlbasis,nrbasis,   &
       intervx,intervy,intervz,npan_eq,npan_log,npolsemi,tk,fcm,emin,emax,rmax,gmax, &
@@ -1193,11 +1193,11 @@ contains
     end if
     if (write_deci_tmat) then
       if (nranks>1) stop 'ERROR: deci-out does not work with MPI!'
-      call outtmathost(alat,ins,krel+korbit,kmrot,nspin,naez,lmmax,bravais,rbasis,  &
+      call outtmathost(alat,ins,krel+korbit,kmrot,nspin,naez,lmmax0d,bravais,rbasis,  &
         qmtet,qmphi,e2in,tk,npol,npnt1,npnt2,npnt3)
     end if
     if (use_decimation) then
-      call deciopt(alat,ins,krel+korbit,kvrel,kmrot,nspin,naez,lmmax,bravais,tk,    &
+      call deciopt(alat,ins,krel+korbit,kvrel,kmrot,nspin,naez,lmmax0d,bravais,tk,    &
         npol,npnt1,npnt2,npnt3,ez,ielast,kaoez,lefttinvll,righttinvll,vacflag,      &
         nlbasis,nrbasis,cmomhost,vref,rmtref,nref,refpot(naez),lmax,lmgf0d,lmmaxd,  &
         lm2d,nembd1,iemxd,nspindd,lmpot,natyp,irmd,ipand)

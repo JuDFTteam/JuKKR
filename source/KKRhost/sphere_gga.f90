@@ -198,13 +198,13 @@ contains
     parameter (tiny=1.e-20_dp)     ! if th < tiny set th=0
     real (kind=dp) :: tt, aa, cd   ! factors in calcul. of Ylm
     integer :: ll, mm, ii          ! l and m indexes
-    integer :: lmmax               ! (lmax+1)**2, total number of spher.
+    integer :: lmmax0d             ! (lmax+1)**2, total number of spher.
     ! harmonics.
     integer :: imm, ipm, lpm, lmm, lpmp1, lmmp1 ! i-m,i+m,l+m,l-m,l+m+1,l-m-1
 
     fpi = 4.e0_dp*pi
     rtwo = sqrt(2.e0_dp)
-    lmmax = (lmax+1)**2
+    lmmax0d = (lmax+1)**2
 
     if (lmax>l4maxd) stop 'derivylm: lmax out of range.'
 
@@ -312,9 +312,9 @@ contains
     end do
 
     ! Derivatives with respect to th
-    call rinit(lmmax, dydth)
-    call rinit(lmmax, d2ydth2)
-    call rinit(lmmax, d2ydthdfi)
+    call rinit(lmmax0d, dydth)
+    call rinit(lmmax0d, d2ydth2)
+    call rinit(lmmax0d, d2ydthdfi)
     ! The l=0 derivatives are zero (established by initialization above).
     ! Start with l=1.
     do ll = 1, lmax

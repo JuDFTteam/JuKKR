@@ -34,7 +34,7 @@ contains
   !> This subroutine was adapted from `NORMCOEFF_SO`.
   !> @endnote
   !-------------------------------------------------------------------------------
-  subroutine normcoeff_so_spinflux(natom, ircut, lmmax, pns, ksra, drdi, mode)
+  subroutine normcoeff_so_spinflux(natom, ircut, lmmax0d, pns, ksra, drdi, mode)
 
 #ifdef CPP_MPI
     use :: mpi
@@ -53,10 +53,10 @@ contains
     integer, intent(in) :: mode
     integer, intent(in) :: ksra
     integer, intent(in) :: natom
-    integer, intent (in) :: lmmax !! (LMAX+1)^2
+    integer, intent (in) :: lmmax0d !! (LMAX+1)^2
     integer, dimension(0:ipand, natypd), intent(in) :: ircut !! R points of panel borders
     real (kind=dp), dimension(irmd, natypd), intent(in) :: drdi !! Derivative dr/di
-    complex (kind=dp), dimension(nspind*lmmax, nspind*lmmax, irmd, 2, natom), intent(in) :: pns
+    complex (kind=dp), dimension(nspind*lmmax0d, nspind*lmmax0d, irmd, 2, natom), intent(in) :: pns
     ! .. Local Scalars ..
     integer :: lm1, lm2, lm1p, ir, i1, i1sp1, i1sp2, lmsp1, lmsp2, isigma, i2sp1, i2sp2, insra, nsra
     integer :: i2
@@ -81,13 +81,13 @@ contains
 
     if (t_inc%i_write>0) then
       write (1337, *) 'NSRA', nsra
-      write (1337, *) 'LMMAX', lmmax
+      write (1337, *) 'lmmax0d', lmmax0d
       write (1337, *) 'lmmaxd', lmmaxd
     end if
 
-    allocate (rll(irmd,lmmax,lmmax,2,2,2,natom))
-    allocate (rll_12(lmmax))
-    allocate (dens(lmmax,lmmax,2,2,2,2,natom))
+    allocate (rll(irmd,lmmax0d,lmmax0d,2,2,2,natom))
+    allocate (rll_12(lmmax0d))
+    allocate (dens(lmmax0d,lmmax0d,2,2,2,2,natom))
     allocate (spinflux(lmmaxd,lmmaxd,natom,3))
 
     rll = czero
@@ -102,7 +102,7 @@ contains
     i1_end = natom
 #endif
 
-    ! rewrite the wavefunctions in RLL arrays of 1,2*LMMAX
+    ! rewrite the wavefunctions in RLL arrays of 1,2*lmmax0d
     do i1 = i1_start, i1_end
       if (t_inc%i_write>0) write (1337, *) 'ATOM', i1, i1_start, i1_end
 
@@ -118,13 +118,13 @@ contains
 
           do i1sp1 = 1, 2
             do i1sp2 = 1, 2
-              do lm1 = 1, lmmax
-                lmsp1 = (i1sp1-1)*lmmax + lm1
-                do lm2 = 1, lmmax
-                  lmsp2 = (i1sp2-1)*lmmax + lm2
+              do lm1 = 1, lmmax0d
+                lmsp1 = (i1sp1-1)*lmmax0d + lm1
+                do lm2 = 1, lmmax0d
+                  lmsp2 = (i1sp2-1)*lmmax0d + lm2
                   rll(ir, lm2, lm1, i1sp2, i1sp1, insra, i1) = pns(lmsp2, lmsp1, ir, insra, i1)
-                end do             ! LM1=1,LMMAX
-              end do               ! LM1=1,LMMAX
+                end do             ! LM1=1,lmmax0d
+              end do               ! LM1=1,lmmax0d
             end do                 ! ISP1=1,2
           end do                   ! ISP1=1,2
 
@@ -138,14 +138,14 @@ contains
           do i2sp1 = 1, 2
             do i2sp2 = 1, 2
 
-              do lm1 = 1, lmmax
-                do lm2 = 1, lmmax
+              do lm1 = 1, lmmax0d
+                do lm2 = 1, lmmax0d
 
                   do insra = 1, nsra
 
                     rll_12 = czero
 
-                    do lm1p = 1, lmmax
+                    do lm1p = 1, lmmax0d
 
                       delta1 = (rll(ircut(1,i2),lm1p,lm2,i2sp1,i2sp2,insra,i1)-rll(ircut(1,i2)-1,lm1p,lm2,i2sp1,i2sp2,insra,i1))/drdi(ircut(1,i2), i2)
                       delta2 = (rll(ircut(1,i2),lm1p,lm1,i1sp1,i1sp2,insra,i1)-rll(ircut(1,i2)-1,lm1p,lm1,i1sp1,i1sp2,insra,i1))/drdi(ircut(1,i2), i2)
@@ -154,7 +154,7 @@ contains
 
                     end do         ! LM1P
 
-                    do lm1p = 1, lmmax
+                    do lm1p = 1, lmmax0d
                       dens(lm1, lm2, i1sp1, i1sp2, i2sp1, i2sp2, i1) = dens(lm1, lm2, i1sp1, i1sp2, i2sp1, i2sp2, i1) + rll_12(lm1p)
                     end do         ! LM1P
 
@@ -172,9 +172,9 @@ contains
 
 #ifdef CPP_MPI
     ! finally gather DENS on master in case of MPI run
-    allocate (work(lmmax,lmmax,2,2,2,2,natom), stat=ierr)
+    allocate (work(lmmax0d,lmmax0d,2,2,2,2,natom), stat=ierr)
     if (ierr/=0) stop 'Error allocating work for MPI comm of DENS in normcoeff_spinf'
-    ihelp = lmmax*lmmax*2*2*2*2*natom
+    ihelp = lmmax0d*lmmax0d*2*2*2*2*natom
     call mpi_reduce(dens, work, ihelp, mpi_double_complex, mpi_sum, master, t_mpi_c_grid%mympi_comm_ie, ierr)
     if (ierr/=mpi_success) stop 'Error in MPI comm of DENS in normcoeff_spinflux'
     dens(:, :, :, :, :, :, :) = work(:, :, :, :, :, :, :)
@@ -200,9 +200,9 @@ contains
 
             do i1sp1 = 1, 2
               do i1sp2 = 1, 2
-                do lm1 = 1, lmmax
-                  do lm2 = 1, lmmax
-                    spinflux((i1sp2-1)*lmmax+lm2, (i1sp1-1)*lmmax+lm1, i1, isigma)=&
+                do lm1 = 1, lmmax0d
+                  do lm2 = 1, lmmax0d
+                    spinflux((i1sp2-1)*lmmax0d+lm2, (i1sp1-1)*lmmax0d+lm1, i1, isigma)=&
                     -(0d0, 1d0)*(dens(lm2,lm1,2,i1sp2,1,i1sp1,i1)+dens(lm2,lm1,1,i1sp2,2,i1sp1,i1))/2
                   end do           ! LM2
                 end do             ! LM1
@@ -213,9 +213,9 @@ contains
 
             do i1sp1 = 1, 2
               do i1sp2 = 1, 2
-                do lm1 = 1, lmmax
-                  do lm2 = 1, lmmax
-                    spinflux((i1sp2-1)*lmmax+lm2, (i1sp1-1)*lmmax+lm1, i1, isigma)= &
+                do lm1 = 1, lmmax0d
+                  do lm2 = 1, lmmax0d
+                    spinflux((i1sp2-1)*lmmax0d+lm2, (i1sp1-1)*lmmax0d+lm1, i1, isigma)= &
                     -(0d0, 1d0)*(-1)*(0d0, 1d0)*(dens(lm2,lm1,2,i1sp2,1,i1sp1,i1)-dens(lm2,lm1,1,i1sp2,2,i1sp1,i1)) /2
                   end do           ! LM2
                 end do             ! LM1
@@ -226,9 +226,9 @@ contains
 
             do i1sp1 = 1, 2
               do i1sp2 = 1, 2
-                do lm1 = 1, lmmax
-                  do lm2 = 1, lmmax
-                    spinflux((i1sp2-1)*lmmax+lm2, (i1sp1-1)*lmmax+lm1, i1, isigma) = (0d0, 1d0)*(dens(lm2,lm1,1,i1sp2,1,i1sp1,i1)-dens(lm2,lm1,2,i1sp2,2,i1sp1,i1))/2
+                do lm1 = 1, lmmax0d
+                  do lm2 = 1, lmmax0d
+                    spinflux((i1sp2-1)*lmmax0d+lm2, (i1sp1-1)*lmmax0d+lm1, i1, isigma) = (0d0, 1d0)*(dens(lm2,lm1,1,i1sp2,1,i1sp1,i1)-dens(lm2,lm1,2,i1sp2,2,i1sp1,i1))/2
                   end do           ! LM2
                 end do             ! LM1
               end do               ! I1SP2

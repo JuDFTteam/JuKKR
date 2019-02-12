@@ -31,7 +31,7 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine rinput13(kte, igf, kxc, lly, icc, ins, kws, ipe, ipf, ipfe, icst, imix, lpot, naez, nemb, nref, ncls, npol, lmax, kcor, kefg, &
-    khyp, kpre, kvmad, lmmax, lmpot, ncheb, nleft, ifile, kvrel, nspin, natyp, nineq, npnt1, npnt2, npnt3, kfrozn, ishift, n1semi, n2semi, &
+    khyp, kpre, kvmad, lmmax0d, lmpot, ncheb, nleft, ifile, kvrel, nspin, natyp, nineq, npnt1, npnt2, npnt3, kfrozn, ishift, n1semi, n2semi, &
     n3semi, nsteps, insref, kshape, itdbry, nright, kforce, ivshift, khfield, nlbasis, nrbasis, intervx, intervy, intervz, npan_eq, npan_log, &
     npolsemi, tk, fcm, emin, emax, rmax, gmax, alat, r_log, rcutz, rcutxy, eshift, qbound, hfield, mixing, abasis, bbasis, cbasis, vconst, &
     tksemi, tolrdif, emusemi, ebotsemi, fsemicore, lambda_xc, deltae, lrhosym, linipol, lcartesian, imt, cls, lmxc, irns, irws, ntcell, refpot, &
@@ -88,7 +88,7 @@ contains
     integer, intent (inout) :: khyp
     integer, intent (inout) :: kpre
     integer, intent (inout) :: kvmad
-    integer, intent (inout) :: lmmax
+    integer, intent (inout) :: lmmax0d !! (lmax+1)**2 without spin doubling
     integer, intent (inout) :: lmpot
     integer, intent (inout) :: ncheb !! Number of Chebychev pannels for the new solver
     integer, intent (inout) :: nleft !! Number of repeated basis for left host to get converged  electrostatic potentials
@@ -2083,7 +2083,7 @@ contains
     if (ncpa/=0) write (1337, 470) itcpamax, cpatol
     ! --------------------------------------------------------
 
-    lmmax = (lmax+1)**2
+    lmmax0d = (lmax+1)**2
     lpot = 2*lmax
     lmpot = (lpot+1)*(lpot+1)
     lmxspd = (2*lpot+1)**2

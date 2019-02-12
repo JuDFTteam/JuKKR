@@ -22,7 +22,7 @@ contains
   !>
   !> Guillaume Geranton, September 2014
   !-------------------------------------------------------------------------------
-  subroutine calc_torq_ll_ss(lmmax, rll, ircut, ipan, icell, cleb, icleb, iend, ifunm, lmsp, irws, drdi, dens, visp, nspin, iatom, vins, irmin)
+  subroutine calc_torq_ll_ss(lmmax0d, rll, ircut, ipan, icell, cleb, icleb, iend, ifunm, lmsp, irws, drdi, dens, visp, nspin, iatom, vins, irmin)
 
     use :: mod_runoptions, only: torque_operator_onlyMT, torque_operator_onlySph 
     use :: global_variables, only: irmd, lmpotd, irmind, ipand, natypd, ncleb
@@ -33,10 +33,10 @@ contains
 
     ! .. Array Arguments ..
     ! non-sph. eigen states of single pot  &
-    integer :: iend, lmmax, irws, nspin, iatom, irmin ! derivative dr/di  &
+    integer :: iend, lmmax0d, irws, nspin, iatom, irmin ! derivative dr/di  &
     ! spherical part of the potential  &
     ! non-sph. part of the potential
-    complex (kind=dp) :: rll(irmd, lmmax, lmmax), dens
+    complex (kind=dp) :: rll(irmd, lmmax0d, lmmax0d), dens
     ! local variables
     real (kind=dp) :: cleb(*), drdi(irmd), visp(irmd, *), vins(irmind:irmd, lmpotd, *)
     integer :: icleb(ncleb, 4), ifunm(natypd, lmpotd), lmsp(natypd, *), ircut(0:ipand), ipan, icell, ifun
@@ -66,7 +66,7 @@ contains
 
     ! cut contributions from outside the MT if recquired
 
-    do lm1p = 1, lmmax
+    do lm1p = 1, lmmax0d
       do ir = 1, irmd
         rsp(ir) = rsp(ir) + rll(ir, lm1p, lm1p)*c0ll*(-1)*(visp(ir,nspin*(iatom-1)+2)-visp(ir,nspin*(iatom-1)+1))*0.5_dp*sqrt(16.0e0_dp*atan(1.0e0_dp))
         ! always >= 2 here

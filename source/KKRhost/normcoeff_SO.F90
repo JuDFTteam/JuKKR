@@ -42,7 +42,7 @@ contains
   !> @warning The gaunt coeffients are stored in index array (see subroutine gaunt)
   !> @endwarning
   !-------------------------------------------------------------------------------
-  subroutine normcoeff_so(natom,ircut,lmmax,pns,thetas,ntcell,ifunm,ipan,lmsp,ksra, &
+  subroutine normcoeff_so(natom,ircut,lmmax0d,pns,thetas,ntcell,ifunm,ipan,lmsp,ksra, &
     cleb,icleb,iend,drdi,irws,nspoh,mode)
 #ifdef CPP_MPI
     use :: mpi
@@ -62,7 +62,7 @@ contains
     integer, intent(in) :: mode
     integer, intent(in) :: ksra
     integer, intent(in) :: natom
-    integer, intent (in) :: lmmax !! (LMAX+1)^2
+    integer, intent (in) :: lmmax0d !! (LMAX+1)^2
     integer, dimension(*), intent(in) :: irws   !! R point at WS radius
     integer, dimension(*), intent(in) :: ntcell !! Index for WS cell
     integer, dimension(natypd), intent(in) :: ipan  !! Number of panels in non-MT-region
@@ -73,7 +73,7 @@ contains
     real (kind=dp), dimension(*), intent(in) :: cleb  !! GAUNT coefficients (GAUNT)
     real (kind=dp), dimension(irmd, natypd), intent(in) :: drdi !! Derivative dr/di
     real (kind=dp), dimension(irid, nfund, *), intent(in) :: thetas
-    complex (kind=dp), dimension(nspind*lmmax, nspind*lmmax, irmd, 2, natom), intent(in) :: pns
+    complex (kind=dp), dimension(nspind*lmmax0d, nspind*lmmax0d, irmd, 2, natom), intent(in) :: pns
     ! .. Local Scalars ..
     complex (kind=dp) :: norm
     integer :: nspod
@@ -99,13 +99,13 @@ contains
     end if
     if (t_inc%i_write>0) then
       write (1337, *) 'NSRA', nsra
-      write (1337, *) 'LMMAX', lmmax
+      write (1337, *) 'lmmax0d', lmmax0d
       write (1337, *) 'lmmaxd', lmmaxd
     end if
 
-    allocate (rll(irmd,lmmax,lmmax,nspoh,nspoh,nspoh,natom))
-    allocate (rll_12(irmd,lmmax,lmmax))
-    allocate (dens(lmmax,lmmax,nspind,nspind,nspind,nspind,natom))
+    allocate (rll(irmd,lmmax0d,lmmax0d,nspoh,nspoh,nspoh,natom))
+    allocate (rll_12(irmd,lmmax0d,lmmax0d))
+    allocate (dens(lmmax0d,lmmax0d,nspind,nspind,nspind,nspind,natom))
 
     rll = czero
     dens = czero
@@ -119,7 +119,7 @@ contains
     i1_end = natom
 #endif
 
-    ! rewrite the wavefunctions in RLL arrays of 1,2*LMMAX
+    ! rewrite the wavefunctions in RLL arrays of 1,2*lmmax0d
     do i1 = i1_start, i1_end
       if (t_inc%i_write>0) write (1337, *) 'ATOM', i1, i1_start, i1_end
 
@@ -134,14 +134,14 @@ contains
         do ir = 1, irmd
           do i1sp1 = 1, nspoh
             do i1sp2 = 1, nspoh
-              do lm1 = 1, lmmax
-                lmsp1 = (i1sp1-1)*lmmax + lm1
-                do lm2 = 1, lmmax
-                  lmsp2 = (i1sp2-1)*lmmax + lm2
+              do lm1 = 1, lmmax0d
+                lmsp1 = (i1sp1-1)*lmmax0d + lm1
+                do lm2 = 1, lmmax0d
+                  lmsp2 = (i1sp2-1)*lmmax0d + lm2
                   rll(ir, lm2, lm1, i1sp2, i1sp1, insra, i1) =                      &
                     pns(lmsp2, lmsp1, ir, insra, i1)
-                end do             ! LM1=1,LMMAX
-              end do               ! LM1=1,LMMAX
+                end do             ! LM1=1,lmmax0d
+              end do               ! LM1=1,lmmax0d
             end do                 ! ISP1=1,2
           end do                   ! ISP1=1,2
         end do                     ! IR
@@ -151,12 +151,12 @@ contains
         do i1sp2 = 1, nspoh
           do i2sp1 = 1, nspoh
             do i2sp2 = 1, nspoh
-              do lm1 = 1, lmmax
-                do lm2 = 1, lmmax
+              do lm1 = 1, lmmax0d
+                do lm2 = 1, lmmax0d
                   do insra = 1, nsra
                     rll_12 = czero
-                    do lm1p = 1, lmmax
-                      do lm2p = 1, lmmax
+                    do lm1p = 1, lmmax0d
+                      do lm2p = 1, lmmax0d
                         do ir = 1, irmd
                           rll_12(ir, lm1p, lm2p) =                                  &
                             conjg(rll(ir,lm1p,lm1,i1sp1,i1sp2,insra,i1))*           &
@@ -164,7 +164,7 @@ contains
                         end do     ! IR
                       end do       ! LM2P
                     end do         ! LM1P
-                    call calc_rho_ll_ss(lmmax, rll_12, ircut(0:ipand,i2), ipan(i2), &
+                    call calc_rho_ll_ss(lmmax0d, rll_12, ircut(0:ipand,i2), ipan(i2), &
                       ntcell(i2), thetas, cleb, icleb, iend, ifunm, lmsp, irws(i2), &
                       drdi(:,i2), norm)
                     dens(lm1, lm2, i1sp1, i1sp2, i2sp1, i2sp2, i1) =                &
@@ -182,9 +182,9 @@ contains
 
 #ifdef CPP_MPI
     ! finally gather DENS on master in case of MPI run
-    allocate (work(lmmax,lmmax,nspind,nspind,nspind,nspind,natom), stat=ierr)
+    allocate (work(lmmax0d,lmmax0d,nspind,nspind,nspind,nspind,natom), stat=ierr)
     if (ierr/=0) stop 'Error allocating work for MPI comm of DENS in normcoeff_SO'
-    ihelp = lmmax*lmmax*nspind*nspind*nspind*nspind*natom
+    ihelp = lmmax0d*lmmax0d*nspind*nspind*nspind*nspind*natom
     call mpi_reduce(dens, work, ihelp, mpi_double_complex, mpi_sum, master, t_mpi_c_grid%mympi_comm_ie, ierr)
     if (ierr/=mpi_success) stop 'Error in MPI comm of DENS in normcoeff_SO'
     dens(:, :, :, :, :, :, :) = work(:, :, :, :, :, :, :)
@@ -202,9 +202,9 @@ contains
             if (isigma==1) then
               do i1sp1 = 1, nspod
                 do i1sp2 = 1, nspod
-                  do lm1 = 1, lmmax
-                    do lm2 = 1, lmmax
-                      rhod((i1sp2-1)*lmmax+lm2, (i1sp1-1)*lmmax+lm1, i1, isigma) =  &
+                  do lm1 = 1, lmmax0d
+                    do lm2 = 1, lmmax0d
+                      rhod((i1sp2-1)*lmmax0d+lm2, (i1sp1-1)*lmmax0d+lm1, i1, isigma) =  &
                         dens(lm2, lm1, 1, i1sp2, 1, i1sp1, i1) +                    &
                         dens(lm2, lm1, 2, i1sp2, 2, i1sp1, i1)
                     end do
@@ -214,9 +214,9 @@ contains
             else if (isigma==2) then
               do i1sp1 = 1, nspod
                 do i1sp2 = 1, nspod
-                  do lm1 = 1, lmmax
-                    do lm2 = 1, lmmax
-                      rhod((i1sp2-1)*lmmax+lm2, (i1sp1-1)*lmmax+lm1, i1, isigma) =  &
+                  do lm1 = 1, lmmax0d
+                    do lm2 = 1, lmmax0d
+                      rhod((i1sp2-1)*lmmax0d+lm2, (i1sp1-1)*lmmax0d+lm1, i1, isigma) =  &
                         dens(lm2, lm1, 2, i1sp2, 1, i1sp1, i1) +                    &
                         dens(lm2, lm1, 1, i1sp2, 2, i1sp1, i1)
                     end do
@@ -226,9 +226,9 @@ contains
             else if (isigma==3) then
               do i1sp1 = 1, nspod
                 do i1sp2 = 1, nspod
-                  do lm1 = 1, lmmax
-                    do lm2 = 1, lmmax
-                      rhod((i1sp2-1)*lmmax+lm2, (i1sp1-1)*lmmax+lm1, i1, isigma) =  &
+                  do lm1 = 1, lmmax0d
+                    do lm2 = 1, lmmax0d
+                      rhod((i1sp2-1)*lmmax0d+lm2, (i1sp1-1)*lmmax0d+lm1, i1, isigma) =  &
                         -(0d0, 1d0)*(dens(lm2,lm1,2,i1sp2,1,i1sp1,i1)               &
                         -dens(lm2,lm1,1,i1sp2,2,i1sp1,i1))
                     end do
@@ -238,9 +238,9 @@ contains
             else if (isigma==4) then
               do i1sp1 = 1, nspod
                 do i1sp2 = 1, nspod
-                  do lm1 = 1, lmmax
-                    do lm2 = 1, lmmax
-                      rhod((i1sp2-1)*lmmax+lm2, (i1sp1-1)*lmmax+lm1, i1, isigma) =  &
+                  do lm1 = 1, lmmax0d
+                    do lm2 = 1, lmmax0d
+                      rhod((i1sp2-1)*lmmax0d+lm2, (i1sp1-1)*lmmax0d+lm1, i1, isigma) =  &
                         -dens(lm2, lm1, 1, i1sp2, 1, i1sp1, i1) +                   &
                         dens(lm2, lm1, 2, i1sp2, 2, i1sp1, i1)
                     end do
