@@ -110,7 +110,7 @@ contains
           end do
           read (36+ihost, 210) alatl, nspinl, naezl, lmmaxl, insl, krell, kmrotl
           ! ......................................................................
-          if ((krell/=krel) .or. (kmrotl/=kmrot) .or. (insl/=ins) .or. (nspinl/=nspin) .or. (lmmaxl/=lmmax) .or. (naezl/=nathost)) then
+          if ((krell/=krel) .or. (kmrotl/=kmrot) .or. (insl/=ins) .or. (nspinl/=nspin) .or. (lmmaxl/=lmmax0d) .or. (naezl/=nathost)) then
             write (6, '(/,5X,2A)') 'ERROR: ', 'host not compatible with your input/sytem'
             write (6, '(14X,6(A6),/,8X,42("-"))') '  KREL', ' KMROT', '   INS', ' NSPIN', ' LMMAX0D', ' BASIS'
             write (6, '(8X,A6,6I6)') 'syst: ', krel, kmrot, ins, nspin, lmmax0d, nathost

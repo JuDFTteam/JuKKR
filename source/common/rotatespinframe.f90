@@ -160,7 +160,7 @@ contains
   !> \end{equation}
   !> `Udegga = transpose(complex conjug ( U ) )`
   !-------------------------------------------------------------------------------
-  subroutine create_wmatrix(theta, phi, theta_old, phi_old, lmsize wmat1, wmat2)
+  subroutine create_wmatrix(theta, phi, theta_old, phi_old, lmsize, wmat1, wmat2)
     implicit none
     ! interface
     real (kind=dp), intent (in) :: phi
