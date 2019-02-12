@@ -74,7 +74,7 @@ contains
     close (37)
     ! ----------------------------------------------------------------------
 100 format (' Vectors in lattice constant units', /, '                                 ')
-110 format ('ALAT=', f9.6, ' NSPIN=', i2, '  NAEZ=', i3, ' LMMAX0D=', i3, ' INS=', i1, ' KREL=', i1, ' KMROT=', i1)
+110 format ('ALAT=', f9.6, ' NSPIN=', i2, '  NAEZ=', i3, ' LMMAX=', i3, ' INS=', i1, ' KREL=', i1, ' KMROT=', i1)
 120 format ('BRAVAIS ', /, 3f8.4, /, 3f8.4, /, 3f8.4)
 130 format ('RBASIS')
 140 format ('RBASIS', 20x, 'MAGNETISATION ANGLES THETA/PHI')
