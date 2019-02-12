@@ -2,7 +2,7 @@
  INVERSE T-MATRIX AND CMOMS
  Vectors in lattice constant units
                                  
-ALAT= 6.684270 NSPIN= 1  NAEZ=  1 LMMAX=  9 INS=1 KREL=0 KMROT=0
+ALAT= 6.684270 NSPIN= 1  NAEZ=  1 LMMAX0D=  9 INS=1 KREL=0 KMROT=0
 BRAVAIS 
   0.7071  0.0000  0.0000
   0.3536  0.6124  0.0000
