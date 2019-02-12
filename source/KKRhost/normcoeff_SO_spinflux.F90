@@ -38,16 +38,15 @@ contains
 
 #ifdef CPP_MPI
     use :: mpi
-#endif
-    use :: mod_mympi, only: myrank, master
-#ifdef CPP_MPI
     use :: mod_types, only: t_mpi_c_grid, t_inc, t_imp
 #else
     use :: mod_types, only: t_inc, t_imp
 #endif
+    use :: mod_mympi, only: myrank, master
     use :: mod_datatypes, only: dp
-    use :: global_variables
+    use :: global_variables, only: lmmaxd, ipand, natypd, irmd, nspind
     use :: mod_constants, only: czero
+
     implicit none
 
     ! .. Input variables
@@ -83,13 +82,13 @@ contains
     if (t_inc%i_write>0) then
       write (1337, *) 'NSRA', nsra
       write (1337, *) 'LMMAX', lmmax
-      write (1337, *) 'LMMAXSO', lmmaxso
+      write (1337, *) 'lmmaxd', lmmaxd
     end if
 
     allocate (rll(irmd,lmmax,lmmax,2,2,2,natom))
     allocate (rll_12(lmmax))
     allocate (dens(lmmax,lmmax,2,2,2,2,natom))
-    allocate (spinflux(lmmaxso,lmmaxso,natom,3))
+    allocate (spinflux(lmmaxd,lmmaxd,natom,3))
 
     rll = czero
     dens = czero
@@ -248,8 +247,8 @@ contains
       end if
       do isigma = 1, 3
         do i1 = 1, natom
-          do lm2 = 1, lmmaxso
-            do lm1 = 1, lmmaxso
+          do lm2 = 1, lmmaxd
+            do lm1 = 1, lmmaxd
               ! minus sign to get the spin flux into the sphere :
               write (12, '(2ES25.16)') - spinflux(lm1, lm2, i1, isigma)
             end do

@@ -46,16 +46,14 @@ contains
     cleb,icleb,iend,drdi,irws,nspoh,mode)
 #ifdef CPP_MPI
     use :: mpi
-#endif
-    use :: mod_mympi, only: myrank, master
-#ifdef CPP_MPI
     use :: mod_types, only: t_mpi_c_grid, t_inc, t_imp
 #else
     use :: mod_types, only: t_inc, t_imp
 #endif
+    use :: mod_mympi, only: myrank, master
     use :: mod_datatypes, only: dp
-    use :: global_variables
-    use :: mod_calc_rho_ll_ss
+    use :: global_variables, only: korbit, lmmaxd, natypd, ipand, ncleb, lmpotd, irmd, irid, nfund, nspind, ipand
+    use :: mod_calc_rho_ll_ss, only: calc_rho_ll_ss
     use :: mod_constants, only: pi, czero
 
     implicit none
@@ -102,7 +100,7 @@ contains
     if (t_inc%i_write>0) then
       write (1337, *) 'NSRA', nsra
       write (1337, *) 'LMMAX', lmmax
-      write (1337, *) 'LMMAXSO', lmmaxso
+      write (1337, *) 'lmmaxd', lmmaxd
     end if
 
     allocate (rll(irmd,lmmax,lmmax,nspoh,nspoh,nspoh,natom))
@@ -197,7 +195,7 @@ contains
     if (myrank==master) then       ! do last part and writeout only on master
       write (*, *) 'collect terms and writeout'
       ! calculate rho
-      allocate (rhod(lmmaxso,lmmaxso,natom,4))
+      allocate (rhod(lmmaxd,lmmaxd,natom,4))
       if (nspoh/=1) then
         do isigma = 1, 4
           do i1 = 1, natom
@@ -261,8 +259,8 @@ contains
         end if
         do isigma = 1, 4
           do i1 = 1, natom
-            do lm2 = 1, lmmaxso
-              do lm1 = 1, lmmaxso
+            do lm2 = 1, lmmaxd
+              do lm1 = 1, lmmaxd
                 write (12, '(2ES25.16)') rhod(lm1, lm2, i1, isigma)
               end do
             end do

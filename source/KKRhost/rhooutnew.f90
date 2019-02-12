@@ -18,16 +18,16 @@ contains
   !> Category: physical-observables, KKRhost
   !> Deprecated: False 
   !> Calculation of the density for the new solver
-  subroutine rhooutnew(nsra, lmax, gmatll, ek, lmpot, df, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll, rllleft, sllleft, cden, cdenlm, cdenns, &
-    rho2nsc, corbital, gflle_part, rpan_intervall, ipan_intervall, nspin)
+  subroutine rhooutnew(nsra, lmax, gmatll, ek, lmpot, df, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, &
+    rll, rllleft, sllleft, cden, cdenlm, cdenns, rho2nsc, corbital, gflle_part, rpan_intervall, ipan_intervall, nspin)
 
     use :: mod_constants, only: cone,czero,pi
     use :: mod_runoptions, only: calc_gmat_lm_full, use_ldau, set_cheby_nosoc
-    use :: mod_profiling
-    use :: global_variables
+    use :: mod_profiling, only: memocc
+    use :: global_variables, only: lmmaxd, ncleb, ntotd, nfund, korbit
     use :: mod_datatypes, only: dp
     use :: mod_orbitalmoment, only: calc_orbitalmoment
-    use :: mod_intcheb_cell
+    use :: mod_intcheb_cell, only: intcheb_cell 
 
     implicit none
 
@@ -50,14 +50,14 @@ contains
     real (kind=dp), dimension (*), intent (in) :: cleb !! GAUNT coefficients (GAUNT)
     real (kind=dp), dimension (0:ntotd), intent (in) :: rpan_intervall
     real (kind=dp), dimension (ntotd*(ncheb+1), nfund), intent (in) :: thetasnew
-    complex (kind=dp), dimension (lmmaxso, lmmaxso), intent (in) :: gmatll !! GMATLL=diagonal elements of the G matrix (system) Note that SLL is not needed for calculation of density, only needed for calculation of Green function
-    complex (kind=dp), dimension (nsra*lmmaxso, lmmaxso, irmdnew), intent (in) :: rll
-    complex (kind=dp), dimension (nsra*lmmaxso, lmmaxso, irmdnew), intent (in) :: rllleft
-    complex (kind=dp), dimension (nsra*lmmaxso, lmmaxso, irmdnew), intent (in) :: sllleft
+    complex (kind=dp), dimension (lmmaxd, lmmaxd), intent (in) :: gmatll !! GMATLL=diagonal elements of the G matrix (system) Note that SLL is not needed for calculation of density, only needed for calculation of Green function
+    complex (kind=dp), dimension (nsra*lmmaxd, lmmaxd, irmdnew), intent (in) :: rll
+    complex (kind=dp), dimension (nsra*lmmaxd, lmmaxd, irmdnew), intent (in) :: rllleft
+    complex (kind=dp), dimension (nsra*lmmaxd, lmmaxd, irmdnew), intent (in) :: sllleft
 
     ! .. Output variables
     complex (kind=dp), dimension (irmdnew, nspin*(1+korbit)), intent (out) :: cdenns
-    complex (kind=dp), dimension (lmmaxso, lmmaxso), intent (out) :: gflle_part
+    complex (kind=dp), dimension (lmmaxd, lmmaxd), intent (out) :: gflle_part
     ! lmlm-dos
     complex (kind=dp), dimension (irmdnew, 0:lmax, nspin*(1+korbit)), intent (out) :: cden
     complex (kind=dp), dimension (irmdnew, lmmaxd/(1+korbit), nspin*(1+korbit)), intent (out) :: cdenlm
@@ -66,14 +66,14 @@ contains
     complex (kind=dp), dimension (irmdnew, lmpot, nspin*(1+korbit)), intent (out) :: rho2nsc
 
     ! .. Local variables
-    integer :: lmsize
+    integer :: lmmax0d !! lm matrix size without spin doubling
     integer :: ir, jspin, lm1, lm2, lm3, m1, l1, j, ifun
     integer :: i_stat, i_all
     real (kind=dp) :: c0ll
     complex (kind=dp) :: cltdf
     integer, dimension (4) :: lmshift1
     integer, dimension (4) :: lmshift2
-    complex (kind=dp), dimension (lmmaxso, lmmaxso, 3) :: loperator
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, 3) :: loperator
 
     ! .. Local allocatable arrays
     complex (kind=dp), dimension (:), allocatable :: cwr ! lmlm-dos
@@ -83,21 +83,21 @@ contains
     complex (kind=dp), dimension (:, :, :), allocatable :: wr1 ! LDAU
     ! .. External routines
 
-    lmsize = lmmaxd/(1+korbit)
+    lmmax0d = lmmaxd/(1+korbit)
 
-    allocate (wr(lmmaxso,lmmaxso,irmdnew), stat=i_stat)
+    allocate (wr(lmmaxd,lmmaxd,irmdnew), stat=i_stat)
     call memocc(i_stat, product(shape(wr))*kind(wr), 'WR', 'RHOOUTNEW')
     wr = czero
     allocate (cwr(irmdnew), stat=i_stat)
     call memocc(i_stat, product(shape(cwr))*kind(cwr), 'CWR', 'RHOOUTNEW')
     cwr = czero
-    allocate (wr1(lmmaxso,lmmaxso,irmdnew), stat=i_stat)
+    allocate (wr1(lmmaxd,lmmaxd,irmdnew), stat=i_stat)
     call memocc(i_stat, product(shape(wr1))*kind(wr1), 'WR1', 'RHOOUTNEW')
     wr1 = czero
-    allocate (qnsi(lmmaxso,lmmaxso), stat=i_stat)
+    allocate (qnsi(lmmaxd,lmmaxd), stat=i_stat)
     call memocc(i_stat, product(shape(qnsi))*kind(qnsi), 'QNSI', 'RHOOUTNEW')
     qnsi = czero
-    allocate (pnsi(lmmaxso,lmmaxso), stat=i_stat)
+    allocate (pnsi(lmmaxd,lmmaxd), stat=i_stat)
     call memocc(i_stat, product(shape(pnsi))*kind(pnsi), 'PNSI', 'RHOOUTNEW')
     pnsi = czero
 
@@ -107,18 +107,18 @@ contains
       lmshift2(:) = 0 
     else
       lmshift1(1) = 0
-      lmshift1(2) = lmsize
+      lmshift1(2) = lmmax0d
       lmshift1(3) = 0
-      lmshift1(4) = lmsize
+      lmshift1(4) = lmmax0d
       lmshift2(1) = 0
-      lmshift2(2) = lmsize
-      lmshift2(3) = lmsize
+      lmshift2(2) = lmmax0d
+      lmshift2(3) = lmmax0d
       lmshift2(4) = 0
     end if
 
     ! for orbital moment
     if (corbital/=0) then
-      call calc_orbitalmoment(lmax, lmmaxso, loperator)
+      call calc_orbitalmoment(lmax, lmmaxd, loperator)
     end if
 
     c0ll = 1e0_dp/sqrt(4e0_dp*pi)
@@ -127,66 +127,66 @@ contains
 
     ! big component of Dirac spinor
     do ir = 1, irmdnew
-      do lm1 = 1, lmmaxso
-        do lm2 = 1, lmmaxso
+      do lm1 = 1, lmmaxd
+        do lm2 = 1, lmmaxd
           qnsi(lm1, lm2) = sllleft(lm1, lm2, ir)
           ! PNSI(LM1,LM2)=RLL(LM1,LM2,IR)
           pnsi(lm1, lm2) = rllleft(lm1, lm2, ir)
         end do
       end do
-      ! CALL ZGEMM('N','N',LMMAXSO,LMMAXSO,LMMAXSO,CONE,PNSI,
-      ! +             LMMAXSO,GMATLL,LMMAXSO,EK,QNSI,LMMAXSO)
-      call zgemm('N', 'T', lmmaxso, lmmaxso, lmmaxso, cone, pnsi, lmmaxso, gmatll, lmmaxso, ek, qnsi, lmmaxso)
-      do lm1 = 1, lmmaxso
-        do lm2 = 1, lmmaxso
+      ! CALL ZGEMM('N','N',lmmaxd,lmmaxd,lmmaxd,CONE,PNSI,
+      ! +             lmmaxd,GMATLL,lmmaxd,EK,QNSI,lmmaxd)
+      call zgemm('N', 'T', lmmaxd, lmmaxd, lmmaxd, cone, pnsi, lmmaxd, gmatll, lmmaxd, ek, qnsi, lmmaxd)
+      do lm1 = 1, lmmaxd
+        do lm2 = 1, lmmaxd
           pnsi(lm1, lm2) = rll(lm1, lm2, ir)
         end do
       end do
-      call zgemm('N', 'T', lmmaxso, lmmaxso, lmmaxso, cone, pnsi, lmmaxso, qnsi, lmmaxso, czero, wr(1,1,ir), lmmaxso)
+      call zgemm('N', 'T', lmmaxd, lmmaxd, lmmaxd, cone, pnsi, lmmaxd, qnsi, lmmaxd, czero, wr(1,1,ir), lmmaxd)
 
       ! small component of Dirac spinor
       if (nsra==2) then
-        do lm1 = 1, lmmaxso
-          do lm2 = 1, lmmaxso
-            ! QNSI(LM1,LM2)=SLLLEFT(LM1+LMMAXSO,LM2,IR)
-            qnsi(lm1, lm2) = -sllleft(lm1+lmmaxso, lm2, ir)
-            ! PNSI(LM1,LM2)=RLLLEFT(LM1+LMMAXSO,LM2,IR)
-            pnsi(lm1, lm2) = -rllleft(lm1+lmmaxso, lm2, ir)
+        do lm1 = 1, lmmaxd
+          do lm2 = 1, lmmaxd
+            ! QNSI(LM1,LM2)=SLLLEFT(LM1+lmmaxd,LM2,IR)
+            qnsi(lm1, lm2) = -sllleft(lm1+lmmaxd, lm2, ir)
+            ! PNSI(LM1,LM2)=RLLLEFT(LM1+lmmaxd,LM2,IR)
+            pnsi(lm1, lm2) = -rllleft(lm1+lmmaxd, lm2, ir)
           end do
         end do
-        ! CALL ZGEMM('N','N',LMMAXSO,LMMAXSO,LMMAXSO,CONE,PNSI,
-        ! +             LMMAXSO,GMATLL,LMMAXSO,EK,QNSI,LMMAXSO)
-        call zgemm('N', 'T', lmmaxso, lmmaxso, lmmaxso, cone, pnsi, lmmaxso, gmatll, lmmaxso, ek, qnsi, lmmaxso)
-        do lm1 = 1, lmmaxso
-          do lm2 = 1, lmmaxso
-            pnsi(lm1, lm2) = rll(lm1+lmmaxso, lm2, ir)
+        ! CALL ZGEMM('N','N',lmmaxd,lmmaxd,lmmaxd,CONE,PNSI,
+        ! +             lmmaxd,GMATLL,lmmaxd,EK,QNSI,lmmaxd)
+        call zgemm('N', 'T', lmmaxd, lmmaxd, lmmaxd, cone, pnsi, lmmaxd, gmatll, lmmaxd, ek, qnsi, lmmaxd)
+        do lm1 = 1, lmmaxd
+          do lm2 = 1, lmmaxd
+            pnsi(lm1, lm2) = rll(lm1+lmmaxd, lm2, ir)
           end do
         end do
-        call zgemm('N', 'T', lmmaxso, lmmaxso, lmmaxso, cone, pnsi, lmmaxso, qnsi, lmmaxso, cone, wr(1,1,ir), lmmaxso)
+        call zgemm('N', 'T', lmmaxd, lmmaxd, lmmaxd, cone, pnsi, lmmaxd, qnsi, lmmaxd, cone, wr(1,1,ir), lmmaxd)
       end if ! small component
 
       ! For orbital moment
       if (corbital/=0) then
-        call zgemm('N', 'N', lmmaxso, lmmaxso, lmmaxso, cone, loperator(1,1,corbital), lmmaxso, wr(1,1,ir), lmmaxso, czero, pnsi, lmmaxso)
-        do lm1 = 1, lmmaxso
-          do lm2 = 1, lmmaxso
+        call zgemm('N', 'N', lmmaxd, lmmaxd, lmmaxd, cone, loperator(1,1,corbital), lmmaxd, wr(1,1,ir), lmmaxd, czero, pnsi, lmmaxd)
+        do lm1 = 1, lmmaxd
+          do lm2 = 1, lmmaxd
             wr(lm1, lm2, ir) = pnsi(lm1, lm2)
           end do
         end do
       end if
-      do lm1 = 1, lmmaxso
-        do lm2 = 1, lmmaxso
+      do lm1 = 1, lmmaxd
+        do lm2 = 1, lmmaxd
           wr1(lm1, lm2, ir) = wr(lm1, lm2, ir)
         end do
       end do
-      do lm1 = 1, lmmaxso
+      do lm1 = 1, lmmaxd
         do lm2 = 1, lm1 - 1
           wr1(lm1, lm2, ir) = wr1(lm1, lm2, ir) + wr1(lm2, lm1, ir)
         end do
       end do
 
       do jspin = 1, nspin*(1+korbit)
-        do lm1 = 1, lmsize
+        do lm1 = 1, lmmax0d
           do lm2 = 1, lm1 - 1
             wr(lm1+lmshift1(jspin), lm2+lmshift2(jspin), ir) =                      &
               wr(lm1+lmshift1(jspin), lm2+lmshift2(jspin), ir) +                    &
@@ -203,8 +203,8 @@ contains
       ! Integrate only up to muffin-tin radius.
       ! ! lmlm-dos
       gflle_part = czero           ! lmlm-dos
-      do lm2 = 1, lmmaxso          ! lmlm-dos
-        do lm1 = 1, lmmaxso        ! lmlm-dos
+      do lm2 = 1, lmmaxd          ! lmlm-dos
+        do lm1 = 1, lmmaxd        ! lmlm-dos
           ! For integration up to MT radius do this:                           !
           ! lmlm-dos
           ! CWR(1:IMT1) = WR(LM1,LM2,1:IMT1)                                   !
@@ -234,7 +234,7 @@ contains
 
     ! DO IR = 1,IRMDNEW
     ! DO JSPIN = 1,4
-    ! DO LM1 = 1,lmsize
+    ! DO LM1 = 1,lmmax0d
     ! DO LM2 = 1,LM1-1
     ! WR(LM1+LMSHIFT1(JSPIN),LM2+LMSHIFT2(JSPIN),IR)=
     ! +           WR(LM1+LMSHIFT1(JSPIN),LM2+LMSHIFT2(JSPIN),IR)+

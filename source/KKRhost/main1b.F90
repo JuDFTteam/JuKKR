@@ -58,7 +58,7 @@ contains
     use :: mod_cinit, only: cinit
     ! array dimensions
     use :: global_variables, only: maxmshd, iemxd, natypd, naezd, kpoibz, lmmaxd, lmgf0d, lmaxd, nrefd, nsheld, wlength, nofgij, &
-      naclsd, nspind, nclsd, nembd, krel, korbit, natomimpd, nrd, nembd1, nspindd, nprincd, lmmaxso, irmind, nspotd, irmd, lpotd, &
+      naclsd, nspind, nclsd, nembd, krel, korbit, natomimpd, nrd, nembd1, nspindd, nprincd, irmind, nspotd, irmd, lpotd, &
       ncleb, ipand, irnsd, lmpotd, irid, nfund, ntotd
     ! stuff defined in main0 already
     use :: mod_main0, only: natyp, ielast, npol, nref, naez, nsra, ins, nspin, ncls, lly, atom, cls, nacls, refpot, ez, alat, rmtref, &
@@ -998,7 +998,7 @@ contains
           atomimp(1:t_imp%natomimp), t_imp%irminimp(1:t_imp%natomimp), icleb, ircut,&
           t_imp%ircutimp(0:ipand,1:t_imp%natomimp),zat,t_imp%zimp(1:t_imp%natomimp),&
           rmesh,cleb(1,1),t_imp%rimp(1:irmd,1:t_imp%natomimp),rclsimp,ez(ie),       &
-          t_imp%vispimp,t_imp%vinsimp, dtmtrx, lmmaxso)
+          t_imp%vispimp,t_imp%vinsimp, dtmtrx, lmmaxd)
 
         ! compute GMATLL_GES, on master rank only
         if (ielast==3 .and. myrank==master) then

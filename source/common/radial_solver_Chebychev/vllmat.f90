@@ -23,7 +23,7 @@ contains
   !>
   !> Sets up non-spherical potential without SOC contribution but already as complex numbers.
   !-------------------------------------------------------------------------------
-  subroutine vllmat(irmin, nrmaxd, irc, lmmax, lmmaxso, vnspll0, vins, lmpot, cleb, icleb, iend, nspin, zat, rnew, use_sratrick, ncleb)
+  subroutine vllmat(irmin, nrmaxd, irc, lmmax, lmmaxd, vnspll0, vins, lmpot, cleb, icleb, iend, nspin, zat, rnew, use_sratrick, ncleb)
 
     implicit none
 
@@ -36,7 +36,7 @@ contains
     integer, intent (in) :: nspin        !! spin-degree of freedom
     integer, intent (in) :: lmpot        !! (LPOT+1)^2
     integer, intent (in) :: nrmaxd       !! NTOTD*(NCHEBD+1), maximal number of radial points in Chebychev mesh
-    integer, intent (in) :: lmmaxso      !! 2*(LMAX+1)^2, for SOC L=(l,m,s) instead of L=(l,m)
+    integer, intent (in) :: lmmaxd      !! 2*(LMAX+1)^2, for SOC L=(l,m,s) instead of L=(l,m)
     integer, intent (in) :: use_sratrick !! switch to use SRA trick (see routine rllsll) or not
     real (kind=dp), intent (in) :: zat   !! atomic charge
     integer, dimension (ncleb, 4), intent (in) :: icleb    !! index array for Gaunt coefficients
@@ -44,7 +44,7 @@ contains
     real (kind=dp), dimension (irmin:irc, lmpot, nspin), intent (in) :: vins !! Non-spherical part of the potential
     real (kind=dp), dimension (irmin:nrmaxd), intent (in) :: rnew !! radial mesh points of Chebychev mesh
     ! output
-    complex (kind=dp), dimension (lmmaxso, lmmaxso, irmin:irc), intent (out) :: vnspll0 !! output potential in Chebychev mesh and (l,m,s)-space
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, irmin:irc), intent (out) :: vnspll0 !! output potential in Chebychev mesh and (l,m,s)-space
     ! local
     integer :: isp !! counter for spin-degree
     integer :: i, ir, j, lm1, lm2, lm3
@@ -92,7 +92,7 @@ contains
     vnspll0(1:lmmax, 1:lmmax, irmin:irc) = cmplx(vnspll(1:lmmax,1:lmmax,irmin:irc,1), 0e0_dp, kind=dp)
 
     if (nspin==2) then             ! hack to make routine work for Bxc-field
-      vnspll0(lmmax+1:lmmaxso, lmmax+1:lmmaxso, irmin:irc) = cmplx(vnspll(1:lmmax,1:lmmax,irmin:irc,nspin), 0e0_dp, kind=dp)
+      vnspll0(lmmax+1:lmmaxd, lmmax+1:lmmaxd, irmin:irc) = cmplx(vnspll(1:lmmax,1:lmmax,irmin:irc,nspin), 0e0_dp, kind=dp)
     end if
 
   end subroutine vllmat

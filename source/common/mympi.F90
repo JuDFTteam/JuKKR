@@ -660,7 +660,7 @@ contains
   !> Deprecated: False
   !> MPI communication for the new solver in the `main1c` subroutine 
   !-------------------------------------------------------------------------------
-  subroutine mympi_main1c_comm_newsosol(nspin, korbit, irmdnew, lmpotd, lmaxd, lmaxd1, lmmaxd, lmmaxso, ielast, nqdos, den, denlm, gflle, rho2nsc, r2nefc, rho2int, espv, muorb, denorbmom, &
+  subroutine mympi_main1c_comm_newsosol(nspin, korbit, irmdnew, lmpotd, lmaxd, lmaxd1, lmmax0d, lmmaxd, ielast, nqdos, den, denlm, gflle, rho2nsc, r2nefc, rho2int, espv, muorb, denorbmom, &
     denorbmomsp, denorbmomlm, denorbmomns, mympi_comm)
 
     use :: mpi
@@ -669,11 +669,11 @@ contains
     integer, intent (in) :: nqdos
     integer, intent (in) :: lmaxd   !! Maximum l component in wave function expansion
     integer, intent (in) :: lmpotd  !! (lpot+1)**2
-    integer, intent (in) :: lmmaxd  !! (KREL+KORBIT+1)*(LMAX+1)**2
+    integer, intent (in) :: lmmax0d  !! (LMAX+1)**2
     integer, intent (in) :: ielast
     integer, intent (in) :: lmaxd1
     integer, intent (in) :: irmdnew
-    integer, intent (in) :: lmmaxso !! lmmaxd
+    integer, intent (in) :: lmmaxd !! (krel+korbit+1)*(LMAX+1)**2
     integer, intent (in) :: nspin
     integer, intent (in) :: korbit
     integer, intent (in) :: mympi_comm
@@ -682,8 +682,8 @@ contains
     complex (kind=dp), dimension(irmdnew, lmpotd, nspin*(1+korbit)), intent (inout) :: r2nefc
     complex (kind=dp), dimension(irmdnew, lmpotd, nspin*(1+korbit)), intent (inout) :: rho2nsc
     complex (kind=dp), dimension(0:lmaxd1, ielast, nqdos, nspin), intent (inout) :: den
-    complex (kind=dp), dimension(lmmaxd, ielast, nqdos, nspin), intent (inout) :: denlm
-    complex (kind=dp), dimension(lmmaxso, lmmaxso, ielast, nqdos), intent (inout) :: gflle
+    complex (kind=dp), dimension(lmmax0d, ielast, nqdos, nspin), intent (inout) :: denlm
+    complex (kind=dp), dimension(lmmaxd, lmmaxd, ielast, nqdos), intent (inout) :: gflle
     real (kind=dp), dimension(3), intent (inout) :: denorbmom
     real (kind=dp), dimension(3), intent (inout) :: denorbmomns
     real (kind=dp), dimension(2, 3), intent (inout) :: denorbmomsp
@@ -725,8 +725,8 @@ contains
     call zcopy(idim, workc, 1, den, 1)
     deallocate (workc)
 
-    idim = lmmaxd*ielast*nspin*nqdos
-    allocate (workc(lmmaxd,ielast,nspin,nqdos), stat=ierr)
+    idim = lmmax0d*ielast*nspin*nqdos
+    allocate (workc(lmmax0d,ielast,nspin,nqdos), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, denlm'
     workc = (0.d0, 0.d0)
     call mpi_reduce(denlm, workc, idim, mpi_double_complex, mpi_sum, master, mympi_comm, ierr)
@@ -743,8 +743,8 @@ contains
     call zcopy(idim, workc, 1, rho2int, 1)
     deallocate (workc)
 
-    idim = lmmaxso*lmmaxso*ielast*nqdos
-    allocate (workc(lmmaxso,lmmaxso,ielast,nqdos), stat=ierr)
+    idim = lmmaxd*lmmaxd*ielast*nqdos
+    allocate (workc(lmmaxd,lmmaxd,ielast,nqdos), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, gflle'
     workc = (0.d0, 0.d0)
     call mpi_reduce(gflle, workc(:,:,:,:), idim, mpi_double_complex, mpi_sum, master, mympi_comm, ierr)
@@ -1180,7 +1180,7 @@ contains
     integer (kind=mpi_address_kind) :: base !! base address of first entry
   
   
-    n = 60
+    n = 59
     allocate (blocklen1(n), etype1(n), disp1(n), stat=ierr)
     if (ierr/=0) stop 'error allocating arrays in bcast_global_variables'
   
@@ -1237,13 +1237,12 @@ contains
     call mpi_get_address(lmpotd, disp1(51), ierr)
     call mpi_get_address(ntotd, disp1(52), ierr)
     call mpi_get_address(nrmaxd, disp1(53), ierr)
-    call mpi_get_address(lmmaxso, disp1(54), ierr)
-    call mpi_get_address(lpotd, disp1(55), ierr)
-    call mpi_get_address(nchebd, disp1(56), ierr)
-    call mpi_get_address(maxmshd, disp1(57), ierr)
-    call mpi_get_address(kBdG, disp1(58), ierr)
-    call mpi_get_address(linterface, disp1(59), ierr)
-    call mpi_get_address(lnc, disp1(60), ierr)
+    call mpi_get_address(lpotd, disp1(54), ierr)
+    call mpi_get_address(nchebd, disp1(55), ierr)
+    call mpi_get_address(maxmshd, disp1(56), ierr)
+    call mpi_get_address(kBdG, disp1(57), ierr)
+    call mpi_get_address(linterface, disp1(58), ierr)
+    call mpi_get_address(lnc, disp1(59), ierr)
   
     ! find displacements of variables
     base = disp1(1)

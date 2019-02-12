@@ -496,7 +496,7 @@ contains
     use :: mod_writehoststructure, only: writehoststructure
     ! array dimensions
     use :: global_variables, only: krel, nspind, nrefd, irmd, ntotd, ipand, ncelld, nrmaxd, nchebd, natypd, naezd, lmaxd, alm, lmmaxd, &
-      almgf0, lmgf0d, ndim_slabinv, nprincd, nembd, nembd1, nembd2, irmind, irnsd, nofgij, natomimpd, lpotd, lmpotd, lmmaxso, npotd, nfund, &
+      almgf0, lmgf0d, ndim_slabinv, nprincd, nembd, nembd1, nembd2, irmind, irnsd, nofgij, natomimpd, lpotd, lmpotd, npotd, nfund, &
       lmxspd, mmaxd, iemxd, ncleb, nclsd, nsheld, naclsd, lm2d, irid, lassld, nrd, nspind, nspindd, ngshd, linterface, nlayerd, knosph, &
       korbit, nmaxd, ishld, wlength, maxmshd, kpoibz, nspotd
 
@@ -609,7 +609,6 @@ contains
     nofgij = natomimpd*natomimpd + 1
     lpotd = lpot
     lmpotd = (lpot+1)**2
-    lmmaxso = lmmaxd               ! lmmaxd already doubled in size! (KREL+1)*LMMAXD
 
     !--------------------------------------------------------------------------------
     ! Allocation calls

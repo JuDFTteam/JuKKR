@@ -80,7 +80,6 @@ module global_variables
   integer :: lmpotd
   integer :: ntotd = 80       !! IPAND+30
   integer :: nrmaxd
-  integer :: lmmaxso          !! (KREL+KORBIT+1)*(LMAX+1)**2
   integer :: lpotd
   integer :: nchebd
   integer :: maxmshd = 30         !! maximal number of different k-meshes

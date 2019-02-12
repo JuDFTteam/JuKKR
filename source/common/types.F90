@@ -214,7 +214,7 @@ module mod_types
     real (kind=dp), dimension(:,:), allocatable :: vispimp !! impurity potential              ! VISPIMP(IRMD,NATOMIMP*NSPIN)
     real (kind=dp), dimension(:,:,:), allocatable :: vinsimp !! impurity potential ! VINSIMP(IRMIND:IRMD,LMPOTD,NATOMIMP*NSPIN)
     real (kind=dp), dimension(:,:,:), allocatable :: thetasimp !! shape functions of imps ! THETASIMP(IRID,NFUND,NATOMIMP)
-    complex (kind=dp), dimension(:,:,:,:), allocatable :: rllimp !! impurity wavefunctions ! RLL(NVEC*LMMAXSO,LMMAXSO,IRMDNEW(I1))
+    complex (kind=dp), dimension(:,:,:,:), allocatable :: rllimp !! impurity wavefunctions ! RLL(NVEC*lmmaxd,lmmaxd,IRMDNEW(I1))
 
   end type type_imp
 
@@ -459,7 +459,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine init_t_imp(t_inc, t_imp)
 
-    use global_variables, only: nspind, nclsd, lmmaxso
+    use global_variables, only: nspind, nclsd, lmmaxd
     implicit none
 
     type (type_inc), intent (in) :: t_inc
@@ -567,7 +567,7 @@ contains
 
     ! complex (kind=dp) arrays
     if (.not. allocated(t_imp%rllimp)) then
-      allocate(t_imp%rllimp(t_inc%nsra*lmmaxso,lmmaxso,t_inc%irmdnew,natomimp),stat=i_stat)
+      allocate(t_imp%rllimp(t_inc%nsra*lmmaxd,lmmaxd,t_inc%irmdnew,natomimp),stat=i_stat)
       if (i_stat/=0) stop 'Problem allocating t_imp%rllimp'
       t_imp%rllimp = czero
     end if
@@ -1099,7 +1099,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine bcast_t_imp_arrays(t_imp, t_inc, master)
 
-    use global_variables, only: lmmaxso
+    use global_variables, only: lmmaxd
     use :: mpi
     implicit none
 
@@ -1147,7 +1147,7 @@ contains
     blocklen2(10) = t_imp%irmd*t_imp%natomimp*t_imp%nspin
     blocklen2(11) = (t_imp%irmd-t_imp%irmind+1)*t_imp%lmpotd*t_imp%natomimp*t_imp%nspin
     blocklen2(12) = 3*t_imp%natomimp
-    blocklen2(13) = t_inc%nsra*lmmaxso*lmmaxso*t_inc%irmdnew*t_imp%natomimp
+    blocklen2(13) = t_inc%nsra*lmmaxd*lmmaxd*t_inc%irmdnew*t_imp%natomimp
     blocklen2(14) = t_imp%natomimp
     blocklen2(15) = t_imp%natomimp
     blocklen2(16) = t_imp%natomimp
