@@ -29,6 +29,7 @@ Removed a lot of code duplicates among different
 - use static library for pkkprime file among different apps
 - use static library for kkrhost routines
 - use routines from common/radial_solver_Chebychev in KKRimp as well
+- rename lmsize to lmmaxd0 whenever the value is fixed (orbitalmoment.f90, rhoqtools.F90, rhovalnew.F90, tmat_newsolver.F90, rllsllsourceterms.f90)
 
 ### Deprecated
 - None

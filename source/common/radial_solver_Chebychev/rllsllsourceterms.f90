@@ -33,7 +33,7 @@ contains
   !> * scalar-relativistic
   !> * full-relativistic
   !-------------------------------------------------------------------------------
-  subroutine rllsllsourceterms(nsra, nvec, eryd, rmesh, nrmax, nrmaxd, lmax, lmsize, use_fullgmat, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor)
+  subroutine rllsllsourceterms(nsra, nvec, eryd, rmesh, nrmax, nrmaxd, lmax, lmmaxd, use_fullgmat, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor)
 
     use :: mod_datatypes, only: dp
     use :: mod_constants, only: cvlight, ci
@@ -44,14 +44,14 @@ contains
 
     ! inputs
     integer, intent (in) :: nsra, lmax, nrmax, nrmaxd
-    integer, intent (in) :: lmsize
+    integer, intent (in) :: lmmaxd !! lms-size [ = (1+korbit)*(lmax+1)**2 ]
     complex (kind=dp), intent (in) :: eryd
     real (kind=dp), dimension (nrmaxd), intent (in) :: rmesh
     integer, intent (in) :: use_fullgmat
 
     ! outputs
     integer, intent (out) :: nvec
-    integer, dimension (nsra*lmsize), intent (out) :: jlk_index !! index array mapping entries of hlk, jlk (bing/small components one after the other) to L=(l,m,s)
+    integer, dimension (nsra*lmmaxd), intent (out) :: jlk_index !! index array mapping entries of hlk, jlk (bing/small components one after the other) to L=(l,m,s)
     complex (kind=dp), dimension (1:nsra*(1+korbit)*(lmax+1), nrmax), intent (out) :: hlk, jlk !! right hankel and bessel source functions
     complex (kind=dp), dimension (1:nsra*(1+korbit)*(lmax+1), nrmax), intent (out) :: hlk2, jlk2 !! left hankel and bessel source functions
     complex (kind=dp), intent (out) :: gmatprefactor !! prefactor of the Green function (2M_0\kappa in PhD Bauer, p. 63)

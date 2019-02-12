@@ -298,7 +298,7 @@ contains
     integer, intent (in) :: j !! atom index j
     integer, intent (in) :: mu !! scanning position (mu0)
     integer, intent (in) :: imin !! minimal layer index 
-    integer, intent (in) :: lmmaxd !! lmsize of GF matrices
+    integer, intent (in) :: lmmaxd !! lm-size of GF matrices
     integer, intent (in) :: nscoef !! number of layers in imp. cluster
     integer, intent (in) :: k_end !! number of kpoints to be stored
     integer, intent (in) :: kpt !! kpoint index

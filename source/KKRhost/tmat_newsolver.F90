@@ -99,8 +99,8 @@ contains
     type (type_dtmatjijdij), intent (inout) :: t_dtmatjij_at !! derived Data type to store \[\Delta t\]-matrix for Jij calculation
 
     ! .. Local variables
-    integer :: ir, irec, use_sratrick, nvec, lm1, lm2, ie, irmdnew, i11
-    integer :: i_stat, lmsize
+    integer :: ir, irec, use_sratrick, nvec, lm1, lm2, ie, irmdnew, i11, i_stat
+    integer :: lmmax0d !! size of lm-dimension without spin-doubling [ =(lmax+1)**2 ]
     integer :: use_fullgmat !! use (l,m,s) coupled matrices or not for 'NOSOC' test option (1/0)
     complex (kind=dp) :: eryd !! energy in Ry
     complex (kind=dp), dimension (nspin*(lmax+1)) :: alphasph !! spherical part of alpha-matrix
@@ -167,7 +167,7 @@ contains
     ith = 0
 #endif
 
-    lmsize = lmmaxd/(1+korbit)
+    lmmax0d = lmmaxd/(1+korbit)
     irmdnew = npan_tot*(ncheb+1)
 
     if (nsra==2) then
@@ -211,7 +211,7 @@ contains
 #endif
 
     ! set up the non-spherical ll' matrix for potential VLL' (done in VLLMAT)
-    call vllmat(1, nrmaxd, irmdnew, lmsize, lmmaxso, vnspll0, vins, lmpot, cleb, icleb, iend, nspin/(nspin-korbit), zat, rnew, use_sratrick, ncleb)
+    call vllmat(1, nrmaxd, irmdnew, lmmax0d, lmmaxso, vnspll0, vins, lmpot, cleb, icleb, iend, nspin/(nspin-korbit), zat, rnew, use_sratrick, ncleb)
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! LDAU
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -221,8 +221,8 @@ contains
       do ir = 1, irmdnew
         vnspll0(lmlo:lmhi, lmlo:lmhi, ir) = vnspll0(lmlo:lmhi, lmlo:lmhi, ir) + wldau(1:mmaxd, 1:mmaxd, 1)
       end do
-      lmlo = lmlo + lmsize
-      lmhi = lmhi + lmsize
+      lmlo = lmlo + lmmax0d
+      lmhi = lmhi + lmmax0d
       do ir = 1, irmdnew
         vnspll0(lmlo:lmhi, lmlo:lmhi, ir) = vnspll0(lmlo:lmhi, lmlo:lmhi, ir) + wldau(1:mmaxd, 1:mmaxd, 2)
       end do
@@ -279,7 +279,7 @@ contains
     !$omp private(dtmatll)                                                     &
     !$omp private(dalphall)                                                    &
     !$omp shared(t_inc)                                                        &
-    !$omp shared(nspin,nsra,lmax,lmsize,iend,ipot,ielast,npan_tot,ncheb)       &
+    !$omp shared(nspin,nsra,lmax,lmmax0d,iend,ipot,ielast,npan_tot,ncheb)       &
     !$omp shared(zat,socscale,ez,cleb,rnew,nth,LMPOT,NRMAXD,LMMAXSO,NTOTD)     &
     !$omp shared(rpan_intervall,vinsnew,ipan_intervall,NCLEB)                  &
     !$omp shared(use_sratrick,irmdnew,theta,phi,vins,vnspll0)                  &
@@ -336,7 +336,7 @@ contains
 
         if ( .not. set_cheby_nosoc) then
           ! Contruct the spin-orbit coupling hamiltonian and add to potential
-          call spinorbit_ham(lmax, lmsize, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpot, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
+          call spinorbit_ham(lmax, lmmax0d, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpot, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
             vnspll0(:,:,:), vnspll1(:,:,:,ith), '1')
         else
           vnspll1(:,:,:,ith) = vnspll0(:,:,:)
@@ -594,7 +594,7 @@ contains
         ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         ! Contruct the spin-orbit coupling hamiltonian and add to potential
-        call spinorbit_ham(lmax,lmsize,vins,rnew,eryd,zat,cvlight,socscale,nspin,   &
+        call spinorbit_ham(lmax,lmmax0d,vins,rnew,eryd,zat,cvlight,socscale,nspin,   &
           lmpot,theta,phi,ipan_intervall,rpan_intervall,npan_tot,ncheb,irmdnew,     &
           nrmaxd,vnspll0(:,:,:),vnspll1(:,:,:,ith),'transpose')
 
@@ -701,7 +701,7 @@ contains
       end if
 
       if (t_dtmatjij_at%calculate) then
-        call calc_dtmatjij(lmsize,lmmaxso,lmpot,ntotd,nrmaxd,nsra,irmdnew,nspin,    &
+        call calc_dtmatjij(lmmax0d,lmmaxso,lmpot,ntotd,nrmaxd,nsra,irmdnew,nspin,    &
           vins,rllleft(:,:,:,ith),rll(:,:,:,ith),rpan_intervall,ipan_intervall,     &
           npan_tot,ncheb,cleb,icleb,iend,ncleb,rnew,t_dtmatjij_at%dtmat_xyz(:,:,:,ie_num))
 
