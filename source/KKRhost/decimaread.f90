@@ -112,7 +112,7 @@ contains
           ! ......................................................................
           if ((krell/=krel) .or. (kmrotl/=kmrot) .or. (insl/=ins) .or. (nspinl/=nspin) .or. (lmmaxl/=lmmax0d) .or. (naezl/=nathost)) then
             write (6, '(/,5X,2A)') 'ERROR: ', 'host not compatible with your input/sytem'
-            write (6, '(14X,6(A6),/,8X,42("-"))') '  KREL', ' KMROT', '   INS', ' NSPIN', ' LMMAX0D', ' BASIS'
+            write (6, '(14X,6(A6),/,8X,42("-"))') '  KREL', ' KMROT', '   INS', ' NSPIN', ' LMMAX', ' BASIS'
             write (6, '(8X,A6,6I6)') 'syst: ', krel, kmrot, ins, nspin, lmmax0d, nathost
             write (6, '(8X,A6,6I6,/)') 'host: ', krell, kmrotl, insl, nspinl, lmmaxl, naezl
             stop '       < DECIMAREAD > '
@@ -239,7 +239,7 @@ contains
 120 continue
     stop '        Error reading hostfile'
 
-130 format (10x, 'ALAT=', f9.6, ' NSPIN=', i2, '  NAEZ=', i3, ' LMMAX0D=', i3, ' INS=', i1, ' KREL=', i1, ' KMROT=', i1)
+130 format (10x, 'ALAT=', f9.6, ' NSPIN=', i2, '  NAEZ=', i3, ' LMMAX=', i3, ' INS=', i1, ' KREL=', i1, ' KMROT=', i1)
 140 format (10x, 'BRAVAIS ', /, 10x, 3f8.4, /, 10x, 3f8.4, /, 10x, 3f8.4)
 150 format (10x, 3f8.4)
 160 format (10x, 3f8.4, 2f9.4)
