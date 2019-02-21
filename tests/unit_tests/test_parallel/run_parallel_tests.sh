@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 # mpi test
 echo 'MPI test'
 echo '--------'
