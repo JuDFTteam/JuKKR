@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # mpi test
 echo 'MPI test'
 echo '--------'
@@ -19,3 +21,4 @@ echo 'hybrid OpenMP/MPI test'
 echo '----------------------'
 mpiifort -qopenmp test_hybrid.f90
 mpirun -np 2 ./a.out | tee out_hybrid.txt
+
