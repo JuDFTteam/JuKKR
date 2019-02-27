@@ -1634,15 +1634,10 @@ contains
     ! Usage of Lloyd's formula
     lly = 0                        ! LLY Default=0 : do not apply Lloyds
     ! formula
-    if (use_lloyd) lly = 1
-    call ioinput('<LLOYD>         ', uio, 1, 7, ier)
-    if (ier==0) then
-      read (unit=uio, fmt=*) lly
-      write (111, *) '<LLOYD>=', lly
-    else
-      write (111, *) 'Default <LLOYD>=', lly
+    if (use_lloyd) then
+        lly = 1
+        write (1337, *) 'Applying Lloyds formula, LLY=', lly
     end if
-    if (lly/=0) write (1337, *) 'Applying Lloyds formula, LLY=', lly
 
     deltae = (1.d-5, 0.d0)         ! Difference for numer. derivative in
     ! Lloyds formula
