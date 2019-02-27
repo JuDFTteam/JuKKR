@@ -46,7 +46,7 @@ contains
     ! mit
     ! den kleinen Werten doch so seine Konvergenzprobleme.
 
-    parameter (tiny=(1.0d-20,1.0d-20))
+    parameter (tiny=(1.0e-20_dp,1.0e-20_dp))
 
     ! Dummy arguments
     real (kind=dp) :: eps, htry, x
@@ -75,12 +75,12 @@ contains
 
       call dirbsrze(i, xest, yseq, y, yerr, nv, nuse)
 
-      errmax = 0.0d0
+      errmax = 0.0_dp
       do j = 1, nv
-        errmax = dble(max(errmax,abs(yerr(j)/(yscal(j)+tiny))))
+        errmax = real(max(errmax,abs(yerr(j)/(yscal(j)+tiny))), kind=dp)
       end do
       errmax = errmax/eps
-      if (errmax<1.0d0) then
+      if (errmax<1.0_dp) then
         x = x + h
 
         call dirbsrad(x, y, dydx, drdi, b, v, r, nmesh)
@@ -90,7 +90,7 @@ contains
       end if
     end do
 
-    if (errmax<1000d0) then
+    if (errmax<1000.0_dp) then
       x = x + h
       call dirbsrad(x, y, dydx, drdi, b, v, r, nmesh)
       if (t_inc%i_write>0) then

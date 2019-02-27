@@ -47,7 +47,7 @@ contains
     if (calc_complex_bandstructure) ii = 6
     if (print_kpoints .and. (t_inc%i_write>0)) write (1337, fmt='(6f12.6)')(bzkp(i), i=1, ii)
 
-    tpi = 8.0d0*atan(1.0d0)
+    tpi = 8.0_dp*atan(1.0_dp)
     convpu = alat/tpi
 
     call cinit(lmgf0d*naezd*lmgf0d, gllke)

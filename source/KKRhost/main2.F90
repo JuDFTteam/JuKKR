@@ -82,7 +82,7 @@ contains
 
     implicit none
 
-    real (kind=dp), parameter :: eps = 1.0d-12
+    real (kind=dp), parameter :: eps = 1.0e-12_dp
 
     integer :: iobroy
     parameter (iobroy=20)
@@ -260,7 +260,7 @@ contains
     ! -------------------------------------------------------------------------
     ! Setting up constants
     ! -------------------------------------------------------------------------
-    fpi = 4.0d0*pi
+    fpi = 4.0_dp*pi
     rfpi = sqrt(fpi)
     rmsav0 = 1.0d10
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -318,7 +318,7 @@ contains
     ! Determine new Fermi level due to valence charge up to old Fermi level
     ! EMAX and density of states DENEF
     ! -------------------------------------------------------------------------
-    if (itscf>1 .and. chrgnt*chrgold<0.0_dp .and. abs(chrgnt)>5.d-2) then
+    if (itscf>1 .and. chrgnt*chrgold<0.0_dp .and. abs(chrgnt)>5.0e-2_dp) then
       e2shift = chrgnt/(chrgnt-chrgold)*(emax-efold)
     else
       e2shift = chrgnt/denef
@@ -337,12 +337,12 @@ contains
     end if
     if (ishift==0) emax = emax - e2shift
     ! -------------------------------------------------------------------------
-    fsemicore = 0d0
+    fsemicore = 0.0_dp
     if (idosemicore==1) then
       ! ----------------------------------------------------------------------
       ! Semicore treatment, recalculate the normalisation factor
       ! ----------------------------------------------------------------------
-      if (chrgsemicore<1d-10) chrgsemicore = 1d-10
+      if (chrgsemicore<1.0e-10_dp) chrgsemicore = 1.0e-10_dp
       ! Number of semicore bands
       i1 = nint(chrgsemicore)
       fsemicore = real(i1, kind=dp)/chrgsemicore*fsold
@@ -359,7 +359,7 @@ contains
     write (6, fmt=120) emax, denef/real(naez, kind=dp)
     write (1337, '(79("+"),/)')
     ! -------------------------------------------------------------------------
-    df = 2.0d0/pi*e2shift/real(nspin, kind=dp)
+    df = 2.0_dp/pi*e2shift/real(nspin, kind=dp)
     ! -------------------------------------------------------------------------
     ! ISPIN LOOP
     ! -------------------------------------------------------------------------
@@ -401,7 +401,7 @@ contains
       nk = 2*lmax + 1
       nmvec = 2
 
-      fact(0) = 1.0d0
+      fact(0) = 1.0_dp
       do i = 1, 100
         fact(i) = fact(i-1)*real(i, kind=dp)
       end do
@@ -502,7 +502,7 @@ contains
       do ih = 1, naez
         write (37, *) ih
         do lm = 1, lmpot
-          c00(lm) = 0.0d0
+          c00(lm) = 0.0_dp
           ! ----------------------------------------------------------------
           ! Store the charge on SITE IH
           ! ----------------------------------------------------------------
@@ -724,7 +724,7 @@ contains
             bvmad = t_madel%bvmad(irec,:)
           end if
           do lm = 1, lmpot
-            if (abs(bvmad(lm))>1d-10) lpotsymm(i1, lm) = .true.
+            if (abs(bvmad(lm))>1.0e-10_dp) lpotsymm(i1, lm) = .true.
           end do
         end do
         do lm = 1, lmpot
@@ -734,7 +734,7 @@ contains
             do ispin = 1, nspin
               ipot = nspin*(i1-1) + ispin
               do ir = 1, irmd
-                vons(ir, lm, ipot) = 0.0d0
+                vons(ir, lm, ipot) = 0.0_dp
               end do
             end do
           end if
@@ -771,7 +771,7 @@ contains
     mix = mixing
     if (special_straight_mixing==1) mix = mixing/real(1+mod(itscf,2), kind=dp)
     if (special_straight_mixing==2) then
-      mix = mixing/(1.0d0+1.0d+3*abs(chrgnt)/real(naez*nspin,kind=dp))
+      mix = mixing/(1.0_dp+1.0e+3_dp*abs(chrgnt)/real(naez*nspin,kind=dp))
     end if
     write (1337, *) 'MIXSTR', mix
     call mixstr(rmsavq, rmsavm, ins, lpot, lmpot, 0, nshell, 1, natyp, conc, nspin, &
@@ -782,7 +782,7 @@ contains
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     ! -------------------------------------------------------------------------
-    if (itscf/=1) rmsav0 = 1.0d2*max(rmsavq, rmsavm)
+    if (itscf/=1) rmsav0 = 1.0e2_dp*max(rmsavq, rmsavm)
 
     write (1337, fmt=140) mix
     write (1337, '(79("="),/)')
@@ -813,14 +813,14 @@ contains
             do j = irmin1, irc1
               vins(j, lm, i) = vons(j, lm, i)
             end do
-            sum = 0.0d0
+            sum = 0.0_dp
             do ir = irmin1, irc1
               rv = vins(ir, lm, i)*rmesh(ir, it)
               sum = sum + rv*rv*drdi(ir, it)
             end do
             if (sqrt(sum)<qbound) then
               do j = irmin1, irc1
-                vins(j, lm, i) = 0.0d0
+                vins(j, lm, i) = 0.0_dp
               end do
             end if
           end do
@@ -861,7 +861,7 @@ contains
     ! -------------------------------------------------------------------------
     ! CONVERGENCY TESTS
     ! -------------------------------------------------------------------------
-    if (search_Efermi .and. (abs(e2shift)<1d-8)) then
+    if (search_Efermi .and. (abs(e2shift)<1.0e-8_dp)) then
       t_inc%i_iteration = t_inc%n_iteration
       icont = 0
       go to 100

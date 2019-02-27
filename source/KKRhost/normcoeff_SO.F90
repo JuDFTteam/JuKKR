@@ -56,7 +56,7 @@ contains
     use :: mod_datatypes, only: dp
     use :: global_variables
     use :: mod_calc_rho_ll_ss
-    use :: mod_constants, only: pi, czero
+    use :: mod_constants, only: czero
 
     implicit none
 
@@ -231,7 +231,7 @@ contains
                   do lm1 = 1, lmmax
                     do lm2 = 1, lmmax
                       rhod((i1sp2-1)*lmmax+lm2, (i1sp1-1)*lmmax+lm1, i1, isigma) =  &
-                        -(0d0, 1d0)*(dens(lm2,lm1,2,i1sp2,1,i1sp1,i1)               &
+                        -(0.0_dp, 1.0_dp)*(dens(lm2,lm1,2,i1sp2,1,i1sp1,i1)               &
                         -dens(lm2,lm1,1,i1sp2,2,i1sp1,i1))
                     end do
                   end do

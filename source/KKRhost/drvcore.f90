@@ -220,7 +220,6 @@ contains
     integer :: kapcore(20*2), lcore(*), nkcore(*)
 
     ! Local variables
-    real (kind=dp) :: dble
     integer :: i, ic, icrel, jrel, kfg(4), l, lmp1, lmxc, lp1, muem05, nc, nmax, nn, nsol, wgt(2)
     real (kind=dp) :: mj
     intrinsic :: abs
@@ -288,7 +287,7 @@ contains
         kapcore(nc+20) = l
 
         do i = 1, nkcore(nc)
-          ecorerel((i-1)*20+nc) = ecorerel((i-1)*20+nc)/dble(wgt(i))
+          ecorerel((i-1)*20+nc) = ecorerel((i-1)*20+nc)/real(wgt(i), kind=dp)
         end do
 
         ! --> update the array ECORE(1..NCORE,UP/DOWN) as
@@ -307,7 +306,7 @@ contains
           ecore(nc, 2) = ecore(nc, 2) + ecortab(icrel+2*l+1+i)
         end do
         do i = 1, 2
-          ecore(nc, i) = ecore(nc, i)/dble(2*l+1)
+          ecore(nc, i) = ecore(nc, i)/real(2*l+1, kind=dp)
         end do
       end do
     end do

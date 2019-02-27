@@ -14,8 +14,6 @@
 !------------------------------------------------------------------------------------
 module mod_mympi
 
-  use :: mod_datatypes, only: dp
-
   implicit none
 
   private
@@ -185,6 +183,7 @@ contains
     myrank_atcomm,nranks_atcomm)
 
     use :: mpi
+    use :: mod_datatypes, only: dp
     implicit none
 
     integer, intent (in) :: master, nranks, myrank, ne, nat, nkmesh
@@ -496,6 +495,7 @@ contains
     denmatc,denef,denefat,rhoorb,muorb,mvevi,mvevil,mvevief,mympi_comm)
 
     use :: mpi
+    use :: mod_datatypes, only: dp
     implicit none
 
     integer, intent (in) :: krel !! Switch for non- (or scalar-) relativistic/relativistic (Dirac) program (0/1). Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
@@ -540,7 +540,7 @@ contains
 
     allocate (work4(irmd,lmpotd,natypd,2), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
-    work4 = 0.d0
+    work4 = 0.0_dp
     idim = irmd*lmpotd*natypd*2
     call mpi_allreduce(rho2ns, work4, idim, mpi_double_precision, mpi_sum, mympi_comm, ierr)
     call dcopy(idim, work4, 1, rho2ns, 1)
@@ -548,7 +548,7 @@ contains
 
     allocate (work4(irmd,lmpotd,natypd,2), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
-    work4 = 0.d0
+    work4 = 0.0_dp
     idim = irmd*lmpotd*natypd*2
     call mpi_allreduce(r2nef, work4, idim, mpi_double_precision, mpi_sum, mympi_comm, ierr)
     call dcopy(idim, work4, 1, r2nef, 1)
@@ -557,7 +557,7 @@ contains
     ! ESPV needs integration over atoms and energies -> MPI_COMM_WORLD
     allocate (work2(0:lmaxd+1,npotd), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
-    work2 = 0.d0
+    work2 = 0.0_dp
     idim = (lmaxd+2)*npotd
     call mpi_allreduce(espv, work2, idim, mpi_double_precision, mpi_sum, mympi_comm, ierr)
     call dcopy(idim, work2, 1, espv, 1)
@@ -565,7 +565,7 @@ contains
 
     allocate (work4c(0:lmaxd+1,ielast,npotd,nqdos), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
-    work4c = (0.d0, 0.d0)
+    work4c = (0.0_dp, 0.0_dp)
     idim = ielast*(lmaxd+2)*npotd*nqdos
     call mpi_allreduce(den, work4c, idim, mpi_double_complex, mpi_sum, mympi_comm, ierr)
     call zcopy(idim, work4c, 1, den, 1)
@@ -573,7 +573,7 @@ contains
 
     allocate (work4c(ielast,lmmaxd,nqdos,npotd), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
-    work4c = (0.d0, 0.d0)
+    work4c = (0.0_dp, 0.0_dp)
     idim = ielast*(lmmaxd)*npotd*nqdos
     call mpi_allreduce(denlm, work4c, idim, mpi_double_complex, mpi_sum, mympi_comm, ierr)
     call zcopy(idim, work4c, 1, denlm, 1)
@@ -582,7 +582,7 @@ contains
     if (idoldau==1) then
       allocate (work3c(mmaxd,mmaxd,npotd), stat=ierr)
       if (ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
-      work3c = (0.d0, 0.d0)
+      work3c = (0.0_dp, 0.0_dp)
       idim = mmaxd*mmaxd*npotd
       call mpi_allreduce(denmatc, work3c, idim, mpi_double_complex, mpi_sum, mympi_comm, ierr)
       call zcopy(idim, work3c, 1, denmatc, 1)
@@ -591,7 +591,7 @@ contains
 
     allocate (work1(1), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
-    work1 = 0.d0
+    work1 = 0.0_dp
     idim = 1
     call mpi_allreduce(denef, work1, idim, mpi_double_precision, mpi_sum, mympi_comm, ierr)
     call dcopy(idim, work1, 1, denef, 1)
@@ -599,7 +599,7 @@ contains
 
     allocate (work1(natyp), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
-    work1 = 0.d0
+    work1 = 0.0_dp
     idim = natyp
     call mpi_allreduce(denefat, work1, idim, mpi_double_precision, mpi_sum, mympi_comm, ierr)
     call dcopy(idim, work1, 1, denefat, 1)
@@ -608,7 +608,7 @@ contains
     if (krel==1) then
       allocate (work2(irmd,natypd), stat=ierr)
       if (ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
-      work2 = 0.d0
+      work2 = 0.0_dp
       idim = irmd*natypd
       call mpi_allreduce(rhoorb, work2, idim, mpi_double_precision, mpi_sum, mympi_comm, ierr)
       call dcopy(idim, work2, 1, rhoorb, 1)
@@ -616,7 +616,7 @@ contains
 
       allocate (work3(0:lmaxd+2,natypd,3), stat=ierr)
       if (ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
-      work3 = 0.d0
+      work3 = 0.0_dp
       idim = (lmaxd+3)*natypd*3
       call mpi_allreduce(muorb, work3, idim, mpi_double_precision, mpi_sum, mympi_comm, ierr)
       call dcopy(idim, work3, 1, muorb, 1)
@@ -625,7 +625,7 @@ contains
       if (lmomvec) then
         allocate (work3c(natypd,3,nmvecmax), stat=ierr)
         if (ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
-        work3c = (0.d0, 0.d0)
+        work3c = (0.0_dp, 0.0_dp)
         idim = natypd*3*nmvecmax
         call mpi_allreduce(mvevi, work3c, idim, mpi_double_complex, mpi_sum, mympi_comm, ierr)
         call zcopy(idim, work3c, 1, mvevi, 1)
@@ -633,7 +633,7 @@ contains
 
         allocate (work4c(lmaxd+1,natypd,3,nmvecmax), stat=ierr)
         if (ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
-        work4c = (0.d0, 0.d0)
+        work4c = (0.0_dp, 0.0_dp)
         idim = (lmaxd+1)*natypd*3*nmvecmax
         call mpi_allreduce(mvevil, work4c, idim, mpi_double_complex, mpi_sum, mympi_comm, ierr)
         call zcopy(idim, work4c, 1, mvevil, 1)
@@ -641,7 +641,7 @@ contains
 
         allocate (work3c(natypd,3,nmvecmax), stat=ierr)
         if (ierr/=0) stop '[mympi_main1c_comm] error allocating work array'
-        work3c = (0.d0, 0.d0)
+        work3c = (0.0_dp, 0.0_dp)
         idim = natypd*3*nmvecmax
         call mpi_allreduce(mvevief, work3c, idim, mpi_double_complex, mpi_sum, mympi_comm, ierr)
         call zcopy(idim, work3c, 1, mvevief, 1)
@@ -664,6 +664,7 @@ contains
     denorbmomsp, denorbmomlm, denorbmomns, mympi_comm)
 
     use :: mpi
+    use :: mod_datatypes, only: dp
     implicit none
     ! .. Input variables
     integer, intent (in) :: nqdos
@@ -701,7 +702,7 @@ contains
     idim = irmdnew*lmpotd*nspin*(1+korbit)
     allocate (workc(irmdnew,lmpotd,nspin*(1+korbit),1), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, r2nefc'
-    workc = (0.d0, 0.d0)
+    workc = (0.0_dp, 0.0_dp)
     call mpi_reduce(r2nefc, workc(:,:,:,1), idim, mpi_double_complex, mpi_sum, master, mympi_comm, ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for r2nefc'
     call zcopy(idim, workc, 1, r2nefc, 1)
@@ -710,7 +711,7 @@ contains
     idim = irmdnew*lmpotd*nspin*(1+korbit)
     allocate (workc(irmdnew,lmpotd,nspin*(1+korbit),1), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, rho2nsc'
-    workc = (0.d0, 0.d0)
+    workc = (0.0_dp, 0.0_dp)
     call mpi_reduce(rho2nsc, workc, idim, mpi_double_complex, mpi_sum, master, mympi_comm, ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for rho2nsc'
     call zcopy(idim, workc, 1, rho2nsc, 1)
@@ -719,7 +720,7 @@ contains
     idim = (lmaxd1+1)*ielast*nspin*nqdos
     allocate (workc(0:lmaxd1,ielast,nspin,nqdos), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, den'
-    workc = (0.d0, 0.d0)
+    workc = (0.0_dp, 0.0_dp)
     call mpi_reduce(den, workc, idim, mpi_double_complex, mpi_sum, master, mympi_comm, ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for den'
     call zcopy(idim, workc, 1, den, 1)
@@ -728,7 +729,7 @@ contains
     idim = lmmaxd*ielast*nspin*nqdos
     allocate (workc(lmmaxd,ielast,nspin,nqdos), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, denlm'
-    workc = (0.d0, 0.d0)
+    workc = (0.0_dp, 0.0_dp)
     call mpi_reduce(denlm, workc, idim, mpi_double_complex, mpi_sum, master, mympi_comm, ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for denlm'
     call zcopy(idim, workc, 1, denlm, 1)
@@ -737,7 +738,7 @@ contains
     idim = nspin*(1+korbit)
     allocate (workc(nspin*(1+korbit),1,1,1), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, rho2int'
-    workc = (0.d0, 0.d0)
+    workc = (0.0_dp, 0.0_dp)
     call mpi_reduce(rho2int, workc(:,1,1,1), idim, mpi_double_complex, mpi_sum, master, mympi_comm, ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for rho2int'
     call zcopy(idim, workc, 1, rho2int, 1)
@@ -746,7 +747,7 @@ contains
     idim = lmmaxso*lmmaxso*ielast*nqdos
     allocate (workc(lmmaxso,lmmaxso,ielast,nqdos), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, gflle'
-    workc = (0.d0, 0.d0)
+    workc = (0.0_dp, 0.0_dp)
     call mpi_reduce(gflle, workc(:,:,:,:), idim, mpi_double_complex, mpi_sum, master, mympi_comm, ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for gflle'
     call zcopy(idim, workc, 1, gflle, 1)
@@ -755,7 +756,7 @@ contains
     ! real (kind=dp) arrays
     idim = (lmaxd1+1)*2
     allocate (work(0:lmaxd1,2,1,1))
-    work = 0.d0
+    work = 0.0_dp
     call mpi_reduce(espv, work, idim, mpi_double_precision, mpi_sum, master, mympi_comm, ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for espv'
     call dcopy(idim, work, 1, espv, 1)
@@ -763,7 +764,7 @@ contains
 
     idim = (lmaxd1+2)*3
     allocate (work(0:lmaxd1+1,3,1,1))
-    work = 0.d0
+    work = 0.0_dp
     call mpi_reduce(muorb, work, idim, mpi_double_precision, mpi_sum, master, mympi_comm, ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for muorb'
     call dcopy(idim, work, 1, muorb, 1)
@@ -771,7 +772,7 @@ contains
 
     idim = 3
     allocate (work(3,1,1,1))
-    work = 0.d0
+    work = 0.0_dp
     call mpi_reduce(denorbmom, work, idim, mpi_double_precision, mpi_sum, master, mympi_comm, ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for denobrmom'
     call dcopy(idim, work, 1, denorbmom, 1)
@@ -779,7 +780,7 @@ contains
 
     idim = 2*3
     allocate (work(2,3,1,1))
-    work = 0.d0
+    work = 0.0_dp
     call mpi_reduce(denorbmomsp, work, idim, mpi_double_precision, mpi_sum, master, mympi_comm, ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for denorbmomsp'
     call dcopy(idim, work, 1, denorbmomsp, 1)
@@ -787,7 +788,7 @@ contains
 
     idim = 3
     allocate (work(3,1,1,1))
-    work = 0.d0
+    work = 0.0_dp
     call mpi_reduce(denorbmomns, work, idim, mpi_double_precision, mpi_sum, master, mympi_comm, ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for denorbmomns'
     call dcopy(idim, work, 1, denorbmomns, 1)
@@ -795,7 +796,7 @@ contains
 
     idim = (lmaxd+1)*3
     allocate (work(0:lmaxd1,3,1,1))
-    work = 0.d0
+    work = 0.0_dp
     call mpi_reduce(denorbmomlm, work, idim, mpi_double_precision, mpi_sum, master, mympi_comm, ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error in MPI_REDUCE for denorbmomlm'
     call dcopy(idim, work, 1, denorbmomlm, 1)
@@ -817,8 +818,8 @@ contains
     angles_new,mympi_comm)
 
     use :: mpi
+    use :: mod_datatypes, only: dp
     implicit none
-
 
     integer, intent (in) :: irmd    !! Maximum number of radial points
     integer, intent (in) :: npotd   !! (2*(KREL+KORBIT)+(1-(KREL+KORBIT))*NSPIND)*NATYP)
@@ -850,7 +851,7 @@ contains
     ! complex (kind=dp) arrays
     idim = (1+lmaxd1)*ielast*nqdos*npotd
     allocate (workc(0:lmaxd1,ielast,nqdos,npotd))
-    workc = (0.d0, 0.d0)
+    workc = (0.0_dp, 0.0_dp)
     call mpi_reduce(den, workc(:,:,:,:), idim, mpi_double_complex, mpi_sum, master, mympi_comm, ierr)
     ! CALL MPI_ALLREDUCE(den,workc(:,:,:,:),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for den'
@@ -859,7 +860,7 @@ contains
 
     idim = lmmaxd*ielast*nqdos*npotd
     allocate (workc(lmmaxd,ielast,nqdos,npotd))
-    workc = (0.d0, 0.d0)
+    workc = (0.0_dp, 0.0_dp)
     call mpi_reduce(denlm, workc(:,:,:,:), idim, mpi_double_complex, mpi_sum, master, mympi_comm, ierr)
     ! CALL MPI_ALLREDUCE(denlm,workc(:,:,:,:),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for denlm'
@@ -868,7 +869,7 @@ contains
 
     idim = mmaxd*mmaxd*npotd
     allocate (workc1(mmaxd,mmaxd,2,2,natypd))
-    workc1 = (0.d0, 0.d0)
+    workc1 = (0.0_dp, 0.0_dp)
     call mpi_reduce(denmatn, workc1(:,:,:,:,:), idim, mpi_double_complex, mpi_sum, master, mympi_comm, ierr)
     ! CALL MPI_ALLREDUCE(denmatn,workc1(:,:,:,:,:),IDIM,MPI_DOUBLE_COMPLEX,MPI_SUM,mympi_comm,IERR)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for denmatn'
@@ -878,7 +879,7 @@ contains
     ! real (kind=dp) arrays
     idim = (lmaxd1+2)*3*natypd
     allocate (work(0:lmaxd1+1,3,natypd,1))
-    work = 0.d0
+    work = 0.0_dp
     call mpi_reduce(muorb, work(:,:,:,1), idim, mpi_double_precision, mpi_sum, master, mympi_comm, ierr)
     ! CALL MPI_ALLREDUCE(muorb,work(:,:,:,1),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for muorb'
@@ -887,7 +888,7 @@ contains
 
     idim = (lmaxd1+1)*npotd
     allocate (work(0:lmaxd1,npotd,1,1))
-    work = 0.d0
+    work = 0.0_dp
     call mpi_reduce(espv, work(:,:,1,1), idim, mpi_double_precision, mpi_sum, master, mympi_comm, ierr)
     ! CALL MPI_ALLREDUCE(ESPV,work(:,:,1,1),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for espv'
@@ -896,7 +897,7 @@ contains
 
     idim = irmd*lmpotd*natypd*2
     allocate (work(irmd,lmpotd,natypd,2))
-    work = 0.d0
+    work = 0.0_dp
     call mpi_reduce(r2nef, work(:,:,:,:), idim, mpi_double_precision, mpi_sum, master, mympi_comm, ierr)
     ! CALL MPI_ALLREDUCE(r2nef,work(:,:,:,:),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for r2nef'
@@ -905,7 +906,7 @@ contains
 
     idim = irmd*lmpotd*natypd*2
     allocate (work(irmd,lmpotd,natypd,2))
-    work = 0.d0
+    work = 0.0_dp
     call mpi_reduce(rho2ns, work(:,:,:,:), idim, mpi_double_precision, mpi_sum, master, mympi_comm, ierr)
     ! CALL MPI_ALLREDUCE(RHO2NS,work(:,:,:,:),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for rho2ns'
@@ -914,7 +915,7 @@ contains
 
     idim = natypd
     allocate (work(natypd,1,1,1))
-    work = 0.d0
+    work = 0.0_dp
     call mpi_reduce(denefat, work(:,1,1,1), idim, mpi_double_precision, mpi_sum, master, mympi_comm, ierr)
     ! CALL MPI_ALLREDUCE(denefat,work(:,1,1,1),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for denefat'
@@ -923,7 +924,7 @@ contains
 
     idim = 1
     allocate (work(1,1,1,1))
-    work = 0.d0
+    work = 0.0_dp
     call mpi_reduce(denef, work(:,1,1,1), idim, mpi_double_precision, mpi_sum, master, mympi_comm, ierr)
     ! CALL MPI_ALLREDUCE(denef,work(:,1,1,1),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for denef'
@@ -932,7 +933,7 @@ contains
 
     idim = 2*natypd
     allocate (work(2,natypd,1,1))
-    work = 0.d0
+    work = 0.0_dp
     call mpi_reduce(angles_new, work(:,:,1,1), idim, mpi_double_precision, mpi_sum, master, mympi_comm, ierr)
     ! CALL MPI_ALLREDUCE(angles_new,work(:,:,1,1),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for angles_new'
@@ -955,6 +956,7 @@ contains
     load_imbalance,nkmesh,kmesh_ie)
 
     use :: mpi
+    use :: mod_datatypes, only: dp
 
     implicit none
 
@@ -1000,9 +1002,9 @@ contains
     if (ierr/=0) stop '[check_communication_pattern] Error allocating t_average'
 
     do ie = 1, ne
-      t_average(ie) = 0.0d0
+      t_average(ie) = 0.0_dp
       do iat = 1, nat
-        t_average(ie) = t_average(ie) + timings_1a(ie, iat)/dfloat(nat)
+        t_average(ie) = t_average(ie) + timings_1a(ie, iat)/real(nat, kind=dp)
       end do
       ! if(myrank==master) write(1337,'(A,i9,2ES23.16)') '[check_communication_pattern]: ie, time for 1a and 1b', ie, timings_1b(ie),t_average(ie)
       ! if(myrank==master .and. t_inc%i_write) write(1337,'(A,i9,2ES23.16)') '[check_communication_pattern]: ie, time for 1a and 1b', ie, timings_1b(ie),t_average(ie)
@@ -1022,7 +1024,7 @@ contains
     load_imbalance(:) = 0
     do ie = 1, ne
       ik = kmesh_ie(ie)            ! multiply with large number to have nice distiguishable integers
-      load_imbalance(ik) = load_imbalance(ik) + (int(10000.0d0*((t_average(ie)+timings_1b(ie))/t_average(ie))))/kmesh_n(ik)
+      load_imbalance(ik) = load_imbalance(ik) + (int(10000.0_dp*((t_average(ie)+timings_1b(ie))/t_average(ie))))/kmesh_n(ik)
     end do
     if (myrank==master) write (*, *) 'load_imbalance', load_imbalance
     ! if(myrank==master .and. t_inc%i_write) write(1337,'(A,i9,1000I9)') '[check_communication_pattern] load imbalance:', load_imbalance

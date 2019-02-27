@@ -44,7 +44,7 @@ contains
     ! ..
     ! .. Scalar arguments ..
     logical, intent(in) :: lsurf  !! If True a matching with semi-inifinite surfaces must be performed
-    integer, intent(in) :: nrd    !! Number of real space vectors
+    integer, intent(inout) :: nrd !! Number of real space vectors, modified in rrgen
     integer, intent(in) :: naez   !! Number of atoms in unit cell
     integer, intent(in) :: natyp  !! Number of kinds of atoms in unit cell
     integer, intent(in) :: natypd !! Auxiliary number of kinds of atoms in the unit cell
@@ -57,8 +57,8 @@ contains
     ! RECBV(3,3)  : Reciprocal lattice vectors in 2*PI/ALAT
     real (kind=dp), dimension(natypd), intent(in) :: conc !! Concentration of a given atom
     real (kind=dp), dimension(natypd), intent(in) :: rws !! Wigner Seitz radius
-    real (kind=dp), dimension(3,0:nrd), intent(in):: rr !! Set of real space vectors (in a.u.)
-    real (kind=dp), dimension(3,3), intent(in) :: bravais !! Bravais lattice vectors
+    real (kind=dp), dimension(3,0:nrd), intent(inout):: rr !! Set of real space vectors (in a.u.), modified in rrgen
+    real (kind=dp), dimension(3,3), intent(inout) :: bravais !! Bravais lattice vectors, modified in idreals
     real (kind=dp), dimension(3,3), intent(out) :: recbv !! Reciprocal basis vectors
     ! ..
     ! .. Local Scalars ..

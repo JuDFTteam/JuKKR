@@ -86,7 +86,6 @@ contains
     integer :: nacls1
     integer :: lmaxd1
     integer :: lrectmt
-    integer :: lmmaxd1
     integer :: itmpdir
     integer :: nspinpot
 
@@ -188,7 +187,6 @@ contains
 
     ! .. Calculate parameters
     lmaxd1 = lmax + 1
-    lmmaxd1 = lmmaxd + 1
     lrectmt = wlength*4*lmmaxd*lmmaxd
 
     ! -------------------------------------------------------------------------
@@ -266,7 +264,7 @@ contains
         qdosopt = 'y'          
       end if
       open (67, form='formatted', file='parameters.gflle')
-      df(:) = wez(:)/dble(nspin)
+      df(:) = wez(:)/real(nspin, kind=dp)
       write (67, *) ielast, iemxd, natyp, nspin, lmax, qdosopt, df(1:ielast), ez(1:ielast), korbit
       close (67)
     end if ! calc_gmat_lm_full
@@ -481,7 +479,7 @@ contains
               ifunm1(1,icell), lmsp1(1,icell), rho2n1(1,1,ispin), rho2n2(1,1,ispin), rhoorb(1,i1), den(0,1,1,ipot), denlm(1,1,1,ipot), &
               muorb(0,1,i1), espv(0,ipot1), cleb, loflm, icleb, iend, jend, solver, socscl(1,krel*i1+(1-krel)), cscl(1,krel*i1+(1-krel)), &
               vtrel(1,i1), btrel(1,i1), rmrel(1,i1), drdirel(1,i1), r2drdirel(1,i1), zrel(i1), jwsrel(i1), irshift(i1), lmomvec, &
-              qmtet(iq), qmphi(iq), mvevil1, mvevil2, nmvecmax, idoldau, lopt(i1), phildau(1,i1), wldau(1,1,1,i1), denmatc(1,1,ipot), &
+              mvevil1, mvevil2, nmvecmax, idoldau, lopt(i1), phildau(1,i1), wldau(1,1,1,i1), denmatc(1,1,ipot), &
               natyp, nqdos, lmax)
 #ifdef CPP_TIMING
             call timing_pause('main1c - rhoval')
@@ -536,8 +534,8 @@ contains
         r2nef(1:irmd, 1:lmpotd, i1, 1:2) = rho2n2(1:irmd, 1:lmpotd, 1:2)
         do ispin=1, nspin
           do l = 0, lmaxd1
-            denef = denef - 2.0_dp*conc(i1)*aimag(den(l,ielast,1,ipot1+ispin-1))/pi/dble(nspinpot)
-            denefat(i1) = denefat(i1) - 2.0_dp*aimag(den(l,ielast,1,ipot1+ispin-1))/pi/dble(nspinpot)
+            denef = denef - 2.0_dp*conc(i1)*aimag(den(l,ielast,1,ipot1+ispin-1))/pi/real(nspinpot, kind=dp)
+            denefat(i1) = denefat(i1) - 2.0_dp*aimag(den(l,ielast,1,ipot1+ispin-1))/pi/real(nspinpot, kind=dp)
           end do
         end do ! ispin
 
@@ -764,7 +762,7 @@ contains
             charge(l, i1, ispin) = 0.0_dp
 
             do ie = 1, ielast
-              charge(l, i1, ispin) = charge(l, i1, ispin) + aimag(wez(ie)*den(l,ie,1,ipot))/dble(nspinpot)
+              charge(l, i1, ispin) = charge(l, i1, ispin) + aimag(wez(ie)*den(l,ie,1,ipot))/real(nspinpot, kind=dp)
               if (ie==iesemicore) then
                 chrgsemicore = chrgsemicore + conc(i1)*charge(l, i1, ispin)
               end if

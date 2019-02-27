@@ -25,10 +25,9 @@ contains
     use :: mod_types, only: t_inc
     use :: mod_datatypes, only: dp
     use :: mod_gradr, only: gradr
-    use :: mod_constants, only: pi
     implicit none
     ! .. Parameters ..
-    real (kind=dp), parameter :: zero=0.d0, zero1=1.d-12, s4 = sqrt(4.0_dp*pi)
+    real (kind=dp), parameter :: zero=0.0_dp, zero1=1.0e-12_dp
     ! ..
     ! .. Scalar Arguments ..
     real (kind=dp) :: dx
@@ -39,7 +38,7 @@ contains
     integer :: ircut(0:ipand)
     ! ..
     ! .. Local Scalars ..
-    real (kind=dp) :: chgden, r2, spiden
+    real (kind=dp) :: chgden, spiden
     integer :: i1, ien, ip, ir, ist, llmax
     ! ..
     ! .. Local Arrays ..
@@ -70,7 +69,6 @@ contains
       if (nspin==1) go to 100
 
       do ir = 2, mesh
-        r2 = rv(ir)*rv(ir)
         chgden = rhol(ir, 1, i1) + rhol(ir, 2, i1)
         spiden = rhol(ir, 2, i1) - rhol(ir, 1, i1)
         if (abs(chgden)>=zero1) then
@@ -87,7 +85,6 @@ contains
 
 100   continue
       do ir = 2, mesh
-        r2 = rv(ir)*rv(ir)
         rl1(ir) = rhol(ir, 1, i1) + rhol(ir, 2, i1)
         ztal(ir) = zero
       end do

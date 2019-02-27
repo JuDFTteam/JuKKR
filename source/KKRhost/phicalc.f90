@@ -36,7 +36,7 @@ contains
     use :: mod_simpk
     use :: mod_constants, only: cvlight, czero
     implicit none
-    real (kind=dp), parameter :: eps = 1.0d-12
+    real (kind=dp), parameter :: eps = 1.0e-12_dp
     ! .. Input variables
     integer, intent(in) :: lphi  !! points at the correct potential, i.e., 1,3,5,.. for NSPIN=2.
     integer, intent(in) :: nsra

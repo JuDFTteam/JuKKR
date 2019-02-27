@@ -43,7 +43,7 @@ contains
   subroutine rhoval(ihost,ldorhoef,icst,ins,ielast,nsra,ispin,nspin,nspinpot,i1,ez, &
     wez,drdi,r,vins,visp,zat,ipan,ircut,irmin,thetas,ifunm,lmsp,rho2ns,r2nef,rhoorb,&
     den,denlm,muorb,espv,cleb,loflm,icleb,iend,jend,solver,soctl,ctl,vtrel,btrel,   &
-    rmrel,drdirel,r2drdirel,zrel,jwsrel,irshift,itermvdir,qmtet,qmphi,mvevil,       &
+    rmrel,drdirel,r2drdirel,zrel,jwsrel,irshift,itermvdir,mvevil,       &
     mvevilef,nmvecmax,idoldau,lopt,phildau,wldau,denmatc,natyp,nqdos,lmax)
 
 #ifdef CPP_MPI
@@ -129,8 +129,6 @@ contains
     ! ITERMDIR variables
     ! ----------------------------------------------------------------------------
     logical, intent (in) :: itermvdir
-    real (kind=dp), intent (in) :: qmtet !! \f$ \theta\f$ angle of the agnetization with respect to the z-axis
-    real (kind=dp), intent (in) :: qmphi !! \f$ \phi\f$ angle of the agnetization with respect to the z-axis
     complex (kind=dp), dimension (0:lmax, 3, nmvecmax), intent (out) :: mvevil ! OUTPUT
     complex (kind=dp), dimension (0:lmax, 3, nmvecmax), intent (out) :: mvevilef ! OUTPUT
     ! ----------------------------------------------------------------------------
@@ -151,12 +149,10 @@ contains
 #ifndef CPP_MPI
     complex (kind=dp) :: dentot    ! qdos
 #endif
-    integer :: idim, ie, ir, l, lm1, lm2, lmhi, lmlo, irec, ispinpot, lastez, m1, mmax
+    integer :: idim, ie, ir, l, lm1, lm2, lmhi, lmlo, irec, lastez, m1, mmax
     integer :: iq                  ! NQDOS ! qdos number of qdos points
     integer :: ix                  ! qdos
     integer :: lrecgflle           ! lmlm-dos
-    integer, dimension (4) :: lmshift1 ! lmlm-dos
-    integer, dimension (4) :: lmshift2 ! lmlm-dos
 
     ! .. Local Arrays
     real (kind=dp), dimension (0:lmax) :: s
@@ -203,14 +199,14 @@ contains
     ! LDAU
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     if (idoldau==1) then
-      wldauav = 0.d0
+      wldauav = 0.0_dp
       lmlo = lopt*lopt + 1
       lmhi = (lopt+1)*(lopt+1)
       mmax = lmhi - lmlo + 1
       do m1 = 1, mmax
         wldauav = wldauav + wldau(m1, m1, ispin)
       end do
-      wldauav = wldauav/dble(mmax)
+      wldauav = wldauav/real(mmax, kind=dp)
       ! -------------------------------------------------------------------------
       ! Note: Application if WLDAU makes the potential discontinuous.
       ! A cutoff can be used if necessary to make the potential continuous
@@ -282,15 +278,6 @@ contains
     end if                         ! qdos
 #endif
 
-    ! set LMSHIFT value which is need to construct dentmp
-    lmshift1(1) = 0
-    lmshift1(2) = lmmaxd
-    lmshift1(3) = 0
-    lmshift1(4) = lmmaxd
-    lmshift2(1) = 0
-    lmshift2(2) = lmmaxd
-    lmshift2(3) = lmmaxd
-    lmshift2(4) = 0
     nqdos = 1                      ! qdos
     if (use_qdos) then      ! qdos
       ! Read BZ path for qdos calculation:                                       ! qdos
@@ -300,9 +287,9 @@ contains
       call memocc(i_stat, product(shape(qvec))*kind(qvec), 'QVEC', 'RHOVAL') ! qdos
       do iq = 1, nqdos             ! qdos
         read (67, *) (rqvec(ix), ix=1, 3) ! qdos
-        qvec(1,iq) = cmplx(rqvec(1), 0.0_dp) 
-        qvec(2,iq) = cmplx(rqvec(2), 0.0_dp) 
-        qvec(3,iq) = cmplx(rqvec(3), 0.0_dp) 
+        qvec(1,iq) = cmplx(rqvec(1), 0.0_dp, kind=dp) 
+        qvec(2,iq) = cmplx(rqvec(2), 0.0_dp, kind=dp) 
+        qvec(3,iq) = cmplx(rqvec(3), 0.0_dp, kind=dp) 
       end do                       ! qdos
       close (67)                   ! qdos
     end if
@@ -337,7 +324,7 @@ contains
       ! !$omp& shared(tmatsph,den,denlm,gflle,gflle_part,rllleft,sllleft)
       ! !$omp& private(iq,df,ek,tmattemp,gmatll,gmat0,iorb,dentemp)
       ! !$omp& private(rho2ns_temp,dentot,dentmp,rho2,temp1)
-      ! !$omp& shared(ldorhoef,nqdos,lmshift1,lmshift2,wez,lmsp,imt1,ifunm)
+      ! !$omp& shared(ldorhoef,nqdos,wez,lmsp,imt1,ifunm)
       ! !$omp& shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)
       ! !$omp& reduction(+:rho2int,espv) reduction(-:muorb)
       ! !$omp& reduction(-:denorbmom,denorbmomsp,denorbmomlm,denorbmomns)
@@ -350,7 +337,7 @@ contains
         if (t_inc%i_write>0) write (1337, *) 'energy', ie, ez(ie)
 
         eryd = ez(ie)
-        df = wez(ie)/dble(nspinpot)
+        df = wez(ie)/real(nspinpot, kind=dp)
         ! -------------------------------------------------------------------------
         ! non/scalar-relativistic OR relativistic
         ! -------------------------------------------------------------------------
@@ -368,7 +355,7 @@ contains
           end if
 
           do l = 0, lmax
-            ekl(l) = ek*dble(2*l+1)
+            ekl(l) = ek*real(2*l+1, kind=dp)
           end do
 
           do iq = 1, nqdos         ! qdos
@@ -411,7 +398,7 @@ contains
 #ifndef CPP_MPI
             ! Write out qdos:
             if (use_qdos) then ! qdos
-              dentot = cmplx(0.d0, 0.d0, kind=dp) ! qdos
+              dentot = cmplx(0.0_dp, 0.0_dp, kind=dp) ! qdos
               do l = 0, lmaxd1     ! qdos
                 dentot = dentot + den(l, ie, iq) ! qdos
               end do               ! qdos
@@ -455,7 +442,7 @@ contains
           ! stop '[rhoval] ERROR array dimensions need to be checked!'
           call drvrho_qdos(ldorhoef,rho2ns,r2nef,den,dmuorb,rhoorb,ie,eryd,df,      &
             lastez,gmatll,vtrel,btrel,rmrel,drdirel,r2drdirel,zrel,jwsrel,irshift,  &
-            solver,soctl,ctl,qmtet,qmphi,itermvdir,mvevil,mvevilef,lmmaxd,lmax,irmd,&
+            solver,soctl,ctl,itermvdir,mvevil,mvevilef,lmmaxd,lmax,irmd,&
             lmpotd,ielast,nmvecmax,i1,nqdos) ! qdos
 
           do l = 0, lmaxd1

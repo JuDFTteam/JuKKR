@@ -73,9 +73,6 @@ contains
 
     integer :: i_start_key, i_check_eq, key_len, iline
 
-    character(len=*), parameter :: abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_<>'
-    integer, parameter :: nlen = len(abc)
-
     ierror = 0
 
     call read_inputcard(ifile)

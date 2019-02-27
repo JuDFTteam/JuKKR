@@ -141,7 +141,7 @@ contains
       if (npnt2>1) then
         de = de/(npnt2-1)
       else
-        de = cmplx(1.0d0, 0.0d0, kind=dp)
+        de = cmplx(1.0_dp, 0.0_dp, kind=dp)
       end if
       npnt = 0
       do i = 1, npnt2
@@ -160,7 +160,7 @@ contains
       ! ----------------------------------------------------------------------------
     else if (npol>0) then
       call gauleg(xi, wi, npnt1)
-      de = npol*cmplx(0.0d0, etk, kind=dp)
+      de = npol*cmplx(0.0_dp, etk, kind=dp)
       npnt = 0
       do i = 1, npnt1
         npnt = npnt + 1
@@ -172,14 +172,14 @@ contains
         df(npnt) = wi(i)*de
       end do                       ! I -> NPNT1
       call gauleg(xi, wi, npnt2)
-      de = (emu-30*kb*tk-ebot)*0.5d0
+      de = (emu-30*kb*tk-ebot)*0.5_dp
       do i = 1, npnt2
         npnt = npnt + 1
         if (npnt>iemxd) then
           write (6, '(/,5X,2A,I4)') 'Dimension ERROR: Increase IEMXD in the inputcard to ', 'at least ', npnt
           stop '     < EMESHT >'
         end if
-        ez(npnt) = xi(i)*de + de + ebot + 2*npol*cmplx(0.0d0, etk, kind=dp)
+        ez(npnt) = xi(i)*de + de + ebot + 2*npol*cmplx(0.0_dp, etk, kind=dp)
         df(npnt) = wi(i)*de
       end do                       ! I -> NPTN2
       call gaufd(xi, wi, npnt3)
@@ -190,7 +190,7 @@ contains
           write (6, '(/,5X,2A,I4)') 'Dimension ERROR: Increase IEMXD in the inputcard to ', 'at least ', npnt
           stop '     < EMESHT >'
         end if
-        ez(npnt) = xi(i)*de + emu + 2*npol*cmplx(0.0d0, etk, kind=dp)
+        ez(npnt) = xi(i)*de + emu + 2*npol*cmplx(0.0_dp, etk, kind=dp)
         df(npnt) = wi(i)*de
       end do                       ! I - >NPTN3
       do i = npol, 1, -1
@@ -199,8 +199,8 @@ contains
           write (6, '(/,5X,2A,I4)') 'Dimension ERROR: Increase IEMXD in the inputcard to ', 'at least ', npnt
           stop '     < EMESHT >'
         end if
-        ez(npnt) = emu + (2*i-1)*cmplx(0.0d0, etk, kind=dp)
-        df(npnt) = -2*cmplx(0.0d0, etk, kind=dp)
+        ez(npnt) = emu + (2*i-1)*cmplx(0.0_dp, etk, kind=dp)
+        df(npnt) = -2*cmplx(0.0_dp, etk, kind=dp)
       end do
       if (t_inc%i_write>0) write (1337, 110) npnt, npol, npnt1, npnt2, npnt3
       ! -------------------------------------------------------------------------
@@ -208,7 +208,7 @@ contains
       ! -------------------------------------------------------------------------
     else
       if (npnt1>0) call gauleg(xi, wi, npnt1)
-      de = -npol*cmplx(0.0d0, etk, kind=dp)
+      de = -npol*cmplx(0.0_dp, etk, kind=dp)
       npnt = 0
       do i = 1, npnt1
         if (npnt>iemxd) then
@@ -220,19 +220,19 @@ contains
         df(npnt) = wi(i)*de
       end do                       ! I -> NPNT1
       call gauleg(xi, wi, npnt2)
-      de = (emu-ebot)*0.5d0
+      de = (emu-ebot)*0.5_dp
       do i = 1, npnt2
         npnt = npnt + 1
         if (npnt>iemxd) then
           write (6, '(/,5X,2A,I4)') 'Dimension ERROR: Increase IEMXD in the inputcard to ', 'at least ', npnt
           stop '     < EMESHT >'
         end if
-        ez(npnt) = xi(i)*de + de + ebot - 2*npol*cmplx(0.0d0, etk, kind=dp)
-        if (calc_GF_Efermi) ez(npnt) = emu + npol*cmplx(0.0d0, etk, kind=dp)
+        ez(npnt) = xi(i)*de + de + ebot - 2*npol*cmplx(0.0_dp, etk, kind=dp)
+        if (calc_GF_Efermi) ez(npnt) = emu + npol*cmplx(0.0_dp, etk, kind=dp)
         df(npnt) = wi(i)*de
       end do                       ! I -> NPNT2
       if (npnt3>0) call gauleg(xi, wi, npnt3)
-      de = -npol*cmplx(0.0d0, etk, kind=dp)
+      de = -npol*cmplx(0.0_dp, etk, kind=dp)
       do i = npnt3, 1, -1
         npnt = npnt + 1
         if (npnt>iemxd) then

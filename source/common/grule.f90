@@ -42,7 +42,7 @@ contains
     integer :: i, it, k, m
     ! ..
     ! .. Intrinsic Functions ..
-    intrinsic :: cos, atan
+    intrinsic :: cos
 
     m = (n+1)/2
     e1 = n*(n+1)

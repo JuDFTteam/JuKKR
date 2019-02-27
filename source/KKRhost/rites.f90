@@ -81,7 +81,7 @@ contains
     character (len=124), dimension (*), intent (in) :: txc
     ! .. Local Scalars
     integer :: i, icore, ih, inew, ip, ir, irmin, irns1, is, isave, j, lm, lmnr, ncore1, nr
-    real (kind=dp) :: a1, b1, rmax, rmt1, rmtnw1, rv, sign, sum, z1
+    real (kind=dp) :: a1, b1, rmax, rmt1, rmtnw1, rv, tmpsum, z1
     ! .. Local Arrays
     integer, dimension (20) :: lcore1
     real (kind=dp), dimension (20) :: ecore1
@@ -101,11 +101,6 @@ contains
 
     do ih = 1, natyp
       do is = 1, nspin
-        if (is==nspin) then
-          sign = 1.0e0_dp
-        else
-          sign = -1.0e0_dp
-        end if
         ip = nspin*(ih-1) + is
 
         rmt1 = rmt(ih)
@@ -190,12 +185,12 @@ contains
           if (lpot>0) then
             lmnr = 1
             do lm = 2, lmpot
-              sum = 0.0e0_dp
+              tmpsum = 0.0e0_dp
               do ir = irmin, nr
                 rv = vins(ir, lm, ip)*ra(ir)
-                sum = sum + rv*rv*dradi(ir)
+                tmpsum = tmpsum + rv*rv*dradi(ir)
               end do               ! IR
-              if (sqrt(sum)>qbound) then
+              if (sqrt(tmpsum)>qbound) then
                 lmnr = lmnr + 1
                 write (ifile, fmt=180) lm
                 write (ifile, fmt=190)(vins(ir,lm,ip), ir=irmin, nr)

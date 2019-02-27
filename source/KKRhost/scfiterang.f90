@@ -35,7 +35,7 @@ contains
     integer :: ixtrmax
     parameter (ixtrmax=4)
     real (kind=dp) :: dangmax
-    parameter (dangmax=3d0)
+    parameter (dangmax=3.0_dp)
 
     ! Dummy arguments
 
@@ -47,13 +47,13 @@ contains
     ! Local variables
 
     real (kind=dp) :: a, b, c, phixtr, tetxtr, d12, d23, d3x
-    real (kind=dp) :: delphi, deltet, lasterr, mixing, qmgammix, qmphimix, qmtetmix, wn, wo
+    real (kind=dp) :: delphi, deltet, lasterr, mixing, qmphimix, qmtetmix, wn, wo
     integer :: i, imv, iprev, iprint, iq, it, itab, ixtr
     real (kind=dp) :: qmgamtab(nqmax, 3), qmphitab(nqmax, 3), qmtettab(nqmax, 3)
     complex (kind=dp) :: drotq(nkmmax, nkmmax, nqmax)
 
-    mixing = 1.0d0
-    wo = 1.0d0 - mixing
+    mixing = 1.0_dp
+    wo = 1.0_dp - mixing
     wn = mixing
     iprint = 0
     ! CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -83,9 +83,9 @@ contains
         qmtettab(iq, 1) = qmtet(iq)
         qmgamtab(iq, 1) = qmgam(iq)
         do i = 2, 3
-          qmphitab(iq, i) = 0d0
-          qmtettab(iq, i) = 0d0
-          qmgamtab(iq, i) = 0d0
+          qmphitab(iq, i) = 0.0_dp
+          qmtettab(iq, i) = 0.0_dp
+          qmgamtab(iq, i) = 0.0_dp
         end do
       end do
 
@@ -129,7 +129,7 @@ contains
         iprev = itab - 1
 
       else
-        if (lasterr>2d0) then
+        if (lasterr>2.0_dp) then
           ixtr = 2
         else
           ixtr = ixtrmax
@@ -139,38 +139,37 @@ contains
 
           qmphimix = wo*qmphitab(iq, 3) + wn*qmphi(iq)
           qmtetmix = wo*qmtettab(iq, 3) + wn*qmtet(iq)
-          qmgammix = wo*qmgamtab(iq, 3) + wn*qmgam(iq)
 
           a = qmphitab(iq, 2)
-          b = (qmphitab(iq,3)-qmphitab(iq,1))*0.5d0
-          c = (qmphitab(iq,3)+qmphitab(iq,1)-2.d0*a)*0.5d0
-          phixtr = a + b*dble(ixtr) + c*dble(ixtr)**2
-          if (phixtr>=0.0d0 .and. phixtr<=360.0d0 .and. abs(phixtr-qmphitab(iq,3))<dangmax) then
+          b = (qmphitab(iq,3)-qmphitab(iq,1))*0.5_dp
+          c = (qmphitab(iq,3)+qmphitab(iq,1)-2.0_dp*a)*0.5_dp
+          phixtr = a + b*real(ixtr, kind=dp) + c*real(ixtr, kind=dp)**2
+          if (phixtr>=0.0_dp .and. phixtr<=360.0_dp .and. abs(phixtr-qmphitab(iq,3))<dangmax) then
             qmphi(iq) = phixtr
           else
             qmphi(iq) = qmphimix
           end if
 
-          if (qmphi(iq)<0d0) qmphi(iq) = qmphi(iq) + 360d0
-          if (qmphi(iq)>360d0) qmphi(iq) = qmphi(iq) - 360d0
+          if (qmphi(iq)<0.0_dp) qmphi(iq) = qmphi(iq) + 360.0_dp
+          if (qmphi(iq)>360.0_dp) qmphi(iq) = qmphi(iq) - 360.0_dp
 
           a = qmtettab(iq, 2)
-          b = (qmtettab(iq,3)-qmtettab(iq,1))*0.5d0
-          c = (qmtettab(iq,3)+qmtettab(iq,1)-2.d0*a)*0.5d0
-          tetxtr = a + b*dble(ixtr) + c*dble(ixtr)**2
+          b = (qmtettab(iq,3)-qmtettab(iq,1))*0.5_dp
+          c = (qmtettab(iq,3)+qmtettab(iq,1)-2.0_dp*a)*0.5_dp
+          tetxtr = a + b*real(ixtr, kind=dp) + c*real(ixtr, kind=dp)**2
           d12 = qmtettab(iq, 1) - qmtettab(iq, 2)
           d23 = qmtettab(iq, 2) - qmtettab(iq, 3)
           d3x = qmtettab(iq, 3) - tetxtr
-          if (tetxtr>=0.0d0 .and. tetxtr<=180.0d0 .and. abs(tetxtr-qmtettab(iq,3))<dangmax .and. (d12*d23>0d0) .and. (d23*d3x>0d0)) then
+          if (tetxtr>=0.0_dp .and. tetxtr<=180.0_dp .and. abs(tetxtr-qmtettab(iq,3))<dangmax .and. (d12*d23>0.0_dp) .and. (d23*d3x>0.0_dp)) then
             qmtet(iq) = tetxtr
           else
             qmtet(iq) = qmtetmix
           end if
 
           a = qmgamtab(iq, 2)
-          b = (qmgamtab(iq,3)-qmgamtab(iq,1))*0.5d0
-          c = (qmgamtab(iq,3)+qmgamtab(iq,1)-2.d0*a)*0.5d0
-          qmgam(iq) = a + b*dble(ixtr) + c*dble(ixtr)**2
+          b = (qmgamtab(iq,3)-qmgamtab(iq,1))*0.5_dp
+          c = (qmgamtab(iq,3)+qmgamtab(iq,1)-2.0_dp*a)*0.5_dp
+          qmgam(iq) = a + b*real(ixtr, kind=dp) + c*real(ixtr, kind=dp)**2
 
           if (iprint>0) write (1337, 100) iq, ixtr, lasterr, ('PHI', i, qmphitab(iq,i), i=1, 3), 'PHIMIX', qmphimix, 'PHIXTR', phixtr, 'PHINEW', qmphi(iq), &
             ('TET', i, qmtettab(iq,i), i=1, 3), 'TETMIX', qmtetmix, 'TETXTR', tetxtr, 'TETNEW', qmtet(iq)
@@ -191,7 +190,7 @@ contains
 
       write (1337, 130)
 
-      erravang = 0d0
+      erravang = 0.0_dp
       do iq = 1, nq
 
         delphi = abs(qmphi(iq)-qmphitab(iq,iprev))

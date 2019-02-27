@@ -20,7 +20,6 @@ contains
   !-------------------------------------------------------------------------------
   subroutine set_jijcalc_flags(t_dtmatjij, natypd, natomimpd, natomimp, atomimp, iqat)
 
-    use :: mod_datatypes, only: dp
     use :: mod_types, only: t_inc, type_dtmatjijdij
     use :: mod_save_wavefun, only: t_wavefunctions
 

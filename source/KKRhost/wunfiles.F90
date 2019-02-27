@@ -185,6 +185,8 @@ module mod_wunfiles
     complex (kind=dp), dimension (:, :, :), allocatable :: dsymll
     complex (kind=dp), dimension (:, :, :, :, :), allocatable :: lefttinvll
     complex (kind=dp), dimension (:, :, :, :, :), allocatable :: righttinvll
+    complex (kind=dp), dimension (:, :, :), allocatable :: mvevi
+    complex (kind=dp), dimension (:, :, :), allocatable :: mvevief
     real (kind=dp), dimension (:), allocatable :: a !! Constants for exponential R mesh
     real (kind=dp), dimension (:), allocatable :: b !! Constants for exponential R mesh
     real (kind=dp), dimension (:), allocatable :: eu
@@ -240,9 +242,7 @@ module mod_wunfiles
     real (kind=dp), dimension (:, :, :), allocatable :: rcls !! Real space position of atom in cluster
     real (kind=dp), dimension (:, :, :), allocatable :: rrot
     real (kind=dp), dimension (:, :, :), allocatable :: bzkp
-    real (kind=dp), dimension (:, :, :), allocatable :: mvevi
     real (kind=dp), dimension (:, :, :), allocatable :: thetas !! shape function THETA=0 outer space THETA =1 inside WS cell in spherical harmonics expansion
-    real (kind=dp), dimension (:, :, :), allocatable :: mvevief
     real (kind=dp), dimension (:, :, :), allocatable :: thetasnew
     real (kind=dp), dimension (:, :, :, :), allocatable :: r2nef
     real (kind=dp), dimension (:, :, :, :), allocatable :: wldau !! potential matrix
@@ -641,7 +641,7 @@ contains
     ! -------------------------------------------------------------------------
     if (relax_SpinAngle_Dirac) then
       i1 = 0
-      emin = 0d0
+      emin = 0.0_dp
       t_params%qmtet = qmtet
       t_params%qmphi = qmphi
       t_params%qmphitab = qmphitab
@@ -1566,6 +1566,8 @@ contains
     call mpi_bcast(t_params%rrel, t_params%lmmaxd*t_params%lmmaxd, mpi_double_complex, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%srrel, 2*2*t_params%lmmaxd, mpi_double_complex, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%phildau, t_params%irm*t_params%natyp, mpi_double_complex, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%mvevi, t_params%natyp*3*t_params%nmvecmax, mpi_double_complex, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%mvevief, t_params%natyp*3*t_params%nmvecmax, mpi_double_complex, master, mpi_comm_world, ierr)
 
     ! -------------------------------------------------------------------------
     ! real (kind=dp) arrays
@@ -1615,8 +1617,6 @@ contains
     call mpi_bcast(t_params%rpan_intervall, ((t_params%ntotd+1)*t_params%natyp), mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%rnew, (t_params%ntotd*(t_params%ncheb+1)*t_params%natyp), mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%thetasnew, (t_params%ntotd*(t_params%ncheb+1)*t_params%nfund*t_params%ncelld), mpi_double_precision, master, mpi_comm_world, ierr)
-    call mpi_bcast(t_params%mvevi, t_params%natyp*3*t_params%nmvecmax, mpi_double_precision, master, mpi_comm_world, ierr)
-    call mpi_bcast(t_params%mvevief, t_params%natyp*3*t_params%nmvecmax, mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%rho2ns, (t_params%irm*t_params%lmpot*t_params%natyp*2), mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%r2nef, (t_params%irm*t_params%lmpot*t_params%natyp*2), mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%rhoc, (t_params%irm*t_params%npotd), mpi_double_precision, master, mpi_comm_world, ierr)
@@ -3039,7 +3039,7 @@ contains
       vtrel = t_params%vtrel
       btrel = t_params%btrel
     end if
-    if (use_spherical_potential_only) vins(irmind:irmd, 2:lmpotd, 1:nspotd) = 0.d0
+    if (use_spherical_potential_only) vins(irmind:irmd, 2:lmpotd, 1:nspotd) = 0.0_dp
     ! -------------------------------------------------------------------------
     ! Itermdir
     ! -------------------------------------------------------------------------
@@ -3324,7 +3324,7 @@ contains
     efold = t_params%efold
     chrgold = t_params%chrgold
     cmomhost = t_params%cmomhost
-    if (use_spherical_potential_only) vins(irmind:irmd, 2:lmpot, 1:nspotd) = 0.d0
+    if (use_spherical_potential_only) vins(irmind:irmd, 2:lmpot, 1:nspotd) = 0.0_dp
 
   end subroutine get_params_2
 
@@ -3598,12 +3598,12 @@ contains
     logical :: lread, lcheckangles
     integer :: i1, i_stat
     real (kind=dp) :: th1, ph1
-    real (kind=dp), parameter :: eps = 1d-5
+    real (kind=dp), parameter :: eps = 1.0e-5_dp
     ! if executed first in wunfiles theta is not allocated, thus read angles from file
     if (.not. allocated(t_params%theta)) then
 
-      theta(:) = 0.d0
-      phi(:) = 0.d0
+      theta(:) = 0.0_dp
+      phi(:) = 0.0_dp
       lread = .false.
       lcheckangles = .false.
       inquire (file='nonco_angle.dat', exist=lread)
@@ -3615,8 +3615,8 @@ contains
           if ((abs(th1)<(pi+eps) .and. abs(th1)>eps) .or. (abs(ph1)<(2*pi+eps) .and. abs(ph1)>eps)) then
             lcheckangles = .true.
           end if
-          theta(i1) = th1*(pi/180.0d0)
-          phi(i1) = ph1*(pi/180.0d0)
+          theta(i1) = th1*(pi/180.0_dp)
+          phi(i1) = ph1*(pi/180.0_dp)
         end do
         close (10)
         if (lcheckangles .and. ((t_inc%i_write>0) .or. (myrank==master))) then
@@ -3625,7 +3625,7 @@ contains
         end if
         write (1337, '(A)') '      I1  THETA[deg]  PHI[deg]'
         do i1 = 1, natyp
-          write (1337, '(I8,2F12.6)') i1, theta(i1)*180d0/pi, phi(i1)*180d0/pi
+          write (1337, '(I8,2F12.6)') i1, theta(i1)*180.0_dp/pi, phi(i1)*180.0_dp/pi
         end do                     ! i1
       end if                       ! LREAD
 

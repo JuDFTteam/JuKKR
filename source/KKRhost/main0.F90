@@ -455,9 +455,9 @@ contains
       write_deci_tmat, write_energy_mesh, write_generalized_potential, write_green_host, write_green_imp, write_kkrimp_input, &
       write_kkrsusc_input, write_pkkr_input, write_pkkr_operators, write_potential_tests, write_rhoq_input, use_ldau, disable_print_serialnumber
     use :: mod_version, only: version1, version2, version3, version4
-    use :: mod_version_info, only: serialnr, construct_serialnr, version_print_header
+    use :: mod_version_info, only: serialnr, version_print_header
     use :: mod_md5sums, only: get_md5sums, md5sum_potential, md5sum_shapefun
-    use :: mod_wunfiles, only: t_params, wunfiles
+    use :: mod_wunfiles, only: wunfiles
     use :: mod_types, only: t_imp, t_inc, init_params_t_imp, init_t_imp
     use :: memoryhandling, only: memocc, allocate_cell, allocate_cpa, allocate_soc, allocate_ldau, allocate_magnetization, allocate_potential, &
       allocate_energies, allocate_relativistic, allocate_clusters, allocate_expansion, allocate_mesh, allocate_pannels, allocate_misc, &
@@ -471,7 +471,6 @@ contains
     use :: mod_changerep, only: changerep
     use :: mod_cinit, only: cinit
     use :: mod_clsgen_tb, only: clsgen_tb
-    use :: mod_convol, only: convol
     use :: mod_deciopt, only: deciopt
     use :: mod_drvbastrans, only: drvbastrans
     use :: mod_epathtb, only: epathtb
@@ -487,7 +486,6 @@ contains
     use :: mod_outtmathost, only: outtmathost
     use :: mod_readimppot, only: readimppot
     use :: mod_relpotcvt, only: relpotcvt
-    use :: mod_rinit, only: rinit
     use :: mod_scalevec, only: scalevec
     use :: mod_setgijtab, only: setgijtab
     use :: mod_shape_corr, only: shape_corr
@@ -508,7 +506,6 @@ contains
     integer :: i
     integer :: j
     integer :: i1
-    integer :: i2
     integer :: ie
     integer :: lm
     integer :: ns
@@ -555,14 +552,6 @@ contains
     ! -------------------------------------------------------------------------
     ! End write version info
     ! -------------------------------------------------------------------------
-
-    ! allocate and initialize testc and optc in t_params for run and test options
-    !allocate (t_params%optc(32), stat=i_stat) ! CHARACTER*8
-    !call memocc(i_stat, product(shape(t_params%optc))*kind(t_params%optc), 't_params%OPTC', 'main0')
-    !t_params%optc(1:32) = '        '
-    !allocate (t_params%testc(32), stat=i_stat)
-    !call memocc(i_stat, product(shape(t_params%testc))*kind(t_params%testc), 't_params%TESTC', 'main0')
-    !t_params%testc(1:32) = '        '
 
     ! -------------------------------------------------------------------------
     ! Reading of the inputcard, and allocation of several arrays
@@ -1205,7 +1194,7 @@ contains
     if (kmrot/=0) then
       fact(0) = 1.0d0
       do i = 1, 100
-        fact(i) = fact(i-1)*dble(i)
+        fact(i) = fact(i-1)*real(i, kind=dp)
       end do
 
       do i1 = 1, naez
@@ -1418,7 +1407,7 @@ contains
 
       do ispin = 1, nspin
         ! shift potential spin dependent
-        vshift = -dble(2*ispin-3)*hfield*inipol(ih)
+        vshift = -real(2*ispin-3, kind=dp)*hfield*inipol(ih)
 
         write (1337, *) 'SHIFTING OF THE POTENTIALS OF ATOM', ih, 'spin', ispin, ' BY', vshift, 'RY.'
         ipot = nspin*(ih-1) + ispin
