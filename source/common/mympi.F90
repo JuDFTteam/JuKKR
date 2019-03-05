@@ -264,7 +264,7 @@ contains
                   q = sqrt((f(1)-real(i2)/real(i1))**2+(f(2)-real(i3)/real(i2))**2+(f(3)-real(i3)/real(i1))**2)
                 end if
                 if (q<qmin .or. qmin==-1) then
-                  ktake = [ i1, i2, i3 ]
+                  ktake(1:3) = [ i1, i2, i3 ]
                   qmin = q
                 end if
               end if
@@ -277,7 +277,7 @@ contains
             if (i1>=i2) then
               q = sqrt((f(1)-real(i2)/real(i1))**2)
               if (q<qmin .or. qmin==-1) then
-                ktake = [ i1, i2 ]
+                ktake(1:2) = [ i1, i2 ]
                 qmin = q
               end if
             end if
