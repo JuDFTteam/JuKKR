@@ -177,13 +177,16 @@ contains
     ! .. Set the parameters
     ! 4 words = 16 bytes / complex number (in ifort 4; in gfort 16) word/byte distiction moved to subroutine opendafile to be the same for all unformatted files
     lrectmt = wlength*4*lmmaxd*lmmaxd
-    ! ..
-    ! .. Data statements
-    ! ..
+
+    ! set printing flag
     iprint = 0
     if (t_inc%i_write>0) iprint = 1
 
-    ! allocatable arrays
+    ! Consistency check
+    if ((krel<0) .or. (krel>1)) stop ' set KREL=0/1 (non/fully) relativistic mode in the inputcard'
+    if ((krel==1) .and. (nspind==2)) stop ' set NSPIND = 1 for KREL = 1 in the inputcard'
+
+    ! initialize allocatable arrays
     allocate (bzkp(3,kpoibz,maxmshd), stat=i_stat)
     allocate (lly_g0tr(ielast), stat=i_stat)
     allocate (tralpharef(ielast), stat=i_stat)
@@ -192,10 +195,14 @@ contains
     allocate (tralpha(ielast,nspind), stat=i_stat)
     allocate (lly_grtr(ielast,nspind), stat=i_stat)
     allocate (cdos_lly(ielast,nspind), stat=i_stat)
-
-    ! Consistency check
-    if ((krel<0) .or. (krel>1)) stop ' set KREL=0/1 (non/fully) relativistic mode in the inputcard'
-    if ((krel==1) .and. (nspind==2)) stop ' set NSPIND = 1 for KREL = 1 in the inputcard'
+    bzkp = 0.0_dp
+    lly_g0tr = czero
+    tralpharef = czero
+    cdosref_lly = czero
+    tracet = czero
+    tralpha = czero
+    lly_grtr = czero
+    cdos_lly = czero
 
     ! -------------------------------------------------------------------------
     ! This routine previously used to read from unformatted files created by
@@ -427,9 +434,6 @@ contains
 
     ncpafail = 0
 
-    ! Initialize trace for Lloyd formula
-    lly_grtr(:, :) = czero ! 1:IELAST,1:NSPIND
-
     ! determine extend of spin loop
     nspin1 = nspin/(1+korbit) ! factor (1+korbit) takes care of NOSOC option
     if (use_Chebychev_solver) then
@@ -649,8 +653,7 @@ contains
             ezoa, atom, rcls, icc, ginp, ideci, lefttinvll(1,1,1,1,ie), righttinvll(1,1,1,1,ie), vacflag, nlbasis, nrbasis, factl, natomimp, nsymat, dsymll, ratom, rrot, nsh1, &
             nsh2, ijtabsym, ijtabsh, icheck, invmod, refpot, trefll, tsst, msst, cfctor, cfctorinv, crel, rc, rrel, srrel, irrel, nrrel, drotq, symunitary, kmrot, natyp, ncpa, &
             icpa, itcpamax, cpatol, noq, iqat, itoq, conc, iprint, icpaflag, ispin, nspindd, tqdos, iqdosrun, & ! qdos
-            dtrefll, dtmatll, dginp, lly_grtr(ie,ispin), & ! LLY Lloyd
-            tracet(ie,ispin), lly) ! LLY Lloyd
+            dtrefll, dtmatll, dginp, lly_grtr(ie,ispin), tracet(ie,ispin), lly) ! LLY Lloyd
 
 #ifdef CPP_TIMING
           call timing_pause('main1b - kloopz')

@@ -372,8 +372,8 @@ contains
           end do   
         end do  
         close (701)
-        write (*, *) 'valence charge from lloyds formula:', (charge_lly(ispin), ispin=1, nspin)
-        if (t_inc%i_write>0) write (1337, *) 'valence charge from lloyds formula:', (charge_lly(ispin), ispin=1, nspin) 
+        write (*, *) 'valence charge from Lloyds formula:', (charge_lly(ispin), ispin=1, nspin)
+        if (t_inc%i_write>0) write (1337, *) 'valence charge from Lloyds formula:', (charge_lly(ispin), ispin=1, nspin) 
       end if ! myrank==master
 
     end if ! LLY<>0
@@ -748,32 +748,30 @@ contains
       end if
 
       ! ----------------------------------------------------------------------
-      ! NATYP
+      ! NATYP loop for summed charge, spin and orbital moments
       ! ----------------------------------------------------------------------
-      chrgsemicore = 0_dp
+      chrgsemicore = 0.0_dp
+      muorb(lmaxd1+1, :, :) = 0.0_dp ! sum of all l-channels (including lmaxd1 for ns contribution)
+      eu(:) = 0_dp
+      edc(:) = 0_dp
       do i1 = 1, natyp
         !----------------------------------------------------------------------------
         ! l/m_s/atom-resolved charges
         !----------------------------------------------------------------------------
-
         do ispin = 1, nspinpot
           ipot = (i1-1)*nspinpot + ispin
           do l = 0, lmaxd1
             charge(l, i1, ispin) = 0.0_dp
-
             do ie = 1, ielast
               charge(l, i1, ispin) = charge(l, i1, ispin) + aimag(wez(ie)*den(l,ie,1,ipot))/real(nspinpot, kind=dp)
               if (ie==iesemicore) then
                 chrgsemicore = chrgsemicore + conc(i1)*charge(l, i1, ispin)
               end if
             end do
-
           end do
         end do
-        eu(i1) = 0_dp
-        edc(i1) = 0_dp
         !----------------------------------------------------------------------------
-        ! Orbital magnetic moments (array initialised to 0.0D0 in rhoval)
+        ! Orbital magnetic moments
         !----------------------------------------------------------------------------
         if (krel==1) then
           do ispin = 1, 3
@@ -784,7 +782,7 @@ contains
         end if
       end do
       ! ----------------------------------------------------------------------
-      ! NATYP
+      ! end NATYP loop for summed charge and orbital moments 
       ! ----------------------------------------------------------------------
 
 

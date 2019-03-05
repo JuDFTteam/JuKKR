@@ -84,16 +84,13 @@ contains
     irest = ntot - int(ntot/nranks)*nranks
 
     if (irest>0) then
-
       do irank = 0, irest - 1
         ntot_pt(irank) = ntot_pt(irank) + 1
         ioff_pt(irank) = ioff_pt(irank) + irank
       end do                       ! irank
-
       do irank = irest, nranks - 1
         ioff_pt(irank) = ioff_pt(irank) + irest
       end do                       ! irank
-
     end if                         ! irest>0
 
     if (present(fill_rest)) then
@@ -206,7 +203,16 @@ contains
 
     ktake(:) = 0
 
+    ! now check different cases:
+    ! 1: mor than one energy group with rest ranks (tackle load imbalance)
+    ! 2: no rest ranks (use cartesian grid)
+    ! 3: only atom parallelization without rest ranks
+    ! 4: only atom paralelization with rest ranks (discard rest ranks and use cartesian grid)
+    ! 5: only energy parallelization without rest ranks
+
     if ((ne*nat)<nranks .and. (ne>1)) then ! .and. nat>1)) then
+      ! find parallelization with rest ranks divided over energy group with
+      ! denset k-mesh
 
       if (nkmesh<=1) then
         if (myrank==master) write (*, '(A,2I7)') &
@@ -404,6 +410,7 @@ contains
       myrank_at = myg - 1
 
     else if ((ne*nat)==nranks .and. (ne>1 .and. nat>1)) then
+      ! no rest ranks, use cartesian grid
 
       rest = 0
 
@@ -426,6 +433,7 @@ contains
       nranks_atcomm = nranks_at
 
     else if (ne==1 .and. nat==nranks) then
+      ! no rest ranks, can use mpi_comm world entirely for atom parallelization
 
       rest = 0
 
@@ -439,7 +447,39 @@ contains
       myrank_atcomm = myrank_at
       nranks_atcomm = nranks_at
 
+    else if (nat<nranks .and. (ne==1 .and. nat>1)) then
+      ! technically have rest ranks but do not use them since ne==1 (wasts some resources!)
+      if (myrank==master) then
+        write (*, '(A,I5,A)') 'WARNING: nat<nranks but ne==1: ', nranks-nat, ' ranks are unused!'
+        write (*, '(A)') 'Please consider modifying your jobsript to not waste any resources!'
+        write (1337, '(A,I5,A)') 'WARNING: nat<nranks but ne==1: ', nranks-nat, ' ranks are unused!'
+        write (1337, '(A)') 'Please consider modifying your jobsript to not waste any resources!'
+      end if
+
+      ! set rest artificially to zero (affects printout only)
+      rest = 0
+      if (myrank<nat) then
+        call mpi_comm_split(mpi_comm_world, 1, myrank, mympi_comm_ie, ierr)
+      else
+        call mpi_comm_split(mpi_comm_world, myrank+1000, 0, mympi_comm_ie, ierr)
+      end if
+
+      call mpi_comm_rank(mympi_comm_ie, myrank_ie, ierr)
+      call mpi_comm_size(mympi_comm_ie, nranks_ie, ierr)
+      if (myrank>=nat) then
+        myrank_ie = -1 ! overwrite this so that myrank==master checks return false for unused ranks
+      end if
+
+      ! set atom communicator manually to mpi_comm_self
+      mympi_comm_at = mpi_comm_self
+      nranks_at = 1
+      myrank_at = 0
+      ! fill atcomm helpes (only used for rest>0)
+      nranks_atcomm = nranks_at
+      myrank_atcomm = myrank_at
+
     else
+      ! fallback: use all ranks for energy parallelization without rest ranks
 
       rest = 0
 
@@ -453,10 +493,9 @@ contains
       myrank_atcomm = myrank_at
       nranks_atcomm = nranks_at
 
-
     end if
 
-
+    ! print output
     if (myrank==master) then
       write (1337, '(A)') '=================================================='
       write (1337, '(A,I5,A)') '    MPI parallelization: use', nranks, ' ranks'
