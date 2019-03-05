@@ -24,16 +24,15 @@ contains
     use :: mod_datatypes, only: dp
     implicit none
 
+    integer, intent(in) :: iprint, narry
+    real (kind=dp), intent(inout) :: darry(narry)
+
     ! PARAMETER definitions
     integer, parameter :: nsqr = 7
     integer, parameter :: nmul = 5
     integer, parameter :: divmax = 15
     real (kind=dp), parameter :: tol = 1e-6_dp
     real (kind=dp), parameter :: eps = 1e-14_dp
-
-    ! Dummy arguments
-    integer :: iprint, narry
-    real (kind=dp) :: darry(narry)
 
     ! Local variables
     integer :: div, i1, i2, idone(narry), imul(nmul), isqr(nsqr)

@@ -316,7 +316,7 @@ contains
       ideriv = 0
       if (lly/=0) ideriv = 1
       do signde = -ideriv, ideriv, 2
-        eryd = ez(ie) + real(signde, kind=dp)*deltae/2.d0 ! LLY
+        eryd = ez(ie) + real(signde, kind=dp)*deltae/2.0_dp ! LLY
 
 #ifdef CPP_OMP
         !$omp critical
@@ -737,6 +737,8 @@ contains
         end if                     ! write_rhoq_input
 #endif
         irec = ie + ielast*(ispin-1) + ielast*nspin/(1+korbit)*(i1-1)
+        ! this test writeout maybe helps to get rid of issue #114
+        if (t_inc%i_write>0) write(1337,*) 'writing tmat to file', ie, ispin, i1, shape(tmatll)
         write (69, rec=irec) tmatll(:, :)
         ! human readable writeout if test option is hit
         if (formatted_files) then
@@ -911,7 +913,7 @@ contains
 
       allocate (vins(irmdnew,lmpot,nspin), stat=i_stat)
       call memocc(i_stat, product(shape(vins))*kind(vins), 'VINS', 'allocate_locals_tmat_newsolver')
-      vins = 0.0d0
+      vins = 0.0_dp
       allocate (aux(lmmaxso,lmmaxso), stat=i_stat)
       call memocc(i_stat, product(shape(aux))*kind(aux), 'AUX', 'allocate_locals_tmat_newsolver')
       aux = czero

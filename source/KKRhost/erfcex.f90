@@ -35,7 +35,7 @@ contains
     real (kind=dp), parameter :: bound = 3.e-11_dp, sqrtpi = sqrt(pi)
 
     ! .. intrinsic functions ..
-    intrinsic :: abs, atan, exp, sqrt
+    intrinsic :: abs, exp, sqrt
 
     
     zz = z*z

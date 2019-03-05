@@ -47,7 +47,7 @@ contains
     integer :: ins, ipe, ipf, ipfe, khfeld, kws, lpot
     ! ..
     ! .. Array Arguments ..
-    real (kind=dp) :: a(natomimp), b(natomimp), drdi(irmd, natomimp), dror(irmd, natomimp), ecore(20, nspin*natomimp), rimp(irmd, natomimp), rmt(natomimp), rmtnew(natomimp), &
+    real (kind=dp) :: a(natomimp), b(natomimp), drdi(irmd, natomimp), ecore(20, nspin*natomimp), rimp(irmd, natomimp), rmt(natomimp), rmtnew(natomimp), &
       rws(natomimp), thetasimp(irid, nfund, natomimp), vinsimp((irmd-irnsd):irmd, (lpot+1)**2, natomimp*nspin), vm2zimp(irmd, natomimp*nspin), zimp(natomimp)
     integer :: imt(natomimp), ipanimp(natomimp), ircutimp(0:ipand, natomimp), irminimp(natomimp), irwsimp(natomimp), ititle(20, nspin*natomimp), lcore(20, nspin*natomimp), &
       ncore(nspin*natomimp), nfu(natomimp)
@@ -193,7 +193,7 @@ contains
 
         if (ins/=0) then
           rmtnew(ih) = scale(1)*alat*xrn(1, ih)
-          imt1 = anint(log(rmtnew(ih)/b(ih)+1.0e0_dp)/a(ih)) + 1
+          imt1 = nint(log(rmtnew(ih)/b(ih)+1.0e0_dp)/a(ih)) + 1
 
           ! ---> for proper core treatment imt must be odd
           ! shift potential by one mesh point if imt is even
@@ -221,7 +221,6 @@ contains
           ea = exp(a1*real(ir-1,kind=dp))
           rimp(ir, ih) = b1*(ea-1.0e0_dp)
           drdi(ir, ih) = a1*b1*ea
-          dror(ir, ih) = a1/(1.0e0_dp-1.0e0_dp/ea)
         end do
 
         ! ---> fill cell-type depending mesh points in the non-muffin-tin-region
@@ -231,7 +230,6 @@ contains
             ir = iri + imt1
             rimp(ir, ih) = scale(1)*alat*xrn(iri, ih)
             drdi(ir, ih) = scale(1)*alat*drn(iri, ih)
-            dror(ir, ih) = drdi(ir, ih)/rimp(ir, ih)
           end do
         end if
 

@@ -271,7 +271,7 @@ contains
 
     ! Local variables
     real (kind=dp) :: r(3,4),rotrbas(3,naezd+nembd)
-    real (kind=dp) :: alat,bravais1(3,3),tol
+    real (kind=dp) :: bravais1(3,3),tol
     integer :: i,j,isym,nsym,i0,ia
     character(len=10) :: charstr(64)
     logical :: llatbas,lbulk
@@ -279,11 +279,9 @@ contains
     !     -------------------------------------------------------------
     nsym = 0
     call pointgrp(rotmat,rotname)
-    !     alat = rfctor*8.d0*datan(1.0d0)
-    !     - ---------------------------------
     do i=1,3
       do j=1,3
-        bravais1(j,i) = bravais(j,i) !/alat
+        bravais1(j,i) = bravais(j,i)
       end do
     end do
     !Check for surface mode. If so, set bravais1(3,3) very large, so
@@ -394,8 +392,6 @@ contains
     integer :: i,m 
     real (kind=dp) :: vdiff 
     real (kind=dp), parameter :: tol=1.0_dp-6
-    ! Intrinsic functions:                                                  
-    intrinsic  dabs,dnint
 
     latvec=.false. 
     do i=1,n

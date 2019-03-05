@@ -286,12 +286,6 @@ contains
       end if
 
       if (lly/=0 .and. .not. t_lloyd%dtmat_to_file) then
-        if (t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1)) then
-          ! reset tralpha and dtmat to zero for rest-ranks, otherwise
-          ! these contributions are counted twice
-          t_lloyd%tralpha = czero
-          t_lloyd%dtmat = czero
-        end if
         call gather_lly_dtmat(t_mpi_c_grid,t_lloyd,lmmaxd,t_mpi_c_grid%mympi_comm_ie)
       end if
 

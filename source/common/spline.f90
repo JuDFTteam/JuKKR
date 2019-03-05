@@ -58,33 +58,33 @@ contains
     if (n>nmax) stop 'SPLINE: n > NMAX.'
     if (abs(yp1)>0.99e30_dp) then
       ! The lower boundary condition is set either to be "natural"
-      y2(1) = 0.e0_dp
-      u(1) = 0.e0_dp
+      y2(1) = 0.0_dp
+      u(1) = 0.0_dp
     else
       ! or else to have a specified first derivative.
-      y2(1) = -0.5e0_dp
-      u(1) = (3.e0_dp/(x(2)-x(1)))*((y(2)-y(1))/(x(2)-x(1))-yp1)
+      y2(1) = -0.50_dp
+      u(1) = (3.0_dp/(x(2)-x(1)))*((y(2)-y(1))/(x(2)-x(1))-yp1)
     end if
 
     do i = 2, n - 1
       ! This is the decomposition loop of the tridiagonal algorithm. y2 and u
       ! are used for temporary storage of the decomposed factors.
       sig = (x(i)-x(i-1))/(x(i+1)-x(i-1))
-      p = sig*y2(i-1) + 2.e0_dp
-      y2(i) = (sig-1.e0_dp)/p
-      u(i) = (6.e0_dp*((y(i+1)-y(i))/(x(i+1)-x(i))-(y(i)-y(i-1))/(x(i)-x(i-1)))/(x(i+1)-x(i-1))-sig*u(i-1))/p
+      p = sig*y2(i-1) + 2.0_dp
+      y2(i) = (sig-1.0_dp)/p
+      u(i) = (6.0_dp*((y(i+1)-y(i))/(x(i+1)-x(i))-(y(i)-y(i-1))/(x(i)-x(i-1)))/(x(i+1)-x(i-1))-sig*u(i-1))/p
     end do
 
     if (abs(ypn)>0.99e30_dp) then
       ! The upper boundary condition is set either to be "natural"
-      qn = 0.e0_dp
-      un = 0.e0_dp
+      qn = 0.0_dp
+      un = 0.0_dp
     else
       ! or else to have a specified 1rst derivative.
-      qn = 0.5e0_dp
-      un = (3.e0_dp/(x(n)-x(n-1)))*(ypn-(y(n)-y(n-1))/(x(n)-x(n-1)))
+      qn = 0.5_dp
+      un = (3.0_dp/(x(n)-x(n-1)))*(ypn-(y(n)-y(n-1))/(x(n)-x(n-1)))
     end if
-    y2(n) = (un-qn*u(n-1))/(qn*y2(n-1)+1.e0_dp)
+    y2(n) = (un-qn*u(n-1))/(qn*y2(n-1)+1.0_dp)
     do k = n - 1, 1, -1
       ! This is the backsubstitution loop of the tridiagonal algorithm.
       y2(k) = y2(k)*y2(k+1) + u(k)
@@ -114,33 +114,33 @@ contains
     if (n>nmax) stop 'SPLINE: n > NMAX.'
     if (abs(yp1)>0.99e30_dp) then
       ! The lower boundary condition is set either to be "natural"
-      y2(1) = 0.e0_dp
-      u(1) = 0.e0_dp
+      y2(1) = 0.0_dp
+      u(1) = 0.0_dp
     else
       ! or else to have a specified first derivative.
-      y2(1) = -0.5e0_dp
-      u(1) = (3.e0_dp/(x(2)-x(1)))*((y(2)-y(1))/(x(2)-x(1))-yp1)
+      y2(1) = -0.5_dp
+      u(1) = (3.0_dp/(x(2)-x(1)))*((y(2)-y(1))/(x(2)-x(1))-yp1)
     end if
 
     do i = 2, n - 1
       ! This is the decomposition loop of the tridiagonal algorithm. y2 and u
       ! are used for temporary storage of the decomposed factors.
       sig = (x(i)-x(i-1))/(x(i+1)-x(i-1))
-      p = sig*y2(i-1) + 2.e0_dp
-      y2(i) = (sig-1.e0_dp)/p
-      u(i) = (6.e0_dp*((y(i+1)-y(i))/(x(i+1)-x(i))-(y(i)-y(i-1))/(x(i)-x(i-1)))/(x(i+1)-x(i-1))-sig*u(i-1))/p
+      p = sig*y2(i-1) + 2.0_dp
+      y2(i) = (sig-1.0_dp)/p
+      u(i) = (6.0_dp*((y(i+1)-y(i))/(x(i+1)-x(i))-(y(i)-y(i-1))/(x(i)-x(i-1)))/(x(i+1)-x(i-1))-sig*u(i-1))/p
     end do
 
     if (abs(ypn)>0.99e30_dp) then
       ! The upper boundary condition is set either to be "natural"
-      qn = 0.e0_dp
-      un = 0.e0_dp
+      qn = 0.0_dp
+      un = 0.0_dp
     else
       ! or else to have a specified 1rst derivative.
-      qn = 0.5e0_dp
-      un = (3.e0_dp/(x(n)-x(n-1)))*(ypn-(y(n)-y(n-1))/(x(n)-x(n-1)))
+      qn = 0.5_dp
+      un = (3.0_dp/(x(n)-x(n-1)))*(ypn-(y(n)-y(n-1))/(x(n)-x(n-1)))
     end if
-    y2(n) = (un-qn*u(n-1))/(qn*y2(n-1)+1.e0_dp)
+    y2(n) = (un-qn*u(n-1))/(qn*y2(n-1)+1.0_dp)
     do k = n - 1, 1, -1
       ! This is the backsubstitution loop of the tridiagonal algorithm.
       y2(k) = y2(k)*y2(k+1) + u(k)

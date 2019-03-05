@@ -22,7 +22,7 @@ contains
   !>
   !> Guillaume Geranton, September 2014
   !-------------------------------------------------------------------------------
-  subroutine calc_torq_ll_ss(lmmax, rll, ircut, ipan, icell, cleb, icleb, iend, ifunm, lmsp, irws, drdi, dens, visp, nspin, iatom, vins, irmin)
+  subroutine calc_torq_ll_ss(lmmax, rll, ircut, ipan, icell, cleb, icleb, iend, lmsp, irws, drdi, dens, visp, nspin, iatom, vins, irmin)
 
     use :: mod_runoptions, only: torque_operator_onlyMT, torque_operator_onlySph 
     use :: global_variables, only: irmd, lmpotd, irmind, ipand, natypd, ncleb
@@ -39,12 +39,11 @@ contains
     complex (kind=dp) :: rll(irmd, lmmax, lmmax), dens
     ! local variables
     real (kind=dp) :: cleb(*), drdi(irmd), visp(irmd, *), vins(irmind:irmd, lmpotd, *)
-    integer :: icleb(ncleb, 4), ifunm(natypd, lmpotd), lmsp(natypd, *), ircut(0:ipand), ipan, icell, ifun
+    integer :: icleb(ncleb, 4), lmsp(natypd, *), ircut(0:ipand), ipan, icell
 
     ! ..
     ! ---> first calculate only the spherically symmetric contribution
     real (kind=dp) :: c0ll
-    complex (kind=dp) :: clt
     complex (kind=dp), allocatable :: rsp(:), rges(:)
     integer :: lm1p, lm2p, lm3p, ir, j, i
     integer :: ircutm(0:ipand)
@@ -81,24 +80,18 @@ contains
         rges(ir) = rsp(ir)
       end if
     end do
-    ! DO 150 IR = IRCUT(1)+1,IRCUT(IPAN)
     if (.not. torque_operator_onlySph) then
       do j = 1, iend
         lm1p = icleb(j, 1)
         lm2p = icleb(j, 2)
-        lm3p = icleb(j, 3)         ! DO IR = IRCUT(1)+1,IRCUT(IPAN)
-        clt = cleb(j)
-
+        lm3p = icleb(j, 3)
 
         if (ipan>1 .and. lmsp(icell,lm3p)>0) then
-          ifun = ifunm(icell, lm3p)
           if (lm1p==lm2p) then
-
             do ir = irmin, ircut(ipan)
               rges(ir) = rges(ir) + rll(ir, lm2p, lm1p)*cleb(j)*(-1)*(vins(ir,lm3p,nspin*(iatom-1)+2)-vins(ir,lm3p,nspin*(iatom-1)+1))*0.5_dp
             end do
           else
-
             do ir = irmin, ircut(ipan)
               rges(ir) = rges(ir) + cleb(j)*(-1)*(vins(ir,lm3p,nspin*(iatom-1)+2)-vins(ir,lm3p,nspin*(iatom-1)+1))*0.5_dp*(rll(ir,lm2p,lm1p)+rll(ir,lm1p,lm2p))
             end do

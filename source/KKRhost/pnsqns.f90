@@ -61,8 +61,8 @@ contains
     complex (kind=dp), dimension (lmmaxd, lmmaxd), intent (in) :: dr
     complex (kind=dp), dimension (lmmaxd, lmmaxd), intent (in) :: ar
     complex (kind=dp), dimension (lmmaxd, lmmaxd), intent (in) :: cr
-    complex (kind=dp), dimension (lmmaxd, lmmaxd, irmind:irmd, 2), intent (in) :: pns
-    complex (kind=dp), dimension (lmmaxd, lmmaxd, irmind:irmd, 2), intent (in) :: qns
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, irmind:irmd, 2), intent (inout) :: pns ! modified in regns
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, irmind:irmd, 2), intent (inout) :: qns ! modified in irwns
     ! .. Local Scalars
     integer :: i, lm1, lm2, lmmkonv, m1, m2, ir, irmax
     ! .. Local Arrays

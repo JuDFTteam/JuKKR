@@ -15,20 +15,21 @@
 
 ----
 
-## *UNRELEASED* (last updated: 2019-01-24)
+## *UNRELEASED* (last updated: 2019-03-05)
 
 **Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release.**
 
 Removed a lot of code duplicates among different
 
 ### Added
-- None
+- script to check the wronskian (see PhD Bauer, p.48)
 
 ### Changed
 - more routines and modules in source/common directory
 - use static library for pkkprime file among different apps
 - use static library for kkrhost routines
 - use routines from common/radial_solver_Chebychev in KKRimp as well
+- use mpiatom parallelization scheme by default if NATYP>=IELAST
 
 ### Deprecated
 - None
@@ -39,6 +40,7 @@ Removed a lot of code duplicates among different
 ### Fixed
 - header handling in complexdos3 tool
 - position of chebint in rhooutnew of KKRimp (probably) corrected
+- fix for issue #114
 
 ----
 

@@ -39,7 +39,6 @@ contains
     ! DENS_GESAMT(:,:), &
     ! DENS_GESAMT_I1(:,:,:)
     real (kind=dp) :: c0ll
-    complex (kind=dp) :: clt
     complex (kind=dp), allocatable :: rsp(:), rges(:) ! ..
     ! ---> first calculate only the spherically symmetric contribution
     ! (for all points r; if r>r_MT (or IR> IRMIN),the density has to
@@ -85,7 +84,6 @@ contains
       lm1p = icleb(j, 1)
       lm2p = icleb(j, 2)
       lm3p = icleb(j, 3)
-      clt = cleb(j)
 
       if (ipan>1 .and. lmsp(icell,lm3p)>0) then
         ifun = ifunm(icell, lm3p)

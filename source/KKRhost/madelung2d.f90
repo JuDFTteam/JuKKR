@@ -133,6 +133,7 @@ contains
         irec = naez*naez
       end if
       allocate(t_madel%avmad(irec, lmpotd, lmpotd), stat=ierr)
+      if (ierr/=0) stop 'Error allocating t_madel%avmad'
     end if
 
     ! --> calculate the gaunt coefs

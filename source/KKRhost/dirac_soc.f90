@@ -47,7 +47,7 @@ contains
     integer :: mpsmax, npemax, nabm
     parameter (mpsmax=40, npemax=4, nabm=4)
     real (kind=dp) :: tol
-    parameter (tol=1.0d-9)
+    parameter (tol=1.0e-9_dp)
     integer :: itmax
     parameter (itmax=50)
 
@@ -68,11 +68,10 @@ contains
     complex (kind=dp) :: detd, mp1(2, 2), mp2(2, 2), mp3(2, 2), mp4(2, 2), mq1(2, 2), mq2(2, 2), mq3(2, 2), mq4(2, 2), p1(2, 2), p2(2, 2), p3(2, 2), p4(2, 2), &
       pc(2, 2, -npemax:mpsmax), pnew(2, 2), pold(2, 2), q1(2, 2), q2(2, 2), q3(2, 2), q4(2, 2), qc(2, 2, -npemax:mpsmax), qnew(2, 2), qold(2, 2), s0, socpp(2), t0, zz
     integer :: i, ic, ip, irk, isk1, isk2, iv, j, jcorr, k, lb(2), lb1, lb2, m, mps, n, nacorr, ndiv, nhlp, nm, npe, nsol, ntop
-    integer :: int, isign, nint
 
-    data apred0/55.0d0, -59.0d0, +37.0d0, -9.0d0/
-    data acorr0/9.0d0, +19.0d0, -5.0d0, +1.0d0/
-    data astep/24.0d0/
+    data apred0/55.0_dp, -59.0_dp, +37.0_dp, -9.0_dp/
+    data acorr0/9.0_dp, +19.0_dp, -5.0_dp, +1.0_dp/
+    data astep/24.0_dp/
 
     csqr = c*c
     cfac = pis*c/(e+csqr)
@@ -91,14 +90,14 @@ contains
     call rinvgj(cmi, cm, npemax, npe)
 
     do iv = 1, npe
-      vc(iv-1) = 0.0d0
+      vc(iv-1) = 0.0_dp
       do n = 1, npe
         vc(iv-1) = vc(iv-1) + cmi(iv, n)*(v(n)+tz/r(n))
       end do
     end do
 
     do iv = 1, npe
-      bc(iv-1) = 0.0d0
+      bc(iv-1) = 0.0_dp
       do n = 1, npe
         bc(iv-1) = bc(iv-1) + cmi(iv, n)*b(n)
       end do
@@ -114,8 +113,8 @@ contains
     lb1 = l - isk1
     lb2 = l - isk2
 
-    cg1 = -mj/(kap1+0.5d0)
-    cg5 = -mj/(-kap1+0.5d0)
+    cg1 = -mj/(kap1+0.5_dp)
+    cg5 = -mj/(-kap1+0.5_dp)
     cgd(1) = cg1
     cgmd(1) = cg5
     kap(1) = real(kap1, kind=dp)
@@ -123,21 +122,21 @@ contains
     lb(1) = lb1
     sk(1) = sk1
     if (abs(mj)>l) then
-      cg2 = 0.0d0
-      cg4 = 0.0d0
-      cg8 = 0.0d0
+      cg2 = 0.0_dp
+      cg4 = 0.0_dp
+      cg8 = 0.0_dp
       nsol = 1
-      cgd(2) = 0.0d0
-      cgo = 0.0d0
-      cgmd(2) = 0.0d0
-      gam(2) = 0.0d0
-      kap(2) = 0.0d0
+      cgd(2) = 0.0_dp
+      cgo = 0.0_dp
+      cgmd(2) = 0.0_dp
+      gam(2) = 0.0_dp
+      kap(2) = 0.0_dp
       lb(2) = 0
-      sk(2) = 0.0d0
+      sk(2) = 0.0_dp
     else
-      cg2 = -sqrt(1.0d0-(mj/(kap1+0.5d0))**2)
-      cg4 = -mj/(kap2+0.5d0)
-      cg8 = -mj/(-kap2+0.5d0)
+      cg2 = -sqrt(1.0_dp-(mj/(kap1+0.5_dp))**2)
+      cg4 = -mj/(kap2+0.5_dp)
+      cg8 = -mj/(-kap2+0.5_dp)
       nsol = 2
       cgd(2) = cg4
       cgo = cg2
@@ -148,10 +147,10 @@ contains
       sk(2) = sk2
     end if
     do i = 1, nsol
-      kpx(i) = -1.0d0 + socscl*real(1+kap(i), kind=dp)
-      lmk(i) = real(l*(l+1), kind=dp) - kpx(i)*(kpx(i)+1.0d0)
+      kpx(i) = -1.0_dp + socscl*real(1+kap(i), kind=dp)
+      lmk(i) = real(l*(l+1), kind=dp) - kpx(i)*(kpx(i)+1.0_dp)
 
-      cgmd(i) = 0.0d0
+      cgmd(i) = 0.0_dp
       ! -------------------------------------- causes numerical inconsistencies
       ! GAM(I) = DSQRT( KPX(I)**2 - (TZ/C)**2 )
       ! KPY(I) = KPX(I)
@@ -416,9 +415,9 @@ contains
     ndiv = 60
     if (ndiv/=0) then
 
-      srk = 1.0d0/real(ndiv, kind=dp)
-      so2 = srk/2.0d0
-      so6 = srk/6.0d0
+      srk = 1.0_dp/real(ndiv, kind=dp)
+      so2 = srk/2.0_dp
+      so6 = srk/6.0_dp
 
       n = nmesh
 

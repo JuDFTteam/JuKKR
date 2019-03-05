@@ -12,7 +12,8 @@
 ### Now script starts:
 
 
-
+### Project name
+#SBATCH --account=jara0191
 
 ### Job name
 #SBATCH --job-name=tests_JuKKR
@@ -48,6 +49,7 @@ cd $srcdir
 
 ### compile KKRhost code and prepare test directory
 ./install.py --program=kkrhost --compiler=mpiifort --parallelization=hybrid \
+#module load gcc/8 && ./install.py --program=kkrhost --compiler=mpif90 --parallelization=mpi \
   && cd build \
   && make -j 12 \
   && cp -r ../tests/KKRhost/ . \

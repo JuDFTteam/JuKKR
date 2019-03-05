@@ -204,7 +204,7 @@ contains
                 do lm1 = 1, lmmax
                   do lm2 = 1, lmmax
                     spinflux((i1sp2-1)*lmmax+lm2, (i1sp1-1)*lmmax+lm1, i1, isigma)=&
-                    -(0d0, 1d0)*(dens(lm2,lm1,2,i1sp2,1,i1sp1,i1)+dens(lm2,lm1,1,i1sp2,2,i1sp1,i1))/2
+                    -(0.0_dp, 1.0_dp)*(dens(lm2,lm1,2,i1sp2,1,i1sp1,i1)+dens(lm2,lm1,1,i1sp2,2,i1sp1,i1))/2
                   end do           ! LM2
                 end do             ! LM1
               end do               ! I1SP2
@@ -217,7 +217,7 @@ contains
                 do lm1 = 1, lmmax
                   do lm2 = 1, lmmax
                     spinflux((i1sp2-1)*lmmax+lm2, (i1sp1-1)*lmmax+lm1, i1, isigma)= &
-                    -(0d0, 1d0)*(-1)*(0d0, 1d0)*(dens(lm2,lm1,2,i1sp2,1,i1sp1,i1)-dens(lm2,lm1,1,i1sp2,2,i1sp1,i1)) /2
+                    -(0.0_dp, 1.0_dp)*(-1)*(0.0_dp, 1.0_dp)*(dens(lm2,lm1,2,i1sp2,1,i1sp1,i1)-dens(lm2,lm1,1,i1sp2,2,i1sp1,i1)) /2
                   end do           ! LM2
                 end do             ! LM1
               end do               ! I1SP2
@@ -229,7 +229,7 @@ contains
               do i1sp2 = 1, 2
                 do lm1 = 1, lmmax
                   do lm2 = 1, lmmax
-                    spinflux((i1sp2-1)*lmmax+lm2, (i1sp1-1)*lmmax+lm1, i1, isigma) = (0d0, 1d0)*(dens(lm2,lm1,1,i1sp2,1,i1sp1,i1)-dens(lm2,lm1,2,i1sp2,2,i1sp1,i1))/2
+                    spinflux((i1sp2-1)*lmmax+lm2, (i1sp1-1)*lmmax+lm1, i1, isigma) = (0.0_dp, 1.0_dp)*(dens(lm2,lm1,1,i1sp2,1,i1sp1,i1)-dens(lm2,lm1,2,i1sp2,2,i1sp1,i1))/2
                   end do           ! LM2
                 end do             ! LM1
               end do               ! I1SP2

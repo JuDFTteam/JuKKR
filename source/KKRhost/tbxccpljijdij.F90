@@ -383,16 +383,16 @@ contains
                   write (499, fmt='(4(a,i5))') '# IT=', it, ' JT=', jt, ' ISITE=', i1, ' JSITE=', i2
                   write (499, fmt='(a,i6)') '#ENERGIES: ', ielast
                 end if           ! calc_exchange_couplings_energy
-                ! Jijmat_real = 0d0
+                ! Jijmat_real = 0.0_dp
                 do ie = 1, ielast
-                  ! Jijmat_real(:,:)=Jijmat_real(:,:)+aimag(wez(ie)*Jijmat(:,:,istore,ie))/2d0
-                  jtmp(1) = (jijmat(1,1,istore,ie)+jijmat(2,2,istore,ie))/2d0
-                  ! jtmp(2) = (Jijmat(2,1,istore,ie)-Jijmat(1,2,istore,ie))/2d0 !<- old defiition (until Apr.2017) which assumed +Dij.(SixSj)
-                  jtmp(2) = (jijmat(1,2,istore,ie)-jijmat(2,1,istore,ie))/2d0 ! <- changed to -Dij.(SixSj), to be consistent with KKRwiki
-                  jtmp(3) = (jijmat(1,1,istore,ie)-jijmat(2,2,istore,ie))/2d0
-                  jtmp(4) = (jijmat(2,1,istore,ie)+jijmat(1,2,istore,ie))/2d0
+                  ! Jijmat_real(:,:)=Jijmat_real(:,:)+aimag(wez(ie)*Jijmat(:,:,istore,ie))/2.0_dp
+                  jtmp(1) = (jijmat(1,1,istore,ie)+jijmat(2,2,istore,ie))/2.0_dp
+                  ! jtmp(2) = (Jijmat(2,1,istore,ie)-Jijmat(1,2,istore,ie))/2.0_dp !<- old defiition (until Apr.2017) which assumed +Dij.(SixSj)
+                  jtmp(2) = (jijmat(1,2,istore,ie)-jijmat(2,1,istore,ie))/2.0_dp ! <- changed to -Dij.(SixSj), to be consistent with KKRwiki
+                  jtmp(3) = (jijmat(1,1,istore,ie)-jijmat(2,2,istore,ie))/2.0_dp
+                  jtmp(4) = (jijmat(2,1,istore,ie)+jijmat(1,2,istore,ie))/2.0_dp
 
-                  jxcijint(:, istore) = jxcijint(:, istore) - wez(ie)*jtmp/4d0
+                  jxcijint(:, istore) = jxcijint(:, istore) - wez(ie)*jtmp/4.0_dp
                   ! factor 2 for NSPIN, another factor of 2 to be consistent
                   ! with definition in tbxccpljij (different from impurity program)
                   if (npol==0 .or. calc_exchange_couplings_energy) then
@@ -431,7 +431,7 @@ loop:     do lm3 = 1, nstore
           do lm2 = 1, natypd
             ! determine the pairs (ij) that match
             ncount = 0
-            dists = 1d38
+            dists = 1.0e38_dp
             istoretmp = 0
             do istore = 1, nstore
               if (indxarr(1,istore)==lm1 .and. indxarr(2,istore)==lm2) then

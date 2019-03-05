@@ -90,7 +90,7 @@ contains
     integer :: imix, ins, iobroy, ipf, itdept, lmpot, natps, natyp, nspin
 
 
-    data mit/1/, zero, one/0.0d0, 1.0d0/
+    data mit/1/, zero, one/0.0_dp, 1.0_dp/
 
     ntird = (irmd*ntperd+(irnsd+1)*(lmpotd-1)*natypd)*nspindd
 
@@ -129,7 +129,7 @@ contains
       do ia = natps, natyp
 
         irc1 = irc(ia)
-        volinv = 3.0d0/(r(irc1,ia)**3)
+        volinv = 3.0_dp/(r(irc1,ia)**3)
 
         do ir = 1, irc1
           ij = ij + 1

@@ -81,7 +81,7 @@ contains
       slc1sum(0:ncheb), rmesh(nrmax)
 
     integer :: ipiv(0:ncheb, lmsize2)
-    integer :: ierror, use_sratrick
+    integer :: ierror
     integer :: idotime
     integer, parameter :: directsolv = 1
     complex (kind=dp) :: alphaget(lmsize, lmsize) ! LLY
@@ -114,12 +114,6 @@ contains
     ! in future implementation equation 4.134 is supposed to be
     ! implemented which should lead to an additional speed-up.
     ! ***********************************************************************
-
-    if (lmsize==1) then
-      use_sratrick = 0
-    else
-      use_sratrick = use_sratrick1
-    end if
 
     ! turn timing output off if in the host code
     idotime = 0
@@ -168,7 +162,7 @@ contains
 #endif
     do ipan = 1, npan
 
-      drpan2 = (rpanbound(ipan)-rpanbound(ipan-1))/2.d0 ! *(b-a)/2 in eq. 5.53, 5.54
+      drpan2 = (rpanbound(ipan)-rpanbound(ipan-1))/2.0_dp ! *(b-a)/2 in eq. 5.53, 5.54
       call rll_local_solutions(vll,tau(0,ipan),drpan2,cslc1,slc1sum,mrnvy(1,1,ipan),& 
         mrnvz(1,1,ipan),mrjvy(1,1,ipan),mrjvz(1,1,ipan),yrf(1,1,0,ipan),            &
         zrf(1,1,0,ipan),ncheb,ipan,lmsize,lmsize2,nrmax,nvec,jlk_index,hlk,jlk,hlk2,& 

@@ -48,7 +48,7 @@ contains
       meirr(nkmmax, nkmmax, 3, nmvecmax), mereg(nkmmax, nkmmax, 3, nmvecmax), mvevd(ntmax, 3, nmvecmax), mvevdl(nlmax, 3, nmvecmax), mvevdm(nlmax, nmuemax, 3, nmvecmax), &
       mvevi(ntmax, 3, nmvecmax), w1(nkmmax, nkmmax), w2(nkmmax, nkmmax), w3(nkmmax, nkmmax), zfjf(2, 2), zfzf(2, 2), zgjg(2, 2), zgzg(2, 2)
     logical :: check
-    integer :: i, i0, ikm, ikm1, ikm2, ikmcb(2, nkmmax), ikmt1, ikmt2, il, im, imkm1, imkm2, imv, imvec, ipol, it, iti, j, j1, j2, jtop, k, k1, k2, kapcb, l, li, lmax, m, mue, &
+    integer :: i, i0, ikm, ikm1, ikm2, ikmcb(2, nkmmax), ikmt1, ikmt2, il, im, imkm2, imv, imvec, ipol, it, iti, j, j1, j2, jtop, k, k1, k2, kapcb, l, li, lmax, m, mue, &
       muetop, n, nmvec, noswf, npol, nsol, nsolcb(nkmmax)
     real (kind=dp) :: mj, sum
     character (len=3) :: str3
@@ -147,14 +147,11 @@ contains
 
             do k1 = 1, nsolcb(ikmt1)
               ikm1 = ikmcb(k1, ikmt1)
-              imkm1 = imkmtab(ikm1)
-
               do imv = 1, nmvec
                 do ipol = 1, npol
                   mereg(ikmt1, ikmt2, ipol, imv) = mereg(ikmt1, ikmt2, ipol, imv) + amemvec(ikm1, ikm2, ipol, imv)*zgzg(k1, k2)
                 end do
               end do
-
             end do
 
             do imv = 1, nmvec
@@ -171,14 +168,11 @@ contains
               imkm2 = imkmtab(ikm2)
               do k1 = 1, nsolcb(ikmt1)
                 ikm1 = ikmcb(k1, ikmt1)
-                imkm1 = imkmtab(ikm1)
-
                 do imv = 1, nmvec
                   do ipol = 1, npol
                     meirr(ikmt1, ikmt2, ipol, imv) = meirr(ikmt1, ikmt2, ipol, imv) + amemvec(ikm1, ikm2, ipol, imv)*zgjg(k1, k2)
                   end do
                 end do
-
               end do
 
               do imv = 1, nmvec

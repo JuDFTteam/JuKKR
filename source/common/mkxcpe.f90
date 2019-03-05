@@ -63,10 +63,10 @@ contains
     real (kind=dp) :: ddrru, df1, df2, drr, drrd, drru, dt1, dt2, dtf, dzdfs, dzdr
     real (kind=dp) :: dzdtr, etot0, etota0, g2r, g2rd, g2ru, gggr, gggrd, gggru, grf
     real (kind=dp) :: grfd, grfu, grgrd, grgru, grr, grrd, grru, grt, grtd
-    real (kind=dp) :: grtu, gzgr, rdspr, ro, rod, rou, rv2, rv3, rvsin1, rvsin2, ry2
+    real (kind=dp) :: grtu, gzgr, rdspr, ro, rod, rou, rv2, rv3, rvsin1, ry2
     real (kind=dp) :: rylm, sint1, sint2, smag, spi, tant1, vcg1, vcg2, vcl1, vcl2
     real (kind=dp) :: vtot1, vtot2, vtota1, vtota2, vxg1, vxg2, vxl1, vxl2, xedg, xedl
-    integer :: idspr, im, ip, l1, ll, llmax, lm, lmax, nn, nn1
+    integer :: idspr, im, ip, l1, ll, lm, nn, nn1
     ! ..
     ! .. Local Arrays ..
     real (kind=dp), dimension(ijd) :: ddry, ddryd, ddryu, drdf, drdfd, drdfu, drdt
@@ -100,8 +100,6 @@ contains
     ! stop14
     ! endif
     ! heck  ist=mesh
-    llmax = l1max*l1max
-    lmax = l1max - 1
     ! lmax2=lmax*2
     ! llmax2=(lmax2+1)**2
     ! lmax3=lmax*1
@@ -257,7 +255,6 @@ contains
 
 
         rvsin1 = rv*sint1
-        rvsin2 = rv2*sint2
 
         grr = dry(ip)
         grt = rdt1(ip)/rv
