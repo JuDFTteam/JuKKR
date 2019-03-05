@@ -747,9 +747,12 @@ contains
     ! set switch for MPIatom test option (see mod_types and mod_mympi)
     ! default values for MPIadapt and MPIatom
     if (natyp<=ielast) then
-      mpiatom = .true.
-    else
+      ! for more energy points than atoms we want energy parallelization
       mpiatom = .false.
+    else
+      ! for for a large number of atoms we want to use atom parallelization
+      ! since this makes the k-loop and the atom loops slow
+      mpiatom = .true.
     end if
     mpiadapt = 1                   ! 1 means check timings and then reshuffle ranks if necessary
     ! change default behaviour for the corresponding test flags are found
@@ -764,7 +767,7 @@ contains
     if (MPI_scheme==3) then
       mpiadapt = 2                 ! 2 means force run with MPIatom then with MPIenerg and then compare to choose optimal
     end if
-    ! so far changing does not work yet, so turn this off:
+    ! so far changing does not work yet, so turn this off always:
     mpiadapt = 0
 
     if (write_pkkr_input .or. write_green_host .or. write_green_imp .or. write_pkkr_operators) then ! fswrt
