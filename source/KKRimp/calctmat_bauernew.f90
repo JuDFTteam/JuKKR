@@ -628,11 +628,13 @@ if ( config_testflag('wronskian') ) then
   if (kspinorbit==1) then
     call calcwronskian(wavefunction%rll(:,:,:,1),wavefunction%sll(:,:,:,1), &
       wavefunction%rllleft(:,:,:,1),wavefunction%sllleft(:,:,:,1), &
-      cellnew)
+      cellnew%ncheb, cellnew%npan_tot, cellnew%ipan_intervall, cellnew%rpan_intervall)
+      !cellnew)
   else
     call calcwronskian(wavefunction%rll(:,:,:,1),wavefunction%sll(:,:,:,1), &
       wavefunction%rll(:,:,:,1),wavefunction%sll(:,:,:,1), &
-      cellnew)
+      cellnew%ncheb, cellnew%npan_tot, cellnew%ipan_intervall, cellnew%rpan_intervall)
+      !cellnew)
   end if
 end if
 

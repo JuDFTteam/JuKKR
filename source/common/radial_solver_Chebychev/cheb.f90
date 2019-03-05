@@ -149,11 +149,10 @@ contains
     real (kind=dp) :: temp1(0:ncheb, 0:ncheb)
     integer :: n
 
-    lambda = cmplx(0.0_dp, 0.0_dp, kind=dp)
-    cmatrix = cmplx(0.0_dp, 0.0_dp, kind=dp)
-    cinvmatrix = cmplx(0.0_dp, 0.0_dp, kind=dp)
-    lambda = cmplx(0.0_dp, 0.0_dp, kind=dp)
-    temp1 = cmplx(0.0_dp, 0.0_dp, kind=dp)
+    lambda = 0.0_dp
+    cmatrix = 0.0_dp
+    cinvmatrix = 0.0_dp
+    temp1 = 0.0_dp
 
     call getlambda(ncheb, lambda)
     call getcinvmatrix(ncheb, cinvmatrix)
