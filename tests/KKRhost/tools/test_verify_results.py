@@ -73,7 +73,8 @@ class Test_parallel():
         # compare parallel modes to check rest parallelization
         cmplist = ['test_run03.1_hybrid_1_3',
                    'test_run03.1_hybrid_1_8',
-		   'test_run03.1_hybrid_1_9']
+		   'test_run03.1_hybrid_1_9',
+                   'test_run03.1_energ_hybrid_1_25']
         cmp_modes(cmplist, '')
 
 

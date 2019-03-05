@@ -181,6 +181,9 @@ echo "###########################################"
 echo "run:intel:Si_LLY_SOC_3_1:"
 echo ""
 ./run_parallel.py -1003
+if [[ ! -d test_run03.1_energ_hybrid_1_25 ]]; then
+  ./tools/run_test_03_1_energ25.sh
+fi
 
 echo "###########################################"
 echo "run:intel:NOSOC_3_2:"
