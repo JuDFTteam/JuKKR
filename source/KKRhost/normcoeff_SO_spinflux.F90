@@ -45,7 +45,7 @@ contains
     use :: mod_mympi, only: myrank, master
     use :: mod_datatypes, only: dp
     use :: global_variables, only: lmmaxd, ipand, natypd, irmd, nspind
-    use :: mod_constants, only: czero
+    use :: mod_constants, only: czero, ci
 
     implicit none
 
@@ -203,7 +203,7 @@ contains
                 do lm1 = 1, lmmax0d
                   do lm2 = 1, lmmax0d
                     spinflux((i1sp2-1)*lmmax0d+lm2, (i1sp1-1)*lmmax0d+lm1, i1, isigma)=&
-                    -(0d0, 1d0)*(dens(lm2,lm1,2,i1sp2,1,i1sp1,i1)+dens(lm2,lm1,1,i1sp2,2,i1sp1,i1))/2
+                    -ci*(dens(lm2,lm1,2,i1sp2,1,i1sp1,i1)+dens(lm2,lm1,1,i1sp2,2,i1sp1,i1))/2
                   end do           ! LM2
                 end do             ! LM1
               end do               ! I1SP2
@@ -216,7 +216,7 @@ contains
                 do lm1 = 1, lmmax0d
                   do lm2 = 1, lmmax0d
                     spinflux((i1sp2-1)*lmmax0d+lm2, (i1sp1-1)*lmmax0d+lm1, i1, isigma)= &
-                    -(0d0, 1d0)*(-1)*(0d0, 1d0)*(dens(lm2,lm1,2,i1sp2,1,i1sp1,i1)-dens(lm2,lm1,1,i1sp2,2,i1sp1,i1)) /2
+                    -ci*(-1)*ci*(dens(lm2,lm1,2,i1sp2,1,i1sp1,i1)-dens(lm2,lm1,1,i1sp2,2,i1sp1,i1)) /2
                   end do           ! LM2
                 end do             ! LM1
               end do               ! I1SP2
@@ -228,7 +228,7 @@ contains
               do i1sp2 = 1, 2
                 do lm1 = 1, lmmax0d
                   do lm2 = 1, lmmax0d
-                    spinflux((i1sp2-1)*lmmax0d+lm2, (i1sp1-1)*lmmax0d+lm1, i1, isigma) = (0d0, 1d0)*(dens(lm2,lm1,1,i1sp2,1,i1sp1,i1)-dens(lm2,lm1,2,i1sp2,2,i1sp1,i1))/2
+                    spinflux((i1sp2-1)*lmmax0d+lm2, (i1sp1-1)*lmmax0d+lm1, i1, isigma) = ci*(dens(lm2,lm1,1,i1sp2,1,i1sp1,i1)-dens(lm2,lm1,2,i1sp2,2,i1sp1,i1))/2
                   end do           ! LM2
                 end do             ! LM1
               end do               ! I1SP2

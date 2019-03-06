@@ -75,7 +75,6 @@ contains
     complex (kind=dp) :: qc(2, 2, -npemax:mpsmax), zz
 
     integer :: i, ip, isk1, isk2, iv, j, k, lb(2), lb1, lb2, m, mps, n, nfy, npe, nsol
-    integer :: isign
     save :: a11, a12, a21, a22, aa11, aa12, aa21, aa22, alpha, bb1, bb2, bc, beta, bqq, cfac, cm, cmi, detd, dix, dy, efac, emvpp, emvqq, fy, gam, gpm, hbs, i, ip, isk1, isk2, iv, &
       j, k, lb, lb1, lb2, m, mps, n, nfy, npe, nsol, pc, qc, rpwgpm, rr, sk, sk1, sk2, tz, vc, w1, w2, w3, w4, w5, w6, w7, x, zz
 

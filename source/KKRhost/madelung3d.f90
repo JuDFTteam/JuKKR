@@ -108,8 +108,8 @@ contains
     if (write_madelung_file) then
       open (69, access='direct', recl=lrecabmad, file='abvmad.unformatted', form='unformatted')
     else
-      allocate(t_madel%avmad(naez*naez, lmpotd, lmpotd), stat=ierr)
-      allocate(t_madel%bvmad(naez*naez, lmpotd), stat=ierr)
+      allocate(t_madel%avmad(naez*naez, lmpotd, lmpotd), t_madel%bvmad(naez*naez, lmpotd), stat=ierr)
+      if (ierr/=0) stop 'Error allocating t_madel%avmad/bvmad'
     end if
 
     ! --> calculate the gaunt coefficients

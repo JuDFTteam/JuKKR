@@ -31,11 +31,11 @@ contains
     implicit none
 
     ! PARAMETER definitions
-    real (kind=dp), parameter :: eps = 1.0d-12
+    real (kind=dp), parameter :: eps = 1.0e-12_dp
     integer :: mpsmax, npemax, invmax
     parameter (mpsmax=20, npemax=20, invmax=3)
     real (kind=dp) :: tol
-    parameter (tol=1.0d-9)
+    parameter (tol=1.0e-9_dp)
     integer :: itmax
     parameter (itmax=50)
 
@@ -52,7 +52,6 @@ contains
     real (kind=dp) :: bc(0:npemax), cg1, cg2, cg4, cg5, cg8, csqr, det, dvc, gam(2), gpm, h24, kap(2), pc(2, 2, 0:mpsmax), pnew(2, 2), pold(2, 2), qc(2, 2, 0:mpsmax), qnew(2, 2), &
       qold(2, 2), rpwgpm, rr, tz, vc(0:npemax)
     integer :: i, iv, j, jcorr, k, kap1, kap2, m, mps, n, nn, nsol
-    integer :: int, nint
     save :: a11, a12, a21, a22, aa11, aa12, aa21, aa22, alpha, bb1, bb2, bc, beta, bova, bpp, bqq, cg1, cg2, cg4, cg5, cg8, csqr, det, diffa, diffb, dmue, dvc, emvpp, emvqq, gam, &
       gpm, h24, i, iv, j, jcorr, k, kap, kap1, kap2, m, mps, n, nn, nsol, pc, pnew, pold, qc, qnew, qold, rpwgpm, rr, tz, vc, w1, w2, w3, w4, w5, w6, w7
 
@@ -61,7 +60,7 @@ contains
     ! MB
 
 
-    h24 = 1.0d0/24.0d0
+    h24 = 1.0_dp/24.0_dp
     dvc = c
     csqr = dvc*dvc
 
@@ -71,14 +70,14 @@ contains
       tz = real(nint(-vv(1)*rc(1)), kind=dp)
       vc(0) = vv(1) - (-tz)/rc(1)
     else
-      tz = 2.0d0*real(z, kind=dp)
+      tz = 2.0_dp*real(z, kind=dp)
       vc(0) = vv(1)
     end if
     do i = 1, 2
       do j = 1, 2
         do k = 1, npemax
-          pc(i, j, k) = 0.0d0
-          qc(i, j, k) = 0.0d0
+          pc(i, j, k) = 0.0_dp
+          qc(i, j, k) = 0.0_dp
         end do
       end do
     end do
@@ -92,8 +91,8 @@ contains
     kap1 = -l - 1
     kap2 = +l
 
-    cg1 = -mj/(kap1+0.5d0)
-    cg5 = -mj/(-kap1+0.5d0)
+    cg1 = -mj/(kap1+0.5_dp)
+    cg5 = -mj/(-kap1+0.5_dp)
     cgd(1) = cg1
     cgmd(1) = cg5
     kap(1) = real(kap1, kind=dp)
@@ -105,19 +104,19 @@ contains
     end if
     ! MB
     if (abs(mj)>l) then
-      cg2 = 0.0d0
-      cg4 = 0.0d0
-      cg8 = 0.0d0
+      cg2 = 0.0_dp
+      cg4 = 0.0_dp
+      cg8 = 0.0_dp
       nsol = 1
-      cgd(2) = 0.0d0
-      cgo = 0.0d0
-      cgmd(2) = 0.0d0
-      gam(2) = 0.0d0
-      kap(2) = 0.0d0
+      cgd(2) = 0.0_dp
+      cgo = 0.0_dp
+      cgmd(2) = 0.0_dp
+      gam(2) = 0.0_dp
+      kap(2) = 0.0_dp
     else
-      cg2 = -sqrt(1.0d0-(mj/(kap1+0.5d0))**2)
-      cg4 = -mj/(kap2+0.5d0)
-      cg8 = -mj/(-kap2+0.5d0)
+      cg2 = -sqrt(1.0_dp-(mj/(kap1+0.5_dp))**2)
+      cg4 = -mj/(kap2+0.5_dp)
+      cg8 = -mj/(-kap2+0.5_dp)
       nsol = 2
       cgd(2) = cg4
       cgo = cg2
@@ -142,7 +141,7 @@ contains
       ! INWARD INTEGRATION
 
       dmue = sqrt(-e-e*e/csqr)
-      bova = -dmue/(1.0d0+e/csqr)
+      bova = -dmue/(1.0_dp+e/csqr)
 
       do n = (nzero-3), nzero
 
@@ -155,10 +154,10 @@ contains
           wq(j, j, n) = bova*wp(j, j, n)
           dq(j, j, n) = bova*d_p(j, j, n)
 
-          wp(i, j, n) = 0.0d0
-          wq(i, j, n) = 0.0d0
-          d_p(i, j, n) = 0.0d0
-          dq(i, j, n) = 0.0d0
+          wp(i, j, n) = 0.0_dp
+          wq(i, j, n) = 0.0_dp
+          d_p(i, j, n) = 0.0_dp
+          dq(i, j, n) = 0.0_dp
         end do
       end do
 
@@ -173,8 +172,8 @@ contains
 
         do j = 1, nsol
           do i = 1, nsol
-            pnew(i, j) = wp(i, j, n+1) - h24*(55.0d0*d_p(i,j,n+1)-59.0d0*d_p(i,j,n+2)+37.0d0*d_p(i,j,n+3)-9.0d0*d_p(i,j,n+4))
-            qnew(i, j) = wq(i, j, n+1) - h24*(55.0d0*dq(i,j,n+1)-59.0d0*dq(i,j,n+2)+37.0d0*dq(i,j,n+3)-9.0d0*dq(i,j,n+4))
+            pnew(i, j) = wp(i, j, n+1) - h24*(55.0_dp*d_p(i,j,n+1)-59.0_dp*d_p(i,j,n+2)+37.0_dp*d_p(i,j,n+3)-9.0_dp*d_p(i,j,n+4))
+            qnew(i, j) = wq(i, j, n+1) - h24*(55.0_dp*dq(i,j,n+1)-59.0_dp*dq(i,j,n+2)+37.0_dp*dq(i,j,n+3)-9.0_dp*dq(i,j,n+4))
           end do
         end do
 
@@ -194,8 +193,8 @@ contains
               d_p(i, j, n) = -kap(i)*pnew(i, j)*dovrc(n) + (emvqq+bqq*cgmd(i))*qnew(i, j)
               dq(i, j, n) = kap(i)*qnew(i, j)*dovrc(n) + (emvpp+bpp*cgd(i))*pnew(i, j) + bpp*cgo*pnew(3-i, j)
 
-              pnew(i, j) = wp(i, j, n+1) - h24*(9.0d0*d_p(i,j,n)+19.0d0*d_p(i,j,n+1)-5.0d0*d_p(i,j,n+2)+d_p(i,j,n+3))
-              qnew(i, j) = wq(i, j, n+1) - h24*(9.0d0*dq(i,j,n)+19.0d0*dq(i,j,n+1)-5.0d0*dq(i,j,n+2)+dq(i,j,n+3))
+              pnew(i, j) = wp(i, j, n+1) - h24*(9.0_dp*d_p(i,j,n)+19.0_dp*d_p(i,j,n+1)-5.0_dp*d_p(i,j,n+2)+d_p(i,j,n+3))
+              qnew(i, j) = wq(i, j, n+1) - h24*(9.0_dp*dq(i,j,n)+19.0_dp*dq(i,j,n+1)-5.0_dp*dq(i,j,n+2)+dq(i,j,n+3))
             end do
           end do
 
@@ -274,8 +273,8 @@ contains
         i = 3 - j
         pc(j, j, 0) = sqrt(abs(kap(j))-gam(j))
         qc(j, j, 0) = (kap(j)+gam(j))*(csqr/tz)*pc(j, j, 0)
-        pc(i, j, 0) = 0.0d0
-        qc(i, j, 0) = 0.0d0
+        pc(i, j, 0) = 0.0_dp
+        qc(i, j, 0) = 0.0_dp
       end do
 
       do j = 1, nsol
@@ -306,7 +305,7 @@ contains
 
       ! CALL RINVGJ(CMI,CM,INVMAX,INVMAX)
       do iv = 1, invmax
-        vc(iv-1) = 0.0d0
+        vc(iv-1) = 0.0_dp
         ! DO N=1,INVMAX
         ! VC(IV-1)=VC(IV-1)+CMI(IV,N)*VV(N)
         ! ENDDO
@@ -315,16 +314,16 @@ contains
         i = 3 - j
         if (kap(j)>0) then
           ! ARBITRARY STARTING VALUES
-          alpha = 0.0d0
-          beta = 0.174d0
+          alpha = 0.0_dp
+          beta = 0.174_dp
         else
-          beta = 0.0d0
-          alpha = 0.174d0
+          beta = 0.0_dp
+          alpha = 0.174_dp
         end if
         pc(j, j, 0) = alpha
         qc(j, j, 0) = beta
-        pc(i, j, 0) = 0.0d0
-        qc(i, j, 0) = 0.0d0
+        pc(i, j, 0) = 0.0_dp
+        qc(i, j, 0) = 0.0_dp
       end do
 
       w4 = bc(0)*cgo
@@ -336,8 +335,8 @@ contains
         do i = 1, nsol
           w1 = emvqq + bqq*cgmd(i)
           w3 = -emvpp + bc(0)*cgd(i)
-          a11 = gam(j) + kap(i) + 1d0
-          a12 = gam(j) - kap(i) + 1d0
+          a11 = gam(j) + kap(i) + 1_dp
+          a12 = gam(j) - kap(i) + 1_dp
           if (abs(a11)>eps) pc(i, j, 1) = w1/a11*qc(i, j, 0)
           if (abs(a12)>eps) qc(i, j, 1) = (-w3*pc(i,j,0)+w4*pc(3-i,j,0))/a12
 
@@ -347,8 +346,8 @@ contains
         do i = 1, nsol
           w1 = emvqq + bqq*cgmd(i)
           w3 = -emvpp + bc(0)*cgd(i)
-          a11 = gam(j) + kap(i) + 2d0
-          a12 = gam(j) - kap(i) + 2d0
+          a11 = gam(j) + kap(i) + 2_dp
+          a12 = gam(j) - kap(i) + 2_dp
           if (abs(a11)>eps) pc(i, j, 2) = (w1*qc(i,j,1)-w2*qc(i,j,0))/a11
           if (abs(a12)>eps) qc(i, j, 2) = (-w3*pc(i,j,1)+w4*pc(3-i,j,1)+w5*pc(i,j,0))/a12
         end do
@@ -411,8 +410,8 @@ contains
 
       do j = 1, nsol
         do i = 1, nsol
-          pnew(i, j) = wp(i, j, n-1) + h24*(55.0d0*d_p(i,j,n-1)-59.0d0*d_p(i,j,n-2)+37.0d0*d_p(i,j,n-3)-9.0d0*d_p(i,j,n-4))
-          qnew(i, j) = wq(i, j, n-1) + h24*(55.0d0*dq(i,j,n-1)-59.0d0*dq(i,j,n-2)+37.0d0*dq(i,j,n-3)-9.0d0*dq(i,j,n-4))
+          pnew(i, j) = wp(i, j, n-1) + h24*(55.0_dp*d_p(i,j,n-1)-59.0_dp*d_p(i,j,n-2)+37.0_dp*d_p(i,j,n-3)-9.0_dp*d_p(i,j,n-4))
+          qnew(i, j) = wq(i, j, n-1) + h24*(55.0_dp*dq(i,j,n-1)-59.0_dp*dq(i,j,n-2)+37.0_dp*dq(i,j,n-3)-9.0_dp*dq(i,j,n-4))
         end do
       end do
 
@@ -433,8 +432,8 @@ contains
             d_p(i, j, n) = -kap(i)*pnew(i, j)*dovrc(n) + (emvqq+bqq*cgmd(i))*qnew(i, j)
             dq(i, j, n) = kap(i)*qnew(i, j)*dovrc(n) + (emvpp+bpp*cgd(i))*pnew(i, j) + bpp*cgo*pnew(3-i, j)
 
-            pnew(i, j) = wp(i, j, n-1) + h24*(9.0d0*d_p(i,j,n)+19.0d0*d_p(i,j,n-1)-5.0d0*d_p(i,j,n-2)+d_p(i,j,n-3))
-            qnew(i, j) = wq(i, j, n-1) + h24*(9.0d0*dq(i,j,n)+19.0d0*dq(i,j,n-1)-5.0d0*dq(i,j,n-2)+dq(i,j,n-3))
+            pnew(i, j) = wp(i, j, n-1) + h24*(9.0_dp*d_p(i,j,n)+19.0_dp*d_p(i,j,n-1)-5.0_dp*d_p(i,j,n-2)+d_p(i,j,n-3))
+            qnew(i, j) = wq(i, j, n-1) + h24*(9.0_dp*dq(i,j,n)+19.0_dp*dq(i,j,n-1)-5.0_dp*dq(i,j,n-2)+dq(i,j,n-3))
           end do
         end do
 

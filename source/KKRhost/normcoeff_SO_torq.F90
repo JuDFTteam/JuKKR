@@ -34,7 +34,7 @@ contains
   !> This subroutine was adapted from `NORMCOEFF_SO`.
   !> @endnote
   !-------------------------------------------------------------------------------
-  subroutine normcoeff_so_torq(natom,ircut,lmmax0d,pns,ntcell,ifunm,ipan,lmsp,ksra,   &
+  subroutine normcoeff_so_torq(natom,ircut,lmmax0d,pns,ntcell,ipan,lmsp,ksra,   &
     cleb,icleb,iend,drdi,irws,visp,nspin,vins,irmin,mode)
 #ifdef CPP_MPI
     use :: mpi
@@ -46,10 +46,10 @@ contains
     use :: mod_datatypes, only: dp
     use :: global_variables, only: ipand, ncleb, irmd, natypd, nspind, lmpotd, irmind, lmmaxd
     use :: mod_calc_torq_ll_ss, only: calc_torq_ll_ss
-    use :: mod_constants, only: czero
+    use :: mod_constants, only: czero, ci
 
     implicit none
-    real (kind=dp), parameter :: eps = 1.0d-12
+    real (kind=dp), parameter :: eps = 1.0e-12_dp
     ! ..
     integer, intent(in) :: iend
     integer, intent(in) :: mode
@@ -64,7 +64,6 @@ contains
     integer, dimension(natypd, *), intent(in)       :: lmsp !! 0,1 : non/-vanishing lm=(l,m) component of non-spherical potential
     integer, dimension(0:ipand, natypd), intent(in) :: ircut !! R points of panel borders
     integer, dimension(ncleb, 4), intent(in)        :: icleb !! Pointer array
-    integer, dimension(natypd, lmpotd), intent(in)  :: ifunm
     real (kind=dp), dimension(*), intent(in) :: cleb  !! GAUNT coefficients (GAUNT)
     real (kind=dp), dimension(irmd, natypd), intent(in) :: drdi !! Derivative dr/di
     real (kind=dp), dimension(irmd, *), intent(in) :: visp !! spherical part of the potential
@@ -171,7 +170,7 @@ contains
                       end do       ! LM2P
                     end do         ! LM1P
 
-                    call calc_torq_ll_ss(lmmax0d, rll_12, ircut(0:ipand,i2), ipan(i2), ntcell(i2), cleb, icleb, iend, ifunm, lmsp, irws(i2), drdi(:,i2), norm, visp, nspin, i1, vins, &
+                    call calc_torq_ll_ss(lmmax0d, rll_12, ircut(0:ipand,i2), ipan(i2), ntcell(i2), cleb, icleb, iend, lmsp, irws(i2), drdi(:,i2), norm, visp, nspin, i1, vins, &
                       irmin(i2))
 
                     dens(lm1, lm2, i1sp1, i1sp2, i2sp1, i2sp2, i1) = dens(lm1, lm2, i1sp1, i1sp2, i2sp1, i2sp2, i1) + norm
@@ -244,7 +243,7 @@ contains
               do i1sp2 = 1, 2
                 do lm1 = 1, lmmax0d
                   do lm2 = 1, lmmax0d
-                    torq((i1sp2-1)*lmmax0d+lm2, (i1sp1-1)*lmmax0d+lm1, i1, isigma) = (0d0, 1d0)*(dens(lm2,lm1,1,i1sp2,2,i1sp1,i1)-dens(lm2,lm1,2,i1sp2,1,i1sp1,i1))*sqa(3) - &
+                    torq((i1sp2-1)*lmmax0d+lm2, (i1sp1-1)*lmmax0d+lm1, i1, isigma) = ci*(dens(lm2,lm1,1,i1sp2,2,i1sp1,i1)-dens(lm2,lm1,2,i1sp2,1,i1sp1,i1))*sqa(3) - &
                       (-dens(lm2,lm1,1,i1sp2,1,i1sp1,i1)+dens(lm2,lm1,2,i1sp2,2,i1sp1,i1))*sqa(2)
                   end do           ! LM2
                 end do             ! LM1
@@ -271,7 +270,7 @@ contains
                 do lm1 = 1, lmmax0d
                   do lm2 = 1, lmmax0d
                     torq((i1sp2-1)*lmmax0d+lm2, (i1sp1-1)*lmmax0d+lm1, i1, isigma) = (dens(lm2,lm1,2,i1sp2,1,i1sp1,i1)+dens(lm2,lm1,1,i1sp2,2,i1sp1,i1))*sqa(2) - &
-                      (0d0, 1d0)*(-dens(lm2,lm1,2,i1sp2,1,i1sp1,i1)+dens(lm2,lm1,1,i1sp2,2,i1sp1,i1))*sqa(1)
+                      ci*(-dens(lm2,lm1,2,i1sp2,1,i1sp1,i1)+dens(lm2,lm1,1,i1sp2,2,i1sp1,i1))*sqa(1)
                   end do           ! LM2
                 end do             ! LM1
               end do               ! I1SP2

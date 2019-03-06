@@ -82,7 +82,7 @@ contains
     real (kind=dp), dimension(irmd*krel+(1-krel), *), intent(in)  :: btrel    !! magnetic field
     real (kind=dp), dimension(irmd*krel+(1-krel), *), intent(in)  :: drdirel  !! derivative of radial mesh
     ! .. Local variables
-    integer :: i, iq, ir, is, int
+    integer :: i, iq, ir, is
     character (len=9), dimension(2) :: txtrel
     character (len=9), dimension(3) :: txtspin
     character (len=3), dimension (0:113) :: elemname

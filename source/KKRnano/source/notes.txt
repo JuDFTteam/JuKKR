@@ -1,0 +1,205 @@
+========================
+Building KKRnano
+========================
+
+*) 2 programs to build: kkr2.exe, kkr0.exe
+
+*) Relevant makefiles: kkr2/Makefile kkr2/kkr0/Makefile
+
+*) Create build directories (these paths are hardcoded in the makefiles)
+   $HOME/build/kkr0
+   $HOME/build/kkr2
+   
+*) building:
+   make PLATFORM=<insert platform> TYPE=<debug or nodebug>
+   
+   where PLATFORM can be JUQUEEN, if PLATFORM is left out it builds with ifort
+   
+========================
+Stack size:
+========================
+
+PARTIALLY FIXED: The program needs a large amount of stack space, otherwise segfaults:
+(space needed depends mainly on lmax and number of mesh points...)
+
+Use this environment variable, when using OpenMP-threads:
+export OMP_STACKSIZE=20M
+
+Without OpenMP threads, one might have to set:
+ulimit -s 20000
+
+=======================
+Stack vs. heap arrays:
+=======================
+
+"vbmrv_mat_mod.f90" is explicitely coded to need stack allocated arrays
+(default for Fortran automatic arrays
+ for C programmers: variable length arrays (C99), allocated with "alloca")
+Also in this case this is only important when using OpenMP.
+use: "export OMP_STACKSIZE=20M"
+
+The other files should work with heap allocated Fortran automatic arrays
+(-heap-arrays option in ifort), but this has not been tested.
+
+ScatteringCalculation_mod.F90 also requires stack allocated arrays when using
+OpenMP. The reason for this is unknown.
+
+appblckcirc.f90, bcpwupper.f also need stack allocated arrays
+
+TODO: a safe strategy would be to not use the 'heap-arrays' option for
+code that uses OpenMP.
+
+=======================
+Interpolation of potential to new mesh and on-the-fly shape-function generation
+=======================
+
+*) A shapefun file has to be provided to specify the initial interstitial mesh
+   (Use the mapping of atom to shape in 'atominfo' - NTCELL)
+*) the shape-functions in 'shapefun' are not used! (but have to be specified
+   to avoid I/O errors in kkr0)
+*) The interstitial mesh in shapefun changes if the muffin-tin radius changes
+   (due to 'muffin-tinization', where points of the MT-region are added to the
+   interstitial mesh)
+*) When MT_scale = 0.0, the muffin-tin radii specified in atominfo will be
+   used
+
+=======================
+Possible problems:
+=======================
+
+*) Block-circulant preconditioning: Needs the same number of non-zero blocks
+   in each row of coefficient matrix. Not usable for certain crystal structures
+   such as perovskite or amorphous phases.
+
+*) Core electron configuration is specified in file 'potential' (not atominfo!)
+   kkr0 reads it and writes it into (binary) file 'atoms'
+   When using binary potential files from a previous calculation, make sure
+   the core configuration matches.
+
+*) Output of "Weinert total energy": probably wrong for spin-polarised
+   calculations.
+   For all calculations: Weinert energy and Harris energy agree only when self-consistency
+   is achieved.
+
+*) Number of mesh points depends on an algorithm using floating point numbers:
+   However, processes working on the same atom must arrive at the same results.
+   Otherwise there will be problems with spin/energy-parallelisation
+   Workaround: If problems occur: calculate without spin/energy-parallelisation
+
+*) Interpolation to a larger muffin-tin radius problematic,
+   since spline polynomial at boundary is unbounded, it blows up when r > rmax
+   Workaround: do several calculations, moving atoms in small steps only
+   SHOULD BE SOLVED NOW
+
+*) Small deviations observed when restarting a calculation (6. digit after .):
+   Deviations were much larger when a converged potential was used
+   Reason: mesh interpolation
+   Fixed: check if mesh has changed - do not interpolate if mesh stays the same
+   STILL OCCURS
+
+*) FIXED?: Convergence problems with lmax=5
+   TODO: check if only for irregular lattice positions
+   FIX: use near field corrections, using less stack memory
+   
+*) I/O with several processes writing to the same file can lead to problems
+   (e.g. on RWTH cluster with Lustre filesystem)
+   Solution: use task-local files
+   
+   This should not be a problem with the GPFS file system (as on JUQUEEN), since
+   it is advertised as having "byte-range"-locking. This matches also with our
+   experience.
+
+========================
+Task-local files:
+========================
+
+*) Compile with preprocessor-macro TASKLOCAL_FILES defined to get
+   a version that uses task-local files for meshes and potentials instead of
+   Fortran direct access files 
+
+========================
+Checkpointing:
+========================
+
+*) Files needed to restart a calculation:
+   energy_mesh, vpotnew, vpotnew.idx, meshes, meshes.idx
+   LDA+U: wldau.unf
+   
+*) To restart calculation:
+   -) run kkr0 *first*
+   -) then rename them to:
+      energy_mesh.0, vpotnew.0, vpotnew.0.idx, meshes.0, meshes.0.idx
+      
+kkr0:
+*) kkr0 can generate a start potential from a formatted potential file named
+   'potential' and a shape-function file 'shapefun'
+
+*) Start potential generation can be skipped by removing/renaming file 'potential'
+   and providing an approximate Fermi-energy in file 'EFERMI' (used for k-mesh
+   generation heuristics)
+   One also has to provide also the file 'atoms' (generated by a previous calculation),
+   since it is not generated without 'potential'.
+   Reason: it contains core state info that normally is given in the 'potential' file.
+   by kkr0 if 'potential' is missing!!!
+
+========================
+K-points:
+========================
+
+Procedure for using a different k-mesh than automatically generated:
+Let's assume that we want to use the same number of k-points at each
+E-point
+
+*) run kkr0.exe
+*) look in the output how many k-meshes are needed
+*) create a file 'new.kpoints' containing EXACTLY the same number of k-meshes
+   (format as file 'kpoints')
+   => replicate the k-mesh N times
+*) run kkr0.exe
+*) proceed as usual
+
+========================
+Specifying the initial Fermi-Energy:
+========================
+
+The initial Fermi energy is used by kkr0 to decide how much k-points
+are calculated for each energy points. The full k-mesh is used for points
+close to the Fermi level
+
+The initial Fermi level can be specified:
+*) in first entry in file 'potential'
+*) if file potential is not present it is taken from file 'EFERMI'
+
+========================
+Weighted Voronoi diagrams
+========================
+
+Specify weights in file 'voro_weights'.
+Each line contains a real number specifying the weight of the corresponding
+atom.
+When regular Voronoi diagrams (Wigner-Seitz cells) are required, set every
+weight to 1.0
+
+Compilation with preprocessor macro USE_VOROWEIGHTS defined. This is required
+because the reading of the Voronoi weights is done in an inefficient way
+(every process reads complete file 'voro_weights')
+
+========================
+Some Bugs:
+========================
+
+*) Fermi energy in formatted DOS output is not the correct Fermi energy
+*) Title in DOS files is not correct
+
+*) k-mesh depends on Fermi-Energy from 'potential' or 'EFERMI' file, which is not the
+   actual one
+
+*) if one uses a saved energy-mesh and makes changes
+   affecting the energy-mesh in input.conf then this asks for trouble
+   
+*) iguess cannot be combined with l-cutoff (RS-cutoff is OK)
+
+ALREADY FIXED bugs:
+
+*) Near field correction do not work with more than 1 MPI rank.
+*) kkr0 can create only meshes and potentials with an equal number of mesh points

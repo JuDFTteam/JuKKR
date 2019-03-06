@@ -34,7 +34,6 @@ contains
     ! ---> first calculate only the spherically symmetric contribution
     ! (for all points r; if r>r_MT (or IR> IRMIN),the density has to
     real (kind=dp) :: c0ll
-    complex (kind=dp) :: clt
     complex (kind=dp), allocatable :: rsp(:), rges(:)
     integer :: lm1p, lm2p, lm3p, ir, j, i
     integer :: ircutm(0:ipand)
@@ -74,7 +73,6 @@ contains
       lm1p = icleb(j, 1)
       lm2p = icleb(j, 2)
       lm3p = icleb(j, 3)
-      clt = cleb(j)
       ! ELSE
       ! DO IR = IRCUT(1)+1,IRCUT(IPAN)
       ! RGES(IR) = RGES(IR)+

@@ -113,7 +113,7 @@ contains
       ! <<<<<<<  set some parameters  <<<<<<<!
       ! >>>>>>>  find numer of wavefunctions that can be stored and allocate store arrays  >>>>>>>!
       ! memory demand for one atom and one energy point in Mbyte
-      delta_mem = real(t_inc%nsra*lmmaxd*lmmaxd*t_inc%irmdnew*nth*16, kind=dp)/(1024.0d0**2)
+      delta_mem = real(t_inc%nsra*lmmaxd*lmmaxd*t_inc%irmdnew*nth*16, kind=dp)/(1024.0_dp**2)
 
       ! number of wavefunction (rll, sll, rllleft, sllleft) that are needed to be stored
       nsave = 0
@@ -124,7 +124,7 @@ contains
 
       delta_mem = delta_mem*nsave
       ! avoid division by zero
-      if (delta_mem<1.0d0) delta_mem = 1.0d0
+      if (delta_mem<1.0_dp) delta_mem = 1.0_dp
 
       ! find numer of wavefunctions that can be stored
       t_wavefunctions%nwfsavemax = t_wavefunctions%maxmem_number*1024**(t_wavefunctions%maxmem_units-2)/int(delta_mem)

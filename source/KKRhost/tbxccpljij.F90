@@ -344,8 +344,7 @@ contains
 
         ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
         if (iprint>1) then
-          write (1337,'(8X,60("-"),/,10X,  &
-              "Single-site and projection matrices read in", " for IT=1,",I3,/)') natyp
+          write (1337,'(8X,60("-"),/,10X, "Single-site and projection matrices read in", " for IT=1,",I3,/)') natyp
           do ispin = 1, nspin
             write (1337, '(8X,60("+"),/,30X, " ISPIN = ",I1,/,8X,60("+"),/)') ispin
             do it = 1, natyp
@@ -357,8 +356,7 @@ contains
             end do
             write (1337, '(8X,60("+"),/)')
           end do
-          write (1337,'(8X,60("-"),/,10X,  &
-              "Delta_t = t(it,DN) - t(it,UP) matrices for IT=1,", I3,/)') natyp
+          write (1337,'(8X,60("-"),/,10X, "Delta_t = t(it,DN) - t(it,UP) matrices for IT=1,", I3,/)') natyp
           do it = 1, natyp
             write (1337, '(12X," IE = ",I2," IT =",I3)') ie, it
             call cmatstr(' DEL T ', 7, deltsst(1,1,it), lmmaxd, lmmaxd, 0, 0, 0, 1.0e-8_dp, 6)
@@ -424,9 +422,7 @@ contains
 
             ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
             if (iprint>2) then
-              write (1337,'(8X,60("-"),/,10X,  &
-                  " G_ij(DN) and G_ji(UP) matrices I =",I3," J =",I3,  &
-                  " IE =",I3,/,8X,60("-"))') ia,ja,ie
+              write (1337,'(8X,60("-"),/,10X, " G_ij(DN) and G_ji(UP) matrices I =",I3," J =",I3, " IE =",I3,/,8X,60("-"))') ia,ja,ie
               call cmatstr(' Gij DN', 7, gmij, lmmaxd, lmmaxd, 0, 0, 0, 1.0e-8_dp, 6)
               call cmatstr(' Gji UP', 7, gmji, lmmaxd, lmmaxd, 0, 0, 0, 1.0e-8_dp, 6)
             end if
@@ -488,7 +484,7 @@ contains
 
                 jxcijint(it, jt, nseff) = jxcijint(it, jt, nseff) - wez(ie)*csum/real(nspin, kind=dp)
 
-                xintegd(it, jt, nseff) = csum/(pi*4.d0)
+                xintegd(it, jt, nseff) = csum/(pi*4.0_dp)
 
                 ! -------> perform substraction instead of addition
                 ! because WGTE ~ -1/pi (WGTE = WEZ(IE)/NSPIN)
@@ -506,7 +502,7 @@ contains
                   else
                     open (499, file=jfnam2, status='OLD', position='APPEND')
                   end if
-                  write (499, fmt='(6E12.4)') ez(ie), xintegd(it, jt, nseff), jxcijint(it, jt, nseff)/4.d0
+                  write (499, fmt='(6E12.4)') ez(ie), xintegd(it, jt, nseff), jxcijint(it, jt, nseff)/4.0_dp
                   close (499)
                 end if           ! (npol==0 .or. calc_exchange_couplings_energy)
 #endif
@@ -605,9 +601,9 @@ contains
 
                 do ie = 1, ielast
                   jxcijint(it, jt, nseff) = jxcijint(it, jt, nseff) - wez(ie)*csum_store(it, jt, nseff, ie)/real(nspin, kind=dp)
-                  xintegdtmp = csum_store(it, jt, nseff, ie)/(pi*4.d0)
+                  xintegdtmp = csum_store(it, jt, nseff, ie)/(pi*4.0_dp)
                   if (npol==0 .or. calc_exchange_couplings_energy) then
-                    write (499, fmt='(6E12.4)') ez(ie), xintegdtmp, jxcijint(it, jt, nseff)/4.d0
+                    write (499, fmt='(6E12.4)') ez(ie), xintegdtmp, jxcijint(it, jt, nseff)/4.0_dp
                   end if         ! (NPOL==0 .OR. calc_exchange_couplings_energy)then
 
                 end do           ! IE
@@ -623,7 +619,7 @@ contains
 
       if (myrank==master) then
         ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
-        wgtemp = cone/4d0
+        wgtemp = cone/4.0_dp
         ! -------> here factor 1/pi omitted since it is included in WGTE
         do ns = 1, nshcalc
           do jt = 1, natyp
@@ -632,7 +628,7 @@ contains
             end do
           end do
           nseff = ns + nsmax
-          rsh(ns) = 0d0
+          rsh(ns) = 0.0_dp
           do i1 = 1, 3
             rsh(ns) = rsh(ns) + ratom(i1, nseff)*ratom(i1, nseff)
           end do

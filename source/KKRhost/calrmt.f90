@@ -19,8 +19,6 @@ contains
   !>
   !> This subroutine calculates imt and rmt(cal-rmt)
   !> and prints some informations about the used meshes
-  !> imtl = maximum number of meshpoints generating a radius
-  !> less or equal than rmt
   !> imt  = number of meshpoint generating a new mt-radius closer to
   !> mt-radius than every other meshpoint
   !-------------------------------------------------------------------------------  
@@ -39,15 +37,12 @@ contains
     ! ..
     ! .. Local Scalars ..
     real (kind=dp) :: drd1, drdws, rimt, rimtm1, rnuc
-    integer :: idelta, ih, imtl, irwsm2
+    integer :: ih, irwsm2
     ! ..
     if (kshape==0) then
       rimt = log(rmt/b+1.e0_dp)/a + 1.e0_dp
-      imtl = nint(rimt)
+      imt = nint(rimt)
       irwsm2 = irws - 2
-      idelta = nint((rimt-imtl)*2)
-      if (idelta==0) imt = imtl
-      if (idelta>0) imt = imtl + 1
       rimtm1 = real(imt-1, kind=dp)
       rmtnew = b*exp(a*rimtm1) - b
 

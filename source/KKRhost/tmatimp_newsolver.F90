@@ -114,7 +114,7 @@ contains
     complex (kind=dp), dimension ((korbit+1)*lmmax0d*natomimp, (korbit+1)*lmmax0d*natomimp), intent (inout) :: dtmtrx
     ! .. Local variables
     integer :: ipot
-    integer :: i1, ir, nsra, use_sratrick, nvec, lm1, lm2, ispin, i2, il1, il2, irmdnewd
+    integer :: i1, ir, nsra, use_sratrick, nvec, lm1, lm2, i2, il1, il2, irmdnewd
     integer :: i_stat, i_all
 #ifdef CPP_MPI
     integer :: ierr
@@ -190,15 +190,15 @@ contains
       open (unit=12, file='nonco_angle.dat', form='FORMATTED')
       do i1 = 1, natyp
         read (12, *) thetahost(i1), phihost(i1)
-        thetahost(i1) = thetahost(i1)/360.0d0*2.0d0*pi
-        phihost(i1) = phihost(i1)/360.0d0*2.0d0*pi
+        thetahost(i1) = thetahost(i1)/360.0_dp*2.0_dp*pi
+        phihost(i1) = phihost(i1)/360.0_dp*2.0_dp*pi
       end do
       close (12)
       open (unit=13, file='nonco_angle_imp.dat', form='FORMATTED')
       do i1 = 1, natomimp
         read (13, *) thetaimp(i1), phiimp(i1)
-        thetaimp(i1) = thetaimp(i1)/360.0d0*2.0d0*pi
-        phiimp(i1) = phiimp(i1)/360.0d0*2.0d0*pi
+        thetaimp(i1) = thetaimp(i1)/360.0_dp*2.0_dp*pi
+        phiimp(i1) = phiimp(i1)/360.0_dp*2.0_dp*pi
       end do
       close (13)
     end if
@@ -278,7 +278,6 @@ contains
 
         theta = thetahost(i1)
         phi = phihost(i1)
-        ispin = 1
         ipot = nspin*(i1-1) + 1
         write (6, *) 'HOST', i2, i1, irmdnew(i1)
 
@@ -582,7 +581,6 @@ contains
     do i1 = i1_start_imp, i1_end_imp
       theta = thetaimp(i1)
       phi = phiimp(i1)
-      ispin = 1
       ipot = nspin*(i1-1) + 1
       write (6, *) 'IMP', i1
 

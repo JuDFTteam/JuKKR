@@ -45,9 +45,8 @@ contains
     integer :: ipan(natypd), ircut(0:ipand, natypd)
 
     real (kind=dp) :: aa(mmaxd, mmaxd, mmaxd, mmaxd, 0:2*lmaxd), erefldau(natypd), fact(0:100), fclmb(0:2*lmaxd+1), g12, g34, jeff(natypd), rlop, rpw(irmd, 2*lmaxd+1), scl, &
-      sg(irmd), sl(irmd), sum, sumfclmb, tg(irmd), tl(irmd), ueff(natypd), wgtfclmb(0:2*lmaxd+1), wig3j, wint(irmd), w2(irmd)
+      sg(irmd), sl(irmd), tmpsum, sumfclmb, tg(irmd), tl(irmd), ueff(natypd), wgtfclmb(0:2*lmaxd+1), wig3j, wint(irmd), w2(irmd)
     integer :: i1, im1, im2, im3, im4, ipan1, ir, irc1, it, kk, l1, lf, lfmax, ll, m1, m2, m3, m4
-    integer :: nint
     
 
     fact(0) = 1.0_dp
@@ -92,7 +91,7 @@ contains
       ! 1a. Calculate slater integrals
 
       rlop = real(lopt(i1), kind=dp)
-      sumfclmb = 0.d0
+      sumfclmb = 0.0_dp
       ! ----------------------------------------------------------------------
       do lf = 2, lfmax, 2
         tl(1) = 0.0_dp
@@ -108,7 +107,7 @@ contains
 
         do ir = 2, irc1
           wint(ir) = real(conjg(phi(ir,i1))*phi(ir,i1), kind=dp)
-          w2(ir) = 2.d0*drdi(ir, i1)*wint(ir)
+          w2(ir) = 2.0_dp*drdi(ir, i1)*wint(ir)
           tl(ir) = w2(ir)*rpw(ir, lf)
           tg(ir) = w2(ir)/rpw(ir, lf+1)
         end do
@@ -165,15 +164,15 @@ contains
               m4 = m1 - m2 + m3
               if (-ll<=m4 .and. m4<=ll) then
                 im4 = ll + m4 + 1
-                sum = 0.d0
+                tmpsum = 0.0_dp
 
                 do kk = -lf, lf
                   g12 = gauntc(fact, ll, m1, lf, kk, ll, m2)
                   g34 = gauntc(fact, ll, m3, lf, -kk, ll, m4)
-                  sum = sum + g12*g34*(-1)**abs(kk)
+                  tmpsum = tmpsum + g12*g34*(-1)**abs(kk)
                 end do
 
-                aa(im1, im2, im3, im4, lf) = sum*4.d0*pi/(2.d0*real(lf,kind=dp)+1.d0)
+                aa(im1, im2, im3, im4, lf) = tmpsum*4.0_dp*pi/(2.0_dp*real(lf,kind=dp)+1.0_dp)
               end if
             end do
           end do
@@ -262,7 +261,7 @@ contains
     real (kind=dp) :: fact(0:100)
     integer :: j, n, n1, n2, n3, n4, n5, nbot, ntop
     real (kind=dp) :: rfact
-    real (kind=dp) :: s, sum, vf, x, y
+    real (kind=dp) :: s, tmpsum, vf, x, y
 
     ! INLINE FUNCTION FACTORIAL FOR REAL ARGUMENT
     rfact(x) = fact(nint(x))
@@ -302,14 +301,14 @@ contains
     else
       s = -1.0_dp
     end if
-    sum = 0.0_dp
+    tmpsum = 0.0_dp
 
     do n = nbot, ntop
       s = -s
       y = fact(n)*fact(n1-n)*fact(n2-n)*fact(n3-n)*fact(n4+n)*fact(n5+n)
-      sum = sum + (s/y)
+      tmpsum = tmpsum + (s/y)
     end do
-    cgcrac = vf*sum
+    cgcrac = vf*tmpsum
 
   end function cgcrac
 

@@ -123,7 +123,7 @@ contains
           end do
           imt1 = 0
         else
-          imt1 = anint(log(rmtnw1/b1+1.0e0_dp)/a1) + 1
+          imt1 = nint(log(rmtnw1/b1+1.0e0_dp)/a1) + 1
           do i = 1, imt1
             rr_u(i) = ra(i)
           end do

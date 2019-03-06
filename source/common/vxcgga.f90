@@ -77,7 +77,6 @@ contains
     use :: mod_gradrl, only:gradrl
     use :: mod_simpk, only: simpk
     use :: mod_simp3, only: simp3
-    use :: mod_constants, only: pi
     implicit none
 
     ! Scalar Arguments ..
@@ -114,7 +113,7 @@ contains
     ! Local Scalars ..
     real (kind=dp), parameter :: zero = 0.0_dp, zero1=1.0e-12_dp
     integer :: ifun,ipan1,ipot,ir,irc0,irc1,irh,irs1,ispin,j,l,l1max,lm,lm2,lmmax0d,m,mesh,nspin2
-    real (kind=dp) :: chgden,dx,elmxc,fpi,r1,r2,rpoint,spiden,vlmxc,vxc1,vxc2,vxc3
+    real (kind=dp) :: chgden,dx,elmxc,r1,r2,rpoint,spiden,vlmxc,vxc1,vxc2,vxc3
     ! Local Arrays ..
     real (kind=dp), dimension(ijend)            :: excij
     real (kind=dp), dimension(irmd, 0:lpotd)    :: er
@@ -132,7 +131,6 @@ contains
 
     !write (1337, fmt=*) ' GGA CALCULATION '
       WRITE (1337,FMT=*) ' GGA CALCULATION ',irmd,ijend,lmpotd,lpotd
-    fpi = 4.0_dp*pi
     lmmax0d = (lmax+1)*(lmax+1)
 
     ! loop over given representive atoms
@@ -153,23 +151,23 @@ contains
     end if
 
     do ispin = 1, nspin
-      vxcr(2, ispin) = 0.0d0
-      vxcr(3, ispin) = 0.0d0
+      vxcr(2, ispin) = 0.0_dp
+      vxcr(3, ispin) = 0.0_dp
     end do
 
     ! initialize for ex.-cor. energy
 
     if (kte==1) then
       do l = 0, lmax
-        exc(l, iatyp) = 0.0d0
+        exc(l, iatyp) = 0.0_dp
         do ir = 1, irc1
-          er(ir, l) = 0.0d0
+          er(ir, l) = 0.0_dp
         end do
       end do
 
       do lm = 1, lmmax0d
         do ir = 1, irc1
-          estor(ir, lm) = 0.0d0
+          estor(ir, lm) = 0.0_dp
         end do
       end do
     end if
@@ -187,8 +185,8 @@ contains
           spiden = rho2ns(ir, lm, 2)/r2
           if (abs(chgden)<=zero1) chgden = zero
           if (abs(spiden)<=zero1) spiden = zero
-          rhol(ir, 2, lm) = (chgden+spiden)/2.d0
-          rhol(ir, 1, lm) = (chgden-spiden)/2.d0
+          rhol(ir, 2, lm) = (chgden+spiden)/2.0_dp
+          rhol(ir, 1, lm) = (chgden-spiden)/2.0_dp
         end do
         ! extrapolate
         rhol(1, 1, lm) = rhol(2, 1, lm)
@@ -201,8 +199,8 @@ contains
           r2 = r1*r1
           chgden = rho2ns(ir, lm, 1)/r2
           if (abs(chgden)<=zero1) chgden = zero
-          rhol(ir, 1, lm) = chgden/2.d0
-          rhol(ir, 2, lm) = chgden/2.d0
+          rhol(ir, 1, lm) = chgden/2.0_dp
+          rhol(ir, 2, lm) = chgden/2.0_dp
         end do
         ! extrapolate
         rhol(1, 1, lm) = rhol(2, 1, lm)

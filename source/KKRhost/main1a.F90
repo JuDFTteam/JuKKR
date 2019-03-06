@@ -60,7 +60,7 @@ contains
     use :: mod_initldau, only: initldau
     use :: mod_calctmat, only: calctmat
     use :: mod_types, only: t_tgmat, t_inc, t_lloyd, t_dtmatjij, init_t_dtmatjij, init_t_dtmatjij_at, t_mpi_c_grid
-    use :: mod_mympi, only: nranks, master, myrank, distribute_work_atoms, distribute_work_energies
+    use :: mod_mympi, only: nranks, master, myrank, distribute_work_atoms, distribute_work_energies, mpiatom
     use :: mod_wunfiles, only: get_params_1a, t_params, read_angles
     use :: mod_jijhelp, only: set_jijcalc_flags
     ! array dimensions
@@ -286,12 +286,13 @@ contains
       end if
 
       if (lly/=0 .and. .not. t_lloyd%dtmat_to_file) then
-        if (t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1)) then
-          ! reset tralpha and dtmat to zero for rest-ranks, otherwise
-          ! these contributions are counted twice
+        if (mpiatom .and. t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1)) then
+          ! reset tralpha and dtmat to zero for rest-ranks to avoid double counting
+          ! for some reason this is only corect for mpiatom mode and not for
+          ! mpienerg, I don't know why but this seems to fix it. P.R. 05.03.2019
           t_lloyd%tralpha = czero
           t_lloyd%dtmat = czero
-        end if
+        end if 
         call gather_lly_dtmat(t_mpi_c_grid,t_lloyd,lmmaxd,t_mpi_c_grid%mympi_comm_ie)
       end if
 

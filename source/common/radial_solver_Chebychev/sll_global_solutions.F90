@@ -77,7 +77,7 @@ contains
       tau(0:ncheb, 0:npan), &    ! Radial mesh point
       slc1sum(0:ncheb), rmesh(nrmax)
 
-    integer :: ierror, use_sratrick
+    integer :: ierror
     integer :: idotime
     integer, parameter :: directsolv = 1
 
@@ -109,12 +109,6 @@ contains
     ! in future implementation equation 4.134 is supposed to be
     ! implemented which should lead to an additional speed-up.
     ! ***********************************************************************
-
-    if (lmsize==1) then
-      use_sratrick = 0
-    else
-      use_sratrick = use_sratrick1
-    end if
 
     ! turn timing output off if in the host code
     idotime = 0

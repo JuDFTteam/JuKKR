@@ -1,0 +1,26 @@
+This is a tool to inflate (converged) input data to supercells
+The following input files from the small cell need to be copied into this directory:
+- rbasis.xyz
+- potential
+- shapefun
+- (voro_weights)
+- (nonco_angle_out.dat)
+
+In order to get an ASCII potential file you might need to run "kkr.exe --convert"
+and concatanate the 'vpot.*' files in the directory where the binary potential files are ('vpotnew', 'vpotnew.idx',...)
+KKRnano can also be forced to write out updated shapefunctions by setting "write_shapes=1" in 'input.conf'
+
+Then set up a text file named 'inputcard' which contains the term "BRAVAIS" in the first line
+and the Bravais vectors of your small unit cell underneath, e.g.
+
+BRAVAIS
+1.0 0.0 0.0
+0.0 1.0 0.0
+0.0 0.0 1.0
+
+Open the script 'create_data.sh' and adjust
+- num_atoms_in
+- inflation_factor
+- sf_header_lines 
+
+Run 'create_data.sh'! Input data for the supercell can be found in directory 'newcell' afterwards.

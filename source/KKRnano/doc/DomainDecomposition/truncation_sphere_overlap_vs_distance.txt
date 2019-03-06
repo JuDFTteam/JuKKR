@@ -1,0 +1,13 @@
+from numpy import pi
+alat = 3.987116496
+cell_volume = (alat * 15)**3
+atom_density = 13500/cell_volume
+Rtrc = 4*alat
+sphere_volume = 4*pi/3*Rtrc**3
+sphere_volume
+atom_density
+normalize = (sphere_volume)**(-1)
+## Formula = 4*pi/3.*((Rtrc - .75*distance)*Rtrc**2 + distance**3/16.) * atom_density
+## exactly zero for distance==2*Rtrc
+## value at distance==0 is 1072.330292425316
+## y=3.14159*((4./3.*15.948465984^2 - x)*15.948465984 + x^3/12.) * .0631078255

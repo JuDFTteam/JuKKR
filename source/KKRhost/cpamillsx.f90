@@ -39,7 +39,7 @@ contains
 
     ! PARAMETER definitions
     real (kind=dp) :: tol, sclstd
-    parameter (tol=10d0, sclstd=1d0)
+    parameter (tol=10.0_dp, sclstd=1.0_dp)
 
     ! Dummy arguments
     real (kind=dp) :: cpachng, cpacorr, cpaerr
@@ -60,9 +60,9 @@ contains
 
     data icparun/0/
 
-    cpaerr = 0.0d0
-    cpacorr = 0.0d0
-    cpachng = 0.0d0
+    cpaerr = 0.0_dp
+    cpacorr = 0.0_dp
+    cpachng = 0.0_dp
     check = .true.
     check = .false.
 
@@ -166,8 +166,8 @@ contains
         if (cpachng>tol*cpachngl .or. cpacorr>cpacorrl) then
           write (*, *) '############### CPA step back'
 
-          p1 = 0.5d0               ! P1 = 0.05D0
-          p2 = 1d0 - p1
+          p1 = 0.5_dp               ! P1 = 0.05D0
+          p2 = 1.0_dp - p1
           cpachng = p1*cpachngl
           cpacorr = p1*cpacorrl
           cpachng = cpachngl

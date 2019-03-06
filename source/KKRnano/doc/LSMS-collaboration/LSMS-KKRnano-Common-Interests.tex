@@ -1,0 +1,383 @@
+\documentclass{llncs}
+
+\usepackage{fancyhdr}
+\renewcommand{\headrulewidth}{0pt}
+\fancypagestyle{firstpage}{
+  \fancyhf{}
+  \fancyhead[C]{\normalsize{ORNL-FZJ -- Internal Draft Version -- Do NOT Distribute!}} 
+}
+
+\usepackage{todonotes}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{units}
+%\usepackage[svgpath=figs/]{svg}
+
+\newcommand{\ttt}[1]{\texttt{#1}}
+\newcommand{\um}[1]{_{\mathrm{#1}}}
+\newcommand{\ket}[1]{ \left| #1 \right\rangle }
+\newcommand{\ellmax}{\ell_{\mathrm{max}}}
+ 
+
+\def\KKRnano{{KKRnano}}
+\def\LSMS{{LSMS}}
+
+\begin{document}
+
+\title{Collaboration on Multiple Scattering Methods}
+
+\author{ 
+  Paul F.~Baumeister\inst{3} 
+  \and
+  Rudolf Zeller\inst{2}
+  \and
+  Marcel Bornemann\inst{2}
+  \and
+  Roman Kovacik\inst{2}
+  \and
+  Khorgolkhuu Odbadrakh\inst{4}
+  \and
+  Markus Eisenbach\inst{1}
+}
+
+\institute{ 
+  Oak Ridge National Laboratory, Oak Ridge, Tennessee 37831, USA
+  \and
+  Peter-Gr\"unberg-Institut, Forschungszentrum J\"ulich, 52425
+  J\"ulich, Germany
+\and
+  J\"ulich Supercomputing Centre, Forschungszentrum J\"ulich, 52425 J\"ulich, Germany
+  \and
+Joint Institute for Computational Sciences, University of Tennessee,
+Oak Ridge, Tennessee 37831, USA
+%   \and
+%   IBM Deutschland Research \& Development GmbH, 71032 B\"{o}blingen, Germany 
+%   \and 
+%   IBM T.J.~Watson Research Center, Yorktown Heights, NY 10598, US
+}
+
+\maketitle
+\thispagestyle{firstpage}
+
+% ==================================================================================================
+\begin{abstract}
+Multiple scattering methods for electronic structure calculations
+give natural access to linear scaling with system size.
+Large scale simulations of realistic quantum effects are becoming increasingly important
+for nanotechnology. Therefore, the developer teams of \LSMS{} at Oak Ridge National Laboratory
+and \KKRnano{} at Forschungszentrum J\"ulich identify mathematical, algorithmic and technical issues
+to improve their implementations of linear scaling density functional theory in close collaboration.
+\end{abstract}
+% ==================================================================================================
+
+% ==================================================================================================
+\section{Introduction} \label{section:intro}
+% ==================================================================================================
+This document describes the framework of a newly-established strong collaboration
+between the Oak Ridge National Laboratory (ORNL) represented by Dr.~Markus Eisenbach
+and Forschungszentrum J\"ulich GmbH (FZJ) represented by Dr.~Rudolf Zeller.
+The aim of the collaboration is to promote the development of multiple scattering methods
+for scalable high performance calculations in the framework of density functional theory
+and related approaches towards the electronics and magentic structure of materials.
+This collaboration will be strongly focussed onto the mutual long-term benefit of both research institutions, 
+ORNL and FZJ, by sharing common experiences in the following three subtopics
+\begin{itemize}
+ \item Mathematical approaches towards specific physical problems  
+ \item Stable numerical algorithms suitable for fast solutions
+ \item Technical issues of porting the applications to current/future HPC platforms
+\end{itemize}
+Both sides are willing to reveal their knowledge on these topics in order to
+contribute to fruitful discussions.
+
+
+%% structure
+In the following section \ref{section:apps}, a short description of the code packages is given as they are today.
+Then common features and major differences between the two implementations are pointed out in section \ref{section:differ}.
+We identify common goals for the future of the two applications in section \ref{section:common}
+and highlight selected technical challenges that have to be overcome for reaching these goals in section \ref{section:tech}.
+Finally, we summarize the contents of this collaboration in section \ref{section:summary}.
+
+% ==================================================================================================
+\section{Applications} \label{section:apps}
+% ==================================================================================================
+
+Both research institutions contribute experiences that are gained during the development
+of their main applications in the field of multiple scattering method.
+These implementations, the \LSMS{} code and \KKRnano{} from ORNL and FZJ, respectively, are described here.
+
+% ..................................................................................................
+\subsection{KKRnano} \label{section:kkrnano}
+% ..................................................................................................
+\KKRnano{} is an implementation of the Korringa-Kohn-Rostoker multiple scattering method \cite{PhysRevB.52.8807,PhysRevB.85.235103}
+that allows to solve for the Green function of a system consisting of many atoms.
+The decomposition of the simulation volume into Voronoi cells has shown to be a good
+approach for a precise description of relevant physical quantities on radial grids within each cell.
+Each Voronoi cell features a radial grid that originates at the cell center
+which coincides with the position of the atomic nucleus unless we treat a vacuum cell.
+If necessary, vacuum cells are added to calculations to improve the convergence with respect to the truncation of
+the angular momenta, $\ellmax$, for various quantities, so that a calculation may involve more cells than atoms.
+%% difficulty: how to find the best position of vacuum cells in an unordered geometry
+The code performs self-consistency (SCF) iterations in order to converge the electron density
+where in each SCF iteration, the new density is found as the imaginary part of the Green function.
+The necessary energy integration is performed in a contour integration scheme that
+samples points in the complex plane.
+The energy-dependent Green function is found as the solution of the Dyson equation
+that arises from the difference of the scattering at the actual potential and the potential 
+of a reference system. As a reference system, \KKRnano{} uses a piece-wise constant potential
+function that represents repulsive spheres located at the atoms sites.
+This choice of reference system allows for a strong localization of the reference cluster
+which is equivalent to a sparse, banded matrix. 
+This allows for a linear scaling of the compute time for the application of the scattering operator
+onto a trial vector that stands for one column of the Green function. 
+The length of the trial vector and the number of columns that have to be solved, however, scale with
+the number of visible atoms.
+Range truncation allows to reduce the number of visible atoms to a fixed number 
+of atoms inside a given radius that defines the interaction zone. This reduces the computational
+complexity for the solution of the Dyson equation from quadratic to linear.
+Parallel processing is implemented for distributed memory (MPI) and on a thread level (OpenMP).
+Both paradigms may be activated at the same time so that huge levels of concurrency 
+($> \,$1M) can be exploited to reduce the time-to-solution.
+
+% ..................................................................................................
+\subsection{LSMS} \label{section:lsms}
+% ..................................................................................................
+
+\LSMS{}\cite{PhysRevLett.75.2867}, like \KKRnano{}, implements the multiple
+scattering KKR formalism in real space to calculate the Green's
+function of condensed matter systems and it follows the same
+fundamental decomposition of space into atomic cells and empty cells
+as needed. The Dyson equation in \LSMS{} is solved with respect to the
+free space reference system, which results in dense matrices for the
+calculation of the scattering path matrix, which limits the size of
+the local interaction zone to $O(100)$ scattering sites.
+
+In addition of non relativistic and scalar relativistic
+calculations, \LSMS{} allows the solution of the fully relativistic
+Dirac equation for electron scattering. Thus all relativistic effects
+including spin-orbit interactions are accounted for, which allows the
+calculation of magnetocrystaline anisotropy energies and
+Dzyaloshinskii-Moriya antisymmetric exchange interactions. The
+energies for arbitrary non-collinear magnetic spin configurations can
+be calculated using selfconsistently determined Lagrange multipliers
+that constrain the local magnetic order. 
+
+The implementation utilizes multiple levels of parallelism: We employ
+distributed memory parallelism via MPI to parallelize over the atoms
+in the system utilizing the natural real space domain decomposition
+and minimal communication requirements in the multiple scattering part
+of the calculation. On node, shared memory, parallelism is achieved
+for both parallelization over atoms as well as over energy points on
+the integration contour. Finally, the calculation of the multiple
+scattering matrix uses GPU acceleration when available.  
+
+An additional level of parallelism is provided by the capability to
+perform Wang-Landau Monte-Carlo sampling of magnetic and chemical
+order. This allows the first principles statistical physics
+calculation of magnetic and ordering phase transitions. The current
+implementation uses a master-slave approach of a single Monte-Carlo
+process driving multiple \LSMS{} instances, thus extending the
+scalability of this method by multiple orders of magnitude.
+
+% ==================================================================================================
+\section{Major Differences} \label{section:differ}
+% ==================================================================================================
+
+\paragraph{Radial grid representation}
+While both codes use a representation on radial grids inside each of the Voronoi cells,
+logarithmic radial grids allow to accurately represent cores states and other radial functions
+close to the nucleus. \KKRnano{} stops the logarithmic grid at the muffin tin radius,
+a radius chosen to touch the Voronoi cell hull from inside or even slightly smaller, and 
+continues with a set of panels each hosting a uniform grid. This allows for a very accurate
+description of the shape functions. \LSMS{}, in contrast, continues the logarithmic grid
+to the outermost point of the cell with the advantage of a much simpler implementation.
+
+\paragraph{Non-collinear spin treatment}
+\LSMS{} can treat the direction of the magnetisation completely unconstrained
+while \KKRnano{} only features a collinear treatment of spins, i.e. $\uparrow$ and $\downarrow$, 
+or non-magentic calculations. However, the process of implementing non-collinear
+magnetism alongside Spin-Orbit-Coupling (SOC) has recently begun.
+MPI Parallelization over the collinear spins is possible.
+
+%% scalar-relativistic single site (and core) solver vs. Dirac, SOC?
+\paragraph{Core solver physics}
+\KKRnano{} offers to choose between a scalar-relativistic and a non-relativistic solution for the core states 
+and for the radial functions entering the single site expressions. 
+\LSMS{}, in contrast, provides access to the fully relativistic
+solution of the Dirac equation in addition to the non-relativistic and
+scalar relativistic solutions for the single site scattering
+solutions, thus naturally including spin-orbit interactions.
+%
+%\todo[inline]{how about the other theory levels in LSMS? SOC? SRA?}
+
+%% direct vs. iterative inversion of the screened interaction
+\paragraph{Direct vs.~iterative Dyson solvers}
+The most time consuming part of \LSMS{} is a LU-decomposition necessary 
+for the inversion that solves the Dyson equation. The LU-inversion in
+\LSMS{} recursively applies the Schur complement of subblocks to
+reduce the number of opperations needed to obtain the diagonal block
+of the inverse.\cite{Eisenbach2016} 
+%
+% \todo[inline]{need more detail here}
+%
+\KKRnano{} constructs a screened KKR operator that features a short range and, hence, a small number
+of non-zero block-bands in the matrix representation. This favors the usage of an iterative
+inversion scheme. The transpose-free quasi-minimal-residual method (TFQMR) has been chosen here.
+
+%% programming model: Fortran2008, F77, C++ on the outer layer
+\paragraph{Programming model}
+\KKRnano{} is written in modern Fortran (F2008) with some legacy parts in old F77 style.
+\LSMS{} makes use of C++ (C++11) for the outer skeleton and Fortran routines
+for the inner work kernel.
+The GPU implementation of \LSMS{} utilizes both standard CUDA
+libraries (cuBLAS) as well as CUDA-C implementations of individual kernels. 
+%
+%\todo[inline]{do you use CUDA Fortran or CUDA-C for the GPU kernels? or are there GPU-libraries}
+
+%% GPU acceleration in LSMS
+\paragraph{GPU acceleration}
+\LSMS{} leverages the compute power of GPUs as shown on Titan, where a $8.6\times$ shorter
+time-to-solution and $7.3\times$ lower energy-to-solution can be achieved.
+A first GPU version for the Dyson solver of \KKRnano{} is currently work in progress.
+
+%% parallelization levels
+\paragraph{Parallelization levels}
+\KKRnano{} allows to distribute cells, collinear spins and energy points over MPI processes,
+while the latter is only efficient to a limited degree due to the strong imbalance of the 
+Matsubara poles compared to other energy points. \LSMS{} only
+parallelizes over atomic cells at the MPI level and over cells and
+energy points at the OpenMP level. The focus on non-collinear
+magnetism and relativity prevents a simple parallelization over spin channels.
+
+% ==================================================================================================
+\section{Common Goals} \label{section:common}
+% ==================================================================================================
+
+%\todo[inline]{check for consistency and add missing topics}
+The two teams identified the following problems in physics as target systems to which \LSMS{} and \KKRnano{}
+are good candidates to be applied to
+\begin{itemize}
+ \item high entropy alloys
+ \item huge systems with disorder
+ \item defects in ordered structures
+ \item full functional systems (e.g.~transistors)
+ \item magnetic materials (e.g.~Skyrmions)
+ \item structural materials (e.g.~metallic glasses)
+\end{itemize}
+
+In order to describe the physics correctly, \KKRnano{} is missing an implementation of non-collinear magnetism.
+
+
+The following requirements on the results are essential to a successful application that gains visibility and impact in the community
+\begin{itemize}
+ \item accuracy
+ \item reliability
+\end{itemize}
+whereas the requirement onto the implementations are
+\begin{itemize}
+ \item robustness
+ \item efficiency
+ \item resource utilization 
+\end{itemize}
+The latter two usually are addressed together when efforts are made to port the application to a new compute platform.
+Often, the porting proceeds in two steps: Get the code functionality correct first, then, increase its efficiency on
+the given architecture. Here, experiences of the \LSMS{} group could be transferred to the \KKRnano{} group who just
+started to experiment with a GPU-accelerated solver kernel.
+
+% ==================================================================================================
+\section{Technical Challenges} \label{section:tech}
+% ==================================================================================================
+
+Here, a list of challenges is given that the developer teams of both applications, \LSMS{} and \KKRnano{}, are
+facing. The aim of collecting these items is to give an overview of what needs to be done in the future
+and to align efforts so that solutions found in one team may be propagated into the other one.
+%\todo[inline]{add missing callenges}
+
+% ..................................................................................................
+\subsection{Fast Poisson solver for distributed charges} %\label{section:}
+% ..................................................................................................
+In each self-consistency iteration the Poisson equation needs to be solved to find the
+electrostatic potential contribution. The charge density distribution (right hand side of the Poisson equation)
+is given as a multi-center expansion on radial grids. The density is limited in its spatial extent
+by the Voronoi-cell construction that enters the expressions as so-called \emph{shape functions}.
+\KKRnano{} employs an Ewald summation technique to separate the long-range and short-range parts of the electrostatic interaction.
+The long range parts are treated with a small number of lattice vectors in reciprocal space. The short-range parts
+are found by summation over periodic images in real space.
+The scaling of this solver quadratic %\todo[inline]{check again} 
+and, hence, the algorithm is not suitable
+for the treatment of huge systems where linear scaling is required in all components of the method.
+
+The requirements for a Poisson solver are stability, accuracy, complexity and speed.
+Since these requirements are fullfilled by the Fast Multipole Method (FMM), 
+an investigation of how the FMM could be applied to the
+electrostatic problem in KKR codes would shine light into this issue.
+In particular it remains to be understood if the delocalized charges require a more
+sophisticated treatment than usual FMM for point charges.
+
+% ..................................................................................................
+\subsection{Placement of empty cells in structural relaxation} %\label{section:}
+% ..................................................................................................
+
+Investigations of defect structures are often related to irregular
+shapes of the Voronoi cell. Therefore, vacuum/empty cells are inserted that do not carry an atomic nucleus
+but an expansion center for a radial grid.
+The exact position of the empty cell's center is in principle arbitrary, however, the quality of results
+depends on the quality of description of densities and potentials inside the cells. Therefore,
+a strongly irregular Voronoi cell is not likely to describe these quantities well with a truncated $\ell$-expansion.
+In particular during structural relaxation, the reconstruction of the geometry
+asks for an automated method for the placement of empty cells.
+
+% ..................................................................................................
+\subsection{Reliable calculations of interatomic forces} %\label{section:}
+% ..................................................................................................
+
+The calculation of reliable forces in a full potential scheme is
+required for structural relaxation of atomic positions and the
+calculation of phononic properties. To achieve this goal, the robust  accuracy
+of a number of different algorithms needs to be ensured. In
+particular, energy variations due to changes in core state  boudary
+conditions and errors due to chnging atomic cell boundary
+volumes need to be addressed when atomc positions change.
+
+% ..................................................................................................
+\subsection{Self-consistency convergence acceleration} %\label{section:}
+% ..................................................................................................
+
+The simulation of larger and larger systems has shown that the usual recipe for the
+convergence of the self-consistency cycles are no longer feasable without accepting a critical
+slowing down with growing system size. 
+This, however, contradicts the principles of an $\mathcal O(N)$-method.
+New ways have to be identified in order to accelerate the SCF convergence, especially in systems
+that feature electronic states close to the Fermi level, and, hence, suffer from charge sloshing.
+
+
+% ==================================================================================================
+\section{Conclusions}\label{section:summary}
+% ==================================================================================================
+
+The two KKR-based DFT applications \LSMS{} and \KKRnano{} identified common aims and similar target problems.
+A list of potential challenges in which a close collaboration could lead to benefits on both sides has been assembled. 
+Among algorithmical issues, three items have been highlighted in particular: 
+\begin{itemize}
+ \item Acceleration of the self-consistency loop,
+ \item placement of empty cells and
+ \item a scalable Poisson solver.
+\end{itemize}
+Furthermore, the collaboration between the developer teams of 
+\LSMS{} from ORNL 
+and
+\KKRnano{} from FZJ
+is meant to provide a platform for fast exchange of experiences on
+bringing the applications to suitable computer architectures and running them in high parallelism.
+
+%   ==================================================================================================
+\section*{Acknowledgments}
+% ==================================================================================================
+We thank Jack Wells and Tjerk Straatsma from ORNL and Dirk Pleiter and Stefan Bl\"ugel from FZJ 
+for their efforts making this collaboration possible.
+
+% ==================================================================================================
+\bibliographystyle{plain} \bibliography{LSMS-KKRnano-Common-Interests} %% LSMS-KKRnano-Common-Interests.bib file
+% ==================================================================================================
+\end{document}

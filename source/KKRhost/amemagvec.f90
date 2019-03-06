@@ -43,10 +43,9 @@ contains
     ! Local variables
 
     character (len=1) :: chpol(3)
-    integer :: i, ikm1, ikm2, imkm, imv, imvec, ipol, j1p05, j2p05, k, k1, k2, kap1, kap2, l, l1, l2, lb1, lb2, m2, msm05, mue1m05, mue2m05, nk, nmvec
-    integer :: iabs, nint
+    integer :: i, ikm1, ikm2, imkm, imv, imvec, ipol, j1p05, j2p05, k, k1, k2, kap1, kap2, l, l1, l2, lb1, m2, msm05, mue1m05, mue2m05, nk, nmvec
     character (len=20) :: str20
-    real (kind=dp) :: sum, xj, xjm, xjp, xm, xynorm
+    real (kind=dp) :: tmpsum, xj, xjm, xjp, xm, xynorm
     character (len=4) :: txtmvec(4)
 
     data chpol/'+', '-', 'z'/
@@ -107,10 +106,8 @@ contains
           l2 = k2/2
           if (mod(k2,2)==0) then
             kap2 = l2
-            lb2 = l2 - 1
           else
             kap2 = -l2 - 1
-            lb2 = l2 + 1
           end if
           j2p05 = iabs(kap2)
 
@@ -120,35 +117,35 @@ contains
             if ((mue1m05-mue2m05)==+1) then
               amemvec(ikm1, ikm2, 1, 1) = xynorm*cgc(ikm1, 2)*cgc(ikm2, 1)
 
-              sum = 0e0_dp
+              tmpsum = 0e0_dp
               do msm05 = -1, 0
                 m2 = mue2m05 - msm05
-                if (abs(m2)<=l2) sum = sum + cgc(ikm1, msm05+2)*cgc(ikm2, msm05+2)*sqrt(real((l2-m2)*(l2+m2+1),kind=dp))
+                if (abs(m2)<=l2) tmpsum = tmpsum + cgc(ikm1, msm05+2)*cgc(ikm2, msm05+2)*sqrt(real((l2-m2)*(l2+m2+1),kind=dp))
               end do
-              amemvec(ikm1, ikm2, 1, 2) = sum
+              amemvec(ikm1, ikm2, 1, 2) = tmpsum
             end if
 
             if ((mue1m05-mue2m05)==-1) then
               amemvec(ikm1, ikm2, 2, 1) = xynorm*cgc(ikm1, 1)*cgc(ikm2, 2)
 
-              sum = 0e0_dp
+              tmpsum = 0e0_dp
               do msm05 = -1, 0
                 m2 = mue2m05 - msm05
-                if (abs(m2)<=l2) sum = sum + cgc(ikm1, msm05+2)*cgc(ikm2, msm05+2)*sqrt(real((l2+m2)*(l2-m2+1),kind=dp))
+                if (abs(m2)<=l2) tmpsum = tmpsum + cgc(ikm1, msm05+2)*cgc(ikm2, msm05+2)*sqrt(real((l2+m2)*(l2-m2+1),kind=dp))
 
               end do
-              amemvec(ikm1, ikm2, 2, 2) = sum
+              amemvec(ikm1, ikm2, 2, 2) = tmpsum
             end if
 
             if ((mue1m05-mue2m05)==0) then
               amemvec(ikm1, ikm2, 3, 1) = cgc(ikm1, 2)*cgc(ikm2, 2) - cgc(ikm1, 1)*cgc(ikm2, 1)
 
-              sum = 0e0_dp
+              tmpsum = 0e0_dp
               do msm05 = -1, 0
                 m2 = mue2m05 - msm05
-                sum = sum + cgc(ikm1, msm05+2)*cgc(ikm2, msm05+2)*m2
+                tmpsum = tmpsum + cgc(ikm1, msm05+2)*cgc(ikm2, msm05+2)*m2
               end do
-              amemvec(ikm1, ikm2, 3, 2) = sum
+              amemvec(ikm1, ikm2, 3, 2) = tmpsum
             end if
 
             ! ----------------------------------------------------------------------

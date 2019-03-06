@@ -112,7 +112,6 @@ contains
     real (kind=dp) :: cog(2, 2, 2), cof(2, 2, 2)
     integer :: i, i1, i2, i3, i5, ikm1, ikm2, il, im, in, info, ipiv(nkmmax), iq, isk1, isk2, it, j, jlim, jtop, k, k1, k2, kap1, kap2, kc, l, l1, lb1, lb2, lin, n, nsol, imkm1, &
       imkm2, is
-    integer :: isign, nint
     logical :: wronski
 
     data r1m/1.0e0_dp, 0.0e0_dp, 0.0e0_dp, 1.0e0_dp/

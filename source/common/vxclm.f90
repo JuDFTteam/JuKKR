@@ -131,22 +131,22 @@ contains
     end if
 
     do ispin = 1, nspin
-      vxcr(2, ispin) = 0.0d0
-      vxcr(3, ispin) = 0.0d0
+      vxcr(2, ispin) = 0.0_dp
+      vxcr(3, ispin) = 0.0_dp
     end do
 
     ! initialize for ex.-cor. energy
     if (kte==1) then
       do l = 0, lmax
-        exc(l, iatyp) = 0.0d0
+        exc(l, iatyp) = 0.0_dp
         do ir = 1, irc1
-          er(ir, l) = 0.0d0
+          er(ir, l) = 0.0_dp
         end do
       end do
 
       do lm = 1, lmmax0d
         do ir = 1, irc1
-          estor(ir, lm) = 0.0d0
+          estor(ir, lm) = 0.0_dp
         end do
       end do
     end if
@@ -156,7 +156,7 @@ contains
       ! generate the densities on an angular mesh
       do is = 1, 2
         do ij = 1, ijend
-          fprho(ij, is) = 0.d0
+          fprho(ij, is) = 0._dp
         end do
       end do
 
@@ -176,7 +176,7 @@ contains
       end if
 
       do ij = 1, ijend
-        factor = (1.d0-exp(-abs(fprho(ij,1))*1000.d0))
+        factor = (1.0_dp-exp(-abs(fprho(ij,1))*1000.0_dp))
         do ispin = 1, nspin
           vxc(ij, ispin) = vxc(ij, ispin)*factor ! cutoff
         end do

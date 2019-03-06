@@ -31,13 +31,13 @@ contains
     real (kind=dp) :: drdi(irmd, *), flm(-1:1, *), flmc(-1:1, *), r(irmd, *), rhoc(irmd, *), v(irmd, lmpotd, *)
     integer :: irws(*)
     ! ..
-    real (kind=dp) :: dv, rws, vint1
+    real (kind=dp) :: dv, vint1
     real (kind=dp), parameter :: fac = sqrt((4.0e0_dp*pi)/3.0e0_dp)
     integer :: i, iatyp, ipot, irws1, ispin, lm, m
     ! ..
     real (kind=dp) :: flmh(-1:1, natypd), v1(irmd)
 
-    intrinsic :: atan, sqrt
+    intrinsic :: sqrt
 
 
     if (lmax<1) then
@@ -51,7 +51,6 @@ contains
     do iatyp = nstart, nend
 
       irws1 = irws(iatyp)
-      rws = r(irws1, iatyp)
 
       do m = -1, 1
         lm = 2 + m + 1

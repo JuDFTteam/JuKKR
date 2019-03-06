@@ -261,7 +261,7 @@ contains
 
       if (myrank==master) write (*, *) 'Computing torq operator'
       call normcoeff_so_torq(natyp,t_params%ircut, lmmaxd/(1+korbit),       &
-        pns_so_all,t_params%ntcell,t_params%ifunm,t_params%ipan,t_params%lmsp,      &
+        pns_so_all,t_params%ntcell,t_params%ipan,t_params%lmsp,      &
         t_inc%kvrel,t_params%cleb,t_params%icleb,t_params%iend,t_params%drdi,       &
         t_params%irws,t_params%visp,nspind,t_params%vins,t_params%irmin,0)
 
@@ -393,7 +393,7 @@ contains
 
       if (myrank==master) write (*, *) 'Computing impurity torq operator'
       call normcoeff_so_torq(natomimp,t_params%ircut,t_params%lmmaxd/2,pns_so_imp,  &
-        t_params%ntcell,t_params%ifunm,t_params%ipan,t_params%lmsp,t_inc%kvrel,     &
+        t_params%ntcell,t_params%ipan,t_params%lmsp,t_inc%kvrel,     &
         t_params%cleb,t_params%icleb,t_params%iend,t_params%drdi,t_params%irws,     &
         t_imp%vispimp,nspind,t_imp%vinsimp,t_params%irmin,1)
 

@@ -51,7 +51,7 @@ contains
     integer :: atom(naclsd), icleb(ncleb, 4), loflm(lm2d), refpot(naezd+nembd)
     ! ..
     ! .. Local Scalars ..
-    integer :: i, lm1, lm2, m, n, n1, n2, ndim, nlm1, nlm2, info, ngd1
+    integer :: lm1, lm2, m, n, n1, n2, ndim, nlm1, nlm2, info, ngd1
     ! ..
     ! .. Local Arrays ..
     integer, allocatable :: ipvt(:)

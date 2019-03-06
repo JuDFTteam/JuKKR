@@ -68,12 +68,10 @@ contains
     character (len=80), intent (inout) :: tmpdir
     complex (kind=dp), dimension (iemxd), intent (inout) :: ez
     ! .. Local variables
-    integer :: i1, ic, icls, ie, lm1, naclsmax, lrecgrf1, i_stat, i_all
+    integer :: i1, ic, icls, ie, lm1, naclsmax, lrecgrf, i_stat, i_all
     complex (kind=dp) :: eryd
     complex (kind=dp) :: lly_g0tr_ie ! LLY
     complex (kind=dp) :: lly_g0tr_dum ! LLY dummy variable used if no LLY is chosen to save memory
-    ! .. Parameters
-    integer :: lrecgrf
     ! .. Local Arrays
     complex (kind=dp), dimension (0:lmax, nref) :: alpharef ! LLY Lloyd Alpha matrix
     complex (kind=dp), dimension (0:lmax, nref) :: dalpharef ! LLY Derivative of the Lloyd Alpha matrix
@@ -102,8 +100,7 @@ contains
     do ic = 1, ncls
       if (nacls(ic)>naclsmax) naclsmax = nacls(ic)
     end do
-    lrecgrf1 = wlength*4*naclsmax*lmgf0d*lmgf0d*ncls
-    lrecgrf = wlength*4*naclsd*lmgf0d*lmgf0d*nclsd
+    lrecgrf = wlength*4*naclsmax*lmgf0d*lmgf0d*ncls
 
     ! allocate and initialize ginp
     allocate (ginp(naclsmax*lmgf0d,lmgf0d,ncls), stat=i_stat)
@@ -124,11 +121,11 @@ contains
     end if
 
     if (t_tgmat%gref_to_file) then
-      call opendafile(68, 'gref', 4, lrecgrf1, tmpdir, itmpdir, iltmp)
+      call opendafile(68, 'gref', 4, lrecgrf, tmpdir, itmpdir, iltmp)
     end if
     if (lly/=0) then
       if (t_lloyd%dgref_to_file) then
-        call opendafile(681, 'dgrefde', 7, lrecgrf1, tmpdir, itmpdir, iltmp)
+        call opendafile(681, 'dgrefde', 7, lrecgrf, tmpdir, itmpdir, iltmp)
       end if
       if (t_lloyd%g0tr_to_file) then
         open (682, file='lly_g0tr_ie.ascii', form='FORMATTED')

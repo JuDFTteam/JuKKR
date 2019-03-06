@@ -126,8 +126,6 @@ contains
     complex (kind=dp) :: temp1
     complex (kind=dp) :: dentemp
     complex (kind=dp) :: gmatprefactor
-    integer, dimension (4) :: lmshift1
-    integer, dimension (4) :: lmshift2
     integer, dimension (nsra*lmmaxd) :: jlk_index
     real (kind=dp), dimension (3) :: moment
     real (kind=dp), dimension (3) :: denorbmom
@@ -190,8 +188,6 @@ contains
     integer :: i1_myrank           ! lmlm-dos, needed for MPI with more than one rank per energy point (nranks_ie>1)
     ! read in wavefunctions
     logical :: rll_was_read_in, sll_was_read_in, rllleft_was_read_in, sllleft_was_read_in
-    ! ..
-    character (len=100) :: filename
 
     ! lmmax0d is original lm-size (without enhancement through soc etc.)
     lmmax0d = lmmaxd/(1+korbit)
@@ -222,7 +218,7 @@ contains
     imt1 = ipan_intervall(npan_log+npan_eq) + 1
     allocate (vins(irmdnew,lmpotd,nspin/(nspin-korbit)), stat=i_stat)
     call memocc(i_stat, product(shape(vins))*kind(vins), 'VINS', 'RHOVALNEW')
-    vins = 0d0
+    vins = 0.0_dp
     vins(1:irmdnew, 1:lmpotd, 1) = vinsnew(1:irmdnew, 1:lmpotd, ipot)
     if (.not.set_cheby_nosoc)  vins(1:irmdnew, 1:lmpotd, nspin) = vinsnew(1:irmdnew, 1:lmpotd, ipot+nspin-1)
 
@@ -337,30 +333,21 @@ contains
     call memocc(i_stat, product(shape(den))*kind(den), 'DENLM', 'RHOVALNEW')
     denlm(:,:,:,:) = czero
 
-    rho2ns = 0.d0                  ! fivos 19.7.2014, this was CZERO
-    r2nef = 0.d0                   ! fivos 19.7.2014, this was CZERO
-    espv = 0d0
+    rho2ns = 0.0_dp                  ! fivos 19.7.2014, this was CZERO
+    r2nef = 0.0_dp                   ! fivos 19.7.2014, this was CZERO
+    espv = 0.0_dp
     rho2int = czero
-    denorbmom = 0d0
-    denorbmomsp = 0d0
-    denorbmomlm = 0d0
-    denorbmomns = 0d0
-    thetanew = 0d0
-    phinew = 0d0
+    denorbmom = 0.0_dp
+    denorbmomsp = 0.0_dp
+    denorbmomlm = 0.0_dp
+    denorbmomns = 0.0_dp
+    thetanew = 0.0_dp
+    phinew = 0.0_dp
     gldau = czero
-    ! LM shifts for correct density summation
-    lmshift1(1) = 0                ! qdos ruess
-    lmshift1(2) = lmmax0d           ! qdos ruess
-    lmshift1(3) = 0                ! qdos ruess
-    lmshift1(4) = lmmax0d           ! qdos ruess
-    lmshift2(1) = 0                ! qdos ruess
-    lmshift2(2) = lmmax0d           ! qdos ruess
-    lmshift2(3) = lmmax0d           ! qdos ruess
-    lmshift2(4) = 0                ! qdos ruess
 
     ! DO IR=1,3
     ! DO LM1=0,LMAXD1+1
-    ! MUORB(LM1,IR)=0d0  !zimmer: initialization shifted to main1c
+    ! MUORB(LM1,IR)=0_dp  !zimmer: initialization shifted to main1c
     ! ENDDO
     ! ENDDO
 
@@ -432,7 +419,7 @@ contains
     ! $omp private(rllleft_was_read_in, sllleft_was_read_in)                 &
     ! !$omp firstprivate(t_inc)                                              &
     ! $omp shared(t_inc)                                                     &
-    ! $omp shared(ldorhoef,nqdos,lmshift1,lmshift2,wez,lmsp,imt1,ifunm)      &
+    ! $omp shared(ldorhoef,nqdos,wez,lmsp,imt1,ifunm)      &
     ! $omp shared(r2orbc,r2nefc,cden,cdenlm,cdenns,rho2nsc_loop)             &
     ! $omp shared(nspin,nsra,iend,ipot,ielast,npan_tot,ncheb,lmax)           &
     ! $omp shared(zat,socscale,ez,rmesh,cleb,rnew,nth,icleb,thetasnew,i1)    &
@@ -458,10 +445,10 @@ contains
       ek = sqrt(eryd)
 
       ! set energy integration weight
-      df = wez(ie)/dble(nspin)
+      df = wez(ie)/real(nspin, kind=dp)
 
       if (nsra==2) then
-        ek = sqrt(eryd+eryd*eryd/(cvlight*cvlight))*(1d0+eryd/(cvlight*cvlight))
+        ek = sqrt(eryd+eryd*eryd/(cvlight*cvlight))*(1.0_dp+eryd/(cvlight*cvlight))
       end if
 #ifdef CPP_OMP
       ! $omp critical
@@ -631,8 +618,10 @@ contains
         ! $omp end critical
 #endif
 
-        ! rotate gmat from global frame to local frame
-        call rotatematrix(gmat0, theta, phi, lmmax0d, 1)
+        if ( .not. set_cheby_nosoc) then
+          ! rotate gmat from global frame to local frame
+          call rotatematrix(gmat0, theta, phi, lmmax0d, 1)
+        end if
 
         do lm1 = 1, lmmaxd
           do lm2 = 1, lmmaxd
@@ -796,8 +785,8 @@ contains
                 end if
               end if                                                                                             ! qdos
             end if ! IQ.EQ.1                                                                                     ! qdos
-            do jspin = 1, nspin/(nspin-korbit)                                                                                  ! qdos
-              dentot(jspin) = cmplx(0.d0, 0.d0, kind=dp)                                                         ! qdos
+            do jspin = 1, nspin/(nspin-korbit)                                                                   ! qdos
+              dentot(jspin) = czero                                                                              ! qdos
               do l1 = 0, lmaxd1                                                                                  ! qdos
                 dentot(jspin) = dentot(jspin) + den(l1, ie, iq, jspin)                                           ! qdos
               end do                                                                                             ! qdos
@@ -834,8 +823,8 @@ contains
                   write (32, '(7(A,3X))') '#   Re(E)', 'Im(E)', 'k_x', 'k_y', 'k_z', 'DEN_tot', 'DEN_s,p,...'                     ! complex qdos
                 end if                                                                                                            ! complex qdos
               end if ! IQ.EQ.1                                                                                                    ! complex qdos
-              do jspin = 1, nspin/(nspin-korbit)                                                                                                 ! complex qdos
-                dentot(jspin) = cmplx(0.d0, 0.d0, kind=dp)                                                                        ! complex qdos
+              do jspin = 1, nspin/(nspin-korbit)                                                                                  ! complex qdos
+                dentot(jspin) = czero                                                                                             ! complex qdos
                 do l1 = 0, lmaxd1                                                                                                 ! complex qdos
                   dentot(jspin) = dentot(jspin) + den(l1, ie, iq, jspin)                                                          ! complex qdos
                 end do                                                                                                            ! complex qdos
@@ -871,12 +860,12 @@ contains
       r2nefc = czero
       rho2nsc = czero
       rho2int = czero
-      muorb = 0.0d0
-      espv = 0.0d0
-      denorbmom = 0.0d0
-      denorbmomsp = 0.0d0
-      denorbmomlm = 0.0d0
-      denorbmomns = 0.0d0
+      muorb = 0.0_dp
+      espv = 0.0_dp
+      denorbmom = 0.0_dp
+      denorbmomsp = 0.0_dp
+      denorbmomlm = 0.0_dp
+      denorbmomns = 0.0_dp
     end if
     call mympi_main1c_comm_newsosol(nspin/(nspin-korbit), korbit, irmdnew, lmpotd, lmax, lmaxd1, lmmax0d, lmmaxd, ielast, nqdos, den, denlm, &
       gflle, rho2nsc, r2nefc, rho2int, espv, muorb, denorbmom, denorbmomsp, denorbmomlm, denorbmomns, t_mpi_c_grid%mympi_comm_at)
@@ -896,7 +885,7 @@ contains
         do ie = 1, ielast
           do lm1 = 1, lmmaxd
             do lm2 = 1, lmmaxd
-              gldau(lm1, lm2) = gldau(lm1, lm2) + gflle(lm1, lm2, ie, 1)*wez(ie)/dble(nspin)
+              gldau(lm1, lm2) = gldau(lm1, lm2) + gflle(lm1, lm2, ie, 1)*wez(ie)/real(nspin, kind=dp)
             end do
           end do
         end do
@@ -1012,12 +1001,12 @@ contains
 
         if (abs(totxymoment)>1d-05) then
           if (abs(moment(3))<1d-05) then
-            thetanew = pi/2d0
+            thetanew = pi/2.0_dp
           else
             thetanew = acos(moment(3)/totmoment)
           end if
           if (totxymoment<1d-05) then
-            phinew = 0d0
+            phinew = 0.0_dp
           else
             phinew = atan2(moment(2), moment(1))
           end if
@@ -1025,7 +1014,7 @@ contains
 
         if (t_inc%i_write>0) then
           write (1337, *) 'moment', myrank, moment(1), moment(2), moment(3)
-          write (1337, *) thetanew/(2.0d0*pi)*360.0d0, phinew/(2.0d0*pi)*360.0d0
+          write (1337, *) thetanew/(2.0_dp*pi)*360.0_dp, phinew/(2.0_dp*pi)*360.0_dp
         end if
         ! only on master different from zero:
         angles_new(1) = thetanew

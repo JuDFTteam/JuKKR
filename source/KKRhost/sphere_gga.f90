@@ -35,7 +35,6 @@ contains
     use :: mod_datatypes, only: dp
     use :: mod_lebedev, only: lebedev
     use :: mod_ymy, only: ymy
-    use :: mod_rinit, only: rinit
     use :: mod_constants, only: pi
     implicit none
 
@@ -192,7 +191,7 @@ contains
     real (kind=dp) :: qlm((l4maxd+1)**2) ! Ylm/cos(m*fi) (m>0) and Ylm/sin(m*fi)
     ! (m<0)
     real (kind=dp) :: cmfi(0:l4maxd), smfi(0:l4maxd) ! cos(m*fi) and sin(m*fi)
-    real (kind=dp) :: xy, xyz, sgm, sgmm, fi
+    real (kind=dp) :: xy, xyz, sgm, sgmm
     real (kind=dp) :: aux
     real (kind=dp) :: tiny
     parameter (tiny=1.e-20_dp)     ! if th < tiny set th=0
@@ -263,7 +262,7 @@ contains
     ! come with a different sign convention compared to the usual in the
     ! program: sin(fi)**m --> (-1)**m * sin(fi)**m. Thus some signs change.
     ! This is taken care of here:
-    fi = atan2(v2, v1)
+    !fi = atan2(v2, v1)
     ! THE CHANGE OF SIGN BELOW IS WRONG AND THEREFORE NOT DONE ANYMORE
     ! It was introduced to keep results consistent with older versions which
     ! already yielded wrong results

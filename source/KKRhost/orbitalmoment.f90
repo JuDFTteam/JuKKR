@@ -30,7 +30,6 @@ contains
     integer, intent (in) :: lmax    !! Maximum l component in wave function expansion
     integer, intent (in) :: lmmaxd  !! (KREL+KORBIT+1)*(LMAX+1)**2
     complex (kind=dp), dimension (lmmaxd, lmmaxd, 3), intent (out) :: loperator
-    integer, save :: first = 1
     integer :: lval
     complex (kind=dp), dimension (:, :, :), allocatable :: lorbit_onel
     integer :: lmmax0d, lstart, lstop, i_stat, i_all
@@ -61,19 +60,6 @@ contains
       loperator(lmmax0d+1:lmmaxd, lmmax0d+1:lmmaxd, :) = loperator(:lmmax0d, :lmmax0d, :)
     end if
 
-    ! if (first==1) then
-    ! open(unit=423492157,file='out_Lx')
-    ! open(unit=423492158,file='out_Ly')
-    ! open(unit=423492159,file='out_Lz')
-    ! do ilm=1,lmmaxd
-    ! write(423492157,'(5000F)'),Loperator(ilm,:,1)
-    ! write(423492158,'(5000F)'),Loperator(ilm,:,2)
-    ! write(423492159,'(5000F)'),Loperator(ilm,:,3)
-    ! end do
-    ! close(423492157);close(423492158);close(423492159)
-    ! end if
-
-    first = 0
   end subroutine calc_orbitalmoment
 
   !-------------------------------------------------------------------------------
