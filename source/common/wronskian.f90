@@ -32,8 +32,8 @@ contains
     complex (kind=dp), intent(in) ::  leftsll(:,:,:) !! irregular left wavefunction
     integer, intent(in) :: ncheb    !! number of Chebychev polynomials
     integer, intent(in) :: npan_tot !! number of panels
-    integer, allocatable, intent(in) :: ipan_intervall(:) !! index array for potential and shapefunction boundaries for each panel
-    real (kind=dp), allocatable, intent(in) :: rpan_intervall(:) !! radial values of panel boundaries 
+    integer, intent(in) :: ipan_intervall(:) !! index array for potential and shapefunction boundaries for each panel
+    real (kind=dp), intent(in) :: rpan_intervall(:) !! radial values of panel boundaries 
     ! local arrays
     complex (kind=dp), allocatable ::  drlldr(:,:,:)     !! derivative of rll
     complex (kind=dp), allocatable ::  dslldr(:,:,:)     !! derivative of sll

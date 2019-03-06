@@ -45,7 +45,7 @@ contains
 #endif
     use :: mod_datatypes, only: dp
     use :: mod_runoptions, only: calc_exchange_couplings, disable_tmat_sratrick, formatted_files, stop_1b, &
-      write_BdG_tests, write_pkkr_operators, write_rhoq_input, set_cheby_nospeedup, set_cheby_nosoc
+      write_BdG_tests, write_pkkr_operators, write_rhoq_input, set_cheby_nospeedup, set_cheby_nosoc, calc_wronskian
     use :: mod_constants, only: czero, cone, cvlight
     use :: global_variables, only: ntotd, ncleb, nrmaxd, mmaxd, nspind, nspotd, iemxd, lmmaxd, korbit
     use :: mod_wunfiles, only: t_params
@@ -62,6 +62,7 @@ contains
     use :: mod_vllmat, only: vllmat
     use :: mod_vllmatsra, only: vllmatsra
     use :: mod_regns, only: zgeinv1
+    use :: mod_wronskian, only: calcwronskian
 #ifdef CPP_BdG
     use :: mod_ioinput, only: ioinput ! to read in something from inputcard
 #endif
@@ -783,6 +784,19 @@ contains
       ! stop timing measurement for this pair of ie and i1, needed for MPIadapt
       if (mpiadapt>0) call timing_stop('time_1a_ieiatom', save_out=timings_1a(ie,i1))
 #endif
+
+      !#######################################################
+      ! Calculation of the Wronskian. Just for nummerical checks
+      !#######################################################
+      if ( calc_wronskian ) then
+        if (korbit==1) then
+          call calcwronskian(rll(:,:,:,ith), sll(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), &
+            ncheb, npan_tot, ipan_intervall, rpan_intervall)
+        else
+          call calcwronskian(rll(:,:,:,ith), sll(:,:,:,ith), rll(:,:,:,ith), sll(:,:,:,ith), &
+            ncheb, npan_tot, ipan_intervall, rpan_intervall)
+        end if
+      end if
 
     end do                         ! IE loop
 #ifdef CPP_OMP

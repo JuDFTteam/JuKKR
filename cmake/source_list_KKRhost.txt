@@ -92,6 +92,8 @@ add_library(lib_common STATIC
     source/common/spinorbit_ham.f90
     source/common/runoptions.F90
     source/common/beshank.f90
+    source/common/wronskian.f90
+    source/common/mathtools.f90
 )
 # disable cmake auto add pf 'lib' prefix to .so file
 SET_TARGET_PROPERTIES(lib_common PROPERTIES PREFIX "")

@@ -169,8 +169,8 @@ class Test_features():
            assert set(text)-set(text_ref)==set()
 
     def test_12_qdos(self):
-        path  = 'test_run12_mpi_1_8/'
-        path0 = 'test_run12_mpi_1_8/ref/'
+        path  = 'test_run12_mpi_1_6/'
+        path0 = 'test_run12_mpi_1_6/ref/'
         for f in 'qdos.01.1.dat qdos.01.2.dat qdos.02.1.dat qdos.02.2.dat qdos.03.1.dat qdos.03.2.dat qdos.04.1.dat qdos.04.2.dat'.split():
            fname = f
            num, text = read_file(path+fname)
@@ -357,8 +357,8 @@ class Test_SOC():
               assert set(text)-set(text_ref)==set()
 
     def test_12_qdos(self):
-        path  = 'test_run12.1_mpi_1_8/'
-        path0 = 'test_run12.1_mpi_1_8/ref/'
+        path  = 'test_run12.1_mpi_1_6/'
+        path0 = 'test_run12.1_mpi_1_6/ref/'
         for f in 'qdos.01.1.dat qdos.01.2.dat qdos.02.1.dat qdos.02.2.dat qdos.03.1.dat qdos.03.2.dat qdos.04.1.dat qdos.04.2.dat'.split():
            fname = f
            num, text = read_file(path+fname)

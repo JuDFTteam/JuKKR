@@ -15,7 +15,7 @@
 
 ----
 
-## *UNRELEASED* (last updated: 2019-03-05)
+## *UNRELEASED* (last updated: 2019-03-06)
 
 **Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release.**
 
@@ -23,6 +23,7 @@ Removed a lot of code duplicates among different
 
 ### Added
 - script to check the wronskian (see PhD Bauer, p.48)
+- calc_wronskian option in KKRhost code to check single-site wavefunctions
 
 ### Changed
 - more routines and modules in source/common directory
@@ -33,6 +34,7 @@ Removed a lot of code duplicates among different
 - replace lmmaxso with lmmaxd and old lmmaxd with lmmmax0d wherever no spin-doubling occurs. Now lmmax0d=(lmax+1)**2 and lmmaxd=(1+krel+korbit)*(lmax+1)**2
 - rename lmmax with lmmax0d or lmsize (in cases where the subroutine is called with different matrix sizes)
 - use mpiatom parallelization scheme by default if NATYP>=IELAST
+- moved wronskian from KKRimp to common to be used in KKRhost as well
 
 ### Deprecated
 - None
