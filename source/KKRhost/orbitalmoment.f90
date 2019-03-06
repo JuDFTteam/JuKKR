@@ -20,7 +20,7 @@ contains
   !> Deprecated: False 
   !> Calculation of the orbital moment 
   !-------------------------------------------------------------------------------
-  subroutine calc_orbitalmoment(lmax, lmsize, loperator)
+  subroutine calc_orbitalmoment(lmax, lmmaxd, loperator)
 
     use :: mod_constants, only: czero
     use :: mod_profiling
@@ -28,13 +28,13 @@ contains
 
     implicit none
     integer, intent (in) :: lmax    !! Maximum l component in wave function expansion
-    integer, intent (in) :: lmsize  !! (KREL+KORBIT+1)*(LMAX+1)**2
-    complex (kind=dp), dimension (lmsize, lmsize, 3), intent (out) :: loperator
+    integer, intent (in) :: lmmaxd  !! (KREL+KORBIT+1)*(LMAX+1)**2
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, 3), intent (out) :: loperator
     integer :: lval
     complex (kind=dp), dimension (:, :, :), allocatable :: lorbit_onel
-    integer :: lmmax, lstart, lstop, i_stat, i_all
+    integer :: lmmax0d, lstart, lstop, i_stat, i_all
 
-    lmmax = (lmax+1)**2
+    lmmax0d = (lmax+1)**2
     loperator = czero
 
     loperator(1, 1, 1) = czero
@@ -56,8 +56,8 @@ contains
       deallocate (lorbit_onel, stat=i_stat)
       call memocc(i_stat, i_all, 'lorbit_onel', 'calc_orbitalmoment')
     end do
-    if (lmsize/=lmmax) then
-      loperator(lmmax+1:lmsize, lmmax+1:lmsize, :) = loperator(:lmmax, :lmmax, :)
+    if (lmmaxd/=lmmax0d) then
+      loperator(lmmax0d+1:lmmaxd, lmmax0d+1:lmmaxd, :) = loperator(:lmmax0d, :lmmax0d, :)
     end if
 
   end subroutine calc_orbitalmoment

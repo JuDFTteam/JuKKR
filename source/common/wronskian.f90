@@ -32,8 +32,8 @@ contains
     complex (kind=dp), intent(in) ::  leftsll(:,:,:) !! irregular left wavefunction
     integer, intent(in) :: ncheb    !! number of Chebychev polynomials
     integer, intent(in) :: npan_tot !! number of panels
-    integer, allocatable, intent(in) :: ipan_intervall(:) !! index array for potential and shapefunction boundaries for each panel
-    real (kind=dp), allocatable, intent(in) :: rpan_intervall(:) !! radial values of panel boundaries 
+    integer, intent(in) :: ipan_intervall(:) !! index array for potential and shapefunction boundaries for each panel
+    real (kind=dp), intent(in) :: rpan_intervall(:) !! radial values of panel boundaries 
     ! local arrays
     complex (kind=dp), allocatable ::  drlldr(:,:,:)     !! derivative of rll
     complex (kind=dp), allocatable ::  dslldr(:,:,:)     !! derivative of sll
@@ -122,13 +122,13 @@ contains
   
     do ilm1=1, lmsize
       do ilm2=1, lmsize
-        write(3246762,'(2i5,50000E)') ilm2, ilm1, wronskian(ilm2,ilm1,:)
+        write(3246762,'(2i5,50000E25.14)') ilm2, ilm1, wronskian(ilm2,ilm1,:)
       end do
     end do
   
     do ilm1=1, lmsize2
       do ilm2=1, lmsize2
-        write(3246763,'(2i5,50000E)') ilm2, ilm1, wronskian2(ilm2,ilm1,:)
+        write(3246763,'(2i5,50000E25.14)') ilm2, ilm1, wronskian2(ilm2,ilm1,:)
       end do
     end do
   

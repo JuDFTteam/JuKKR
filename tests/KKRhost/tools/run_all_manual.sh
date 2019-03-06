@@ -3,7 +3,7 @@
 source python-select local
 
 
-cd tests
+cd tests/KKRhost
 
 echo "###########################################"
 echo "run:intel:serial_1:"

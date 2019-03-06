@@ -12,20 +12,22 @@
 !> Dummy version of `main1a` which is used to test the `tmat_newsolver`
 !-------------------------------------------------------------------------------
 subroutine main1a_dummy
-  use :: mod_profiling
-  use :: mod_constants
-  use :: global_variables
+  use :: mod_profiling, only: memocc
+  use :: mod_constants, only: 
+  use :: global_variables, only: nrmaxd, lmpotd, nspotd, iemxd, ncleb, ntotd, mmaxd, nspind, natypd
   use :: mod_datatypes, only: dp
 
   use :: mod_types, only: t_tgmat, t_inc, t_lloyd, t_dtmatjij, init_t_dtmatjij, init_t_dtmatjij_at
   use :: mod_mympi, only: nranks, master, myrank
-  use :: mod_timing
-  use :: mod_wunfiles
+  use :: mod_timing, only: 
+  use :: mod_wunfiles, only: 
   use :: mod_jijhelp, only: set_jijcalc_flags
 
   use :: mod_tmatnewsolver, only: tmat_newsolver
-  use :: mod_main0
-  use :: mod_ioinput
+  use :: mod_main0, only: ielast, natyp, nspin, lmax, nsra, iend, lly, deltae, idoldau, ncheb, cleb, icleb, ez, npan_tot, &
+    lopt, ipan_intervall, zat, socscale, rnew, rpan_intervall, wldau
+  use :: mod_ioinput, only: ioinput
+  use :: mod_runoptions, only:write_BdG_tests
 
 
   implicit none
@@ -50,7 +52,7 @@ subroutine main1a_dummy
   ! for data import:
   character (len=25) :: dummy
   integer :: ier
-  character (len=256) :: uio                               ! NCOLIO=256
+  character (len=:), allocatable :: uio           ! NCOLIO=256
 
 
   ! BdG specific:

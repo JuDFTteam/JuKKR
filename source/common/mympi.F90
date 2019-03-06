@@ -20,7 +20,7 @@ module mod_mympi
   public :: myrank, nranks, master, mympi_init, mpiatom, mpiadapt, distribute_work_atoms, distribute_work_energies
 #ifdef CPP_MPI
   public :: distribute_linear_on_tasks, find_dims_2d, create_newcomms_group_ie, mympi_main1c_comm, mympi_main1c_comm_newsosol, mympi_main1c_comm_newsosol2, &
-    check_communication_pattern
+    check_communication_pattern, bcast_global_variables
 #endif
 
   integer, save :: myrank   = -1
@@ -699,7 +699,7 @@ contains
   !> Deprecated: False
   !> MPI communication for the new solver in the `main1c` subroutine 
   !-------------------------------------------------------------------------------
-  subroutine mympi_main1c_comm_newsosol(nspin, korbit, irmdnew, lmpotd, lmaxd, lmaxd1, lmmaxd, lmmaxso, ielast, nqdos, den, denlm, gflle, rho2nsc, r2nefc, rho2int, espv, muorb, denorbmom, &
+  subroutine mympi_main1c_comm_newsosol(nspin, korbit, irmdnew, lmpotd, lmaxd, lmaxd1, lmmax0d, lmmaxd, ielast, nqdos, den, denlm, gflle, rho2nsc, r2nefc, rho2int, espv, muorb, denorbmom, &
     denorbmomsp, denorbmomlm, denorbmomns, mympi_comm)
 
     use :: mpi
@@ -709,11 +709,11 @@ contains
     integer, intent (in) :: nqdos
     integer, intent (in) :: lmaxd   !! Maximum l component in wave function expansion
     integer, intent (in) :: lmpotd  !! (lpot+1)**2
-    integer, intent (in) :: lmmaxd  !! (KREL+KORBIT+1)*(LMAX+1)**2
+    integer, intent (in) :: lmmax0d  !! (LMAX+1)**2
     integer, intent (in) :: ielast
     integer, intent (in) :: lmaxd1
     integer, intent (in) :: irmdnew
-    integer, intent (in) :: lmmaxso !! lmmaxd
+    integer, intent (in) :: lmmaxd !! (krel+korbit+1)*(LMAX+1)**2
     integer, intent (in) :: nspin
     integer, intent (in) :: korbit
     integer, intent (in) :: mympi_comm
@@ -722,8 +722,8 @@ contains
     complex (kind=dp), dimension(irmdnew, lmpotd, nspin*(1+korbit)), intent (inout) :: r2nefc
     complex (kind=dp), dimension(irmdnew, lmpotd, nspin*(1+korbit)), intent (inout) :: rho2nsc
     complex (kind=dp), dimension(0:lmaxd1, ielast, nqdos, nspin), intent (inout) :: den
-    complex (kind=dp), dimension(lmmaxd, ielast, nqdos, nspin), intent (inout) :: denlm
-    complex (kind=dp), dimension(lmmaxso, lmmaxso, ielast, nqdos), intent (inout) :: gflle
+    complex (kind=dp), dimension(lmmax0d, ielast, nqdos, nspin), intent (inout) :: denlm
+    complex (kind=dp), dimension(lmmaxd, lmmaxd, ielast, nqdos), intent (inout) :: gflle
     real (kind=dp), dimension(3), intent (inout) :: denorbmom
     real (kind=dp), dimension(3), intent (inout) :: denorbmomns
     real (kind=dp), dimension(2, 3), intent (inout) :: denorbmomsp
@@ -765,8 +765,8 @@ contains
     call zcopy(idim, workc, 1, den, 1)
     deallocate (workc)
 
-    idim = lmmaxd*ielast*nspin*nqdos
-    allocate (workc(lmmaxd,ielast,nspin,nqdos), stat=ierr)
+    idim = lmmax0d*ielast*nspin*nqdos
+    allocate (workc(lmmax0d,ielast,nspin,nqdos), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, denlm'
     workc = (0.0_dp, 0.0_dp)
     call mpi_reduce(denlm, workc, idim, mpi_double_complex, mpi_sum, master, mympi_comm, ierr)
@@ -783,8 +783,8 @@ contains
     call zcopy(idim, workc, 1, rho2int, 1)
     deallocate (workc)
 
-    idim = lmmaxso*lmmaxso*ielast*nqdos
-    allocate (workc(lmmaxso,lmmaxso,ielast,nqdos), stat=ierr)
+    idim = lmmaxd*lmmaxd*ielast*nqdos
+    allocate (workc(lmmaxd,lmmaxd,ielast,nqdos), stat=ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol] Error allocating workc, gflle'
     workc = (0.0_dp, 0.0_dp)
     call mpi_reduce(gflle, workc(:,:,:,:), idim, mpi_double_complex, mpi_sum, master, mympi_comm, ierr)
@@ -1198,6 +1198,124 @@ contains
 #endif
 
   end subroutine distribute_work_atoms
+
+#ifdef CPP_MPI
+  !-------------------------------------------------------------------------------
+  !> Summary: MPI Briadcast of global variables
+  !> Author: Jonathan Chico
+  !> Category: KKRhost, communication, initialization
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> MPI broadcast routine for global variables (i.e. array dimensions etc.)
+  !-------------------------------------------------------------------------------
+  subroutine bcast_global_variables()
+    use :: mpi
+    use :: global_variables ! use all parameters
+    implicit none
+  
+    integer :: n !! number of paramters that are broadcasted
+    integer, allocatable :: blocklen1(:), etype1(:) !! blocklength of variuables in derived data type and list of MPI datatypes
+    integer :: ierr !! error status
+    integer :: mympitype1 !! derived data type for collective communication
+    integer (kind=mpi_address_kind), allocatable :: disp1(:) !! MPI addresses
+    integer (kind=mpi_address_kind) :: base !! base address of first entry
+  
+  
+    n = 59
+    allocate (blocklen1(n), etype1(n), disp1(n), stat=ierr)
+    if (ierr/=0) stop 'error allocating arrays in bcast_global_variables'
+  
+    call mpi_get_address(n, disp1(1), ierr)
+    call mpi_get_address(irid, disp1(2), ierr)
+    call mpi_get_address(krel, disp1(3), ierr)
+    call mpi_get_address(nfund, disp1(4), ierr)
+    call mpi_get_address(ipand, disp1(5), ierr)
+    call mpi_get_address(ngshd, disp1(6), ierr)
+    call mpi_get_address(ncleb, disp1(7), ierr)
+    call mpi_get_address(knoco, disp1(8), ierr)
+    call mpi_get_address(iemxd, disp1(9), ierr)
+    call mpi_get_address(irnsd, disp1(10), ierr)
+    call mpi_get_address(nmaxd, disp1(11), ierr)
+    call mpi_get_address(ishld, disp1(12), ierr)
+    call mpi_get_address(naclsd, disp1(13), ierr)
+    call mpi_get_address(nspotd, disp1(14), ierr)
+    call mpi_get_address(ntperd, disp1(15), ierr)
+    call mpi_get_address(ntrefd, disp1(16), ierr)
+    call mpi_get_address(nsheld, disp1(17), ierr)
+    call mpi_get_address(ncelld, disp1(18), ierr)
+    call mpi_get_address(nspind, disp1(19), ierr)
+    call mpi_get_address(knosph, disp1(20), ierr)
+    call mpi_get_address(korbit, disp1(21), ierr)
+    call mpi_get_address(kpoibz, disp1(22), ierr)
+    call mpi_get_address(wlength, disp1(23), ierr)
+    call mpi_get_address(nprincd, disp1(24), ierr)
+    call mpi_get_address(nlayerd, disp1(25), ierr)
+    call mpi_get_address(natomimpd, disp1(26), ierr)
+    call mpi_get_address(lmaxd, disp1(27), ierr)
+    call mpi_get_address(lmmaxd, disp1(28), ierr)
+    call mpi_get_address(lmgf0d, disp1(29), ierr)
+    call mpi_get_address(alm, disp1(30), ierr)
+    call mpi_get_address(almgf0, disp1(31), ierr)
+    call mpi_get_address(ndim_slabinv, disp1(32), ierr)
+    call mpi_get_address(nembd, disp1(33), ierr)
+    call mpi_get_address(nembd1, disp1(34), ierr)
+    call mpi_get_address(nembd2, disp1(35), ierr)
+    call mpi_get_address(nrd, disp1(36), ierr)
+    call mpi_get_address(lm2d, disp1(37), ierr)
+    call mpi_get_address(nclsd, disp1(38), ierr)
+    call mpi_get_address(mmaxd, disp1(39), ierr)
+    call mpi_get_address(npotd, disp1(40), ierr)
+    call mpi_get_address(lmxspd, disp1(41), ierr)
+    call mpi_get_address(lassld, disp1(42), ierr)
+    call mpi_get_address(irmind, disp1(43), ierr)
+    call mpi_get_address(nofgij, disp1(44), ierr)
+    call mpi_get_address(nspindd, disp1(45), ierr)
+    call mpi_get_address(nsatypd, disp1(46), ierr)
+    call mpi_get_address(nrefd, disp1(47), ierr)
+    call mpi_get_address(irmd, disp1(48), ierr)
+    call mpi_get_address(naezd, disp1(49), ierr)
+    call mpi_get_address(natypd, disp1(50), ierr)
+    call mpi_get_address(lmpotd, disp1(51), ierr)
+    call mpi_get_address(ntotd, disp1(52), ierr)
+    call mpi_get_address(nrmaxd, disp1(53), ierr)
+    call mpi_get_address(lpotd, disp1(54), ierr)
+    call mpi_get_address(nchebd, disp1(55), ierr)
+    call mpi_get_address(maxmshd, disp1(56), ierr)
+    call mpi_get_address(kBdG, disp1(57), ierr)
+    call mpi_get_address(linterface, disp1(58), ierr)
+    call mpi_get_address(lnc, disp1(59), ierr)
+  
+    ! find displacements of variables
+    base = disp1(1)
+    disp1 = disp1 - base
+  
+    ! set length of variables in derived data type
+    blocklen1(1:n) = 1
+  
+    ! set datatype of variables
+    etype1(1:n-2) = mpi_integer
+    etype1(n-1:n) = mpi_logical
+  
+    ! create new Type structure for derived data type
+    call mpi_type_create_struct(n, blocklen1, disp1, etype1, mympitype1, ierr)
+    if (ierr/=mpi_success) stop 'Problem in create_mpimask_t_inc'
+  
+    ! commit new type
+    call mpi_type_commit(mympitype1, ierr)
+    if (ierr/=mpi_success) stop 'error commiting create_mpimask_t_inc'
+  
+    ! broadcast derived data type
+  
+    call mpi_bcast(n, 1, mympitype1, master, mpi_comm_world, ierr)
+    if (ierr/=mpi_success) stop 'error brodcasting t_inc'
+  
+    ! finally free auxiliary type and deallocate working arrays
+    call mpi_type_free(mympitype1, ierr)
+    deallocate (blocklen1, etype1, disp1, stat=ierr)
+    if (ierr/=0) stop 'error deallocating arrays in bcast_global_variables'
+
+  end subroutine bcast_global_variables
+#endif
 
 
 end module mod_mympi

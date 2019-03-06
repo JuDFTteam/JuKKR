@@ -19,7 +19,7 @@ contains
   !> 
   !> Computes rho matrix (see eq. 2.111 ff. in PhD thesis of Bernd Zimmermann)
   !-------------------------------------------------------------------------------
-  subroutine calc_rho_ll_ss(lmmax, rll, ircut, ipan, icell, thetas, cleb, icleb, iend, ifunm, lmsp, irws, drdi, dens)
+  subroutine calc_rho_ll_ss(lmmax0d, rll, ircut, ipan, icell, thetas, cleb, icleb, iend, ifunm, lmsp, irws, drdi, dens)
 
     use :: mod_datatypes, only: dp
     use :: global_variables, only: irmd, irid, nfund, ncleb, natypd, lmpotd, ipand
@@ -28,11 +28,11 @@ contains
 
     ! .. Array Arguments ..
     ! non-sph. eigen states of single pot
-    integer :: iend, lmmax, irws   ! derivative dr/di
+    integer :: iend, lmmax0d, irws   ! derivative dr/di
 
     ! local variables
     ! ,DENS(:,:,:)
-    complex (kind=dp) :: rll(irmd, lmmax, lmmax), dens
+    complex (kind=dp) :: rll(irmd, lmmax0d, lmmax0d), dens
     real (kind=dp) :: cleb(*), thetas(irid, nfund, *), drdi(irmd) ! RGES_W(:,:,:,:),
     ! &
     integer :: icleb(ncleb, 4), ifunm(natypd, lmpotd), lmsp(natypd, *), ircut(0:ipand), ipan, icell, ifun
@@ -58,7 +58,7 @@ contains
     rsp = 0e0_dp
     rges = 0e0_dp
 
-    do lm1p = 1, lmmax
+    do lm1p = 1, lmmax0d
       do ir = 1, irmd
         rsp(ir) = rsp(ir) + rll(ir, lm1p, lm1p)
       end do

@@ -101,7 +101,7 @@ contains
     real (kind=dp), dimension(irmd, lmpotd, 2), intent(inout)  :: v
     ! ..
     ! .. Local Scalars ..
-    integer :: ifun, ij, ipot, ir, irc1, irh, irs1, is, ispin, j, l, lm, lm2, lmmax, m
+    integer :: ifun, ij, ipot, ir, irc1, irh, irs1, is, ispin, j, l, lm, lm2, lmmax0d, m
     real (kind=dp) :: elmxc, fpi, fpipr2, vlmxc, vxc1, vxc2, vxc3, factor
     ! ..
     ! .. Local Arrays ..
@@ -118,7 +118,7 @@ contains
 
     write (1337, *) 'Including cutoff of vxc for small density'
     fpi =4.0_dp*pi 
-    lmmax = (lmax+1)*(lmax+1)
+    lmmax0d = (lmax+1)*(lmax+1)
 
     ! loop over given representive atoms
 
@@ -144,7 +144,7 @@ contains
         end do
       end do
 
-      do lm = 1, lmmax
+      do lm = 1, lmmax0d
         do ir = 1, irc1
           estor(ir, lm) = 0.0_dp
         end do
@@ -162,7 +162,7 @@ contains
 
       fpipr2 = fpi/r(ir)**2
       do ispin = 1, nspin
-        do lm = 1, lmmax
+        do lm = 1, lmmax0d
           call daxpy(ijend, rho2ns(ir,lm,ispin)*fpipr2, yr(1,lm), 1, fprho(1,ispin), 1)
         end do
       end do
@@ -186,7 +186,7 @@ contains
       do ispin = 1, nspin
         ! determine the corresponding potential number
         ipot = ispin
-        do lm = 1, lmmax
+        do lm = 1, lmmax0d
           vlmxc = ddot(ijend, vxc(1,ispin), 1, wtyr(1,lm), 1)
           v(ir, lm, ipot) = v(ir, lm, ipot) + vlmxc
           ! store the ex.-c. potential of ir=2 and =3 for the extrapolation

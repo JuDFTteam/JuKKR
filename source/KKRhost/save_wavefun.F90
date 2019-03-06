@@ -6,7 +6,7 @@
 
 !------------------------------------------------------------------------------------
 !> Summary: Wrapper module for the handling of the wavefunctions
-!> Author: 
+!> Author:
 !> Wrapper module for the handling of the wavefunctions
 !------------------------------------------------------------------------------------
 module mod_save_wavefun
@@ -17,9 +17,9 @@ module mod_save_wavefun
 
   !-------------------------------------------------------------------------------
   !> Summary: Definition of the variables used to store and handle the wavefunctions
-  !> Author: 
+  !> Author:
   !> Category: single-site, KKRhost
-  !> Deprecated: False 
+  !> Deprecated: False
   !> Definition of the variables used to store and handle the wavefunctions
   !-------------------------------------------------------------------------------
   type :: type_wavefunctions
@@ -32,10 +32,10 @@ module mod_save_wavefun
     ! allocatable arrays
     integer, dimension(:,:), allocatable :: isave_wavefun !! 0 if (iat_myrank, ie_myrank) pair is not saved, 1...Nwfsavemax otherwise, for first, second, ... Nwfsavemax-th saved wavefunction on this rank; (Nat_myrank, Ne_myrank)
     logical :: save_rll, save_sll, save_rllleft, save_sllleft !! logicals that say which wavefunctions are stored (used to reduce amount of memory that is used
-    complex (kind=dp), dimension(:, :, :, :, :),  allocatable :: rll !! regular right wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
-    complex (kind=dp), dimension(:, :, :, :, :), allocatable :: rllleft !! regular left wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
-    complex (kind=dp), dimension(:, :, :, :, :), allocatable :: sll !! iregular right wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
-    complex (kind=dp), dimension(:, :, :, :, :), allocatable :: sllleft !! iregular left wavefunction; (Nwfsavemax, NSRA*LMMAXSO, LMMAXSO, IRMDNEW, 0:nth-1)
+    complex (kind=dp), dimension(:, :, :, :, :),  allocatable :: rll !! regular right wavefunction; (Nwfsavemax, NSRA*lmmaxd, lmmaxd, IRMDNEW, 0:nth-1)
+    complex (kind=dp), dimension(:, :, :, :, :), allocatable :: rllleft !! regular left wavefunction; (Nwfsavemax, NSRA*lmmaxd, lmmaxd, IRMDNEW, 0:nth-1)
+    complex (kind=dp), dimension(:, :, :, :, :), allocatable :: sll !! iregular right wavefunction; (Nwfsavemax, NSRA*lmmaxd, lmmaxd, IRMDNEW, 0:nth-1)
+    complex (kind=dp), dimension(:, :, :, :, :), allocatable :: sllleft !! iregular left wavefunction; (Nwfsavemax, NSRA*lmmaxd, lmmaxd, IRMDNEW, 0:nth-1)
 
   end type type_wavefunctions
 
@@ -48,10 +48,10 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Find how many wavefunctions can be stored and set `isave_wavefun` array to determine which wavefunctions are stored
-  !> Author: 
+  !> Author:
   !> Category: input-output, profiling, initialization, KKRhost
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-  !> Find how many wavefunctions can be stored and set `isave_wavefun` array to 
+  !> Find how many wavefunctions can be stored and set `isave_wavefun` array to
   !> determine which wavefunctions are stored
   !-------------------------------------------------------------------------------
   subroutine find_isave_wavefun(t_wavefunctions)
@@ -64,6 +64,7 @@ contains
 #ifdef CPP_MPI
     use :: mod_types, only: t_mpi_c_grid
 #endif
+    use global_variables, only: natypd, lmmaxd
 
     implicit none
 
@@ -86,7 +87,7 @@ contains
 #endif
     t_wavefunctions%nth = nth
 
-    nat = t_inc%natyp
+    nat = natypd
     ne = t_inc%ielast
 #ifdef CPP_MPI
     ! local parameter for myrank
@@ -112,7 +113,7 @@ contains
       ! <<<<<<<  set some parameters  <<<<<<<!
       ! >>>>>>>  find numer of wavefunctions that can be stored and allocate store arrays  >>>>>>>!
       ! memory demand for one atom and one energy point in Mbyte
-      delta_mem = real(t_inc%nsra*t_inc%lmmaxso*t_inc%lmmaxso*t_inc%irmdnew*nth*16, kind=dp)/(1024.0_dp**2)
+      delta_mem = real(t_inc%nsra*lmmaxd*lmmaxd*t_inc%irmdnew*nth*16, kind=dp)/(1024.0_dp**2)
 
       ! number of wavefunction (rll, sll, rllleft, sllleft) that are needed to be stored
       nsave = 0
@@ -170,19 +171,19 @@ contains
       ! allocate store arrays in t_wavefunctions
       if (t_wavefunctions%nwfsavemax>0) then
         if (t_wavefunctions%save_rll) then
-          allocate (t_wavefunctions%rll(t_wavefunctions%nwfsavemax,t_inc%nsra*t_inc%lmmaxso,t_inc%lmmaxso,t_inc%irmdnew,0:nth-1), stat=ierr)
+          allocate (t_wavefunctions%rll(t_wavefunctions%nwfsavemax,t_inc%nsra*lmmaxd,lmmaxd,t_inc%irmdnew,0:nth-1), stat=ierr)
           if (ierr/=0) stop '[find_isave_wavefun] Error allocating rll'
         end if
         if (t_wavefunctions%save_sll) then
-          allocate (t_wavefunctions%rllleft(t_wavefunctions%nwfsavemax,t_inc%nsra*t_inc%lmmaxso,t_inc%lmmaxso,t_inc%irmdnew,0:nth-1), stat=ierr)
+          allocate (t_wavefunctions%rllleft(t_wavefunctions%nwfsavemax,t_inc%nsra*lmmaxd,lmmaxd,t_inc%irmdnew,0:nth-1), stat=ierr)
           if (ierr/=0) stop '[find_isave_wavefun] Error allocating rllleft'
         end if
         if (t_wavefunctions%save_rllleft) then
-          allocate (t_wavefunctions%sll(t_wavefunctions%nwfsavemax,t_inc%nsra*t_inc%lmmaxso,t_inc%lmmaxso,t_inc%irmdnew,0:nth-1), stat=ierr)
+          allocate (t_wavefunctions%sll(t_wavefunctions%nwfsavemax,t_inc%nsra*lmmaxd,lmmaxd,t_inc%irmdnew,0:nth-1), stat=ierr)
           if (ierr/=0) stop '[find_isave_wavefun] Error allocating sll'
         end if
         if (t_wavefunctions%save_sllleft) then
-          allocate (t_wavefunctions%sllleft(t_wavefunctions%nwfsavemax,t_inc%nsra*t_inc%lmmaxso,t_inc%lmmaxso,t_inc%irmdnew,0:nth-1), stat=ierr)
+          allocate (t_wavefunctions%sllleft(t_wavefunctions%nwfsavemax,t_inc%nsra*lmmaxd,lmmaxd,t_inc%irmdnew,0:nth-1), stat=ierr)
           if (ierr/=0) stop '[find_isave_wavefun] Error allocating sllleft'
         end if
       end if
@@ -242,17 +243,17 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Saves wavefunction of atom iat and energypoint ie if enough memory is given
-  !> Author: 
+  !> Author:
   !> Category: single-site, KKRhost
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !> Saves wavefunction of atom iat and energypoint ie if enough memory is given
   !-------------------------------------------------------------------------------
   subroutine save_wavefunc(t_wavefunctions,rll,rllleft,sll,sllleft,iat,ie,nsra,     &
-    lmmaxso,irmdnew,ith)
+    lmmaxd,irmdnew,ith)
 
     implicit none
     type (type_wavefunctions), intent (inout) :: t_wavefunctions
-    integer, intent (in) :: iat, ie, nsra, lmmaxso, irmdnew, ith
+    integer, intent (in) :: iat, ie, nsra, lmmaxd, irmdnew, ith
     complex (kind=dp), intent (in) :: rll(:, :, :, 0:), rllleft(:, :, :, 0:)
     complex (kind=dp), intent (in) :: sll(:, :, :, 0:), sllleft(:, :, :, 0:)
 
@@ -265,22 +266,22 @@ contains
       if (t_wavefunctions%save_rll) then
 
         if (iprint_debug>0) write (*, *) 'save rll', ie, iat
-        t_wavefunctions%rll(isave, 1:nsra*lmmaxso, 1:lmmaxso, 1:irmdnew, ith) = rll(1:nsra*lmmaxso, 1:lmmaxso, 1:irmdnew, ith)
+        t_wavefunctions%rll(isave, 1:nsra*lmmaxd, 1:lmmaxd, 1:irmdnew, ith) = rll(1:nsra*lmmaxd, 1:lmmaxd, 1:irmdnew, ith)
       end if
 
       if (t_wavefunctions%save_rllleft) then
         if (iprint_debug>0) write (*, *) 'write out rllleft', ie, iat
-        t_wavefunctions%rllleft(isave, 1:nsra*lmmaxso, 1:lmmaxso, 1:irmdnew, ith) = rllleft(1:nsra*lmmaxso, 1:lmmaxso, 1:irmdnew, ith)
+        t_wavefunctions%rllleft(isave, 1:nsra*lmmaxd, 1:lmmaxd, 1:irmdnew, ith) = rllleft(1:nsra*lmmaxd, 1:lmmaxd, 1:irmdnew, ith)
       end if
 
       if (t_wavefunctions%save_sll) then
         if (iprint_debug>0) write (*, *) 'write out sll', ie, iat
-        t_wavefunctions%sll(isave, 1:nsra*lmmaxso, 1:lmmaxso, 1:irmdnew, ith) = sll(1:nsra*lmmaxso, 1:lmmaxso, 1:irmdnew, ith)
+        t_wavefunctions%sll(isave, 1:nsra*lmmaxd, 1:lmmaxd, 1:irmdnew, ith) = sll(1:nsra*lmmaxd, 1:lmmaxd, 1:irmdnew, ith)
       end if
 
       if (t_wavefunctions%save_sllleft) then
         if (iprint_debug>0) write (*, *) 'write out sllleft', ie, iat
-        t_wavefunctions%sllleft(isave, 1:nsra*lmmaxso, 1:lmmaxso, 1:irmdnew, ith) = sllleft(1:nsra*lmmaxso, 1:lmmaxso, 1:irmdnew, ith)
+        t_wavefunctions%sllleft(isave, 1:nsra*lmmaxd, 1:lmmaxd, 1:irmdnew, ith) = sllleft(1:nsra*lmmaxd, 1:lmmaxd, 1:irmdnew, ith)
       end if
 
     end if
@@ -289,19 +290,19 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Reads wavefunction of atom iat and energypoint ie if it was stored
-  !> Author: 
+  !> Author:
   !> Category: single-site, KKRhost
-  !> Deprecated: False 
+  !> Deprecated: False
   !> Reads wavefunction of atom iat and energypoint ie if it was stored
   !-------------------------------------------------------------------------------
   subroutine read_wavefunc(t_wavefunctions,rll,rllleft,sll,sllleft,iat,ie,nsra,     &
-    lmmaxso,irmdnew,ith,nth,read_in_rll,read_in_sll,read_in_rllleft,read_in_sllleft)
+    lmmaxd,irmdnew,ith,nth,read_in_rll,read_in_sll,read_in_rllleft,read_in_sllleft)
 
     implicit none
     type (type_wavefunctions), intent (inout) :: t_wavefunctions
-    integer, intent (in) :: iat, ie, nsra, lmmaxso, irmdnew, ith, nth
-    complex (kind=dp), intent (out) :: rll(1:nsra*lmmaxso, 1:lmmaxso, 1:irmdnew, 0:(nth-1)), rllleft(1:nsra*lmmaxso, 1:lmmaxso, 1:irmdnew, 0:(nth-1)), &
-      sll(1:nsra*lmmaxso, 1:lmmaxso, 1:irmdnew, 0:(nth-1)), sllleft(1:nsra*lmmaxso, 1:lmmaxso, 1:irmdnew, 0:(nth-1))
+    integer, intent (in) :: iat, ie, nsra, lmmaxd, irmdnew, ith, nth
+    complex (kind=dp), intent (out) :: rll(1:nsra*lmmaxd, 1:lmmaxd, 1:irmdnew, 0:(nth-1)), rllleft(1:nsra*lmmaxd, 1:lmmaxd, 1:irmdnew, 0:(nth-1)), &
+      sll(1:nsra*lmmaxd, 1:lmmaxd, 1:irmdnew, 0:(nth-1)), sllleft(1:nsra*lmmaxd, 1:lmmaxd, 1:irmdnew, 0:(nth-1))
     logical, intent (out) :: read_in_rll, read_in_sll, read_in_rllleft, read_in_sllleft ! true or false, if wavefunction of this (iat,ie) pair was read in or not, respectively
 
     integer :: isave
@@ -317,25 +318,25 @@ contains
 
       if (t_wavefunctions%save_rll) then
         if (iprint_debug>0) write (*, *) 'read in rll', ie, iat
-        rll(1:nsra*lmmaxso, 1:lmmaxso, 1:irmdnew, ith) = t_wavefunctions%rll(isave, 1:nsra*lmmaxso, 1:lmmaxso, 1:irmdnew, ith)
+        rll(1:nsra*lmmaxd, 1:lmmaxd, 1:irmdnew, ith) = t_wavefunctions%rll(isave, 1:nsra*lmmaxd, 1:lmmaxd, 1:irmdnew, ith)
         read_in_rll = .true.
       end if
 
       if (t_wavefunctions%save_rllleft) then
         if (iprint_debug>0) write (*, *) 'read in rllleft', ie, iat
-        rllleft(1:nsra*lmmaxso, 1:lmmaxso, 1:irmdnew, ith) = t_wavefunctions%rllleft(isave, 1:nsra*lmmaxso, 1:lmmaxso, 1:irmdnew, ith)
+        rllleft(1:nsra*lmmaxd, 1:lmmaxd, 1:irmdnew, ith) = t_wavefunctions%rllleft(isave, 1:nsra*lmmaxd, 1:lmmaxd, 1:irmdnew, ith)
         read_in_rllleft = .true.
       end if
 
       if (t_wavefunctions%save_sll) then
         if (iprint_debug>0) write (*, *) 'read in sll', ie, iat
-        sll(1:nsra*lmmaxso, 1:lmmaxso, 1:irmdnew, ith) = t_wavefunctions%sll(isave, 1:nsra*lmmaxso, 1:lmmaxso, 1:irmdnew, ith)
+        sll(1:nsra*lmmaxd, 1:lmmaxd, 1:irmdnew, ith) = t_wavefunctions%sll(isave, 1:nsra*lmmaxd, 1:lmmaxd, 1:irmdnew, ith)
         read_in_sll = .true.
       end if
 
       if (t_wavefunctions%save_sllleft) then
         if (iprint_debug>0) write (*, *) 'read in sllleft', ie, iat
-        sllleft(1:nsra*lmmaxso, 1:lmmaxso, 1:irmdnew, ith) = t_wavefunctions%sllleft(isave, 1:nsra*lmmaxso, 1:lmmaxso, 1:irmdnew, ith)
+        sllleft(1:nsra*lmmaxd, 1:lmmaxd, 1:irmdnew, ith) = t_wavefunctions%sllleft(isave, 1:nsra*lmmaxd, 1:lmmaxd, 1:irmdnew, ith)
         read_in_sllleft = .true.
       end if
 
@@ -347,9 +348,9 @@ contains
 #ifdef CPP_MPI
   !-------------------------------------------------------------------------------
   !> Summary: Broadcast parameters for memory demand from master to all other ranks
-  !> Author: 
+  !> Author:
   !> Category: communication, KKRhost
-  !> Deprecated: False 
+  !> Deprecated: False
   !> Broadcast parameters for memory demand from master to all other ranks
   !-------------------------------------------------------------------------------
   subroutine bcast_params_savewf(t_wavefunctions)

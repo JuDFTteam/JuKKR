@@ -66,7 +66,7 @@ module mod_main0
   ! ------------- > scalars > ------------- 
   !integers
   public :: kte, kws, kxc, igf, icc, ins, irm, ipe, ipf, ipfe, kcor, kefg, khyp, kpre, nprinc, nsra, lpot, imix, iend, icst, &
-    naez, nemb, lmax, ncls, nref, npol, npnt1, npnt2, npnt3, lmmax, nvirt, lmpot, kvmad, itscf, ncheb, nineq, natyp, ifile, &
+    naez, nemb, lmax, ncls, nref, npol, npnt1, npnt2, npnt3, lmmax0d, nvirt, lmpot, kvmad, itscf, ncheb, nineq, natyp, ifile, &
     kvrel, nspin, nleft, nright, invmod, khfeld, itdbry, insref, kshape, ielast, ishift, ivshift, kfrozn, nsymat, nqcalc, kforce, n1semi, &
     n2semi, n3semi, nlayer, nlbasis, nrbasis, intervx, intervy, intervz, maxmesh, npan_eq, npan_log, npolsemi, scfsteps, natomimp, &
     iesemicore, idosemicore
@@ -86,8 +86,8 @@ module mod_main0
     ipan_intervall, jend, kmrot, ncpa, itcpamax, noq, iqat, icpa, hostimp, zrel, jwsrel, irshift, nrrel, ntldau, idoldau, itrunldau, &
     kreadldau, lopt, itldau, lly, irrel
   !real
-  public :: vbc, zperight, zperleft, recbv, bravais, rsymat, a, b, wg, gsh, zat, rmt, rws, vref, vref_temp, mtfac, rmtnew, rmtref, &
-    rmtref_temp, rmtrefat, fpradius, socscale, rmesh, s, rr, drdi, dror, cleb, visp, cscl, rnew, ratom, ecore, tleft, tright, socscl, &
+  public :: vbc, zperight, zperleft, recbv, bravais, rsymat, a, b, wg, gsh, zat, rmt, rws, vref, mtfac, rmtnew, rmtref, &
+    rmtrefat, fpradius, socscale, rmesh, s, rr, drdi, dror, cleb, visp, cscl, rnew, ratom, ecore, tleft, tright, socscl, &
     rbasis, rclsimp, cmomhost, rpan_intervall, rs, yrg, vins, rcls, rrot, qmtet, qmphi, qmgam, qmgamtab, qmphitab, qmtettab, cpatol, &
     conc, fact, vtrel, btrel, rmrel, drdirel, r2drdirel, thesme, thetas, thetasnew, ueff, jeff, erefldau, wldau, uldau
   !complex
@@ -130,7 +130,7 @@ module mod_main0
   integer :: npnt1 = 3             !! number of E points (EMESHT) for the contour integration going up
   integer :: npnt2 = 10            !! number of E points (EMESHT) for the contour integration goind parallel to the real axis
   integer :: npnt3 = 4             !! number of E points (EMESHT) for the contour integration going down
-  integer :: lmmax = 16            !! (LMAX+1)^2
+  integer :: lmmax0d = 16          !! (LMAX+1)^2 wihtout spin doubling
   integer :: nvirt = 0
   integer :: lmpot = 16            !! (LPOT+1)**2
   integer :: kvmad = 0
@@ -280,11 +280,9 @@ module mod_main0
   real (kind=dp), dimension (:), allocatable :: rmt !! Muffin-tin radius of true system
   real (kind=dp), dimension (:), allocatable :: rws !! Wigner Seitz radius
   real (kind=dp), dimension (:), allocatable :: vref
-  real (kind=dp), dimension (:), allocatable :: vref_temp
   real (kind=dp), dimension (:), allocatable :: mtfac       !! Scaling factor for radius MT
   real (kind=dp), dimension (:), allocatable :: rmtnew      !! Adapted muffin-tin radius
   real (kind=dp), dimension (:), allocatable :: rmtref      !! Muffin-tin radius of reference system
-  real (kind=dp), dimension (:), allocatable :: rmtref_temp !! Muffin-tin radius of reference system
   real (kind=dp), dimension (:), allocatable :: rmtrefat
   real (kind=dp), dimension (:), allocatable :: fpradius !! R point at which full-potential treatment starts
   real (kind=dp), dimension (:), allocatable :: socscale !! Spin-orbit scaling
@@ -496,7 +494,7 @@ contains
     use :: mod_writehoststructure, only: writehoststructure
     ! array dimensions
     use :: global_variables, only: krel, nspind, nrefd, irmd, ntotd, ipand, ncelld, nrmaxd, nchebd, natypd, naezd, lmaxd, alm, lmmaxd, &
-      almgf0, lmgf0d, ndim_slabinv, nprincd, nembd, nembd1, nembd2, irmind, irnsd, nofgij, natomimpd, lpotd, lmpotd, lmmaxso, npotd, nfund, &
+      almgf0, lmgf0d, ndim_slabinv, nprincd, nembd, nembd1, nembd2, irmind, irnsd, nofgij, natomimpd, lpotd, lmpotd, npotd, nfund, &
       lmxspd, mmaxd, iemxd, ncleb, nclsd, nsheld, naclsd, lm2d, irid, lassld, nrd, nspind, nspindd, ngshd, linterface, nlayerd, knosph, &
       korbit, nmaxd, ishld, wlength, maxmshd, kpoibz, nspotd
 
@@ -560,7 +558,7 @@ contains
     !! @endnote
     ! -------------------------------------------------------------------------
     call rinput13(kte,igf,kxc,lly,icc,ins,kws,ipe,ipf,ipfe,icst,imix,lpot,naez,nemb,&
-      nref,ncls,npol,lmax,kcor,kefg,khyp,kpre,kvmad,lmmax,lmpot,ncheb,nleft,ifile,  &
+      nref,ncls,npol,lmax,kcor,kefg,khyp,kpre,kvmad,lmmax0d,lmpot,ncheb,nleft,ifile,  &
       kvrel,nspin,natyp,nineq,npnt1,npnt2,npnt3,kfrozn,ishift,n1semi,n2semi,n3semi, &
       scfsteps,insref,kshape,itdbry,nright,kforce,ivshift,khfeld,nlbasis,nrbasis,   &
       intervx,intervy,intervz,npan_eq,npan_log,npolsemi,tk,fcm,emin,emax,rmax,gmax, &
@@ -600,7 +598,6 @@ contains
     nofgij = natomimpd*natomimpd + 1
     lpotd = lpot
     lmpotd = (lpot+1)**2
-    lmmaxso = lmmaxd               ! lmmaxd already doubled in size! (KREL+1)*LMMAXD
 
     !--------------------------------------------------------------------------------
     ! Allocation calls
@@ -687,39 +684,11 @@ contains
       nlbasis,nrbasis,nleft,nright,zperleft,zperight,tleft,tright,rmtref,rmtrefat,  &
       vref,refpot,nref,rcls,rcutz,rcutxy,alat,natyp,nclsd,nrd,naclsd,nrefd,nembd,   &
       linterface,nprinc)
-    ! overwrite nrefd and change allocations accordingly
-    ! Allocate temporary arrays
-    allocate(rmtref_temp(nrefd),stat=i_stat)
-    call memocc(i_stat, product(shape(rmtref_temp))*kind(rmtref_temp), 'rmtref_temp', 'main0')
-    allocate(vref_temp(nrefd),stat=i_stat)
-    call memocc(i_stat, product(shape(vref_temp))*kind(vref_temp), 'vref_temp', 'main0')
 
-    rmtref_temp(:) = rmtref(:)
-    vref_temp(:) = vref(:)
-    nrefd = nref
-    ! Deallocate arrays
-    i_all = -product(shape(rmtref))*kind(rmtref)
-    deallocate (rmtref, stat=i_stat)
-    call memocc(i_stat, i_all, 'rmtref', 'main0')
-    i_all = -product(shape(vref))*kind(vref)
-    deallocate (vref, stat=i_stat)
-    call memocc(i_stat, i_all, 'vref', 'main0')
-   
-    ! Allocate arrays
-    allocate(rmtref(nrefd),stat=i_stat)
-    call memocc(i_stat, product(shape(rmtref))*kind(rmtref), 'rmtref', 'main0')
-    allocate(vref(nrefd),stat=i_stat)
-    call memocc(i_stat, product(shape(vref))*kind(vref), 'vref', 'main0')
-
-    rmtref(:) = rmtref_temp(1:nref)
-    vref(:) = vref_temp(1:nref)
-    ! Deallocate temporary arrays
-    i_all = -product(shape(rmtref_temp))*kind(rmtref_temp)
-    deallocate (rmtref_temp, stat=i_stat)
-    call memocc(i_stat, i_all, 'rmtref_temp', 'main0')
-    i_all = -product(shape(vref_temp))*kind(vref_temp)
-    deallocate (vref_temp, stat=i_stat)
-    call memocc(i_stat, i_all, 'vref_temp', 'main0')
+    ! change nrefd to nref and reduce size of rmtre, vref accordingly
+    ! do the same for ncls(d) with nacls and rcls arrays
+    ! this is needed because in the 'allocate_clusters' call the maximal size was used
+    call reduce_array_size(nref, nrefd, rmtref, vref, ncls, nclsd, nacls, rcls)
 
     nlayer = naez/nprinc
     ! overwrite nprincd if chosen too small (also up
@@ -1213,11 +1182,11 @@ contains
     end if
     if (write_deci_tmat) then
       if (nranks>1) stop 'ERROR: deci-out does not work with MPI!'
-      call outtmathost(alat,ins,krel+korbit,kmrot,nspin,naez,lmmax,bravais,rbasis,  &
+      call outtmathost(alat,ins,krel+korbit,kmrot,nspin,naez,lmmax0d,bravais,rbasis,  &
         qmtet,qmphi,e2in,tk,npol,npnt1,npnt2,npnt3)
     end if
     if (use_decimation) then
-      call deciopt(alat,ins,krel+korbit,kvrel,kmrot,nspin,naez,lmmax,bravais,tk,    &
+      call deciopt(alat,ins,krel+korbit,kvrel,kmrot,nspin,naez,lmmax0d,bravais,tk,    &
         npol,npnt1,npnt2,npnt3,ez,ielast,kaoez,lefttinvll,righttinvll,vacflag,      &
         nlbasis,nrbasis,cmomhost,vref,rmtref,nref,refpot(naez),lmax,lmgf0d,lmmaxd,  &
         lm2d,nembd1,iemxd,nspindd,lmpot,natyp,irmd,ipand)
@@ -1464,5 +1433,74 @@ contains
     write (iunit, '(6A)') '  Compile options: ', trim(version2), ' ', trim(version3), ' ', trim(version4)
     write (iunit, '(2A)') '  serial number for files: ', serialnr
   end subroutine print_versionserial
+
+
+  !-------------------------------------------------------------------------------  
+  !> Summary: Reduce size of arrays depending on nrefd, ncsld 
+  !> Author: Philipp Ruessmann
+  !> Category: input-output, KKRhost 
+  !> Deprecated: False 
+  !> Overwrite nrefd and nclsd with actual values and change allocations accordingly
+  !> Should be called after nrefd, nclsd have been determined in clsgen_tb
+  !-------------------------------------------------------------------------------  
+  subroutine reduce_array_size(nref, nrefd, rmtref, vref, ncls, nclsd, nacls, rcls)
+
+    use mod_datatypes, only: dp
+
+    implicit none
+
+    ! interface
+    integer, intent(in) :: nref      !! actual number of reference potentials
+    integer, intent(in) :: ncls      !! actual number of clusters
+    integer, intent(inout) :: nrefd  !! maximal number of reference potentials
+    integer, intent(inout) :: nclsd  !! maximal number of clusters
+    integer, dimension(:), allocatable, intent(inout) :: nacls !! number of atom in cluster
+    real (kind=dp), dimension(:, :, :), allocatable, intent(inout) :: rcls !!real space position of atoms in cluster
+    real (kind=dp), dimension (:), allocatable, intent(inout) :: rmtref !! Muffin-tin radius of reference system
+    real (kind=dp), dimension (:), allocatable, intent(inout) :: vref !! reference potential
+    ! local
+    integer :: naclsd !! size of second dimension of rcls
+    integer :: i_stat !! status of (de)allocations
+    real (kind=dp), dimension (:), allocatable :: rmtref_temp    !! Muffin-tin radius of reference system
+    real (kind=dp), dimension (:), allocatable :: vref_temp      !! reference potential
+    integer, dimension(:), allocatable :: nacls_temp             !! number of atom in cluster
+    real (kind=dp), dimension(:, :, :), allocatable :: rcls_temp !!real space position of atoms in cluster
+
+    ! determine size of second rcls dimension
+    naclsd = ubound(rcls, 2)
+
+    ! Allocate temporary arrays
+    allocate(rmtref_temp(nrefd),stat=i_stat)
+    allocate(vref_temp(nrefd),stat=i_stat)
+    allocate(nacls_temp(nclsd),stat=i_stat)
+    allocate(rcls_temp(3,naclsd,nclsd),stat=i_stat)
+
+    ! create temporary copy
+    rmtref_temp(:) = rmtref(:)
+    vref_temp(:) = vref(:)
+    nacls_temp(:) = nacls(:)
+    rcls_temp(:,:,:) = rcls(:,:,:)
+
+    ! update array dimensions
+    nrefd = nref
+    nclsd = ncls
+
+    ! Reallocate arrays
+    deallocate (rmtref, vref, nacls, rcls, stat=i_stat)
+    allocate(rmtref(nrefd),stat=i_stat)
+    allocate(vref(nrefd),stat=i_stat)
+    allocate(nacls(nclsd),stat=i_stat)
+    allocate(rcls(3,naclsd,nclsd),stat=i_stat)
+
+    ! copy value from temp arrays
+    rmtref(:) = rmtref_temp(1:nref)
+    vref(:) = vref_temp(1:nref)
+    nacls(:) = nacls_temp(1:ncls)
+    rcls(:,:,:) = rcls_temp(:,:,1:ncls)
+
+    ! cleanup deallocations
+    deallocate(rmtref_temp, vref_temp, nacls_temp, rcls_temp, stat=i_stat)
+
+  end subroutine reduce_array_size
 
 end module mod_main0

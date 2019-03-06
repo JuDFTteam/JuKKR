@@ -31,7 +31,7 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine rinput13(kte, igf, kxc, lly, icc, ins, kws, ipe, ipf, ipfe, icst, imix, lpot, naez, nemb, nref, ncls, npol, lmax, kcor, kefg, &
-    khyp, kpre, kvmad, lmmax, lmpot, ncheb, nleft, ifile, kvrel, nspin, natyp, nineq, npnt1, npnt2, npnt3, kfrozn, ishift, n1semi, n2semi, &
+    khyp, kpre, kvmad, lmmax0d, lmpot, ncheb, nleft, ifile, kvrel, nspin, natyp, nineq, npnt1, npnt2, npnt3, kfrozn, ishift, n1semi, n2semi, &
     n3semi, nsteps, insref, kshape, itdbry, nright, kforce, ivshift, khfield, nlbasis, nrbasis, intervx, intervy, intervz, npan_eq, npan_log, &
     npolsemi, tk, fcm, emin, emax, rmax, gmax, alat, r_log, rcutz, rcutxy, eshift, qbound, hfield, mixing, abasis, bbasis, cbasis, vconst, &
     tksemi, tolrdif, emusemi, ebotsemi, fsemicore, lambda_xc, deltae, lrhosym, linipol, lcartesian, imt, cls, lmxc, irns, irws, ntcell, refpot, &
@@ -45,7 +45,7 @@ contains
     set_kmesh_large, stop_1b, stop_1c, use_BdG, use_Chebychev_solver, use_cond_LB, use_decimation, use_lloyd, use_qdos, &
     use_rigid_Efermi, use_semicore, use_virtual_atoms, write_green_host, write_green_imp, write_kkrimp_input, &
     write_pkkr_input, write_pkkr_operators, use_ldau, set_cheby_nospeedup, set_cheby_nosoc, write_tb_coupling
-    use :: mod_constants, only: cvlight
+    use :: mod_constants, only: cvlight, ryd
     use :: mod_wunfiles, only: t_params
     use :: memoryhandling, only: allocate_semi_inf_host, allocate_magnetization, allocate_cell, allocate_cpa, allocate_soc, allocate_ldau
     use :: mod_types, only: t_inc
@@ -58,7 +58,7 @@ contains
     use :: mod_ioinput, only: ioinput
     use :: global_variables, only: linterface, korbit, krel, irmd, irnsd, nsheld, knosph, iemxd, nrd, knoco, kpoibz, ntrefd, natomimpd, &
       nprincd, ipand, nfund, irid, ngshd, nmaxd, ishld, wlength, naclsd, ntotd, ncleb, nspind, nspindd, npotd, lmmaxd, lmgf0d, &
-      lassld, nembd1, irmind, nofgij, ntperd, nsatypd, nspotd, lnc, lmxspd, lm2d, nclsd, mmaxd, ncleb, kBdG
+      lassld, nembd1, irmind, nofgij, ntperd, nsatypd, nspotd, lnc, lmxspd, lm2d, nclsd, mmaxd, ncleb, kBdG, delta_BdG
 
 
     implicit none
@@ -88,7 +88,7 @@ contains
     integer, intent (inout) :: khyp
     integer, intent (inout) :: kpre
     integer, intent (inout) :: kvmad
-    integer, intent (inout) :: lmmax
+    integer, intent (inout) :: lmmax0d !! (lmax+1)**2 without spin doubling
     integer, intent (inout) :: lmpot
     integer, intent (inout) :: ncheb !! Number of Chebychev pannels for the new solver
     integer, intent (inout) :: nleft !! Number of repeated basis for left host to get converged  electrostatic potentials
@@ -866,15 +866,27 @@ contains
     ! ----------------------------------------------------------------------------
     ! Readin Options for Bogoliubov-de-Gennes Formalism
     ! ----------------------------------------------------------------------------
-    call ioinput('KBdG            ', uio, 1, 7, ier)
+    call ioinput('KBDG            ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) kBdG
-      write (111, *) 'KBdG= ', kBdG
+      write (111, *) 'KBDG= ', kBdG
     else
-      write (111, *) 'Default KBdG= ', kBdG
+      write (111, *) 'Default KBDG= ', kBdG
     end if
     if (kBdG/=0) use_BdG = .true.
     if (use_BdG) kBdG = 1
+
+    ! read in starting value of Delta
+    if (kBdG/=0) then
+      call ioinput('delta_BdG       ', uio, 1, 7, ier)
+      if (ier==0) then
+        read (unit=uio, fmt=*) delta_BdG
+        write (111, *) 'delta_BdG= ', delta_BdG
+      else
+        write (111, *) 'Default delta_BdG= ', delta_BdG
+      end if
+      write (1337, *) 'Use Bogoliubov-de-Gennes formalism with initial value of Delta set to ', delta_BdG, 'Ry = ', delta_BdG*ryd*1000, 'meV' 
+    end if
 
 
     ! ----------------------------------------------------------------------------
@@ -1093,7 +1105,7 @@ contains
     ! End of allocation of SOC arrays
     !--------------------------------------------------------------------------------
     if (use_Chebychev_solver) then      ! Spin-orbit
-      if (use_Chebychev_solver .and. (nspin/=2)) stop ' set NSPIN = 2 for SOC solver in inputcard'
+      if (use_Chebychev_solver .and. (nspin/=2) .and. .not.set_cheby_nosoc) stop ' set NSPIN = 2 for SOC solver in inputcard'
       npan_log = 30
       npan_eq = 30
       ncheb = 10
@@ -2065,7 +2077,7 @@ contains
     if (ncpa/=0) write (1337, 470) itcpamax, cpatol
     ! --------------------------------------------------------
 
-    lmmax = (lmax+1)**2
+    lmmax0d = (lmax+1)**2
     lpot = 2*lmax
     lmpot = (lpot+1)*(lpot+1)
     lmxspd = (2*lpot+1)**2

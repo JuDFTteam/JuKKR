@@ -51,6 +51,8 @@ add_executable(
     source/common/runoptions.F90
     source/common/ioinput.f90
     source/common/beshank.f90
+    source/common/wronskian.f90
+    source/common/mathtools.f90
     source/voronoi/test.f
     source/KKRimp/nrtype.f90
     source/KKRimp/type_gmatbulk.f90
@@ -74,7 +76,6 @@ add_executable(
     source/KKRimp/physic_params.f90
     source/KKRimp/checknan.f90
     source/KKRimp/log.f90
-    source/KKRimp/mathtools.f90
     source/KKRimp/config.f90
     source/KKRimp/wrapper.f90
     source/KKRimp/simp3.f90
@@ -147,7 +148,6 @@ add_executable(
     source/KKRimp/interpolpot.f
     source/KKRimp/interpolatecell.f90
     source/KKRimp/checkinterpolation.f90
-    source/KKRimp/wronskian.f90
     source/KKRimp/calctmat_bauernew_testtools.f90
     source/KKRimp/calctmat_bauernew.f90
     source/KKRimp/energyloop.F90

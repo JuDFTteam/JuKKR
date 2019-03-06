@@ -26,7 +26,7 @@ contains
   !> by the PBE functional
   !-------------------------------------------------------------------------------   
   subroutine mkxcpe2(ir,np,rv,rholm,vxcp,excp,ylm,dylmt1,dylmf1,dylmf2,dylmtf,drrl, &
-    ddrrl,drrul,ddrrul,irmd,lmpotd,lmmax,use_sol)
+    ddrrl,drrul,ddrrul,irmd,lmpotd,lmmax0d,use_sol)
     ! ------------------------------------------------------------------
     ! Calculation of the exchange-correlation potential.
     ! coded by M. Ogura, Apr. 2015, Munich
@@ -38,7 +38,7 @@ contains
     integer, intent(in) :: ir
     integer, intent(in) :: np 
     integer, intent(in) :: irmd    !! Maximum number of radial points                
-    integer, intent(in) :: lmmax   !! (LMAX+1)^2
+    integer, intent(in) :: lmmax0d   !! (LMAX+1)^2
     integer, intent(in) :: lmpotd  !! (lpot+1)**2 
     real (kind=dp), intent(in) :: rv
     logical, intent(in) :: use_sol !! use_sol=0 -> PBE, use_sol=1 -> PBEsol
@@ -84,7 +84,7 @@ contains
           d2(n, ispin) = 0e0_dp
         end do
       end do
-      do lm = 1, lmmax
+      do lm = 1, lmmax0d
         l1 = nint(sqrt(real(lm,kind=dp)-5e-1_dp))
         d(1) = d(1) + rholm(lm, 1)*ylm(ip, lm)
         d(2) = d(2) + rholm(lm, 2)*ylm(ip, lm)

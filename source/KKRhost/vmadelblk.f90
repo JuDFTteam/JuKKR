@@ -98,7 +98,7 @@ contains
     real (kind=dp), dimension (lmpot, naez), intent (out) :: vinters
     ! .. Local Scalars
     integer :: lrecabmad, irec
-    integer :: i, l, lm, lm2, lmmax, m, io1, io2, ipot, iq1, iq2
+    integer :: i, l, lm, lm2, lmmax0d, m, io1, io2, ipot, iq1, iq2
     integer :: irs1, ispin, it1, it2, noqval
     real (kind=dp) :: ac
     ! .. Local Arrays
@@ -113,7 +113,7 @@ contains
     lrecabmad = wlength*2*lmpot*lmpot + wlength*2*lmpot
     if (write_madelung_file) open (69, access='direct', recl=lrecabmad, file='abvmad.unformatted', form='unformatted')
 
-    lmmax = (lmax+1)*(lmax+1)
+    lmmax0d = (lmax+1)*(lmax+1)
 
     if (icc/=0) then
       do iq1 = 1, naez
@@ -168,14 +168,14 @@ contains
                 ! lm = 1 component disappears if there is only one host atom
                 ! take moments of sphere
                 ! ----------------------------------------------------------
-                do lm2 = 2, lmmax
+                do lm2 = 2, lmmax0d
                   ac = ac + avmad(lm, lm2)*cmom(lm2, it2)*conc(it2)
                 end do
                 ! ----------------------------------------------------------
                 ! Add contribution of interstial in case of shapes
                 ! ----------------------------------------------------------
                 if (kshape/=0) then
-                  do lm2 = 2, lmmax
+                  do lm2 = 2, lmmax0d
                     ac = ac + avmad(lm, lm2)*cminst(lm2, it2)*conc(it2)
                   end do
                 end if
@@ -206,14 +206,14 @@ contains
                   ! -------------------------------------------------------
                   ! Take moments of sphere
                   ! -------------------------------------------------------
-                  do lm2 = 1, lmmax
+                  do lm2 = 1, lmmax0d
                     ac = ac + avmad(lm, lm2)*cmom(lm2, it2)*conc(it2)
                   end do
                   ! -------------------------------------------------------
                   ! Add contribution of interstial in case of shapes
                   ! -------------------------------------------------------
                   if (kshape/=0) then
-                    do lm2 = 1, lmmax
+                    do lm2 = 1, lmmax0d
                       ac = ac + avmad(lm, lm2)*cminst(lm2, it2)*conc(it2)
                     end do
                   end if
@@ -277,7 +277,7 @@ contains
     write (1337, *)
     write (1337, *) '                     ', 'Writing intercell potential for impurity'
     write (1337, '(/,20X,55("-"))')
-    write (1337, 130) hostimp(0), lmmax
+    write (1337, 130) hostimp(0), lmmax0d
     write (1337, '(20X,55("-"),/,35X,"  i host lm  Vint")')
     do i = 1, hostimp(0)
       write (1337, *)
@@ -290,9 +290,9 @@ contains
     end do
     write (1337, '(79("="),/)')
 
-    write (91, 140) hostimp(0), lmmax
+    write (91, 140) hostimp(0), lmmax0d
     do i = 1, hostimp(0)
-      write (91, 150)(vinters(lm,hostimp(i)), lm=1, lmmax)
+      write (91, 150)(vinters(lm,hostimp(i)), lm=1, lmmax0d)
     end do
     close (91)
 
