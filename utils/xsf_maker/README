@@ -1,0 +1,15 @@
+The program xsf_maker generates an .xsf file using KKR structure info
+
+Compilation: ifort xsf_maker.f90 -o xsf_maker
+
+Usage: ./xsf_maker < xsf_input
+
+Input: see xsf_input for an example
+
+Output: filename.xsf
+
+The .xsf can then be imported into Vesta, and the geometry easily analyzed
+
+Useful options are: 
+-> conversion from a.u. to Angstrom
+-> shift of the basis vector (for nicer display in Vesta)
