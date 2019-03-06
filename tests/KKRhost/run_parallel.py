@@ -40,7 +40,7 @@ if test_coverage<0:
     modes = ['hybrid']
     npara_pairs = [[1,3]]
     if test_coverage in [-12]:
-        npara_pairs = [[1,8]]
+        npara_pairs = [[1,6]]
         modes = ['mpi']
     # for LLY run check also with 8 and 9 ranks to check for LLY miscommunication bug
     if test_coverage in [-3]:
