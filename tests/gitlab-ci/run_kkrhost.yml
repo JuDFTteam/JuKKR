@@ -135,6 +135,8 @@ run_kkrhost:intel:multi_node_9:
   script:
     - cd tests/KKRhost
     - ./run_multi_node.py
+    # run this test here since it needs 25 mpi ranks
+    - ./tools/run_test_03_1_energ25.sh
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -587,7 +589,6 @@ run_kkrhost:intel:Si_LLY_SOC_3_1:
   script:
     - cd tests/KKRhost
     - ./run_parallel.py -1003
-    - ./tools/run_test_03_1_energ25.sh
   artifacts:
     paths:
       - tests/KKRhost/test_run*
