@@ -77,7 +77,6 @@ add_executable(
     source/KKRimp/checknan.f90
     source/KKRimp/log.f90
     source/KKRimp/config.f90
-    source/KKRimp/wrapper.f90
     source/KKRimp/simp3.f90
     source/KKRimp/regsol.f
     source/KKRimp/soutk.f90
