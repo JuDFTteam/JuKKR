@@ -122,13 +122,13 @@ contains
   
     do ilm1=1, lmsize
       do ilm2=1, lmsize
-        write(3246762,'(2i5,50000E)') ilm2, ilm1, wronskian(ilm2,ilm1,:)
+        write(3246762,'(2i5,50000E25.14)') ilm2, ilm1, wronskian(ilm2,ilm1,:)
       end do
     end do
   
     do ilm1=1, lmsize2
       do ilm2=1, lmsize2
-        write(3246763,'(2i5,50000E)') ilm2, ilm1, wronskian2(ilm2,ilm1,:)
+        write(3246763,'(2i5,50000E25.14)') ilm2, ilm1, wronskian2(ilm2,ilm1,:)
       end do
     end do
   
