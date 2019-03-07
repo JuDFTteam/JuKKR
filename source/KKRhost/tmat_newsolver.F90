@@ -484,7 +484,7 @@ contains
         ! faster calculation of RLL.
         ! no irregular solutions are needed in self-consistent iterations
         ! because the t-matrix depends only on RLL
-        if (.not. set_cheby_nospeedup .and. .not. (calc_exchange_couplings .or. write_pkkr_operators)) then
+        if (.not. set_cheby_nospeedup .and. .not. (calc_exchange_couplings .or. write_pkkr_operators) .and. .not.calc_wronskian) then
           call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), tmat0(:,:), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
             jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alpha0(:,:))
         else
@@ -585,10 +585,13 @@ contains
         close (9999)
       end if
 
-      ! Calculate additional t-matrices for Jij-tensor calculation
-      if (t_dtmatjij_at%calculate .or. (t_wavefunctions%isave_wavefun(i1,ie)>0 .and.&
-         (t_wavefunctions%save_rllleft .or. t_wavefunctions%save_sllleft)) .or.     &
-         ((write_rhoq_input .and. ie==2) .and. (i1==mu0))) then ! rhoqtest
+      !----------------------------------------------------------------------------
+      ! Calculate the left-hand side solution
+      !----------------------------------------------------------------------------
+      if ( t_dtmatjij_at%calculate .or. (t_wavefunctions%isave_wavefun(i1,ie)>0 .and. &
+           (t_wavefunctions%save_rllleft .or. t_wavefunctions%save_sllleft)) .or.     &
+           ((write_rhoq_input .and. ie==2) .and. (i1==mu0)) .or.                      & ! rhoqtest
+           calc_wronskian ) then
         ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         ! Calculate the left-hand side solution this needs to be done for the
         ! calculation of t-matrices for Jij tensor or if wavefunctions should be saved
@@ -642,7 +645,7 @@ contains
         ! faster calculation of RLL.
         ! no left solutions are needed in self-consistent iterations
         ! because the t-matrix depends only on RLL
-        if (.not. set_cheby_nospeedup .and. .not. ( calc_exchange_couplings .or. write_pkkr_operators)) then
+        if (.not. set_cheby_nospeedup .and. .not. ( calc_exchange_couplings .or. write_pkkr_operators) .and. .not.calc_wronskian) then
           ! do nothing
         else
           call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), tmat0, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
@@ -688,11 +691,10 @@ contains
 #endif
         end if                     ! write_rhoq_input
 
-        !----------------------------------------------------------------------------
-        ! Calculate the left-hand side solution
-        !----------------------------------------------------------------------------
-
       end if                       ! t_dtmatJij_at%calculate .or. t_wavefunctions%Nwfsavemax>0
+      !----------------------------------------------------------------------------
+      ! Calculate the left-hand side solution
+      !----------------------------------------------------------------------------
 
       ! save_wavefuncions
       if (t_wavefunctions%nwfsavemax>0) then
@@ -789,6 +791,9 @@ contains
       ! Calculation of the Wronskian. Just for nummerical checks
       !#######################################################
       if ( calc_wronskian ) then
+        open(9999, file='test_rmesh', form='formatted')
+        write(9999, '(50000E26.17)') rnew(1:irmdnew)
+        close(9999)
         if (korbit==1) then
           call calcwronskian(rll(:,:,:,ith), sll(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), &
             ncheb, npan_tot, ipan_intervall, rpan_intervall)
@@ -796,6 +801,7 @@ contains
           call calcwronskian(rll(:,:,:,ith), sll(:,:,:,ith), rll(:,:,:,ith), sll(:,:,:,ith), &
             ncheb, npan_tot, ipan_intervall, rpan_intervall)
         end if
+        stop
       end if
 
     end do                         ! IE loop
@@ -829,7 +835,7 @@ contains
     ipiv,tmat0,tmatll,alpha0,dtmatll,alphall,dalphall,jlk_index,nsra,lmmaxd,nth,   &
     lmax,vnspll,vnspll0,vnspll1,hlk,jlk,hlk2,jlk2,tmatsph,rll,sll,rllleft,sllleft)
     use :: mod_datatypes, only: dp
-    use :: mod_runoptions, only: calc_exchange_couplings, write_rhoq_input
+    use :: mod_runoptions, only: calc_exchange_couplings, write_rhoq_input, calc_wronskian
     use :: mod_constants, only: czero
     use :: global_variables, only: korbit
     use :: mod_profiling, only: memocc
@@ -909,7 +915,7 @@ contains
       sll = czero
 
       ! Left regular and irregular wavefunctions (used here only in case of XCPL or saving of left wavefunctions)
-      if (calc_exchange_couplings .or. (t_wavefunctions%save_rllleft .or. t_wavefunctions%save_sllleft .or. write_rhoq_input)) then
+      if (calc_exchange_couplings .or. (t_wavefunctions%save_rllleft .or. t_wavefunctions%save_sllleft .or. write_rhoq_input) .or. calc_wronskian) then
         allocate (rllleft(nsra*lmmaxd,lmmaxd,irmdnew,0:nth-1), stat=i_stat)
         call memocc(i_stat, product(shape(rllleft))*kind(rllleft), 'RLLLEFT', 'allocate_locals_tmat_newsolver')
         rllleft = czero

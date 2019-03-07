@@ -26,28 +26,28 @@ contains
     use mod_cheb, only: getCLambdaCinv
     implicit none
     ! interface
-    complex (kind=dp), intent(in) ::  rll(:,:,:) !! regular right wavefunction
-    complex (kind=dp), intent(in) ::  sll(:,:,:) !! irregular right wavefunction
-    complex (kind=dp), intent(in) ::  leftrll(:,:,:) !! regular left wavefunction
-    complex (kind=dp), intent(in) ::  leftsll(:,:,:) !! irregular left wavefunction
+    complex (kind=dp), intent(in) :: rll(:,:,:) !! regular right wavefunction
+    complex (kind=dp), intent(in) :: sll(:,:,:) !! irregular right wavefunction
+    complex (kind=dp), intent(in) :: leftrll(:,:,:) !! regular left wavefunction
+    complex (kind=dp), intent(in) :: leftsll(:,:,:) !! irregular left wavefunction
     integer, intent(in) :: ncheb    !! number of Chebychev polynomials
     integer, intent(in) :: npan_tot !! number of panels
-    integer, intent(in) :: ipan_intervall(:) !! index array for potential and shapefunction boundaries for each panel
-    real (kind=dp), intent(in) :: rpan_intervall(:) !! radial values of panel boundaries 
+    integer, intent(in) :: ipan_intervall(0:npan_tot) !! index array for potential and shapefunction boundaries for each panel
+    real (kind=dp), intent(in) :: rpan_intervall(0:npan_tot) !! radial values of panel boundaries 
     ! local arrays
-    complex (kind=dp), allocatable ::  drlldr(:,:,:)     !! derivative of rll
-    complex (kind=dp), allocatable ::  dslldr(:,:,:)     !! derivative of sll
-    complex (kind=dp), allocatable ::  dleftrlldr(:,:,:) !! derivative of leftrll
-    complex (kind=dp), allocatable ::  dleftslldr(:,:,:) !! derivative of leftsll
-    complex (kind=dp), allocatable ::  fn(:),dfndr(:)    !! working arrays for radial derivatives
-    complex (kind=dp), allocatable ::  fn2(:),dfn2dr(:)  !! working arrays for radial derivatives
-    complex (kind=dp), allocatable ::  fn3(:),dfn3dr(:)  !! working arrays for radial derivatives
-    complex (kind=dp), allocatable ::  fn4(:),dfn4dr(:)  !! working arrays for radial derivatives
-    complex (kind=dp), allocatable ::  wronskian(:,:,:)  !! wronskian of the first kind (eq. 4.44, PhD Bauer)
-    complex (kind=dp), allocatable ::  wronskian2(:,:,:) !! wronskian of the second kind (eq. 4.37, PhD Bauer)
+    complex (kind=dp), allocatable :: drlldr(:,:,:)     !! derivative of rll
+    complex (kind=dp), allocatable :: dslldr(:,:,:)     !! derivative of sll
+    complex (kind=dp), allocatable :: dleftrlldr(:,:,:) !! derivative of leftrll
+    complex (kind=dp), allocatable :: dleftslldr(:,:,:) !! derivative of leftsll
+    complex (kind=dp), allocatable :: fn(:),dfndr(:)    !! working arrays for radial derivatives
+    complex (kind=dp), allocatable :: fn2(:),dfn2dr(:)  !! working arrays for radial derivatives
+    complex (kind=dp), allocatable :: fn3(:),dfn3dr(:)  !! working arrays for radial derivatives
+    complex (kind=dp), allocatable :: fn4(:),dfn4dr(:)  !! working arrays for radial derivatives
+    complex (kind=dp), allocatable :: wronskian(:,:,:)  !! wronskian of the first kind (eq. 4.44, PhD Bauer)
+    complex (kind=dp), allocatable :: wronskian2(:,:,:) !! wronskian of the second kind (eq. 4.37, PhD Bauer)
     complex (kind=dp) :: CLambdaCinv(0:ncheb,0:ncheb) !! complex version of integration matrix in Chebychev mesh (imaginary part is zero)
     real (kind=dp) :: CLambdaCinv_temp(0:ncheb,0:ncheb) !! integration matrix in Chebychev mesh
-    real (kind=dp)          :: widthfac !! width of panel = 1/2*(r(m)-r(m-1))
+    real (kind=dp) :: widthfac !! width of panel = 1/2*(r(m)-r(m-1))
     ! working indices and matrix sizes
     integer :: ilm1,ilm2,ir,ipan,irstart,irstop
     integer :: lmsize,lmsize2,nrmax
@@ -56,21 +56,21 @@ contains
     lmsize2 = ubound(rll,1)
     nrmax   = ubound(rll,3)
   
-    write(*,*) 'in calcwronskian:', lmsize,lmsize2,nrmax
-    allocate( drlldr(lmsize2,lmsize,nrmax),dslldr(lmsize2,lmsize,nrmax) )
-    allocate( dleftrlldr(lmsize2,lmsize,nrmax),dleftslldr(lmsize2,lmsize,nrmax) )
+    write(*,*) 'in calcwronskian:', lmsize, lmsize2, nrmax
+    allocate( drlldr(lmsize2,lmsize,nrmax), dslldr(lmsize2,lmsize,nrmax) )
+    allocate( dleftrlldr(lmsize2,lmsize,nrmax), dleftslldr(lmsize2,lmsize,nrmax) )
     allocate( wronskian(lmsize,lmsize,nrmax) )
     allocate( wronskian2(lmsize2,lmsize2,nrmax) )
-    allocate( fn(nrmax),fn2(nrmax),dfndr(nrmax),dfn2dr(nrmax) )
-    allocate( fn3(nrmax),fn4(nrmax),dfn3dr(nrmax),dfn4dr(nrmax) )
-  
+    allocate( fn(nrmax), fn2(nrmax), dfndr(nrmax), dfn2dr(nrmax) )
+    allocate( fn3(nrmax), fn4(nrmax), dfn3dr(nrmax), dfn4dr(nrmax) )
   
     ! ############################################################
     ! Differentiate the wave functions
     ! ############################################################
 
-    ! construct Chebychev intetgration matrix
+    ! construct Chebychev integration matrix
     call getCLambdaCinv(Ncheb, CLambdaCinv_temp(0:ncheb,0:ncheb))
+    ! convert to complex numbers
     CLambdaCinv(0:ncheb,0:ncheb) = cmplx(CLambdaCinv_temp(0:ncheb,0:ncheb), 0.0_dp)
   
     ! perform radial derivative of rll, rllleft, sll and sllleft
@@ -84,7 +84,7 @@ contains
         do ipan=1,npan_tot
           irstart=ipan_intervall(ipan-1)+1
           irstop = ipan_intervall(ipan)
-          widthfac = 2.0D0/(rpan_intervall(ipan)-rpan_intervall(ipan-1))
+          widthfac = 2.0_dp/(rpan_intervall(ipan)-rpan_intervall(ipan-1))
   
           dfndr(irstart:irstop) = matvec_dzdz(CLambdaCinv,fn(irstart:irstop))
           dfndr(irstart:irstop) = dfndr(irstart:irstop)*widthfac
@@ -115,6 +115,15 @@ contains
   
     ! open output file for wronskian relations and write files out
     ! the files contail the left-hand site of eq. 4.44 and 4.37
+    open(unit=9246760,file='test_rpan_intervall')
+    write(9246760,'(50000F35.16)') rpan_intervall(:)
+    close(unit=9246760)
+
+    open(unit=9246761,file='test_rllleft')
+    open(unit=9246762,file='test_sllleft')
+    open(unit=9246763,file='test_rll')
+    open(unit=9246764,file='test_sll')
+
     open(unit=3246762,file='test_wronskian')
     open(unit=3246763,file='test_wronskian2')
     write(3246762,'(a)') '# lm1, lm2, wronskian(lm1, lm2, 1:ir_max) (first kind)'
@@ -122,18 +131,27 @@ contains
   
     do ilm1=1, lmsize
       do ilm2=1, lmsize
-        write(3246762,'(2i5,50000E25.14)') ilm2, ilm1, wronskian(ilm2,ilm1,:)
+        write(3246762,'(2i5,50000F35.16)') ilm2, ilm1, wronskian(ilm2,ilm1,:)
+        write(9246761,'(2i5,50000F35.16)') ilm2, ilm1, leftrll(ilm2,ilm1,:)
+        write(9246762,'(2i5,50000F35.16)') ilm2, ilm1, leftsll(ilm2,ilm1,:)
+        write(9246763,'(2i5,50000F35.16)') ilm2, ilm1, rll(ilm2,ilm1,:)
+        write(9246764,'(2i5,50000F35.16)') ilm2, ilm1, sll(ilm2,ilm1,:)
       end do
     end do
   
     do ilm1=1, lmsize2
       do ilm2=1, lmsize2
-        write(3246763,'(2i5,50000E25.14)') ilm2, ilm1, wronskian2(ilm2,ilm1,:)
+        write(3246763,'(2i5,50000F35.16)') ilm2, ilm1, wronskian2(ilm2,ilm1,:)
       end do
     end do
   
     close(3246762)
     close(3246763)
+
+    close(9246761)
+    close(9246762)
+    close(9246763)
+    close(9246764)
   
   end subroutine calcwronskian
 
