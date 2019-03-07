@@ -545,7 +545,7 @@ contains
         if (write_BdG_tests) then
           write (filename, '(A,I0.3,A,I0.3,A)') 'tmat_atom_', i1, '_energ_', ie, '.dat'
           open (888888, file=trim(filename), form='formatted')
-          write (888888, '(A,I9,A,I9,A,I9)') '# dimension: lmmaxd=', lmmaxd, ' lmmaxd=', lmmaxd
+          write (888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: lmmaxd=', lmmaxd, ' lmmaxd=', lmmaxd, ' ; ERYD=', eryd
           write (888888, '(2ES21.9)') tmatll(:, :)
           close (888888)
         end if
