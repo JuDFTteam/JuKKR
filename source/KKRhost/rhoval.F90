@@ -54,18 +54,18 @@ contains
     use :: mod_mympi, only: distribute_linear_on_tasks
 #endif
     use :: mod_types, only: t_tgmat, t_inc, t_mpi_c_grid, init_tgmat
-    use :: mod_constants
+    use :: mod_constants, only: pi, czero, cvlight, cone, ci
     use :: mod_runoptions, only: calc_gmat_lm_full, set_gmat_to_zero, use_qdos, write_complex_qdos, disable_print_serialnumber
-    use :: mod_profiling
+    use :: mod_profiling, only: memocc
     use :: mod_version_info, only: version_print_header
-    use :: global_variables
-    use :: mod_datatypes
-    use :: mod_pnsqns
-    use :: mod_cradwf
-    use :: mod_rholm
-    use :: mod_rhons
-    use :: mod_wfmesh
-    use :: mod_drvrho
+    use :: global_variables, only: lmmaxd, lmaxd, irmd, irmind, lmpotd, irid, nfund, ncleb, ipand, wlength, krel, iemxd, krel, mmaxd, nspind, lmxspd, lm2d
+    use :: mod_datatypes, only: dp
+    use :: mod_pnsqns, only: pnsqns
+    use :: mod_cradwf, only: cradwf
+    use :: mod_rholm, only: rholm
+    use :: mod_rhons, only: rhons
+    use :: mod_wfmesh, only: wfmesh
+    use :: mod_drvrho, only: drvrho_qdos
 
     implicit none
 

@@ -451,7 +451,8 @@ contains
     use :: mod_runoptions, only: calc_DOS_Efermi, calc_GF_Efermi, relax_SpinAngle_Dirac, set_empty_system, use_Chebychev_solver, &
       use_decimation, use_ewald_2d, use_qdos, use_semicore, use_spherical_potential_only, use_virtual_atoms, write_deci_pot, &
       write_deci_tmat, write_energy_mesh, write_generalized_potential, write_green_host, write_green_imp, write_kkrimp_input, &
-      write_kkrsusc_input, write_pkkr_input, write_pkkr_operators, write_potential_tests, write_rhoq_input, use_ldau, disable_print_serialnumber
+      write_kkrsusc_input, write_pkkr_input, write_pkkr_operators, write_potential_tests, write_rhoq_input, use_ldau, &
+      disable_print_serialnumber, stop_1a, calc_wronskian
     use :: mod_version, only: version1, version2, version3, version4
     use :: mod_version_info, only: serialnr, version_print_header
     use :: mod_md5sums, only: get_md5sums, md5sum_potential, md5sum_shapefun
@@ -1294,11 +1295,33 @@ contains
       if ((npol/=0) .and. (npnt1==0) .and. (npnt3==0)) then
         stop 'For qdos calculation change enery contour to dos path'
       end if
-      if (tk>50.d0) write (*, *) &
-        'WARNING:  high energy smearing due to high value of TEMPR for energy contour integration could not be of advantage. Consider changeing ''TEMPR'' to lower value'
-      if (tk>50.d0) write (1337, *) &
-        'WARNING:  high energy smearing due to high value of TEMPR for energy contour integration could not be of advantage. Consider changeing ''TEMPR'' to lower value'
+      if (tk>50.d0) write (*, *) 'WARNING:  high energy smearing due to high value of TEMPR for energy contour integration could not be of advantage. Consider changeing ''TEMPR'' to lower value'
+      if (tk>50.d0) write (1337, *) 'WARNING:  high energy smearing due to high value of TEMPR for energy contour integration could not be of advantage. Consider changeing ''TEMPR'' to lower value'
       write (1337, *) '       QDOS: consistecy check complete'
+    end if
+
+    ! Check consistency with Wronskian test calculation
+    if (calc_wronskian) then
+      write (1337, *)
+      write (1337, *) '     < WRONSKIAN > : consistency check '
+      write (1337, *) ' run wronskian calculation with single energy point only and then execute ''check_wronskian.py'' script.'
+      if (.not. stop_1a) then
+        stop_1a = .true.
+        write (*, *) ' automatically adding ''stop_1a'' option.'
+        write (1337, *) ' automatically adding ''stop_1a'' option.'
+      end if
+      if (npol/=0 .and. npnt1==0 .and. npnt3==0 .and. npnt2/=1) then
+        write(*, *) 'Calculation of Wronskian only possible for a single energy point!'
+        write(*, *) 'Otherwise files become too large.'
+        stop 
+      end if
+      if (tk>10.0e-5_dp) then
+        stop 'Calculation of Wronskian only works for real energies! Choose ''TEMPR=0'''
+      end if
+      if (nranks>1) then
+        stop 'Calculation of Wronskian only works in serial!'
+      end if
+      write (1337, *) '       WRONSKIAN: consistecy check complete'
     end if
 
     ! -------------------------------------------------------------------------

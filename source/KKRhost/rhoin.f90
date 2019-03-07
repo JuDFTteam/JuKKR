@@ -84,49 +84,36 @@ contains
   !> @endwarning
   !-------------------------------------------------------------------------------
   subroutine rhoin(ar,cden,cr,df,gmat,ek,rho2ns,irc1,nsra,efac,pz,fz,qz,sz,cleb,    &
-    icleb,jend,iend,ekl,cdenlm) ! lm-dos
+    icleb,jend,iend,ekl,cdenlm)
 
     use :: mod_datatypes, only: dp
-    use :: global_variables
-    use :: mod_constants, only: pi,czero
+    use :: global_variables, only: lmmaxd, lmaxd, irmd, ncleb, lmpotd
+    use :: mod_constants, only: pi, czero
     implicit none
-    ! lm-dos
-    ! ..
+    ! interface
     complex (kind=dp) :: df, ek
     integer :: iend, irc1, nsra
-    ! .. Local Scalars ..
-    ! ..
-    complex (kind=dp) :: ar(lmmaxd, *), cden(irmd, 0:lmaxd), cr(lmmaxd, *), efac(*), ekl(0:lmaxd), fz(irmd, 0:lmaxd), gmat(lmmaxd, lmmaxd), pz(irmd, 0:lmaxd), qz(irmd, 0:lmaxd), &
-      sz(irmd, 0:lmaxd), cdenlm(irmd, lmmaxd) ! .. Local Arrays ..
-    real (kind=dp) :: cleb(*), rho2ns(irmd, lmpotd)
+    complex (kind=dp) :: ar(lmmaxd, lmmaxd), cden(irmd, 0:lmaxd), cr(lmmaxd, lmmaxd), efac(lmmaxd), ekl(0:lmaxd), fz(irmd, 0:lmaxd), gmat(lmmaxd, lmmaxd), pz(irmd, 0:lmaxd), qz(irmd, 0:lmaxd), &
+      sz(irmd, 0:lmaxd), cdenlm(irmd, lmmaxd)
+    real (kind=dp) :: cleb(ncleb), rho2ns(irmd, lmpotd)
     integer :: icleb(ncleb, 4), jend(lmpotd, 0:lmaxd, 0:lmaxd)
-    ! ..
-    ! .. External Functions ..
+    ! local
     complex (kind=dp) :: efac1, efac2, ffz, gmatl, ppz, v1, v2
     real (kind=dp) :: c0ll
     integer :: i, ir, j, j0, j1, l, l1, l2, lm1, lm2, lm3, lm3max, ln2, ln3, m
-    ! ..
-    ! .. Intrinsic Functions ..
-    complex (kind=dp) :: vr(lmmaxd, lmmaxd), wf(irmd, 0:lmaxd, 0:lmaxd), wr(lmmaxd, lmmaxd)
-    ! ..
-    ! .. Save statement ..
-    complex (kind=dp) :: zdotu
-    external :: zdotu
-    ! ..
-    ! .. Data statements ..
-    intrinsic :: aimag, sqrt
-    ! ..
-    ! C0LL = 1/sqrt(4*pi)
+    complex (kind=dp) :: vr(lmmaxd, lmmaxd), wf(irmd, 0:lmaxd, 0:lmaxd), wr(lmmaxd, lmmaxd), ar2(lmmaxd**2), vr2(lmmaxd**2)
+    complex (kind=dp), external :: zdotu
 
-    ! ---> set up array wr(lm1,lm2)
+    ! C0LL = 1/sqrt(4*pi)
     c0ll = 1.0e0_dp/sqrt(4.0e0_dp*pi)
-    ! use first vr
 
     lm3max = icleb(iend, 3)
 
-
-    ! ---> using symmetry of structural green function
-
+    ! ---> set up array wr(lm1,lm2)
+    !      use first vr
+    wr = czero
+    vr = czero
+    ar2 = czero
     do lm2 = 1, lmmaxd
       ln2 = lm2
       v2 = efac(lm2)*efac(lm2)*gmat(ln2, ln2)
@@ -135,9 +122,7 @@ contains
       end do
     end do
 
-
-    ! ---> using symmetry of gaunt coeffients
-
+    ! ---> using symmetry of structural green function
     do lm2 = 2, lmmaxd
       ln2 = lm2
       efac2 = 2.0e0_dp*efac(lm2)
@@ -150,20 +135,27 @@ contains
       end do
     end do
 
+    ar2 = reshape(ar, [lmmaxd**2])
+    vr2 = reshape(vr, [lmmaxd**2])
     do lm1 = 1, lmmaxd
       efac1 = efac(lm1)
-      wr(lm1, lm1) = zdotu(lmmaxd, ar(lm1,1), lmmaxd, vr(lm1,1), lmmaxd)/(efac1*efac1)
+      !write(*,*) lm1, lmmaxd, shape(ar2), shape(vr), efac1
+      !write(*,*) ar2(lm1,:)
+      !write(*,*) vr(lm1,:)
+      !wr(lm1, lm1) = zdotu(lmmaxd, ar(lm1,1), lmmaxd, vr(lm1,1), lmmaxd)/(efac1*efac1) ! this seems to work with the intel compiler
+      wr(lm1, lm1) = dot_product(conjg(ar2(lm1::lmmaxd)), vr2(lm1::lmmaxd))/(efac1*efac1) ! this works with conjugation!!!
+      !wr(lm1, lm1) = zdotu(lmmaxd, ar2(lm1), lmmaxd, vr2(lm1), lmmaxd)/(efac1*efac1)
+      !wr(lm1, lm1) = zdotu(lmmaxd, ar(lm1,1), lmmaxd, vr(lm1,1), lmmaxd)/(efac1*efac1)
       do lm2 = 1, lm1 - 1
-        ! ---> set up array wf(l1,l2) = pz(l1)*pz(l2)
-
-
+        ! ---> using symmetry of gaunt coeffients
         efac2 = efac(lm2)
-        wr(lm1, lm2) = (zdotu(lmmaxd,ar(lm1,1),lmmaxd,vr(lm2,1),lmmaxd)+zdotu(lmmaxd,ar(lm2,1),lmmaxd,vr(lm1,1),lmmaxd))/(efac1*efac2)
+        !wr(lm1, lm2) = ( zdotu(lmmaxd,ar(lm1,1),lmmaxd,vr(lm2,1),lmmaxd) + zdotu(lmmaxd,ar(lm2,1),lmmaxd,vr(lm1,1),lmmaxd) )/(efac1*efac2) ! this seems to work with the intel compiler
+        wr(lm1, lm2) = ( dot_product(conjg(ar2(lm1::lmmaxd)),vr2(lm2::lmmaxd)) + dot_product(conjg(ar2(lm2::lmmaxd)),vr2(lm1::lmmaxd)) )/(efac1*efac2) ! this works with conjugation!!!
+        !wr(lm1, lm2) = ( zdotu(lmmaxd,ar2(lm1),lmmaxd,vr2(lm2),lmmaxd) + zdotu(lmmaxd,ar2(lm2),lmmaxd,vr2(lm1),lmmaxd) )/(efac1*efac2)
       end do
     end do
 
-    ! ---> first calculate only the spherically symmetric contribution
-    ! remember that the gaunt coeffients for that case are 1/sqrt(4 pi)
+    ! ---> set up array wf(l1,l2) = pz(l1)*pz(l2)
     if (nsra==2) then
       do l1 = 0, lmaxd
         do l2 = 0, l1
@@ -183,73 +175,60 @@ contains
       end do
     end if
 
-    ! Implicit integration over energies
-
-
+    ! ---> first calculate only the spherically symmetric contribution
+    ! remember that the gaunt coeffients for that case are 1/sqrt(4 pi)
     do l = 0, lmaxd
       gmatl = czero
       do m = -l, l
         lm1 = l*(l+1) + m + 1
         gmatl = gmatl + wr(lm1, lm1)
       end do
-      ! lm-dos
       if (nsra==2) then
         do i = 2, irc1
           ppz = pz(i, l)
           ffz = fz(i, l)
           cden(i, l) = ppz*(gmatl*ppz+ekl(l)*qz(i,l)) + ffz*(gmatl*ffz+ekl(l)*sz(i,l))
-          rho2ns(i, 1) = rho2ns(i, 1) + c0ll*aimag(df*cden(i,l)) ! lm-dos
-          ! lm-dos
-          ! lm-dos
-          do m = -l, l             ! lm-dos
+          rho2ns(i, 1) = rho2ns(i, 1) + c0ll*aimag(df*cden(i,l)) ! Implicit integration over energies
+          do m = -l, l
             lm1 = l*(l+1) + m + 1
-            cdenlm(i, lm1) = ppz*(wr(lm1,lm1)*ppz+ek*qz(i,l)) + ffz*(wr(lm1,lm1)*ffz+ek*sz(i,l)) ! Implicit integration over
-            ! energies
+            cdenlm(i, lm1) = ppz*(wr(lm1,lm1)*ppz+ek*qz(i,l)) + ffz*(wr(lm1,lm1)*ffz+ek*sz(i,l))
           end do
-          ! lm-dos
         end do
-        ! lm-dos
       else
         do i = 2, irc1
           ppz = pz(i, l)
           cden(i, l) = ppz*(gmatl*ppz+ekl(l)*qz(i,l))
-          rho2ns(i, 1) = rho2ns(i, 1) + c0ll*aimag(df*cden(i,l)) ! lm-dos
-          ! lm-dos
+          rho2ns(i, 1) = rho2ns(i, 1) + c0ll*aimag(df*cden(i,l)) ! Implicit integration over energies
           do m = -l, l
             lm1 = l*(l+1) + m + 1
             cdenlm(i, lm1) = ppz*(wr(lm1,lm1)*ppz+ek*qz(i,l))
-          end do                   ! ---> calculate the non spherically
-          ! symmetric contribution
-          ! to speed up the pointer jend generated in gaunt is used
+          end do
         end do
       end if
-      ! remember that the wavefunctions are l and not lm dependent
     end do
 
-
-
-
+    ! ---> calculate the non spherically symmetric contribution
+    ! to speed up the pointer jend generated in gaunt is used
+    ! remember that the wavefunctions are l and not lm dependent
 
     j0 = 1
 
     do lm3 = 2, lm3max
+
       do l1 = 0, lmaxd
         do l2 = 0, l1
-          ! ---> sum over m1,m2 for fixed lm3,l1,l2
           j1 = jend(lm3, l1, l2)
 
           if (j1/=0) then
 
             gmatl = czero
 
-
-
+            ! ---> sum over m1,m2 for fixed lm3,l1,l2
             do j = j0, j1
               lm1 = icleb(j, 1)
               lm2 = icleb(j, 2)
               gmatl = gmatl + cleb(j)*wr(lm1, lm2)
             end do
-
 
             j0 = j1 + 1
 
@@ -257,14 +236,13 @@ contains
             do i = 2, irc1
               rho2ns(i, lm3) = rho2ns(i, lm3) + aimag(gmatl*wf(i,l1,l2))
             end do
-          end if
-          ! lm-dos
-        end do
-        ! -----------------------------------------------------------------------
-      end do
 
-    end do
-    ! calculates the charge density inside r(irmin) in case
+          end if ! (j1/=0)
+
+        end do ! l2
+      end do ! l1
+    end do ! lm3
+
   end subroutine rhoin
 
 end module mod_rhoin

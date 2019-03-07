@@ -83,12 +83,12 @@ contains
   subroutine rhons(den,df,drdi,gmat,ek,rho2ns,ipan,ircut,irmin,thetas,ifunm,lmsp,   &
     nsra,qns,pns,ar,cr,pz,fz,qz,sz,cleb,icleb,jend,iend,ekl,denlm,gflle_part)
 
-    use :: mod_datatypes
+    use :: mod_datatypes, only: dp
     use :: mod_runoptions, only: calc_gmat_lm_full, use_qdos, use_ldau
-    use :: global_variables
-    use :: mod_rhoin
-    use :: mod_rhoout
-    use :: mod_csimpk
+    use :: global_variables, only: lmmaxd, irmd, lmaxd, ncleb, ipand, irmind, lmpotd, nfund, irid
+    use :: mod_rhoin, only: rhoin
+    use :: mod_rhoout, only: rhoout
+    use :: mod_csimpk, only: csimpk
     use :: mod_constants, only: pi
     implicit none
     ! ..
@@ -102,7 +102,7 @@ contains
 #ifndef CPP_MPI
     complex (kind=dp) :: energ     ! lm-dos
 #endif
-    real (kind=dp) :: cleb(*), drdi(irmd), rho2ns(irmd, lmpotd), thetas(irid, nfund)
+    real (kind=dp) :: cleb(ncleb), drdi(irmd), rho2ns(irmd, lmpotd), thetas(irid, nfund)
     integer :: icleb(ncleb, 4), ifunm(*), ircut(0:ipand), jend(lmpotd, 0:lmaxd, 0:lmaxd), lmsp(*)
     ! ..
     ! .. Local Scalars ..
@@ -120,7 +120,7 @@ contains
     efac(1) = 1.0d0
     v1 = 1.0d0
     do l = 1, lmaxd
-      v1 = v1*ek/dble(2*l-1)
+      v1 = v1*ek/real(2*l-1, kind=dp)
       do m = -l, l
         lm = l*(l+1) + m + 1
         efac(lm) = v1
