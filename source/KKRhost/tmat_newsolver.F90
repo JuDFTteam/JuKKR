@@ -213,6 +213,15 @@ contains
 
     ! set up the non-spherical ll' matrix for potential VLL' (done in VLLMAT)
     call vllmat(1, nrmaxd, irmdnew, lmmax0d, lmmaxd, vnspll0, vins, lmpot, cleb, icleb, iend, nspin/(nspin-korbit), zat, rnew, use_sratrick, ncleb)
+#ifdef CPP_BdG
+    ! test writeout of VNSPLL1
+    if (write_BdG_tests) then
+      open (7352834, file='vnspll.txt', form='formatted')
+      write (7352834, '(A,3I9)') '# lmmaxd,lmmaxd,IRMDNEW=', lmmaxd, lmmaxd, irmdnew
+      write (7352834, '(2ES25.16)') vnspll0(:, :, :)
+      close (7352834)
+    end if
+#endif
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! LDAU
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -351,7 +360,7 @@ contains
         if (write_BdG_tests) then
           open (7352834, file='vnspll_SOC.txt', form='formatted')
           write (7352834, '(A,3I9)') '# lmmaxd,lmmaxd,IRMDNEW=', lmmaxd, lmmaxd, irmdnew
-          write (7352834, '(2F25.14)') vnspll1(:, :, :, ith)
+          write (7352834, '(2ES25.16)') vnspll1(:, :, :, ith)
           close (7352834)
         end if
 #endif
@@ -386,7 +395,7 @@ contains
           else
             write (7352834, '(A,3I9)') '# lmmaxd,lmmaxd,IRMDNEW=', lmmaxd, lmmaxd, irmdnew
           end if
-          write (7352834, '(2F25.14)') vnspll(:, :, :, ith)
+          write (7352834, '(2ES25.16)') vnspll(:, :, :, ith)
           close (7352834)
         end if
 #endif
@@ -449,27 +458,27 @@ contains
           write (filename, '(A,I0.3,A,I0.3,A)') 'tmatsph_atom_', i1, '_energ_', ie, '.dat'
           open (888888, file=trim(filename), form='formatted')
           write (888888, '(A,I9,A,I9,A,I9)') '# dimension: lmmaxd=', lmmaxd, ' lmmaxd=', lmmaxd
-          write (888888, '(2ES21.9)') tmatsph(:, ith)
+          write (888888, '(2ES25.16)') tmatsph(:, ith)
           close (888888)
           write (filename, '(A,I0.3,A,I0.3,A)') 'rll_sph_jlk_atom_', i1, '_energ_', ie, '.dat'
           open (888888, file=trim(filename), form='formatted')
           write (888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: 4*(LMAX+1)=', 4*(lmax+1), ' IRMDNEW=', irmdnew, ' ; ERYD=', eryd
-          write (888888, '(2ES21.9)') jlk(:, :, ith)
+          write (888888, '(2ES25.16)') jlk(:, :, ith)
           close (888888)
           write (filename, '(A,I0.3,A,I0.3,A)') 'rll_sph_hlk_atom_', i1, '_energ_', ie, '.dat'
           open (888888, file=trim(filename), form='formatted')
           write (888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: 4*(LMAX+1)=', 4*(lmax+1), ' IRMDNEW=', irmdnew, ' ; ERYD=', eryd
-          write (888888, '(2ES21.9)') hlk(:, :, ith)
+          write (888888, '(2ES25.16)') hlk(:, :, ith)
           close (888888)
           write (filename, '(A,I0.3,A,I0.3,A)') 'rll_sph_jlk2_atom_', i1, '_energ_', ie, '.dat'
           open (888888, file=trim(filename), form='formatted')
           write (888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: 4*(LMAX+1)=', 4*(lmax+1), ' IRMDNEW=', irmdnew, ' ; ERYD=', eryd
-          write (888888, '(2ES21.9)') jlk2(:, :, ith)
+          write (888888, '(2ES25.16)') jlk2(:, :, ith)
           close (888888)
           write (filename, '(A,I0.3,A,I0.3,A)') 'rll_sph_hlk2_atom_', i1, '_energ_', ie, '.dat'
           open (888888, file=trim(filename), form='formatted')
           write (888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: 4*(LMAX+1)=', 4*(lmax+1), ' IRMDNEW=', irmdnew, ' ; ERYD=', eryd
-          write (888888, '(2ES21.9)') hlk2(:, :, ith)
+          write (888888, '(2ES25.16)') hlk2(:, :, ith)
           close (888888)
         end if
 #endif
@@ -546,7 +555,7 @@ contains
           write (filename, '(A,I0.3,A,I0.3,A)') 'tmat_atom_', i1, '_energ_', ie, '.dat'
           open (888888, file=trim(filename), form='formatted')
           write (888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: lmmaxd=', lmmaxd, ' lmmaxd=', lmmaxd, ' ; ERYD=', eryd
-          write (888888, '(2ES21.9)') tmatll(:, :)
+          write (888888, '(2ES25.16)') tmatll(:, :)
           close (888888)
         end if
 #endif
