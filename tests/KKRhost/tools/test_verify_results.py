@@ -191,7 +191,7 @@ class Test_features():
            #assert set(text)-set(text_ref)==set()
            if std(abs(num-num_ref))>=5*10**-16 or mean(abs(num-num_ref))>=10**-14 or abs(num-num_ref).max()>=2*10**-12 or set(text)-set(text_ref)!=set():
               failed_tests+=1
-        assert failed_tests>1 # workaround to allow occasional error on test machine for qdos.01.1.dat
+        assert failed_tests<=1 # workaround to allow occasional error on test machine for qdos.01.1.dat
 
     """
     def test_13_rhoq(self):
