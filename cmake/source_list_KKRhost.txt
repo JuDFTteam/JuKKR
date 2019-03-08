@@ -282,7 +282,7 @@ add_library(lib_kkrhost STATIC
     source/KKRhost/relpotcvt.f90
     source/KKRhost/renorm_lly.f90
     source/KKRhost/rhocore.f90
-    source/KKRhost/rhoin.f90
+    source/KKRhost/rhoin.F90
     source/KKRhost/rholm.f90
     source/KKRhost/rhons.F90
     source/KKRhost/rhoout.f90
