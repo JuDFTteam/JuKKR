@@ -101,7 +101,13 @@ contains
     complex (kind=dp) :: efac1, efac2, ffz, gmatl, ppz, v1, v2
     real (kind=dp) :: c0ll
     integer :: i, ir, j, j0, j1, l, l1, l2, lm1, lm2, lm3, lm3max, ln2, ln3, m
-    complex (kind=dp) :: vr(lmmaxd, lmmaxd), wf(irmd, 0:lmaxd, 0:lmaxd), wr(lmmaxd, lmmaxd), ar2(lmmaxd**2), vr2(lmmaxd**2)
+    complex (kind=dp) :: vr(lmmaxd, lmmaxd), wf(irmd, 0:lmaxd, 0:lmaxd), wr(lmmaxd, lmmaxd)
+#ifdef __GFORTRAN__
+    ! for the gfortran compiler zdotu leads to a segfault, then using
+    ! dot_product gives the correct result without segfault, this needs these
+    ! auxiliary arrays
+    complex (kind=dp) :: ar2(lmmaxd**2), vr2(lmmaxd**2)
+#endif
     complex (kind=dp), external :: zdotu
 
     ! C0LL = 1/sqrt(4*pi)
@@ -113,7 +119,6 @@ contains
     !      use first vr
     wr = czero
     vr = czero
-    ar2 = czero
     do lm2 = 1, lmmaxd
       ln2 = lm2
       v2 = efac(lm2)*efac(lm2)*gmat(ln2, ln2)
@@ -135,23 +140,25 @@ contains
       end do
     end do
 
+#ifdef __GFORTRAN__
     ar2 = reshape(ar, [lmmaxd**2])
     vr2 = reshape(vr, [lmmaxd**2])
+#endif
     do lm1 = 1, lmmaxd
       efac1 = efac(lm1)
-      !write(*,*) lm1, lmmaxd, shape(ar2), shape(vr), efac1
-      !write(*,*) ar2(lm1,:)
-      !write(*,*) vr(lm1,:)
-      !wr(lm1, lm1) = zdotu(lmmaxd, ar(lm1,1), lmmaxd, vr(lm1,1), lmmaxd)/(efac1*efac1) ! this seems to work with the intel compiler
-      wr(lm1, lm1) = dot_product(conjg(ar2(lm1::lmmaxd)), vr2(lm1::lmmaxd))/(efac1*efac1) ! this works with conjugation!!!
-      !wr(lm1, lm1) = zdotu(lmmaxd, ar2(lm1), lmmaxd, vr2(lm1), lmmaxd)/(efac1*efac1)
-      !wr(lm1, lm1) = zdotu(lmmaxd, ar(lm1,1), lmmaxd, vr(lm1,1), lmmaxd)/(efac1*efac1)
+#ifdef __GFORTRAN__
+      wr(lm1, lm1) = dot_product(conjg(ar2(lm1::lmmaxd)), vr2(lm1::lmmaxd))/(efac1*efac1) ! this works only with conjugation due to definition of dot_product
+#else
+      wr(lm1, lm1) = zdotu(lmmaxd, ar(lm1,1), lmmaxd, vr(lm1,1), lmmaxd)/(efac1*efac1) ! this works with the intel compiler
+#endif
       do lm2 = 1, lm1 - 1
         ! ---> using symmetry of gaunt coeffients
         efac2 = efac(lm2)
-        !wr(lm1, lm2) = ( zdotu(lmmaxd,ar(lm1,1),lmmaxd,vr(lm2,1),lmmaxd) + zdotu(lmmaxd,ar(lm2,1),lmmaxd,vr(lm1,1),lmmaxd) )/(efac1*efac2) ! this seems to work with the intel compiler
-        wr(lm1, lm2) = ( dot_product(conjg(ar2(lm1::lmmaxd)),vr2(lm2::lmmaxd)) + dot_product(conjg(ar2(lm2::lmmaxd)),vr2(lm1::lmmaxd)) )/(efac1*efac2) ! this works with conjugation!!!
-        !wr(lm1, lm2) = ( zdotu(lmmaxd,ar2(lm1),lmmaxd,vr2(lm2),lmmaxd) + zdotu(lmmaxd,ar2(lm2),lmmaxd,vr2(lm1),lmmaxd) )/(efac1*efac2)
+#ifdef __GFORTRAN__
+        wr(lm1, lm2) = ( dot_product(conjg(ar2(lm1::lmmaxd)),vr2(lm2::lmmaxd)) + dot_product(conjg(ar2(lm2::lmmaxd)),vr2(lm1::lmmaxd)) )/(efac1*efac2) ! this works with gfortran
+#else
+        wr(lm1, lm2) = ( zdotu(lmmaxd,ar(lm1,1),lmmaxd,vr(lm2,1),lmmaxd) + zdotu(lmmaxd,ar(lm2,1),lmmaxd,vr(lm1,1),lmmaxd) )/(efac1*efac2) ! this works with the intel compiler
+#endif
       end do
     end do
 
