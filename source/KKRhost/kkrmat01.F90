@@ -314,6 +314,7 @@ contains
       if (mythread==0 .and. t_inc%i_time>0) call timing_start('main1b - fourier')
 #endif
 
+      rrm(1:3, 0) = 0.0_dp ! second index of rr and rrm start at 0
       rrm(1:3, 1:nrd) = -rr(1:3, 1:nrd)
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! KREL .EQ. 0/1
