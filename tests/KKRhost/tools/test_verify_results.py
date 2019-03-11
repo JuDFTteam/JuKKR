@@ -168,31 +168,6 @@ class Test_features():
            assert abs(num-num_ref).max()<2*10**-8
            assert set(text)-set(text_ref)==set()
 
-    def test_12_qdos(self):
-        path  = 'test_run12_mpi_1_6/'
-        path0 = 'test_run12_mpi_1_6/ref/'
-        failed_tests = 0
-        for f in 'qdos.01.1.dat qdos.01.2.dat qdos.02.1.dat qdos.02.2.dat qdos.03.1.dat qdos.03.2.dat qdos.04.1.dat qdos.04.2.dat'.split():
-           fname = f
-           num, text = read_file(path+fname)
-           num_ref, text_ref = read_file(path0+fname)
-           # remove line with serial number
-           text = text[1:]
-           text_ref = text_ref[1:]
-           # now compare
-           print(fname)
-           print(std(abs(num-num_ref)))
-           print(mean(abs(num-num_ref)))
-           print(abs(num-num_ref).max())
-           print(set(text)-set(text_ref)==set())
-           #assert std(abs(num-num_ref))<5*10**-16
-           #assert mean(abs(num-num_ref))<10**-14
-           #assert abs(num-num_ref).max()<2*10**-12
-           #assert set(text)-set(text_ref)==set()
-           if std(abs(num-num_ref))>=5*10**-16 or mean(abs(num-num_ref))>=10**-14 or abs(num-num_ref).max()>=2*10**-12 or set(text)-set(text_ref)!=set():
-              failed_tests+=1
-        assert failed_tests<=1 # workaround to allow occasional error on test machine for qdos.01.1.dat
-
     """
     def test_13_rhoq(self):
         path  = 'test_run13/'
@@ -359,31 +334,6 @@ class Test_SOC():
               num_ref, text_ref = read_file(path0+fname)
               assert std(num-num_ref)<10**-10
               assert set(text)-set(text_ref)==set()
-
-    def test_12_qdos(self):
-        path  = 'test_run12.1_mpi_1_6/'
-        path0 = 'test_run12.1_mpi_1_6/ref/'
-        failed_tests = 0
-        for f in 'qdos.01.1.dat qdos.01.2.dat qdos.02.1.dat qdos.02.2.dat qdos.03.1.dat qdos.03.2.dat qdos.04.1.dat qdos.04.2.dat'.split():
-           fname = f
-           num, text = read_file(path+fname)
-           num_ref, text_ref = read_file(path0+fname)
-           # remove line with serial number
-           text = text[1:]
-           text_ref = text_ref[1:]
-           # now compare
-           print(fname)
-           print(std(abs(num-num_ref)))
-           print(mean(abs(num-num_ref)))
-           print(abs(num-num_ref).max())
-           print(set(text)-set(text_ref)==set())
-           #assert std(abs(num-num_ref))<5*10**-16
-           #assert mean(abs(num-num_ref))<10**-14
-           #assert abs(num-num_ref).max()<2*10**-12
-           #assert set(text)-set(text_ref)==set()
-           if std(abs(num-num_ref))>=5*10**-16 or mean(abs(num-num_ref))>=10**-14 or abs(num-num_ref).max()>=2*10**-12 or set(text)-set(text_ref)!=set():
-              failed_tests+=1
-        assert failed_tests<=1 # workaround to allow occasional error on test machine for qdos.01.1.dat
 
     def test_14_ASA(self):
         path0 = 'test_run14.1_hybrid_1_3/'
