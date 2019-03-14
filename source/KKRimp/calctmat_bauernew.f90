@@ -128,10 +128,10 @@ if (ubound(tmat%tmat,1)/=lmsize) stop 'calctmat: error in tmat dim'
 
 if ( config_testflag('tmatdebug') ) then
   do ir=1,cellnew%nrmaxnew
-    write(1001,'(50000E)') cellnew%rmeshnew(ir),(cellnew%vpotnew(ir,lm1,ispin),lm1=1,lmpot)
+    write(1001,'(50000E25.14)') cellnew%rmeshnew(ir),(cellnew%vpotnew(ir,lm1,ispin),lm1=1,lmpot)
   end do
-  write(5000,'(50000F)') cellnew%rmeshnew
-  write(5001,'(50000F)') cell%rmesh
+  write(5000,'(50000E25.14)') cellnew%rmeshnew
+  write(5001,'(50000E25.14)') cell%rmesh
 end if
 
 
@@ -202,8 +202,8 @@ endif                                                                           
 
 if ( config_testflag('vlldebug') ) then
   do ir=1,cellnew%nrmaxnew
-      write(1233,'(50000E)') Vnspll0(:,:,ir)
-      if (kspinorbit==1) write(11233,'(50000E)') Vpotll2(:,:,ir)
+      write(1233,'(50000E25.14)') Vnspll0(:,:,ir)
+      if (kspinorbit==1) write(11233,'(50000E25.14)') Vpotll2(:,:,ir)
   end do
 end if
 
@@ -247,8 +247,8 @@ end if
 
 if ( config_testflag('vlldebug') ) then
   do ir=1,cellnew%nrmaxnew
-      write(1234,'(50000E)') vnspll1(:,:,ir)
-      if (kspinorbit==1) write(11234,'(50000E)') vnspll2(:,:,ir)
+      write(1234,'(50000E25.14)') vnspll1(:,:,ir)
+      if (kspinorbit==1) write(11234,'(50000E25.14)') vnspll2(:,:,ir)
   end do
   open (7352834, file='vnspll_SOC.txt', form='formatted')
   write (7352834, '(A,3I9)') '# LMMAXSO,LMMAXSO,IRMDNEW=', lmsize, lmsize, cellnew%nrmaxnew
@@ -291,8 +291,8 @@ end if
 
 if ( config_testflag('vlldebug') ) then
   do ir=1,cellnew%nrmaxnew
-    write(1235,'(50000E)') Vpotll(:,:,ir)
-    if (kspinorbit==1) write(11235,'(50000E)') Vpotll2(:,:,ir)
+    write(1235,'(50000E25.14)') Vpotll(:,:,ir)
+    if (kspinorbit==1) write(11235,'(50000E25.14)') Vpotll2(:,:,ir)
   end do
   open (7352834, file='vnspll_sra.txt', form='formatted')
   if (nsra==2) then
@@ -311,8 +311,8 @@ end if
 
 if ( config_testflag('vlldebug') ) then
   do ir=1,cellnew%nrmaxnew
-    write(12351,'(50000E)') Vpotll(1:lmsize,1:lmsize,ir)
-    if (kspinorbit==1) write(112351,'(50000E)') Vpotll2(1:lmsize,1:lmsize,ir)
+    write(12351,'(50000E25.14)') Vpotll(1:lmsize,1:lmsize,ir)
+    if (kspinorbit==1) write(112351,'(50000E25.14)') Vpotll2(1:lmsize,1:lmsize,ir)
   end do
 end if
 
@@ -357,10 +357,10 @@ end if
 
 if ( config_testflag('writesourceterms')) then
   do lm1=1,ubound(jlk,1)
-    write(1661,'(50000E)') jlk(lm1,:)
-    write(1662,'(50000E)') hlk(lm1,:)
-    write(1663,'(50000E)') jlk2(lm1,:)
-    write(1664,'(50000E)') hlk2(lm1,:)
+    write(1661,'(50000E25.14)') jlk(lm1,:)
+    write(1662,'(50000E25.14)') hlk(lm1,:)
+    write(1663,'(50000E25.14)') jlk2(lm1,:)
+    write(1664,'(50000E25.14)') hlk2(lm1,:)
   end do
   write (filename, '(A,I0.3,A,I0.3,A)') 'rll_source_jlk_atom_', 1, '_energ_', 1, '.dat'
   open (888888, file=trim(filename), form='formatted')
@@ -407,10 +407,10 @@ end if
 
 if ( config_testflag('writesourceterms')) then
   do lm1=1,ubound(jlk,1)
-    write(1671,'(50000E)') jlk(lm1,:)
-    write(1672,'(50000E)') hlk(lm1,:)
-    write(1673,'(50000E)') jlk2(lm1,:)
-    write(1674,'(50000E)') hlk2(lm1,:)
+    write(1671,'(50000E25.14)') jlk(lm1,:)
+    write(1672,'(50000E25.14)') hlk(lm1,:)
+    write(1673,'(50000E25.14)') jlk2(lm1,:)
+    write(1674,'(50000E25.14)') hlk2(lm1,:)
   end do
   write (filename, '(A,I0.3,A,I0.3,A)') 'tmatsph_atom_', 1, '_energ_', 1, '.dat'
   open (888888, file=trim(filename), form='formatted')
@@ -568,8 +568,8 @@ if ((kspinorbit==1).and.calcleft) then
   if ( config_testflag('tmatdebug') ) then
     do lm1=1,lmsize
       do lm2=1,lmsize
-        write(4100,'(50000E)') wavefunction%rllleft(lm2,lm1,:,1)
-        write(4101,'(50000E)') wavefunction%sllleft(lm2,lm1,:,1)
+        write(4100,'(50000E25.14)') wavefunction%rllleft(lm2,lm1,:,1)
+        write(4101,'(50000E25.14)') wavefunction%sllleft(lm2,lm1,:,1)
       end do
     end do
   end if
@@ -578,8 +578,8 @@ if ((kspinorbit==1).and.calcleft) then
     if ( config_testflag('tmatdebug') ) then
       do lm1=1,lmsize
         do lm2=lmsize+1,2*lmsize
-          write(4110,'(50000E)') wavefunction%rllleft(lm2,lm1,:,1)
-          write(4111,'(50000E)') wavefunction%sllleft(lm2,lm1,:,1)
+          write(4110,'(50000E25.14)') wavefunction%rllleft(lm2,lm1,:,1)
+          write(4111,'(50000E25.14)') wavefunction%sllleft(lm2,lm1,:,1)
         end do
       end do
     end if
@@ -590,8 +590,8 @@ end if !(kspinorbit==1)
 if ( config_testflag('tmatdebug') ) then
   do lm1=1,lmsize
     do lm2=1,lmsize
-      write(4000,'(50000E)') wavefunction%rll(lm2,lm1,:,1)
-      write(4001,'(50000E)') wavefunction%sll(lm2,lm1,:,1)
+      write(4000,'(50000E25.14)') wavefunction%rll(lm2,lm1,:,1)
+      write(4001,'(50000E25.14)') wavefunction%sll(lm2,lm1,:,1)
     end do
   end do
 end if
@@ -600,8 +600,8 @@ if (wavefunction%nvec==2) then
   if ( config_testflag('tmatdebug') ) then
     do lm1=1,lmsize
       do lm2=lmsize+1,2*lmsize
-        write(4010,'(50000E)') wavefunction%rll(lm2,lm1,:,1)
-        write(4011,'(50000E)') wavefunction%sll(lm2,lm1,:,1)
+        write(4010,'(50000E25.14)') wavefunction%rll(lm2,lm1,:,1)
+        write(4011,'(50000E25.14)') wavefunction%sll(lm2,lm1,:,1)
       end do
     end do
   end if

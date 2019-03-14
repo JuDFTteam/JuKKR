@@ -40,13 +40,13 @@ c#@# KKRtags: VORONOI input-output
 c#@# KKRmerge: potential optimization by keeping STRING in a save variable
       INTEGER NCHAR,NABC,NCOLIO,NLINIO
       PARAMETER(NCHAR=16,NABC=40,NCOLIO=256,NLINIO=5000)
-      CHARACTER CHARKEY*NCHAR
-      CHARACTER CHAR*NCOLIO
+      CHARACTER (len=nchar) CHARKEY
+      CHARACTER (len=ncolio) CHAR
       INTEGER ILINE,IERROR,IFILE
       integer i,ios,ier,npt,ilen,ipos,ipos1,ipos2,iklen,aaaa
-      CHARACTER STRING(NLINIO)*NCOLIO
-      CHARACTER STRING1*NCOLIO
-      CHARACTER ABC*NABC
+      CHARACTER (len=ncolio) STRING(NLINIO)
+      CHARACTER (len=ncolio) STRING1
+      CHARACTER (len=nabc) ABC
       CHARACTER ATEST
       DATA ABC/'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_<>'/
 c

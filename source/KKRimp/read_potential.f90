@@ -273,7 +273,7 @@ end if
 do iatom=1,natom
 ALLOCATE (corestate(iatom)%LCORE(NCORESTATED,NSPIN), &
           corestate(iatom)%ECORE(NCORESTATED,NSPIN),STAT=IERROR)
-          IF (IERROR/=0) STOP'[read_potential] Error while allocationg arrays LCORESTATE,ECORESTATE'
+          IF (IERROR/=0) STOP '[read_potential] Error while allocationg arrays LCORESTATE,ECORESTATE'
 end do !iatom
 
 
@@ -292,7 +292,7 @@ end do !iatom
 DO IATOM= 1, NATOM
   ALLOCATE (CELL(IATOM)%RMESH(NRMAXD), CELL(IATOM)%DRMESHDI(NRMAXD), CELL(IATOM)%DRMESHOR(NRMAXD), &
             CELL(IATOM)%NRCUT(0:NPAND),STAT=IERROR)
-            IF (IERROR/=0) STOP'[read_potential] Error while allocationg arrays LCORESTATE,ECORESTATE'
+            IF (IERROR/=0) STOP '[read_potential] Error while allocationg arrays LCORESTATE,ECORESTATE'
   CELL(IATOM)%NRCUT=0
 END DO !IATOM
 
@@ -482,10 +482,10 @@ write(1337,'(2A)') ' IATOM   RCORE   NRCORE   ',&
                    'RMT   RMAX   NRMAX   RMIN_NS   NRMIN_NS'
 DO IATOM=1,NATOM
   IF (INS==1) THEN
-   write(1337,'(I5,F8.3,I6,F8.3,F8.3,I5,F8.3,I)') IATOM,CELL(IATOM)%RCORE,CELL(IATOM)%NRCORE, &
+   write(1337,'(I5,F8.3,I6,F8.3,F8.3,I5,F8.3,I5)') IATOM,CELL(IATOM)%RCORE,CELL(IATOM)%NRCORE, &
                                    CELL(IATOM)%RMT,CELL(IATOM)%RMAX,CELL(IATOM)%NRMAX,CELL(IATOM)%RMESH(CELL(IATOM)%NRMIN_NS),CELL(IATOM)%NRMIN_NS
   ELSE
-   write(1337,'(I5,F8.3,I6,F8.3,F8.3,I5,F8.3,I)') IATOM,CELL(IATOM)%RCORE,CELL(IATOM)%NRCORE, &
+   write(1337,'(I5,F8.3,I6,F8.3,F8.3,I5,F8.3,I5)') IATOM,CELL(IATOM)%RCORE,CELL(IATOM)%NRCORE, &
                                    CELL(IATOM)%RMT,CELL(IATOM)%RMAX,CELL(IATOM)%NRMAX
   END IF
 END DO !NATOM

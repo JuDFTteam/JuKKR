@@ -52,8 +52,8 @@ print *,'Calculate rms'
 rms=0
 print *, 'vpotin        vpotout'
 do ir=1,cell%nrmax
-  write(*,'(I,2F,E)'),ir,vpotin(ir,1),testpot_out2(ir),(vpotin(ir,1)-testpot_out2(ir))
-  write(112,'(I,2F,E)'),ir,vpotin(ir,1),testpot_out2(ir),(vpotin(ir,1)-testpot_out2(ir))
+  write(*,'(I5,2F25.14,E25.14)'),ir,vpotin(ir,1),testpot_out2(ir),(vpotin(ir,1)-testpot_out2(ir))
+  write(112,'(5I5,2F25.14,E25.14)'),ir,vpotin(ir,1),testpot_out2(ir),(vpotin(ir,1)-testpot_out2(ir))
   rms = rms + (vpotin(ir,1)-testpot_out2(ir))**2
 end do
 rms = sqrt(rms)

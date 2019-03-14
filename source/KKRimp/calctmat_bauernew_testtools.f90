@@ -23,7 +23,7 @@ dim3=dim1/2
 write(*,*) dim1,dim2
 
 do ir=1,dim2
-  write(345,'(5000E)') jlk(:,ir)
+  write(345,'(5000E25.14)') jlk(:,ir)
   do lm=1,dim3
 !     print *, lm
 !     print *, lm+dim3
@@ -33,7 +33,7 @@ do ir=1,dim2
 !     print *, lm
     jlk(lm,ir) = temp
   end do !lm
-  write(345,'(5000E)') jlk(:,ir)
+  write(345,'(5000E25.14)') jlk(:,ir)
 end do !dim2
 
 end subroutine switch_jlk

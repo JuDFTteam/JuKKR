@@ -515,7 +515,7 @@ allocate(FM1(NTIRD),G(NTIRD),SM(NTIRD),SM1(NTIRD),VI3(NTIRD),UI2(NTIRD),UI3(NTIR
       END DO !IS
 ! c
   if (mode/='.') then
-    if (imap>NTIRD) stop'[MIXBROYDEN_SHIFT] IMAP > NTIRD'
+    if (imap>NTIRD) stop '[MIXBROYDEN_SHIFT] IMAP > NTIRD'
   end if
       END SUBROUTINE MIXBROYDEN_SHIFT
 

@@ -149,13 +149,13 @@ call cradwf(eryd,ek,config%nsra,alpha,cell%npan,cell%nrcut,cvlight,rs,s,        
 
 
 if ( config_testflag('tmatdebug') ) then
-  write(1999,'(50000F)') cell%rmesh
-!   write(5001,'(50000F)') cell%rmesh
+  write(1999,'(50000E25.14)') cell%rmesh
+!   write(5001,'(50000E25.14)') cell%rmesh
   do lm1=0,lmaxatom
-      write(2000,'(50000E)') pz(:,lm1)
-      write(2001,'(50000E)') fz(:,lm1)
-      write(2002,'(50000E)') qz(:,lm1)
-      write(2003,'(50000E)') sz(:,lm1)
+      write(2000,'(50000E25.14)') pz(:,lm1)
+      write(2001,'(50000E25.14)') fz(:,lm1)
+      write(2002,'(50000E25.14)') qz(:,lm1)
+      write(2003,'(50000E25.14)') sz(:,lm1)
   end do
 !   stop
 end if
@@ -179,13 +179,13 @@ else
 end if
 
 if ( config_testflag('tmatdebug') ) then
-!   write(1999,'(50000F)') cell%rmesh
-  write(5003,'(5000F)')  cell%rmesh(cell%nrmin_ns:cell%nrmax)
-!   write(5001,'(50000F)') cell%rmesh
+!   write(1999,'(50000E25.14)') cell%rmesh
+  write(5003,'(5000E25.14)')  cell%rmesh(cell%nrmin_ns:cell%nrmax)
+!   write(5001,'(50000E25.14)') cell%rmesh
   do lm1=1,(lmaxatom+1)**2
     do lm2=1,(lmaxatom+1)**2
-      write(2100,'(50000E)') pns(lm2,lm1,:,1)
-      write(2101,'(50000E)') pns(lm2,lm1,:,2)
+      write(2100,'(50000E25.14)') pns(lm2,lm1,:,1)
+      write(2101,'(50000E25.14)') pns(lm2,lm1,:,2)
     end do
   end do
 !   stop
@@ -194,7 +194,7 @@ end if
 
 
 ! do lm1=1,(lmaxatom+1)**2
-!   write(3001,'(5000F)') tmatll(:,lm1)
+!   write(3001,'(5000E25.14)') tmatll(:,lm1)
 ! end do
 ! stop
 

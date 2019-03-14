@@ -153,8 +153,8 @@ do iatom=1,natom
     Jijmatrix(:,:,iatom,jatom)=Jijmatrix(:,:,iatom,jatom)+dimag(wez*Jijmatrixtemp_complex)
 
     if ( config_testflag('Jij(E)') ) then
-      write(234932875,'(2I,500F)') iatom, jatom,dimag(wez*Jijmatrixtemp_complex)
-      write(234932876,'(2I,500F)') iatom, jatom,Jijmatrixtemp
+      write(234932875,'(2I5,500E25.14)') iatom, jatom,dimag(wez*Jijmatrixtemp_complex)
+      write(234932876,'(2I5,500E25.14)') iatom, jatom,Jijmatrixtemp
     end if 
   end do !jatom
 
@@ -336,7 +336,7 @@ elseif (conventionmode=='kkr') then
   sigma(2,1,3)=( 0.0D0, 0.0D0)
   sigma(2,2,3)=( 1.0D0, 0.0D0)
 else
-  stop'[calc_sigma] wrong mode'
+  stop '[calc_sigma] wrong mode'
 end if
 
 
@@ -402,7 +402,7 @@ double precision :: Jijmatrix_temp(3,3)
 
   do iatom=1,natom
 
-  write(34536268,'(I,20F)') iatom,Aimatrix(:,iatom)
+  write(34536268,'(I5,20E25.14)') iatom,Aimatrix(:,iatom)
 
 
 

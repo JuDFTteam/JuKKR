@@ -168,7 +168,7 @@ else  !( additional panel in the log. part)
       cellnew%ipan_intervall(ipan) = ipan*(cellnew%ncheb+1)
     end if
   end do !npan_log
-  if (ishift==0 .and. ilogmesh_panshift==1) stop'error in interpolatecell'
+  if (ishift==0 .and. ilogmesh_panshift==1) stop 'error in interpolatecell'
 
   ishift=0
   rmin= config%rlogpan 
@@ -182,7 +182,7 @@ else  !( additional panel in the log. part)
     cellnew%ipan_intervall(cellnew%npan_log+ipan+ishift) = (cellnew%npan_log+ipan+ishift)*(cellnew%ncheb+1)
   end do !npan_log
 
-  if (ishift==0 .and. ilinmesh_panshift==1) stop'error in interpolatecell'
+  if (ishift==0 .and. ilinmesh_panshift==1) stop 'error in interpolatecell'
 
 !  ############################################################################
   ! creates the panels for the shape function region
@@ -317,7 +317,7 @@ end if
 
 if (config_testflag('rmeshdensity')) then
   open(unit=234918173,file='out_rmeshdensity')
-  write(234918173,'(50000E)') (cellnew%rmeshnew(ir+1)-cellnew%rmeshnew(ir),ir=1,cellnew%nrmaxnew-1)
+  write(234918173,'(50000E25.14)') (cellnew%rmeshnew(ir+1)-cellnew%rmeshnew(ir),ir=1,cellnew%nrmaxnew-1)
 end if
 
 write(1337,*) 'exiting interpolecell'

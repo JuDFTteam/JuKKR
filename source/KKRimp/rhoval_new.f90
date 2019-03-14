@@ -172,11 +172,11 @@ do jspin=nspinstart,nspinstop
     call cheb2oldgrid(cell%nrmax, cellnew%nrmaxnew, (2*lmaxatom+1)**2, cell%rmesh, cellnew%ncheb, cellnew%npan_tot, cellnew%rpan_intervall, cellnew%ipan_intervall, rho2ns_complex(:,:,jspin), density%rho2ns_complex(:,:,jspin), cell%nrmax)
 
     if (config_testflag('write_rho2complex')) then
-      write(4420,'(50000E)') cellnew%rmeshnew
-      write(4421,'(50000E)') cell%rmesh
+      write(4420,'(50000E25.14)') cellnew%rmeshnew
+      write(4421,'(50000E25.14)') cell%rmesh
       do lm1=1,(2*lmaxatom+1)**2
-        write(4424,'(50000E)') rho2ns_complex(:,lm1,jspin)
-        write(4425,'(50000E)') density%rho2ns_complex(:,lm1,jspin)
+        write(4424,'(50000E25.14)') rho2ns_complex(:,lm1,jspin)
+        write(4425,'(50000E25.14)') density%rho2ns_complex(:,lm1,jspin)
       end do
     end if
 

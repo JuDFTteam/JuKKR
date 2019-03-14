@@ -532,8 +532,8 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
            end if
 
            if (ie==1) then
-              write(2342348,'(50000E)') cell(iatom)%rmesh
-              write(2342349,'(50000E)') cellnew(iatom)%rmeshnew
+              write(2342348,'(50000E25.14)') cell(iatom)%rmesh
+              write(2342349,'(50000E25.14)') cellnew(iatom)%rmeshnew
            end if
 
 
@@ -598,7 +598,7 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
     call gdyson(3434560,ie,ispin,nspin,natom,lmaxatom,tmat,use_fullgmat,gmat,& 
                 gmatonsite,ielast,mpi_iebounds(:,my_rank),ITSCF,saveGmat)
     write(1337,*) 'end call gdyson'
-    if(config_testflag('gtest')) write(30000+my_rank,'(832E)') gmat%gmat
+    if(config_testflag('gtest')) write(30000+my_rank,'(832E25.14)') gmat%gmat
 
     call timing_stop('gref->gmat')
 
@@ -655,7 +655,7 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
 
           else
 
-             if (ispin==2) stop' [eloop] use_fullmat==1 but nspin==2'
+             if (ispin==2) stop ' [eloop] use_fullmat==1 but nspin==2'
              write(1337,*) 'call RHOVAL'
              call RHOVALFULL(ie,ielast,ez(ie) ,WEZ(IE), gmatonsite(iatom,ispin)%gmat, NSPIN, &
                   IATOM,CELL(iatom),VPOT(:,:,1,iatom),VPOT(:,:,2,iatom),SHAPEFUN(iatom), GAUNTCOEFF(lmaxatom(iatom)), ZATOM(iatom),&
@@ -666,7 +666,7 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
 
           if ( config_testflag('tmatdebug') ) then
              do lm1=1,(2*LMAXATOM(iatom)+1)**2
-                write(9004,'(50000F)') density(iatom)%rho2ns(:,lm1,ispin)
+                write(9004,'(50000E25.14)') density(iatom)%rho2ns(:,lm1,ispin)
              end do
           end if
 
@@ -706,10 +706,10 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
 
 
           if ( config_testflag('tmatdebug') ) then
-             write(9002,'(50000F)') cell(iatom)%rmesh(:)
+             write(9002,'(50000E25.14)') cell(iatom)%rmesh(:)
              do lm1=1,(2*LMAXATOM(iatom)+1)**2
-                write(9004+my_rank,'(50000E)') density(iatom)%rho2ns_complex(:,lm1,1)
-                write(9004+my_rank,'(50000E)') density(iatom)%rho2ns_complex(:,lm1,2)
+                write(9004+my_rank,'(50000E25.14)') density(iatom)%rho2ns_complex(:,lm1,1)
+                write(9004+my_rank,'(50000E25.14)') density(iatom)%rho2ns_complex(:,lm1,2)
              end do
           end if
 
@@ -719,16 +719,16 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
        end if
 
        if ( config_testflag('rhotest') ) then
-          write(9902,'(50000F)') cell(iatom)%rmesh(:)
+          write(9902,'(50000E25.14)') cell(iatom)%rmesh(:)
           do lm1=1,(2*LMAXATOM(iatom)+1)**2
-             write(9904+my_rank,'(50000E)') density(iatom)%rho2ns(:,lm1,ispin)
+             write(9904+my_rank,'(50000E25.14)') density(iatom)%rho2ns(:,lm1,ispin)
           end do
        end if
 
        if (config_testflag('write_rho2nscompnew')) then
           do lm1=1,(2*LMAXATOM(iatom)+1)**2
-             write(9604+my_rank,'(50000E)') density(iatom)%rho2ns_complexnew(:,lm1,1)
-             write(9704+my_rank,'(50000E)') density(iatom)%rho2ns_complexnew(:,lm1,2)
+             write(9604+my_rank,'(50000E25.14)') density(iatom)%rho2ns_complexnew(:,lm1,1)
+             write(9704+my_rank,'(50000E25.14)') density(iatom)%rho2ns_complexnew(:,lm1,2)
           end do
        end if
 
@@ -922,8 +922,8 @@ if (config%ncoll==1) then
                       cell(iatom)%nrmax,(2*lmaxatom(iatom)+1)**2, &
                       density(iatom)%theta,density(iatom)%phi,density(iatom)%thetaold,density(iatom)%phiold, cell(iatom)%nrmax)
 
-    write(23452326,'(5000F)') density(iatom)%theta*180/pi,density(iatom)%phi*180/pi
-    write(23452327,'(5000F)') density(iatom)%magmoment
+    write(23452326,'(5000E25.14)') density(iatom)%theta*180/pi,density(iatom)%phi*180/pi
+    write(23452327,'(5000E25.14)') density(iatom)%magmoment
   end do !iatom
 
 else
@@ -999,14 +999,14 @@ end if
   do iatom=1,natom
     write(*,*       ) 'Orbital moments are: '
     write(*, '(100F9.5)') density(iatom)%orbitalmom
-    write(88943362,'(10F)') density(iatom)%orbitalmom
-    write(88943363,'(10F)') density(iatom)%orbitalmom_ns
+    write(88943362,'(10E25.14)') density(iatom)%orbitalmom
+    write(88943363,'(10E25.14)') density(iatom)%orbitalmom_ns
   
     write(88943364,*) '#atom',iatom
     write(88943365,*) '#atom',iatom
     do ialpha=1,3
-      write(88943364,'(I,100F9.5)') ialpha,density(iatom)%orbitalmom_lm(0:lmaxatom(iatom),ialpha)
-      write(88943365,'(I,100F9.5)') ialpha,density(iatom)%orbitalmom_sp(1:2,ialpha)
+      write(88943364,'(I5,100F9.5)') ialpha,density(iatom)%orbitalmom_lm(0:lmaxatom(iatom),ialpha)
+      write(88943365,'(I5,100F9.5)') ialpha,density(iatom)%orbitalmom_sp(1:2,ialpha)
     end do
   end do !iatom
   end if

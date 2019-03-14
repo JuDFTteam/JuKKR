@@ -140,7 +140,7 @@ contains
      rotaterealspace_createrotmatrix(3,2) =         0.0D0
      rotaterealspace_createrotmatrix(3,3) =             cos(theta)
     
-    if (verbose=='1') then
+    if (verbose==1) then
       print *,'-----------------------------------------------------------------'
       print *, rotaterealspace_createrotmatrix(1,1),rotaterealspace_createrotmatrix(1,2),rotaterealspace_createrotmatrix(1,3)
       print *, rotaterealspace_createrotmatrix(2,1),rotaterealspace_createrotmatrix(2,2),rotaterealspace_createrotmatrix(2,3)
@@ -181,7 +181,7 @@ contains
      rotaterealspace_createrotmatrix_nvec(3,2) = nvec(3)*nvec(2)*(1.0D0-cosa) + nvec(1)*sina
      rotaterealspace_createrotmatrix_nvec(3,3) = nvec(3)*nvec(3)*(1.0D0-cosa) +         cosa
     
-    if (verbose=='1') then
+    if (verbose==1) then
       print *,'-----------------------------------------------------------------'
       print *, rotaterealspace_createrotmatrix_nvec(1,1),rotaterealspace_createrotmatrix_nvec(1,2),rotaterealspace_createrotmatrix_nvec(1,3)
       print *, rotaterealspace_createrotmatrix_nvec(2,1),rotaterealspace_createrotmatrix_nvec(2,2),rotaterealspace_createrotmatrix_nvec(2,3)
@@ -219,7 +219,7 @@ contains
      rotaterealspace_createdrotmatrixdalpha_nvec(3,2) = nvec(3)*nvec(2)*(1.0D0+sina) + nvec(1)*cosa
      rotaterealspace_createdrotmatrixdalpha_nvec(3,3) = nvec(3)*nvec(3)*(1.0D0+sina) -         sina
     
-    if (verbose=='1') then
+    if (verbose==1) then
       print *,'-----------------------------------------------------------------'
       print *, rotaterealspace_createdrotmatrixdalpha_nvec(1,1),rotaterealspace_createdrotmatrixdalpha_nvec(1,2),rotaterealspace_createdrotmatrixdalpha_nvec(1,3)
       print *, rotaterealspace_createdrotmatrixdalpha_nvec(2,1),rotaterealspace_createdrotmatrixdalpha_nvec(2,2),rotaterealspace_createdrotmatrixdalpha_nvec(2,3)

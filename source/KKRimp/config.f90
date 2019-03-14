@@ -156,7 +156,7 @@ do while (ios/=-1)
          elseif (config%kvrel==3) then 
            config%nsra=4
          else
-           stop'[config] error KVREL=?'
+           stop '[config] error KVREL=?'
          end if
       case ('MIXFAC')
          read(string1,*,iostat=ios2) keyword1, config%mixfac
@@ -436,7 +436,7 @@ end function config_runflag
       !
       integer           :: i,j
 
-      if (iachar("a")-32 .ne. iachar("A") ) stop'[function get_uppercase] Alphabetical order in character list is not ASCII format.'
+      if (iachar("a")-32 .ne. iachar("A") ) stop '[function get_uppercase] Alphabetical order in character list is not ASCII format.'
 
       do i = 1, len(strIn)
            j = iachar(strIn(i:i))
