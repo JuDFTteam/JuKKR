@@ -39,7 +39,7 @@ contains
   !> atom.
   !-------------------------------------------------------------------------------
   subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, nacls, atom, ezoa, nlbasis, nrbasis, nleft, nright, zperleft, zperight, tleft, tright, rmtref, &
-    rmtrefat, vref, irefpot, nrefpot, rcls, rcut, rcutxy, alat, natyp, nclsd, nrd, naclsd, nrefd, nembd, linterface, nprinc)
+    rmtrefat, vref, irefpot, nrefpot, rcls, rcut, rcutxy, alat, natyp, nclsd, nrd, naclsd, nrefd, nembd, linterface, nprincd, nprinc)
     ! ************************************************************************
     ! 
     use :: mod_datatypes, only: dp
@@ -57,6 +57,7 @@ contains
     integer :: nrd
     integer :: naclsd
     integer :: nrefd
+    integer, intent(in) :: nprincd !! user-supplied number of layers in a principal layer
     integer :: nprinc              !! Calculated number of layers in a principal layer
     integer :: natyp
     integer :: nembd
@@ -80,7 +81,7 @@ contains
 
     ! .. locals
     ! IX,
-    integer :: ilay, n1, ir, isite, jsite, iat1, na, number, maxnumber, pos, ia, in, ib, ii, jatom, icu, ic, iat, i1, icluster, nclsall
+    integer :: ilay, n1, ir, isite, jsite, iat1, na, number, maxnumber, pos, ia, in, ib, nb, ii, jatom, icu, ic, iat, i1, icluster, nclsall
     integer :: iatom(naclsd), iezoa(naclsd), isort(naclsd), icouplmat(naez, naez), irep(nclsd) ! representative atom of cluster (inverse of CLS)
     integer :: irefpot(naez+nembd), nrefpot
     real (kind=dp) :: rmtrefat(naez+nembd), rmtref1(naez+nembd)
@@ -465,6 +466,32 @@ contains
         end do
       end do
       write (1337, *) 'CLSGEN_TB: Number of layers in a principal layer: NPRINC=', nprinc
+    end if
+
+    ! Check if the user-specified blocking is correct
+    if (mod(naez,nprincd) == 0) then
+      nb = naez/nprincd
+      do ib=1,nb-1
+!       diagonal blocks
+        icouplmat(1+(ib-1)*nprincd:ib*nprincd,1+(ib-1)*nprincd:ib*nprincd) = 0
+!       subdiagonal blocks
+        icouplmat(1+ib*nprincd:(ib+1)*nprincd,1+(ib-1)*nprincd:ib*nprincd) = 0
+!       superdiagonal blocks
+        icouplmat(1+(ib-1)*nprincd:ib*nprincd,1+ib*nprincd:(ib+1)*nprincd) = 0
+      end do
+!     last diagonal blocks
+      icouplmat(1+(nb-1)*nprincd:nb*nprincd,1+(nb-1)*nprincd:nb*nprincd) = 0
+!     mistakes were made?
+      if (any(icouplmat /= 0)) then
+        write (1337, *) 'CLSGEN_TB: WARNING --- User-supplied NPRINCD=', nprincd, ' is INCORRECT!'
+        ! Write out the coupling matrix
+        write (1337, *) 'Truncated coupling matrix:'
+        do jatom = 1, naez
+          write (1337, 280) jatom, (icouplmat(jatom,iat), iat=1, naez)
+        end do
+      else
+        nprinc = nprincd
+      end if
     end if
 
     ! close clusters file
