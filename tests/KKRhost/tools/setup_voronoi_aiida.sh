@@ -1,8 +1,8 @@
 verdi code setup --non-interactive \
-                 --code-folder="/builds/kkr" \
-                 --code-rel-path="voronoi.exe" \
                  --label="voronoi" \
-                 --store-in-db \
+                 --on-computer \
+                 --computer="slurmcontrol" \
+                 --remote-abs-path="/builds/kkr/voronoi.exe" \
                  --input-plugin="kkr.voro" \
                  --prepend-text="ln -s /builds/kkr/ElementDataBase ."
 
