@@ -129,6 +129,7 @@ run_kkrhost:intel:MPIenerg_8:
 run_kkrhost:intel:multi_node_9:
   image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-control:latest
   stage: run_kkrhost_parallel
+  allow_failure: true
   services:
      - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
        alias: c1
