@@ -17,6 +17,10 @@ before_script:
 
 stages: 
   - test
+  # voronoi stages
+  - build_voronoi
+  - run_voronoi
+    # verify stage not defined yet
   # kkrhost stages
   - build_kkrhost
   - run_kkrhost_serial
@@ -36,10 +40,6 @@ stages:
   # pkkprime stages
   - build_pkkprime
     # run and verift stages not defined yet
-  # voronoi stages
-  - build_voronoi
-  - run_voronoi
-    # verify stage not defined yet
   # rhoq stages
   - build_rhoq
     # run and verift stages not defined yet
