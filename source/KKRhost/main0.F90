@@ -684,7 +684,7 @@ contains
     call clsgen_tb(naez,nemb,nvirt,rr,rbasis,kaoez,zat,cls,ncls,nacls,atom,ezoa,    &
       nlbasis,nrbasis,nleft,nright,zperleft,zperight,tleft,tright,rmtref,rmtrefat,  &
       vref,refpot,nref,rcls,rcutz,rcutxy,alat,natyp,nclsd,nrd,naclsd,nrefd,nembd,   &
-      linterface,nprinc)
+      linterface,nprincd,nprinc)
 
     ! change nrefd to nref and reduce size of rmtre, vref accordingly
     ! do the same for ncls(d) with nacls and rcls arrays
