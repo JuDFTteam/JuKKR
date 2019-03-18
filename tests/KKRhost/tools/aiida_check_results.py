@@ -24,7 +24,7 @@ print 'Workflow pk=', pk0
 # extract results node and get out dict
 n = load_node(pk0)
 for node in n.get_outputs():
-    if node.label=='kkr_scf_wc_results':
+    if node.label=='workflow_Results':
         break
 out = node.get_dict()
 print '\n\noutput dictionary:\n-------------------------------------------------'
