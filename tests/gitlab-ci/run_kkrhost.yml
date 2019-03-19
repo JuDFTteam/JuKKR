@@ -547,7 +547,7 @@ run_kkrhost:intel:aiida-kkr:
     - cp tests/voronoi.exe /builds/kkr/voronoi.exe # copy voronoi executable to correct dir
     - export C_FORCE_ROOT='true' # needed since root process executes aiida
     - verdi devel setproperty logging.celery_loglevel INFO && verdi devel setproperty logging.aiida_loglevel INFO && verdi daemon restart # restart aiida daemon with increased loglevel
-    - tests/KKRhost/tools/setup_voronoi_aiida.sh
+    - tests/KKRhost/tools/setup_codes_aiida.sh
     # finally run simple test case using kkr_scf workflow of aiida
     - tests/KKRhost/tools/aiida_simple_test.py
     # check some output of the calculation and export aiida database
