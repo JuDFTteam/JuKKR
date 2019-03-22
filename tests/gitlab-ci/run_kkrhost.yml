@@ -548,6 +548,8 @@ run_kkrhost:intel:aiida-kkr:
     - export C_FORCE_ROOT='true' # needed since root process executes aiida
     - verdi devel setproperty logging.celery_loglevel INFO && verdi devel setproperty logging.aiida_loglevel INFO && verdi daemon restart # restart aiida daemon with increased loglevel
     - tests/KKRhost/tools/setup_codes_aiida.sh
+    # start rabbitmq message broker in background
+    - rabbitmq-server -detached
     # finally run simple test case using kkr_scf workflow of aiida
     - tests/KKRhost/tools/aiida_simple_test.py
     # check some output of the calculation and export aiida database
