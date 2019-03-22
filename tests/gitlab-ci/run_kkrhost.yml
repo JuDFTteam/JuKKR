@@ -550,6 +550,8 @@ run_kkrhost:intel:aiida-kkr:
     - tests/KKRhost/tools/setup_codes_aiida.sh
     # start rabbitmq message broker in background
     - rabbitmq-server -detached
+    # check if rabbit mq is running
+    - tests/KKRhost/tools/check_pika-rabbitmq.py
     # finally run simple test case using kkr_scf workflow of aiida
     - tests/KKRhost/tools/aiida_simple_test.py
     # check some output of the calculation and export aiida database
