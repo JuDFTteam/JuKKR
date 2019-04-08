@@ -38,7 +38,6 @@ contains
     ! ..
     ! .. Locals
     integer :: i, ih, ihf, il, ipot1, ipot2
-    integer :: nint
     real (kind=dp) :: rmt(ntmax), rws(ntmax)
     character (len=3) :: txtt(nt)
     ! ......................................................................

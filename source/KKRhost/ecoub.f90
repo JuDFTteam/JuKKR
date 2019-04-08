@@ -82,7 +82,7 @@ contains
     real (kind=dp), parameter :: rfpi = sqrt(4.0_dp*pi)
 
     ! .. Intrinsic Functions ..
-    intrinsic :: atan, sqrt
+    intrinsic :: sqrt
 
 
     do iatyp = 1, natyp
@@ -105,22 +105,22 @@ contains
       do l = 0, lmax
 
         do i = 1, irc1
-          er(i) = 0.0d0
+          er(i) = 0.0_dp
         end do
 
         do ispin = 1, nspin
 
           if (ispin==nspin) then
-            sign = 1.0d0
+            sign = 1.0_dp
           else
-            sign = -1.0d0
+            sign = -1.0_dp
           end if
 
           do m = -l, l
             lm = l*l + l + m + 1
 
             do i = 1, irs1
-              rhosp = (rho2ns(i,lm,iatyp,1)+sign*rho2ns(i,lm,iatyp,nspin))/4.0d0
+              rhosp = (rho2ns(i,lm,iatyp,1)+sign*rho2ns(i,lm,iatyp,nspin))/4.0_dp
               er(i) = er(i) + rhosp*vm2z(i, lm, ipot)
             end do
 
@@ -136,20 +136,20 @@ contains
                   if (lm2==1) then
                     do ir = irs1 + 1, irc1
                       irh = ir - irs1
-                      rhosp = (rho2ns(ir,lm,iatyp,1)+sign*rho2ns(ir,lm,iatyp,nspin))/2.0d0
+                      rhosp = (rho2ns(ir,lm,iatyp,1)+sign*rho2ns(ir,lm,iatyp,nspin))/2.0_dp
 
                       ! --->                 remember that in the interstial -2z/r has
                       ! to be taken into account
 
-                      er(ir) = er(ir) + rhosp*gsh(j)*thetas(irh, ifun, icell)*(vm2z(ir,1,ipot)/2.0d0-z(iatyp)/r(ir,iatyp)*rfpi)
+                      er(ir) = er(ir) + rhosp*gsh(j)*thetas(irh, ifun, icell)*(vm2z(ir,1,ipot)/2.0_dp-z(iatyp)/r(ir,iatyp)*rfpi)
                     end do
 
                   else
 
                     do ir = irs1 + 1, irc1
                       irh = ir - irs1
-                      rhosp = (rho2ns(ir,lm,iatyp,1)+sign*rho2ns(ir,lm,iatyp,nspin))/2.0d0
-                      er(ir) = er(ir) + rhosp*gsh(j)*thetas(irh, ifun, icell)*vm2z(ir, lm2, ipot)/2.0d0
+                      rhosp = (rho2ns(ir,lm,iatyp,1)+sign*rho2ns(ir,lm,iatyp,nspin))/2.0_dp
+                      er(ir) = er(ir) + rhosp*gsh(j)*thetas(irh, ifun, icell)*vm2z(ir, lm2, ipot)/2.0_dp
                     end do
 
                   end if
@@ -175,11 +175,11 @@ contains
 
       ! --->   calculate the madelung potential
 
-      vmad = vm2z(irs1, 1, ipot)/rfpi - rfpi*2.0d0*cmom(1, iatyp)/r(irs1, iatyp)
+      vmad = vm2z(irs1, 1, ipot)/rfpi - rfpi*2.0_dp*cmom(1, iatyp)/r(irs1, iatyp)
 
       ! --->   add to ecou
 
-      ecou(0, iatyp) = ecou(0, iatyp) - z(iatyp)*vmad/2.0d0
+      ecou(0, iatyp) = ecou(0, iatyp) - z(iatyp)*vmad/2.0_dp
 
       ! --->   option to calculate full generalized madelung potential
       !                                         rc
@@ -187,13 +187,13 @@ contains
       !                                         0
 
       if (kvmad==1) then
-        er(1) = 0.0d0
+        er(1) = 0.0_dp
         do i = 2, irs1
           er(i) = rho2ns(i, 1, iatyp, 1)/r(i, iatyp)
         end do
 
         call simp3(er, vm, 1, irs1, drdi(1,iatyp))
-        vm = 2.0d0*rfpi*vm + vmad
+        vm = 2.0_dp*rfpi*vm + vmad
 
         ! atom nr. iatyp is the iatyp-th atom on the potential cards
         ! e. g., in binary alloys iatyp=1 and iatyp=2 refer to host

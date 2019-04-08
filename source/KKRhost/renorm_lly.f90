@@ -50,26 +50,19 @@ contains
     real (kind=dp) :: denef, denefat(natypd)
     real (kind=dp) :: espv(0:(lmaxd+1), npotd)
 ! Internal:
-    integer :: ll, ie, i1, ispin, ipot, spindegen, irc1, signsp, idim
+    integer :: ll, ie, i1, ispin, ipot, irc1, signsp, idim
     real (kind=dp) :: renorm_at(natypd, 2) !! 1: charge renormalization per atom (energy-integrated); 2: same for spin moment
     complex (kind=dp) :: cdos_loc(ielast, (1+krel)*nspind) !! Density from local summation
     complex (kind=dp) :: cdos_locvc(ielast, (1+krel)*nspind) !! Density from Lloyd's formula
     real (kind=dp) :: cren(ielast, 2) !! Renormalization constant for charge and spin density
     real (kind=dp) :: charge(natypd, 2), charge_lly(natypd, 2) !! Atomic charge per spin (local summation and renormalized)
     complex (kind=dp) :: chadd(ielast, natypd, nspind), cdos_add !! Integration step for charge/atom/spin
-    complex (kind=dp) :: qlly(2), qstar(2)
     real (kind=dp) :: sum0(2), sum1(2)
-
-
-    ! Spin degeneracy, 2 if nspin=1, 1 if nspin=2
-    spindegen = 3 - nspin
 
     cren(:, :) = 0e0_dp
     renorm_at(:, :) = 1.e0_dp
     charge_lly(:, :) = 0.e0_dp
     charge(:, :) = 0.e0_dp
-    qlly(:) = czero
-    qstar(:) = czero
 
     ! First find renormalization factor per energy and atomic charges
     cdos_loc = czero

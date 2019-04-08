@@ -26,7 +26,6 @@ contains
     integer :: kappa, muem05
 
     ! Local variables
-    integer :: iabs
     integer :: jp05, l
 
     jp05 = iabs(kappa)

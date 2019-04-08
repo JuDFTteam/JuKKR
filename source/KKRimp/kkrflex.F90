@@ -263,7 +263,7 @@ call log_write('<<<<<<<<<<<<<<<<<<< end set_gaunt_harmonics <<<<<<<<<<<<<<<<<<<'
 ! allocate(test1(16,16))
 ! call  JMTRX(0.000001D0,0.000001D0,0.0000001D0,(1.5D0,0.0D0),3,test1,test2)
 ! do iatom=1,16
-!   write(123456,'(50000F)') test1(iatom,:)
+!   write(123456,'(50000E25.14)') test1(iatom,:)
 ! end do
 ! stop
 
@@ -447,7 +447,7 @@ if ( config_testflag('step_potential') ) then
   do iatom=1,natom
     do ispin=1,natom
       do ilm=1,(2*lmaxatom(iatom)+1)**2
-        write(424,'(50000E)') vpot(:,ilm,ispin,iatom)
+        write(424,'(50000E25.14)') vpot(:,ilm,ispin,iatom)
       end do
     end do
   end do
@@ -464,7 +464,7 @@ if ( config_testflag('change_nrmin') ) then
 end if
 
 ! read(5339,*) vpot
-!     write(5338,'(50000F)') vpot
+!     write(5338,'(50000E25.14)') vpot
 ! vpot(:cell(1)%NRMIN_NS,2:,:,:)=0.0D0
 ! vpot(:210,2:,:,:)=0.0D0
 
@@ -1032,7 +1032,7 @@ end if
       end do
     end do
 
-!     write(5339,'(50000F)') vpot
+!     write(5339,'(50000E25.14)') vpot
 
     call log_write('>>>>>>>>>>>>>>>>>>>>> rites >>>>>>>>>>>>>>>>>>>>>')
     call rites(nspin,natom,zatom,alat,cell(1)%nrmaxd,lmaxd,config%ins, &

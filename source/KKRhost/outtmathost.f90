@@ -22,7 +22,7 @@ contains
   !> Deprecated: False
   !> Writes out the header of the t-matrices decimation file
   !-------------------------------------------------------------------------------
-  subroutine outtmathost(alat,ins,krel,kmrot,nspin,naez,lmmax,bravais,rbasis,qmtet, &
+  subroutine outtmathost(alat,ins,krel,kmrot,nspin,naez,lmmax0d,bravais,rbasis,qmtet, &
     qmphi,e2in,tk,npol,npnt1,npnt2,npnt3)
 
     use :: mod_version_info, only: version_print_header
@@ -36,7 +36,7 @@ contains
     integer, intent(in) :: npol   !! Number of Matsubara Poles (EMESHT)
     integer, intent(in) :: kmrot  !! 0: no rotation of the magnetisation; 1: individual rotation of the magnetisation for every site
     integer, intent(in) :: nspin  !! Counter for spin directions
-    integer, intent(in) :: lmmax  !! Maximum l component in wave function expansion
+    integer, intent(in) :: lmmax0d !! Maximum l component in wave function expansion
     integer, intent(in) :: npnt1  !! number of E points (EMESHT) for the contour integration
     integer, intent(in) :: npnt2  !! number of E points (EMESHT) for the contour integration
     integer, intent(in) :: npnt3  !! number of E points (EMESHT) for the contour integration
@@ -56,7 +56,7 @@ contains
     call version_print_header(37, disable_print=disable_print_serialnumber)
     write (37, fmt=*) 'INVERSE T-MATRIX AND CMOMS'
     write (37, fmt=100)
-    write (37, fmt=110) alat, nspin, naez, lmmax, ins, krel, kmrot
+    write (37, fmt=110) alat, nspin, naez, lmmax0d, ins, krel, kmrot
     write (37, fmt=120) bravais
     if (krel==0) then
       write (37, fmt=130)

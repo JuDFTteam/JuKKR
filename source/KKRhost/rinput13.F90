@@ -31,7 +31,7 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine rinput13(kte, igf, kxc, lly, icc, ins, kws, ipe, ipf, ipfe, icst, imix, lpot, naez, nemb, nref, ncls, npol, lmax, kcor, kefg, &
-    khyp, kpre, kvmad, lmmax, lmpot, ncheb, nleft, ifile, kvrel, nspin, natyp, nineq, npnt1, npnt2, npnt3, kfrozn, ishift, n1semi, n2semi, &
+    khyp, kpre, kvmad, lmmax0d, lmpot, ncheb, nleft, ifile, kvrel, nspin, natyp, nineq, npnt1, npnt2, npnt3, kfrozn, ishift, n1semi, n2semi, &
     n3semi, nsteps, insref, kshape, itdbry, nright, kforce, ivshift, khfield, nlbasis, nrbasis, intervx, intervy, intervz, npan_eq, npan_log, &
     npolsemi, tk, fcm, emin, emax, rmax, gmax, alat, r_log, rcutz, rcutxy, eshift, qbound, hfield, mixing, abasis, bbasis, cbasis, vconst, &
     tksemi, tolrdif, emusemi, ebotsemi, fsemicore, lambda_xc, deltae, lrhosym, linipol, lcartesian, imt, cls, lmxc, irns, irws, ntcell, refpot, &
@@ -43,9 +43,9 @@ contains
     use :: mod_runoptions, only: read_runoptions, calc_DOS_Efermi, calc_GF_Efermi, calc_exchange_couplings, &
       dirac_scale_SpeefOfLight, disable_charge_neutrality, disable_print_serialnumber, modify_soc_Dirac, relax_SpinAngle_Dirac, search_Efermi, &
     set_kmesh_large, stop_1b, stop_1c, use_BdG, use_Chebychev_solver, use_cond_LB, use_decimation, use_lloyd, use_qdos, &
-    use_rigid_Efermi, use_semicore, use_virtual_atoms, write_DOS, write_green_host, write_green_imp, write_kkrimp_input, &
+    use_rigid_Efermi, use_semicore, use_virtual_atoms, write_green_host, write_green_imp, write_kkrimp_input, &
     write_pkkr_input, write_pkkr_operators, use_ldau, set_cheby_nospeedup, set_cheby_nosoc, write_tb_coupling
-    use :: mod_constants, only: czero, cvlight
+    use :: mod_constants, only: cvlight, ryd
     use :: mod_wunfiles, only: t_params
     use :: memoryhandling, only: allocate_semi_inf_host, allocate_magnetization, allocate_cell, allocate_cpa, allocate_soc, allocate_ldau
     use :: mod_types, only: t_inc
@@ -58,7 +58,7 @@ contains
     use :: mod_ioinput, only: ioinput
     use :: global_variables, only: linterface, korbit, krel, irmd, irnsd, nsheld, knosph, iemxd, nrd, knoco, kpoibz, ntrefd, natomimpd, &
       nprincd, ipand, nfund, irid, ngshd, nmaxd, ishld, wlength, naclsd, ntotd, ncleb, nspind, nspindd, npotd, lmmaxd, lmgf0d, &
-      lassld, nembd1, irmind, nofgij, ntperd, nsatypd, nspotd, lnc, lmxspd, naezd, lm2d, nclsd, mmaxd, ncleb, kBdG
+      lassld, nembd1, irmind, nofgij, ntperd, nsatypd, nspotd, lnc, lmxspd, lm2d, nclsd, mmaxd, ncleb, kBdG, delta_BdG
 
 
     implicit none
@@ -88,7 +88,7 @@ contains
     integer, intent (inout) :: khyp
     integer, intent (inout) :: kpre
     integer, intent (inout) :: kvmad
-    integer, intent (inout) :: lmmax
+    integer, intent (inout) :: lmmax0d !! (lmax+1)**2 without spin doubling
     integer, intent (inout) :: lmpot
     integer, intent (inout) :: ncheb !! Number of Chebychev pannels for the new solver
     integer, intent (inout) :: nleft !! Number of repeated basis for left host to get converged  electrostatic potentials
@@ -242,7 +242,7 @@ contains
     logical :: lexist, operator_imp, oldstyle
     ! ..
     ! .. Local Scalars ..
-    real (kind=dp), parameter :: eps = 10d-13
+    real (kind=dp), parameter :: eps = 10.0e-13_dp
     integer :: ndim  !! Dimension for the Bravais lattice for slab or bulk (2/3)
     integer :: nasoc
     integer :: i, il, j, ier, ier2, i1, ii, ir, idosemicore, i_stat, i_all
@@ -380,7 +380,7 @@ contains
     end if
 
     write (111, *) 'Bravais vectors in units of ALAT'
-    bravais(1:3, 1:3) = 0d0
+    bravais(1:3, 1:3) = 0.0_dp
     do i = 1, ndim
       call ioinput('BRAVAIS         ', uio, i, 7, ier)
       if (ier/=0) stop 'RINPUT: BRAVAIS NOT FOUND'
@@ -569,7 +569,7 @@ contains
     end do                         ! I=1,NAEZ
     call idreals(rbasis(1,1), 3*naez, iprint)
 
-    dvec(1:3) = 1.d0
+    dvec(1:3) = 1.0_dp
     call ioinput('BASISCALE       ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*)(dvec(i), i=1, 3)
@@ -773,7 +773,7 @@ contains
       kaoez(1, i) = i              ! default
       iqat(i) = i                  ! Basis-Site of atom I
     end do
-    if (natyp==naez) conc(1:natyp) = 1.d0
+    if (natyp==naez) conc(1:natyp) = 1.0_dp
 
     ! CPA calculation, read concentrations
     if (natyp>naez) then
@@ -806,7 +806,7 @@ contains
         end do
 
         do iq = 1, naez
-          sum1 = 0d0
+          sum1 = 0.0_dp
           if (noq(iq)<1) then
             write (6, *) 'RINPUT13: CPA: SITE', iq, 'HAS NO ASSIGNED ATOM'
             stop 'RINPUT13: CPA'
@@ -814,7 +814,7 @@ contains
           do io = 1, noq(iq)
             sum1 = sum1 + conc(kaoez(io,iq))
           end do
-          if (abs(sum1-1.d0)>1d-6) then
+          if (abs(sum1-1.0_dp)>1.0e-6_dp) then
             write (6, *) ' SITE ', iq, ' CONCENTRATION <> 1.0 !'
             write (6, *) ' CHECK YOUR <ATOMINFO-CPA> INPUT '
             stop ' IN <RINPUT99>'
@@ -866,15 +866,27 @@ contains
     ! ----------------------------------------------------------------------------
     ! Readin Options for Bogoliubov-de-Gennes Formalism
     ! ----------------------------------------------------------------------------
-    call ioinput('KBdG            ', uio, 1, 7, ier)
+    call ioinput('KBDG            ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) kBdG
-      write (111, *) 'KBdG= ', kBdG
+      write (111, *) 'KBDG= ', kBdG
     else
-      write (111, *) 'Default KBdG= ', kBdG
+      write (111, *) 'Default KBDG= ', kBdG
     end if
     if (kBdG/=0) use_BdG = .true.
     if (use_BdG) kBdG = 1
+
+    ! read in starting value of Delta
+    if (kBdG/=0) then
+      call ioinput('delta_BdG       ', uio, 1, 7, ier)
+      if (ier==0) then
+        read (unit=uio, fmt=*) delta_BdG
+        write (111, *) 'delta_BdG= ', delta_BdG
+      else
+        write (111, *) 'Default delta_BdG= ', delta_BdG
+      end if
+      write (1337, *) 'Use Bogoliubov-de-Gennes formalism with initial value of Delta set to ', delta_BdG, 'Ry = ', delta_BdG*ryd*1000, 'meV' 
+    end if
 
 
     ! ----------------------------------------------------------------------------
@@ -1093,11 +1105,11 @@ contains
     ! End of allocation of SOC arrays
     !--------------------------------------------------------------------------------
     if (use_Chebychev_solver) then      ! Spin-orbit
-      if (use_Chebychev_solver .and. (nspin/=2)) stop ' set NSPIN = 2 for SOC solver in inputcard'
+      if (use_Chebychev_solver .and. (nspin/=2) .and. .not.set_cheby_nosoc) stop ' set NSPIN = 2 for SOC solver in inputcard'
       npan_log = 30
       npan_eq = 30
       ncheb = 10
-      r_log = 0.1d0
+      r_log = 0.1_dp
       call ioinput('NPAN_LOG        ', uio, 1, 7, ier)
       if (ier==0) read (unit=uio, fmt=*) npan_log
       call ioinput('NPAN_EQ         ', uio, 1, 7, ier)
@@ -1206,7 +1218,7 @@ contains
 
     ! Scale magnetic moment (0 < Lambda_XC < 1,  0=zero moment, 1= full
     ! moment)
-    lambda_xc = 1.d0
+    lambda_xc = 1.0_dp
     call ioinput('LAMBDA_XC       ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) lambda_xc
@@ -1278,7 +1290,7 @@ contains
     ! Begin external field control
     !--------------------------------------------------------------------------------
     khfield = 0
-    hfield = 0.d0
+    hfield = 0.0_dp
     call ioinput('HFIELD          ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) hfield
@@ -1292,7 +1304,7 @@ contains
       write (111, *) 'Default HFIELD= ', hfield
     end if
 
-    vconst = 0.d0
+    vconst = 0.0_dp
     call ioinput('VCONST          ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) vconst
@@ -1430,7 +1442,6 @@ contains
 
     ! Energy contour
     npol = 7
-    ! if (write_DOS) NPOL = 0
     call ioinput('NPOL            ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) npol
@@ -1444,7 +1455,7 @@ contains
       read (unit=uio, fmt=*) emin
       write (111, *) 'EMIN= ', emin
     else if (npol==0) then
-      emin = -1.d0
+      emin = -1.0_dp
       write (111, *) 'Default for DOS: EMIN= ', emin
     else
       write (1337, *) 'Error in rinput13: EMIN not found'
@@ -1452,7 +1463,7 @@ contains
       stop 'Error in rinput13: EMIN not found'
     end if
 
-    emax = 1.d0
+    emax = 1.0_dp
     call ioinput('EMAX            ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) emax
@@ -1461,7 +1472,7 @@ contains
       write (111, *) 'Default  EMAX=', emax
     end if
 
-    tk = 800.d0
+    tk = 800.0_dp
     call ioinput('TEMPR           ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) tk
@@ -1480,8 +1491,8 @@ contains
       write (111, *) 'Default  NPT1=', npnt1
     end if
 
-    npnt2 = nint((emax-emin)*20.d0) ! 20 pts/Ryd
-    if (npol==0) npnt2 = nint((emax-emin)*100.d0) ! For dos, 100 pts/Ryd
+    npnt2 = nint((emax-emin)*20.0_dp) ! 20 pts/Ryd
+    if (npol==0) npnt2 = nint((emax-emin)*100.0_dp) ! For dos, 100 pts/Ryd
     call ioinput('NPT2            ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) npnt2
@@ -1509,7 +1520,7 @@ contains
     n1semi = 0
     n2semi = 0
     n3semi = 0
-    fsemicore = 1.d0
+    fsemicore = 1.0_dp
 
     ier = 0
     if (use_semicore) then
@@ -1557,7 +1568,7 @@ contains
     end if
 
     ! CPA convergence parameters
-    cpatol = 1d-4
+    cpatol = 1e-4_dp
     itcpamax = 20
     call ioinput('CPAINFO         ', uio, 1, 7, ier)
     if (ier==0) then
@@ -1571,7 +1582,7 @@ contains
     !--------------------------------------------------------------------------------
     ! Begin screening cluster information
     !--------------------------------------------------------------------------------
-    rcutz = 11.d0/alat             ! Default 11 Bohr radii
+    rcutz = 11.0_dp/alat             ! Default 11 Bohr radii
     call ioinput('RCLUSTZ         ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) rcutz
@@ -1590,7 +1601,7 @@ contains
     end if
 
     write (1337, *) 'Parameters used for the cluster calculation'
-    if (abs(rcutz-rcutxy)<1.d-4) then
+    if (abs(rcutz-rcutxy)<1.0e-4_dp) then
       write (1337, *) 'Clusters inside spheres with radius R = ', rcutz
     else
       write (1337, *) 'Clusters inside cylinders with '
@@ -1634,17 +1645,12 @@ contains
     ! Usage of Lloyd's formula
     lly = 0                        ! LLY Default=0 : do not apply Lloyds
     ! formula
-    if (use_lloyd) lly = 1
-    call ioinput('<LLOYD>         ', uio, 1, 7, ier)
-    if (ier==0) then
-      read (unit=uio, fmt=*) lly
-      write (111, *) '<LLOYD>=', lly
-    else
-      write (111, *) 'Default <LLOYD>=', lly
+    if (use_lloyd) then
+        lly = 1
+        write (1337, *) 'Applying Lloyds formula, LLY=', lly
     end if
-    if (lly/=0) write (1337, *) 'Applying Lloyds formula, LLY=', lly
 
-    deltae = (1.d-5, 0.d0)         ! Difference for numer. derivative in
+    deltae = (1.0e-5_dp, 0.0_dp)         ! Difference for numer. derivative in
     ! Lloyds formula
     call ioinput('<DELTAE>        ', uio, 1, 7, ier)
     if (ier==0) then
@@ -1696,7 +1702,7 @@ contains
           iqat(i) = i
           rmtrefat(i) = rmtref(refpot(i))
           cls(i) = j
-          conc(i) = 1.d0
+          conc(i) = 1.0_dp
           noq(i) = 1
           kaoez(1, i) = i
         end if
@@ -1737,7 +1743,7 @@ contains
     ! write(6,2103)
 
     do iq = 1, naez
-      sum1 = 0d0
+      sum1 = 0.0_dp
       if (noq(iq)<1) then
         write (6, *) 'RINPUT13: CPA: SITE', iq, 'HAS NO ASSIGNED ATOM'
         stop 'RINPUT13: CPA'
@@ -1745,7 +1751,7 @@ contains
       do io = 1, noq(iq)
         sum1 = sum1 + conc(kaoez(io,iq))
       end do
-      if (abs(sum1-1.d0)>1d-6) then
+      if (abs(sum1-1.0_dp)>1.0e-6_dp) then
         write (6, *) ' SITE ', iq, ' CONCENTRATION <> 1.0 !'
         write (6, *) ' CHECK YOUR <ATOMINFO-CPA> INPUT '
         stop ' IN <RINPUT99>'
@@ -1818,7 +1824,7 @@ contains
       imix = 0
     end if
 
-    strmix = 0.01d0
+    strmix = 0.01_dp
     call ioinput('STRMIX          ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) strmix
@@ -1840,7 +1846,7 @@ contains
       write (111, *) 'Default ITDBRY= ', itdbry
     end if
 
-    fcm = 20.d0
+    fcm = 20.0_dp
     call ioinput('FCM             ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) fcm
@@ -1849,7 +1855,7 @@ contains
       write (111, *) 'Default FCM= ', fcm
     end if
 
-    qbound = 1.d-7
+    qbound = 1.0e-7_dp
     call ioinput('QBOUND          ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) qbound
@@ -1858,7 +1864,7 @@ contains
       write (111, *) 'Default QBOUND= ', qbound
     end if
 
-    brymix = 0.01d0
+    brymix = 0.01_dp
     call ioinput('BRYMIX          ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*) brymix
@@ -1943,12 +1949,12 @@ contains
       write (111, *) 'No charge neutrality required, ISHIFT is set to', ishift
     end if
 
-    eshift = 0.d0
+    eshift = 0.0_dp
     insref = 0
     kws = 2
     khyp = 0
 
-    tolrdif = 0.5d0                ! Set free GF to zero for r<tolrdif
+    tolrdif = 0.5_dp                ! Set free GF to zero for r<tolrdif
     ! (a.u.)(vir. atoms)
     call ioinput('<TOLRDIF>       ', uio, 1, 7, ier)
     if (ier==0) then
@@ -2047,17 +2053,17 @@ contains
 
     if (search_Efermi) then
       imix = 0
-      mixing = 0.0d0
+      mixing = 0.0_dp
       strmix = mixing
       itdbry = 1
-      qbound = 1.0d-10
+      qbound = 1.0e-10_dp
       write (1337, '(1X,A)') 'Option SEARCHEF used overriding INPUT for'
       write (1337, '(1X,A)') 'IMIX,MIX,QBOUND,ITDBRY: 0, 0.0, 1E-10, 1'
       write (1337, *)
     end if
 
     if (imix>2) then
-      fcm = 1.0d0
+      fcm = 1.0_dp
       mixing = brymix
     else
       mixing = strmix
@@ -2071,7 +2077,7 @@ contains
     if (ncpa/=0) write (1337, 470) itcpamax, cpatol
     ! --------------------------------------------------------
 
-    lmmax = (lmax+1)**2
+    lmmax0d = (lmax+1)**2
     lpot = 2*lmax
     lmpot = (lpot+1)*(lpot+1)
     lmxspd = (2*lpot+1)**2
@@ -2160,15 +2166,15 @@ contains
       ! -------------------------------------------------------------------------
       ! Atoms equivalent by inversional symmetry
       ! -------------------------------------------------------------------------
-      qmtet(i) = 0d0
-      qmphi(i) = 0d0
+      qmtet(i) = 0.0_dp
+      qmphi(i) = 0.0_dp
       ier = 0
       call ioinput('RBASISANG       ', uio, i, 7, ier)
 
       if (ier==0) then
         read (unit=uio, fmt=*)(rbasis(j,i), j=1, 3), qmtet(i), qmphi(i)
-        if (abs(qmtet(i))>1d-6) kmrot = 1
-        if (abs(qmphi(i))>1d-6) kmrot = 1
+        if (abs(qmtet(i))>1.0e-6_dp) kmrot = 1
+        if (abs(qmphi(i))>1.0e-6_dp) kmrot = 1
       end if
     end do                         ! I=1,NAEZ
     call idreals(rbasis(1,1), 3*naez, iprint)
@@ -2261,8 +2267,8 @@ contains
         call ioinput('SOSCALE         ', uio, 0, 7, ier)
         if (ier==0) then
           read (unit=uio, fmt=*) soscale
-          if (soscale>-2.5d0) then
-            if (soscale>=0.0d0) then ! SOC-I
+          if (soscale>-2.5_dp) then
+            if (soscale>=0.0_dp) then ! SOC-I
               solver = 'ABM-SOC   '
               mansoc = .true.
             else                   ! SOC-II
@@ -2282,7 +2288,7 @@ contains
           write (1337, 890)
         end if
 
-        if (mansoc .and. (soscale>=0d0)) then
+        if (mansoc .and. (soscale>=0.0_dp)) then
           imansoc(1:natyp) = 1
           ! -------------------------------------------------------------------
           ! Now look for a possible include/exclude list (SOCLIST= +/- NASOC)
@@ -2344,7 +2350,7 @@ contains
         call ioinput('CTLSCALE        ', uio, 0, 7, ier)
         if (ier==0) then
           read (unit=uio, fmt=*) ctlscale
-          if (ctlscale>=1d-12) then
+          if (ctlscale>=1.0e-12_dp) then
             manctl = .true.
           else
             write (1337, 870) '< CSCALE >'
@@ -2359,7 +2365,7 @@ contains
           cscl(:, :) = cscl(:, :)/sqrt(ctlscale)
           write (1337, 980, advance='no')
           write (1337, 910)
-          write (1337, 950) 1.d0/sqrt(ctlscale)
+          write (1337, 950) 1.0_dp/sqrt(ctlscale)
         end if
         write (1337, 310)
       end if
@@ -2647,7 +2653,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine read_old_runtestoptions(invmod,verbosity,MPI_scheme,oldstyle)
 
-    use :: mod_ioinput, only: ioinput, convert_to_uppercase
+    use :: mod_ioinput, only: ioinput
     use :: mod_runoptions, only: set_old_runoption
     use :: mod_profiling, only: memocc
 

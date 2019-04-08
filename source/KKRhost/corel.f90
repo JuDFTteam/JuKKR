@@ -33,7 +33,7 @@ contains
     integer :: nitmax, irnumx
     parameter (nitmax=40, irnumx=10)
     real (kind=dp) :: zero
-    parameter (zero=0.0d0)
+    parameter (zero=0.0_dp)
     ! ..
     ! .. Scalar Arguments ..
     real (kind=dp) :: a, b, qc, rmax, zat
@@ -60,9 +60,9 @@ contains
     data spn, text/'down', 'up  ', 's   ', 'p   ', 'd   ', 'f   ', 'g   '/
     ! ..
     vlnc = .false.
-    value = 1.d-8
-    slope = -1.d-8
-    e2 = 50.0d0
+    value = 1.0e-8_dp
+    slope = -1.0e-8_dp
+    e2 = 50.0_dp
 
     do ic = 1, 4
       kfg(ic) = 0
@@ -81,7 +81,7 @@ contains
     if (kfg(3)/=0) lmxc = 2
     if (kfg(4)/=0) lmxc = 3
 
-    tol = 1.0d-12*(zat*zat+1.d0)
+    tol = 1.0e-12_dp*(zat*zat+1.0_dp)
     lmp1 = lmxc + 1
     nc = 0
     inuc = -irnumx
@@ -93,7 +93,7 @@ contains
 
     do lp1 = 1, lmp1
       l = lp1 - 1
-      e1 = (-5.d0-((zat+1.d0)/dble(lp1))**2)*1.5d0 - 50.d0
+      e1 = (-5.0_dp-((zat+1.0_dp)/real(lp1, kind=dp))**2)*1.5_dp - 50.0_dp
       nmax = kfg(lp1)
 
       if (nmax/=0) then
@@ -108,7 +108,7 @@ contains
           call intcor(e1, e2, rho, g, f, v, value, slope, l, nn, e, sum, nre, vlnc, a, b, zat, rmax, nr, tol, irmd, ipr, nitmax, nsra)
           ediff = e - ei
           ecore(nc) = e
-          wgt = real(l+l+1)/sum*2.d0/real(nspin)
+          wgt = real(l+l+1)/sum*2.0_dp/real(nspin)
           if ((t_inc%i_write>0) .and. (ipr/=0)) write (1337, fmt=110) ei, ediff, e
 
           ! ---> sum up contributions to total core charge

@@ -31,7 +31,6 @@ contains
   
     use :: mod_datatypes, only: dp
     use :: mod_spher, only: spher
-    use :: mod_shape_corr, only: triangle
     use :: mod_trarea, only: trarea
     implicit none
 
@@ -46,7 +45,7 @@ contains
     ! ..
     ! .. Local Scalars ..
     complex (kind=dp) :: ci, em1f, em2f, ep1f, ep2f
-    real (kind=dp) :: aaa, ccc, di, fi, one, pi, sss
+    real (kind=dp) :: aaa, ccc, di, fi, sss
     integer :: i, ip, l, llmax, lm, lm1, lm1m, lm2, lmm, lmm1, lmm1m, lmm2, m, mm
     ! ..
     ! .. Local Arrays ..
@@ -55,8 +54,6 @@ contains
     ! ..
 
     ci = cmplx(0.e0_dp, 1.e0_dp, kind=dp)
-    one = 1.e0_dp
-    pi = 4.e0_dp*atan(one)
     llmax = (lmax+1)**2
 
     do ip = 1, ijd

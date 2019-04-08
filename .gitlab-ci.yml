@@ -17,6 +17,10 @@ before_script:
 
 stages: 
   - test
+  # voronoi stages
+  - build_voronoi
+  - run_voronoi
+    # verify stage not defined yet
   # kkrhost stages
   - build_kkrhost
   - run_kkrhost_serial
@@ -36,10 +40,6 @@ stages:
   # pkkprime stages
   - build_pkkprime
     # run and verift stages not defined yet
-  # voronoi stages
-  - build_voronoi
-  - run_voronoi
-    # verify stage not defined yet
   # rhoq stages
   - build_rhoq
     # run and verift stages not defined yet
@@ -57,6 +57,7 @@ test:intel:
     - which profmerge
     - which codecov || which Codecov
     # needs to be implemented (tests for dependencies e.g. MPI, OpenMP, LAPACK, etc.)
+    - cd tests/unit_tests/test_parallel && ./run_parallel_tests.sh
 
 ###############################################################################
 # include build / run / verify scripts for all codes

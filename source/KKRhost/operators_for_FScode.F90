@@ -6,7 +6,7 @@
 
 !------------------------------------------------------------------------------------
 !> Summary: Interface routine to normcoeff routines that prepare operators for use in `FScode` (compuation of spin expectation value etc.)
-!> Author: 
+!> Author:
 !> Interface routine to normcoeff routines that prepare operators for
 !> use in `FScode` (compuation of spin expectation value etc.)
 !> First wavefuncitons are read in and converted to old mesh and then
@@ -18,9 +18,9 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Interface routine to normcoeff routines that prepare operators for use in `FScode` (compuation of spin expectation value etc.)
-  !> Author: 
+  !> Author:
   !> Category: physical-observables, KKRhost
-  !> Deprecated: False 
+  !> Deprecated: False
   !> Interface routine to normcoeff routines that prepare operators for
   !> use in `FScode` (compuation of spin expectation value etc.)
   !> First wavefuncitons are read in and converted to old mesh and then
@@ -47,6 +47,7 @@ contains
     use :: mod_normcoeff_so_torq
     use :: mod_rotatespinframe, only: rotatematrix
     use :: mod_constants, only: czero
+    use :: global_variables, only: lmmaxd, nspind
 
     implicit none
 
@@ -68,7 +69,7 @@ contains
     integer :: ie, ie_start, ie_end, ie_num, lm1, lm2, ir, i1, i1_start, i1_end, ierr
 
     ! array dimensions
-    integer :: lmmaxd, irmd, natyp, nsra, ncheb, ntotd
+    integer :: irmd, natyp, nsra, ncheb, ntotd
 
     ! arrays for rmeshes (old and new), and nonco_angles
     integer, dimension(:), allocatable :: irws, npan_tot
@@ -99,7 +100,6 @@ contains
     ! first fill scalar and array parameters that are used here
     ! call get_params_operators(lmmaxd, irmd, natyp, nsra, ncheb, ntot, irws,
     ! scalars
-    lmmaxd  = t_inc%lmmaxd
     irmd    = t_params%irm
     natyp   = t_params%natyp
     nsra    = t_params%nsra
@@ -254,19 +254,19 @@ contains
 
       ! done with preparations, call normcoeff routines that construct operators
       if (myrank==master) write (*, *) 'Computing spin operator'
-      call normcoeff_so(natyp, t_params%ircut,t_params%lmmaxd/(1+korbit),pns_so_all,& 
+      call normcoeff_so(natyp, t_params%ircut, lmmaxd/(1+korbit),pns_so_all,&
         t_params%thetas,t_params%ntcell,t_params%ifunm,t_params%ipan,t_params%lmsp, &
         t_inc%kvrel,t_params%cleb,t_params%icleb,t_params%iend,t_params%drdi,       &
         t_params%irws,1+korbit,0)
 
       if (myrank==master) write (*, *) 'Computing torq operator'
-      call normcoeff_so_torq(natyp,t_params%ircut,t_params%lmmaxd/(1+korbit),       &
-        pns_so_all,t_params%ntcell,t_params%ifunm,t_params%ipan,t_params%lmsp,      &
+      call normcoeff_so_torq(natyp,t_params%ircut, lmmaxd/(1+korbit),       &
+        pns_so_all,t_params%ntcell,t_params%ipan,t_params%lmsp,      &
         t_inc%kvrel,t_params%cleb,t_params%icleb,t_params%iend,t_params%drdi,       &
-        t_params%irws,t_params%visp,t_inc%nspin,t_params%vins,t_params%irmin,0)
+        t_params%irws,t_params%visp,nspind,t_params%vins,t_params%irmin,0)
 
       if (myrank==master) write (*, *) 'Computing spinflux operator'
-      call normcoeff_so_spinflux(natyp,t_params%ircut,t_params%lmmaxd/(1+korbit),   &
+      call normcoeff_so_spinflux(natyp,t_params%ircut, lmmaxd/(1+korbit),   &
         pns_so_all,t_inc%kvrel,t_params%drdi,0)
 
     end if                         ! .not. impurity_operator_only
@@ -393,9 +393,9 @@ contains
 
       if (myrank==master) write (*, *) 'Computing impurity torq operator'
       call normcoeff_so_torq(natomimp,t_params%ircut,t_params%lmmaxd/2,pns_so_imp,  &
-        t_params%ntcell,t_params%ifunm,t_params%ipan,t_params%lmsp,t_inc%kvrel,     &
+        t_params%ntcell,t_params%ipan,t_params%lmsp,t_inc%kvrel,     &
         t_params%cleb,t_params%icleb,t_params%iend,t_params%drdi,t_params%irws,     &
-        t_imp%vispimp,t_inc%nspin,t_imp%vinsimp,t_params%irmin,1)
+        t_imp%vispimp,nspind,t_imp%vinsimp,t_params%irmin,1)
 
       if (myrank==master) write (*, *) 'Computing impurity spinflux operator'
       call normcoeff_so_spinflux(natomimp,t_params%ircut,t_params%lmmaxd/2,         &

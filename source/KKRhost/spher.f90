@@ -41,7 +41,7 @@ contains
     integer :: i, ii, l2, lm, ln, m, nn
     ! ..
     ! .. Intrinsic Functions ..
-    intrinsic :: abs, atan, real, sqrt
+    intrinsic :: abs, real, sqrt
 
     ovr1 = abs(x) - 1.e0_dp
     if (ovr1>0.1e-12_dp) then

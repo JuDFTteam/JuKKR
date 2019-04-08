@@ -47,13 +47,10 @@ contains
 
     ! Local variables
     complex (kind=dp) :: b(n, n), ca, cb, arg, dtab(0:n*n)
-    character :: char
     logical :: same, small
     character (len=1) :: ctab(0:n*n), vz(-1:+1)
-    real (kind=dp) :: dble
     character (len=150) :: fmt1, fmt2, fmt3, fmt4
     integer :: i, i1, ic0, id, il, ilsep(20), ipt(218), iq, isl, iw(m), j, j0, jp, jq, k, l3, lf, mm, n1, n2, n3, nc, nd, nfil, nk, nm, nm1, nm2, nm3, nnon0, nsl
-    integer :: ichar, isign, nint
     real (kind=dp) :: tol
 
     data vz/'-', ' ', ' '/
@@ -149,11 +146,11 @@ contains
       lf = 21
     else
       if (mcol==1) then
-        nk = nint(sqrt(dble(n)))
+        nk = nint(sqrt(real(n, kind=dp)))
       else if (mcol==2) then
-        nk = nint(sqrt(dble(n/2)))
+        nk = nint(sqrt(real(n/2, kind=dp)))
       else if (mcol==3) then
-        nk = 2*nint(sqrt(dble(n/2))) - 1
+        nk = 2*nint(sqrt(real(n/2, kind=dp))) - 1
       end if
       do k = 1, nk
         if (mcol<=2) then
@@ -205,12 +202,12 @@ contains
       nsl = 1
       ilsep(1) = n
     else if (mlin==1) then
-      nsl = nint(sqrt(dble(n)))
+      nsl = nint(sqrt(real(n, kind=dp)))
       do il = 1, nsl
         ilsep(il) = il**2
       end do
     else if (mlin==2) then
-      nsl = nint(sqrt(dble(n/2)))
+      nsl = nint(sqrt(real(n/2, kind=dp)))
       do il = 1, nsl
         ilsep(il) = il**2
       end do
@@ -219,7 +216,7 @@ contains
       end do
       nsl = 2*nsl
     else if (mlin==3) then
-      nsl = 2*nint(sqrt(dble(n/2))) - 1
+      nsl = 2*nint(sqrt(real(n/2, kind=dp))) - 1
       ilsep(1) = 2
       do k = 2, nsl
         ilsep(k) = ilsep(k-1) + 2*((k+1)/2)

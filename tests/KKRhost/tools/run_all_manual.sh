@@ -3,7 +3,7 @@
 source python-select local
 
 
-cd tests
+cd tests/KKRhost
 
 echo "###########################################"
 echo "run:intel:serial_1:"
@@ -43,6 +43,10 @@ ln -s test_run02_serial_1_1/ test_run09_mpi_1_32
 ln -s test_run02_serial_1_1/ test_run09_hybrid_1_32
 ln -s test_run02_serial_1_1/ test_run09_hybrid_4_8
 ln -s test_run02_serial_1_1/ test_run09_hybrid_8_4
+echo "running 03.1_energ_hybrid_1_25 on mult node"
+if [[ ! -d test_run03.1_energ_hybrid_1_25 ]]; then
+  ./tools/run_test_03_1_energ25.sh
+fi
 
 
 echo "###########################################"

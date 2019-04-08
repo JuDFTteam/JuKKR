@@ -35,10 +35,10 @@ contains
     integer :: idspr
     ! ..
     ! .. Local Scalars ..
-    real (kind=dp) :: a1, a2, a3, af, alc, alf, alfc, ap, b1, b1f, b1p, b2, b2f, b2p, b3, bcr, beta, bf, bp, brs, bx, bxd, bxu, bz41, c1, c113, c115, c13, c1415, c2, c23, c2915, &
+    real (kind=dp) :: a1, a2, a3, af, alc, alf, alfc, ap, b1, b1f, b1p, b2, b2f, b2p, b3, bcr, beta, bf, bp, brs, bz41, c1, c113, c115, c13, c1415, c2, c23, c2915, &
       c2q23, c3, c32, c43, c53, c56, c76, c83, ca, ccf, ccp, ce, cef, cep, cf, cgz, cp, crdc, crf, cro, crp, crr1, crr2, dacdr, dbdr, dbrod, dbrou, dcdr, dd, decdrf, decdrp, df, &
       dfdz, dlta, d_p, dsdfd, dsdfu, dspr, dsprs, dvdr1, dvdr2, dvdrd, dvdru, ec, ecf, ecp, ecrs, eczta, ef3vi, expfai, f1d, f1u, f2d, f2u, f3d, f3u, fai, fai2, fd, fdd0, fk, fu, &
-      fz, gf, gp, gr2, gr2d, gr2u, gz, gz2, gz3, hugef, huges, q1, q2, q3, rnc, ro113, ro13, ro2, ro43, ro76, ro83, rod, rod13, rod23, rod3, rod43, rod53, rou, rou13, rou23, &
+      fz, gf, gp, gr2, gz, gz2, gz3, hugef, huges, q1, q2, q3, rnc, ro113, ro13, ro2, ro43, ro76, ro83, rod, rod13, rod23, rod3, rod43, rod53, rou, rou13, rou23, &
       rou3, rou43, rou53, rs, rs2, rs3, sd, sd2, sd3, sd4, sd6, sidfd, sidfu, sk, ssfc, su, su2, su3, su4, su6, tc, td, tksg, tu, uc, ud, uu, vc, vc13, vc45d, vc45u, vc6, &
       vccf, vcf, vcl1, vcl2, vcp, vxp, vz, wc, x01, x02, x03, xedgd, xedgu, xedld, xedlu, xf, xl01, xl02, xl03, xl1, xl2, xl3, xld1, xld2, xld3, xlf, xp, xs, zt13m, zt13p, zta3, &
       zta4
@@ -125,9 +125,7 @@ contains
     rod43 = rod**c43
     ! .....
     ! gr2=drr*drr
-    ! gr2u=drru**2
     ! drrd=drr-drru
-    ! gr2d=drrd**2
     ! ddrrd=ddrr-ddrru
     ! .....
     fz = ffz(zta)
@@ -322,8 +320,6 @@ contains
     ! write(6,*)  '  GGA '
     ! .....
     gr2 = agr**2
-    gr2u = agru**2
-    gr2d = agrd**2
 
     c56 = 5.e0_dp/6.e0_dp
     c115 = 1.e0_dp/15.e0_dp
@@ -395,11 +391,6 @@ contains
 
     end if
 
-    ! .....
-    ! .....bxu,bxd,bx: grad-coeff. for exchange.
-
-    bxu = xedgu/gr2u*rou43
-    ! .....
     rod53 = rod**c53
     ! edrrd=ddrrd
     ! if(drrd.lt.0.) edrrd=-ddrrd
@@ -432,27 +423,18 @@ contains
       fd = f1d**c115
       sidfd = c115*f1d**(-c1415)*f2d
       dsdfd = c115*f1d**(-c2915)*(-c1415*sd*f2d**2+f1d*f3d)
-      ! .....
       xedgd = -3.722102942e0_dp*(fd-1.e0_dp)*rod43
-      ! .....
       vxgd = dsprs*alf*rod13*(c43*(fd-1.e0_dp)-td*sidfd-(ud-c43*sd3)*dsdfd)
 
     else
 
       dbrod = rod*2.e0_dp
-
       call exch91(dbrod, sd, ud, td, xedld, xedgd, vxld, vxgd)
-
       xedl = xedl + xedld/2.e0_dp
 
     end if
 
-    bxd = xedgd/gr2d*rod43
-    ! .....
-
     xedg = dsprs*(xedgu+xedgd)/2.e0_dp
-
-    bx = (bxu+bxd)/2.e0_dp
 
     if (iex==1) go to 110
 
@@ -472,7 +454,6 @@ contains
       if (fai>hugef) go to 110
       fai2 = fai*fai
       expfai = exp(-fai)
-      ! .....
       ! .....
       if (ipg==0) then
 
@@ -499,10 +480,10 @@ contains
           write (6, fmt=120) ivn, ivg
           stop 16
         end if
-        ! .....
+
         dfdz = fdfdz(zta)
         vz = (1.e0_dp+alc/ecp*fz/fdd0*bz41)**c13
-        ! .....
+        
         ssfc = vz
         ! .....
         ! .....    dvdru,dvdrd: d(vz)/drou,-d.
@@ -521,21 +502,19 @@ contains
       ! .....  bcr: grad-coeff. for correlation.
       bcr = ssfc*expfai*cro
       cedg = dsprs*bcr*gr2/ro43
-      ! .....
       ! .....  vccf:v-correlation-coeff.
       vccf = -ssfc*expfai*cro/ro13
       vc13 = (2.e0_dp-fai)*g2r/ro - (c43-c113*fai+c76*fai2)*gr2/ro2 + fai*(fai-3.e0_dp)*gggr/agr/ro
       ! &    fai*(fai-3.)*ddrr/ro
       vc6 = -gr2/ro*(fai2-fai-1.e0_dp)/cro*dcdr
-      ! .....
+
       vcgu = dsprs*vccf*(vc13+vc6+vc45u)
-      ! .....
+
       vcgd = dsprs*vccf*(vc13+vc6+vc45d)
 
     else
 
       ! PW91
-
       call corlsd(rs, zta, ec, vclu, vcld, ecrs, eczta, alfc)
 
       vclu = vclu*2.e0_dp
@@ -564,7 +543,7 @@ contains
       bcr = cedg/gr2*ro43
 
     end if
-    ! .....
+
 110 continue
 
     xcptu = vxlu + vclu + vxgu + vcgu

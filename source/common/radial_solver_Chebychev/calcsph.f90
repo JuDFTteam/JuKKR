@@ -20,7 +20,7 @@ contains
   !> Constructs potential matrices and calls rllsll routine to find spherical wavefunctions
   !> starting from spherical Bessel and Hankel functions (see PhD D. Bauer)
   !-------------------------------------------------------------------------------
-  subroutine calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, zat, eryd, lmpotd, lmmaxso, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, &
+  subroutine calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, zat, eryd, lmpotd, lmmaxd, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, &
     tmat, alpha, use_sratrick)
 
     use :: global_variables, only: korbit
@@ -31,7 +31,7 @@ contains
 
     implicit none
     ! construct wavefunctions for spherical potentials
-    integer :: nsra, irmdnew, nrmaxd, nspin, lmax, lmpotd, lmmaxso
+    integer :: nsra, irmdnew, nrmaxd, nspin, lmax, lmpotd, lmmaxd
     integer :: ncheb, npan_tot
     integer :: use_sratrick
     real (kind=dp) :: zat
@@ -42,7 +42,7 @@ contains
     complex (kind=dp) :: jlk(1:nsra*(1+korbit)*(lmax+1), irmdnew)
     complex (kind=dp) :: hlk2(1:nsra*(1+korbit)*(lmax+1), irmdnew)
     complex (kind=dp) :: jlk2(1:nsra*(1+korbit)*(lmax+1), irmdnew)
-    integer :: jlk_index(2*lmmaxso)
+    integer :: jlk_index(2*lmmaxd)
 
     ! local
     integer :: lmsize, lmsize2, nvec, nspintemp

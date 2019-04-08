@@ -23,7 +23,7 @@ contains
   !>
   !> Sets up non-spherical potential without SOC contribution but already as complex numbers.
   !-------------------------------------------------------------------------------
-  subroutine vllmat(irmin, nrmaxd, irc, lmmax, lmmaxso, vnspll0, vins, lmpot, cleb, icleb, iend, nspin, zat, rnew, use_sratrick, ncleb)
+  subroutine vllmat(irmin, nrmaxd, irc, lmsize, lmmaxd, vnspll0, vins, lmpot, cleb, icleb, iend, nspin, zat, rnew, use_sratrick, ncleb)
 
     implicit none
 
@@ -32,11 +32,11 @@ contains
     integer, intent (in) :: iend         !! maximal number of non-vanishing Gaunt coefficients
     integer, intent (in) :: ncleb        !! Number of Gaunt coefficients
     integer, intent (in) :: irmin        !! max r for spherical treatment, afterwards non-spherical contribution
-    integer, intent (in) :: lmmax        !! (LMAX+1)^2
+    integer, intent (in) :: lmsize        !! (LMAX+1)^2
     integer, intent (in) :: nspin        !! spin-degree of freedom
     integer, intent (in) :: lmpot        !! (LPOT+1)^2
     integer, intent (in) :: nrmaxd       !! NTOTD*(NCHEBD+1), maximal number of radial points in Chebychev mesh
-    integer, intent (in) :: lmmaxso      !! 2*(LMAX+1)^2, for SOC L=(l,m,s) instead of L=(l,m)
+    integer, intent (in) :: lmmaxd      !! 2*(LMAX+1)^2, for SOC L=(l,m,s) instead of L=(l,m)
     integer, intent (in) :: use_sratrick !! switch to use SRA trick (see routine rllsll) or not
     real (kind=dp), intent (in) :: zat   !! atomic charge
     integer, dimension (ncleb, 4), intent (in) :: icleb    !! index array for Gaunt coefficients
@@ -44,14 +44,14 @@ contains
     real (kind=dp), dimension (irmin:irc, lmpot, nspin), intent (in) :: vins !! Non-spherical part of the potential
     real (kind=dp), dimension (irmin:nrmaxd), intent (in) :: rnew !! radial mesh points of Chebychev mesh
     ! output
-    complex (kind=dp), dimension (lmmaxso, lmmaxso, irmin:irc), intent (out) :: vnspll0 !! output potential in Chebychev mesh and (l,m,s)-space
+    complex (kind=dp), dimension (lmmaxd, lmmaxd, irmin:irc), intent (out) :: vnspll0 !! output potential in Chebychev mesh and (l,m,s)-space
     ! local
     integer :: isp !! counter for spin-degree
     integer :: i, ir, j, lm1, lm2, lm3
-    real (kind=dp), dimension (lmmax, lmmax, irmin:irc, nspin) :: vnspll !! work array of potential, is casted to complex array `vnspll0` in the the end
+    real (kind=dp), dimension (lmsize, lmsize, irmin:irc, nspin) :: vnspll !! work array of potential, is casted to complex array `vnspll0` in the the end
 
     do isp = 1, nspin
-      do lm1 = 1, lmmax
+      do lm1 = 1, lmsize
         do lm2 = 1, lm1
           do ir = irmin, irc
             vnspll(lm1, lm2, ir, isp) = 0.0e0_dp
@@ -70,7 +70,7 @@ contains
       ! -------------------------------------------------------------------------
       ! Use symmetry of the gaunt coef.
       ! -------------------------------------------------------------------------
-      do lm1 = 1, lmmax
+      do lm1 = 1, lmsize
         do lm2 = 1, lm1 - 1
           do i = irmin, irc
             vnspll(lm2, lm1, i, isp) = vnspll(lm1, lm2, i, isp)
@@ -79,7 +79,7 @@ contains
       end do                       ! LM1
 
       if (use_sratrick==0) then
-        do lm1 = 1, lmmax
+        do lm1 = 1, lmsize
           do i = irmin, irc
             vnspll(lm1, lm1, i, isp) = vnspll(lm1, lm1, i, isp) + vins(i, 1, isp) - 2e0_dp*zat/rnew(i)
           end do
@@ -89,10 +89,10 @@ contains
     end do                         ! NSPIN
 
     ! Set vnspll as twice as large
-    vnspll0(1:lmmax, 1:lmmax, irmin:irc) = cmplx(vnspll(1:lmmax,1:lmmax,irmin:irc,1), 0e0_dp, kind=dp)
+    vnspll0(1:lmsize, 1:lmsize, irmin:irc) = cmplx(vnspll(1:lmsize,1:lmsize,irmin:irc,1), 0e0_dp, kind=dp)
 
     if (nspin==2) then             ! hack to make routine work for Bxc-field
-      vnspll0(lmmax+1:lmmaxso, lmmax+1:lmmaxso, irmin:irc) = cmplx(vnspll(1:lmmax,1:lmmax,irmin:irc,nspin), 0e0_dp, kind=dp)
+      vnspll0(lmsize+1:lmmaxd, lmsize+1:lmmaxd, irmin:irc) = cmplx(vnspll(1:lmsize,1:lmsize,irmin:irc,nspin), 0e0_dp, kind=dp)
     end if
 
   end subroutine vllmat

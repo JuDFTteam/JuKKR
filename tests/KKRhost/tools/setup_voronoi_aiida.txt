@@ -1,7 +1,0 @@
-voronoi
-
-False
-kkr.voro
-slurmcontrol
-/builds/kkr/kkrjm/voronoi/voronoi.exe
-ln -s /builds/kkr/kkrjm/voronoi/ElementDataBase .

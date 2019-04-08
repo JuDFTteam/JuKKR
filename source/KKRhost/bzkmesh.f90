@@ -27,7 +27,7 @@ contains
     use :: mod_datatypes, only: dp
     use :: mod_bzirr3d, only: bzirr3d
     implicit none
-    real (kind=dp), parameter :: eps = 1.0d-12
+    real (kind=dp), parameter :: eps = 1.0e-12_dp
     ! ..
     ! .. Scalar Arguments ..
     integer :: maxmesh, nbxin, nbyin, nbzin, nsymat, iprint, krel, kpoibz, ielast, maxmshd

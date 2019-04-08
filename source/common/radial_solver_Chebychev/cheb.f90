@@ -14,10 +14,10 @@
 !-------------------------------------------------------------------------------
 module mod_cheb
 
+  use :: mod_datatypes, only: dp
   private
   public :: getcmatrix, getcinvmatrix, getccmatrix, getlambda, getclambdacinv, getclambda2cinv, diffcheb,  intcheb_complex
-
-  double complex,allocatable :: intweight(:)
+  complex (kind=dp), allocatable :: intweight(:)
 
 contains
 
@@ -31,7 +31,6 @@ contains
   !> Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
   !-------------------------------------------------------------------------------
   subroutine getcmatrix(ncheb, cmatrix)
-    use :: mod_datatypes, only: dp
     use :: mod_constants, only: pi
     implicit none
     integer, intent (in) :: ncheb
@@ -42,7 +41,7 @@ contains
     do icheb1 = 0, ncheb
       do icheb2 = 0, ncheb
         ! maybe incorrect
-        cmatrix(icheb2, icheb1) = cos(icheb1*pi*((ncheb-icheb2)+0.5e0_dp)/(ncheb+1))
+        cmatrix(icheb2, icheb1) = cos(icheb1*pi*((ncheb-icheb2)+0.5_dp)/(ncheb+1))
       end do
     end do
   end subroutine getcmatrix
@@ -58,7 +57,6 @@ contains
   !> Gonzalez et al, Journal of Computational Physics 134, 134-149 (1997)
   !-------------------------------------------------------------------------------
   subroutine getcinvmatrix(ncheb, cinvmatrix)
-    use :: mod_datatypes, only: dp
     use :: mod_constants, only: pi
     implicit none
     integer, intent (in) :: ncheb
@@ -67,12 +65,12 @@ contains
     integer :: icheb1, icheb2
     real (kind=dp) :: fac
 
-    fac = 1.0e0_dp/(ncheb+1)
+    fac = 1.0_dp/(ncheb+1)
     do icheb1 = 0, ncheb
       do icheb2 = 0, ncheb
-        cinvmatrix(icheb1, icheb2) = fac*cos(icheb1*pi*((ncheb-icheb2)+0.5e0_dp)/(ncheb+1))
+        cinvmatrix(icheb1, icheb2) = fac*cos(icheb1*pi*((ncheb-icheb2)+0.5_dp)/(ncheb+1))
       end do
-      fac = 2.0e0_dp/(ncheb+1)
+      fac = 2.0_dp/(ncheb+1)
     end do
   end subroutine getcinvmatrix
 
@@ -91,7 +89,6 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine getccmatrix(ncheb, rmesh, nrmesh, cmatrix)
-    use :: mod_datatypes, only: dp
     implicit none
     integer, intent (in) :: ncheb, nrmesh
     real (kind=dp), intent (in) :: rmesh(nrmesh)
@@ -116,7 +113,6 @@ contains
   ! Chebyshev expansion
   !-------------------------------------------------------------------------------
   subroutine getlambda(ncheb, lambda)
-    use :: mod_datatypes, only: dp
     implicit none
     integer, intent (in) :: ncheb
     real (kind=dp), intent (out) :: lambda(0:ncheb, 0:ncheb)
@@ -143,7 +139,6 @@ contains
   !> Set up the product of C-matrix, Lambda-matrix and C^-1-matrix
   !-------------------------------------------------------------------------------
   subroutine getclambdacinv(ncheb, clambdacinv)
-    use :: mod_datatypes, only: dp
     implicit none
     integer :: ncheb
     real (kind=dp) :: clambdacinv(0:ncheb, 0:ncheb)
@@ -154,18 +149,17 @@ contains
     real (kind=dp) :: temp1(0:ncheb, 0:ncheb)
     integer :: n
 
-    lambda = cmplx(0.0e0_dp, 0.0e0_dp, kind=dp)
-    cmatrix = cmplx(0.0e0_dp, 0.0e0_dp, kind=dp)
-    cinvmatrix = cmplx(0.0e0_dp, 0.0e0_dp, kind=dp)
-    lambda = cmplx(0.0e0_dp, 0.0e0_dp, kind=dp)
-    temp1 = cmplx(0.0e0_dp, 0.0e0_dp, kind=dp)
+    lambda = 0.0_dp
+    cmatrix = 0.0_dp
+    cinvmatrix = 0.0_dp
+    temp1 = 0.0_dp
 
     call getlambda(ncheb, lambda)
     call getcinvmatrix(ncheb, cinvmatrix)
     call getcmatrix(ncheb, cmatrix)
     n = ncheb + 1
-    call dgemm('N', 'N', n, n, n, 1e0_dp, lambda, n, cinvmatrix, n, 0e0_dp, temp1, n)
-    call dgemm('N', 'N', n, n, n, 1e0_dp, cmatrix, n, temp1, n, 0e0_dp, clambdacinv, n)
+    call dgemm('N', 'N', n, n, n, 1.0_dp, lambda, n, cinvmatrix, n, 0.0_dp, temp1, n)
+    call dgemm('N', 'N', n, n, n, 1.0_dp, cmatrix, n, temp1, n, 0.0_dp, clambdacinv, n)
   end subroutine getclambdacinv
 
 
@@ -181,7 +175,6 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine getclambda2cinv(ncheb, clambda2cinv)
-    use :: mod_datatypes, only: dp
     implicit none
     integer :: ncheb
     real (kind=dp) :: clambda2cinv(0:ncheb, 0:ncheb)
@@ -192,11 +185,11 @@ contains
     real (kind=dp) :: temp1(0:ncheb, 0:ncheb)
     real (kind=dp) :: temp2(0:ncheb, 0:ncheb)
 
-    lambda = cmplx(0.0e0_dp, 0.0e0_dp, kind=dp)
-    cmatrix = cmplx(0.0e0_dp, 0.0e0_dp, kind=dp)
-    cinvmatrix = cmplx(0.0e0_dp, 0.0e0_dp, kind=dp)
-    lambda = cmplx(0.0e0_dp, 0.0e0_dp, kind=dp)
-    temp1 = cmplx(0.0e0_dp, 0.0e0_dp, kind=dp)
+    lambda = cmplx(0.0_dp, 0.0_dp, kind=dp)
+    cmatrix = cmplx(0.0_dp, 0.0_dp, kind=dp)
+    cinvmatrix = cmplx(0.0_dp, 0.0_dp, kind=dp)
+    lambda = cmplx(0.0_dp, 0.0_dp, kind=dp)
+    temp1 = cmplx(0.0_dp, 0.0_dp, kind=dp)
 
     call getlambda(ncheb, lambda)
     call getcinvmatrix(ncheb, cinvmatrix)
@@ -218,7 +211,6 @@ contains
   !> and multiply this to input matrix
   !-------------------------------------------------------------------------------
   subroutine diffcheb(fn, ncheb, dfndr)
-    use :: mod_datatypes, only: dp
     implicit none
     integer :: ncheb
     real (kind=dp) :: fn(0:ncheb)
@@ -243,23 +235,23 @@ contains
     use mod_constants, only: pi
     implicit none
     integer, intent(in)         :: ncheb
-    double complex, intent(in)  :: arr1(0:Ncheb)
-    double complex, intent(out) :: result1
+    complex (kind=dp), intent(in)  :: arr1(0:Ncheb)
+    complex (kind=dp), intent(out) :: result1
     integer :: icheb1,icheb2
     
     if (.not. allocated(intweight)) then
       allocate(intweight(0:ncheb))
-      intweight=1.0D0
+      intweight=1.0_dp
       do icheb1=0,ncheb
         do icheb2=2,ncheb,2
-          intweight(icheb1)=intweight(icheb1)+(-2.0D0/(icheb2**2-1.0D0))*dcos(icheb2*pi*(icheb1+0.5D0)/(Ncheb+1))
+          intweight(icheb1)=intweight(icheb1)+(-2.0_dp/(icheb2**2-1.0_dp))*cos(icheb2*pi*(icheb1+0.5_dp)/(Ncheb+1))
         end do
-        intweight(icheb1)=intweight(icheb1)*2.0D0/(Ncheb+1)
+        intweight(icheb1)=intweight(icheb1)*2.0_dp/(Ncheb+1)
       end do
     end if
     
     if (ubound(intweight,1)/=Ncheb) stop 'error1234'
-    result1=(0.0D0,0.0D0)
+    result1=(0.0_dp,0.0_dp)
     do icheb1=0,ncheb
       result1=result1+intweight(icheb1)*arr1(icheb1)
     end do
@@ -278,7 +270,6 @@ contains
   !> Helper function that wraps dgemv after sanity check of input
   !-------------------------------------------------------------------------------
   subroutine matvec_dmdm(ncheb, mat1, vec1, outvec)
-    use :: mod_datatypes, only: dp
     implicit none
     integer, intent (in) :: ncheb
     real (kind=dp), intent (in) :: mat1(0:ncheb, 0:ncheb), vec1(0:ncheb)
@@ -288,7 +279,7 @@ contains
     m = size(mat1, 1)
     n = size(mat1, 2)
     if (size(vec1,1)/=n) stop 'matvec_dmdm: dimensions of first input array differ.'
-    call dgemv('N', m, n, 1.0e0_dp, mat1, m, vec1, 1, 0.0e0_dp, outvec, 1)
+    call dgemv('N', m, n, 1.0_dp, mat1, m, vec1, 1, 0.0_dp, outvec, 1)
   end subroutine matvec_dmdm
 
   !-------------------------------------------------------------------------------
@@ -300,7 +291,6 @@ contains
   !> Helper function wrapping dgemm
   !-------------------------------------------------------------------------------
   subroutine matmat_dmdm(mat1, mat2, ncheb, outmat)
-    use :: mod_datatypes, only: dp
     implicit none
     integer, intent (in) :: ncheb
     real (kind=dp), intent (in) :: mat1(0:ncheb, 0:ncheb), mat2(0:ncheb, 0:ncheb)
@@ -309,7 +299,7 @@ contains
     integer :: n
 
     n = ncheb + 1
-    call dgemm('N', 'N', n, n, n, 1e0_dp, mat1, n, mat2, n, 0e0_dp, outmat, n)
+    call dgemm('N', 'N', n, n, n, 1.0_dp, mat1, n, mat2, n, 0.0_dp, outmat, n)
   end subroutine matmat_dmdm
 
 end module mod_cheb

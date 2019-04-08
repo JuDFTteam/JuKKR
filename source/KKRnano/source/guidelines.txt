@@ -1,0 +1,64 @@
+Elias Rabel, 2012
+
+Some Guidelines:
+
+Calculating more than 1 atom per MPI process and using > 1 threads:
+The stack size for OpenMP threads has to be increased by using this command:
+
+export OMP_STACKSIZE=20M
+
+
+Understanding the code:
+
+*) When design choices are unclear, cross-check with the original version of the code 
+   or the related Juelich/Munich code.
+
+*) Good starting points are: main2.F90, CalculationData_mod.F90, datastructures/*.*, kkr0/main0.f90,
+                             KKRnanoParallel/KKRnanoParallel_mod.f90,
+                             ScatteringCalculation_mod.F90, ProcessKKRresults_mod.F90
+                             kloopz1.f90, IterativeSolver/kkrmat01_new.F90
+
+Concerning datastructures:
+
+*) Note: Datastructures in Fortran >90 are declared using the keyword "type".
+
+*) Datastructures are usually declared in a module with the same name but with "_mod" appended.
+   The file of the module should have the same name as the module with the appropriate extension
+   ( *.f90, *.F90, *.f)
+   
+*) Routines that operate on a datastructure should be bundled together in the same module.
+
+*) Datastructures that require memory allocation possess a routine
+   named 'create<Name of Datastructure>'
+   In this case also a routine named 'destroy<Name of Datastructure>'
+   has to exists which must be called after usage of the structure to free resources (e.g. memory)
+   
+*) The create* routines usually acquire only the needed storage. Sometimes an additional initialisation
+   routine has to be called after creation. Those are named 'init<Name of Datastructure>'.
+   Actual calculations usually take place in routines named 'calculate<Name of Datastructure>'.
+   Sometimes code that could be found in init* or calculate* routines is already bundled in the
+   'create' - routine - especially for less complicated datastructures.
+   
+*) As the first argument to this routines serves an instance of the datastructure itself.
+   
+*) Since datastructures can contain other datastructures or references (Fortran-"pointers") to them,
+   hierarchies of datastructures emerge. Deep nesting of datastructures is avoided.
+   A datastructure is responsible for creation and deletion of its member, if this member is tightly coupled
+   (or is an integral part of) its host datastructure.
+   
+   If a datastructure just "knows" about another datastructure, one should choose a reference - creation and
+   deletion then takes place elsewhere.
+   
+*) You are basically on your own to find out how the datastructures are related and work.
+   Just remember the "create - init - use/calculate - destroy" - lifecycle.
+
+*) Members of datastructures retain the names of their "historical" counterparts. Sorry.
+
+*) Only what belongs conceptually together should be member of the same datastructure.
+
+*) Access members via get<Name of member> or set<Name of member> routines, if possible.    
+   
+Different kinds of datastructures:
+
+*) plain 'structs'
+*) Opaque objects

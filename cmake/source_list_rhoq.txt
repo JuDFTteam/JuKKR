@@ -4,6 +4,7 @@ set_source_files_properties(source/rhoq/mod_rhoq.F90 PROPERTIES COMPILE_FLAGS "$
 # the executable is built from this list of files
 add_executable(
     rhoq.x
+    source/common/global_variables.F90
     source/common/version.F90
     source/common/version_info.F90
     source/common/DataTypes.f90

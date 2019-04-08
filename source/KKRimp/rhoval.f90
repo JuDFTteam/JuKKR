@@ -279,47 +279,47 @@ end do
 
 if ( config_testflag('tmatdebug') ) then
 
-write(5001,'(5000F)') cell%rmesh(cell%nrmin_ns:cell%nrmax)
-write(5002,'(5000F)') cell%rmesh(:)
+write(5001,'(5000E25.14)') cell%rmesh(cell%nrmin_ns:cell%nrmax)
+write(5002,'(5000E25.14)') cell%rmesh(:)
 
 do lm1=1,(lmaxatom+1)**2
   do lm2=1,(lmaxatom+1)**2
-    write(4002,'(5000E)') pns(lm2,lm1,:,1)
+    write(4002,'(5000E25.14)') pns(lm2,lm1,:,1)
   end do
 end do
 
 do lm1=1,(lmaxatom+1)**2
   do lm2=1,(lmaxatom+1)**2
-    write(4003,'(5000F)') qns(lm2,lm1,:,1)
+    write(4003,'(5000E25.14)') qns(lm2,lm1,:,1)
   end do
 end do
 
 do lm1=0,lmaxatom
-    write(4004,'(5500E)') pz(:,lm1)
+    write(4004,'(5500E25.14)') pz(:,lm1)
 end do
 
 do lm1=0,lmaxatom
-    write(4005,'(5500E)') qz(:,lm1)
+    write(4005,'(5500E25.14)') qz(:,lm1)
 end do
 
 do lm1=0,lmaxatom
-    write(4006,'(5500E)') fz(:,lm1)
+    write(4006,'(5500E25.14)') fz(:,lm1)
 end do
 
 do lm1=0,lmaxatom
-    write(4007,'(5500E)') sz(:,lm1)
+    write(4007,'(5500E25.14)') sz(:,lm1)
 end do
 
 
 do lm1=1,(lmaxatom+1)**2
   do lm2=1,(lmaxatom+1)**2
-    write(4008,'(5000E)') pns(lm2,lm1,:,2)
+    write(4008,'(5000E25.14)') pns(lm2,lm1,:,2)
   end do
 end do
 
 do lm1=1,(lmaxatom+1)**2
   do lm2=1,(lmaxatom+1)**2
-    write(4009,'(5000F)') qns(lm2,lm1,:,2)
+    write(4009,'(5000E25.14)') qns(lm2,lm1,:,2)
   end do
 end do
 

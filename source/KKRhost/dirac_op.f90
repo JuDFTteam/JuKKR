@@ -47,9 +47,9 @@ contains
     integer :: mpsmax, npemax, nabm
     parameter (mpsmax=40, npemax=4, nabm=4)
     complex (kind=dp) :: c0
-    parameter (c0=(0.0d0,0.0d0))
+    parameter (c0=(0.0_dp,0.0_dp))
     real (kind=dp) :: tol
-    parameter (tol=1.0d-9)
+    parameter (tol=1.0e-9_dp)
     integer :: itmax
     parameter (itmax=50)
 
@@ -68,16 +68,14 @@ contains
     real (kind=dp) :: acorr(0:nabm-1), acorr0(0:nabm-1), apred(nabm), apred0(nabm), astep, b14, bc(0:npemax), bh, bhlp(nabm+4), cgd(2), cgmd(2), cm(npemax, npemax), &
       cmi(npemax, npemax), csqr, dhlp(nabm+4), gam(2), gpm, hlp(nabm+4), hlp1, kap(2), r14, rh, rhlp(nabm+4), rpwgpm, rr, sk(2), sk1, sk2, so2, so6, srk, tz, v14, vc(0:npemax), vh, &
       vhlp(nabm+4), wrp, wrq, x14, xh
-    real (kind=dp) :: abs, dble, sqrt
     integer :: i, ic, ikm(2), ikmi, ikmj, imkm(2), imkmi, imkmj, ip, irk, isk1, isk2, iv, j, jcorr, k, lb(2), lb1, lb2, m, mps, ms, n, nacorr, ndiv, nhlp, nm, npe, nsol, ntop
-    integer :: int, isign, nint
 
     ! DATA APRED0 / 1901.0D0, -2774.0D0, 2616.0D0, -1274.0D0, 251.0D0 /
     ! DATA ACORR0 /  251.0D0,  +646.0D0, -264.0D0,  +106.0D0, -19.0D0 /
     ! DATA ASTEP  /  720.0D0 /
-    data apred0/55.0d0, -59.0d0, +37.0d0, -9.0d0/
-    data acorr0/9.0d0, +19.0d0, -5.0d0, +1.0d0/
-    data astep/24.0d0/
+    data apred0/55.0_dp, -59.0_dp, +37.0_dp, -9.0_dp/
+    data acorr0/9.0_dp, +19.0_dp, -5.0_dp, +1.0_dp/
+    data astep/24.0_dp/
 
     csqr = c*c
     cfac = pis*c/(e+csqr)
@@ -85,7 +83,7 @@ contains
     ! find   NPE  expansion coefficients for the potential and b-field
     npe = 4
 
-    tz = dble(2*z)
+    tz = real(2*z, kind=dp)
 
     do iv = 1, npe
       do n = 1, npe
@@ -96,7 +94,7 @@ contains
     call rinvgj(cmi, cm, npemax, npe)
 
     do iv = 1, npe
-      vc(iv-1) = 0.0d0
+      vc(iv-1) = 0.0_dp
 
       do n = 1, npe
 
@@ -110,7 +108,7 @@ contains
     end do
 
     do iv = 1, npe
-      bc(iv-1) = 0.0d0
+      bc(iv-1) = 0.0_dp
       do n = 1, npe
         bc(iv-1) = bc(iv-1) + cmi(iv, n)*b(n)
       end do
@@ -120,16 +118,16 @@ contains
 
     isk1 = isign(1, kap1)
     isk2 = isign(1, kap2)
-    sk1 = dble(isk1)
-    sk2 = dble(isk2)
+    sk1 = real(isk1, kind=dp)
+    sk2 = real(isk2, kind=dp)
     lb1 = l - isk1
     lb2 = l - isk2
 
-    cg1 = -mj/(kap1+0.5d0)
-    cg5 = -mj/(-kap1+0.5d0)
+    cg1 = -mj/(kap1+0.5_dp)
+    cg5 = -mj/(-kap1+0.5_dp)
     cgd(1) = cg1
     cgmd(1) = cg5
-    kap(1) = dble(kap1)
+    kap(1) = real(kap1, kind=dp)
     ! MB
     if (nucleus==0) then
       gam(1) = sqrt(kap(1)**2-(tz/c)**2)
@@ -140,26 +138,26 @@ contains
     lb(1) = lb1
     sk(1) = sk1
     if (abs(mj)>l) then
-      cg2 = 0.0d0
-      cg4 = 0.0d0
-      cg8 = 0.0d0
+      cg2 = 0.0_dp
+      cg4 = 0.0_dp
+      cg8 = 0.0_dp
       nsol = 1
-      cgd(2) = 0.0d0
-      cgo = 0.0d0
-      cgmd(2) = 0.0d0
-      gam(2) = 0.0d0
-      kap(2) = 0.0d0
+      cgd(2) = 0.0_dp
+      cgo = 0.0_dp
+      cgmd(2) = 0.0_dp
+      gam(2) = 0.0_dp
+      kap(2) = 0.0_dp
       lb(2) = 0
-      sk(2) = 0.0d0
+      sk(2) = 0.0_dp
     else
-      cg2 = -sqrt(1.0d0-(mj/(kap1+0.5d0))**2)
-      cg4 = -mj/(kap2+0.5d0)
-      cg8 = -mj/(-kap2+0.5d0)
+      cg2 = -sqrt(1.0_dp-(mj/(kap1+0.5_dp))**2)
+      cg4 = -mj/(kap2+0.5_dp)
+      cg8 = -mj/(-kap2+0.5_dp)
       nsol = 2
       cgd(2) = cg4
       cgo = cg2
       cgmd(2) = cg8
-      kap(2) = dble(kap2)
+      kap(2) = real(kap2, kind=dp)
 
       if (nucleus==0) then
         gam(2) = sqrt(kap(2)**2-(tz/c)**2)
@@ -171,10 +169,10 @@ contains
       sk(2) = sk2
     end if
     ! -----------------------------------------------------------------------
-    ikm(1) = ikapmue(kap1, nint(mj-0.5d0))
-    ikm(2) = ikapmue(kap2, nint(mj-0.5d0))
-    imkm(1) = ikapmue(-kap1, nint(mj-0.5d0))
-    imkm(2) = ikapmue(-kap2, nint(mj-0.5d0))
+    ikm(1) = ikapmue(kap1, nint(mj-0.5_dp))
+    ikm(2) = ikapmue(kap2, nint(mj-0.5_dp))
+    imkm(1) = ikapmue(-kap1, nint(mj-0.5_dp))
+    imkm(2) = ikapmue(-kap2, nint(mj-0.5_dp))
     ! -----------------------------------------------------------------------
 
     call rinit(2*2*nrmax, ap)
@@ -199,8 +197,8 @@ contains
       do n = 1, nmesh
         do j = 1, nsol
           do i = 1, nsol
-            ap(i, j, n) = 0d0
-            aq(i, j, n) = 0d0
+            ap(i, j, n) = 0.0_dp
+            aq(i, j, n) = 0.0_dp
           end do
         end do
       end do
@@ -338,7 +336,7 @@ contains
 
         do j = 1, nsol
           pr(j, j, n) = cjlz(l, zz)*r(n)
-          d_p(j, j, n) = (dble(l+1)*cjlz(l,zz)-zz*cjlz(l+1,zz))*drdi(n)
+          d_p(j, j, n) = (real(l+1, kind=dp)*cjlz(l,zz)-zz*cjlz(l+1,zz))*drdi(n)
 
           qr(j, j, n) = (d_p(j,j,n)/drdi(n)+pr(j,j,n)*(kap(j)/r(n)))/s0
           dq(j, j, n) = qr(j, j, n)*(kap(j)/r(n)) - pr(j, j, n)*t0
@@ -447,9 +445,9 @@ contains
         i = 3 - j
         pi(j, j, n) = cjlz(l, arg)*r(n)
         qi(j, j, n) = cfac*sk(j)*cjlz(lb(j), arg)*r(n)*c
-        d_p(j, j, n) = (dble(l+1)*cjlz(l,arg)-arg*cjlz(l+1,arg))*drdi(n)
+        d_p(j, j, n) = (real(l+1, kind=dp)*cjlz(l,arg)-arg*cjlz(l+1,arg))*drdi(n)
         m = lb(j)
-        dq(j, j, n) = cfac*sk(j)*(dble(m+1)*cjlz(m,arg)-arg*cjlz(m+1,arg))*drdi(n)*c
+        dq(j, j, n) = cfac*sk(j)*(real(m+1, kind=dp)*cjlz(m,arg)-arg*cjlz(m+1,arg))*drdi(n)*c
 
         pi(i, j, n) = c0
         qi(i, j, n) = c0
@@ -463,9 +461,9 @@ contains
     ndiv = 60
     if (ndiv/=0) then
 
-      srk = 1.0d0/dble(ndiv)
-      so2 = srk/2.0d0
-      so6 = srk/6.0d0
+      srk = 1.0_dp/real(ndiv, kind=dp)
+      so2 = srk/2.0_dp
+      so6 = srk/6.0_dp
 
       n = nmesh
 
@@ -497,11 +495,11 @@ contains
         end do
       end do
 
-      x14 = dble(n)
+      x14 = real(n, kind=dp)
       nhlp = nabm + 4
-      hlp1 = dble(nmesh-nhlp)
+      hlp1 = real(nmesh-nhlp, kind=dp)
       do i = 1, nhlp
-        hlp(i) = dble(i)
+        hlp(i) = real(i, kind=dp)
         vhlp(i) = v(nmesh-nhlp+i)
         bhlp(i) = b(nmesh-nhlp+i)
         dhlp(i) = drdi(nmesh-nhlp+i)
@@ -596,7 +594,7 @@ contains
 
         if (mod(irk,ndiv)==0) then
           n = nmesh - irk/ndiv
-          if (abs(x14-dble(n))>1.0d-5) then
+          if (abs(x14-real(n, kind=dp))>1.0d-5) then
             write (*, *) ' <DIRAC> RUNGE-KUTTA: ', irk, ndiv, n, x14
             stop
           end if

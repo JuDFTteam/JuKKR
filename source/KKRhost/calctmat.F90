@@ -113,14 +113,14 @@ contains
     ! ==LDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAULDAU
 
     if (idoldau==1) then
-      wldauav = 0.d0
+      wldauav = 0.0_dp
       lmlo = lopt*lopt + 1
       lmhi = (lopt+1)*(lopt+1)
       mmax = lmhi - lmlo + 1
       do m1 = 1, mmax
         wldauav = wldauav + wldau(m1, m1, ispin)
       end do
-      wldauav = wldauav/dble(mmax)
+      wldauav = wldauav/real(mmax, kind=dp)
 
       ! -> Note: Application if WLDAU makes the potential discontinuous.
       ! A cutoff can be used if necessary to make the potential continuous
@@ -131,7 +131,7 @@ contains
       ! ccc            CUTOFF(IR) = 1D0/CUTOFF(IR)
 
       do m1 = 1, irmd
-        cutoff(m1) = 1.d0
+        cutoff(m1) = 1.0_dp
       end do
     end if
 
@@ -184,7 +184,7 @@ contains
         tmat0(:, :) = czero
         alpha0(:, :) = czero
 
-        eryd = ez(ie) + signde*deltae/2.d0 ! LLY
+        eryd = ez(ie) + signde*deltae/2.0_dp ! LLY
         if (t_inc%i_write>0) write (1337, *) 'energy:', ie, '', eryd
 
         ! =======================================================================
@@ -273,6 +273,8 @@ contains
       tmat0(:, :) = tmatll(:, :)
       if (t_tgmat%tmat_to_file) then
         irec = ie + ielast*(ispin-1) + ielast*nspin*(i1-1)
+        ! this test writeout maybe helps to get rid of issue #114
+        if (t_inc%i_write>0) write(1337,*) 'writing tmat to file', ie, ispin, i1, shape(tmatll)
         write (69, rec=irec) tmat0
         ! human readable writeout if test option is hit
         if (formatted_files) then

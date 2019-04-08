@@ -20,7 +20,7 @@ program kkrcode
 
 #ifdef CPP_MPI
   use :: mpi
-  use :: mod_mympi, only: mympi_init, myrank, nranks, master, find_dims_2d, distribute_linear_on_tasks, create_newcomms_group_ie, mpiatom, mpiadapt, check_communication_pattern
+  use :: mod_mympi, only: mympi_init, myrank, nranks, master, find_dims_2d, distribute_linear_on_tasks, create_newcomms_group_ie, mpiatom, mpiadapt, check_communication_pattern, bcast_global_variables
   use :: mod_save_wavefun, only: t_wavefunctions, bcast_params_savewf
   use :: godfrin, only: t_godfrin, bcast_params_godfrin ! GODFRIN Flaviano
   use :: mod_wunfiles, only: bcast_t_params_scalars, bcast_t_params_arrays
@@ -241,7 +241,7 @@ program kkrcode
 
   ! allocate timing arrays
   if (mpiadapt>0) then
-    allocate (timings_1a(t_inc%ielast,t_inc%natyp), stat=i_stat)
+    allocate (timings_1a(t_inc%ielast,natypd), stat=i_stat)
     call memocc(i_stat, product(shape(timings_1a))*kind(timings_1a), 'timings_1a', 'main_all')
     allocate (timings_1b(t_inc%ielast), stat=i_stat)
     call memocc(i_stat, product(shape(timings_1b))*kind(timings_1b), 'timings_1b', 'main_all')
@@ -253,7 +253,7 @@ program kkrcode
   end if                           ! MPIadapt>0
 
   ! create_subcomms_2d: first find maximal dimensions
-  call find_dims_2d(nranks, t_inc%natyp, t_inc%ielast, dims, mpiatom)
+  call find_dims_2d(nranks, natypd, t_inc%ielast, dims, mpiatom)
   ! save in dims
   t_mpi_c_grid%dims = dims
 
@@ -414,7 +414,7 @@ program kkrcode
     ! adapt MPI communicator grid to tackle load imbalance better
     if (mpiadapt>0) then
       ! create_subcomms_2d: first find maximal dimensions
-      call find_dims_2d(nranks, t_inc%natyp, t_inc%ielast, dims, mpiatom)
+      call find_dims_2d(nranks, natypd, t_inc%ielast, dims, mpiatom)
       ! save in dims
       t_mpi_c_grid%dims = dims
 
@@ -962,4 +962,3 @@ program kkrcode
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 end program kkrcode
-

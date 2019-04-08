@@ -41,8 +41,6 @@ contains
     real (kind=dp) :: ecou(0:lpot, *), epotin(*), espc(0:3, npotd), espv(0:(lmaxd+1), npotd), exc(0:lpot, *), eu(*), edcldau(*)
     integer :: lcoremax(*), nshell(*), lopt(*)
     real (kind=dp) :: bandesum, bandet, ecous, edc, efctor, et, etot, excs
-    real (kind=dp) :: etotldau
-    real (kind=dp) :: dble
     integer :: iatyp, ipot, is, ispin, l
     character (len=4) :: textl(0:6)
     character (len=5) :: textns
@@ -53,25 +51,22 @@ contains
     data texts/' spin down   ', ' spin  up    ', ' paramagnetic'/
     data textns/' ns ='/
     ! ---> loop over host atoms
-    efctor = 1.0d0/13.6058d0
+    efctor = 1.0_dp/13.6058_dp
 
-    etot = 0.0d0
-    bandesum = 0.0d0
-    etotldau = 0.0d0
+    etot = 0.0_dp
+    bandesum = 0.0_dp
 
     if (kpre==1 .and. (t_inc%i_write>0)) write (1337, fmt=100)
-
-
 
     do iatyp = 1, natyp
 
       if (kpre==1 .and. (t_inc%i_write>0)) write (1337, fmt=110) iatyp
 
-      edc = 0.0d0
-      et = 0.0d0
-      bandet = 0.0d0
-      ecous = 0.0d0
-      excs = 0.0d0
+      edc = 0.0_dp
+      et = 0.0_dp
+      bandet = 0.0_dp
+      ecous = 0.0_dp
+      excs = 0.0_dp
 
       is = 0
       if (nspin==1) is = is + 2
@@ -97,14 +92,11 @@ contains
         bandet = bandet + espv((lmaxd+1), ipot)
         et = et + espv((lmaxd+1), ipot)
       end do
+
       ! --->  sum up Coulomb and Ex.-Corel. contribution
-
-
       et = et + eu(iatyp)
       bandet = bandet + eu(iatyp)
       if (kpre==1 .and. idoldau==1 .and. lopt(iatyp)>=0 .and. (t_inc%i_write>0)) write (1337, 280) eu(iatyp)
-
-
 
       do l = 0, lpot
         ecous = ecous + ecou(l, iatyp)
@@ -124,7 +116,6 @@ contains
       end if
 
       if (.not. (no_madelung)) then
-
         et = et + ecous + excs
         edc = edc + ecous + excs
 
@@ -135,7 +126,6 @@ contains
           if (idoldau==1 .and. lopt(iatyp)>=0) write (1337, 290) - edcldau(iatyp)
           write (1337, fmt=250) edc
         end if
-        ! IATYP = 1,NATYP
       end if
 
       if (natyp>1 .or. nshell(iatyp)>1) then
@@ -144,8 +134,8 @@ contains
         write (1337, fmt=310)
       end if
 
-      etot = etot + et*dble(nshell(iatyp))*conc(iatyp)
-      bandesum = bandesum + bandet*dble(nshell(iatyp))*conc(iatyp)
+      etot = etot + et*real(nshell(iatyp), kind=dp)*conc(iatyp)
+      bandesum = bandesum + bandet*real(nshell(iatyp), kind=dp)*conc(iatyp)
 
     end do
 
@@ -155,7 +145,6 @@ contains
 
 
     return
-    ! 17.10.95 ***************************************************************
 100 format (32('='), ' TOTAL ENERGIES ', 31('='), /)
 110 format (3x, 'Total energies atom ', i3, /, 3x, 23('-'))
 120 format (5x, 'single particle energies ', a13)
@@ -166,7 +155,6 @@ contains
 170 format (5x, '                              band energy per atom :', 1x, f15.10, /)
 180 format (5x, 'coulomb  contribution : ', 2(i3,1x,f15.8), /, (29x,2(i3,1x,f15.8)))
 190 format (5x, 68('-'))
-    ! ************************************************************************
 200 format (5x, 'ex.-cor. contribution : ', 2(i3,1x,f15.8), /, (29x,2(i3,1x,f15.8)))
 210 format (/, 3x, 'Total contribution of atom', i3, ' =', f15.8)
 220 format (5x, '                              sum of band energies :', 1x, f15.10, /, 3x, 70('-'))
@@ -177,10 +165,8 @@ contains
 270 format (5x, 'tot. coulomb contribution : ', f15.8, /)
 280 format (/, 5x, 'LDA+U correction to the single particle energy     :', f16.8)
 290 format (/, 5x, 'LDA+U double counting contribution                 :', f16.8)
-    ! calculate the total energy of the cluster .
 300 format (3x, '   including LDA+U correction :', f15.8)
 310 format (3x, 70('-'))
-    ! gather all energy-parts which are calculated in different
 320 format ('TOTAL ENERGY in ryd. : ', f25.8, /, 15x)
   end subroutine etotb1
 

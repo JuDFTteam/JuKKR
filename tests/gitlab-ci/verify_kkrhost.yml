@@ -6,13 +6,33 @@ verify_kkrhost:intel:
     - pip install pytest
     # prepare and execute verification using pytest
     - cd tests/KKRhost
-    - pytest -v --ignore=tools/aiida_simple_test.py 
+    - pytest -v --ignore=tools/aiida_simple_test.py --ignore=tools/test_verify_qdos.py 
     - tar -zcvf ../all_test_results.tar.gz test_run*
   artifacts:
     paths:
       - all_test_results.tar.gz
     expire_in: 1 day
   only: 
+    - BdG
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - develop-kkrhost
+    - GROUP3
+
+verify_kkrhost_qdos:intel:
+  stage: verify_kkrhost
+  allow_failure: true
+  script:
+    # use pip to install pytest
+    - pip install pytest
+    # prepare and execute verification using pytest
+    - cd tests/KKRhost
+    - pytest -v --ignore=tools/aiida_simple_test.py -k Test_qdos
+  only: 
+    - BdG
     - schedules
     - triggers
     - web

@@ -149,8 +149,8 @@ contains
         density%magmoment2=density%magmoment
     end if
     
-      write(23452324,'(5000F)') density%theta*180/pi,density%phi*180/pi
-      write(23452325,'(5000F)') magmoment
+      write(23452324,'(5000E25.14)') density%theta*180/pi,density%phi*180/pi
+      write(23452325,'(5000E25.14)') magmoment
 
   end subroutine rotatespin
 

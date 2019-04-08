@@ -81,7 +81,7 @@ contains
     real (kind=dp) :: r2rhod, r2rhou, temp, zzor
     integer :: i, iatyp, ic, ipan1, ipotd, ipotu, irc1, irmin1, irs1, l1, lm, m1
 
-    real (kind=dp) :: ens(0:lpot, natypd), er(irmd)
+    real (kind=dp) :: er(irmd)
     integer :: ircutm(0:ipand)
 
     real (kind=dp), parameter :: rfpi = sqrt(4.0e0_dp*pi)
@@ -131,13 +131,8 @@ contains
       end if
 
       epotin(iatyp) = temp
-      ens(0, iatyp) = temp
 
       ! --->   add non spher. contribution in case of non spher. input potential
-      do l1 = 1, lpot
-        ens(l1, iatyp) = 0.0e0_dp
-      end do
-
       if (ins/=0) then
 
         irmin1 = irmin(iatyp)
@@ -169,7 +164,6 @@ contains
             call simpk(er, temp, ipan1, ircutm, drdi(1,iatyp))
 
             epotin(iatyp) = epotin(iatyp) + temp
-            ens(l1, iatyp) = temp
 
           end do
 

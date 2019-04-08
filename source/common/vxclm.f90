@@ -101,7 +101,7 @@ contains
     real (kind=dp), dimension(irmd, lmpotd, 2), intent(inout)  :: v
     ! ..
     ! .. Local Scalars ..
-    integer :: ifun, ij, ipot, ir, irc1, irh, irs1, is, ispin, j, l, lm, lm2, lmmax, m
+    integer :: ifun, ij, ipot, ir, irc1, irh, irs1, is, ispin, j, l, lm, lm2, lmmax0d, m
     real (kind=dp) :: elmxc, fpi, fpipr2, vlmxc, vxc1, vxc2, vxc3, factor
     ! ..
     ! .. Local Arrays ..
@@ -118,7 +118,7 @@ contains
 
     write (1337, *) 'Including cutoff of vxc for small density'
     fpi =4.0_dp*pi 
-    lmmax = (lmax+1)*(lmax+1)
+    lmmax0d = (lmax+1)*(lmax+1)
 
     ! loop over given representive atoms
 
@@ -131,22 +131,22 @@ contains
     end if
 
     do ispin = 1, nspin
-      vxcr(2, ispin) = 0.0d0
-      vxcr(3, ispin) = 0.0d0
+      vxcr(2, ispin) = 0.0_dp
+      vxcr(3, ispin) = 0.0_dp
     end do
 
     ! initialize for ex.-cor. energy
     if (kte==1) then
       do l = 0, lmax
-        exc(l, iatyp) = 0.0d0
+        exc(l, iatyp) = 0.0_dp
         do ir = 1, irc1
-          er(ir, l) = 0.0d0
+          er(ir, l) = 0.0_dp
         end do
       end do
 
-      do lm = 1, lmmax
+      do lm = 1, lmmax0d
         do ir = 1, irc1
-          estor(ir, lm) = 0.0d0
+          estor(ir, lm) = 0.0_dp
         end do
       end do
     end if
@@ -156,13 +156,13 @@ contains
       ! generate the densities on an angular mesh
       do is = 1, 2
         do ij = 1, ijend
-          fprho(ij, is) = 0.d0
+          fprho(ij, is) = 0._dp
         end do
       end do
 
       fpipr2 = fpi/r(ir)**2
       do ispin = 1, nspin
-        do lm = 1, lmmax
+        do lm = 1, lmmax0d
           call daxpy(ijend, rho2ns(ir,lm,ispin)*fpipr2, yr(1,lm), 1, fprho(1,ispin), 1)
         end do
       end do
@@ -176,7 +176,7 @@ contains
       end if
 
       do ij = 1, ijend
-        factor = (1.d0-exp(-abs(fprho(ij,1))*1000.d0))
+        factor = (1.0_dp-exp(-abs(fprho(ij,1))*1000.0_dp))
         do ispin = 1, nspin
           vxc(ij, ispin) = vxc(ij, ispin)*factor ! cutoff
         end do
@@ -186,7 +186,7 @@ contains
       do ispin = 1, nspin
         ! determine the corresponding potential number
         ipot = ispin
-        do lm = 1, lmmax
+        do lm = 1, lmmax0d
           vlmxc = ddot(ijend, vxc(1,ispin), 1, wtyr(1,lm), 1)
           v(ir, lm, ipot) = v(ir, lm, ipot) + vlmxc
           ! store the ex.-c. potential of ir=2 and =3 for the extrapolation

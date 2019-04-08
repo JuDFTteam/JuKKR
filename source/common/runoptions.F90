@@ -110,6 +110,7 @@ module mod_runoptions
   logical :: write_rhoq_input = .false.                !!write out files needed for rhoq module (Quasiparticle interference) (former: 'rhoqtest')
   logical :: write_tmat_file = .false.                 !!write t-matix to file (former: 'tmatfile')
   logical :: write_tb_coupling = .false.               !!write couplings in tight-binging reference system to file `couplings.dat` (former: 'godfrin')
+  logical :: calc_wronskian = .false.                  !!calculate the wronskian relations of first and second kind for the wavefunctions (see PhD Bauer pp 48)
 
   !some old run and test options have been removed:
   !  'atptshft': replaced by presence or absence of IVSHIFT in inputcard
@@ -227,6 +228,7 @@ module mod_runoptions
     call set_runoption(write_DOS_lm                  , '<write_DOS_lm>'                  , '<lmdos>'   )
     call set_runoption(use_lloyd                     , '<use_lloyd>'                     , '<LLOYD>'   )
     call set_runoption(write_gmat_file               , '<write_gmat_file>'               , '<gmatfile>')
+    call set_runoption(calc_wronskian                , '<calc_wronskian>'               , '<wronskian>')
 
   end subroutine read_runoptions
 
@@ -634,6 +636,9 @@ module mod_runoptions
     else if (keyword == 'MPIENERG') then
       MPI_scheme = 2
       write (1337, *) "    Setting MPI_Scheme=2 because of MPIenerg"
+    else if (keyword == 'WRONSKI ') then
+      calc_wronskian = .true.
+      write (1337, *) "    Enable calculation of Wronskian relation of the wavefunctions"
     else if (keyword == 'EIGENV  ' .or. keyword == 'SPARSE  ' .or. keyword == 'WIRE    ' .or. keyword == 'ISO SURF' .or. keyword == 'EIGENV  ' .or. keyword == 'WFCT    ' .or. keyword == 'EV      ' .or. keyword == 'ND      ' .or. keyword == 'WAIT    ') then
       write (1337, *) "    ### Ignoring option '" // keyword_in // "' because it is not implemented any more. ###"
 

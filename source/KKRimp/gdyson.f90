@@ -85,7 +85,7 @@ call gdyson_readgmat(igmatnewfile,use_fullgmat,ielast,ie,Gref,gref1,mpi_iebounds
 
 
 ! open(32492345,file='test_gdyson_gref')
-! write(32492345,'(5000E)') Gref
+! write(32492345,'(5000E25.14)') Gref
 
 ! #############################
 ! set up T-matrix
@@ -107,9 +107,9 @@ if (.not. config_testflag('nodyson')) then
 
   if (config_testflag('write_gdyson')) then
     open(243234,file='test_gdyson1')
-    write(243234,'(50000E)') tmat_big
+    write(243234,'(50000E25.14)') tmat_big
     open(243235,file='test_gdyson2')
-    write(243235,'(50000E)') Gref
+    write(243235,'(50000E25.14)') Gref
   end if
 
   ! #############################
@@ -121,7 +121,7 @@ if (.not. config_testflag('nodyson')) then
   !            gmat%gmatdim,CZERO,GTMAT,gmat%gmatdim)
   if (config_testflag('write_gdyson')) then
     open(243236,file='test_gdyson3')
-    write(243236,'(50000E)') GTMAT
+    write(243236,'(50000E25.14)') GTMAT
   end if
   ! #############################
   ! calculate 1- Gref*T
@@ -132,7 +132,7 @@ if (.not. config_testflag('nodyson')) then
   
   if (config_testflag('write_gdyson')) then
     open(243237,file='test_gdyson4')
-    write(243237,'(50000E)') GTMAT
+    write(243237,'(50000E25.14)') GTMAT
   end if
   ! #############################
   ! calculate G=(1-Gref*T)**-1*Gref
@@ -141,7 +141,7 @@ if (.not. config_testflag('nodyson')) then
   ! the Greensfunction is now stored in Gref
   if (config_testflag('write_gdyson')) then
     open(243238,file='test_gdyson5')
-    write(243238,'(50000E)') Gref
+    write(243238,'(50000E25.14)') Gref
   end if
 end if !(.not. config_testopt('nodyson')) then
 

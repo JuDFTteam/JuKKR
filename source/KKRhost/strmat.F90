@@ -58,16 +58,15 @@ contains
 #endif
 
     use :: mod_constants
-    use :: mod_runoptions, only: use_virtual_atoms
     use :: mod_datatypes, only: dp
-    use :: mod_ymy
-    use :: mod_gamfc
+    use :: mod_ymy, only: ymy
+    use :: mod_gamfc, only: gamfc
 
     implicit none
     ! ..
     ! .. Parameters ..
     real (kind=dp) :: bound
-    parameter (bound=1d-8)
+    parameter (bound=1.0e-8_dp)
     ! ..
     ! .. Scalar arguments ..
     real (kind=dp) :: alat, vol
@@ -92,7 +91,7 @@ contains
 
     lmx = 2*lpot
     lmxsp = (lmx+1)*(lmx+1)
-    fpi = 4.0d0*pi
+    fpi = 4.0_dp*pi
 
     ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
     write (1337, '(5X,2A,/)') '< STRMAT > : ', 'calculating lattice sums'
@@ -135,9 +134,9 @@ contains
         dq2 = qi(2, i1) - qi(2, i2)
         dq3 = qi(3, i1) - qi(3, i2)
 
-        stest(1) = -sqrt(fpi)/vol/(4d0*lamda*lamda)
+        stest(1) = -sqrt(fpi)/vol/(4.0_dp*lamda*lamda)
         do lm = 2, lmxsp
-          stest(lm) = 0.0d0
+          stest(lm) = 0.0_dp
         end do
 
         ! --> exclude the origine and add correction if i1.eq.i2
@@ -209,7 +208,7 @@ contains
             if (beta>50.0_dp) then
               bfac = 0.0_dp
             else
-              expbsq = exp(beta*beta/4.0d0)
+              expbsq = exp(beta*beta/4.0_dp)
               bfac = fpi*exp(ci*dqdotg)/(ga*ga*expbsq*vol)
             end if
 
@@ -226,10 +225,11 @@ contains
             do lm = 1, lmxsp
               if (abs(aimag(stest(lm)))>bound) then
                 write (6, *) ' ERROR: Imaginary contribution', ' to REAL lattice sum'
-                stop
+                write(6, *) abs(aimag(stest(lm))), bound
+                stop 
               end if
               smat(lm, i1, i2) = real(stest(lm), kind=dp)
-              stest(lm) = 0.0d0
+              stest(lm) = 0.0_dp
             end do
           else
 

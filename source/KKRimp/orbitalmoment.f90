@@ -41,15 +41,15 @@ do lval=1,lmax
   call calc_orbit_onel(lval,Lorbit_onel)
 !   print *,'lone',lval,1
 !   do ilm=1,2*lval+1
-!     write(*,'(500F)'),Lorbit_onel(ilm,:,1)
+!     write(*,'(500E25.14)'),Lorbit_onel(ilm,:,1)
 !   end do
 !   print *,'lone',lval,2
 !   do ilm=1,2*lval+1
-!     write(*,'(500F)'),Lorbit_onel(ilm,:,2)
+!     write(*,'(500E25.14)'),Lorbit_onel(ilm,:,2)
 !   end do
 !   print *,'lone',lval,3
 !   do ilm=1,2*lval+1
-!     write(*,'(500F)'),Lorbit_onel(ilm,:,3)
+!     write(*,'(500E25.14)'),Lorbit_onel(ilm,:,3)
 !   end do
 !   write(*,*) '<<< calc_orbit_onel'
 
@@ -74,9 +74,9 @@ if (first==1) then
   open(unit=423492159,file='out_Lz')
   call version_print_header(423492159)
   do ilm=1,lmsize
-    write(423492157,'(5000F)'),Loperator(ilm,:,1)
-    write(423492158,'(5000F)'),Loperator(ilm,:,2)
-    write(423492159,'(5000F)'),Loperator(ilm,:,3)
+    write(423492157,'(5000E25.14)'),Loperator(ilm,:,1)
+    write(423492158,'(5000E25.14)'),Loperator(ilm,:,2)
+    write(423492159,'(5000E25.14)'),Loperator(ilm,:,3)
   end do
   close(423492157);close(423492158);close(423492159)
 end if
@@ -205,13 +205,13 @@ Lorbit_onel(:,:,2)=L_y
 Lorbit_onel(:,:,3)=L_z
 !    print *,'lone >>'
 !   do i1=1,2*lval+1
-!     write(*,'(500F)'),Lorbit_onel(i1,:,1)
+!     write(*,'(500E25.14)'),Lorbit_onel(i1,:,1)
 !   end do
 !   do i1=1,2*lval+1
-!     write(*,'(500F)'),Lorbit_onel(i1,:,2)
+!     write(*,'(500E25.14)'),Lorbit_onel(i1,:,2)
 !   end do  
 !   do i1=1,2*lval+1
-!     write(*,'(500F)'),Lorbit_onel(i1,:,3)
+!     write(*,'(500E25.14)'),Lorbit_onel(i1,:,3)
 !   end do
 !    print *,'lone <<'
 

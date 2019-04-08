@@ -339,7 +339,7 @@ end subroutine GAUNTHARMONICS_getlmaxbounds
         IEND = I - 1
         IF (NCLEB.LT.IEND) THEN
           WRITE (6,FMT=9000) NCLEB,IEND
-          STOP'[GAUNT.f] stop'
+          STOP '[GAUNT.f] stop'
 
         ELSE
 !

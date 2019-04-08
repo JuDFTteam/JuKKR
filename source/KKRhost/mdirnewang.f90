@@ -60,7 +60,7 @@ contains
     real (kind=dp), dimension(3,nmvecmax) :: mvglo
 
     ! Intrinsic Functions
-    intrinsic :: abs, atan
+    intrinsic :: abs
 
     ! Data Statements
     data icall/0/

@@ -33,7 +33,7 @@ contains
     nacls1,nspinpot,natyp,conc,ielast,intervx,intervy,intervz,dostot)
     use :: mod_version_info, only: version_print_header
     use :: mod_datatypes
-    use :: mod_constants, only: pi, kb, ryd, czero
+    use :: mod_constants, only: pi, kb, czero
     use :: mod_runoptions, only: disable_print_serialnumber
     implicit none
     ! ..

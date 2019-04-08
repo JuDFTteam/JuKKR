@@ -90,7 +90,7 @@ contains
 
       if (config_testflag('write_umat')) then
         do ilm=1,dimgmathost
-          write(7654323,'(50000F)') umat(:,ilm)
+          write(7654323,'(50000E25.14)') umat(:,ilm)
         end do
       end if
 

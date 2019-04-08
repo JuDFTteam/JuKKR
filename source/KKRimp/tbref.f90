@@ -49,7 +49,7 @@ if (config_testflag('tfree')==1) then
   do iatom = 1,ntotatom
     write(10000,*) '#atom',iatom
     do lm1=1,(lmaxatom(iatom)+1)**2
-      write(10000,'(50000f)') trefll(lm1,:,iatom)
+      write(10000,'(50000E25.14)') trefll(lm1,:,iatom)
     end do !lm
   end do !iatom
   close(10000)
@@ -75,9 +75,9 @@ if (config_testflag('gref')==1) then
     do iatom=1, tbcluster%nacls(icls)
 !     write(88188,*) 'rcls= ',rcls(:,iatom,icls)
       do ilmgf0d = 1,(lmaxatom(tbcluster%atom(iatom,icls))+1)**2
-!         write(*,'(50000f)') gref(icls)%mat( tbcluster%iatom2index(iatom,icls)-1+ &
+!         write(*,'(50000E25.14)') gref(icls)%mat( tbcluster%iatom2index(iatom,icls)-1+ &
 !                                                   ilmgf0d,:)
-        write(20000,'(50000f)') gref(icls)%mat( tbcluster%iatom2index(iatom,icls)-1+ &
+        write(20000,'(50000E25.14)') gref(icls)%mat( tbcluster%iatom2index(iatom,icls)-1+ &
                                                 ilmgf0d,:)
       end do !ilmgf0d
     end do !iatom

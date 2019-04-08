@@ -6,13 +6,21 @@ if not is_dbenv_loaded():
 
 from aiida.orm import Code, load_node, DataFactory
 from aiida.work import run
-from aiida_kkr.tools.kkr_params import kkrparams
+from masci_tools.io.kkr_params import kkrparams
 from aiida_kkr.workflows.kkr_scf import kkr_scf_wc
 from pprint import pprint
 from numpy import array
 
 ParameterData = DataFactory('parameter')
 StructureData = DataFactory('structure')
+
+# make sure running the workflow exists after at most 5 minutes
+import timeout_decorator
+@timeout_decorator.timeout(300, use_signals=False)
+def run_timeout(builder):
+    from aiida.work.launch import run
+    out = run(builder)
+    return out
 
 def print_clean_inouts(node):
     from pprint import pprint
@@ -51,18 +59,21 @@ wfd['convergence_criterion'] = 10**-4
 wfd['check_dos'] = False 
 wfd['kkr_runmax'] = 5
 wfd['nsteps'] = 50 
-wfd['queue_name'] = ''
-wfd['resources']['num_machines'] = 1 
-wfd['use_mpi'] = True
-
 wfd['num_rerun'] = 2
 wfd['natom_in_cls_min'] = 20
+
+options = {'queue_name' : '', 'resources': {"num_machines": 1}, 'max_wallclock_seconds' : 5*60, 'use_mpi' : True, 'custom_scheduler_commands' : ''}
+options = ParameterData(dict=options)
+
 
 KKRscf_wf_parameters = ParameterData(dict=wfd)
 
 # The scf-workflow needs also the voronoi and KKR codes to be able to run the calulations
 VoroCode = Code.get_from_string('voronoi@slurmcontrol')
 KKRCode = Code.get_from_string('KKRcode@slurmcontrol')
+# for local tests:
+#VoroCode = Code.get_from_string('voronoi@localhost')
+#KKRCode = Code.get_from_string('KKRhost@localhost')
 
 # Finally we use the kkrparams class to prepare a valid set of KKR parameters that are stored as a ParameterData object for the use in aiida
 ParaNode = ParameterData(dict=kkrparams(LMAX=2, RMAX=7, GMAX=65, NSPIN=1, RCLUSTZ=1.9).get_dict())
@@ -70,8 +81,18 @@ ParaNode = ParameterData(dict=kkrparams(LMAX=2, RMAX=7, GMAX=65, NSPIN=1, RCLUST
 label = 'KKR-scf for Cu bulk'
 descr = 'KKR self-consistency workflow for Cu bulk'
 try:
-   run(kkr_scf_wc, structure=Cu, calc_parameters=ParaNode, voronoi=VoroCode, 
-       kkr=KKRCode, wf_parameters=KKRscf_wf_parameters, _label=label, _description=descr)
+   # setup workflow process
+   builder = kkr_scf_wc.get_builder()
+   builder.calc_parameters = ParaNode
+   builder.voronoi = VoroCode
+   builder.kkr = KKRCode
+   builder.structure = Cu
+   builder.wf_parameters = KKRscf_wf_parameters
+   builder.options = options
+   builder.label = label
+   builder.description = descr
+   # now run calculation
+   out = run_timeout(builder)
 except:
    print 'some Error occured in run of kkr_scf_wc'
 

@@ -6,6 +6,7 @@ build_voronoi:intel:
     - FC=$(which mpiifort) cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DENABLE_COV=ON -DCOMPILE_KKRHOST=OFF -DCOMPILE_KKRIMP=OFF -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=ON -DCOMPILE_RHOQ=OFF ..
     - make -j4
     - cp voronoi.exe ../tests/voronoi.exe
+    - cd ../../
   artifacts:
     paths:
       - tests/voronoi.exe

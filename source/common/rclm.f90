@@ -85,7 +85,7 @@ contains
   subroutine rclm(key, ll, ldim, vmat)
 
     use :: mod_cinit, only: cinit
-    use :: mod_constants, only: cone,ci,czero
+    use :: mod_constants, only: cone,ci
     implicit none
     real (kind=dp), parameter :: eps = 1.0e-12_dp
     ! ..

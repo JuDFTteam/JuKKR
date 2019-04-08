@@ -35,14 +35,11 @@ contains
     complex (kind=dp) :: gllke(alm, alm), gdi(ndim_slabinv, ndim_slabinv, nlayerd), gup(ndim_slabinv, ndim_slabinv, nlayerd), gdow(ndim_slabinv, ndim_slabinv, nlayerd)
     complex (kind=dp), allocatable :: gtemp(:, :)
     integer :: i, i1, ip1, ii1, il1, ldi1, ip2, ii2, il2, ldi2, j, invmod
-    integer :: lm1, lm2, info, ipvt(alm), nlayer
+    integer :: lm1, lm2, info, ipvt(alm)
     integer :: icheck(naezd/nprincd, naezd/nprincd)
     ! total matrix inversion
 
     allocate (gtemp(alm,alm))
-
-    ! Naive number of layers in each principal layer
-    nlayer = naezd/nprincd
 
     ! ---------------------------------------------------------------------
     ! full matrix inversion
