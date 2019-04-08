@@ -5,11 +5,12 @@
 !------------------------------------------------------------------------------------
 MODULE nrtype
   
+  use iso_fortran_env, only: real32, real64
   INTEGER, PARAMETER :: WLENGTH = 1      ! For I/O in direct access files; =1 for ifort, =4 for gfort
-  INTEGER, PARAMETER :: SP = KIND(1.0)
-  INTEGER, PARAMETER :: DP = KIND(1.0D0)
-  INTEGER, PARAMETER :: SPC = KIND((1.0,1.0))
-  INTEGER, PARAMETER :: DPC = KIND((1.0D0,1.0D0))
+  INTEGER, PARAMETER :: SP = real32
+  INTEGER, PARAMETER :: DP = real64
+  INTEGER, PARAMETER :: SPC = real32
+  INTEGER, PARAMETER :: DPC = real64
   REAL(DP), PARAMETER :: SQRT2=1.41421356237309504880168872420969807856967_dp
   REAL(DP), PARAMETER :: EULER=0.5772156649015328606065120900824024310422_dp
   REAL(DP), PARAMETER :: PI=3.141592653589793238462643383279502884197_dp

@@ -25,37 +25,37 @@
      &     ,IPAN,IRCUT,R,DRDI,Z,EREFLDAU,IDOLDAU,WLDAUAV,CUTOFF
      &     ,IATOM,NSPIN,NSRA,LMAXD,IRMD)
 
+      use nrtype, only: dp
       USE mod_regsol
       USE mod_simpk
       use global_variables, only: ipand
       implicit none
-      REAL*8 CVLIGHT
-      PARAMETER (CVLIGHT=274.0720442D0)
+      real(kind=dp), PARAMETER :: CVLIGHT=274.0720442_dp
 
 ! Input
       INTEGER IATOM,NSRA,NSPIN,IRMD,LMAXD
       INTEGER LPHI                 ! l-value for LDA+U
       INTEGER IPAN,IRCUT(0:IPAN)   ! IPAN,IRCUT(0:IPAND)
       INTEGER IDOLDAU
-      REAL*8 DRDI(:)             ! DRDI(IRMD,NATYPD)
-      REAL*8 R(:),VISP(:,:),Z ! R(IRMD),VISP(IRMD,NPOTD)
-      REAL*8 EREFLDAU,WLDAUAV(2),CUTOFF(:)
+      REAL(kind=dp) DRDI(:)             ! DRDI(IRMD,NATYPD)
+      REAL(kind=dp) R(:),VISP(:,:),Z ! R(IRMD),VISP(IRMD,NPOTD)
+      REAL(kind=dp) EREFLDAU,WLDAUAV(2),CUTOFF(:)
 
 ! Output:
-      COMPLEX*16 PHI(:)          ! PHI(IRMD)
+      COMPLEX(kind=dp) PHI(:)          ! PHI(IRMD)
 
 ! Inside
-      REAL*8,ALLOCATABLE :: RS(:,:),S(:),DROR(:)  ! RS(IRMD,0:LMAXD),S(0:LMAXD),DROR(IRMD)
-      DOUBLE COMPLEX,ALLOCATABLE :: HAMF(:,:),MASS(:),DLOGDP(:)     ! HAMF(IRMD,0:LMAXD),MASS(IRMD),DLOGDP(0:LMAXD)
-      REAL*8,ALLOCATABLE  :: VAVRG(:),WINT(:)    ! VAVRG(IRMD),WINT(IRMD)
-      COMPLEX*16,ALLOCATABLE :: PZ(:,:),FZ(:,:) ! PZ(IRMD,0:LMAXD),FZ(IRMD,0:LMAXD)
+      REAL(kind=dp),ALLOCATABLE :: RS(:,:),S(:),DROR(:)  ! RS(IRMD,0:LMAXD),S(0:LMAXD),DROR(IRMD)
+      COMPLEX(kind=dp),ALLOCATABLE :: HAMF(:,:),MASS(:),DLOGDP(:)     ! HAMF(IRMD,0:LMAXD),MASS(IRMD),DLOGDP(0:LMAXD)
+      REAL(kind=dp),ALLOCATABLE  :: VAVRG(:),WINT(:)    ! VAVRG(IRMD),WINT(IRMD)
+      COMPLEX(kind=dp),ALLOCATABLE :: PZ(:,:),FZ(:,:) ! PZ(IRMD,0:LMAXD),FZ(IRMD,0:LMAXD)
 
 
       INTEGER IPOT1,IRS1,IRC1
 
       INTEGER IR,L1,MMAX
-      REAL*8 WNORM,WLDAUAVUD
-      COMPLEX*16 CNORM,EZ,CZERO
+      REAL(kind=dp) WNORM,WLDAUAVUD
+      COMPLEX(kind=dp) CNORM,EZ,CZERO
 
 
 
@@ -164,7 +164,7 @@ c     ENDDO
 C Or, Normalise in sphere:
       PHI(:) = CUTOFF(:) * PHI(:)
       DO IR = 1,IRC1
-          WINT(IR) = DREAL( DCONJG(PHI(IR)) * PHI(IR) )
+          WINT(IR) = REAL( CONJG(PHI(IR)) * PHI(IR), kind=dp )
       ENDDO
 
 C
@@ -176,7 +176,7 @@ C
 C --> normalise PZ,FZ to unit probability in WS cell
 C
 
-      CNORM = 1.D0/DSQRT(WNORM)
+      CNORM = 1.D0/SQRT(WNORM)
       CALL ZSCAL(IRMD,CNORM,PHI,1)
    
       DEALLOCATE( RS,S,DROR )

@@ -566,17 +566,16 @@ end function this_readline
 
 
    subroutine preconditioning_readgreenfn(IE,ISPIN,IELAST,lmsizehost,NATOMIMP,GCLUST,CMODE)
+     use nrtype, only: dp, sp
      implicit none
-     double complex,allocatable   ::  gclust(:,:)
-     complex,allocatable   ::  gclustsingle(:,:)
-     integer                      ::  natomimp,ie,lmsizehost,ispin,ielast
-     integer                      ::  ierror,ngclus,irec
-     character(len=*)             ::  cmode
+     complex (kind=dp), allocatable :: gclust(:,:)
+     complex (kind=sp), allocatable :: gclustsingle(:,:)
+     integer :: natomimp,ie,lmsizehost,ispin,ielast
+     integer :: ierror,ngclus,irec
+     character(len=*) :: cmode
    ngclus=natomimp*lmsizehost
-!    write(*,*) natomimp,lmsizehost
 
    irec = ielast*(ispin-1)+ ie+1
-!     write(*,*) 'irec',irec
    if (cmode=='singleprecision') then 
      allocate (gclust(ngclus,ngclus),stat=ierror)
      allocate (gclustsingle(ngclus,ngclus),stat=ierror)

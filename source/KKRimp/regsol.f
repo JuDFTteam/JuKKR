@@ -42,8 +42,8 @@
 C     .. Scalar Arguments ..
       complex(kind=dp), intent(in) :: E
       real(kind=dp), intent(in) :: CVLIGHT !!Speed of light
-      DOUBLE PRECISION Z
-      DOUBLE PRECISION WLDAUAV
+      real(kind=dp) Z
+      real(kind=dp) WLDAUAV
       INTEGER IPAN,IPAND,IRMD,LMAXATOM,IDOLDAU,LOPT
       integer, intent(in) :: NSRA
 C     ..
@@ -61,40 +61,37 @@ C     .. Array Arguments ..
       integer, intent(in) :: IRCUT(0:IPAND)
 C     ..
 C     .. Local Scalars ..
-      DOUBLE COMPLEX DFD0,DPD0,FIP0,FIP1,HAMF1,K1F,K1P,K2F,K2P,K3F,K3P,
-     +               K4F,K4P,MASS1,PIP0,PIP1,VME,VMEFAC,VMETR1
-      DOUBLE PRECISION DROR1,DRSM1,DRSP1,S1,SM1,SP1,SRAFAC
+      complex(kind=dp) :: DF_dp,DP_dp,FIP0,FIP1,HAMF1,K1F,K1P,K2F,K2P,
+     +   K3F, K3P, K4F,K4P,MASS1,PIP0,PIP1,VME,VMEFAC,VMETR1
+      real(kind=dp) DROR1,DRSM1,DRSP1,S1,SM1,SP1,SRAFAC
       INTEGER IP,IR,IRC,IRE,IRS,IRSP1,J,K,L
 C     ..
 C     .. Local Arrays ..
-      DOUBLE COMPLEX A(-1:4),B(0:4),DFDI(-4:0),DPDI(-4:0)
-      DOUBLE COMPLEX HAMFLDAU(IRMD)
-C     ..
-C     .. Intrinsic Functions ..
-      INTRINSIC CMPLX,DBLE
+      complex(kind=dp) A(-1:4),B(0:4),DFDI(-4:0),DPDI(-4:0)
+      complex(kind=dp) HAMFLDAU(IRMD)
 C     ..
 
       IF (NSRA.EQ.2) THEN
 c
 c---> in case of sra  srafac = 1/c - otherwise srafac = 0
 c
-        SRAFAC = 1.0D0/CVLIGHT
+        SRAFAC = 1.0_dp/CVLIGHT
       ELSE
-        SRAFAC = 0.0D0
+        SRAFAC = 0.0_dp
       END IF
 c
       IRC = IRCUT(IPAN)
 c
 
       DO 10 IR = 2,IRC
-        VMETR1 = (VM2Z(IR)-E)*R(IR) - 2.0D0*Z
+        VMETR1 = (VM2Z(IR)-E)*R(IR) - 2.0_dp*Z
         HAMF(IR,0) = VMETR1*DROR(IR)
         MASS(IR) = R(IR) - SRAFAC*SRAFAC*VMETR1
    10 CONTINUE
 c
       DO 30 L = 1,LMAXATOM
         DO 20 IR = 7,IRC
-          HAMF(IR,L) = DBLE(L*L+L)/MASS(IR)*DROR(IR) + HAMF(IR,0)
+          HAMF(IR,L) = real(L*L+L, kind=dp)/MASS(IR)*DROR(IR)+HAMF(IR,0)
    20   CONTINUE
    30 CONTINUE
 c
@@ -108,10 +105,10 @@ C  by adding the average WLDAUAV to the spherical part of the
 C  potential.
 C
       IF ( IDOLDAU.EQ.1.AND.LOPT.GE.0 ) THEN
-         S1 = DBLE(LOPT*LOPT+LOPT)
+         S1 = real(LOPT*LOPT+LOPT, kind=dp)
          DO IR = 2,IRC
             VMETR1 = ( VM2Z(IR) - E + WLDAUAV*CUTOFF(IR) )*R(IR) 
-            HAMFLDAU(IR) = (VMETR1-2.0D0*Z)*DROR(IR)
+            HAMFLDAU(IR) = (VMETR1-2.0_dp*Z)*DROR(IR)
          END DO
 C
          DO IR = 7,IRC
@@ -129,8 +126,8 @@ c
       DO 120 L = 0,LMAXATOM
 c
         S1 = S(L)
-        SM1 = S1 - 1.0D0
-        SP1 = S1 + 1.0D0
+        SM1 = S1 - 1.0_dp
+        SP1 = S1 + 1.0_dp
 c
 c---> loop over the number of kinks
 c
@@ -144,26 +141,26 @@ c
 c---> initial values
 c
             VME = VM2Z(2) - E
-            VMEFAC = 1.0D0 - VME*SRAFAC*SRAFAC
-            IF (NSRA.EQ.2 .AND. Z.GT.0.0D0) THEN
-              A(-1) = 0.0D0
-              A(0) = 1.0D0
-              B(0) = DCMPLX(SM1*CVLIGHT*CVLIGHT/ (2*Z),0.0D0)
+            VMEFAC = 1.0_dp - VME*SRAFAC*SRAFAC
+            IF (NSRA.EQ.2 .AND. Z.GT.0.0_dp) THEN
+              A(-1) = 0.0_dp
+              A(0) = 1.0_dp
+              B(0) = CMPLX(SM1*CVLIGHT*CVLIGHT/ (2*Z),0.0_dp, kind=dp)
               DO 50 J = 1,3
-                A(J) = (0.0d0,0.d0)
-                B(J) = (0.0d0,0.d0)
+                A(J) = (0.0_dp,0._dp)
+                B(J) = (0.0_dp,0._dp)
    50         CONTINUE
 
             ELSE
 
 
-              A(0) = 0.0D0
-              B(0) = DBLE(L)/VMEFAC
-              A(1) = 1.0D0
+              A(0) = 0.0_dp
+              B(0) = real(L, kind=dp)/VMEFAC
+              A(1) = 1.0_dp
               DO 60 J = 2,4
-                A(J) = (VME*VMEFAC*A(J-2)-2.0D0*Z*A(J-1))/
-     +                 DBLE((J-1)* (J+2*L))
-                B(J-1) = DBLE(L+J-1)*A(J)/VMEFAC
+                A(J) = (VME*VMEFAC*A(J-2)-2.0_dp*Z*A(J-1))/
+     +                 real((J-1)* (J+2*L), kind=dp)
+                B(J-1) = real(L+J-1, kind=dp)*A(J)/VMEFAC
    60         CONTINUE
 
             END IF
@@ -174,20 +171,20 @@ c---> power series near origin
 c
             DO 80 IR = 2,6
               PIP0 = A(3)
-              DPD0 = 3.0D0*A(3)
+              DP_dp = 3.0_dp*A(3)
               FIP0 = B(3)
-              DFD0 = 3.0D0*B(3)
+              DF_dp = 3.0_dp*B(3)
               DO 70 J = 2,0,-1
                 PIP0 = A(J) + PIP0*R(IR)
-                DPD0 = DBLE(J)*A(J) + DPD0*R(IR)
+                DP_dp = real(J, kind=dp)*A(J) + DP_dp*R(IR)
                 FIP0 = B(J) + FIP0*R(IR)
-                DFD0 = DBLE(J)*B(J) + DFD0*R(IR)
+                DF_dp = real(J, kind=dp)*B(J) + DF_dp*R(IR)
    70         CONTINUE
 c
               PZ(IR,L) = PIP0
               FZ(IR,L) = FIP0
-              DPDI(K) = DPD0*DROR(IR)
-              DFDI(K) = DFD0*DROR(IR)
+              DPDI(K) = DP_dp*DROR(IR)
+              DFDI(K) = DF_dp*DROR(IR)
 c
               K = K + 1
    80       CONTINUE
@@ -211,25 +208,25 @@ c
             K1P = DPDI(-4)
             K1F = DFDI(-4)
 c
-            DROR1 = (3.0D0*DROR(IRS+3)-15.0D0*DROR(IRS+2)+
-     +              45.0D0*DROR(IRSP1)+15.0D0*DROR(IRS))/48.0D0
+            DROR1 = (3.0_dp*DROR(IRS+3)-15.0_dp*DROR(IRS+2)+
+     +              45.0_dp*DROR(IRSP1)+15.0_dp*DROR(IRS))/48.0_dp
             DRSP1 = DROR1*SP1
             DRSM1 = DROR1*SM1
-            MASS1 = (3.0D0*MASS(IRS+3)-15.0D0*MASS(IRS+2)+
-     +              45.0D0*MASS(IRSP1)+15.0D0*MASS(IRS))/48.0D0
-            HAMF1 = (3.0D0*HAMF(IRS+3,L)-15.0D0*HAMF(IRS+2,L)+
-     +              45.0D0*HAMF(IRSP1,L)+15.0D0*HAMF(IRS,L))/48.0D0
-            K2P = MASS1* (FIP0+0.5D0*K1F) - DRSM1* (PIP0+0.5D0*K1P)
-            K2F = HAMF1* (PIP0+0.5D0*K1P) - DRSP1* (FIP0+0.5D0*K1F)
-            K3P = MASS1* (FIP0+0.5D0*K2F) - DRSM1* (PIP0+0.5D0*K2P)
-            K3F = HAMF1* (PIP0+0.5D0*K2P) - DRSP1* (FIP0+0.5D0*K2F)
+            MASS1 = (3.0_dp*MASS(IRS+3)-15.0_dp*MASS(IRS+2)+
+     +              45.0_dp*MASS(IRSP1)+15.0_dp*MASS(IRS))/48.0_dp
+            HAMF1 = (3.0_dp*HAMF(IRS+3,L)-15.0_dp*HAMF(IRS+2,L)+
+     +              45.0_dp*HAMF(IRSP1,L)+15.0_dp*HAMF(IRS,L))/48.0_dp
+            K2P = MASS1* (FIP0+0.5_dp*K1F) - DRSM1* (PIP0+0.5_dp*K1P)
+            K2F = HAMF1* (PIP0+0.5_dp*K1P) - DRSP1* (FIP0+0.5_dp*K1F)
+            K3P = MASS1* (FIP0+0.5_dp*K2F) - DRSM1* (PIP0+0.5_dp*K2P)
+            K3F = HAMF1* (PIP0+0.5_dp*K2P) - DRSP1* (FIP0+0.5_dp*K2F)
 c
             DRSP1 = DROR(IRSP1)*SP1
             DRSM1 = DROR(IRSP1)*SM1
             K4P = MASS(IRSP1)* (FIP0+K3F) - DRSM1* (PIP0+K3P)
             K4F = HAMF(IRSP1,L)* (PIP0+K3P) - DRSP1* (FIP0+K3F)
-            PIP0 = PIP0 + (K1P+2.0D0* (K2P+K3P)+K4P)/6.0D0
-            FIP0 = FIP0 + (K1F+2.0D0* (K2F+K3F)+K4F)/6.0D0
+            PIP0 = PIP0 + (K1P+2.0_dp* (K2P+K3P)+K4P)/6.0_dp
+            FIP0 = FIP0 + (K1F+2.0_dp* (K2F+K3F)+K4F)/6.0_dp
 c
             PZ(IRSP1,L) = PIP0
             FZ(IRSP1,L) = FIP0
@@ -253,11 +250,11 @@ c
               DRSP1 = DROR(IR)*SP1
               DRSM1 = DROR(IR)*SM1
 c
-              K4P = MASS(IR)* (FIP0+2.0D0*K3F) - DRSM1* (PIP0+2.0D0*K3P)
-              K4F = HAMF(IR,L)* (PIP0+2.0D0*K3P) -
-     +              DRSP1* (FIP0+2.0D0*K3F)
-              PIP0 = PIP0 + (K1P+2.0D0* (K2P+K3P)+K4P)/3.0D0
-              FIP0 = FIP0 + (K1F+2.0D0* (K2F+K3F)+K4F)/3.0D0
+              K4P = MASS(IR)*(FIP0+2.0_dp*K3F)-DRSM1*(PIP0+2.0_dp*K3P)
+              K4F = HAMF(IR,L)* (PIP0+2.0_dp*K3P) -
+     +              DRSP1* (FIP0+2.0_dp*K3F)
+              PIP0 = PIP0 + (K1P+2.0_dp* (K2P+K3P)+K4P)/3.0_dp
+              FIP0 = FIP0 + (K1F+2.0_dp* (K2F+K3F)+K4F)/3.0_dp
 c
               PZ(IR,L) = PIP0
               FZ(IR,L) = FIP0
@@ -273,12 +270,12 @@ c
 c
 c---> predictor : 5 point adams - bashforth
 c
-            PIP1 = PIP0 + (1901.0D0*DPDI(0)-2774.0D0*DPDI(-1)+
-     +             2616.0D0*DPDI(-2)-1274.0D0*DPDI(-3)+
-     +             251.0D0*DPDI(-4))/720.0D0
-            FIP1 = FIP0 + (1901.0D0*DFDI(0)-2774.0D0*DFDI(-1)+
-     +             2616.0D0*DFDI(-2)-1274.0D0*DFDI(-3)+
-     +             251.0D0*DFDI(-4))/720.0D0
+            PIP1 = PIP0 + (1901.0_dp*DPDI(0)-2774.0_dp*DPDI(-1)+
+     +             2616.0_dp*DPDI(-2)-1274.0_dp*DPDI(-3)+
+     +             251.0_dp*DPDI(-4))/720.0_dp
+            FIP1 = FIP0 + (1901.0_dp*DFDI(0)-2774.0_dp*DFDI(-1)+
+     +             2616.0_dp*DFDI(-2)-1274.0_dp*DFDI(-3)+
+     +             251.0_dp*DFDI(-4))/720.0_dp
 c
             DPDI(-4) = DPDI(-3)
             DPDI(-3) = DPDI(-2)
@@ -294,12 +291,12 @@ c
 c
 c---> corrector : 5 point adams - moulton
 c
-            PIP0 = PIP0 + (251.0D0*DPDI(0)+646.0D0*DPDI(-1)-
-     +             264.0D0*DPDI(-2)+106.0D0*DPDI(-3)-19.0D0*DPDI(-4))/
-     +             720.0D0
-            FIP0 = FIP0 + (251.0D0*DFDI(0)+646.0D0*DFDI(-1)-
-     +             264.0D0*DFDI(-2)+106.0D0*DFDI(-3)-19.0D0*DFDI(-4))/
-     +             720.0D0
+            PIP0 = PIP0 + (251.0_dp*DPDI(0)+646.0_dp*DPDI(-1)-
+     +           264.0_dp*DPDI(-2)+106.0_dp*DPDI(-3)-19.0_dp*DPDI(-4))/
+     +           720.0_dp
+            FIP0 = FIP0 + (251.0_dp*DFDI(0)+646.0_dp*DFDI(-1)-
+     +           264.0_dp*DFDI(-2)+106.0_dp*DFDI(-3)-19.0_dp*DFDI(-4))/
+     +           720.0_dp
 c
             PZ(IR,L) = PIP0
             FZ(IR,L) = FIP0
