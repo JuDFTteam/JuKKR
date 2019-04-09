@@ -110,8 +110,8 @@ contains
     integer :: imt1, l, lm, m, irmax, lm1, lm2
     ! ..
     ! .. Local Arrays ..
-    complex (kind=dp) :: cden(irmd, 0:lmaxd), cdenns(irmd), efac(lmmaxd), cdenlm(irmd, lmmaxd), cwr(irmd, lmmaxd, lmmaxd) & ! lm-dos
-      , gflle_part(lmmaxd, lmmaxd)
+    complex (kind=dp) :: cden(irmd, 0:lmaxd), cdenns(irmd), efac(lmmaxd), cdenlm(irmd, lmmaxd), cwr(irmd, lmmaxd, lmmaxd) ! lm-dos
+    complex (kind=dp), optional :: gflle_part(lmmaxd, lmmaxd)
     ! ..
     ! .. External Functions ..
 
@@ -148,7 +148,7 @@ contains
 
     do lm1 = 1, lmmaxd                                          ! lm-dos
       call csimpk(cdenlm(1,lm1), denlm(lm1), ipan, ircut, drdi) ! lm-dos
-      if (calc_gmat_lm_full .or. use_qdos .or. use_ldau) then   ! lmlm-dos & LDAU
+      if (present(gflle_part) .and. calc_gmat_lm_full .or. use_qdos .or. use_ldau) then   ! lmlm-dos & LDAU
         do lm2 = 1, lmmaxd                                      ! lmlm-dos
           call csimpk(cwr(1,lm1,lm2), gflle_part(lm1,lm2), &    ! lmlm-dos &
             ipan, ircut, drdi)                                  ! lmlm-dos

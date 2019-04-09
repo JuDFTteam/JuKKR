@@ -53,6 +53,11 @@ add_executable(
     source/common/beshank.f90
     source/common/wronskian.f90
     source/common/mathtools.f90
+    source/KKRhost/rhons.F90
+    source/KKRhost/rhoin.F90
+    source/KKRhost/rhoout.f90
+    source/KKRhost/csimpk.f90
+    source/KKRhost/csum.f90
     source/voronoi/test.f
     source/KKRimp/nrtype.F90
     source/KKRimp/type_gmatbulk.f90
@@ -124,7 +129,6 @@ add_executable(
     source/KKRimp/calctmat.f90
     source/KKRimp/calctmatfull.f90
     source/KKRimp/irwns.f
-    source/KKRimp/csimpk.f
     source/KKRimp/pnsqns.f
     source/KKRimp/BasisTransform.f90
     source/KKRimp/mixbroydenspin.f90
@@ -134,10 +138,7 @@ add_executable(
     source/KKRimp/calccouplingconstants.f90
     source/KKRimp/complexdos3.f90
     source/KKRimp/rholm.f
-    source/KKRimp/rhoin.f90
-    source/KKRimp/rhoout.f90
     source/KKRimp/rhooutnew.f90
-    source/KKRimp/rhons.f
     source/KKRimp/rhoval.f90
     source/KKRimp/rhoval_new.f90
     source/KKRimp/rhovalfull.f90
