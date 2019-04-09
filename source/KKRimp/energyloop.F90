@@ -412,12 +412,6 @@ endif
 if (ITSCF==1 .and. config%kspinorbit==1) then 
   call read_spinorbit(natom,cellorbit,my_rank)
 end if
-if (my_rank==0) then
- write(*,*) 'spinorbit index'
- do iatom=1,natom
-  write(*,*) 'Atom',iatom,cellorbit%use_spinorbit(iatom)
- enddo
-endif
 
 !####################################################################
 !####################################################################

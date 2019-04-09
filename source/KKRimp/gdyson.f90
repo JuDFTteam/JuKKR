@@ -78,7 +78,6 @@ integer                                :: igmatnewfile
 
 
 allocate (tmat_big(gmat%gmatdim,gmat%gmatdim),gref(gmat%gmatdim,gmat%gmatdim),gtmat(gmat%gmatdim,gmat%gmatdim)) 
-
 allocate (gref1(gmat%gmathostdim,gmat%gmathostdim))
 
 call gdyson_readgmat(igmatnewfile,use_fullgmat,ielast,ie,Gref,gref1,mpi_iebounds,ITSCF,gmat%gmathostdim,gmat,ispin)
@@ -107,13 +106,15 @@ if (.not. config_testflag('nodyson')) then
 
   if (config_testflag('write_gdyson')) then
     open(243234,file='test_gdyson1')
-    write(243234,'(50000E25.14)') tmat_big
+    if (ie==1 .and. ispin==1) write(243234, '(A,i9)') '# -T ', gmat%gmatdim
+    write(243234,'(2i5,500000E16.7)') ie, ispin, tmat_big
     open(243235,file='test_gdyson2')
-    write(243235,'(50000E25.14)') Gref
+    if (ie==1 .and. ispin==1) write(243235, '(A,i9)') '# gref', gmat%gmatdim
+    write(243235,'(2i5,500000E16.7)') ie, ispin, Gref
   end if
 
   ! #############################
-  ! calculate Gref*T
+  ! calculate -Gref*T (minus sign comes in at tmat_big assignment
   ! #############################
   
   call matmat_zmzm(Gref,tmat_big,GTMAT)
@@ -121,10 +122,11 @@ if (.not. config_testflag('nodyson')) then
   !            gmat%gmatdim,CZERO,GTMAT,gmat%gmatdim)
   if (config_testflag('write_gdyson')) then
     open(243236,file='test_gdyson3')
-    write(243236,'(50000E25.14)') GTMAT
+    if (ie==1 .and. ispin==1) write(243236, '(A,i9)') '# -Gref*T', gmat%gmatdim 
+    write(243236,'(2i5,500000E16.7)') ie, ispin, GTMAT
   end if
   ! #############################
-  ! calculate 1- Gref*T
+  ! calculate 1-Gref*T
   ! #############################
   do ilm=1,gmat%gmatdim
     GTMAT(ilm,ilm)=GTMAT(ilm,ilm)+CONE
@@ -132,7 +134,8 @@ if (.not. config_testflag('nodyson')) then
   
   if (config_testflag('write_gdyson')) then
     open(243237,file='test_gdyson4')
-    write(243237,'(50000E25.14)') GTMAT
+    if (ie==1 .and. ispin==1) write(243237, '(A,i9)') '# 1-Gref*T', gmat%gmatdim
+    write(243237,'(2i5,500000E16.7)') ie, ispin, GTMAT
   end if
   ! #############################
   ! calculate G=(1-Gref*T)**-1*Gref
@@ -141,7 +144,8 @@ if (.not. config_testflag('nodyson')) then
   ! the Greensfunction is now stored in Gref
   if (config_testflag('write_gdyson')) then
     open(243238,file='test_gdyson5')
-    write(243238,'(50000E25.14)') Gref
+    if (ie==1 .and. ispin==1) write(243238, '(A,i9)') '# G=(1-Gref*T)**-1*Gref', gmat%gmatdim
+    write(243238,'(2i5,500000E16.7)') ie, ispin, Gref
   end if
 end if !(.not. config_testopt('nodyson')) then
 
@@ -151,7 +155,6 @@ end if !(.not. config_testopt('nodyson')) then
 do iatom=1,natom
   nlmindex1=gmat%iatom2nlmindex(1,iatom)
   nlmindex2=gmat%iatom2nlmindex(3,iatom)
-!   write(*,*) nlmindex1,nlmindex2
   gmatonsite(iatom,ispin)%gmat=Gref(nlmindex1:nlmindex2,nlmindex1:nlmindex2)
 end do !iatom
 

@@ -84,7 +84,7 @@ contains
     nsra,qns,pns,ar,cr,pz,fz,qz,sz,cleb,icleb,jend,iend,ekl,denlm,gflle_part)
 
     use :: mod_datatypes, only: dp
-    use :: mod_runoptions, only: calc_gmat_lm_full, use_qdos, use_ldau
+    use :: mod_runoptions, only: calc_gmat_lm_full, use_qdos, use_ldau, write_DOS_lm
     use :: global_variables, only: lmmaxd, irmd, lmaxd, ncleb, ipand, irmind, lmpotd, nfund, irid
     use :: mod_rhoin, only: rhoin
     use :: mod_rhoout, only: rhoout
@@ -163,7 +163,7 @@ contains
     ! Therefore the following is a good approximation           ! lm-dos
     ! for energies of a few Ryd:                                ! lm-dos
 #ifndef CPP_MPI
-    if (.not. use_qdos) then
+    if (.not. use_qdos .and. write_DOS_lm) then
       energ = ek**2                ! lm-dos
       write (30, 100) real(energ, kind=dp), (-aimag(denlm(lm))/pi, lm=1, lmmaxd)
 100   format (30e12.4)

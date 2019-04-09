@@ -169,16 +169,6 @@ allocate(gmathostnew(nlmhostnew,nlmhostnew))
 ! ###########################################
 
 recl1=wlength*2*natomimpd*lmsizehost*natomimpd*lmsizehost
-! print *, 'natomimpd',natomimpd,'lmsizehost',lmsizehost
-
-! Obsolete after introducinf wlength
-!!#ifdef GFORT
-!! the gfortran compiler assumes a rec length of 1 byte whereas the 
-!! ifc compiler assumes a rec length of 4byte by default.
-!! one should change the bulk program in the future!!!
-!!recl1=4*recl1
-!!#endif
-
 recl2=wlength*4*nlmhostnew*nlmhostnew
 open (88,access='direct',recl=recl1,file='kkrflex_green',form='unformatted')
 if (lattice_relax==0) then
