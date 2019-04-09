@@ -54,7 +54,7 @@ add_executable(
     source/common/wronskian.f90
     source/common/mathtools.f90
     source/voronoi/test.f
-    source/KKRimp/nrtype.f90
+    source/KKRimp/nrtype.F90
     source/KKRimp/type_gmatbulk.f90
     source/KKRimp/type_tmat.f90
     source/KKRimp/type_gmat.f90

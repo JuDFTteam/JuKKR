@@ -477,7 +477,7 @@ if ( config_testflag('write_vpotin') ) then
       write(43623223,'(50000g24.16)') vpot(:,:,ispin,iatom)
     end do !ispin
   end do !iatom
-end if ! config_testflag('write_gmatonsite')
+end if ! config_testflag('write_vpotin')
 
 
 ! ********************************************************** 
@@ -725,7 +725,7 @@ end if
       else
         stop '[energyloop] nspin error'
       end if
-    end if ! config_testflag('write_gmatonsite')
+    end if ! config_testflag('write_totden')
 
     call log_write('>>>>>>>>>>>>>>>>>>>>> vintras >>>>>>>>>>>>>>>>>>>>>')
     ! ********************************************************** 
@@ -755,7 +755,7 @@ end if
           write(7836785,'(50000g24.16)') cmom(:,iatom)
         end do !ispin
       end do !iatom
-    end if ! config_testflag('write_gmatonsite')
+    end if ! config_testflag('write_vintrascmom')
     
     
     if ( config_testflag('write_vintraspot') ) then
@@ -766,7 +766,7 @@ end if
           write(786785,'(50000g24.16)') vpot_out(:,:,ispin,iatom)
         end do !ispin
       end do !iatom
-    end if ! config_testflag('write_gmatonsite')
+    end if ! config_testflag('write_vintraspot')
     
     if ( config_testflag('vinters=0') ) then
       intercell_ach=0.0d0
@@ -790,7 +790,7 @@ end if
           write(54633563,'(50000g24.16)') vpot_out(:,:,ispin,iatom)
         end do !ispin
       end do !iatom
-    end if ! config_testflag('write_gmatonsite')
+    end if ! config_testflag('write_vpotout')
   
 !-------------------------------------------------------------------                       ! lda+u
 ! Calculate output interaction potential for lda+u and mix.                                ! lda+u
@@ -849,7 +849,7 @@ end if
           write(54644563,'(50000g24.16)') vpot_out(:,:,ispin,iatom)
         end do !ispin
       end do !iatom
-    end if ! config_testflag('write_gmatonsite')
+    end if ! config_testflag('write_vpotout')
 
 
     if (config%calcforce==1) then
@@ -883,7 +883,7 @@ end if
           write(126456563,'(50000g24.16)') vpot_out(:,:,ispin,iatom)
         end do !ispin
       end do !iatom
-    end if ! config_testflag('write_gmatonsite')
+    end if ! config_testflag('write_vpotout')
   
     if (config%ins.ne.0) then
       call log_write('>>>>>>>>>>>>>>>>>>>>> convoldrv >>>>>>>>>>>>>>>>>>>>>')
@@ -909,7 +909,7 @@ end if
           write(546456563,'(50000g24.16)') vpot_out(:,:,ispin,iatom)
         end do !ispin
       end do !iatom
-    end if ! config_testflag('write_gmatonsite')
+    end if ! config_testflag('write_vpotout')
     
     
     
@@ -921,7 +921,7 @@ end if
           write(54633563,'(50000g24.16)') vpot_out(:,:,ispin,iatom)
         end do !ispin
       end do !iatom
-    end if ! config_testflag('write_gmatonsite')
+    end if ! config_testflag('write_vpotout')
     
     
     call log_write('>>>>>>>>>>>>>>>>>>>>> mixstr >>>>>>>>>>>>>>>>>>>>>')
@@ -944,7 +944,7 @@ end if
           write(43623223,'(50000g24.16)') vpot(:,:,ispin,iatom)
         end do !ispin
       end do !iatom
-    end if ! config_testflag('write_gmatonsite')
+    end if ! config_testflag('write_vpotin')
 
   
     if (config%imix>=3 .and. itscf>config%nsimplemixfirst) then
@@ -963,7 +963,7 @@ end if
           write(54633563,'(50000g24.16)') vpot_out(:,:,ispin,iatom)
         end do !ispin
       end do !iatom
-    end if ! config_testflag('write_gmatonsite')
+    end if ! config_testflag('write_vpotmixed')
 
 
 

@@ -6,7 +6,11 @@
 MODULE nrtype
   
   use iso_fortran_env, only: real32, real64
-  INTEGER, PARAMETER :: WLENGTH = 1      ! For I/O in direct access files; =1 for ifort, =4 for gfort
+#ifdef __GFORTRAN__
+  INTEGER, PARAMETER :: WLENGTH = 4 !! For I/O in direct access files; =4 for gfort
+#else
+  INTEGER, PARAMETER :: WLENGTH = 1 !! For I/O in direct access files; =1 for ifort
+#endif
   INTEGER, PARAMETER :: SP = real32
   INTEGER, PARAMETER :: DP = real64
   INTEGER, PARAMETER :: SPC = real32

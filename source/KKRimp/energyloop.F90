@@ -1045,7 +1045,7 @@ end if
     else
       stop '[energyloop] nspin error'
     end if
-  end if ! config_testflag('write_gmatonsite')
+  end if ! config_testflag('write_density')
 
 end if !my_rank=0
 
