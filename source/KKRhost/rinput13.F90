@@ -625,11 +625,13 @@ contains
           if (ier/=0) stop 'Error reading `<RBLEFT>`: check your inputcard'
           kaoez(1, naez+i) = i     ! Default
           call ioinput('<KAOEZL>        ', uio, i, 7, ier)
-          if (ier==0) read (unit=uio, fmt=*, iostat=ier) kaoez(1, naez+i)
-          if (ier/=0) stop 'Error reading `<KAOEZL>`: check your inputcard'
+          ier2 = 0
+          if (ier==0) read (unit=uio, fmt=*, iostat=ier2) kaoez(1, naez+i)
+          if (ier2/=0) stop 'Error reading `<KAOEZL>`: check your inputcard'
           call ioinput('<RMTREFL>       ', uio, i, 7, ier)
-          if (ier==0) read (unit=uio, fmt=*, iostat=ier) rmtrefat(naez+i)
-          if (ier/=0) stop 'Error reading `<RMTREFL>`: check your inputcard'
+          ier2 = 0
+          if (ier==0) read (unit=uio, fmt=*, iostat=ier2) rmtrefat(naez+i)
+          if (ier2/=0) stop 'Error reading `<RMTREFL>`: check your inputcard'
           write (111, fmt='(3E20.12,3X,F9.6,3X,I5)')(tleft(i1,i), i1=1, 3), rmtrefat(naez+i), kaoez(1, naez+i)
         end do
         write (111, fmt='(A82)') '<RBRIGHT>                                                     <RMTREFR>   <KAOEZL>'
@@ -639,11 +641,13 @@ contains
           if (ier/=0) stop 'Error reading `<RBRIGHT>`: check your inputcard'
           kaoez(1, naez+nlbasis+i) = i ! Default
           call ioinput('<KAOEZR>        ', uio, i, 7, ier)
-          if (ier==0) read (unit=uio, fmt=*, iostat=ier) kaoez(1, naez+nlbasis+i)
-          if (ier/=0) stop 'Error reading `<KAOEZR>`: check your inputcard'
+          ier2 = 0
+          if (ier==0) read (unit=uio, fmt=*, iostat=ier2) kaoez(1, naez+nlbasis+i)
+          if (ier2/=0) stop 'Error reading `<KAOEZR>`: check your inputcard'
           call ioinput('<RMTREFR>       ', uio, i, 7, ier)
-          if (ier==0) read (unit=uio, fmt=*, iostat=ier) rmtrefat(naez+nlbasis+i)
-          if (ier/=0) stop 'Error reading `<RMTREFR>`: check your inputcard'
+          ier2 = 0
+          if (ier==0) read (unit=uio, fmt=*, iostat=ier2) rmtrefat(naez+nlbasis+i)
+          if (ier2/=0) stop 'Error reading `<RMTREFR>`: check your inputcard'
           write (111, fmt='(3E20.12,3X,F9.6,3X,I5)')(tright(i1,i), i1=1, 3), rmtrefat(naez+nlbasis+i), kaoez(1, naez+nlbasis+i)
         end do
 
@@ -1167,17 +1171,21 @@ contains
       ncheb = 10
       r_log = 0.1_dp
       call ioinput('NPAN_LOG        ', uio, 1, 7, ier)
-      if (ier==0) read (unit=uio, fmt=*, iostat=ier) npan_log
-      if (ier/=0) stop 'Error reading `NPAN_LOG`: check your inputcard'
+      ier2 = 0
+      if (ier==0) read (unit=uio, fmt=*, iostat=ier2) npan_log
+      if (ier2/=0) stop 'Error reading `NPAN_LOG`: check your inputcard'
       call ioinput('NPAN_EQ         ', uio, 1, 7, ier)
-      if (ier==0) read (unit=uio, fmt=*, iostat=ier) npan_eq
-      if (ier/=0) stop 'Error reading `NPAN_EQ`: check your inputcard'
+      ier2 = 0
+      if (ier==0) read (unit=uio, fmt=*, iostat=ier2) npan_eq
+      if (ier2/=0) stop 'Error reading `NPAN_EQ`: check your inputcard'
       call ioinput('NCHEB           ', uio, 1, 7, ier)
-      if (ier==0) read (unit=uio, fmt=*, iostat=ier) ncheb
-      if (ier/=0) stop 'Error reading `NCHEB`: check your inputcard'
+      ier2 = 0
+      if (ier==0) read (unit=uio, fmt=*, iostat=ier2) ncheb
+      if (ier2/=0) stop 'Error reading `NCHEB`: check your inputcard'
       call ioinput('R_LOG           ', uio, 1, 7, ier)
-      if (ier==0) read (unit=uio, fmt=*, iostat=ier) r_log
-      if (ier/=0) stop 'Error reading `R_LOG`: check your inputcard'
+      ier2 = 0
+      if (ier==0) read (unit=uio, fmt=*, iostat=ier2) r_log
+      if (ier2/=0) stop 'Error reading `R_LOG`: check your inputcard'
       write (111, *) 'NPAN_LOG= ', npan_log
       write (111, *) 'NPAN_EQ= ', npan_eq
       write (111, *) 'NCHEB= ', ncheb
@@ -1347,9 +1355,10 @@ contains
       end if
       kreadldau = 0
       ier = 0
+      ier2 = 0
       call ioinput('KREADLDAU       ', uio, 1, 7, ier)
-      if (ier==0) read (unit=uio, fmt=*, iostat=ier) kreadldau
-      if (ier/=0) stop 'Error reading `KREADLDAU`: check your inputcard'
+      if (ier==0) read (unit=uio, fmt=*, iostat=ier2) kreadldau
+      if (ier2/=0) stop 'Error reading `KREADLDAU`: check your inputcard'
 
     end if
     !--------------------------------------------------------------------------------

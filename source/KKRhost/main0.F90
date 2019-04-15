@@ -512,6 +512,8 @@ contains
     integer :: i_stat, i_all
     integer :: irec
     integer :: lrecabmad
+    integer :: i_commensurate !! counter to find closest divisor of naez for slab inversion (finds nprincd)
+    integer :: ilayer !! loop counter for layer index, needed to find i_commensurate
     real (kind=dp) :: zattemp
     integer :: ierr
     real (kind=dp), dimension(:,:), allocatable :: tmp_rr
@@ -692,15 +694,40 @@ contains
     call reduce_array_size(nref, nrefd, rmtref, vref, ncls, nclsd, nacls, rcls)
 
     nlayer = naez/nprinc
-    ! overwrite nprincd if chosen too small (also up
+    ! overwrite nprincd if chosen too small (also updates array `icheck`)
     if (nprincd<nprinc) then
-      if (nlayer*nprinc/=naez) nprinc = naez
+      ! find nprincd such that it is as big as it needs to be while being as
+      ! small as commensurability with the number of layers etc. allows
+      ! for this we loop over all layers and look for the divisors of naez
+      i_commensurate = -1
+      do ilayer = naez, 1, -1 ! go through loop backwards to find smallest divisor
+        if (mod(naez, ilayer)==0) then
+          if (naez/ilayer>=nprinc .and. i_commensurate==-1) then
+            i_commensurate = naez/ilayer
+          end if
+        end if
+      end do
+      ! now we take the smallest divisor of naez that is >= nprinc
+      if (i_commensurate>-1) nprinc = i_commensurate
+
+      ! this is the fallback to reset it to the number of atoms
+      if (nlayer*nprinc/=naez) then
+        ! in this case we should actually do full inversion instead of slab inversion
+        nprinc = naez
+        ! this is enforced here automatically
+        write (*, '(A)') 'WARNING: Found NPRINC==NAEZ!', 'Automatically overwriting inversion scheme with full inversion'
+        write (1337, '(A)') 'WARNING: Found NPRINC==NAEZ!', 'Automatically overwriting inversion scheme with full inversion'
+        invmod = 0
+      end if
+
+      ! now nprinc was found successfully, so nprincd can be set accordingly
       write (*, *) 'Automatically overwriting nprincd with ', nprinc
       write (1337, *) 'Automatically overwriting nprincd with ', nprinc
       nprincd = nprinc
-      ! update parameter that depend on nprincd
+
+      ! update parameter that depend on nprincd and change allocations of arrays that have nprincd
       ndim_slabinv = nprincd*lmmaxd
-      ! change allocations of arrays that have nprincd
+
       i_all = -product(shape(icheck))*kind(icheck)
       deallocate (icheck, stat=i_stat)
       call memocc(i_stat, i_all, 'icheck', 'main0')
@@ -708,7 +735,7 @@ contains
       allocate (icheck(naez/nprincd,naez/nprincd), stat=i_stat)
       call memocc(i_stat, product(shape(icheck))*kind(icheck), 'ICHECK', 'main0')
       icheck = 0
-    end if
+    end if ! nprincd<nprinc
 
     ! store nlayerd for later use
     nlayerd = nlayer
