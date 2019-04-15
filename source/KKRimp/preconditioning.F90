@@ -570,10 +570,8 @@ end function this_readline
      allocate (gclust(ngclus,ngclus),stat=ierror)
      allocate (gclustsingle(ngclus,ngclus),stat=ierror)
      read(88,rec=irec) gclustsingle
-
-!      write(*,'(50000E25.14)') gclustsingle
-
-     gclust=DCMPLX(gclustsingle)
+     ! write(*,'(50000E25.14)') gclustsingle
+     gclust=CMPLX(gclustsingle, kind=dp)
      deallocate (gclustsingle)
    else if (cmode=='doubleprecision') then
      allocate (gclust(ngclus,ngclus),stat=ierror)
@@ -592,7 +590,10 @@ end function this_readline
      integer                      ::  irec
    irec = ielast*(ispin-1)+ ie+1
    write(89,rec=irec) gclust
-   if(config_testflag('gmat_plain')) write(8989,'(65000E25.14)') gclust
+   if(config_testflag('gmat_plain')) then
+     if (ie==1 .and. ispin==1) write(8989, '(A,i9)') '#gref read-in', nlmhostnew
+     write(8989,'(2i5,650000E25.14)') ie, ispin, gclust
+   end if
    end subroutine !precontitioning_start
 
 

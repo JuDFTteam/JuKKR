@@ -278,7 +278,7 @@ inner:    do j = 1, natomimp
 170 format (5x, i5, ' |', i3, 1x, i3, ' | ', 3f9.4, f9.5, 1x, '|', a9)
 180 format (5x, i5, ' |', i3, 1x, i3, ' | ', 3f9.4, f9.5, 1x, '|')
 190 format (5x, 5x, ' |', 7x, ' | ', 27x, 9x, 1x, '|')
-200 format (8x, 'Number of block elements to be calculated : ', i3, /)
+200 format (8x, 'Number of block elements to be calculated : ', i9, /)
 210 format (8x, 'Setting pairs for task-defined cluster sites ', 'and connections', /, 12x, 'atoms in cluster : ', i3)
 220 format (6x, 72(':'), /, 22x, '(impurity) cluster related data/indexing', /, 6x, 72(':'))
 
