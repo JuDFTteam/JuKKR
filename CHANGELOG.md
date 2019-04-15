@@ -15,15 +15,38 @@
 
 ----
 
-## *UNRELEASED* (last updated: 2019-03-06)
+## *UNRELEASED* (last updated: 2019-04-15)
 
 **Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release.**
 
 Removed a lot of code duplicates among different
 
 ### Added
+- None
+
+### Changed
+- None
+
+### Deprecated
+- None
+
+### Removed
+- None
+
+### Fixed
+- None
+
+----
+
+## v3.3 (2019-04-15)
+
+### Added
 - script to check the wronskian (see PhD Bauer, p.48)
 - calc_wronskian option in KKRhost code to check single-site wavefunctions
+- auto tests for OpenMP and MPI functionality
+- xsf maker utility to create vesta input file
+- improved error handling of inputcard reading errors
+- generate code coverage report
 
 ### Changed
 - more routines and modules in source/common directory
@@ -35,6 +58,8 @@ Removed a lot of code duplicates among different
 - rename lmmax with lmmax0d or lmsize (in cases where the subroutine is called with different matrix sizes)
 - use mpiatom parallelization scheme by default if NATYP>=IELAST
 - moved wronskian from KKRimp to common to be used in KKRhost as well
+- added lmdos writeout mode for qdos
+- find NPRINCD to lowest possible divisor of NAEZ
 
 ### Deprecated
 - None
@@ -47,7 +72,12 @@ Removed a lot of code duplicates among different
 - position of chebint in rhooutnew of KKRimp (probably) corrected
 - bug in SRA-trick usage (issue #108)
 - bug FERMIOUT option (issue #109)
+- fix for issue #113
 - fix for issue #114
+- fix for issue #115
+- fix for issue #116
+- gfortran compilation fixed for kkrhost, kkrimp, voronoi
+- fix debug compilation of kkrimp
 
 ----
 
