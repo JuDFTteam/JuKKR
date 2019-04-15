@@ -114,8 +114,7 @@ pages:
     - mv build/ ../public/
     - cd ..
     # add code coverage
-    # this is deactivated since otherwise the source code can be seen without login
-    #- tar -zxvf cov.tar.gz && mv CODE_COVERAGE.HTML public/page/codecov/index.html && mv CodeCoverage public/page/codecov/CodeCoverage
+    - tar -zxvf cov.tar.gz && mv CODE_COVERAGE.HTML public/page/codecov/index.html && mv CodeCoverage public/page/codecov/CodeCoverage
   artifacts:
     paths:
       - public
