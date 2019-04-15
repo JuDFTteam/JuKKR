@@ -24,7 +24,7 @@ contains
   !> Author: Philipp Rüssmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller,
   !> and many others ...
   !> Category: single-site, potential, KKRhost
-  !> Deprecated: False 
+  !> Deprecated: False
   !> Main subroutine for the calculation of the t-matrix
   !>
   !> Calls routines that compute singe-site wavefunctions and t-matrices.
@@ -60,7 +60,7 @@ contains
     use :: mod_initldau, only: initldau
     use :: mod_calctmat, only: calctmat
     use :: mod_types, only: t_tgmat, t_inc, t_lloyd, t_dtmatjij, init_t_dtmatjij, init_t_dtmatjij_at, t_mpi_c_grid
-    use :: mod_mympi, only: nranks, master, myrank, distribute_work_atoms, distribute_work_energies
+    use :: mod_mympi, only: nranks, master, myrank, distribute_work_atoms, distribute_work_energies, mpiatom
     use :: mod_wunfiles, only: get_params_1a, t_params, read_angles
     use :: mod_jijhelp, only: set_jijcalc_flags
     ! array dimensions
@@ -282,16 +282,17 @@ contains
         end do
         mytot = t_mpi_c_grid%ntot_pt1(t_mpi_c_grid%myrank_ie)
         call gather_tmat(t_inc,t_tgmat,t_mpi_c_grid,ntot_all,ioff_all,mytot,        &
-          t_mpi_c_grid%mympi_comm_ie,t_mpi_c_grid%nranks_ie)
+          t_mpi_c_grid%mympi_comm_ie,t_mpi_c_grid%nranks_ie, nspin, lmmaxd, natypd)
       end if
 
       if (lly/=0 .and. .not. t_lloyd%dtmat_to_file) then
-        if (t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1)) then
-          ! reset tralpha and dtmat to zero for rest-ranks, otherwise
-          ! these contributions are counted twice
+        if (mpiatom .and. t_mpi_c_grid%myrank_ie>(t_mpi_c_grid%dims(1)-1)) then
+          ! reset tralpha and dtmat to zero for rest-ranks to avoid double counting
+          ! for some reason this is only corect for mpiatom mode and not for
+          ! mpienerg, I don't know why but this seems to fix it. P.R. 05.03.2019
           t_lloyd%tralpha = czero
           t_lloyd%dtmat = czero
-        end if
+        end if 
         call gather_lly_dtmat(t_mpi_c_grid,t_lloyd,lmmaxd,t_mpi_c_grid%mympi_comm_ie)
       end if
 
@@ -299,7 +300,7 @@ contains
       ! for calculation of Jij-tensor
       ! -------------------------------------------------------------------------
       if (calc_exchange_couplings .and. use_Chebychev_solver) then
-        do i1 = 1, t_inc%natyp
+        do i1 = 1, natypd
           ! initialize t_dtmatJij on other tasks
           ! t_dtmatJij was already allocated for certain atoms within the atom loop
           ! (in tmat_newsolver). This initialization cannot be made before tmat_newsolver,
@@ -358,14 +359,14 @@ contains
 
 #ifdef CPP_BdG
   !-------------------------------------------------------------------------------
-  !> Summary: Write out inputs for tmat_newsolver (BdG develop) 
-  !> Author: Philipp Ruessmann  
-  !> Deprecated: False 
+  !> Summary: Write out inputs for tmat_newsolver (BdG develop)
+  !> Author: Philipp Ruessmann
+  !> Deprecated: False
   !> Category: input-output, unit-test, KKRhost
   !>
-  !> @note JC: not sure how this exactly works bur variables do not seem to need 
-  !> declaration before being run. Maybe it is a good idea to add it.                    
-  !> @endnote                                                                       
+  !> @note JC: not sure how this exactly works bur variables do not seem to need
+  !> declaration before being run. Maybe it is a good idea to add it.
+  !> @endnote
   !-------------------------------------------------------------------------------
   subroutine BdG_write_tmatnewsolver_inputs(nranks, i1, i1_start, ielast, &
     nspin, lmax, nsra, iend, lmpotd, lly, deltae, idoldau, ncleb, &

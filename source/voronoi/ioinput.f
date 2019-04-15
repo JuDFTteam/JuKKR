@@ -1,4 +1,6 @@
       SUBROUTINE IOinput(CHARKEY,CHAR,ILINE,IFILE,IERROR)
+
+      use mod_verify77, only : VERIFY77
 c *********************************************************
 c *  This subroutine is responsible for the I/O
 c *  with the input file.
@@ -38,13 +40,13 @@ c#@# KKRtags: VORONOI input-output
 c#@# KKRmerge: potential optimization by keeping STRING in a save variable
       INTEGER NCHAR,NABC,NCOLIO,NLINIO
       PARAMETER(NCHAR=16,NABC=40,NCOLIO=256,NLINIO=5000)
-      CHARACTER CHARKEY*NCHAR
-      CHARACTER CHAR*NCOLIO
+      CHARACTER (len=nchar) CHARKEY
+      CHARACTER (len=ncolio) CHAR
       INTEGER ILINE,IERROR,IFILE
       integer i,ios,ier,npt,ilen,ipos,ipos1,ipos2,iklen,aaaa
-      CHARACTER STRING(NLINIO)*NCOLIO
-      CHARACTER STRING1*NCOLIO
-      CHARACTER ABC*NABC
+      CHARACTER (len=ncolio) STRING(NLINIO)
+      CHARACTER (len=ncolio) STRING1
+      CHARACTER (len=nabc) ABC
       CHARACTER ATEST
       DATA ABC/'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_<>'/
 c
@@ -135,35 +137,4 @@ Cccc       end if
       STOP
       END
 
-        SUBROUTINE VERIFY77(NABC,ABC,NCHAR,STR1,ipos1,ipos2)
-        implicit none
-c#@# KKRtags: VORONOI
-c This sub returns the position of the first space character
-c in ipos2, and the position of the first letter in the string
-c STR1
-c
-        INTEGER NCHAR,NABC
-        CHARACTER STR1*NCHAR
-        CHARACTER ABC*NABC
-        CHARACTER CHAR*1
-        integer ipos,ipos1,ipos2,i,j
-!        DATA ABC/'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_<>'/
-         ipos2 =0
-c
-         ipos1 = INDEX(STR1,' ')
-         do j=1,10
-            char = str1(j:j+1)
-c           write(6,*) 'char : ',j, char 
-            ipos = 0
-            do i=1,40
-               ipos = INDEX(CHAR,ABC(I:I))
-               if (IPOS.GT.0) THEN
-                  ipos2 = j
-                  RETURN
-               end if 
-            end do
-            
-         end do   
-         RETURN
-         END 
 

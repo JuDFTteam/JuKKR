@@ -86,7 +86,6 @@ contains
     integer :: nacls1
     integer :: lmaxd1
     integer :: lrectmt
-    integer :: lmmaxd1
     integer :: itmpdir
     integer :: nspinpot
 
@@ -188,7 +187,6 @@ contains
 
     ! .. Calculate parameters
     lmaxd1 = lmax + 1
-    lmmaxd1 = lmmaxd + 1
     lrectmt = wlength*4*lmmaxd*lmmaxd
 
     ! -------------------------------------------------------------------------
@@ -266,7 +264,7 @@ contains
         qdosopt = 'y'          
       end if
       open (67, form='formatted', file='parameters.gflle')
-      df(:) = wez(:)/dble(nspin)
+      df(:) = wez(:)/real(nspin, kind=dp)
       write (67, *) ielast, iemxd, natyp, nspin, lmax, qdosopt, df(1:ielast), ez(1:ielast), korbit
       close (67)
     end if ! calc_gmat_lm_full
@@ -374,8 +372,8 @@ contains
           end do   
         end do  
         close (701)
-        write (*, *) 'valence charge from lloyds formula:', (charge_lly(ispin), ispin=1, nspin)
-        if (t_inc%i_write>0) write (1337, *) 'valence charge from lloyds formula:', (charge_lly(ispin), ispin=1, nspin) 
+        write (*, *) 'valence charge from Lloyds formula:', (charge_lly(ispin), ispin=1, nspin)
+        if (t_inc%i_write>0) write (1337, *) 'valence charge from Lloyds formula:', (charge_lly(ispin), ispin=1, nspin) 
       end if ! myrank==master
 
     end if ! LLY<>0
@@ -401,7 +399,7 @@ contains
 
     ! find boundaries for atom loop (MPI parallelization level)
 #ifdef CPP_MPI
-    ntot1 = t_inc%natyp
+    ntot1 = natypd
     if (.not. use_Chebychev_solver) then
 
       call distribute_linear_on_tasks(t_mpi_c_grid%nranks_ie, t_mpi_c_grid%myrank_ie+t_mpi_c_grid%myrank_at, master, ntot1, ntot_pt, ioff_pt, .true.)
@@ -481,7 +479,7 @@ contains
               ifunm1(1,icell), lmsp1(1,icell), rho2n1(1,1,ispin), rho2n2(1,1,ispin), rhoorb(1,i1), den(0,1,1,ipot), denlm(1,1,1,ipot), &
               muorb(0,1,i1), espv(0,ipot1), cleb, loflm, icleb, iend, jend, solver, socscl(1,krel*i1+(1-krel)), cscl(1,krel*i1+(1-krel)), &
               vtrel(1,i1), btrel(1,i1), rmrel(1,i1), drdirel(1,i1), r2drdirel(1,i1), zrel(i1), jwsrel(i1), irshift(i1), lmomvec, &
-              qmtet(iq), qmphi(iq), mvevil1, mvevil2, nmvecmax, idoldau, lopt(i1), phildau(1,i1), wldau(1,1,1,i1), denmatc(1,1,ipot), &
+              mvevil1, mvevil2, nmvecmax, idoldau, lopt(i1), phildau(1,i1), wldau(1,1,1,i1), denmatc(1,1,ipot), &
               natyp, nqdos, lmax)
 #ifdef CPP_TIMING
             call timing_pause('main1c - rhoval')
@@ -536,8 +534,8 @@ contains
         r2nef(1:irmd, 1:lmpotd, i1, 1:2) = rho2n2(1:irmd, 1:lmpotd, 1:2)
         do ispin=1, nspin
           do l = 0, lmaxd1
-            denef = denef - 2.0_dp*conc(i1)*aimag(den(l,ielast,1,ipot1+ispin-1))/pi/dble(nspinpot)
-            denefat(i1) = denefat(i1) - 2.0_dp*aimag(den(l,ielast,1,ipot1+ispin-1))/pi/dble(nspinpot)
+            denef = denef - 2.0_dp*conc(i1)*aimag(den(l,ielast,1,ipot1+ispin-1))/pi/real(nspinpot, kind=dp)
+            denefat(i1) = denefat(i1) - 2.0_dp*aimag(den(l,ielast,1,ipot1+ispin-1))/pi/real(nspinpot, kind=dp)
           end do
         end do ! ispin
 
@@ -750,32 +748,30 @@ contains
       end if
 
       ! ----------------------------------------------------------------------
-      ! NATYP
+      ! NATYP loop for summed charge, spin and orbital moments
       ! ----------------------------------------------------------------------
-      chrgsemicore = 0_dp
+      chrgsemicore = 0.0_dp
+      muorb(lmaxd1+1, :, :) = 0.0_dp ! sum of all l-channels (including lmaxd1 for ns contribution)
+      eu(:) = 0_dp
+      edc(:) = 0_dp
       do i1 = 1, natyp
         !----------------------------------------------------------------------------
         ! l/m_s/atom-resolved charges
         !----------------------------------------------------------------------------
-
         do ispin = 1, nspinpot
           ipot = (i1-1)*nspinpot + ispin
           do l = 0, lmaxd1
             charge(l, i1, ispin) = 0.0_dp
-
             do ie = 1, ielast
-              charge(l, i1, ispin) = charge(l, i1, ispin) + aimag(wez(ie)*den(l,ie,1,ipot))/dble(nspinpot)
+              charge(l, i1, ispin) = charge(l, i1, ispin) + aimag(wez(ie)*den(l,ie,1,ipot))/real(nspinpot, kind=dp)
               if (ie==iesemicore) then
                 chrgsemicore = chrgsemicore + conc(i1)*charge(l, i1, ispin)
               end if
             end do
-
           end do
         end do
-        eu(i1) = 0_dp
-        edc(i1) = 0_dp
         !----------------------------------------------------------------------------
-        ! Orbital magnetic moments (array initialised to 0.0D0 in rhoval)
+        ! Orbital magnetic moments
         !----------------------------------------------------------------------------
         if (krel==1) then
           do ispin = 1, 3
@@ -786,7 +782,7 @@ contains
         end if
       end do
       ! ----------------------------------------------------------------------
-      ! NATYP
+      ! end NATYP loop for summed charge and orbital moments 
       ! ----------------------------------------------------------------------
 
 
@@ -828,7 +824,7 @@ contains
       ! Write out lm charges and moments
       ! -------------------------------------------------------------------
       withorbmom = krel+korbit
-      if (set_cheby_nosoc) withorbmom = withorbmom+1
+      if (set_cheby_nosoc) withorbmom = nspin-1 !withorbmom+1
       call wrmoms(withorbmom, natyp, nspinpot, texts, textl, textns, charge, muorb, lmax, lmaxd1)
 
       ! ----------------------------------------------------------------------

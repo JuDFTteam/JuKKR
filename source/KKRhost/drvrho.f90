@@ -23,7 +23,7 @@ contains
   !> V. Popescu, Munich, May 2004
   !-------------------------------------------------------------------------------
   subroutine drvrho_qdos(ldorhoef, rho2ns, r2nef, den, dmuorb, rhotborb, iecurr, eryd, we, ielast, gmatll, vt, bt, r, drdi, r2drdi, zat_in, jws_in, ishift, solver, soctl, ctl, &
-    qmtet, qmphi, itermvdir, mvevil, mvevilef, lmmaxd, lmaxd, irmd, lmpotd, iemxd, nmvecmax, i1, nqdos) ! qdos ruess
+    itermvdir, mvevil, mvevilef, lmmaxd, lmaxd, irmd, lmpotd, iemxd, nmvecmax, i1, nqdos) ! qdos ruess
 
     use :: mod_types, only: t_tgmat
     use :: mod_datatypes, only: dp
@@ -50,7 +50,7 @@ contains
     parameter (nkmpmax=nkmmax+2*nlmax, nmuemax=2*nlmax)
     parameter (linmax=2*nlmax*(2*nlmax-1))
     real (kind=dp) :: dzero
-    parameter (dzero=0.0d0)
+    parameter (dzero=0.0_dp)
 
     ! Dummy arguments
     integer :: lmaxd, lmmaxd, irmd, ielast
@@ -107,11 +107,7 @@ contains
     parameter (nmvecmaxd=4)
     real (kind=dp) :: amemvec(nkmmax, nkmmax, 3, nmvecmaxd), fact(0:100)
     integer :: imkmtab(nkmmax), ikmllim1(nkmmax), ikmllim2(nkmmax)
-    character (len=1) :: txtl(0:nlmax)
     integer :: igrid(2), iepath, nepath
-
-    real (kind=dp) :: qmtet, qmphi ! ARG. LIST
-    real (kind=dp) :: qmphiloc(nqmax), qmtetloc(nqmax) ! DUMMY
 
     complex (kind=dp) :: bmvevdl0(nlmax, ntmax, 3, nmvecmax), bmvevil1(nlmax, ntmax, 3, nmvecmax), mvevdl0(nlmax, ntmax, 3, nmvecmax), mvevil1(nlmax, ntmax, 3, nmvecmax)
     complex (kind=dp) :: mvevil(0:lmaxd, 3, nmvecmax) ! OUTPUT
@@ -122,7 +118,7 @@ contains
     data icall/0/
 
     save :: icall, ikm1lin, ikm2lin, gdia, gmdia, goff, lopt, nlq, nkmq, iqat, irel, bcor, bcors, qel, nat, conc, txtt, imt, shftef, nvaltot, nkm, ihyper, iprint, it, iq, nl, nt, &
-      nucleus, cgc, iwrregwf, iwrirrwf, calcint, getirrsol, nfilcbwf, pi, sqpi, amemvec, imkmtab, ikmllim1, ikmllim2, fact, splitss, txtl, igrid, iepath, nepath
+      nucleus, cgc, iwrregwf, iwrirrwf, calcint, getirrsol, nfilcbwf, pi, sqpi, amemvec, imkmtab, ikmllim1, ikmllim2, fact, splitss, igrid, iepath, nepath
 
     icall = icall + 1
     zat(ntmax) = zat_in
@@ -183,11 +179,11 @@ contains
       call calcgf(nkmax, cgc, gdia, gmdia, goff, gmoff, fdia, fmdia, foff, fmoff, ltab, lbtab, kaptab, nmuetab, nmuemax, nkmmax, nkmpmax)
 
       do it = 1, ntmax
-        bcor(it) = 0d0
-        bcors(it) = 0d0
-        qel(it) = 0d0
+        bcor(it) = 0.0_dp
+        bcors(it) = 0.0_dp
+        qel(it) = 0.0_dp
         nat(it) = 1
-        conc(it) = 1d0
+        conc(it) = 1.0_dp
         txtt(it) = '    '
         imt(it) = 1
         lopt(it) = -1              ! this should change for Brooks' OP
@@ -201,10 +197,10 @@ contains
       end do
 
       irel = 3
-      shftef = 0d0
-      efermi = 0d0
+      shftef = 0.0_dp
+      efermi = 0.0_dp
       nvaltot = 0
-      pi = 4d0*atan(1d0)
+      pi = 4.0_dp*atan(1.0_dp)
       sqpi = sqrt(pi)
 
       nkm = lmmaxd
@@ -228,16 +224,13 @@ contains
 
       if (itermvdir) then
         splitss = .false.
-        fact(0) = 1.0d0
+        fact(0) = 1.0_dp
         do i = 1, 100
-          fact(i) = fact(i-1)*dble(i)
+          fact(i) = fact(i-1)*real(i, kind=dp)
         end do
 
         call amemagvec(irel, iprint+1, nkm, amemvec, ikmllim1, ikmllim2, imkmtab, cgc, nlmax, nkmmax, nkmpmax, nmvecmax)
 
-        do i = 0, nlmax
-          txtl(i) = ' '
-        end do
         igrid(1) = 5
         iepath = 1
         nepath = 1
@@ -318,15 +311,15 @@ contains
 
       do i = 1, jws(it)
         ip = i + ishift
-        rho2ns(ip, 1, 1) = rho2ns(ip, 1, 1) - 0.5d0*sqpi*rhochr(i, it)*(r(i,1)**2)
-        rho2ns(ip, 1, 2) = rho2ns(ip, 1, 2) - 0.5d0*sqpi*rhospn(i, it)*(r(i,1)**2)
-        rhotborb(ip) = rhotborb(ip) - 0.5d0*sqpi*rhoorb(i, it)*(r(i,1)**2)
+        rho2ns(ip, 1, 1) = rho2ns(ip, 1, 1) - 0.5_dp*sqpi*rhochr(i, it)*(r(i,1)**2)
+        rho2ns(ip, 1, 2) = rho2ns(ip, 1, 2) - 0.5_dp*sqpi*rhospn(i, it)*(r(i,1)**2)
+        rhotborb(ip) = rhotborb(ip) - 0.5_dp*sqpi*rhoorb(i, it)*(r(i,1)**2)
       end do
 
       do il = 1, nl
-        den(il-1, iecurr+ielast) = -0.5d0*(dosl0(il,it)+smtl0(il,it))*pi
+        den(il-1, iecurr+ielast) = -0.5_dp*(dosl0(il,it)+smtl0(il,it))*pi
 
-        den(il-1, iecurr) = -0.5d0*(dosl0(il,it)-smtl0(il,it))*pi
+        den(il-1, iecurr) = -0.5_dp*(dosl0(il,it)-smtl0(il,it))*pi
 
         do i = 1, 2
           dmuorb(il-1, i) = -omtls0(il, it, i)*pi
@@ -341,9 +334,6 @@ contains
       ! ITERMDIR
 
       if (itermvdir) then
-
-        qmphiloc(iq) = qmphi
-        qmtetloc(iq) = qmtet
 
         call cinit(nlmax*ntmax*3*nmvecmax, mvevdl0)
         call cinit(nlmax*ntmax*3*nmvecmax, bmvevdl0)
@@ -387,8 +377,8 @@ contains
 
     do i = 1, jws(it)
       ip = i + ishift
-      r2nef(ip, 1, 1) = -0.5d0*sqpi*rhochr(i, it)*(r(i,1)**2)
-      r2nef(ip, 1, 2) = -0.5d0*sqpi*rhospn(i, it)*(r(i,1)**2)
+      r2nef(ip, 1, 1) = -0.5_dp*sqpi*rhochr(i, it)*(r(i,1)**2)
+      r2nef(ip, 1, 2) = -0.5_dp*sqpi*rhospn(i, it)*(r(i,1)**2)
     end do
 
     ! CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC

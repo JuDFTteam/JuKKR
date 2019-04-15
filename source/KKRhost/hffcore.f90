@@ -56,7 +56,6 @@ contains
     real (kind=dp) :: ame(2, 2), cff(2, 2), cfg(2, 2), cgf(2, 2), cgg(2, 2), cqf(2, 2), cqg(2, 2), csf(2, 2), csg(2, 2), dovr(nrc), drovrn(nrc), drovrn1(nrc), f(nrc, 2), ff(2, 2), &
       ff1(2, 2), ff2(2, 2), fg(2, 2), fg1(2, 2), fg2(2, 2), g(nrc, 2), gf(2, 2), gf1(2, 2), gf2(2, 2), gg(2, 2), gg1(2, 2), gg2(2, 2)
     integer :: i, ikm1, ikm2, j, k, k1, k2, n
-    integer :: nint
 
     if (kap2==0) kap2 = kap1
 

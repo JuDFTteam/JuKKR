@@ -15,12 +15,14 @@ build_kkrhost:gnu:debug:
     - FC=/opt/gcc8/bin/gfortran cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug -DCOMPILE_KKRHOST=ON -DCOMPILE_KKRIMP=OFF -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF -DCOMPILE_RHOQ=OFF ..
     - make -j4 VERBOSE=1
   only: 
+    - BdG
     - schedules
     - triggers
     - web
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 build_kkrhost:intel:debug:
   stage: build_kkrhost
@@ -29,12 +31,14 @@ build_kkrhost:intel:debug:
     - FC=$(which ifort) cmake -DENABLE_MPI=OFF -DENABLE_OMP=OFF -DCMAKE_BUILD_TYPE=Debug -DCOMPILE_KKRHOST=ON -DCOMPILE_KKRIMP=OFF -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF -DCOMPILE_RHOQ=OFF ..
     - make -j4
   only: 
+    - BdG
     - schedules
     - triggers
     - web
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 build_kkrhost:intel:openmp_debug:
   stage: build_kkrhost
@@ -43,12 +47,14 @@ build_kkrhost:intel:openmp_debug:
     - FC=$(which ifort) cmake -DENABLE_MPI=OFF -DENABLE_OMP=ON -DCMAKE_BUILD_TYPE=Debug -DCOMPILE_KKRHOST=ON -DCOMPILE_KKRIMP=OFF -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF -DCOMPILE_RHOQ=OFF ..
     - make -j4
   only: 
+    - BdG
     - schedules
     - triggers
     - web
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 build_kkrhost:intel:hybrid_debug:
   stage: build_kkrhost
@@ -57,12 +63,14 @@ build_kkrhost:intel:hybrid_debug:
     - FC=$(which mpiifort) cmake -DENABLE_MPI=ON -DENABLE_OMP=ON -DCMAKE_BUILD_TYPE=Debug -DCOMPILE_KKRHOST=ON -DCOMPILE_KKRIMP=OFF -DCOMPILE_KKRSUSC=OFF -DCOMPILE_PKKPRIME=OFF -DCOMPILE_VORONOI=OFF -DCOMPILE_RHOQ=OFF ..
     - make -j4
   only: 
+    - BdG
     - schedules
     - triggers
     - web
     - master
     - develop
     - develop-kkrhost
+    - GROUP3
 
 ## 1.2 production versions ##
 build_kkrhost:intel:hybrid:
@@ -81,9 +89,11 @@ build_kkrhost:intel:hybrid:
       - tests/kkr.x
     expire_in: 1 day
   only: 
+    - BdG
     - schedules
     - triggers
     - web
     - master
     - develop
     - develop-kkrhost
+    - GROUP3

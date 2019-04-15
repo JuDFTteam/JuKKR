@@ -58,15 +58,13 @@
      +                 LMAXATOM,LMAXD,NSPIN,
      +                 NATOM,VM2Z,ZATOM,INS,IRMD,LMPOTD,LPOTD)
 
-C     .. Parameters ..
-!       include 'inc.p'
-C     ..
       USE TYPE_CELL
       USE TYPE_DENSITY
       USE TYPE_SHAPEFUN
       USE TYPE_GAUNTSHAPE
       USE MOD_SIMP3
       USE MOD_SIMPK
+      use global_variables, only: ipand
       IMPLICIT NONE
       TYPE(CELL_TYPE) :: CELL(NATOM)
       TYPE(DENSITY_TYPE) :: DENSITY(NATOM)
@@ -203,8 +201,9 @@ c
           IF (INS.EQ.0) THEN
             CALL SIMP3(ER,ECOU(L,IATYP),1,IRS1,CELL(IATYP)%DRMESHDI)
           ELSE
+            ipand = CELL(IATYP)%NPAND
             CALL SIMPK(ER,ECOU(L,IATYP),IPAN1,CELL(IATYP)%NRCUT,
-     +                 CELL(IATYP)%DRMESHDI,CELL(IATYP)%NPAND)
+     +                 CELL(IATYP)%DRMESHDI) !,CELL(IATYP)%NPAND)
           END IF
 
    80   CONTINUE                    ! L = 0,LMAX

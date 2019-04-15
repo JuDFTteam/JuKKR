@@ -58,7 +58,6 @@ contains
     complex (kind=dp) :: dosl, hffl, jf(nrmax, 2, 2), jg(nrmax, 2, 2), omtl, smtl, wds, wof, wog, wsf, wsg, wt, zf(nrmax, 2, 2), zfjf, zfzf, zg(nrmax, 2, 2), zgjg, zgzg
     complex (kind=dp) :: omtls(2), omtms(nmuemax, 2)
     integer :: i, iflag, ikm1, ikm2, il, im, is, it, jj, jtop, k1, k2, ka, kap1, kap2, kb, l, lin, lmax, mm, mue, nsol
-    integer :: nint
 
     save :: chko, chkq, chks
 

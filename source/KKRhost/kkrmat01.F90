@@ -56,7 +56,6 @@ contains
     use :: mod_rhoqtools, only: rhoq_find_kmask, rhoq_saveg, rhoq_write_tau0, rhoq_read_mu0_scoef
     use :: global_variables, only: nembd1, nembd2, nsheld, nclsd, naclsd, lmmaxd, nprincd, nrd, nrefd, lmgf0d, krel, ndim_slabinv, alm, almgf0 
     use :: mod_constants, only: czero, cone, nsymaxd, ci,pi
-    use :: mod_profiling, only: memocc
     use :: mod_datatypes, only: dp
     use :: mod_decimate, only: decimate
     use :: mod_dlke0, only: dlke0
@@ -171,24 +170,17 @@ contains
     ! Array allocations
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     allocate (gllke(alm,alm), stat=i_stat)
-    call memocc(i_stat, product(shape(gllke))*kind(gllke), 'GLLKE', 'kkrmat01')
     ! LLY Lloyd
     if (lly/=0) then
       allocate (dgllke(alm,alm), stat=i_stat)
-      call memocc(i_stat, product(shape(dgllke))*kind(dgllke), 'DGLLKE', 'kkrmat01')
       allocate (grefllke(alm,alm), stat=i_stat)
-      call memocc(i_stat, product(shape(grefllke))*kind(grefllke), 'GREFLLKE', 'kkrmat01')
     end if
 
     if (use_virtual_atoms) then
       allocate (gllke0v(alm,alm), stat=i_stat)
-      call memocc(i_stat, product(shape(gllke0v))*kind(gllke0v), 'GLLKE0V', 'kkrmat01')
       allocate (gllke0v2(alm,alm), stat=i_stat)
-      call memocc(i_stat, product(shape(gllke0v2))*kind(gllke0v2), 'GLLKE0V2', 'kkrmat01')
       allocate (gllketv(alm,lmmaxd), stat=i_stat)
-      call memocc(i_stat, product(shape(gllketv))*kind(gllketv), 'GLLKETV', 'kkrmat01')
       allocate (gllketv_new(lmmaxd,alm), stat=i_stat)
-      call memocc(i_stat, product(shape(gllketv_new))*kind(gllketv_new), 'GLLKETV_new', 'kkrmat01')
     end if                         ! ( use_virtual_atoms ) THEN
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! End of array allocations
@@ -251,24 +243,18 @@ contains
     ! allocattions of work arrays
     if (krel==0) then
       allocate (gllken(almgf0,almgf0), stat=i_stat)
-      call memocc(i_stat, product(shape(gllken))*kind(gllken), 'GLLKEN', 'kkrmat01')
       gllken(:, :) = czero
       allocate (gllkem(almgf0,almgf0), stat=i_stat)
-      call memocc(i_stat, product(shape(gllkem))*kind(gllkem), 'GLLKEM', 'kkrmat01')
       gllkem(:, :) = czero
       if (lly/=0) then
         allocate (dgllken(almgf0,almgf0), stat=i_stat)
-        call memocc(i_stat, product(shape(dgllken))*kind(dgllken), 'DGLLKEN', 'kkrmat01')
         dgllken(:, :) = czero
         allocate (dgllkem(almgf0,almgf0), stat=i_stat)
-        call memocc(i_stat, product(shape(dgllkem))*kind(dgllkem), 'DGLLKEM', 'kkrmat01')
         dgllkem(:, :) = czero
       end if
     else
       allocate (gllke0(almgf0,almgf0), stat=i_stat)
-      call memocc(i_stat, product(shape(gllke0))*kind(gllke0), 'GLLKE0', 'kkrmat01')
       allocate (gllke0m(almgf0,almgf0), stat=i_stat)
-      call memocc(i_stat, product(shape(gllke0m))*kind(gllke0m), 'GLLKE0M', 'kkrmat01')
     end if                         ! (KREL.EQ.0)
     ! ----------------------------------------------------------------------
 
@@ -319,7 +305,7 @@ contains
 #endif
 
       bzkpk(1:3) = kp(1:3)
-      bzkpk(4:6) = 0.d0
+      bzkpk(4:6) = 0.0_dp
 
       ! -------------------------------------------------------------------------
       ! Fourier transformation
@@ -328,6 +314,7 @@ contains
       if (mythread==0 .and. t_inc%i_time>0) call timing_start('main1b - fourier')
 #endif
 
+      rrm(1:3, 0) = 0.0_dp ! second index of rr and rrm start at 0
       rrm(1:3, 1:nrd) = -rr(1:3, 1:nrd)
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! KREL .EQ. 0/1
@@ -360,9 +347,9 @@ contains
           ! $omp single
           do i2 = 1, alm
             do i1 = 1, alm
-              gllke(i1, i2) = (gllken(i1,i2)+gllkem(i2,i1))*0.5d0
+              gllke(i1, i2) = (gllken(i1,i2)+gllkem(i2,i1))*0.5_dp
               if (lly/=0) then
-                dgllke(i1, i2) = (dgllken(i1,i2)+dgllkem(i2,i1))*0.5d0 ! LLY Lloyd
+                dgllke(i1, i2) = (dgllken(i1,i2)+dgllkem(i2,i1))*0.5_dp ! LLY Lloyd
               end if
             end do
           end do
@@ -371,9 +358,9 @@ contains
           ! $omp single
           do i2 = 1, almgf0
             do i1 = 1, almgf0
-              gllken(i1, i2) = (gllken(i1,i2)+gllkem(i2,i1))*0.5d0
+              gllken(i1, i2) = (gllken(i1,i2)+gllkem(i2,i1))*0.5_dp
               if (lly/=0) then
-                dgllken(i1, i2) = (dgllken(i1,i2)+dgllkem(i2,i1))*0.5d0 ! LLY Lloyd
+                dgllken(i1, i2) = (dgllken(i1,i2)+dgllkem(i2,i1))*0.5_dp ! LLY Lloyd
               end if
             end do
           end do
@@ -422,7 +409,7 @@ contains
 
         do i2 = 1, almgf0
           do i1 = 1, almgf0
-            gllke0(i1, i2) = (gllke0(i1,i2)+gllke0m(i2,i1))*0.5d0
+            gllke0(i1, i2) = (gllke0(i1,i2)+gllke0m(i2,i1))*0.5_dp
           end do
         end do
         ! $omp end single
@@ -529,7 +516,7 @@ contains
           ! $omp single
           do i1 = 1, naez
             ! GAUX1 = dt/dE-dtref/dE
-            gaux1(1:lmmaxd, 1:lmmaxd) = (1.d0/cfctor)*(dtmatll(1:lmmaxd,1:lmmaxd,i1)-dtrefll(1:lmmaxd,1:lmmaxd,refpot(i1)))
+            gaux1(1:lmmaxd, 1:lmmaxd) = (1.0_dp/cfctor)*(dtmatll(1:lmmaxd,1:lmmaxd,i1)-dtrefll(1:lmmaxd,1:lmmaxd,refpot(i1)))
             gaux2(1:lmmaxd, 1:lmmaxd) = tinvll(1:lmmaxd, 1:lmmaxd, i1)
             ! T_AUX = (dt/dE-dtref/dE)* Deltat^-1
             call zgemm('N', 'N', lmmaxd, lmmaxd, lmmaxd, cone, gaux1, lmmaxd, gaux2, lmmaxd, czero, gaux3, lmmaxd)
@@ -664,24 +651,18 @@ contains
     if (krel==0) then
       if (mythread==0) then
         deallocate (gllken, stat=i_stat)
-        call memocc(i_stat, -product(shape(gllken))*kind(gllken), 'GLLKEN', 'kkrmat01')
         deallocate (gllkem, stat=i_stat)
-        call memocc(i_stat, -product(shape(gllkem))*kind(gllkem), 'GLLKEM', 'kkrmat01')
       end if
       if (lly/=0) then
         if (mythread==0) then
           deallocate (dgllken, stat=i_stat)
-          call memocc(i_stat, -product(shape(dgllken))*kind(dgllken), 'DGLLKEN', 'kkrmat01')
           deallocate (dgllkem, stat=i_stat)
-          call memocc(i_stat, -product(shape(dgllkem))*kind(dgllkem), 'DGLLKEM', 'kkrmat01')
         end if
       end if
     else
       if (mythread==0) then
         deallocate (gllke0, stat=i_stat)
-        call memocc(i_stat, -product(shape(gllke0))*kind(gllke0), 'GLLKE0', 'kkrmat01')
         deallocate (gllke0m, stat=i_stat)
-        call memocc(i_stat, -product(shape(gllke0m))*kind(gllke0m), 'GLLKE0M', 'kkrmat01')
       end if
     end if                         ! (KREL.EQ.0)
     ! ----------------------------------------------------------------------
@@ -720,15 +701,12 @@ contains
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     i_all = -product(shape(gllke))*kind(gllke)
     deallocate (gllke, stat=i_stat)
-    call memocc(i_stat, i_all, 'GLLKE', 'kkrmat01')
     ! LLY Lloyd
     if (lly/=0) then
       i_all = -product(shape(dgllke))*kind(dgllke)
       deallocate (dgllke, stat=i_stat)
-      call memocc(i_stat, i_all, 'DGLLKE', 'kkrmat01')
       i_all = -product(shape(grefllke))*kind(grefllke)
       deallocate (grefllke, stat=i_stat)
-      call memocc(i_stat, i_all, 'GREFLLKE', 'kkrmat01')
     end if
     ! ----------------------------------------------------------------------------
 

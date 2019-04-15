@@ -36,7 +36,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine construct_serialnr()
     ! take information from version file and create serial number with time stamp
-    use :: mod_version, only: version1, version2, version3, version4
+    use :: mod_version, only: version1, version2
     implicit none
 
     integer, dimension (8) :: values
@@ -77,7 +77,7 @@ contains
     print_version = .true.
 
     if (present(disable_print)) then
-    	if (disable_print) print_version = .false.
+      if (disable_print) print_version = .false.
     end if!
 
 

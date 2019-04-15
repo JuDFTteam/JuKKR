@@ -44,7 +44,7 @@ contains
   !>
   !>                                     V. Popescu - Munich, Dec 04
   !-------------------------------------------------------------------------------
-  subroutine deciopt(alat, ins, krel, kvrel, kmrot, nspin, naez, lmmax, bravais, tk, npol, npnt1, npnt2, npnt3, ez, ielast, kaoez, lefttinvll, righttinvll, vacflag, nlbasis, &
+  subroutine deciopt(alat, ins, krel, kvrel, kmrot, nspin, naez, lmmax0d, bravais, tk, npol, npnt1, npnt2, npnt3, ez, ielast, kaoez, lefttinvll, righttinvll, vacflag, nlbasis, &
     nrbasis, cmomhost, vref, rmtref, nref, refpot, lmaxd, lmgf0d, lmmaxd, lm2d, nembd1, iemxd, nspind, lmpotd, natypd, irmd, ipand)
 
     use :: mod_datatypes, only: dp
@@ -58,7 +58,7 @@ contains
     ! .. Scalar arguments
     integer :: lmmaxd, nembd1, iemxd, nspind, lmpotd, natypd, ipand, irmd, lmaxd
     integer :: lm2d, nref, lmgf0d
-    integer :: ins, krel, kmrot, nspin, naez, lmmax, npol, npnt1, npnt2, npnt3
+    integer :: ins, krel, kmrot, nspin, naez, lmmax0d, npol, npnt1, npnt2, npnt3
     integer :: ielast, nlbasis, nrbasis, kvrel
     real (kind=dp) :: alat, tk
     ! ..
@@ -95,7 +95,7 @@ contains
       ! --> first call to read the header ( IE = 0 )
 
       ie = 0
-      call decimaread(ez, tk, npnt1, npnt2, npnt3, npol, nspin, lefttinvll(1,1,1,1,1), righttinvll(1,1,1,1,1), vacflag, ie, nlbasis, nrbasis, naez, kaoez, kmrot, ins, nspin, lmmax, &
+      call decimaread(ez, tk, npnt1, npnt2, npnt3, npol, nspin, lefttinvll(1,1,1,1,1), righttinvll(1,1,1,1,1), vacflag, ie, nlbasis, nrbasis, naez, kaoez, kmrot, ins, nspin, lmmax0d, &
         ielast, fileleft, fileright, krel, natypd, lmmaxd, nembd1)
 
       ! --> get the left and right host Delta_t matrices
@@ -107,7 +107,7 @@ contains
       do ispin = 1, nspinso
         do ie = 1, ielast
           call decimaread(ez, tk, npnt1, npnt2, npnt3, npol, ispin, lefttinvll(1,1,1,ispin,ie), righttinvll(1,1,1,ispin,ie), vacflag, ie, nlbasis, nrbasis, naez, kaoez, kmrot, ins, &
-            nspin, lmmax, ielast, fileleft, fileright, krel, natypd, lmmaxd, nembd1)
+            nspin, lmmax0d, ielast, fileleft, fileright, krel, natypd, lmmaxd, nembd1)
 
           ! --> host matrices have been written out in true units
           ! they are used in p.u. units (see kloopz) --> convert them here

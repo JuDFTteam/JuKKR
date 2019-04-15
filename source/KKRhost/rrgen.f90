@@ -34,11 +34,12 @@ contains
     implicit none
     ! ..
     ! .. Scalar arguments ..
-    logical :: lsurf
-    integer :: nrd
+    logical, intent(in) :: lsurf
+    integer, intent(inout) :: nrd
     ! ..
     ! .. Array arguments ..
-    real (kind=dp) :: bv1(3, 3), rr(3, 0:nrd)
+    real (kind=dp), intent(in) :: bv1(3, 3)
+    real (kind=dp), intent(out) :: rr(3, 0:nrd)
     ! ..
     ! .. Local scalars ..
     real (kind=dp) :: epsshl, r, r1, r2, r3, rmax, rr2, rs

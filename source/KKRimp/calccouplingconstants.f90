@@ -15,9 +15,9 @@ contains
 !> For details see Ebert and Mankovsky, PRB 79, 045209 (2009) 
 !-------------------------------------------------------------------------------
 subroutine calcJijmatrix(gmat,tmat,natom,wez,Jijmatrix,Aimatrix)
-use type_tmat
-use type_gmat
-use mod_mathtools
+use type_tmat, only: tmat_type
+use type_gmat, only: gmat_type
+use mod_mathtools, only: matmat
 use mod_config, only: config_testflag
 
 implicit none
@@ -153,8 +153,8 @@ do iatom=1,natom
     Jijmatrix(:,:,iatom,jatom)=Jijmatrix(:,:,iatom,jatom)+dimag(wez*Jijmatrixtemp_complex)
 
     if ( config_testflag('Jij(E)') ) then
-      write(234932875,'(2I,500F)') iatom, jatom,dimag(wez*Jijmatrixtemp_complex)
-      write(234932876,'(2I,500F)') iatom, jatom,Jijmatrixtemp
+      write(234932875,'(2I5,500E25.14)') iatom, jatom,dimag(wez*Jijmatrixtemp_complex)
+      write(234932876,'(2I5,500E25.14)') iatom, jatom,Jijmatrixtemp
     end if 
   end do !jatom
 
@@ -173,13 +173,15 @@ end subroutine calcJijmatrix
 !> For details see Ebert and Mankovsky, PRB 79, 045209 (2009) 
 !-------------------------------------------------------------------------------
 subroutine calccouplingdeltat(wavefunction,deltaTmat,cellnew,gauntcoeff,theta,phi,lmmax,lmsize,lmax,lmpot,nrmax)
-use type_wavefunction
-use type_cellnew
-use type_gauntcoeff
+use nrtype, only: dp
+use type_wavefunction, only: wavefunction_type 
+use type_cellnew, only: cell_typenew
+use type_gauntcoeff, only: gauntcoeff_type
 use mod_mathtools, only: matmat, matmat1T,matmatT1
-use mod_vllmat
-use mod_chebyshev, only: intcheb_cell
-use mod_rotatespinframe  
+use mod_vllmat, only: vllmat
+use mod_intcheb_cell, only: intcheb_cell
+use mod_rotatespinframe, only: rotatematrix
+
 implicit none
 type(wavefunction_type)                   :: wavefunction
 type(cell_typenew)                        :: cellnew
@@ -206,36 +208,12 @@ else
   leftsol=0
 end if
 
-! lmsize= ubound(wavefunction%Rll,1)
-! print *,'lmsize, lmmax',lmsize,lmmax
-
 bpot(:,:,1) = (cellnew%vpotnew(:,:,1)-cellnew%vpotnew(:,:,2)) *0.5D0 ! not quite sure if this factor should appear here
                                                               !        check the reference of Ebert
 
+call vllmat(1, cellnew%nrmaxnew, cellnew%nrmaxnew, lmmax, lmmax, bpotll, bpot, lmpot, gauntcoeff%cleb, gauntcoeff%icleb, gauntcoeff%iend, 2, 0.0_dp, cellnew%rmeshnew, 0, gauntcoeff%ncleb)
 
-
-
-
-! do ir=1,nrmax
-! write(7776,'(50000E)') bpot(ir,:,1)
-! end do
-
-call vllmat(bpotll,bpot,lmax,lmmax,lmpot,1, &
-            cellnew%nrmaxnew,gauntcoeff,0.0D0,cellnew%rmeshnew,lmmax,0,2,1,'NS')
-
-!   do ir=1,nrmax
-!  write(7777,'(50000E)') bpotll(:,:,ir)
-! end do
 call calclambda(lambda,theta,phi)
-! print *,theta,phi
-! print *,lambda(1,:,1)
-! print *,lambda(2,:,1)
-! 
-! print *,lambda(1,:,2)
-! print *,lambda(2,:,2)
-! 
-! print *,lambda(1,:,3)
-! print *,lambda(2,:,3)
 
 
 ! ##########################################################################################3
@@ -276,19 +254,13 @@ do kspin=1,3
     do ilm2=1,lmsize
 !       write(*,*) ilm1,ilm2,lmsize
       fntemp = RBpotR(ilm1,ilm2,:)
-      call intcheb_cell(fntemp,cellnew,RBpotR_integrated(ilm1,ilm2,kspin))
+      call intcheb_cell(fntemp, RBpotR_integrated(ilm1,ilm2,kspin), cellnew%rpan_intervall, cellnew%ipan_intervall, cellnew%npan_tot, cellnew%ncheb, cellnew%nrmaxnew)
     end do
   end do
   call rotatematrix(RBpotR_integrated(:,:,kspin), theta, phi, lmmax,0 ) ! 'loc->glob')
 ! stop
 end do !kspin
 
-!   do kspin=1,3
-! !     write(*,*) 'spin ',kspin
-!     do ilm1=1,lmsize
-!       write(7700-1+kspin,'(50000E)') RBpotR_integrated(ilm1,:,kspin)
-!     end do !ilm1
-!   end do !kspin
 deltaTmat=RBpotR_integrated
 
 ! stop
@@ -303,7 +275,7 @@ end subroutine calccouplingdeltat
 !> 
 !-------------------------------------------------------------------------------
 subroutine calclambda(lambda,theta,phi)
-use mod_rotatespinframe
+use mod_rotatespinframe, only: rotatematrix
 implicit none
 double complex :: lambda(2,2,3)
 double precision :: theta, phi
@@ -364,7 +336,7 @@ elseif (conventionmode=='kkr') then
   sigma(2,1,3)=( 0.0D0, 0.0D0)
   sigma(2,2,3)=( 1.0D0, 0.0D0)
 else
-  stop'[calc_sigma] wrong mode'
+  stop '[calc_sigma] wrong mode'
 end if
 
 
@@ -397,7 +369,7 @@ end subroutine calc_sigma
 !> 
 !-------------------------------------------------------------------------------
 subroutine calccouplingconstants_writeoutJij(natom,Jijmatrix,Aimatrix,density,ITSCF)
-use type_density
+use type_density, only: density_type
 use  rotaterealspace, only: rotaterealspace_matrix2
 implicit none
 integer :: natom,ITSCF
@@ -430,7 +402,7 @@ double precision :: Jijmatrix_temp(3,3)
 
   do iatom=1,natom
 
-  write(34536268,'(I,20F)') iatom,Aimatrix(:,iatom)
+  write(34536268,'(I5,20E25.14)') iatom,Aimatrix(:,iatom)
 
 
 

@@ -35,7 +35,7 @@ contains
 
     real (kind=dp) :: d, drx, drx0, drx1, drx2, drx3, drxu, drxu0, drxu1, drxu2, drxu3, drxx, drxx0, drxx1, drxx2, drxx3, drxxu, drxxu0, drxxu1, drxxu2, drxxu3, f0, f1, f2, f3, f4, &
       f5, g1, g2, g3, g4, g5
-    integer :: i, i1, i2, i3, i4, i5, i6, igd, ist, iwr, j, ndvpt, nred
+    integer :: i, i1, i2, i3, i4, i5, i6, igd, ist, j, ndvpt, nred
     ! ..
     ! .. Statement Functions ..
     real (kind=dp) :: f131, f132, f133, f141, f142, f143, f144, f151, f152, f153, f154, f155, f161, f162, f163, f164, f165, f166, f231, f232, f233, f241, f242, f243, f244, f251, &
@@ -43,7 +43,7 @@ contains
 
     intrinsic :: real
 
-    save :: ndvpt, igd, iwr
+    save :: ndvpt, igd
     ! ..
     ! .. Data statements ..
     ! .....-----------------------------------------------------------------
@@ -57,7 +57,6 @@ contains
 
     data ndvpt/6/
     data igd/1/
-    data iwr/0/
     ! ..
     ! .. Statement Function definitions ..
     ! statement functions:
@@ -116,7 +115,6 @@ contains
     ! ..
 
     ! .....-----------------------------------------------------------------
-    iwr = 0
 
     ist = ist1
 
@@ -223,7 +221,7 @@ contains
 
     end if
 
-    nred = real(ndvpt, kind=dp)/2 + .1e0_dp
+    nred = int(real(ndvpt, kind=dp)/2 + .1e0_dp)
 
     do j = nred + ist, mesh - nred
 
@@ -384,7 +382,7 @@ contains
 
     end if
 
-    nred = real(ndvpt, kind=dp)/2 + .1e0_dp
+    nred = int(real(ndvpt, kind=dp)/2 + .1e0_dp)
 
     if (mesh-nred<=ist) then
       write (6, fmt='(/'' MESH-NRED.LT.IST. MESH,NRED,IST='',3I4)') mesh, nred, ist

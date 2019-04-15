@@ -72,13 +72,13 @@ contains
 
     ! ..
     ! .. Array arguments
-    integer, dimension(nofgij),  intent(in) :: ijtabcalc !! Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
+    integer, dimension(natom**2),  intent(in) :: ijtabcalc !! Linear pointer, specifying whether the block (i,j) has to be calculated needs set up for ICC=-1, not used for ICC=1
     integer, dimension(natomd),  intent(in) :: atom
     integer, dimension(nsymaxd), intent(in) :: isymindex
     integer, dimension(nofgij),  intent(in) :: iofgij
     integer, dimension(nofgij),  intent(in) :: jofgij
-    integer, dimension(nofgij), intent(out) :: ijtabsym
-    integer, dimension(nofgij), intent(out) :: ijtabsh
+    integer, dimension(natom**2), intent(out) :: ijtabsym
+    integer, dimension(natom**2), intent(out) :: ijtabsh
     integer, dimension(nsheld, 2*nsymaxd), intent(out) :: ish
     integer, dimension(nsheld, 2*nsymaxd), intent(out) :: jsh
     integer, dimension(nsheld), intent(inout) :: nsh1
@@ -107,7 +107,7 @@ contains
 
     ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
     write (1337, 120)
-    if (iprint>1) call printijtab(natom, nofgij, ijtabcalc)
+    if (iprint>1) call printijtab(natom, natom**2, ijtabcalc)
     ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
 
     if (nofgij<=0) then
@@ -310,7 +310,7 @@ contains
     ! OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO OUTPUT
     write (1337, 140) 'assigned shells and symmetries'
     do i = 1, natom
-      ai = (i-1)*natom + j
+      ai = (i-1)*natom
       do j = 1, natom
         ij = ai + j
         if (ijtabcalc(ij)>0) write (1337, 150) i, j, ijtabsh(ij), ijtabsym(ij), rotname(ijtabsym(ij))

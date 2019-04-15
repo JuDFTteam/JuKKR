@@ -101,7 +101,7 @@
         L2=gauntcoeff(LMAX)%LOFLM(LM2)
         L3=gauntcoeff(LMAX)%LOFLM(LM3)
 !       calculate jmat for lm1.ge.lm2
-          write(*,'(3I,10F)') lm1,lm2,lm3,gauntcoeff(LMAX)%CLEB(IA,1),bj(l3),ylm(lm3)
+          write(*,'(3I5,10E25.14)') lm1,lm2,lm3,gauntcoeff(LMAX)%CLEB(IA,1),bj(l3),ylm(lm3)
         CLLL1=FOURP*gauntcoeff(LMAX)%CLEB(IA,1)*(EI)**(L1+L3-L2)
         JMAT(LM1,LM2)=JMAT(LM1,LM2)+CLLL1*BJ(L3)*YLM(LM3)
       END DO

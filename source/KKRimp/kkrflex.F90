@@ -61,7 +61,10 @@ program kkrflex
   use mod_calctmat_bauernew !test
   use mod_change_nrmin
 
-
+  use global_variables, only: ipand
+#ifdef CPP_MPI
+  use mod_mympi, only: myrank, master
+#endif
 
 
   use mod_mathtools
@@ -182,6 +185,9 @@ mpi_size=1
       CALL MPI_INIT(ierror)
       CALL MPI_COMM_RANK(MPI_COMM_WORLD, my_rank, ierror)
       CALL MPI_COMM_SIZE(MPI_COMM_WORLD, mpi_size, ierror)
+
+      myrank = my_rank
+      master = 0
 #endif
 ! find serial number that is printed to files
 call construct_serialnr()
@@ -257,7 +263,7 @@ call log_write('<<<<<<<<<<<<<<<<<<< end set_gaunt_harmonics <<<<<<<<<<<<<<<<<<<'
 ! allocate(test1(16,16))
 ! call  JMTRX(0.000001D0,0.000001D0,0.0000001D0,(1.5D0,0.0D0),3,test1,test2)
 ! do iatom=1,16
-!   write(123456,'(50000F)') test1(iatom,:)
+!   write(123456,'(50000E25.14)') test1(iatom,:)
 ! end do
 ! stop
 
@@ -441,7 +447,7 @@ if ( config_testflag('step_potential') ) then
   do iatom=1,natom
     do ispin=1,natom
       do ilm=1,(2*lmaxatom(iatom)+1)**2
-        write(424,'(50000E)') vpot(:,ilm,ispin,iatom)
+        write(424,'(50000E25.14)') vpot(:,ilm,ispin,iatom)
       end do
     end do
   end do
@@ -458,7 +464,7 @@ if ( config_testflag('change_nrmin') ) then
 end if
 
 ! read(5339,*) vpot
-!     write(5338,'(50000F)') vpot
+!     write(5338,'(50000E25.14)') vpot
 ! vpot(:cell(1)%NRMIN_NS,2:,:,:)=0.0D0
 ! vpot(:210,2:,:,:)=0.0D0
 
@@ -471,7 +477,7 @@ if ( config_testflag('write_vpotin') ) then
       write(43623223,'(50000g24.16)') vpot(:,:,ispin,iatom)
     end do !ispin
   end do !iatom
-end if ! config_testflag('write_gmatonsite')
+end if ! config_testflag('write_vpotin')
 
 
 ! ********************************************************** 
@@ -719,7 +725,7 @@ end if
       else
         stop '[energyloop] nspin error'
       end if
-    end if ! config_testflag('write_gmatonsite')
+    end if ! config_testflag('write_totden')
 
     call log_write('>>>>>>>>>>>>>>>>>>>>> vintras >>>>>>>>>>>>>>>>>>>>>')
     ! ********************************************************** 
@@ -749,7 +755,7 @@ end if
           write(7836785,'(50000g24.16)') cmom(:,iatom)
         end do !ispin
       end do !iatom
-    end if ! config_testflag('write_gmatonsite')
+    end if ! config_testflag('write_vintrascmom')
     
     
     if ( config_testflag('write_vintraspot') ) then
@@ -760,7 +766,7 @@ end if
           write(786785,'(50000g24.16)') vpot_out(:,:,ispin,iatom)
         end do !ispin
       end do !iatom
-    end if ! config_testflag('write_gmatonsite')
+    end if ! config_testflag('write_vintraspot')
     
     if ( config_testflag('vinters=0') ) then
       intercell_ach=0.0d0
@@ -784,7 +790,7 @@ end if
           write(54633563,'(50000g24.16)') vpot_out(:,:,ispin,iatom)
         end do !ispin
       end do !iatom
-    end if ! config_testflag('write_gmatonsite')
+    end if ! config_testflag('write_vpotout')
   
 !-------------------------------------------------------------------                       ! lda+u
 ! Calculate output interaction potential for lda+u and mix.                                ! lda+u
@@ -813,9 +819,10 @@ end if
     ! single particle core energies
     call espcb(energyparts%espc,nspin,natom,corestate)
     ! input potential
+    ipand = cell(1)%npand
     call epotinb(energyparts%epotin,nspin,natom,vpot,config%ins, &
                             lmaxatom,zatom,cell,density, &
-                            cell(1)%npand, cell(1)%nrmaxd,2*lmaxd)
+                            ipand, cell(1)%nrmaxd,2*lmaxd)
     ! the electrostatic potential-energies
     call ecoub(cmom,cmom_interst,energyparts%ecou,cell,density,shapefun,gauntshape,lmaxatom,lmaxd,nspin,natom,vpot_out,zatom, &
                           config%ins,cell(1)%nrmaxd,(2*lmaxd+1)**2,2*lmaxd)
@@ -842,7 +849,7 @@ end if
           write(54644563,'(50000g24.16)') vpot_out(:,:,ispin,iatom)
         end do !ispin
       end do !iatom
-    end if ! config_testflag('write_gmatonsite')
+    end if ! config_testflag('write_vpotout')
 
 
     if (config%calcforce==1) then
@@ -876,7 +883,7 @@ end if
           write(126456563,'(50000g24.16)') vpot_out(:,:,ispin,iatom)
         end do !ispin
       end do !iatom
-    end if ! config_testflag('write_gmatonsite')
+    end if ! config_testflag('write_vpotout')
   
     if (config%ins.ne.0) then
       call log_write('>>>>>>>>>>>>>>>>>>>>> convoldrv >>>>>>>>>>>>>>>>>>>>>')
@@ -902,7 +909,7 @@ end if
           write(546456563,'(50000g24.16)') vpot_out(:,:,ispin,iatom)
         end do !ispin
       end do !iatom
-    end if ! config_testflag('write_gmatonsite')
+    end if ! config_testflag('write_vpotout')
     
     
     
@@ -914,7 +921,7 @@ end if
           write(54633563,'(50000g24.16)') vpot_out(:,:,ispin,iatom)
         end do !ispin
       end do !iatom
-    end if ! config_testflag('write_gmatonsite')
+    end if ! config_testflag('write_vpotout')
     
     
     call log_write('>>>>>>>>>>>>>>>>>>>>> mixstr >>>>>>>>>>>>>>>>>>>>>')
@@ -937,7 +944,7 @@ end if
           write(43623223,'(50000g24.16)') vpot(:,:,ispin,iatom)
         end do !ispin
       end do !iatom
-    end if ! config_testflag('write_gmatonsite')
+    end if ! config_testflag('write_vpotin')
 
   
     if (config%imix>=3 .and. itscf>config%nsimplemixfirst) then
@@ -956,7 +963,7 @@ end if
           write(54633563,'(50000g24.16)') vpot_out(:,:,ispin,iatom)
         end do !ispin
       end do !iatom
-    end if ! config_testflag('write_gmatonsite')
+    end if ! config_testflag('write_vpotmixed')
 
 
 
@@ -1025,7 +1032,7 @@ end if
       end do
     end do
 
-!     write(5339,'(50000F)') vpot
+!     write(5339,'(50000E25.14)') vpot
 
     call log_write('>>>>>>>>>>>>>>>>>>>>> rites >>>>>>>>>>>>>>>>>>>>>')
     call rites(nspin,natom,zatom,alat,cell(1)%nrmaxd,lmaxd,config%ins, &

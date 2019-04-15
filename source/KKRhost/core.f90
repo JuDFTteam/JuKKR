@@ -73,13 +73,12 @@ contains
     use :: mod_hffcore, only: hffcore
     use :: mod_ikapmue, only: ikapmue
     use :: mod_rintsimp, only: rintsimp
-    use :: mod_rnuctab, only: rnuctab
     use :: mod_rinit, only: rinit
     implicit none
 
     ! PARAMETER definitions
     real (kind=dp) :: unend, tolvar, trymix, dvstep
-    parameter (unend=600.0d0, tolvar=1.0d-6, trymix=0.01d0, dvstep=0.01d0)
+    parameter (unend=600.0_dp, tolvar=1.0d-6, trymix=0.01_dp, dvstep=0.01_dp)
     integer :: itermax, nlshellmax
     parameter (itermax=200, nlshellmax=15)
 
@@ -100,7 +99,6 @@ contains
     logical :: check, ferro, scaleb, suppressb, bndstachk
     integer :: i, ic, ic1, ic2, icst, ie, iflag, ii, il, ilc, ilshell, im, imin, in, info, ipiv(4), ish, istart, it, iter, iv, j, jlim, jtop, jv, k, kap(2), kap1, kap2, kc, l, &
       lcp1, lll, loop, lqntab(nlshellmax), muem05, n, nlshell, nmatch, nn, node, nqn, nqntab(nlshellmax), nrc, nsh, nsol, nvar, nzero, s, t
-    integer :: iabs
     character (len=10) :: txtb(1:5)
     character (len=3) :: txtk(4)
     character (len=1) :: txtl(0:3)
@@ -129,7 +127,7 @@ contains
     do it = 1, nt
       suppressb = .false.
       scaleb = .false.
-      scale = 1d0
+      scale = 1.0_dp
 
       im = imt(it)
       jtop = jws(im)
@@ -143,13 +141,12 @@ contains
       end do
       do n = (nrmax+1), nrc
         rc(n) = rat*rc(n-1)
-        drdic(n) = (rat-1.0d0)*rc(n-1)
+        drdic(n) = (rat-1.0_dp)*rc(n-1)
         r2drdic(n) = rc(n)*rc(n)*drdic(n)
         dovrc(n) = drdic(n)/rc(n)
       end do
       if (nucleus/=0) then
         stop 'something went very wrong!!!'
-        ! rnuc = rnuctab(zat(it))
         in = 1
         do while (rc(in)<=rnuc)
           in = in + 1
@@ -166,16 +163,16 @@ contains
 
       loop = 1
 100   continue
-      bcor(it) = 0.0d0
-      bcors(it) = 0.0d0
+      bcor(it) = 0.0_dp
+      bcors(it) = 0.0_dp
       do i = 1, nmemax
-        split2(i, it) = 0.0d0
-        split3(i, it) = 0.0d0
+        split2(i, it) = 0.0_dp
+        split3(i, it) = 0.0_dp
       end do
-      bsum = 0.0d0
+      bsum = 0.0_dp
       do n = 1, nrmax
-        rhochr(n, it) = 0.0d0
-        rhospn(n, it) = 0.0d0
+        rhochr(n, it) = 0.0_dp
+        rhospn(n, it) = 0.0_dp
       end do
       do n = 1, jws(im)
         vv(n) = vt(n, it)
@@ -185,14 +182,14 @@ contains
 
       if (suppressb) then
         do n = 1, jws(im)
-          bb(n) = 0.0d0
+          bb(n) = 0.0_dp
         end do
-        bsum = 0.0d0
+        bsum = 0.0_dp
       end if
 
       do n = (jws(im)+1), nrc
-        vv(n) = 0.0d0
-        bb(n) = 0.0d0
+        vv(n) = 0.0_dp
+        bb(n) = 0.0_dp
       end do
 
       nlshell = 0
@@ -252,8 +249,8 @@ contains
           do icst = 1, ncstmax
             do kc = 1, 2
               do n = 1, nrmax
-                gcor(n, kc, icst) = 0.0d0
-                fcor(n, kc, icst) = 0.0d0
+                gcor(n, kc, icst) = 0.0_dp
+                fcor(n, kc, icst) = 0.0_dp
               end do
             end do
           end do
@@ -261,13 +258,13 @@ contains
         ! xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
         ish = 0
-        bsh = 0.0d0
+        bsh = 0.0_dp
         do i = 1, nmemax
-          split1(i) = 0.0d0
+          split1(i) = 0.0_dp
         end do
         ! MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
         do muem05 = -l - 1, +l
-          mj = muem05 + 0.5d0
+          mj = muem05 + 0.5_dp
 
 
           kap1 = -l - 1
@@ -299,7 +296,7 @@ contains
             ! ----------------------------------------
             if (ish>1) then
               ec = ecortab(ic-1, it)
-              if (s==2) ec = ecortab(ic-1, it)*1.1d0
+              if (s==2) ec = ecortab(ic-1, it)*1.1_dp
               if (ish>=4) ec = ecortab(ic-2, it)
               go to 130
             end if
@@ -309,7 +306,7 @@ contains
             ! FIND  E-LIMIT
             ! --------------------
             if (lll==0) then
-              elim = -2*dble(zat(it)**2)/(1.5d0*nqn*nqn)
+              elim = -2*real(zat(it)**2, kind=dp)/(1.5_dp*nqn*nqn)
             else
               elim = vv(1) + lll/rc(1)**2
               do n = 2, nrc
@@ -318,11 +315,11 @@ contains
               end do
             end if
 
-            ec = -dble(zat(it)**2)/(2.0d0*nqn*nqn)
+            ec = -real(zat(it)**2, kind=dp)/(2.0_dp*nqn*nqn)
 
             istart = 1
 110         continue
-            if (ec<=elim) ec = elim*0.7d0
+            if (ec<=elim) ec = elim*0.7_dp
 
             ! --------------------
             ! FIND    NZERO
@@ -369,13 +366,13 @@ contains
 
             if (node/=(nqn-l-1)) then
               if (node>(nqn-l-1)) then
-                ec = 1.2d0*ec
+                ec = 1.2_dp*ec
               else
-                ec = 0.8d0*ec
+                ec = 0.8_dp*ec
               end if
               go to 110
             else if ((gc(s,s,nmatch)/gc(s,s,nmatch-1)<=0.0) .or. (gc(s,s,nmatch)/gc(s,s,nmatch-1)>=1.0)) then
-              ec = 0.9d0*ec
+              ec = 0.9_dp*ec
               go to 110
             end if
 
@@ -393,11 +390,11 @@ contains
 
             if (nsol/=2 .or. nvar==2) then
               do iv = 3, 4
-                err(iv) = 0.0d0
-                errnew(iv) = 0.0d0
-                var(iv) = 0.0d0
-                varnew(iv) = 0.0d0
-                dv(iv) = 0.0d0
+                err(iv) = 0.0_dp
+                errnew(iv) = 0.0_dp
+                var(iv) = 0.0_dp
+                varnew(iv) = 0.0_dp
+                dv(iv) = 0.0_dp
               end do
             else if (ish>=4) then
               do iv = 1, 4
@@ -406,7 +403,7 @@ contains
             else
 
               do j = 1, nsol
-                now(j) = 0.0d0
+                now(j) = 0.0_dp
               end do
               do n = 1, nmatch - 1
                 rr = rc(n)**3
@@ -416,7 +413,7 @@ contains
               end do
 
               do j = 1, nsol
-                niw(j) = 0.0d0
+                niw(j) = 0.0_dp
               end do
               do n = nmatch, nzero - 1
                 rr = rc(n)**3
@@ -443,8 +440,8 @@ contains
             iter = iter + 1
 
             if (scaleb) then
-              scale = min(1.0d0, 0.1d0*iter)
-              if (nsol==1) scale = 1.0d0
+              scale = min(1.0_dp, 0.1_dp*iter)
+              if (nsol==1) scale = 1.0_dp
               do n = 1, jws(im)
                 bb(n) = bt(n, it)*scale
               end do
@@ -462,9 +459,9 @@ contains
 
               if (node/=(nqn-l-1)) then
                 if (node>(nqn-l-1)) then
-                  ec = 1.2d0*ec
+                  ec = 1.2_dp*ec
                 else
-                  ec = 0.8d0*ec
+                  ec = 0.8_dp*ec
                 end if
                 istart = istart + 1
                 if (istart<20) go to 110
@@ -478,7 +475,7 @@ contains
               varnew(iv) = var(iv) + dv(iv)*dvstep
 
               if (abs(var(iv))>1d-16) then
-                if (abs(dv(iv)/var(iv))<tolvar) varnew(iv) = var(iv)*(1.0d0+sign(dvstep*tolvar,dv(iv)))
+                if (abs(dv(iv)/var(iv))<tolvar) varnew(iv) = var(iv)*(1.0_dp+sign(dvstep*tolvar,dv(iv)))
               else if (ferro) then
                 if (t_inc%i_write>0) write (1337, 270) ' VAR(', iv, ') = 0 for (T,N,L,K,M;S,NSOL) ', itprt, nqn, l, kap(s), (2*muem05+1), '/2  ', s, nsol, '  --- suppress B'
                 loop = 2
@@ -493,8 +490,8 @@ contains
 
               do ie = 1, nvar
                 if (abs(errnew(ie)-err(ie))<1d-16) then
-                  dedv(ie, iv) = 0.0d0
-                  if ((ie==iv) .and. .not. ferro) dedv(ie, iv) = 1.0d0
+                  dedv(ie, iv) = 0.0_dp
+                  if ((ie==iv) .and. .not. ferro) dedv(ie, iv) = 1.0_dp
                 else
                   dedv(ie, iv) = (errnew(ie)-err(ie))/(varnew(iv)-var(iv))
                 end if
@@ -505,7 +502,7 @@ contains
               varnew(jv) = var(jv)
             end do
             varnew(1) = var(1) + dv(1)*dvstep
-            if (abs(dv(1)/var(1))<tolvar) varnew(1) = var(1)*(1.0d0+sign(dvstep*tolvar,dv(1)))
+            if (abs(dv(1)/var(1))<tolvar) varnew(1) = var(1)*(1.0_dp+sign(dvstep*tolvar,dv(1)))
             call coredir(it, ctl(it,ilc), varnew(1), l, mj, 'OUT', vv, bb, rc, drdic, dovrc, nmatch, nzero, gc, fc, d_p, dq, wp, wq, pow, qow, piw, qiw, cgd, cgmd, cgo, nrc, &
               zat(it), nucleus)
             call coredir(it, ctl(it,ilc), varnew(1), l, mj, 'INW', vv, bb, rc, drdic, dovrc, nmatch, nzero, gc, fc, d_p, dq, wp, wq, pow, qow, piw, qiw, cgd, cgmd, cgo, nrc, &
@@ -524,16 +521,16 @@ contains
             call dgetri(nvar, dvde, 4, ipiv, dedv, 4*4, info)
 
             do iv = 1, nvar
-              dv(iv) = 0.0d0
+              dv(iv) = 0.0_dp
               do ie = 1, nvar
                 dv(iv) = dv(iv) + dvde(iv, ie)*err(ie)
               end do
               var(iv) = var(iv) - dv(iv)
             end do
 
-            if (var(1)>0.0d0) then
+            if (var(1)>0.0_dp) then
               if (iprint>=1 .and. (t_inc%i_write>0)) write (1337, *) ' warning from <CORE> E=', var(1), it, nqn, l
-              var(1) = -0.2d0
+              var(1) = -0.2_dp
             end if
 
             call coredir(it, ctl(it,ilc), var(1), l, mj, 'OUT', vv, bb, rc, drdic, dovrc, nmatch, nzero, gc, fc, d_p, dq, wp, wq, pow, qow, piw, qiw, cgd, cgmd, cgo, nrc, zat(it), &
@@ -605,8 +602,8 @@ contains
             ! SUM FOR EACH KAPPA
             do n = 1, nzero
               do k = 1, nsol
-                gck(k, s, n) = 0.0d0
-                fck(k, s, n) = 0.0d0
+                gck(k, s, n) = 0.0_dp
+                fck(k, s, n) = 0.0_dp
                 do j = 1, nsol
                   gck(k, s, n) = gck(k, s, n) + gc(k, j, n)
                   fck(k, s, n) = fck(k, s, n) + fc(k, j, n)
@@ -621,10 +618,10 @@ contains
               norm = r2drdic(1)*(gck(k,s,1)**2+fck(k,s,1)**2)
             end do
 
-            simp = -1.0d0
+            simp = -1.0_dp
             do n = 2, nzero
               simp = -simp
-              w = (3.0d0+simp)*r2drdic(n)
+              w = (3.0_dp+simp)*r2drdic(n)
               do k = 1, nsol
                 norm = norm + w*(gck(k,s,n)**2+fck(k,s,n)**2)
               end do
@@ -634,12 +631,12 @@ contains
             do k = 1, nsol
               norm = norm - r2drdic(n)*(gck(k,s,n)**2+fck(k,s,n)**2)
             end do
-            norm = norm/3.0d0
+            norm = norm/3.0_dp
 
             do k = 1, nsol
-              norm = norm + 0.5d0*r2drdic(1)*(gck(k,s,1)**2+fck(k,s,1)**2)
+              norm = norm + 0.5_dp*r2drdic(1)*(gck(k,s,1)**2+fck(k,s,1)**2)
             end do
-            norm = 1.0d0/sqrt(norm)
+            norm = 1.0_dp/sqrt(norm)
 
             do n = 1, nzero
               do k = 1, nsol
@@ -650,8 +647,8 @@ contains
             if (nzero<jtop) then
               do n = (nzero+1), jtop
                 do k = 1, nsol
-                  gck(k, s, n) = 0.0d0
-                  fck(k, s, n) = 0.0d0
+                  gck(k, s, n) = 0.0_dp
+                  fck(k, s, n) = 0.0_dp
                 end do
               end do
             end if
@@ -671,9 +668,9 @@ contains
             ! ------------------------------ to recover old (errounous data)
             ! -------
             if (itxray>0) then
-              norm = 1.0d0
+              norm = 1.0_dp
             else
-              norm = 1.0d0/sqrt(aux)
+              norm = 1.0_dp/sqrt(aux)
             end if
 
             do n = 1, max(nzero, jtop)
@@ -706,15 +703,15 @@ contains
             ! -----------------------------------
 
             w = r2drdic(1)
-            sz = 0.0d0
+            sz = 0.0_dp
             do k = 1, nsol
               sz = sz + w*(gck(k,s,1)**2*cgd(k)+fck(k,s,1)**2*cgmd(k))
             end do
 
-            simp = -1.0d0
+            simp = -1.0_dp
             do n = 2, nzero
               simp = -simp
-              w = (3.0d0+simp)*r2drdic(n)
+              w = (3.0_dp+simp)*r2drdic(n)
               do k = 1, nsol
                 sz = sz + w*(gck(k,s,n)**2*cgd(k)+fck(k,s,n)**2*cgmd(k))
               end do
@@ -732,10 +729,10 @@ contains
               w = r2drdic(1)
               sz = sz + w*gck(1, s, 1)*gck(2, s, 1)*cgo*2
 
-              simp = -1.0d0
+              simp = -1.0_dp
               do n = 2, nzero
                 simp = -simp
-                w = (3.0d0+simp)*r2drdic(n)
+                w = (3.0_dp+simp)*r2drdic(n)
                 do k = 1, nsol
                   sz = sz + w*gck(1, s, n)*gck(2, s, n)*cgo*2
                 end do
@@ -747,7 +744,7 @@ contains
 
             end if
 
-            sz = sz/3.0d0
+            sz = sz/3.0_dp
 
 
             ! ------------------------------
@@ -765,7 +762,7 @@ contains
               end do
             end if                 ! end of nucleus.eq.0
 
-            bsol = 0.0d0
+            bsol = 0.0_dp
             do j = 1, nsol
               do i = 1, nsol
                 bsol = bsol + bhf(i, j)
@@ -784,7 +781,7 @@ contains
               call hffcore(rnuc, nzero, kap1, kap2, nsol, mj, gck, fck, nrc, shf, s, nmemax, nkmmax, rc, drdic, sdia, smdia, soff, smoff, qdia, qoff, qmdia, qmoff, nucleus, jlim)
 
               do k = 1, nmemax
-                split(k) = 0.0d0
+                split(k) = 0.0_dp
                 do j = 1, nsol
                   do i = 1, nsol
                     split(k) = split(k) + shf(i, j, k)
@@ -805,12 +802,12 @@ contains
               ! ----------------------------------------------------- l-shell
               ! completed
               if (itxray==0 .and. iprint>0 .and. (t_inc%i_write>0)) then
-                write (1337, 280) itprt, nqn, txtl(l), txtk(iabs(kap(s))), (2*muem05+1), kap(s), iter, ec, bsol*.001d0, bsh*.001d0
+                write (1337, 280) itprt, nqn, txtl(l), txtk(iabs(kap(s))), (2*muem05+1), kap(s), iter, ec, bsol*.001_dp, bsh*.001_dp
                 if (ismqhfi==1) then
                   do k = 1, nmemax
-                    write (1337, 290) txtb(k), split(k)*.001d0, split1(k)*.001d0
+                    write (1337, 290) txtb(k), split(k)*.001_dp, split1(k)*.001_dp
                   end do
-                  write (1337, 300) 'total error in %', 100.0d0*(1.0d0-split(4)/split(5))
+                  write (1337, 300) 'total error in %', 100.0_dp*(1.0_dp-split(4)/split(5))
                 end if
               end if
               ! ----------------------------
@@ -821,10 +818,10 @@ contains
                 ic2 = ic
                 if (ecortab(ic2,it)>=ecortab(ic1,it)) then
                   imin = ic1
-                  vz = +1.0d0
+                  vz = +1.0_dp
                 else
                   imin = ic2
-                  vz = -1.0d0
+                  vz = -1.0_dp
                 end if
                 iflag = 0
                 ii = 1
@@ -850,17 +847,17 @@ contains
 
               end if
             else if (itxray==0 .and. iprint>0) then
-              if (t_inc%i_write>0) write (1337, 280) itprt, nqn, txtl(l), txtk(iabs(kap(s))), (2*muem05+1), kap(s), iter, ec, bsol*.001d0
+              if (t_inc%i_write>0) write (1337, 280) itprt, nqn, txtl(l), txtk(iabs(kap(s))), (2*muem05+1), kap(s), iter, ec, bsol*.001_dp
               if (ismqhfi==1) then
                 do k = 1, nmemax
-                  if (t_inc%i_write>0) write (1337, 290) txtb(k), split(k)*.001d0
+                  if (t_inc%i_write>0) write (1337, 290) txtb(k), split(k)*.001_dp
                 end do
-                if (t_inc%i_write>0) write (1337, 300) 'total error in %', 100.0d0*(1.0d0-split(4)/split(5))
+                if (t_inc%i_write>0) write (1337, 300) 'total error in %', 100.0_dp*(1.0_dp-split(4)/split(5))
               end if
             end if
             ! -----------------------------------------------------------------------
 
-            if (iprint>=1 .and. (t_inc%i_write>0)) write (1337, 310)((bhf(i,j)*.001d0,i=1,nsol), j=1, nsol)
+            if (iprint>=1 .and. (t_inc%i_write>0)) write (1337, 310)((bhf(i,j)*.001_dp,i=1,nsol), j=1, nsol)
 
 
             ! --------------------------------
@@ -869,7 +866,7 @@ contains
             ! USING THE CONVENTIONAL ALGORITHM
             ! --------------------------------
             if (check) then
-              ecc = 0.95d0*ec
+              ecc = 0.95_dp*ec
 150           continue
               call coredir(it, ctl(it,ilc), ecc, l, mj, 'OUT', vv, bb, rc, drdic, dovrc, nmatch, nzero, gc, fc, d_p, dq, wp, wq, pow, qow, piw, qiw, cgd, cgmd, cgo, nrc, zat(it), &
                 nucleus)
@@ -882,11 +879,11 @@ contains
                 fc(s, s, n) = fc(s, s, n)*norm
               end do
 
-              norm = 0.0d0
+              norm = 0.0_dp
               do n = 3, nzero, 2
-                norm = norm + r2drdic(n)*(gc(s,s,n)**2+fc(s,s,n)**2) + 4.d0*r2drdic(n-1)*(gc(s,s,n-1)**2+fc(s,s,n-1)**2) + r2drdic(n-2)*(gc(s,s,n-2)**2+fc(s,s,n-2)**2)
+                norm = norm + r2drdic(n)*(gc(s,s,n)**2+fc(s,s,n)**2) + 4._dp*r2drdic(n-1)*(gc(s,s,n-1)**2+fc(s,s,n-1)**2) + r2drdic(n-2)*(gc(s,s,n-2)**2+fc(s,s,n-2)**2)
               end do
-              norm = norm/3.0d0
+              norm = norm/3.0_dp
 
               lcp1 = min(nlmax, l+1)
               dec = pow(s, s)*(qow(s,s)-rc(nmatch)*ctl(it,lcp1)*fc(s,s,nmatch))/norm
@@ -944,13 +941,13 @@ contains
       ! LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 
 
-      if (itxray==0 .and. iprint>0 .and. (t_inc%i_write>0)) write (1337, 250) bcor(it)*.001d0, bcors(it)*.001d0
+      if (itxray==0 .and. iprint>0 .and. (t_inc%i_write>0)) write (1337, 250) bcor(it)*.001_dp, bcors(it)*.001_dp
       if (ismqhfi==1) then
         do n = 1, nmemax
-          if (t_inc%i_write>0) write (1337, 260) split2(n, it)*.001d0, split3(n, it)*.001d0
+          if (t_inc%i_write>0) write (1337, 260) split2(n, it)*.001_dp, split3(n, it)*.001_dp
         end do
-        if (t_inc%i_write>0) write (1337, 300) 'total error', 100.0d0*(1.0d0-split2(4,it)/split2(5,it))
-        if (t_inc%i_write>0) write (1337, 300) 'total error', 100.0d0*(1.0d0-split3(4,it)/split3(5,it))
+        if (t_inc%i_write>0) write (1337, 300) 'total error', 100.0_dp*(1.0_dp-split2(4,it)/split2(5,it))
+        if (t_inc%i_write>0) write (1337, 300) 'total error', 100.0_dp*(1.0_dp-split3(4,it)/split3(5,it))
       end if
 
       if ((itxray==0) .or. (it==itxray)) then

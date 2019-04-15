@@ -9,29 +9,27 @@ contains
 subroutine rhoval_new(eryd,ie,wez,cellnew,wavefunction,cell,gmatll,iatom,ispin,nspin,SHAPEFUN,GAUNTCOEFF, ZATOM, DENSITY, &
                          LMAXATOM,LMMAXATOM,config,lmaxd,energyparts,kspinorbit,use_fullgmat,nspinden,efermi, &
                          ldau) ! lda+u
-! use mod_gauntharmonics, only: gauntcoeff
-use type_cell
-use type_cellnew
-use type_shapefun
-use type_gauntcoeff
-use type_density
-use type_config
-use type_wavefunction
-use type_energyparts
-use mod_cheb2oldgridc
-! use mod_interpolpot
-use mod_vllmat
-use mod_checknan
-! use mod_gauntharmonics, only: gauntcoeff
-use mod_rllsll
-use mod_rhooutnew
+use nrtype, only: dp, dpc
+use type_cell, only: cell_type
+use type_cellnew, only: cell_typenew
+use type_shapefun, only: shapefun_type
+use type_gauntcoeff, only: gauntcoeff_type
+use type_density, only: density_type
+use type_config, only: config_type
+use type_wavefunction, only: wavefunction_type
+use type_energyparts, only: energyparts_type
+use mod_cheb2oldgrid, only: cheb2oldgrid
+use mod_checknan, only: checknan
+use mod_rllsll, only: rllsll
+use mod_rhooutnew, only: rhooutnew
 use mod_config, only: config_testflag
 use mod_physic_params, only: cvlight
-use mod_spinorbit
 use mod_config, only: config_testflag
-use type_ldau                                   ! lda+u
+use type_ldau, only: ldau_type                          ! lda+u
+use mod_intcheb_cell, only: intcheb_cell   ! lda+u
 
 implicit none
+
 !interface
 complex(kind=dpc)                         :: eryd
 integer                                   :: ie
@@ -131,7 +129,6 @@ end if
 
 
 
-
 call rhooutnew(gauntcoeff,df,gmatll,ek,cellnew,wavefunction,rho2ns_complex(:,:,:), &
                config%nsra, &
                lmaxd,lmaxatom,lmmaxatom,wavefunction%lmsize,wavefunction%lmsize2,(2*lmaxd+1)**2,cellnew%nrmaxnew, &
@@ -156,7 +153,7 @@ density%gfint(lmslo:lmshi,lmslo:lmshi) = density%gfint(lmslo:lmshi,lmslo:lmshi) 
 do jspin=nspinstart,nspinstop
 
     do lval=0,lmaxd
-      call intcheb_cell(cden(:,lval,jspin),cellnew,rho2ns_integrated(jspin))
+      call intcheb_cell(cden(:,lval,jspin),rho2ns_integrated(jspin), cellnew%rpan_intervall, cellnew%ipan_intervall, cellnew%npan_tot, cellnew%ncheb, cellnew%nrmaxnew)
       density%rho2ns_integrated(jspin)=density%rho2ns_integrated(jspin)+rho2ns_integrated(jspin)*df !*C0LL
       if (jspin<=2) then 
         density%den(lval,jspin,ie)=density%den(lval,jspin,ie)+rho2ns_integrated(jspin)
@@ -165,58 +162,34 @@ do jspin=nspinstart,nspinstop
 
     if (jspin<=2) then 
       do lm1=1,(lmaxd+1)**2
-        call intcheb_cell(cdenlm(:,lm1,jspin),cellnew,density%denlm(lm1,jspin,ie))
+        call intcheb_cell(cdenlm(:,lm1,jspin),density%denlm(lm1,jspin,ie), cellnew%rpan_intervall, cellnew%ipan_intervall, cellnew%npan_tot, cellnew%ncheb, cellnew%nrmaxnew)
       end do 
-      call intcheb_cell(cdenns(:,jspin),cellnew,density%den(lmaxd+1,jspin,ie))
+      call intcheb_cell(cdenns(:,jspin),density%den(lmaxd+1,jspin,ie), cellnew%rpan_intervall, cellnew%ipan_intervall, cellnew%npan_tot, cellnew%ncheb, cellnew%nrmaxnew)
       density%rho2ns_integrated(jspin)=density%rho2ns_integrated(jspin)+density%den(lmaxd+1,jspin,ie)*df !*C0LL
     end if
 
-    call cheb2oldgridc(cell,cellnew,cellnew%ncheb,(2*lmaxatom+1)**2,rho2ns_complex(:,:,jspin),density%rho2ns_complex(:,:,jspin))
+
+    call cheb2oldgrid(cell%nrmax, cellnew%nrmaxnew, (2*lmaxatom+1)**2, cell%rmesh, cellnew%ncheb, cellnew%npan_tot, cellnew%rpan_intervall, cellnew%ipan_intervall, rho2ns_complex(:,:,jspin), density%rho2ns_complex(:,:,jspin), cell%nrmax)
 
     if (config_testflag('write_rho2complex')) then
-      write(4420,'(50000E)') cellnew%rmeshnew
-      write(4421,'(50000E)') cell%rmesh
+      write(4420,'(50000E25.14)') cellnew%rmeshnew
+      write(4421,'(50000E25.14)') cell%rmesh
       do lm1=1,(2*lmaxatom+1)**2
-        write(4424,'(50000E)') rho2ns_complex(:,lm1,jspin)
-        write(4425,'(50000E)') density%rho2ns_complex(:,lm1,jspin)
+        write(4424,'(50000E25.14)') rho2ns_complex(:,lm1,jspin)
+        write(4425,'(50000E25.14)') density%rho2ns_complex(:,lm1,jspin)
       end do
     end if
 
 
 end do
 
-!     write(*,*) (density%den(0,1,ie)+density%den(1,1,ie)+density%den(2,1,ie)+density%den(3,1,ie))*df*C0LL
-!     write(*,*) (density%den(0,2,ie)+density%den(1,2,ie)+density%den(2,2,ie)+density%den(3,2,ie))*df*C0LL
-!     write(*,*) density%den(:,3,ie)
-!     write(*,*) density%den(:,jspin,ie)
-
-!     write(*,*) rho2ns_integrated(1)
-!     write(*,*) rho2ns_integrated(2)
-!     write(*,*) rho2ns_integrated(3)
-!     write(*,*) rho2ns_integrated(4)
-
-
-! if (use_fullgmat==1) then
-!   nspintemp=2
-! else
-!   nspintemp=1
-! end if
-
  do jspin=nspinstart,nspinstop
    if (jspin<=2) then
       do lval = 0,lmaxatom+1
         density%ncharge(lval,jspin) = density%ncharge(lval,jspin) + DIMAG(density%den(lval,jspin,ie)*df)
       end do
-!      ! test lmresolved charge
-!      do lval = 1,lmaxatom
-!        do mval=-lval,lval
-!          lm1 = lval**2+lval+mval+1
-!          write(*,*) 'lm charges: iatom, ie, jspin, lm', iatom, ie, jspin, lm1, DIMAG(density%denlm(lm1,jspin,ie)*df)
-!        end do
-!      end do
       do lval = 0,lmaxatom+1
         energyparts%espv(lval,jspin,iatom) = energyparts%espv(lval,jspin,iatom) + dimag( (eryd-efermi)*density%den(lval,jspin,ie)*df)
-!         write(*,*) 'ep',jspin,energyparts%espv(lval,jspin,iatom)
       end do
    end if
  end do
@@ -244,12 +217,12 @@ if (.not. config_testflag('noscatteringmoment')) then
   do jspin=nspinstart,nspinstop
 
     do lval=0,lmaxd
-      call intcheb_cell(cden(:,lval,jspin),cellnew,rho2ns_integrated(jspin))
+      call intcheb_cell(cden(:,lval,jspin),rho2ns_integrated(jspin), cellnew%rpan_intervall, cellnew%ipan_intervall, cellnew%npan_tot, cellnew%ncheb, cellnew%nrmaxnew)
       density%rho2ns_integrated_scattering(jspin)=density%rho2ns_integrated_scattering(jspin)+rho2ns_integrated(jspin)*df !*C0LL
     end do
 
     if (jspin<=2) then 
-      call intcheb_cell(cdenns(:,jspin),cellnew,temp1)
+      call intcheb_cell(cdenns(:,jspin),temp1, cellnew%rpan_intervall, cellnew%ipan_intervall, cellnew%npan_tot, cellnew%ncheb, cellnew%nrmaxnew)
       density%rho2ns_integrated_scattering(jspin)=density%rho2ns_integrated_scattering(jspin)+temp1*df !*C0LL
     end if
 
@@ -270,16 +243,14 @@ if (config%calcorbitalmoment==1) then
       if (jspin<=2) then 
 
         do lval=0,lmaxd
-          call intcheb_cell(cden(:,lval,jspin),cellnew,rho2ns_integrated(jspin))
-!           print *,'sph',ialpha,jspin,rho2ns_integrated(jspin)
+          call intcheb_cell(cden(:,lval,jspin),rho2ns_integrated(jspin), cellnew%rpan_intervall, cellnew%ipan_intervall, cellnew%npan_tot, cellnew%ncheb, cellnew%nrmaxnew)
           density%orbitalmom(ialpha)=density%orbitalmom(ialpha) + rho2ns_integrated(jspin)*df!*C0LL
           density%orbitalmom_sp(jspin,ialpha)=density%orbitalmom_sp(jspin,ialpha) + rho2ns_integrated(jspin)*df!*C0LL
           density%orbitalmom_lm(lval,ialpha)=density%orbitalmom_lm(lval,ialpha) + rho2ns_integrated(jspin)*df!*C0LL
         end do
         if (jspin<=2) then 
-          call intcheb_cell(cdenns(:,jspin),cellnew,temp1)
+          call intcheb_cell(cdenns(:,jspin),temp1, cellnew%rpan_intervall, cellnew%ipan_intervall, cellnew%npan_tot, cellnew%ncheb, cellnew%nrmaxnew)
           density%orbitalmom_ns(ialpha)=density%orbitalmom_ns(ialpha) + temp1*df!*C0LL
-!         density%orbitalmom(ialpha)=density%orbitalmom(ialpha) + temp1*df*C0LL
         end if
       end if
     end do
@@ -287,11 +258,6 @@ if (config%calcorbitalmoment==1) then
 
 end if
 
-
-
-
-
-! stop 'rhoval'
 end subroutine rhoval_new
 
 end module mod_rhoval_new

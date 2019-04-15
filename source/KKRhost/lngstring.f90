@@ -41,7 +41,7 @@ module mod_lngstring
   
       ! Local variables
       character :: c
-      integer :: i, ichar
+      integer :: i
   
       lngstring = 0
       do i = lstrmax, 1, -1

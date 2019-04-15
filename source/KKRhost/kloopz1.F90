@@ -52,7 +52,7 @@ contains
 
     ! .. Parameters
     integer, parameter :: linmax = 1
-    real (kind=dp), parameter :: tolmssq = 1.0d-6
+    real (kind=dp), parameter :: tolmssq = 1.0e-6_dp
     ! .. Input variables
     integer, intent (in) :: ie
     integer, intent (in) :: lly    !! LLY <> 0 => use Lloyd formula
@@ -189,7 +189,7 @@ contains
     ! Symmetrising G matrix    : pick G(ISYM) for symmetry ISYM
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! if ( ICALL.EQ.1 ) then
-    cnsymat = cone/dble(nsymat)
+    cnsymat = cone/real(nsymat, kind=dp)
     do iu = 1, nsymaxd
       do it = 1, natyp
         isumt(iu, it) = it
@@ -283,7 +283,7 @@ contains
         if (kmrot==0) then
           do lm2 = 1, lmmaxd
             do lm1 = 1, lm2
-              mssq(lm1, lm2, i) = 0.5d0*(mssq(lm1,lm2,i)+mssq(lm2,lm1,i))
+              mssq(lm1, lm2, i) = 0.5_dp*(mssq(lm1,lm2,i)+mssq(lm2,lm1,i))
               mssq(lm2, lm1, i) = mssq(lm1, lm2, i)
             end do
           end do
@@ -516,7 +516,7 @@ contains
     end if
     do ns = 1, nshell(0)
 
-      ldia = (abs(ratom(1,ns)**2+ratom(2,ns)**2+ratom(3,ns)**2)<1d-6)
+      ldia = (abs(ratom(1,ns)**2+ratom(2,ns)**2+ratom(3,ns)**2)<1.0e-6_dp)
       ! -------------------------------------------------------------------------
       ! GLL = -TAU
       ! -------------------------------------------------------------------------

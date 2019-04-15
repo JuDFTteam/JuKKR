@@ -3,15 +3,15 @@ summary: Source code documentation of the Jülich KKR code family
 author: The Jülich KKR team
 email: p.ruessmann@fz-juelich.de
 license: by-nc
-version: 3.0
+version: 3.3
 project_website: https://iffgit.fz-juelich.de/kkr/jukkr
 project_download: https://iffgit.fz-juelich.de/kkr/jukkr
-src_dir: ../source/voronoi/
+src_dir: ../source/common/
+         ../source/voronoi/
          ../source/KKRhost/
          ../source/KKRimp/
-         ../source/voronoi/
          ../source/PKKprime/
-exclude_dir: 
+exclude_dir: ../source/deprecated/
 page_dir: ./
 output_dir: ./build
 media_dir: ./media

@@ -30,7 +30,7 @@ contains
     real (kind=dp) :: nd(64, 3, *), ratom(3, *), rrot(48, 3, *)
     integer :: isymindex(*)
 
-    integer :: i, id, ns, k, j, isym
+    integer :: i, id, ns, isym
 
 
     do ns = 1, nshell

@@ -29,7 +29,7 @@ contains
 
 #ifdef CPP_MPI
     use :: mpi
-    use :: mod_mympi, only: find_dims_2d, distribute_linear_on_tasks, mpiadapt
+    use :: mod_mympi, only: mpiadapt, distribute_work_atoms
     use :: mod_types, only: t_mpi_c_grid, save_t_mpi_c_grid, get_ntot_pt_ioff_pt_2d, init_params_t_imp, init_t_imp, bcast_t_imp_scalars, &
       bcast_t_imp_arrays
 #endif
@@ -39,7 +39,6 @@ contains
       use_qdos, use_readcpa, write_deci_tmat, write_gmat_plain, write_green_host, write_green_imp, write_kkrimp_input, &
       write_pkkr_input, write_pkkr_operators, write_rhoq_input, write_gmat_ascii, set_cheby_nosoc
     use :: mod_constants, only: czero, cone, pi
-    use :: mod_profiling, only: memocc
     use :: mod_operators_for_fscode, only: operators_for_fscode
     use :: mod_getscratch, only: opendafile
     use :: mod_kloopz1, only: kloopz1_qdos
@@ -58,7 +57,7 @@ contains
     use :: mod_cinit, only: cinit
     ! array dimensions
     use :: global_variables, only: maxmshd, iemxd, natypd, naezd, kpoibz, lmmaxd, lmgf0d, lmaxd, nrefd, nsheld, wlength, nofgij, &
-      naclsd, nspind, nclsd, nembd, krel, korbit, natomimpd, nrd, nembd1, nspindd, nprincd, lmmaxso, irmind, nspotd, irmd, lpotd, &
+      naclsd, nspind, nclsd, nembd, krel, korbit, natomimpd, nrd, nembd1, nspindd, nprincd, irmind, nspotd, irmd, lpotd, &
       ncleb, ipand, irnsd, lmpotd, irid, nfund, ntotd
     ! stuff defined in main0 already
     use :: mod_main0, only: natyp, ielast, npol, nref, naez, nsra, ins, nspin, ncls, lly, atom, cls, nacls, refpot, ez, alat, rmtref, &
@@ -86,12 +85,13 @@ contains
     integer :: iltmp
     integer :: nmesh
     integer :: nqdos               !! number of qdos points
+    integer :: nq_start            !! start of q-points parallelization
+    integer :: nq_end              !! end number for q-point parallelization
     integer :: isite               ! qdos ruess
     integer :: ideci
     integer :: ispin
     integer :: iprint
     integer :: itmpdir
-    integer :: lrecgrf
     integer :: lrectmt
     integer :: lrectra             ! LLY Lloyd
     integer :: iqdosrun            !! counter to organise qdos run
@@ -100,7 +100,6 @@ contains
     integer :: ncpafail
     integer :: icpaflag
     integer :: reclength
-    integer :: lrecgreen
     real (kind=dp) :: phi
     real (kind=dp) :: theta
     real (kind=dp) :: rfctor       !! rfctor=a/(2*pi) conversion factor to p.u.
@@ -173,42 +172,37 @@ contains
     ! PARAMETER(NCPAIRD=10)
     ! INTEGER IATCONDL(NCPAIRD),IATCONDR(NCPAIRD),NCONDPAIR
     ! -------------------------------------------------------------------------
-    ! .. Intrinsic Functions ..
-    intrinsic :: atan
 
 
     ! .. Set the parameters
-    lrectra = wlength*4            ! LLY Lloyd
-    lrecgrf = wlength*4*naclsd*lmgf0d*lmgf0d*nclsd ! 4 words = 16 bytes / complex number (in ifort 4; in gfort 16) word/byte distiction moved to subroutine opendafile to be the same for all unformatted files
+    ! 4 words = 16 bytes / complex number (in ifort 4; in gfort 16) word/byte distiction moved to subroutine opendafile to be the same for all unformatted files
     lrectmt = wlength*4*lmmaxd*lmmaxd
-    lrecgreen = wlength*2*natomimp*lmmaxd*natomimp*lmmaxd
-    ! ..
-    ! .. Data statements
-    ! ..
+
+    ! set printing flag
     iprint = 0
     if (t_inc%i_write>0) iprint = 1
-
-    ! allocatable arrays
-    allocate (bzkp(3,kpoibz,maxmshd), stat=i_stat)
-    call memocc(i_stat, product(shape(bzkp))*kind(bzkp), 'BZKP', 'main1b')
-    allocate (lly_g0tr(ielast), stat=i_stat)
-    call memocc(i_stat, product(shape(lly_g0tr))*kind(lly_g0tr), 'LLY_G0TR', 'main1b')
-    allocate (tralpharef(ielast), stat=i_stat)
-    call memocc(i_stat, product(shape(tralpharef))*kind(tralpharef), 'TRALPHAREF', 'main1b')
-    allocate (cdosref_lly(ielast), stat=i_stat)
-    call memocc(i_stat, product(shape(cdosref_lly))*kind(cdosref_lly), 'CDOSREF_LLY', 'main1b')
-    allocate (tracet(ielast,nspind), stat=i_stat)
-    call memocc(i_stat, product(shape(tracet))*kind(tracet), 'TRACET', 'main1b')
-    allocate (tralpha(ielast,nspind), stat=i_stat)
-    call memocc(i_stat, product(shape(tralpha))*kind(tralpha), 'TRALPHA', 'main1b')
-    allocate (lly_grtr(ielast,nspind), stat=i_stat)
-    call memocc(i_stat, product(shape(lly_grtr))*kind(lly_grtr), 'LLY_GRTR', 'main1b')
-    allocate (cdos_lly(ielast,nspind), stat=i_stat)
-    call memocc(i_stat, product(shape(cdos_lly))*kind(cdos_lly), 'CDOS_LLY', 'main1b')
 
     ! Consistency check
     if ((krel<0) .or. (krel>1)) stop ' set KREL=0/1 (non/fully) relativistic mode in the inputcard'
     if ((krel==1) .and. (nspind==2)) stop ' set NSPIND = 1 for KREL = 1 in the inputcard'
+
+    ! initialize allocatable arrays
+    allocate (bzkp(3,kpoibz,maxmshd), stat=i_stat)
+    allocate (lly_g0tr(ielast), stat=i_stat)
+    allocate (tralpharef(ielast), stat=i_stat)
+    allocate (cdosref_lly(ielast), stat=i_stat)
+    allocate (tracet(ielast,nspind), stat=i_stat)
+    allocate (tralpha(ielast,nspind), stat=i_stat)
+    allocate (lly_grtr(ielast,nspind), stat=i_stat)
+    allocate (cdos_lly(ielast,nspind), stat=i_stat)
+    bzkp = 0.0_dp
+    lly_g0tr = czero
+    tralpharef = czero
+    cdosref_lly = czero
+    tracet = czero
+    tralpha = czero
+    lly_grtr = czero
+    cdos_lly = czero
 
     ! -------------------------------------------------------------------------
     ! This routine previously used to read from unformatted files created by
@@ -309,11 +303,9 @@ contains
 
     if (.not. allocated(ginp)) then
       allocate (ginp(naclsmax*lmgf0d,lmgf0d,ncls), stat=i_stat)
-      call memocc(i_stat, product(shape(ginp))*kind(ginp), 'GINP', 'main1b')
     end if
     if (.not. allocated(dginp)) then
       allocate (dginp(naclsmax*lmgf0d,lmgf0d,ncls), stat=i_stat)
-      call memocc(i_stat, product(shape(dginp))*kind(dginp), 'DGINP', 'main1b')
     end if
 
     if (t_tgmat%gref_to_file) then
@@ -414,10 +406,7 @@ contains
       i_all = -product(shape(qvec))*kind(qvec)                                      ! qdos ruess
       ! deallocate in first run allocated array to change it                        ! qdos ruess
       deallocate (qvec, stat=i_stat)                                                ! qdos ruess
-      call memocc(i_stat, i_all, 'QVEC', 'main1b')                                  ! qdos ruess
-                                                                                    ! qdos ruess  
       allocate (qvec(3,nqdos), stat=i_stat)                                         ! qdos ruess
-      call memocc(i_stat, product(shape(qvec))*kind(qvec), 'QVEC', 'main1b')        ! qdos ruess
       do iq = 1, nqdos                                                              ! qdos ruess
         read (67, *)(qvec(ix,iq), ix=1, 3)                                          ! qdos ruess
       end do                                                                        ! qdos ruess
@@ -432,10 +421,10 @@ contains
       nofks(1) = 1                                                                  ! qdos ruess
       volcub(1, 1) = volbz(1)                                                       ! qdos ruess
       nsymat = 1                                                                    ! qdos ruess
+      
     else if (use_qdos .and. (iqdosrun==0)) then                              ! qdos ruess
       ! Call the k loop just once with one k point to write out the tmat.qdos file  ! qdos ruess
       allocate (qvec(3,nqdos), stat=i_stat)                                         ! qdos ruess
-      call memocc(i_stat, product(shape(qvec))*kind(qvec), 'QVEC', 'main1b')        ! qdos ruess
       if (i_stat/=0) stop '[main1b] Error allocating qvec'                          ! qdos ruess
       qvec(1:3, 1) = 0.d0                                                           ! qdos ruess
       kmesh(1:ielast) = 1                                                           ! qdos ruess
@@ -445,9 +434,6 @@ contains
 
     ncpafail = 0
 
-    ! Initialize trace for Lloyd formula
-    lly_grtr(:, :) = czero ! 1:IELAST,1:NSPIND
-
     ! determine extend of spin loop
     nspin1 = nspin/(1+korbit) ! factor (1+korbit) takes care of NOSOC option
     if (use_Chebychev_solver) then
@@ -455,14 +441,23 @@ contains
       call read_angles(t_params, natyp, theta_at, phi_at)
     end if
 
+    ! find boundaries of qdos and energy loops
+    ie_start = 0
+    ie_end = ielast
+    nq_start = 1
+    nq_end = nqdos
 #ifdef CPP_MPI
     ie_start = t_mpi_c_grid%ioff_pt2(t_mpi_c_grid%myrank_at)
     ie_end = t_mpi_c_grid%ntot_pt2(t_mpi_c_grid%myrank_at)
-#else
-    ie_start = 0
-    ie_end = ielast
+    if(use_qdos) then
+      call distribute_work_atoms(nqdos, nq_start, nq_end)
+      if (t_inc%i_write>0) then
+        write(1337,'(A,I9,A,I9,A,I9)') 'rank', myrank, ' does q-points: ', nq_start, ' to ', nq_end
+      endif
+    endif
 #endif
     if (write_rhoq_input) then
+      ! overwrite energy loop automatically
       ie_start = 1
       ie_end = 1
     end if
@@ -570,7 +565,7 @@ contains
             tmat(:, :) = t_tgmat%tmat(:, :, irec)
           end if
 
-          if (use_Chebychev_solver) then
+          if (use_Chebychev_solver .and. .not. set_cheby_nosoc) then
             ! read in theta and phi for noncolinear
             theta = theta_at(i1)
             phi = phi_at(i1)
@@ -590,7 +585,7 @@ contains
               tmat(:, :) = t_lloyd%dtmat(:, :, irec)
             end if
 
-            if (use_Chebychev_solver) call rotatematrix(tmat, theta, phi, lmgf0d, 0) ! LLY
+            if (use_Chebychev_solver .and. .not. set_cheby_nosoc) call rotatematrix(tmat, theta, phi, lmgf0d, 0) ! LLY
 
             dtmatll(1:lmmaxd, 1:lmmaxd, i1) = tmat(1:lmmaxd, 1:lmmaxd) ! LLY
             if (t_lloyd%dtmat_to_file) then
@@ -654,7 +649,7 @@ contains
         ! -------------------------------------------------------------------
         ! Loop over all QDOS points and change volume for KLOOPZ run accordingly
         ! -------------------------------------------------------------------
-        do iq = 1, nqdos           ! qdos ruess
+        do iq = nq_start, nq_end           ! qdos ruess
           if (use_qdos) bzkp(:, 1, 1) = qvec(:, iq) ! qdos ruess: Set q-point x,y,z
 
 #ifdef CPP_TIMING
@@ -664,8 +659,7 @@ contains
             ezoa, atom, rcls, icc, ginp, ideci, lefttinvll(1,1,1,1,ie), righttinvll(1,1,1,1,ie), vacflag, nlbasis, nrbasis, factl, natomimp, nsymat, dsymll, ratom, rrot, nsh1, &
             nsh2, ijtabsym, ijtabsh, icheck, invmod, refpot, trefll, tsst, msst, cfctor, cfctorinv, crel, rc, rrel, srrel, irrel, nrrel, drotq, symunitary, kmrot, natyp, ncpa, &
             icpa, itcpamax, cpatol, noq, iqat, itoq, conc, iprint, icpaflag, ispin, nspindd, tqdos, iqdosrun, & ! qdos
-            dtrefll, dtmatll, dginp, lly_grtr(ie,ispin), & ! LLY Lloyd
-            tracet(ie,ispin), lly) ! LLY Lloyd
+            dtrefll, dtmatll, dginp, lly_grtr(ie,ispin), tracet(ie,ispin), lly) ! LLY Lloyd
 
 #ifdef CPP_TIMING
           call timing_pause('main1b - kloopz')
@@ -973,7 +967,6 @@ contains
           open (unit=60, file='green_host', form='FORMATTED')
         end if
         allocate (dtmtrx(lmmaxd*t_imp%natomimp,lmmaxd*t_imp%natomimp), stat=i_stat)
-        call memocc(i_stat, product(shape(dtmtrx))*kind(dtmtrx), 'DTMTRX', 'main1b')
         dtmtrx = czero
 
         ! find DTMTRX (written out for IELAST==1), parallelized with
@@ -986,7 +979,7 @@ contains
           atomimp(1:t_imp%natomimp), t_imp%irminimp(1:t_imp%natomimp), icleb, ircut,&
           t_imp%ircutimp(0:ipand,1:t_imp%natomimp),zat,t_imp%zimp(1:t_imp%natomimp),&
           rmesh,cleb(1,1),t_imp%rimp(1:irmd,1:t_imp%natomimp),rclsimp,ez(ie),       &
-          t_imp%vispimp,t_imp%vinsimp, dtmtrx, lmmaxso)
+          t_imp%vispimp,t_imp%vinsimp, dtmtrx, lmmaxd)
 
         ! compute GMATLL_GES, on master rank only
         if (ielast==3 .and. myrank==master) then
@@ -995,7 +988,6 @@ contains
 
         i_all = -product(shape(dtmtrx))*kind(dtmtrx)
         deallocate (dtmtrx, stat=i_stat)
-        call memocc(i_stat, i_all, 'DTMTRX', 'main1b')
 
       end do                       ! ie-loop
 
@@ -1045,21 +1037,13 @@ contains
 
     ! deallocate arrays
     deallocate (bzkp, stat=i_stat)
-    call memocc(i_stat, -product(shape(bzkp))*kind(bzkp), 'BZKP', 'main1b')
     deallocate (lly_g0tr, stat=i_stat)
-    call memocc(i_stat, -product(shape(lly_g0tr))*kind(lly_g0tr), 'LLY_G0TR', 'main1b')
     deallocate (tralpharef, stat=i_stat)
-    call memocc(i_stat, -product(shape(tralpharef))*kind(tralpharef), 'TRALPHAREF', 'main1b')
     deallocate (cdosref_lly, stat=i_stat)
-    call memocc(i_stat, -product(shape(cdosref_lly))*kind(cdosref_lly), 'CDOSREF_LLY', 'main1b')
     deallocate (tracet, stat=i_stat)
-    call memocc(i_stat, -product(shape(tracet))*kind(tracet), 'TRACET', 'main1b')
     deallocate (tralpha, stat=i_stat)
-    call memocc(i_stat, -product(shape(tralpha))*kind(tralpha), 'TRALPHA', 'main1b')
     deallocate (lly_grtr, stat=i_stat)
-    call memocc(i_stat, -product(shape(lly_grtr))*kind(lly_grtr), 'LLY_GRTR', 'main1b')
     deallocate (cdos_lly, stat=i_stat)
-    call memocc(i_stat, -product(shape(cdos_lly))*kind(cdos_lly), 'CDOS_LLY', 'main1b')
 
     if (t_inc%i_write>0) write (1337, '(79("="),/,30X,"< KKR1b finished >",/,79("="),/)')
 

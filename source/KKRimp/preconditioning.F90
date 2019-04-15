@@ -169,16 +169,6 @@ allocate(gmathostnew(nlmhostnew,nlmhostnew))
 ! ###########################################
 
 recl1=wlength*2*natomimpd*lmsizehost*natomimpd*lmsizehost
-! print *, 'natomimpd',natomimpd,'lmsizehost',lmsizehost
-
-! Obsolete after introducinf wlength
-!!#ifdef GFORT
-!! the gfortran compiler assumes a rec length of 1 byte whereas the 
-!! ifc compiler assumes a rec length of 4byte by default.
-!! one should change the bulk program in the future!!!
-!!recl1=4*recl1
-!!#endif
-
 recl2=wlength*4*nlmhostnew*nlmhostnew
 open (88,access='direct',recl=recl1,file='kkrflex_green',form='unformatted')
 if (lattice_relax==0) then
@@ -218,14 +208,14 @@ do ie=mpi_iebounds(1,my_rank),mpi_iebounds(2,my_rank)
 
     call preconditioning_readgreenfn(ie,ispin,ielast,lmsizehost,ntotatom,gmathost,'singleprecision')
 !                                      in    in         in        in     out
-    if(config_testflag('gtest')) write(10000+my_rank,'(832E)') gmathost
+    if(config_testflag('gtest')) write(10000+my_rank,'(832E25.14)') gmathost
 
     call dysonvirtatom(natom,ntotatom,lmsizehost,gmathost,tmat(:,:,:,ie,ispin),killatom, &
                        isvatom,lmaxatom,gmathostnew,nlmhostnew,lattice_relax,NSOC)
 
     call preconditioning_writegreenfn(ie,ispin,ielast,gmathostnew,nlmhostnew)
 
-       if(config_testflag('gtest')) write(20000+my_rank,'(832E)') gmathostnew
+       if(config_testflag('gtest')) write(20000+my_rank,'(832E25.14)') gmathostnew
 
 
     write(1337,*) 'proc = ',my_rank,' IE = ',ie,'ispin= ',ispin,'done...'
@@ -393,7 +383,7 @@ end if
 jatom=0
 allocate(intercell_ach(lmpothost,ntotatom)) ! Phivos 2.6.14: before this was: allocate(intercell_ach(lmpothost,natom)), too small in case of "killed" atoms
 do iatom=1,ntotatom
-!   write(*,'(A,5000F)') 'test',achnew(:,iatom)
+!   write(*,'(A,5000E25.14)') 'test',achnew(:,iatom)
   if (killatom(iatom)==0) then
     jatom=jatom+1
     intercell_ach(:,jatom)=achnew(:,iatom)
@@ -556,7 +546,7 @@ end function this_readline
    write(1337,*) '--------------------------------------------'
 !    write(*,*) '[read_energy] energie weights are:',wez
    do ie=1,ielast
-     write(1337,'(A,I3,2F,A,2F)') '       ',ie,ez(ie),' ',wez(ie)
+     write(1337,'(A,I3,2F25.14,A,2F25.14)') '       ',ie,ez(ie),' ',wez(ie)
    end do
 !    read(88,rec=1) ielast,nspin,natomimp,lmmaxd,(ez(ie),ie=1,ielast),(wez(ie),ie=1,ielast)
    close(88)
@@ -566,25 +556,22 @@ end function this_readline
 
 
    subroutine preconditioning_readgreenfn(IE,ISPIN,IELAST,lmsizehost,NATOMIMP,GCLUST,CMODE)
+     use nrtype, only: dp, sp
      implicit none
-     double complex,allocatable   ::  gclust(:,:)
-     complex,allocatable   ::  gclustsingle(:,:)
-     integer                      ::  natomimp,ie,lmsizehost,ispin,ielast
-     integer                      ::  ierror,ngclus,irec
-     character(len=*)             ::  cmode
+     complex (kind=dp), allocatable :: gclust(:,:)
+     complex (kind=sp), allocatable :: gclustsingle(:,:)
+     integer :: natomimp,ie,lmsizehost,ispin,ielast
+     integer :: ierror,ngclus,irec
+     character(len=*) :: cmode
    ngclus=natomimp*lmsizehost
-!    write(*,*) natomimp,lmsizehost
 
    irec = ielast*(ispin-1)+ ie+1
-!     write(*,*) 'irec',irec
    if (cmode=='singleprecision') then 
      allocate (gclust(ngclus,ngclus),stat=ierror)
      allocate (gclustsingle(ngclus,ngclus),stat=ierror)
      read(88,rec=irec) gclustsingle
-
-!      write(*,'(50000F)') gclustsingle
-
-     gclust=DCMPLX(gclustsingle)
+     ! write(*,'(50000E25.14)') gclustsingle
+     gclust=CMPLX(gclustsingle, kind=dp)
      deallocate (gclustsingle)
    else if (cmode=='doubleprecision') then
      allocate (gclust(ngclus,ngclus),stat=ierror)
@@ -603,7 +590,10 @@ end function this_readline
      integer                      ::  irec
    irec = ielast*(ispin-1)+ ie+1
    write(89,rec=irec) gclust
-   if(config_testflag('gmat_plain')) write(8989,'(65000f)') gclust
+   if(config_testflag('gmat_plain')) then
+     if (ie==1 .and. ispin==1) write(8989, '(A,i9)') '#gref read-in', nlmhostnew
+     write(8989,'(2i5,650000E25.14)') ie, ispin, gclust
+   end if
    end subroutine !precontitioning_start
 
 

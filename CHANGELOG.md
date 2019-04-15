@@ -15,9 +15,11 @@
 
 ----
 
-## *UNRELEASED* (last updated: 2018-12-11)
+## *UNRELEASED* (last updated: 2019-04-15)
 
 **Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release.**
+
+Removed a lot of code duplicates among different
 
 ### Added
 - None
@@ -33,6 +35,49 @@
 
 ### Fixed
 - None
+
+----
+
+## v3.3 (2019-04-15)
+
+### Added
+- script to check the wronskian (see PhD Bauer, p.48)
+- calc_wronskian option in KKRhost code to check single-site wavefunctions
+- auto tests for OpenMP and MPI functionality
+- xsf maker utility to create vesta input file
+- improved error handling of inputcard reading errors
+- generate code coverage report
+
+### Changed
+- more routines and modules in source/common directory
+- use static library for pkkprime file among different apps
+- use static library for kkrhost routines
+- use routines from common/radial_solver_Chebychev in KKRimp as well
+- rename lmsize to lmmaxd0 whenever the value is fixed (orbitalmoment.f90, rhoqtools.F90, rhovalnew.F90, tmat_newsolver.F90, rllsllsourceterms.f90)
+- replace lmmaxso with lmmaxd and old lmmaxd with lmmmax0d wherever no spin-doubling occurs. Now lmmax0d=(lmax+1)**2 and lmmaxd=(1+krel+korbit)*(lmax+1)**2
+- rename lmmax with lmmax0d or lmsize (in cases where the subroutine is called with different matrix sizes)
+- use mpiatom parallelization scheme by default if NATYP>=IELAST
+- moved wronskian from KKRimp to common to be used in KKRhost as well
+- added lmdos writeout mode for qdos
+- find NPRINCD to lowest possible divisor of NAEZ
+
+### Deprecated
+- None
+
+### Removed
+- removed code duplicates
+
+### Fixed
+- header handling in complexdos3 tool
+- position of chebint in rhooutnew of KKRimp (probably) corrected
+- bug in SRA-trick usage (issue #108)
+- bug FERMIOUT option (issue #109)
+- fix for issue #113
+- fix for issue #114
+- fix for issue #115
+- fix for issue #116
+- gfortran compilation fixed for kkrhost, kkrimp, voronoi
+- fix debug compilation of kkrimp
 
 ----
 
@@ -68,6 +113,7 @@ Start of large KKR repository holding *voronoi*, *KKRhost*, *KKRimp*, *KKRsusc*,
 - escaped keywords (like `<ZATOM>` as opposed to `LMAX`) are now allowed to be case-insensitive (in both, `inputcard` and source code).
 - refactoring of `source/common/ioinput.f90` for more simplicity, readability and flexibility
 - total energy is also calculated and written out in case of non-scf calculation
+- change factor (2-korbit) to (nspin-korbit) for NOSOC with NSPIN=1
 
 ### Deprecated
 - makefiles of *PKKprime*, *voronoi*, *KKRimp*, *rhoq*
@@ -112,7 +158,7 @@ Major code refactoring getting rid of the `inc.p` files which eliminates the nee
 ### Changed
 - convert all files to Fortran 90, including putting everything into modules
 - polish code using NAG compiler, gfortran and ifort with debug options
-- change 'NOSOC' test option such that now is explicitly does a spin-loop with decoupled (i.e. a factor 2 smaller) matrices. The old behavior can be triggered by setting the '<SOCSCL>' values to 0.
+- change `NOSOC` test option such that now is explicitly does a spin-loop with decoupled (i.e. a factor 2 smaller) matrices. The old behavior can be triggered by setting the `<SOCSCL>` values to 0.
 
 ### Deprecated
 - `inc.p` dependecy for array dimensions

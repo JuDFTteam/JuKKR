@@ -26,44 +26,44 @@ subroutine energyloop(my_rank,mpi_size,ITSCF,cell, vpot, shapefun,zatom,natom,ns
 #ifdef CPP_MPI
        use mpi
 #endif
-      use nrtype
-      use mod_rhoval
-      use mod_rhoval_new
-      use mod_rhovalfull
-      use type_cell
-      use type_cellnew
-      use type_cellorbit
-      use type_density
-      use type_tmat
-      use type_gmat
-      use type_config
-      use type_gmatonsite
-      use type_shapefun
-      use type_energyparts
-      use type_wavefunction
-      use type_ldau    ! lda+u
-      use mod_read_spinorbit
-      use mod_calctmat
-      use mod_calctmatfull
-      use mod_calctmat_bauernew
-      use mod_gdyson
-      use mod_interpolatecell
-      use mod_rotatespin
-      use mod_rotatespinframe
-      use mod_checknan
+      use nrtype, only: dp, dpc, pi, wlength
+      use mod_rhoval, only: rhoval
+      use mod_rhoval_new, only: rhoval_new
+      use mod_rhovalfull, only: rhovalfull
+      use type_cell, only: cell_type
+      use type_cellnew, only: cell_typenew
+      use type_cellorbit, only: cell_typeorbit
+      use type_density, only: density_type
+      use type_tmat, only: tmat_type
+      use type_gmat, only: gmat_type
+      use type_config, only: config_type
+      use type_gmatonsite, only: gmatonsite_type
+      use type_shapefun, only: shapefun_type
+      use type_energyparts, only: energyparts_type
+      use type_wavefunction, only: wavefunction_type
+      use type_ldau, only: ldau_type    ! lda+u
+      use mod_read_spinorbit, only: read_spinorbit
+      use mod_calctmat, only: calctmat
+      use mod_calctmatfull, only: calctmatfull
+      use mod_calctmat_bauernew, only: calctmat_bauernew
+      use mod_gdyson, only: gdyson, gdyson_read_kgrefsoc
+      use mod_interpolatecell, only: interpolatecell
+      use mod_rotatespin, only: rotatespin
+      use mod_rotatespinframe, only: rotatematrix, rotatevector
+      use mod_checknan, only: checknan
 !       use mod_config, only: config_testflag
-      use mod_config
-      use mod_timing
-      use mod_complexdos3
+      use mod_config, only: config_runflag, config_testflag
+      use mod_timing, only: timing_start, timing_stop, timing_pause
+      use mod_complexdos3, only: complexdos3
       use mod_log, only: log_write
-      use mod_read_angle
-      use mod_mixbroydenspin
-      use mod_wavefunctodisc
+      use mod_read_angle, only: read_angle, check_angle
+      use mod_mixbroydenspin, only: mixbroydenspinangle, mixbroydenspin
+      use mod_wavefunctodisc, only: wavefunctodisc_read, wavefunctodisc_write
       use mod_gauntharmonics, only: gauntcoeff
       use mod_mpienergy, only: mpienergy_distribute
       use mod_calccouplingconstants, only: calcJijmatrix,calccouplingconstants_writeoutJij
-      use mod_checkinterpolation
-      use mod_version_info
+      use mod_checkinterpolation, only: checkinterpolation
+      use mod_version_info, only: version_print_header
       implicit none
       integer                         :: ITSCF
       type(cell_type)                 ::  cell(natom)
@@ -81,8 +81,6 @@ subroutine energyloop(my_rank,mpi_size,ITSCF,cell, vpot, shapefun,zatom,natom,ns
       complex(kind=dpc)               ::  ez(ielast),wez(ielast)
       integer                         :: ielast
       type(config_type)             ::  config
-!       real(kind=dp)                   ::  rho2ns(cell%nrmax,(2*lmaxatom+1)**2,nspin,natom), espv(0:lmaxatom+1,2)
-!       double complex                  ::  den(0:lmaxatom+1) !,ez(iemxd), &
       integer                         ::  ie,ispin,iatom,ialpha
       integer                         ::  lm1
       type(tmat_type),allocatable    :: tmat(:,:) !(lmmaxd,lmmaxd)
@@ -96,13 +94,11 @@ subroutine energyloop(my_rank,mpi_size,ITSCF,cell, vpot, shapefun,zatom,natom,ns
       type(gmat_type)               :: gmat
       integer                        :: ilval,ilm,ilm2,ilmatom,lmsmax !lda+u
       integer                        :: nlmhost
-!       integer                        :: kgrefsoc
 
       integer                        :: ispinfac,ierror
 
       integer                        :: writeout_ie
       integer                        :: nspinden
-! write(*,*) 'test'
       double precision,allocatable    :: Jijmatrix(:,:,:,:)
       double precision,allocatable    :: Jijmatrix_temp(:,:,:,:)
       double precision,allocatable    :: Aimatrix(:,:)
@@ -204,11 +200,6 @@ if (itscf<=3) then
 else
   idotime=0
 end if
-
-! nlmhost=0
-! do iatom=1,natom
-!   nlmhost=nlmhost+(lmaxatom(iatom)+1)**2 * (gmat%kgrefsoc+1)
-! end do !iatom=1,natom
 
 
 if (ITSCF==1) then
@@ -340,15 +331,10 @@ if (config%ncoll==1) then
 
 end if ! (config%ncoll==1)
 
-!     density(1)%theta= 3.1415926D0/4.0D0 !/4.0D0
-!     density(1)%phi=0.0D0! 3.1415926D0/4.0D0
-
-
 do iatom=1,natom
   if (ITSCF==1) then
     allocate ( density(iatom)%rho2ns(cell(iatom)%nrmax,(2*lmaxatom(iatom)+1)**2,2), &
                density(iatom)%rho2ns_complex(cell(iatom)%nrmax,(2*lmaxatom(iatom)+1)**2,nspinden), &
-!                density(iatom)%espv(0:lmaxatom(iatom)+1,2), &
                density(iatom)%den(0:lmaxatom(iatom)+2,nspin,ielast), &
                density(iatom)%denlm((lmaxatom(iatom)+1)**2,nspin,ielast), &
                density(iatom)%ncharge(0:lmaxatom(iatom)+1,nspin ), &
@@ -426,12 +412,6 @@ endif
 if (ITSCF==1 .and. config%kspinorbit==1) then 
   call read_spinorbit(natom,cellorbit,my_rank)
 end if
-if (my_rank==0) then
- write(*,*) 'spinorbit index'
- do iatom=1,natom
-  write(*,*) 'Atom',iatom,cellorbit%use_spinorbit(iatom)
- enddo
-endif
 
 !####################################################################
 !####################################################################
@@ -465,17 +445,6 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
     open(unit=234932875,file='test_Jijmatrix_Eres_IE_int'//trim(ctemp)//'.dat')
     open(unit=234932876,file='test_Jijmatrix_Eres_IE'//trim(ctemp)//'.dat')
   end if 
-
-
-
-! stop
-! #ifndef MPI
-!   writeout_step = 1+(mpi_iebounds(2,my_rank)-mpi_iebounds(1,my_rank))/4
-!   if (mod(ie,writeout_step)==0 .or. ie==mpi_iebounds(2,my_rank)) then 
-!     write(*,'(A,I4,A,I4,A)') '[energyloop] Energy ie=',writeout_ie,' to',ie,' done'
-!     writeout_ie=ie
-!   end if
-! #endif
 
 
   ! ###################################
@@ -519,8 +488,6 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
         end if
 
 
-
-
       if (use_fullgmat==1 .and. .not. config_testflag('tmatnew')) then
         tmat(iatom,ispin)%tmat=(0.0D0,0.0D0)
         write(1337,*) 'call CALCTMATFULL'
@@ -552,10 +519,6 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
 
               call interpolatecell(cell(iatom)%nrcut(1)+1,shapefun(iatom)%thetas(:,:),(4*lmaxatom(iatom)+1)**2,CELL(IATOM), lmaxatom(iatom),cellnew(iatom),ispin,nspin,config,'shapefun',testpotdummy)
 
-
-
-
-
               call interpolatecell(1,VPOT(:,:,ISPIN,IATOM),(2*lmaxatom(iatom)+1)**2,CELL(IATOM),lmaxatom(iatom),cellnew(iatom),ispin,nspin,config,'potential',testpotdummy)
               if (use_fullgmat==1) then
                  call interpolatecell(1,VPOT(:,:,2,IATOM),(2*lmaxatom(iatom)+1)**2,CELL(IATOM),lmaxatom(iatom),cellnew(iatom),2,nspin,config,'potential',testpotdummy)
@@ -563,8 +526,8 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
            end if
 
            if (ie==1) then
-              write(2342348,'(50000E)') cell(iatom)%rmesh
-              write(2342349,'(50000E)') cellnew(iatom)%rmeshnew
+              write(2342348,'(50000E25.14)') cell(iatom)%rmesh
+              write(2342349,'(50000E25.14)') cellnew(iatom)%rmeshnew
            end if
 
 
@@ -576,7 +539,7 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
               else
                  calcleft=.true.  ! calculate only right solution of WF is not stored
               end if
-! Pass  array wldaumat into subroutine, to be added to vpotll in the subroutine ! lda+u
+              ! Pass  array wldaumat into subroutine, to be added to vpotll in the subroutine ! lda+u
               call calctmat_bauernew (cell(IATOM),tmat(iatom,ispin),lmaxatom(iatom),ez(IE),ZATOM(iatom), &
                    cellnew(iatom),wavefunction(iatom,ispin),ispin,nspin,config%kspinorbit, &
                    use_fullgmat,density(IATOM)%theta,density(IATOM)%phi,config%ncoll,config%nsra,config,idotime, &
@@ -616,7 +579,6 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
 
       end if
     end do !iatom
-    call timing_stop('vpot->tmat')
 
     if ( config_testflag('stopcalctmat') ) then
       stop '[energyloop] stop after calctmat because of test flag'
@@ -630,7 +592,7 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
     call gdyson(3434560,ie,ispin,nspin,natom,lmaxatom,tmat,use_fullgmat,gmat,& 
                 gmatonsite,ielast,mpi_iebounds(:,my_rank),ITSCF,saveGmat)
     write(1337,*) 'end call gdyson'
-    if(config_testflag('gtest')) write(30000+my_rank,'(832E)') gmat%gmat
+    if(config_testflag('gtest')) write(30000+my_rank,'(832E25.14)') gmat%gmat
 
     call timing_stop('gref->gmat')
 
@@ -687,7 +649,7 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
 
           else
 
-             if (ispin==2) stop' [eloop] use_fullmat==1 but nspin==2'
+             if (ispin==2) stop ' [eloop] use_fullmat==1 but nspin==2'
              write(1337,*) 'call RHOVAL'
              call RHOVALFULL(ie,ielast,ez(ie) ,WEZ(IE), gmatonsite(iatom,ispin)%gmat, NSPIN, &
                   IATOM,CELL(iatom),VPOT(:,:,1,iatom),VPOT(:,:,2,iatom),SHAPEFUN(iatom), GAUNTCOEFF(lmaxatom(iatom)), ZATOM(iatom),&
@@ -698,7 +660,7 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
 
           if ( config_testflag('tmatdebug') ) then
              do lm1=1,(2*LMAXATOM(iatom)+1)**2
-                write(9004,'(50000F)') density(iatom)%rho2ns(:,lm1,ispin)
+                write(9004,'(50000E25.14)') density(iatom)%rho2ns(:,lm1,ispin)
              end do
           end if
 
@@ -738,10 +700,10 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
 
 
           if ( config_testflag('tmatdebug') ) then
-             write(9002,'(50000F)') cell(iatom)%rmesh(:)
+             write(9002,'(50000E25.14)') cell(iatom)%rmesh(:)
              do lm1=1,(2*LMAXATOM(iatom)+1)**2
-                write(9004+my_rank,'(50000E)') density(iatom)%rho2ns_complex(:,lm1,1)
-                write(9004+my_rank,'(50000E)') density(iatom)%rho2ns_complex(:,lm1,2)
+                write(9004+my_rank,'(50000E25.14)') density(iatom)%rho2ns_complex(:,lm1,1)
+                write(9004+my_rank,'(50000E25.14)') density(iatom)%rho2ns_complex(:,lm1,2)
              end do
           end if
 
@@ -751,16 +713,16 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
        end if
 
        if ( config_testflag('rhotest') ) then
-          write(9902,'(50000F)') cell(iatom)%rmesh(:)
+          write(9902,'(50000E25.14)') cell(iatom)%rmesh(:)
           do lm1=1,(2*LMAXATOM(iatom)+1)**2
-             write(9904+my_rank,'(50000E)') density(iatom)%rho2ns(:,lm1,ispin)
+             write(9904+my_rank,'(50000E25.14)') density(iatom)%rho2ns(:,lm1,ispin)
           end do
        end if
 
        if (config_testflag('write_rho2nscompnew')) then
           do lm1=1,(2*LMAXATOM(iatom)+1)**2
-             write(9604+my_rank,'(50000E)') density(iatom)%rho2ns_complexnew(:,lm1,1)
-             write(9704+my_rank,'(50000E)') density(iatom)%rho2ns_complexnew(:,lm1,2)
+             write(9604+my_rank,'(50000E25.14)') density(iatom)%rho2ns_complexnew(:,lm1,1)
+             write(9704+my_rank,'(50000E25.14)') density(iatom)%rho2ns_complexnew(:,lm1,2)
           end do
        end if
 
@@ -806,11 +768,6 @@ do iatom=1,natom
        if (.not. config_testflag('tmatnew') ) then
 
         allocate(rho2ns_temp(cell(iatom)%nrmax,(2*lmaxatom(iatom)+1)**2,2))
-
-!         write(*,*) ubound(density(iatom)%rho2ns)
-!         write(*,*) ubound(rho2ns_temp)
-!         write(*,*) cell(iatom)%nrmax*(2*lmaxatom(iatom)+1)**2*2
-
   
         CALL MPI_REDUCE(density(iatom)%rho2ns, rho2ns_temp, cell(iatom)%nrmax*(2*lmaxatom(iatom)+1)**2*2, &
                         MPI_DOUBLE_PRECISION, MPI_SUM, 0,MPI_COMM_WORLD, ierror)
@@ -821,15 +778,11 @@ do iatom=1,natom
        else if ( config_testflag('tmatnew') ) then
 
         allocate(rho2ns_complex_temp(cell(iatom)%nrmax,(2*lmaxatom(iatom)+1)**2,nspinden))
-!        write(*,*) '1','iatom= ',iatom
         CALL MPI_REDUCE(density(iatom)%rho2ns_complex, rho2ns_complex_temp, cell(iatom)%nrmax*(2*lmaxatom(iatom)+1)**2*nspinden, &
                         MPI_DOUBLE_COMPLEX, MPI_SUM, 0,MPI_COMM_WORLD, ierror)
         density(iatom)%rho2ns_complex=rho2ns_complex_temp
-!        write(*,*) '2','iatom= ',iatom
   
-  !        if (my_rank==0) write(*,*) density(iatom)%espv 
         deallocate(rho2ns_complex_temp)!(cell(iatom)%nrmax,(2*lmaxatom(iatom)+1)**2,2))
-!        write(*,*) '3','iatom= ',iatom
 
 !-----------------------------------------------------------------------------------     ! lda+u
 !  mpi-reduce green-function parts                                                       ! lda+u
@@ -839,7 +792,6 @@ do iatom=1,natom
                         MPI_DOUBLE_COMPLEX, MPI_SUM, 0,MPI_COMM_WORLD, ierror)           ! lda+u
        density(iatom)%gfint=gfint_temp                                                   ! lda+u
        deallocate(gfint_temp)                                                            ! lda+u
-!         write(*,*) '4','iatom= ',iatom
 
        allocate(gflle_temp(lmsmax,lmsmax,ielast))                                        ! lda+u
        CALL MPI_REDUCE(density(iatom)%gflle, gflle_temp, ielast*lmsmax**2, &             ! lda+u
@@ -847,7 +799,6 @@ do iatom=1,natom
        density(iatom)%gflle=gflle_temp                                                   ! lda+u
        deallocate(gflle_temp)                                                            ! lda+u
 !-----------------------------------------------------------------------------------     ! lda+u
-!         write(*,*) '5','iatom= ',iatom
 
        end if
 
@@ -893,8 +844,6 @@ do iatom=1,natom
          density(iatom)%ncharge=ncharge_temp(0:lmaxatom(iatom)+1,:)
        end do !ispin=1,nspin
 ! 
-! write(*,*) 'include den and denlm'
-! !         write(my_rank+1000,'(5000F)') dimag(density(iatom)%den)
        allocate(den_temp(0:lmaxatom(iatom)+2,nspin,ielast))
        CALL MPI_REDUCE(density(iatom)%den, den_temp, (1+lmaxatom(iatom)+2)*nspin*ielast, &
                        MPI_DOUBLE_COMPLEX, MPI_SUM, 0,MPI_COMM_WORLD, ierror)
@@ -906,7 +855,6 @@ do iatom=1,natom
                        MPI_DOUBLE_COMPLEX, MPI_SUM, 0,MPI_COMM_WORLD, ierror)
        density(iatom)%denlm=denlm_temp
        deallocate(denlm_temp)
-! !         write(my_rank+2000,'(5000F)') dimag(density(iatom)%den)
 
 end do
 
@@ -925,7 +873,6 @@ end do
 
        end if
   
-!         write(*,*) '7','iatom= ',iatom
 
 allocate(espv_temp(0:lmaxd+1,NSPIN,NATOM))
 CALL MPI_REDUCE(energyparts%espv, espv_temp, (lmaxd+2)*NSPIN*NATOM, &
@@ -952,13 +899,6 @@ call log_write('<<<<<<<<<<<<<<<<<<< calcJij <<<<<<<<<<<<<<<<<<<')
 
 end if
 
-!      do lm1=1,(2*lmaxatom(1)+1)**2
-!        Do ispin=1,ubound(density(1)%RHO2NS_COMPLEX,3)
-!          write(7990+ispin,'(5000E)') density(1)%RHO2NS_COMPLEX(:,lm1,ispin)
-!        END DO
-!      end do
-
-
 if (config%ncoll==1) then
   do iatom=1,natom
     call rotatespin(density(iatom),cell(iatom),lmaxatom(iatom),config,iatom)
@@ -976,11 +916,9 @@ if (config%ncoll==1) then
                       cell(iatom)%nrmax,(2*lmaxatom(iatom)+1)**2, &
                       density(iatom)%theta,density(iatom)%phi,density(iatom)%thetaold,density(iatom)%phiold, cell(iatom)%nrmax)
 
-    write(23452326,'(5000F)') density(iatom)%theta*180/pi,density(iatom)%phi*180/pi
-    write(23452327,'(5000F)') density(iatom)%magmoment
+    write(23452326,'(5000E25.14)') density(iatom)%theta*180/pi,density(iatom)%phi*180/pi
+    write(23452327,'(5000E25.14)') density(iatom)%magmoment
   end do !iatom
-
-
 
 else
 
@@ -994,65 +932,6 @@ else
     end do
   end if
 end if
-
-
-
-
-
-
-! write(*,*) 'test'
-!c
-!c---> gather the parts in the last energy loop
-!c     be carefull!!! this is for the temperature!!!
-
-! do ispin=1,nspin
-!   do iatom=1,natom
-!     do ilval=0,lmaxatom(iatom)+1
-!             energyparts%espv(ilval,ispin,iatom) = energyparts%espv(ilval,ispin,iatom) - &
-!                                dreal(ez(ielast))*dimag(density(iatom)%ncharge(ilval,ispin))
-! 
-!     end do
-!   end do
-! end do 
-
-
-
-
-
-! c           write(6,'(13x,2e12.6)') e
-! c           write(6,'(13x,i3,1x,e12.6)') l,espv(l,i1,ispin)
-
-
-
-!   if(config_runflag('ldos')) then
-!     do iatom=1,natom
-!       do ispin=1,nspin
-!         OPEN(UNIT=30, &
-!             FILE="out_ldos.atom="//char(48+IATOM/10)//char(48+mod(IATOM,10))//"_spin"//char(48+ISPIN)//".dat")
-!         do ie=1,ielast
-!           WRITE(30,'(300G24.16)') DREAL(EZ(IE)),(-DIMAG(DENSITY(IATOM)%DEN(ilval,ISPIN,IE))/PI,ilval=0,LMAXATOM(IATOM)+1)
-!         end do !ie
-!         close(30)
-!       end do !ispin
-!     end do !iatom
-!   end if !lmdos
-! 
-! 
-! 
-!   if(config_runflag('lmdos')) then
-!     do iatom=1,natom
-!       do ispin=1,nspin
-!         OPEN(UNIT=30, &
-!             FILE="out_lmdos.atom="//char(48+IATOM/10)//char(48+mod(IATOM,10))//"_spin"//char(48+ISPIN)//".dat")
-!         do ie=1,ielast
-!           WRITE(30,'(300G24.16)') DREAL(EZ(IE)),(-DIMAG(DENSITY(IATOM)%DENLM(LM1,ISPIN,IE))/PI,LM1=1,(LMAXATOM(IATOM)+1)**2)
-!         end do !ie
-!         close(30)
-!       end do !ispin
-!     end do !iatom
-!   end if !lmdos
-
-
 
 
   if(config_runflag('ldos').or.config_runflag('lmdos')) then
@@ -1114,14 +993,14 @@ end if
   do iatom=1,natom
     write(*,*       ) 'Orbital moments are: '
     write(*, '(100F9.5)') density(iatom)%orbitalmom
-    write(88943362,'(10F)') density(iatom)%orbitalmom
-    write(88943363,'(10F)') density(iatom)%orbitalmom_ns
+    write(88943362,'(10E25.14)') density(iatom)%orbitalmom
+    write(88943363,'(10E25.14)') density(iatom)%orbitalmom_ns
   
     write(88943364,*) '#atom',iatom
     write(88943365,*) '#atom',iatom
     do ialpha=1,3
-      write(88943364,'(I,100F9.5)') ialpha,density(iatom)%orbitalmom_lm(0:lmaxatom(iatom),ialpha)
-      write(88943365,'(I,100F9.5)') ialpha,density(iatom)%orbitalmom_sp(1:2,ialpha)
+      write(88943364,'(I5,100F9.5)') ialpha,density(iatom)%orbitalmom_lm(0:lmaxatom(iatom),ialpha)
+      write(88943365,'(I5,100F9.5)') ialpha,density(iatom)%orbitalmom_sp(1:2,ialpha)
     end do
   end do !iatom
   end if
@@ -1160,7 +1039,7 @@ end if
     else
       stop '[energyloop] nspin error'
     end if
-  end if ! config_testflag('write_gmatonsite')
+  end if ! config_testflag('write_density')
 
 end if !my_rank=0
 

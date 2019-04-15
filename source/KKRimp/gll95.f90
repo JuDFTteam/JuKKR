@@ -125,7 +125,7 @@ if (config_testflag('gfree')==1) then
   open(unit=10000,file='test_gfree')
   write(10000,*) '#icls',icls
   do lm1=1,tbcluster%nclsgf(icls)
-    write(10000,'(50000f)') gref(lm1,:)
+    write(10000,'(50000E25.14)') gref(lm1,:)
   end do
   close(10000)
 end if
@@ -146,7 +146,7 @@ if (config_testflag('gtfree')==1) then
   open(unit=10000,file='test_gtfree')
   write(10000,*) '#icls',icls
   do lm1=1,tbcluster%nclsgf(icls)
-    write(10000,'(50000f)') gref(lm1,:)
+    write(10000,'(50000E25.14)') gref(lm1,:)
   end do
   close(10000)
 end if

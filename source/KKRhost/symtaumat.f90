@@ -64,13 +64,11 @@ contains
     ! Local variables
     real (kind=dp) :: a, b, co1, co2, co3, det, fact(0:100), si1, si2, si3, sk
     real (kind=dp) symeulang(3, 48), tet1, tet2, tet3, rj, rmj
-    real (kind=dp) :: dble
     complex (kind=dp) :: dinv(nkmmax, nkmmax), dtim(nkmmax, nkmmax)
     complex (kind=dp) rc(nkmmax, nkmmax), w1(nkmmax, nkmmax), w2(nkmmax, nkmmax)
     logical :: equal
     integer :: i, i1, i2, ind0q(nqmax), invflag(48), iq, irel, ireleff, isym, itop
     integer :: j, k, l, loop, m, n, nk, nkeff, nkm, nlm, nok, ns
-    integer :: nint
     real (kind=dp) :: rmat(3, 3)
     real (kind=dp) :: w
 
@@ -85,7 +83,7 @@ contains
     ! -----------------------------------------------------------------------
     fact(0) = 1.0e0_dp
     do i = 1, 100
-      fact(i) = fact(i-1)*dble(i)
+      fact(i) = fact(i-1)*real(i, kind=dp)
     end do
     ! -----------------------------------------------------------------------
 

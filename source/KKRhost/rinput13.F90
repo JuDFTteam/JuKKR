@@ -31,7 +31,7 @@ contains
   !> @endnote
   !-------------------------------------------------------------------------------
   subroutine rinput13(kte, igf, kxc, lly, icc, ins, kws, ipe, ipf, ipfe, icst, imix, lpot, naez, nemb, nref, ncls, npol, lmax, kcor, kefg, &
-    khyp, kpre, kvmad, lmmax, lmpot, ncheb, nleft, ifile, kvrel, nspin, natyp, nineq, npnt1, npnt2, npnt3, kfrozn, ishift, n1semi, n2semi, &
+    khyp, kpre, kvmad, lmmax0d, lmpot, ncheb, nleft, ifile, kvrel, nspin, natyp, nineq, npnt1, npnt2, npnt3, kfrozn, ishift, n1semi, n2semi, &
     n3semi, nsteps, insref, kshape, itdbry, nright, kforce, ivshift, khfield, nlbasis, nrbasis, intervx, intervy, intervz, npan_eq, npan_log, &
     npolsemi, tk, fcm, emin, emax, rmax, gmax, alat, r_log, rcutz, rcutxy, eshift, qbound, hfield, mixing, abasis, bbasis, cbasis, vconst, &
     tksemi, tolrdif, emusemi, ebotsemi, fsemicore, lambda_xc, deltae, lrhosym, linipol, lcartesian, imt, cls, lmxc, irns, irws, ntcell, refpot, &
@@ -43,9 +43,9 @@ contains
     use :: mod_runoptions, only: read_runoptions, calc_DOS_Efermi, calc_GF_Efermi, calc_exchange_couplings, &
       dirac_scale_SpeefOfLight, disable_charge_neutrality, disable_print_serialnumber, modify_soc_Dirac, relax_SpinAngle_Dirac, search_Efermi, &
     set_kmesh_large, stop_1b, stop_1c, use_BdG, use_Chebychev_solver, use_cond_LB, use_decimation, use_lloyd, use_qdos, &
-    use_rigid_Efermi, use_semicore, use_virtual_atoms, write_DOS, write_green_host, write_green_imp, write_kkrimp_input, &
+    use_rigid_Efermi, use_semicore, use_virtual_atoms, write_green_host, write_green_imp, write_kkrimp_input, &
     write_pkkr_input, write_pkkr_operators, use_ldau, set_cheby_nospeedup, set_cheby_nosoc, write_tb_coupling
-    use :: mod_constants, only: czero, cvlight
+    use :: mod_constants, only: cvlight, ryd
     use :: mod_wunfiles, only: t_params
     use :: memoryhandling, only: allocate_semi_inf_host, allocate_magnetization, allocate_cell, allocate_cpa, allocate_soc, allocate_ldau
     use :: mod_types, only: t_inc
@@ -58,7 +58,7 @@ contains
     use :: mod_ioinput, only: ioinput
     use :: global_variables, only: linterface, korbit, krel, irmd, irnsd, nsheld, knosph, iemxd, nrd, knoco, kpoibz, ntrefd, natomimpd, &
       nprincd, ipand, nfund, irid, ngshd, nmaxd, ishld, wlength, naclsd, ntotd, ncleb, nspind, nspindd, npotd, lmmaxd, lmgf0d, &
-      lassld, nembd1, irmind, nofgij, ntperd, nsatypd, nspotd, lnc, lmxspd, naezd, lm2d, nclsd, mmaxd, ncleb, kBdG
+      lassld, nembd1, irmind, nofgij, ntperd, nsatypd, nspotd, lnc, lmxspd, lm2d, nclsd, mmaxd, ncleb, kBdG, delta_BdG
 
 
     implicit none
@@ -88,7 +88,7 @@ contains
     integer, intent (inout) :: khyp
     integer, intent (inout) :: kpre
     integer, intent (inout) :: kvmad
-    integer, intent (inout) :: lmmax
+    integer, intent (inout) :: lmmax0d !! (lmax+1)**2 without spin doubling
     integer, intent (inout) :: lmpot
     integer, intent (inout) :: ncheb !! Number of Chebychev pannels for the new solver
     integer, intent (inout) :: nleft !! Number of repeated basis for left host to get converged  electrostatic potentials
@@ -242,7 +242,7 @@ contains
     logical :: lexist, operator_imp, oldstyle
     ! ..
     ! .. Local Scalars ..
-    real (kind=dp), parameter :: eps = 10d-13
+    real (kind=dp), parameter :: eps = 10.0e-13_dp
     integer :: ndim  !! Dimension for the Bravais lattice for slab or bulk (2/3)
     integer :: nasoc
     integer :: i, il, j, ier, ier2, i1, ii, ir, idosemicore, i_stat, i_all
@@ -321,7 +321,8 @@ contains
     !--------------------------------------------------------------------------------
     call ioinput('ALATBASIS       ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) alat
+      read (unit=uio, fmt=*, iostat=ier) alat
+      if (ier/=0) stop 'Error reading `ALATBASIS`: check your inputcard'
       write (111, *) 'ALATBASIS=', alat
     else
       write (111, *) 'ALATBASIS not found in inputcard'
@@ -333,7 +334,8 @@ contains
     linterface = .false.
     call ioinput('INTERFACE       ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) linterface
+      read (unit=uio, fmt=*, iostat=ier) linterface
+      if (ier/=0) stop 'Error reading `INTERFACE`: check your inputcard'
       write (111, *) 'INTERFACE=', linterface
     else
       write (111, *) 'Default INTERFACE= ', linterface
@@ -341,7 +343,8 @@ contains
 
     call ioinput('<INVMODE>       ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) invmod
+      read (unit=uio, fmt=*, iostat=ier) invmod
+      if (ier/=0) stop 'Error reading `<INVMODE>`: check your inputcard'
       write (111, *) '<INVMODE>=', invmod
     else if(invmod==-1) then!invmod was not forced by old runoptions
       if (linterface) then
@@ -354,7 +357,8 @@ contains
 
     call ioinput('<VERBOSITY>     ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) verbosity
+      read (unit=uio, fmt=*, iostat=ier) verbosity
+      if (ier/=0) stop 'Error reading `<VERBOSITY>`: check your inputcard'
       write (111, *) '<VERBOSITY>=', verbosity
     else
       write (111, *) 'Default <VERBOSITY>= ', verbosity
@@ -362,7 +366,8 @@ contains
 
     call ioinput('<MPI_SCHEME>    ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) MPI_scheme
+      read (unit=uio, fmt=*, iostat=ier) MPI_scheme
+      if (ier/=0) stop 'Error reading `<MPI_SCHEME>`: check your inputcard'
       write (111, *) '<MPI_SCHEME>=', MPI_scheme
     else
       write (111, *) 'Default <MPI_SCHEME>= ', MPI_scheme
@@ -380,11 +385,12 @@ contains
     end if
 
     write (111, *) 'Bravais vectors in units of ALAT'
-    bravais(1:3, 1:3) = 0d0
+    bravais(1:3, 1:3) = 0.0_dp
     do i = 1, ndim
       call ioinput('BRAVAIS         ', uio, i, 7, ier)
       if (ier/=0) stop 'RINPUT: BRAVAIS NOT FOUND'
-      read (unit=uio, fmt=*)(bravais(j,i), j=1, ndim)
+      read (unit=uio, fmt=*, iostat=ier)(bravais(j,i), j=1, ndim)
+      if (ier/=0) stop 'Error reading `BRAVAIS`: check your inputcard'
     end do
     write (111, fmt='(A7)') 'BRAVAIS'
     do i = 1, ndim
@@ -396,7 +402,8 @@ contains
     !--------------------------------------------------------------------------------
     call ioinput('NAEZ            ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) naez
+      read (unit=uio, fmt=*, iostat=ier) naez
+      if (ier/=0) stop 'Error reading `NAEZ`: check your inputcard'
       write (111, *) 'NAEZ=', naez
     else
       write (111, *) 'NAEZ not found'
@@ -413,7 +420,8 @@ contains
     natyp = naez
     call ioinput('NATYP           ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) natyp
+      read (unit=uio, fmt=*, iostat=ier) natyp
+      if (ier/=0) stop 'Error reading `NATYP`: check your inputcard'
       write (111, *) 'NATYP=', natyp
     else
       write (111, *) 'Default NATYP= ', naez
@@ -435,7 +443,8 @@ contains
     ier = 0
     call ioinput('CARTESIAN       ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) lcartesian
+      read (unit=uio, fmt=*, iostat=ier) lcartesian
+      if (ier/=0) stop 'Error reading `CARTESIAN`: check your inputcard'
       write (111, *) 'CARTESIAN= ', lcartesian
     else
       write (111, *) 'Default CARTESIAN= ', lcartesian
@@ -449,7 +458,8 @@ contains
       nright = 10
       call ioinput('NRIGHTHO        ', uio, 1, 7, ier)
       if (ier==0) then
-        read (unit=uio, fmt=*) nright
+        read (unit=uio, fmt=*, iostat=ier) nright
+        if (ier/=0) stop 'Error reading `NRIGHTHO`: check your inputcard'
         write (111, *) 'NRIGHTHO=', nright
       else
         write (111, *) 'Default NRIGHTHO=', nright
@@ -458,7 +468,8 @@ contains
       nleft = 10
       call ioinput('NLEFTHOS        ', uio, 1, 7, ier)
       if (ier==0) then
-        read (unit=uio, fmt=*) nleft
+        read (unit=uio, fmt=*, iostat=ier) nleft
+        if (ier/=0) stop 'Error reading `NLEFTHOS`: check your inputcard'
         write (111, *) 'NLEFTHOS=', nleft
       else
         write (111, *) 'Default NLEFTHOS=', nleft
@@ -475,7 +486,8 @@ contains
         end if
       end if
       if (ier==0) then
-        read (unit=uio, fmt=*) nlbasis
+        read (unit=uio, fmt=*, iostat=ier) nlbasis
+        if (ier/=0) stop 'Error reading `NLBASIS`: check your inputcard'
         write (111, *) '<NLBASIS>=', nlbasis
       end if
 
@@ -490,7 +502,8 @@ contains
         end if
       end if
       if (ier==0) then
-        read (unit=uio, fmt=*) nrbasis
+        read (unit=uio, fmt=*, iostat=ier) nrbasis
+        if (ier/=0) stop 'Error reading `NRBASIS`: check your inputcard'
         write (111, *) '<NRBASIS>=', nrbasis
       end if
 
@@ -553,13 +566,15 @@ contains
     do i = 1, naez
       call ioinput('<RBASIS>        ', uio, i, 7, ier)
       if (ier==0) then
-        read (unit=uio, fmt=*)(rbasis(j,i), j=1, 3)
+        read (unit=uio, fmt=*, iostat=ier)(rbasis(j,i), j=1, 3)
+        if (ier/=0) stop 'Error reading `<RBASIS>`: check your inputcard'
         write (111, fmt='(3E24.12)')(rbasis(j,i), j=1, 3)
       else
         ier = 0
         call ioinput('RBASIS          ', uio, i, 7, ier)
         if (ier==0) then
-          read (unit=uio, fmt=*)(rbasis(j,i), j=1, 3)
+          read (unit=uio, fmt=*, iostat=ier)(rbasis(j,i), j=1, 3)
+          if (ier/=0) stop 'Error reading `RBASIS`: check your inputcard'
           write (111, fmt='(3E24.12)')(rbasis(j,i), j=1, 3)
         else
           write (*, *) 'RINPUT13: Keyword <RBASIS> or RBASIS not found. Stopping.'
@@ -569,10 +584,11 @@ contains
     end do                         ! I=1,NAEZ
     call idreals(rbasis(1,1), 3*naez, iprint)
 
-    dvec(1:3) = 1.d0
+    dvec(1:3) = 1.0_dp
     call ioinput('BASISCALE       ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*)(dvec(i), i=1, 3)
+      read (unit=uio, fmt=*, iostat=ier)(dvec(i), i=1, 3)
+      if (ier/=0) stop 'Error reading `BASISCALE`: check your inputcard'
       write (111, fmt='(A10,3E12.4)') 'BASISCALE=', dvec(1:3)
     else
       write (111, fmt='(A18,3E12.4)') 'Default BASISCALE=', dvec(1:3)
@@ -605,23 +621,33 @@ contains
         write (111, fmt='(A82)') '<RBLEFT>                                                      <RMTREFL>   <KAOEZL>'
         do i = 1, nlbasis
           call ioinput('<RBLEFT>        ', uio, i, 7, ier)
-          read (unit=uio, fmt=*)(tleft(i1,i), i1=1, 3)
+          read (unit=uio, fmt=*, iostat=ier)(tleft(i1,i), i1=1, 3)
+          if (ier/=0) stop 'Error reading `<RBLEFT>`: check your inputcard'
           kaoez(1, naez+i) = i     ! Default
           call ioinput('<KAOEZL>        ', uio, i, 7, ier)
-          if (ier==0) read (unit=uio, fmt=*) kaoez(1, naez+i)
+          ier2 = 0
+          if (ier==0) read (unit=uio, fmt=*, iostat=ier2) kaoez(1, naez+i)
+          if (ier2/=0) stop 'Error reading `<KAOEZL>`: check your inputcard'
           call ioinput('<RMTREFL>       ', uio, i, 7, ier)
-          if (ier==0) read (unit=uio, fmt=*) rmtrefat(naez+i)
+          ier2 = 0
+          if (ier==0) read (unit=uio, fmt=*, iostat=ier2) rmtrefat(naez+i)
+          if (ier2/=0) stop 'Error reading `<RMTREFL>`: check your inputcard'
           write (111, fmt='(3E20.12,3X,F9.6,3X,I5)')(tleft(i1,i), i1=1, 3), rmtrefat(naez+i), kaoez(1, naez+i)
         end do
         write (111, fmt='(A82)') '<RBRIGHT>                                                     <RMTREFR>   <KAOEZL>'
         do i = 1, nrbasis
           call ioinput('<RBRIGHT>       ', uio, i, 7, ier)
-          read (unit=uio, fmt=*)(tright(i1,i), i1=1, 3)
+          read (unit=uio, fmt=*, iostat=ier)(tright(i1,i), i1=1, 3)
+          if (ier/=0) stop 'Error reading `<RBRIGHT>`: check your inputcard'
           kaoez(1, naez+nlbasis+i) = i ! Default
           call ioinput('<KAOEZR>        ', uio, i, 7, ier)
-          if (ier==0) read (unit=uio, fmt=*) kaoez(1, naez+nlbasis+i)
+          ier2 = 0
+          if (ier==0) read (unit=uio, fmt=*, iostat=ier2) kaoez(1, naez+nlbasis+i)
+          if (ier2/=0) stop 'Error reading `<KAOEZR>`: check your inputcard'
           call ioinput('<RMTREFR>       ', uio, i, 7, ier)
-          if (ier==0) read (unit=uio, fmt=*) rmtrefat(naez+nlbasis+i)
+          ier2 = 0
+          if (ier==0) read (unit=uio, fmt=*, iostat=ier2) rmtrefat(naez+nlbasis+i)
+          if (ier2/=0) stop 'Error reading `<RMTREFR>`: check your inputcard'
           write (111, fmt='(3E20.12,3X,F9.6,3X,I5)')(tright(i1,i), i1=1, 3), rmtrefat(naez+nlbasis+i), kaoez(1, naez+nlbasis+i)
         end do
 
@@ -629,13 +655,15 @@ contains
 
         do i = 1, nlbasis
           call ioinput('LEFTBASIS       ', uio, i, 7, ier)
-          read (unit=uio, fmt=*)(tleft(i1,i), i1=1, 3), ii, ir
+          read (unit=uio, fmt=*, iostat=ier)(tleft(i1,i), i1=1, 3), ii, ir
+          if (ier/=0) stop 'Error reading `LEFTBASIS`: check your inputcard'
           kaoez(1, naez+i) = ii    ! changed 1.11.99
           refpot(naez+i) = ir
         end do
         do i = 1, nrbasis
           call ioinput('RIGHBASIS       ', uio, i, 7, ier)
-          read (unit=uio, fmt=*)(tright(i1,i), i1=1, 3), ii, ir
+          read (unit=uio, fmt=*, iostat=ier)(tright(i1,i), i1=1, 3), ii, ir
+          if (ier/=0) stop 'Error reading `RIGHBASIS`: check your inputcard'
           kaoez(1, naez+nlbasis+i) = ii ! changed 1.11.99
           refpot(naez+nlbasis+i) = ir
         end do
@@ -666,7 +694,8 @@ contains
         write (*, *) 'rimput13: ZPERIODL not found in inputcard'
         stop 'rimput13: ZPERIODL not found in inputcard'
       else
-        read (unit=uio, fmt=*)(zperleft(i1), i1=1, 3)
+        read (unit=uio, fmt=*, iostat=ier)(zperleft(i1), i1=1, 3)
+        if (ier/=0) stop 'Error reading `ZPERIODL`: check your inputcard'
         write (111, fmt='(A9,3E20.12)') 'ZPERIODL=', (zperleft(i1), i1=1, 3)
       end if
       call idreals(zperleft(1), 3, iprint)
@@ -676,7 +705,8 @@ contains
         write (*, *) 'rimput13: ZPERIODR not found in inputcard'
         stop 'rinput13: ZPERIODR not found in inputcard'
       else
-        read (unit=uio, fmt=*)(zperight(i1), i1=1, 3)
+        read (unit=uio, fmt=*, iostat=ier)(zperight(i1), i1=1, 3)
+        if (ier/=0) stop 'Error reading `ZPERIODR`: check your inputcard'
         write (111, fmt='(A9,3E20.12)') 'ZPERIODR=', (zperight(i1), i1=1, 3)
       end if
       call idreals(zperight(1), 3, iprint)
@@ -725,7 +755,8 @@ contains
       write (111, *) 'NSPIN not found'
       stop 'NSPIN not found'
     else
-      read (unit=uio, fmt=*) nspin
+      read (unit=uio, fmt=*, iostat=ier) nspin
+      if (ier/=0) stop 'Error reading `NSPIN`: check your inputcard'
       write (111, *) 'NSPIN=', nspin
     end if
 
@@ -739,7 +770,8 @@ contains
       do i = 1, natyp
         call ioinput('<ZATOM>         ', uio, i, 7, ier)
         if (ier==0) then
-          read (unit=uio, fmt=*) zat(i)
+          read (unit=uio, fmt=*, iostat=ier) zat(i)
+          if (ier/=0) stop 'Error reading `<ZATOM>`: check your inputcard'
           write (111, fmt='(F6.3)') zat(i)
         end if
       end do
@@ -750,7 +782,8 @@ contains
     ! Angular momentum cutoff
     call ioinput('LMAX', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) lmax
+      read (unit=uio, fmt=*, iostat=ier) lmax
+      if (ier/=0) stop 'Error reading `LMAX`: check your inputcard'
       write (111, *) 'LMAX=', lmax
     else
       stop 'LMAX not found'
@@ -773,7 +806,7 @@ contains
       kaoez(1, i) = i              ! default
       iqat(i) = i                  ! Basis-Site of atom I
     end do
-    if (natyp==naez) conc(1:natyp) = 1.d0
+    if (natyp==naez) conc(1:natyp) = 1.0_dp
 
     ! CPA calculation, read concentrations
     if (natyp>naez) then
@@ -792,9 +825,11 @@ contains
         write (111, fmt='(A18)') '<SITE>  <CPA-CONC>'
         do i = 1, natyp
           call ioinput('<SITE>          ', uio, i, 7, ier)
-          read (unit=uio, fmt=*) iqat(i)
+          read (unit=uio, fmt=*, iostat=ier) iqat(i)
+          if (ier/=0) stop 'Error reading `<SITE>`: check your inputcard'
           call ioinput('<CPA-CONC>      ', uio, i, 7, ier)
-          read (unit=uio, fmt=*) conc(i)
+          read (unit=uio, fmt=*, iostat=ier) conc(i)
+          if (ier/=0) stop 'Error reading `<CPA-CONC>`: check your inputcard'
           write (111, fmt='(I5,4X,E16.8)') iqat(i), conc(i)
         end do
 
@@ -806,7 +841,7 @@ contains
         end do
 
         do iq = 1, naez
-          sum1 = 0d0
+          sum1 = 0.0_dp
           if (noq(iq)<1) then
             write (6, *) 'RINPUT13: CPA: SITE', iq, 'HAS NO ASSIGNED ATOM'
             stop 'RINPUT13: CPA'
@@ -814,7 +849,7 @@ contains
           do io = 1, noq(iq)
             sum1 = sum1 + conc(kaoez(io,iq))
           end do
-          if (abs(sum1-1.d0)>1d-6) then
+          if (abs(sum1-1.0_dp)>1.0e-6_dp) then
             write (6, *) ' SITE ', iq, ' CONCENTRATION <> 1.0 !'
             write (6, *) ' CHECK YOUR <ATOMINFO-CPA> INPUT '
             stop ' IN <RINPUT99>'
@@ -837,7 +872,8 @@ contains
     kvrel = 1                      ! 0=Schroedinger / 1=SRA / 2=Dirac
     call ioinput('KVREL           ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) kvrel
+      read (unit=uio, fmt=*, iostat=ier) kvrel
+      if (ier/=0) stop 'Error reading `KVREL`: check your inputcard'
       write (111, *) 'KVREL= ', kvrel
     else
       write (111, *) 'Default KVREL= ', kvrel
@@ -856,7 +892,8 @@ contains
 
     call ioinput('KORBIT          ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) korbit
+      read (unit=uio, fmt=*, iostat=ier) korbit
+      if (ier/=0) stop 'Error reading `KORBIT`: check your inputcard'
       write (111, *) 'KORBIT= ', korbit
     else
       write (111, *) 'Default KORBIT= ', korbit
@@ -866,15 +903,29 @@ contains
     ! ----------------------------------------------------------------------------
     ! Readin Options for Bogoliubov-de-Gennes Formalism
     ! ----------------------------------------------------------------------------
-    call ioinput('KBdG            ', uio, 1, 7, ier)
+    call ioinput('KBDG            ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) kBdG
-      write (111, *) 'KBdG= ', kBdG
+      read (unit=uio, fmt=*, iostat=ier) kBdG
+      if (ier/=0) stop 'Error reading `KBDG`: check your inputcard'
+      write (111, *) 'KBDG= ', kBdG
     else
-      write (111, *) 'Default KBdG= ', kBdG
+      write (111, *) 'Default KBDG= ', kBdG
     end if
     if (kBdG/=0) use_BdG = .true.
     if (use_BdG) kBdG = 1
+
+    ! read in starting value of Delta
+    if (kBdG/=0) then
+      call ioinput('delta_BdG       ', uio, 1, 7, ier)
+      if (ier==0) then
+        read (unit=uio, fmt=*, iostat=ier) delta_BdG
+        if (ier/=0) stop 'Error reading `delta_BdG`: check your inputcard'
+        write (111, *) 'delta_BdG= ', delta_BdG
+      else
+        write (111, *) 'Default delta_BdG= ', delta_BdG
+      end if
+      write (1337, *) 'Use Bogoliubov-de-Gennes formalism with initial value of Delta set to ', delta_BdG, 'Ry = ', delta_BdG*ryd*1000, 'meV' 
+    end if
 
 
     ! ----------------------------------------------------------------------------
@@ -885,7 +936,8 @@ contains
     !! @endnote
     call ioinput('IRMD            ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) irmd
+      read (unit=uio, fmt=*, iostat=ier) irmd
+      if (ier/=0) stop 'Error reading `IRMD`: check your inputcard'
       write (111, *) 'IRMD= ', irmd
     else
       write (111, *) 'Default IRMD= ', irmd
@@ -893,7 +945,8 @@ contains
 
     call ioinput('IRNSD           ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) irnsd
+      read (unit=uio, fmt=*, iostat=ier) irnsd
+      if (ier/=0) stop 'Error reading `IRNSD`: check your inputcard'
       write (111, *) 'IRNSD= ', irnsd
     else
       write (111, *) 'Default IRNSD= ', irnsd
@@ -901,7 +954,8 @@ contains
 
     call ioinput('NSHELD          ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) nsheld
+      read (unit=uio, fmt=*, iostat=ier) nsheld
+      if (ier/=0) stop 'Error reading `NSHELD`: check your inputcard'
       write (111, *) 'NSHELD= ', nsheld
     else
       write (111, *) 'Default NSHELD= ', nsheld
@@ -909,7 +963,8 @@ contains
 
     call ioinput('KNOSPH          ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) knosph
+      read (unit=uio, fmt=*, iostat=ier) knosph
+      if (ier/=0) stop 'Error reading `KNOSPH`: check your inputcard'
       write (111, *) 'KNOSPH= ', knosph
     else
       write (111, *) 'Default KNOSPH= ', knosph
@@ -917,7 +972,8 @@ contains
 
     call ioinput('IEMXD           ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) iemxd
+      read (unit=uio, fmt=*, iostat=ier) iemxd
+      if (ier/=0) stop 'Error reading `IEMXD`: check your inputcard'
       write (111, *) 'IEMXD= ', iemxd
     else
       write (111, *) 'Default IEMXD= ', iemxd
@@ -925,7 +981,8 @@ contains
 
     call ioinput('NRMESH          ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) nrd
+      read (unit=uio, fmt=*, iostat=ier) nrd
+      if (ier/=0) stop 'Error reading `NRMESH`: check your inputcard'
       write (111, *) 'NRMESH= ', nrd
     else
       write (111, *) 'Default NRMESH= ', nrd
@@ -933,7 +990,8 @@ contains
 
     call ioinput('KPOIBZ          ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) kpoibz
+      read (unit=uio, fmt=*, iostat=ier) kpoibz
+      if (ier/=0) stop 'Error reading `KPOIBZ`: check your inputcard'
       write (111, *) 'KPOIBZ= ', kpoibz
     else
       write (111, *) 'Default KPOIBZ= ', kpoibz
@@ -941,7 +999,8 @@ contains
 
     call ioinput('NMAXD           ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) nmaxd
+      read (unit=uio, fmt=*, iostat=ier) nmaxd
+      if (ier/=0) stop 'Error reading `NMAXD`: check your inputcard'
       write (111, *) 'NMAXD= ', nmaxd
     else
       write (111, *) 'Default NMAXD= ', nmaxd
@@ -949,7 +1008,8 @@ contains
 
     call ioinput('ISHLD           ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) ishld
+      read (unit=uio, fmt=*, iostat=ier) ishld
+      if (ier/=0) stop 'Error reading `ISHLD`: check your inputcard'
       write (111, *) 'ISHLD= ', ishld
     else
       write (111, *) 'Default ISHLD= ', ishld
@@ -957,7 +1017,8 @@ contains
 
     call ioinput('KNOCO           ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) knoco
+      read (unit=uio, fmt=*, iostat=ier) knoco
+      if (ier/=0) stop 'Error reading `KNOCO`: check your inputcard'
       write (111, *) 'KNOCO= ', knoco
     else
       write (111, *) 'Default KNOCO= ', knoco
@@ -965,7 +1026,8 @@ contains
 
     call ioinput('NTREFD          ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) ntrefd
+      read (unit=uio, fmt=*, iostat=ier) ntrefd
+      if (ier/=0) stop 'Error reading `NTREFD`: check your inputcard'
       write (111, *) 'NTREFD= ', ntrefd
     else
       write (111, *) 'Default NTREFD= ', ntrefd
@@ -973,7 +1035,8 @@ contains
 
     call ioinput('NATOMIMPD       ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) natomimpd
+      read (unit=uio, fmt=*, iostat=ier) natomimpd
+      if (ier/=0) stop 'Error reading `NATOMIMPD`: check your inputcard'
       write (111, *) 'NATOMIMPD= ', natomimpd
     else
       write (111, *) 'Default NATOMIMPD= ', natomimpd
@@ -981,7 +1044,8 @@ contains
 
     call ioinput('NPRINCD         ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) nprincd
+      read (unit=uio, fmt=*, iostat=ier) nprincd
+      if (ier/=0) stop 'Error reading `NPRINCD`: check your inputcard'
       write (111, *) 'NPRINCD= ', nprincd
     else
       write (111, *) 'Default NPRINCD= ', nprincd
@@ -989,7 +1053,8 @@ contains
 
     call ioinput('IPAND           ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) ipand
+      read (unit=uio, fmt=*, iostat=ier) ipand
+      if (ier/=0) stop 'Error reading `IPAND`: check your inputcard'
       write (111, *) 'IPAND= ', ipand
     else
       write (111, *) 'Default IPAND= ', ipand
@@ -997,7 +1062,8 @@ contains
 
     call ioinput('NFUND           ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) nfund
+      read (unit=uio, fmt=*, iostat=ier) nfund
+      if (ier/=0) stop 'Error reading `NFUND`: check your inputcard'
       write (111, *) 'NFUND= ', nfund
     else
       write (111, *) 'Default NFUND= ', nfund
@@ -1005,7 +1071,8 @@ contains
 
     call ioinput('IRID            ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) irid
+      read (unit=uio, fmt=*, iostat=ier) irid
+      if (ier/=0) stop 'Error reading `IRID`: check your inputcard'
       write (111, *) 'IRID= ', irid
     else
       write (111, *) 'Default IRID= ', irid
@@ -1013,7 +1080,8 @@ contains
 
     call ioinput('NGSHD           ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) ngshd
+      read (unit=uio, fmt=*, iostat=ier) ngshd
+      if (ier/=0) stop 'Error reading `NGSHD`: check your inputcard'
       write (111, *) 'NGHSD= ', ngshd
     else
       write (111, *) 'Default NGSHD= ', ngshd
@@ -1021,7 +1089,8 @@ contains
 
     call ioinput('WLENGTH         ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) wlength
+      read (unit=uio, fmt=*, iostat=ier) wlength
+      if (ier/=0) stop 'Error reading `WLENGTH`: check your inputcard'
       write (111, *) 'WLENGTH= ', wlength
     else
       write (111, *) 'Default WLENGTH= ', wlength
@@ -1029,7 +1098,8 @@ contains
 
     call ioinput('NACLSD          ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) naclsd
+      read (unit=uio, fmt=*, iostat=ier) naclsd
+      if (ier/=0) stop 'Error reading `NACLSD`: check your inputcard'
       write (111, *) 'NACLSD= ', naclsd
     else
       write (111, *) 'Default NACLSD= ', naclsd
@@ -1037,7 +1107,8 @@ contains
 
     call ioinput('NTOTD           ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) ntotd
+      read (unit=uio, fmt=*, iostat=ier) ntotd
+      if (ier/=0) stop 'Error reading `NTOTD`: check your inputcard'
       write (111, *) 'NTOTD= ', ntotd
     else
       write (111, *) 'Default NTOTD= ', ntotd
@@ -1045,7 +1116,8 @@ contains
 
     call ioinput('KREL            ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) krel
+      read (unit=uio, fmt=*, iostat=ier) krel
+      if (ier/=0) stop 'Error reading `KREL`: check your inputcard'
       write (111, *) 'KREL= ', krel
     else
       write (111, *) 'Default KREL= ', krel
@@ -1093,19 +1165,27 @@ contains
     ! End of allocation of SOC arrays
     !--------------------------------------------------------------------------------
     if (use_Chebychev_solver) then      ! Spin-orbit
-      if (use_Chebychev_solver .and. (nspin/=2)) stop ' set NSPIN = 2 for SOC solver in inputcard'
+      if (use_Chebychev_solver .and. (nspin/=2) .and. .not.set_cheby_nosoc) stop ' set NSPIN = 2 for SOC solver in inputcard'
       npan_log = 30
       npan_eq = 30
       ncheb = 10
-      r_log = 0.1d0
+      r_log = 0.1_dp
       call ioinput('NPAN_LOG        ', uio, 1, 7, ier)
-      if (ier==0) read (unit=uio, fmt=*) npan_log
+      ier2 = 0
+      if (ier==0) read (unit=uio, fmt=*, iostat=ier2) npan_log
+      if (ier2/=0) stop 'Error reading `NPAN_LOG`: check your inputcard'
       call ioinput('NPAN_EQ         ', uio, 1, 7, ier)
-      if (ier==0) read (unit=uio, fmt=*) npan_eq
+      ier2 = 0
+      if (ier==0) read (unit=uio, fmt=*, iostat=ier2) npan_eq
+      if (ier2/=0) stop 'Error reading `NPAN_EQ`: check your inputcard'
       call ioinput('NCHEB           ', uio, 1, 7, ier)
-      if (ier==0) read (unit=uio, fmt=*) ncheb
+      ier2 = 0
+      if (ier==0) read (unit=uio, fmt=*, iostat=ier2) ncheb
+      if (ier2/=0) stop 'Error reading `NCHEB`: check your inputcard'
       call ioinput('R_LOG           ', uio, 1, 7, ier)
-      if (ier==0) read (unit=uio, fmt=*) r_log
+      ier2 = 0
+      if (ier==0) read (unit=uio, fmt=*, iostat=ier2) r_log
+      if (ier2/=0) stop 'Error reading `R_LOG`: check your inputcard'
       write (111, *) 'NPAN_LOG= ', npan_log
       write (111, *) 'NPAN_EQ= ', npan_eq
       write (111, *) 'NCHEB= ', ncheb
@@ -1118,7 +1198,8 @@ contains
       do i = 1, natyp
         call ioinput('<SOCSCL>        ', uio, i, 7, ier)
         if (ier==0) then
-          read (unit=uio, fmt=*) socscale(i)
+          read (unit=uio, fmt=*, iostat=ier) socscale(i)
+          if (ier/=0) stop 'Error reading `<SOCSCL>`: check your inputcard'
           write (111, fmt='(F6.3)') socscale(i)
         end if
       end do
@@ -1142,7 +1223,8 @@ contains
       do i = 1, natyp
         call ioinput('<FPRADIUS>      ', uio, i, 7, ier)
         if (ier==0) then
-          read (unit=uio, fmt=*) fpradius(i)
+          read (unit=uio, fmt=*, iostat=ier) fpradius(i)
+          if (ier/=0) stop 'Error reading `<FPRADIUS>`: check your inputcard'
         end if
         write (111, fmt='(F6.3)') fpradius(i)
       end do
@@ -1154,7 +1236,8 @@ contains
     ins = 1
     call ioinput('INS             ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) ins
+      read (unit=uio, fmt=*, iostat=ier) ins
+      if (ier/=0) stop 'Error reading `INS`: check your inputcard'
       write (111, *) 'INS= ', ins
     else
       write (111, *) 'Default INS= ', ins
@@ -1164,7 +1247,8 @@ contains
     if (ins==0) kshape = 0
     call ioinput('KSHAPE          ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) kshape
+      read (unit=uio, fmt=*, iostat=ier) kshape
+      if (ier/=0) stop 'Error reading `KSHAPE`: check your inputcard'
       write (111, *) 'KSHAPE= ', kshape
     else
       write (111, *) 'Default KSHAPE= ', kshape
@@ -1184,7 +1268,8 @@ contains
       ! atom
       call ioinput('<SHAPE>         ', uio, i, 7, ier)
       if (ier==0) then
-        read (unit=uio, fmt=*) ntcell(i)
+        read (unit=uio, fmt=*, iostat=ier) ntcell(i)
+        if (ier/=0) stop 'Error reading `<SHAPE>`: check your inputcard'
         write (111, fmt='(I6)') ntcell(i)
       end if
     end do
@@ -1198,7 +1283,8 @@ contains
     kxc = 2                        ! 0=vBH 1=MJW 2=VWN 3=PW91
     call ioinput('KEXCOR          ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) kxc
+      read (unit=uio, fmt=*, iostat=ier) kxc
+      if (ier/=0) stop 'Error reading `KEXCOR`: check your inputcard'
       write (111, *) 'KEXCOR= ', kxc
     else
       write (111, *) 'Default KEXCOR= ', kxc
@@ -1206,10 +1292,11 @@ contains
 
     ! Scale magnetic moment (0 < Lambda_XC < 1,  0=zero moment, 1= full
     ! moment)
-    lambda_xc = 1.d0
+    lambda_xc = 1.0_dp
     call ioinput('LAMBDA_XC       ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) lambda_xc
+      read (unit=uio, fmt=*, iostat=ier) lambda_xc
+      if (ier/=0) stop 'Error reading `LAMBDA_XC`: check your inputcard'
       write (111, *) 'LAMBDA_XC= ', lambda_xc
     else
       write (111, *) 'Default LAMBDA_XC= ', lambda_xc
@@ -1244,7 +1331,8 @@ contains
       if (ier/=0) then
         nasoc = natyp
       else
-        read (unit=uio, fmt=*) nasoc
+        read (unit=uio, fmt=*, iostat=ier) nasoc
+        if (ier/=0) stop 'Error reading `NAT_LDAU`: check your inputcard'
         if (nasoc>natyp) stop ' main0: NAT_LDAU > NATYP'
       end if
 
@@ -1255,7 +1343,8 @@ contains
         ier = 0
         call ioinput('LDAU_PARA       ', uio, i, 7, ier)
         if (ier==0) then
-          read (unit=uio, fmt=*) i1, lopt(i1), ueff(i1), jeff(i1), erefldau(i1)
+          read (unit=uio, fmt=*, iostat=ier) i1, lopt(i1), ueff(i1), jeff(i1), erefldau(i1)
+          if (ier/=0) stop 'Error reading `LDAU_PARA`: check your inputcard'
           il = il + 1
         end if
       end do
@@ -1266,8 +1355,10 @@ contains
       end if
       kreadldau = 0
       ier = 0
+      ier2 = 0
       call ioinput('KREADLDAU       ', uio, 1, 7, ier)
-      if (ier==0) read (unit=uio, fmt=*) kreadldau
+      if (ier==0) read (unit=uio, fmt=*, iostat=ier2) kreadldau
+      if (ier2/=0) stop 'Error reading `KREADLDAU`: check your inputcard'
 
     end if
     !--------------------------------------------------------------------------------
@@ -1278,10 +1369,11 @@ contains
     ! Begin external field control
     !--------------------------------------------------------------------------------
     khfield = 0
-    hfield = 0.d0
+    hfield = 0.0_dp
     call ioinput('HFIELD          ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) hfield
+      read (unit=uio, fmt=*, iostat=ier) hfield
+      if (ier/=0) stop 'Error reading `HFIELD`: check your inputcard'
       if (abs(hfield)>eps) then
         khfield = 1
         write (*, *) 'WARNING: HFIELD>0.0 found, set KHFIELD to 1'
@@ -1292,10 +1384,11 @@ contains
       write (111, *) 'Default HFIELD= ', hfield
     end if
 
-    vconst = 0.d0
+    vconst = 0.0_dp
     call ioinput('VCONST          ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) vconst
+      read (unit=uio, fmt=*, iostat=ier) vconst
+      if (ier/=0) stop 'Error reading `VCONST`: check your inputcard'
       write (111, *) 'VCONST= ', vconst
     else
       write (111, *) 'Default VCONST= ', vconst
@@ -1304,7 +1397,8 @@ contains
 
     call ioinput('IVSHIFT         ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) ivshift
+      read (unit=uio, fmt=*, iostat=ier) ivshift
+      if (ier/=0) stop 'Error reading `IVSHIFT`: check your inputcard'
       write (111, *) 'IVSHIFT= ', ivshift
     else
       write (111, *) 'Default IVSHIFT= ', ivshift
@@ -1314,7 +1408,8 @@ contains
     linipol = .false.
     call ioinput('LINIPOL         ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) linipol
+      read (unit=uio, fmt=*, iostat=ier) linipol
+      if (ier/=0) stop 'Error reading `LINIPOL`: check your inputcard'
       write (111, *) 'LINIPOL= ', linipol
     else
       write (111, *) 'Default: LINIPOL= ', linipol
@@ -1332,7 +1427,8 @@ contains
       inipol(1:natyp) = 1
       call ioinput('XINIPOL         ', uio, 1, 7, ier)
       if (ier==0) then
-        read (unit=uio, fmt=*)(inipol(i), i=1, natyp)
+        read (unit=uio, fmt=*, iostat=ier)(inipol(i), i=1, natyp)
+        if (ier/=0) stop 'Error reading `XINIPOL`: check your inputcard'
         write (111, fmt='(A10,80I2)') 'XINIPOL=  ', (inipol(i), i=1, natyp)
       else
         write (111, fmt='(A18,80I2)') 'Default XINIPOL=  ', (inipol(i), i=1, natyp)
@@ -1352,7 +1448,8 @@ contains
     igf = 0
     call ioinput('IGREENFUN       ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) igf
+      read (unit=uio, fmt=*, iostat=ier) igf
+      if (ier/=0) stop 'Error reading `IGREENFUN`: check your inputcard'
       write (111, *) 'IGREENFUN= ', igf
     else
       write (111, *) 'Default IGREENFUN= ', igf
@@ -1379,7 +1476,8 @@ contains
     icc = 0
     call ioinput('ICC             ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) icc
+      read (unit=uio, fmt=*, iostat=ier) icc
+      if (ier/=0) stop 'Error reading `ICC`: check your inputcard'
       write (111, *) 'ICC= ', icc
     else
       write (111, *) 'Default ICC= ', icc
@@ -1405,7 +1503,8 @@ contains
     intervz = 10
     call ioinput('BZDIVIDE        ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) intervx, intervy, intervz
+      read (unit=uio, fmt=*, iostat=ier) intervx, intervy, intervz
+      if (ier/=0) stop 'Error reading `BZDIVIDE`: check your inputcard'
       write (111, fmt='(A9,3I5)') 'BZDIVIDE=', intervx, intervy, intervz
     else
       write (111, fmt='(A17,3I5)') 'Default BZDIVIDE=', intervx, intervy, intervz
@@ -1430,10 +1529,10 @@ contains
 
     ! Energy contour
     npol = 7
-    ! if (write_DOS) NPOL = 0
     call ioinput('NPOL            ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) npol
+      read (unit=uio, fmt=*, iostat=ier) npol
+      if (ier/=0) stop 'Error reading `NPOL`: check your inputcard'
       write (111, *) 'NPOL=', npol
     else
       write (111, *) 'Default NPOL=', npol
@@ -1441,10 +1540,11 @@ contains
 
     call ioinput('EMIN            ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) emin
+      read (unit=uio, fmt=*, iostat=ier) emin
+      if (ier/=0) stop 'Error reading `EMIN`: check your inputcard'
       write (111, *) 'EMIN= ', emin
     else if (npol==0) then
-      emin = -1.d0
+      emin = -1.0_dp
       write (111, *) 'Default for DOS: EMIN= ', emin
     else
       write (1337, *) 'Error in rinput13: EMIN not found'
@@ -1452,19 +1552,21 @@ contains
       stop 'Error in rinput13: EMIN not found'
     end if
 
-    emax = 1.d0
+    emax = 1.0_dp
     call ioinput('EMAX            ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) emax
+      read (unit=uio, fmt=*, iostat=ier) emax
+      if (ier/=0) stop 'Error reading `EMAX`: check your inputcard'
       write (111, *) ' EMAX=', emax
     else
       write (111, *) 'Default  EMAX=', emax
     end if
 
-    tk = 800.d0
+    tk = 800.0_dp
     call ioinput('TEMPR           ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) tk
+      read (unit=uio, fmt=*, iostat=ier) tk
+      if (ier/=0) stop 'Error reading `TEMPR`: check your inputcard'
       write (111, *) 'TEMPR=', tk
     else
       write (111, *) 'Default TEMPR=', tk
@@ -1474,17 +1576,19 @@ contains
     if (npol==0) npnt1 = 0
     call ioinput('NPT1            ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) npnt1
+      read (unit=uio, fmt=*, iostat=ier) npnt1
+      if (ier/=0) stop 'Error reading `NPT1`: check your inputcard'
       write (111, *) ' NPT1=', npnt1
     else
       write (111, *) 'Default  NPT1=', npnt1
     end if
 
-    npnt2 = nint((emax-emin)*20.d0) ! 20 pts/Ryd
-    if (npol==0) npnt2 = nint((emax-emin)*100.d0) ! For dos, 100 pts/Ryd
+    npnt2 = nint((emax-emin)*20.0_dp) ! 20 pts/Ryd
+    if (npol==0) npnt2 = nint((emax-emin)*100.0_dp) ! For dos, 100 pts/Ryd
     call ioinput('NPT2            ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) npnt2
+      read (unit=uio, fmt=*, iostat=ier) npnt2
+      if (ier/=0) stop 'Error reading `NPT2`: check your inputcard'
       write (111, *) ' NPT2=', npnt2
     else
       write (111, *) 'Default  NPT2=', npnt2
@@ -1494,7 +1598,8 @@ contains
     if (npol==0) npnt3 = 0
     call ioinput('NPT3            ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) npnt3
+      read (unit=uio, fmt=*, iostat=ier) npnt3
+      if (ier/=0) stop 'Error reading `NPT3`: check your inputcard'
       write (111, *) ' NPT3=', npnt3
     else
       write (111, *) 'Default  NPT3=', npnt3
@@ -1509,38 +1614,46 @@ contains
     n1semi = 0
     n2semi = 0
     n3semi = 0
-    fsemicore = 1.d0
+    fsemicore = 1.0_dp
 
     ier = 0
     if (use_semicore) then
       call ioinput('EBOTSEMI        ', uio, 1, 7, ier)
       if (ier/=0) go to 100
-      read (unit=uio, fmt=*) ebotsemi
+      read (unit=uio, fmt=*, iostat=ier) ebotsemi
+      if (ier/=0) stop 'Error reading `EBOTSEMI`: check your inputcard'
       call ioinput('EMUSEMI         ', uio, 1, 7, ier)
       if (ier/=0) go to 100
-      read (unit=uio, fmt=*) emusemi
+      read (unit=uio, fmt=*, iostat=ier) emusemi
+      if (ier/=0) stop 'Error reading `EMUSEMI`: check your inputcard'
 
       ! -> EMUSEMI < EBOT
       if (emusemi>=emin) go to 100
       call ioinput('TKSEMI          ', uio, 1, 7, ier)
       if (ier/=0) go to 100
-      read (unit=uio, fmt=*) tksemi
+      read (unit=uio, fmt=*, iostat=ier) tksemi
+      if (ier/=0) stop 'Error reading `TKSEMI`: check your inputcard'
 
       call ioinput('NPOLSEMI        ', uio, 1, 7, ier)
       if (ier/=0) go to 100
-      read (unit=uio, fmt=*) npolsemi
+      read (unit=uio, fmt=*, iostat=ier) npolsemi
+      if (ier/=0) stop 'Error reading `NPOLSEMI`: check your inputcard'
       call ioinput('N1SEMI          ', uio, 1, 7, ier)
       if (ier/=0) go to 100
-      read (unit=uio, fmt=*) n1semi
+      read (unit=uio, fmt=*, iostat=ier) n1semi
+      if (ier/=0) stop 'Error reading `N1SEMI`: check your inputcard'
       call ioinput('N2SEMI          ', uio, 1, 7, ier)
       if (ier/=0) go to 100
-      read (unit=uio, fmt=*) n2semi
+      read (unit=uio, fmt=*, iostat=ier) n2semi
+      if (ier/=0) stop 'Error reading `N2SEMI`: check your inputcard'
       call ioinput('N3SEMI          ', uio, 1, 7, ier)
       if (ier/=0) go to 100
-      read (unit=uio, fmt=*) n3semi
+      read (unit=uio, fmt=*, iostat=ier) n3semi
+      if (ier/=0) stop 'Error reading `N3SEMI`: check your inputcard'
       call ioinput('FSEMICORE       ', uio, 1, 7, ier)
       if (ier/=0) go to 100
-      read (unit=uio, fmt=*) fsemicore
+      read (unit=uio, fmt=*, iostat=ier) fsemicore
+      if (ier/=0) stop 'Error reading `FSEMICORE`: check your inputcard'
       idosemicore = 1
 100   continue
       if (idosemicore==0) then
@@ -1557,11 +1670,12 @@ contains
     end if
 
     ! CPA convergence parameters
-    cpatol = 1d-4
+    cpatol = 1e-4_dp
     itcpamax = 20
     call ioinput('CPAINFO         ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) cpatol, itcpamax
+      read (unit=uio, fmt=*, iostat=ier) cpatol, itcpamax
+      if (ier/=0) stop 'Error reading `CPAINFO`: check your inputcard'
     else
       write (111, *) 'Default cpainfo:'
     end if
@@ -1571,10 +1685,11 @@ contains
     !--------------------------------------------------------------------------------
     ! Begin screening cluster information
     !--------------------------------------------------------------------------------
-    rcutz = 11.d0/alat             ! Default 11 Bohr radii
+    rcutz = 11.0_dp/alat             ! Default 11 Bohr radii
     call ioinput('RCLUSTZ         ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) rcutz
+      read (unit=uio, fmt=*, iostat=ier) rcutz
+      if (ier/=0) stop 'Error reading `RCLUSTZ`: check your inputcard'
       write (111, *) 'RCLUSTZ=', rcutz
     else
       write (111, *) 'Default RCLUSTZ=', rcutz
@@ -1583,14 +1698,15 @@ contains
     rcutxy = rcutz
     call ioinput('RCLUSTXY        ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) rcutxy
+      read (unit=uio, fmt=*, iostat=ier) rcutxy
+      if (ier/=0) stop 'Error reading `RCLUSTXY`: check your inputcard'
       write (111, *) 'RCLUSTXY=', rcutxy
     else
       write (111, *) 'Default RCLUSTXY=', rcutxy
     end if
 
     write (1337, *) 'Parameters used for the cluster calculation'
-    if (abs(rcutz-rcutxy)<1.d-4) then
+    if (abs(rcutz-rcutxy)<1.0e-4_dp) then
       write (1337, *) 'Clusters inside spheres with radius R = ', rcutz
     else
       write (1337, *) 'Clusters inside cylinders with '
@@ -1606,7 +1722,8 @@ contains
     do i = 1, naez
       call ioinput('<RMTREF>        ', uio, i, 7, ier)
       if (ier==0) then
-        read (unit=uio, fmt=*) rmtrefat(i)
+        read (unit=uio, fmt=*, iostat=ier) rmtrefat(i)
+        if (ier/=0) stop 'Error reading `<RMTREF>`: check your inputcard'
       end if
     end do
     if (ier==0) then
@@ -1625,7 +1742,8 @@ contains
     icst = 2
     call ioinput('ICST            ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) icst
+      read (unit=uio, fmt=*, iostat=ier) icst
+      if (ier/=0) stop 'Error reading `ICST`: check your inputcard'
       write (111, *) 'ICST=', icst
     else
       write (111, *) 'Default ICST=', icst
@@ -1634,21 +1752,17 @@ contains
     ! Usage of Lloyd's formula
     lly = 0                        ! LLY Default=0 : do not apply Lloyds
     ! formula
-    if (use_lloyd) lly = 1
-    call ioinput('<LLOYD>         ', uio, 1, 7, ier)
-    if (ier==0) then
-      read (unit=uio, fmt=*) lly
-      write (111, *) '<LLOYD>=', lly
-    else
-      write (111, *) 'Default <LLOYD>=', lly
+    if (use_lloyd) then
+        lly = 1
+        write (1337, *) 'Applying Lloyds formula, LLY=', lly
     end if
-    if (lly/=0) write (1337, *) 'Applying Lloyds formula, LLY=', lly
 
-    deltae = (1.d-5, 0.d0)         ! Difference for numer. derivative in
+    deltae = (1.0e-5_dp, 0.0_dp)         ! Difference for numer. derivative in
     ! Lloyds formula
     call ioinput('<DELTAE>        ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) deltae
+      read (unit=uio, fmt=*, iostat=ier) deltae
+      if (ier/=0) stop 'Error reading `<DELTAE>`: check your inputcard'
       write (111, *) '<DELTAE>=', deltae
     else
       write (111, *) 'Default <DELTAE>=', deltae
@@ -1676,7 +1790,8 @@ contains
       call ioinput('ATOMINFOC       ', uio, i+1, 7, ier)
       if (ier==0) then
         latominfo = .true.
-        read (unit=uio, fmt=*) zat(i), lmxc(i), (kfg(j,i), j=1, 4), j, ier, ntcell(i), mtfac(i), irns(i), rmtref(ier), iqat(i), conc(i)
+        read (unit=uio, fmt=*, iostat=ier) zat(i), lmxc(i), (kfg(j,i), j=1, 4), j, ier, ntcell(i), mtfac(i), irns(i), rmtref(ier), iqat(i), conc(i)
+        if (ier/=0) stop 'Error reading `ATOMINFOC`: check your inputcard'
         iq = iqat(i)
         refpot(iq) = ier
         rmtrefat(i) = rmtref(ier)
@@ -1692,11 +1807,12 @@ contains
         call ioinput('ATOMINFO        ', uio, i+1, 7, ier)
         if (ier==0) then
           latominfo = .true.
-          read (unit=uio, fmt=*) zat(i), lmxc(i), (kfg(j,i), j=1, 4), j, refpot(i), ntcell(i), mtfac(i), irns(i), rmtref(refpot(i))
+          read (unit=uio, fmt=*, iostat=ier) zat(i), lmxc(i), (kfg(j,i), j=1, 4), j, refpot(i), ntcell(i), mtfac(i), irns(i), rmtref(refpot(i))
+          if (ier/=0) stop 'Error reading `ATOMINFO`: check your inputcard'
           iqat(i) = i
           rmtrefat(i) = rmtref(refpot(i))
           cls(i) = j
-          conc(i) = 1.d0
+          conc(i) = 1.0_dp
           noq(i) = 1
           kaoez(1, i) = i
         end if
@@ -1737,7 +1853,7 @@ contains
     ! write(6,2103)
 
     do iq = 1, naez
-      sum1 = 0d0
+      sum1 = 0.0_dp
       if (noq(iq)<1) then
         write (6, *) 'RINPUT13: CPA: SITE', iq, 'HAS NO ASSIGNED ATOM'
         stop 'RINPUT13: CPA'
@@ -1745,7 +1861,7 @@ contains
       do io = 1, noq(iq)
         sum1 = sum1 + conc(kaoez(io,iq))
       end do
-      if (abs(sum1-1.d0)>1d-6) then
+      if (abs(sum1-1.0_dp)>1.0e-6_dp) then
         write (6, *) ' SITE ', iq, ' CONCENTRATION <> 1.0 !'
         write (6, *) ' CHECK YOUR <ATOMINFO-CPA> INPUT '
         stop ' IN <RINPUT99>'
@@ -1770,7 +1886,8 @@ contains
     if (ier/=0) then
       write (111, *) 'Default NSTEPS=', nsteps
     else
-      read (unit=uio, fmt=*) nsteps
+      read (unit=uio, fmt=*, iostat=ier) nsteps
+      if (ier/=0) stop 'Error reading `NSTEPS`: check your inputcard'
     end if
     if (npol==0) then
       nsteps = 1
@@ -1799,7 +1916,8 @@ contains
     imix = 0
     call ioinput('IMIX            ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) imix
+      read (unit=uio, fmt=*, iostat=ier) imix
+      if (ier/=0) stop 'Error reading `IMIX`: check your inputcard'
       write (111, *) 'IMIX= ', imix
     else
       write (111, *) 'Default IMIX= ', imix
@@ -1807,7 +1925,8 @@ contains
     if (imix==0) then
       call ioinput('<SPECIAL_STRAIGHT_MIXING>', uio, 1, 7, ier)
       if (ier==0) then
-        read (unit=uio, fmt=*) special_straight_mixing
+        read (unit=uio, fmt=*, iostat=ier) special_straight_mixing
+        if (ier/=0) stop 'Error reading `<SPECIAL_STRAIGHT_MIXING>`: check your inputcard'
         write (111, *) '<SPECIAL_STRAIGHT_MIXING>= ', special_straight_mixing
       else
         write (111, *) 'Default <SPECIAL_STRAIGHT_MIXING>= ', special_straight_mixing
@@ -1818,10 +1937,11 @@ contains
       imix = 0
     end if
 
-    strmix = 0.01d0
+    strmix = 0.01_dp
     call ioinput('STRMIX          ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) strmix
+      read (unit=uio, fmt=*, iostat=ier) strmix
+      if (ier/=0) stop 'Error reading `STRMIX`: check your inputcard'
       write (111, *) 'STRMIX= ', strmix
     else
       write (111, *) 'Default STRMIX= ', strmix
@@ -1834,34 +1954,38 @@ contains
     itdbry = 40
     call ioinput('ITDBRY          ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) itdbry
+      read (unit=uio, fmt=*, iostat=ier) itdbry
+      if (ier/=0) stop 'Error reading `ITDBRY`: check your inputcard'
       write (111, *) 'ITDBRY= ', itdbry
     else
       write (111, *) 'Default ITDBRY= ', itdbry
     end if
 
-    fcm = 20.d0
+    fcm = 20.0_dp
     call ioinput('FCM             ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) fcm
+      read (unit=uio, fmt=*, iostat=ier) fcm
+      if (ier/=0) stop 'Error reading `FCM`: check your inputcard'
       write (111, *) 'FCM= ', fcm
     else
       write (111, *) 'Default FCM= ', fcm
     end if
 
-    qbound = 1.d-7
+    qbound = 1.0e-7_dp
     call ioinput('QBOUND          ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) qbound
+      read (unit=uio, fmt=*, iostat=ier) qbound
+      if (ier/=0) stop 'Error reading `QBOUND`: check your inputcard'
       write (111, *) 'QBOUND= ', qbound
     else
       write (111, *) 'Default QBOUND= ', qbound
     end if
 
-    brymix = 0.01d0
+    brymix = 0.01_dp
     call ioinput('BRYMIX          ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) brymix
+      read (unit=uio, fmt=*, iostat=ier) brymix
+      if (ier/=0) stop 'Error reading `BRYMIX`: check your inputcard'
       write (111, *) 'BRYMIX= ', brymix
     else
       write (111, *) 'Default BRYMIX= ', brymix
@@ -1869,12 +1993,14 @@ contains
 
     call ioinput('RMAX            ', uio, 1, 7, ier)
     if (ier/=0) stop 'rinput13: RMAX not in the inputcard'
-    read (unit=uio, fmt=*) rmax
+    read (unit=uio, fmt=*, iostat=ier) rmax
+    if (ier/=0) stop 'Error reading `RMAX`: check your inputcard'
     write (111, *) 'RMAX= ', rmax
 
     call ioinput('GMAX            ', uio, 1, 7, ier)
     if (ier/=0) stop 'rinput13: GMAX not in the inputcard'
-    read (unit=uio, fmt=*) gmax
+    read (unit=uio, fmt=*, iostat=ier) gmax
+    if (ier/=0) stop 'Error reading `GMAX`: check your inputcard'
     write (111, *) 'GMAX= ', gmax
     !--------------------------------------------------------------------------------
     ! End SCF convergence control
@@ -1888,14 +2014,19 @@ contains
     if (ier==0) then
       call ioinput('FILES           ', uio, il, 7, ier)
       read (unit=uio, fmt='(A40)') i12
+      if (ier/=0) stop 'Error reading `FILES` (dummy line): check your inputcard'
       call ioinput('FILES           ', uio, il+1, 7, ier)
       read (unit=uio, fmt='(A40)') i13
+      if (ier/=0) stop 'Error reading `FILES` (potential): check your inputcard'
       call ioinput('FILES           ', uio, il+2, 7, ier)
       read (unit=uio, fmt='(A40)') i40
+      if (ier/=0) stop 'Error reading `FILES` (dummy line): check your inputcard'
       call ioinput('FILES           ', uio, il+3, 7, ier)
       read (unit=uio, fmt='(A40)') i19
+      if (ier/=0) stop 'Error reading `FILES` (shapefun): check your inputcard'
       call ioinput('FILES           ', uio, il+4, 7, ier)
       read (unit=uio, fmt='(A40)') i25
+      if (ier/=0) stop 'Error reading `FILES` (scoef): check your inputcard'
     else
       i13 = 'potential                               ' ! 40 chars
       i19 = 'shapefun                                ' ! 40 chars
@@ -1917,7 +2048,8 @@ contains
     ifile = 13
     call ioinput('<IFILE>         ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) ifile
+      read (unit=uio, fmt=*, iostat=ier) ifile
+      if (ier/=0) stop 'Error reading `<IFILE>`: check your inputcard'
       write (111, *) '<IFILE>= ', ifile
     else
       write (111, *) 'Default <IFILE>= ', ifile
@@ -1927,7 +2059,8 @@ contains
     ishift = 0
     call ioinput('ISHIFT          ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) ishift
+      read (unit=uio, fmt=*, iostat=ier) ishift
+      if (ier/=0) stop 'Error reading `ISHIFT`: check your inputcard'
       write (111, *) 'ISHIFT= ', ishift
     else
       write (111, *) 'Default ISHIFT= ', ishift
@@ -1943,16 +2076,17 @@ contains
       write (111, *) 'No charge neutrality required, ISHIFT is set to', ishift
     end if
 
-    eshift = 0.d0
+    eshift = 0.0_dp
     insref = 0
     kws = 2
     khyp = 0
 
-    tolrdif = 0.5d0                ! Set free GF to zero for r<tolrdif
+    tolrdif = 0.5_dp                ! Set free GF to zero for r<tolrdif
     ! (a.u.)(vir. atoms)
     call ioinput('<TOLRDIF>       ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) tolrdif
+      read (unit=uio, fmt=*, iostat=ier) tolrdif
+      if (ier/=0) stop 'Error reading `<TOLRDIF>`: check your inputcard'
       write (111, *) '<TOLRDIF>=', tolrdif
     else
       write (111, *) 'Default <TOLRDIF>=', tolrdif
@@ -1974,7 +2108,8 @@ contains
     kvmad = 0
     call ioinput('KVMAD           ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) kvmad
+      read (unit=uio, fmt=*, iostat=ier) kvmad
+      if (ier/=0) stop 'Error reading `KVMAD`: check your inputcard'
       write (111, *) 'KVMAD= ', kvmad
     else
       write (111, *) 'Default KVMAD= ', kvmad
@@ -2004,7 +2139,8 @@ contains
     if (ins>0) then
       call ioinput('KFORCE          ', uio, 1, 7, ier)
       if (ier==0) then
-        read (unit=uio, fmt=*) kforce
+        read (unit=uio, fmt=*, iostat=ier) kforce
+        if (ier/=0) stop 'Error reading `KFORCE`: check your inputcard'
         write (111, *) 'KFORCE= ', kforce
       else
         write (111, *) 'Default KFORCE= ', kforce
@@ -2047,17 +2183,17 @@ contains
 
     if (search_Efermi) then
       imix = 0
-      mixing = 0.0d0
+      mixing = 0.0_dp
       strmix = mixing
       itdbry = 1
-      qbound = 1.0d-10
+      qbound = 1.0e-10_dp
       write (1337, '(1X,A)') 'Option SEARCHEF used overriding INPUT for'
       write (1337, '(1X,A)') 'IMIX,MIX,QBOUND,ITDBRY: 0, 0.0, 1E-10, 1'
       write (1337, *)
     end if
 
     if (imix>2) then
-      fcm = 1.0d0
+      fcm = 1.0_dp
       mixing = brymix
     else
       mixing = strmix
@@ -2071,7 +2207,7 @@ contains
     if (ncpa/=0) write (1337, 470) itcpamax, cpatol
     ! --------------------------------------------------------
 
-    lmmax = (lmax+1)**2
+    lmmax0d = (lmax+1)**2
     lpot = 2*lmax
     lmpot = (lpot+1)*(lpot+1)
     lmxspd = (2*lpot+1)**2
@@ -2113,7 +2249,8 @@ contains
     lrhosym = .false.
     call ioinput('LRHOSYM         ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) lrhosym
+      read (unit=uio, fmt=*, iostat=ier) lrhosym
+      if (ier/=0) stop 'Error reading `LRHOSYM`: check your inputcard'
       write (111, *) 'LRHOSYM= ', lrhosym
     else
       write (111, *) 'Default LRHOSYM= ', lrhosym
@@ -2129,7 +2266,8 @@ contains
 
     if (lrhosym) then
       call ioinput('IXIPOL          ', uio, 1, 7, ier)
-      read (unit=uio, fmt=*)(ixipol(i), i=1, natyp)
+      read (unit=uio, fmt=*, iostat=ier)(ixipol(i), i=1, natyp)
+      if (ier/=0) stop 'Error reading `IXIPOL`: check your inputcard'
       write (1337, 240)(ixipol(i), i=1, natyp)
       write (1337, 340)
       do i = 1, natyp
@@ -2160,15 +2298,16 @@ contains
       ! -------------------------------------------------------------------------
       ! Atoms equivalent by inversional symmetry
       ! -------------------------------------------------------------------------
-      qmtet(i) = 0d0
-      qmphi(i) = 0d0
+      qmtet(i) = 0.0_dp
+      qmphi(i) = 0.0_dp
       ier = 0
       call ioinput('RBASISANG       ', uio, i, 7, ier)
 
       if (ier==0) then
-        read (unit=uio, fmt=*)(rbasis(j,i), j=1, 3), qmtet(i), qmphi(i)
-        if (abs(qmtet(i))>1d-6) kmrot = 1
-        if (abs(qmphi(i))>1d-6) kmrot = 1
+        read (unit=uio, fmt=*, iostat=ier)(rbasis(j,i), j=1, 3), qmtet(i), qmphi(i)
+        if (ier/=0) stop 'Error reading `RBASISANG`: check your inputcard'
+        if (abs(qmtet(i))>1.0e-6_dp) kmrot = 1
+        if (abs(qmphi(i))>1.0e-6_dp) kmrot = 1
       end if
     end do                         ! I=1,NAEZ
     call idreals(rbasis(1,1), 3*naez, iprint)
@@ -2243,7 +2382,8 @@ contains
       solver = 'BS        '
       call ioinput('SOLVER          ', uio, 0, 7, ier)
       if (ier==0) then
-        read (unit=uio, fmt=*) solver
+        read (unit=uio, fmt=*, iostat=ier) solver
+        if (ier/=0) stop 'Error reading `SOLVER`: check your inputcard'
         if (solver(1:2)=='BS') then
           solver = 'BS        '
         else
@@ -2260,9 +2400,10 @@ contains
       if (modify_soc_Dirac) then
         call ioinput('SOSCALE         ', uio, 0, 7, ier)
         if (ier==0) then
-          read (unit=uio, fmt=*) soscale
-          if (soscale>-2.5d0) then
-            if (soscale>=0.0d0) then ! SOC-I
+          read (unit=uio, fmt=*, iostat=ier) soscale
+          if (ier/=0) stop 'Error reading `SOCSCALE`: check your inputcard'
+          if (soscale>-2.5_dp) then
+            if (soscale>=0.0_dp) then ! SOC-I
               solver = 'ABM-SOC   '
               mansoc = .true.
             else                   ! SOC-II
@@ -2282,7 +2423,7 @@ contains
           write (1337, 890)
         end if
 
-        if (mansoc .and. (soscale>=0d0)) then
+        if (mansoc .and. (soscale>=0.0_dp)) then
           imansoc(1:natyp) = 1
           ! -------------------------------------------------------------------
           ! Now look for a possible include/exclude list (SOCLIST= +/- NASOC)
@@ -2293,7 +2434,8 @@ contains
           ! -------------------------------------------------------------------
           call ioinput('SOCLIST         ', uio, 0, 7, ier)
           if (ier==0) then
-            read (unit=uio, fmt=*) nasoc, (isp(i), i=1, abs(nasoc))
+            read (unit=uio, fmt=*, iostat=ier) nasoc, (isp(i), i=1, abs(nasoc))
+            if (ier/=0) stop 'Error reading `SOCLIST`: check your inputcard'
 
             if (nasoc/=0) then
               if (nasoc<0) then    ! exclude this atoms
@@ -2343,8 +2485,9 @@ contains
       if (dirac_scale_SpeefOfLight) then
         call ioinput('CTLSCALE        ', uio, 0, 7, ier)
         if (ier==0) then
-          read (unit=uio, fmt=*) ctlscale
-          if (ctlscale>=1d-12) then
+          read (unit=uio, fmt=*, iostat=ier) ctlscale
+          if (ier/=0) stop 'Error reading `CTLSCALE`: check your inputcard'
+          if (ctlscale>=1.0e-12_dp) then
             manctl = .true.
           else
             write (1337, 870) '< CSCALE >'
@@ -2359,7 +2502,7 @@ contains
           cscl(:, :) = cscl(:, :)/sqrt(ctlscale)
           write (1337, 980, advance='no')
           write (1337, 910)
-          write (1337, 950) 1.d0/sqrt(ctlscale)
+          write (1337, 950) 1.0_dp/sqrt(ctlscale)
         end if
         write (1337, 310)
       end if
@@ -2422,7 +2565,8 @@ contains
     !------------------------------------------------------------------------------
     call ioinput('MEMWFSAVE       ', uio, 0, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) t_wavefunctions%maxmem_number
+      read (unit=uio, fmt=*, iostat=ier) t_wavefunctions%maxmem_number
+      if (ier/=0) stop 'Error reading `MEMWFSAVE`: check your inputcard'
 
       ! if LLOYD is used turn off wave func saving since in main1a and main1c
       ! different energy points are used (in 1a the derivative of the t-matrix is
@@ -2441,7 +2585,8 @@ contains
     end if
     call ioinput('UNITMEMWFSAVE   ', uio, 0, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*) t_wavefunctions%maxmem_units
+      read (unit=uio, fmt=*, iostat=ier) t_wavefunctions%maxmem_units
+      if (ier/=0) stop 'Error reading `UNITMEMWFSAVE`: check your inputcard'
       write (1337, *) '< UNITMEMWFSAVE >', t_wavefunctions%maxmem_units, ' (max memory= UNITMEMWFSAVE*1024**MEMWFSAVE)'
       write (111, *) 'UNITMEMWFSAVE=', t_wavefunctions%maxmem_units
     else
@@ -2488,11 +2633,13 @@ contains
       t_godfrin%na = naez
       call ioinput('GODFRIN         ', uio, 2, 7, ier)
       if (ier/=0) stop 'RINPUT: GODFRIN not found!'
-      read (unit=uio, fmt=*) t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
+      read (unit=uio, fmt=*, iostat=ier) t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
+      if (ier/=0) stop 'Error reading `GODFRIN` (nb, ldiag, lper, lpardiso): check your inputcard'
 
       call ioinput('GODFRIN         ', uio, 4, 7, ier)
       allocate (t_godfrin%bdims(t_godfrin%nb))
-      read (unit=uio, fmt=*) t_godfrin%bdims(:)
+      read (unit=uio, fmt=*, iostat=ier) t_godfrin%bdims(:)
+      if (ier/=0) stop 'Error reading `GIDFRIN (bdims)`: check your inputcard'
 
       ! Inconsistency check
       if (t_godfrin%na/=sum(t_godfrin%bdims)) stop 'godfrin: na /= sum(bdims)'
@@ -2647,7 +2794,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine read_old_runtestoptions(invmod,verbosity,MPI_scheme,oldstyle)
 
-    use :: mod_ioinput, only: ioinput, convert_to_uppercase
+    use :: mod_ioinput, only: ioinput
     use :: mod_runoptions, only: set_old_runoption
     use :: mod_profiling, only: memocc
 
@@ -2679,7 +2826,8 @@ contains
       if (first) write (1337, *) 'Old style of run- and test-options found. Testing input:'
       first = .false.
 
-      read (unit=uio, fmt=130)(optc(i), i=1, 8)
+      read (unit=uio, fmt=130, iostat=ier)(optc(i), i=1, 8)
+      if (ier/=0) stop 'Error reading `RUNOPT`: check your inputcard'
 
       !write result to inputcard_generated
       write (111, fmt='(A6)') 'RUNOPT'
@@ -2700,9 +2848,11 @@ contains
       if (first) write (1337, *) 'Old style of run- and test-options found. Testing input:'
       first = .false.
 
-      read (unit=uio, fmt=130)(testc(i), i=1, 8)
+      read (unit=uio, fmt=130, iostat=ier)(testc(i), i=1, 8)
+      if (ier/=0) stop 'Error reading `TESTOPT`: check your inputcard'
       call ioinput('TESTOPT         ', uio, 2, 7, ier)
-      read (unit=uio, fmt=130)(testc(8+i), i=1, 8)
+      read (unit=uio, fmt=130, iostat=ier)(testc(8+i), i=1, 8)
+      if (ier/=0) stop 'Error reading `TESTOPT` (line 2): check your inputcard'
 
       !write result to inputcard_generated
       write (111, fmt='(A7)') 'TESTOPT'

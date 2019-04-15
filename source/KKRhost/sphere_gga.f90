@@ -35,7 +35,6 @@ contains
     use :: mod_datatypes, only: dp
     use :: mod_lebedev, only: lebedev
     use :: mod_ymy, only: ymy
-    use :: mod_rinit, only: rinit
     use :: mod_constants, only: pi
     implicit none
 
@@ -192,19 +191,19 @@ contains
     real (kind=dp) :: qlm((l4maxd+1)**2) ! Ylm/cos(m*fi) (m>0) and Ylm/sin(m*fi)
     ! (m<0)
     real (kind=dp) :: cmfi(0:l4maxd), smfi(0:l4maxd) ! cos(m*fi) and sin(m*fi)
-    real (kind=dp) :: xy, xyz, sgm, sgmm, fi
+    real (kind=dp) :: xy, xyz, sgm, sgmm
     real (kind=dp) :: aux
     real (kind=dp) :: tiny
     parameter (tiny=1.e-20_dp)     ! if th < tiny set th=0
     real (kind=dp) :: tt, aa, cd   ! factors in calcul. of Ylm
     integer :: ll, mm, ii          ! l and m indexes
-    integer :: lmmax               ! (lmax+1)**2, total number of spher.
+    integer :: lmmax0d             ! (lmax+1)**2, total number of spher.
     ! harmonics.
     integer :: imm, ipm, lpm, lmm, lpmp1, lmmp1 ! i-m,i+m,l+m,l-m,l+m+1,l-m-1
 
     fpi = 4.e0_dp*pi
     rtwo = sqrt(2.e0_dp)
-    lmmax = (lmax+1)**2
+    lmmax0d = (lmax+1)**2
 
     if (lmax>l4maxd) stop 'derivylm: lmax out of range.'
 
@@ -263,7 +262,7 @@ contains
     ! come with a different sign convention compared to the usual in the
     ! program: sin(fi)**m --> (-1)**m * sin(fi)**m. Thus some signs change.
     ! This is taken care of here:
-    fi = atan2(v2, v1)
+    !fi = atan2(v2, v1)
     ! THE CHANGE OF SIGN BELOW IS WRONG AND THEREFORE NOT DONE ANYMORE
     ! It was introduced to keep results consistent with older versions which
     ! already yielded wrong results
@@ -312,9 +311,9 @@ contains
     end do
 
     ! Derivatives with respect to th
-    call rinit(lmmax, dydth)
-    call rinit(lmmax, d2ydth2)
-    call rinit(lmmax, d2ydthdfi)
+    call rinit(lmmax0d, dydth)
+    call rinit(lmmax0d, d2ydth2)
+    call rinit(lmmax0d, d2ydthdfi)
     ! The l=0 derivatives are zero (established by initialization above).
     ! Start with l=1.
     do ll = 1, lmax

@@ -17,7 +17,7 @@ contains
   !>
   !-------------------------------------------------------------------------------
   subroutine greenimp(natomimp, dtmtrx, e)
-    use :: global_variables, only: lmmaxso
+    use :: global_variables, only: lmmaxd
     use :: mod_datatypes, only: dp
     use :: mod_constants, only: czero, cone
 
@@ -26,23 +26,23 @@ contains
     complex (kind=dp) :: e, e1
     integer :: natomimp, ndim, info
     integer :: i, j, lm1, lm2, ilm, jlm, ilm1, jlm1
-    integer :: ipvt1(natomimp*lmmaxso)
-    complex (kind=dp) :: dtmtrx(lmmaxso*natomimp, lmmaxso*natomimp)
+    integer :: ipvt1(natomimp*lmmaxd)
+    complex (kind=dp) :: dtmtrx(lmmaxd*natomimp, lmmaxd*natomimp)
     complex (kind=dp), allocatable :: gimp(:, :), gi(:, :)
 
     ! read in GF of the host
-    allocate (gimp(natomimp*lmmaxso,natomimp*lmmaxso))
+    allocate (gimp(natomimp*lmmaxd,natomimp*lmmaxd))
 
     gimp = czero
     write (6, *) 'read in Green for host'
     read (60, '(2e17.9)') e1
     ! READ(60,*) E1
     do j = 1, natomimp
-      do lm2 = 1, lmmaxso
-        jlm = (j-1)*lmmaxso + lm2
+      do lm2 = 1, lmmaxd
+        jlm = (j-1)*lmmaxd + lm2
         do i = 1, natomimp
-          do lm1 = 1, lmmaxso
-            ilm = (i-1)*lmmaxso + lm1
+          do lm1 = 1, lmmaxd
+            ilm = (i-1)*lmmaxd + lm1
             ! READ(60,*) JLM1,ILM1,GIMP(ILM,JLM)
             read (60, '((2I5),(2e17.9))') jlm1, ilm1, gimp(ilm, jlm)
           end do
@@ -51,9 +51,9 @@ contains
     end do
 
     ! calculate impurity GF
-    allocate (gi(natomimp*lmmaxso,natomimp*lmmaxso))
+    allocate (gi(natomimp*lmmaxd,natomimp*lmmaxd))
     gi = czero
-    ndim = natomimp*lmmaxso
+    ndim = natomimp*lmmaxd
     ! -G_host * delta t
     call zgemm('N', 'N', ndim, ndim, ndim, -cone, gimp, ndim, dtmtrx, ndim, czero, gi, ndim)
     do i = 1, ndim

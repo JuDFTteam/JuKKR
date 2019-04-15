@@ -56,8 +56,8 @@ contains
     
     niter = niter + 1
     do ir = 1, irm
-      g(ir) = 0.0d0
-      f(ir) = 0.0d0
+      g(ir) = 0.0_dp
+      f(ir) = 0.0_dp
     end do
 
     if (niter>nitmax) then
@@ -67,19 +67,19 @@ contains
 
     else !niter>nitmax
 
-      if (e<=e1 .or. e>=e2) e = .5d0*(e1+e2)
+      if (e<=e1 .or. e>=e2) e = 0.5_dp*(e1+e2)
       nre = nr
-      if (e<=-1.d-8) then
-        tsrme = 2.d0*sqrt(-e)
-        re = (log(-tsrme*e/1.d-8)/tsrme-zz/e)*2.d0
-        nre = nint(log(re/b+1.d0)/a+1.d0)
+      if (e<=-1.0e-8_dp) then
+        tsrme = 2.0_dp*sqrt(-e)
+        re = (log(-tsrme*e/1.0e-8_dp)/tsrme-zz/e)*2.0_dp
+        nre = nint(log(re/b+1.0_dp)/a+1.0_dp)
         nre = (nre/2)*2 + 1
         nre = min0(nre, nr)
         nre = max0(nre, 35)
       end if
-      xxx = 1.d0
-      valu = 1.d-1
-      slop = -1.d-1
+      xxx = 1.0_dp
+      valu = 1.0e-1_dp
+      slop = -1.0e-1_dp
       if (nre<nr .and. niter==1 .and. ipr/=0 .and. (t_inc%i_write>0)) write (1337, fmt=130)
       if (nre>=nr) then
         valu = value
@@ -88,14 +88,14 @@ contains
           ! --->   single site  boundary condition
           vme = -e
           if (nsra==1) then
-            cappai = cmplx(0.d0, sqrt(vme), kind=dp)
+            cappai = cmplx(0.0_dp, sqrt(vme), kind=dp)
           else
-            cappai = cmplx(0.d0, sqrt((1.d0-vme/cvlight/cvlight)*vme), kind=dp)
+            cappai = cmplx(0.0_dp, sqrt((1.0_dp-vme/cvlight/cvlight)*vme), kind=dp)
           end if
           arg = cappai*rn
           call hankel(hl, l+2, arg)
           dofe = real(l+1, kind=dp)/rn - cappai*hl(l+2)/hl(l+1)
-          valu = 1.d-10
+          valu = 1.e-10_dp
           slop = real(valu*dofe, kind=dp)
         end if
 
@@ -112,29 +112,29 @@ contains
       psi2 = g(kc)
       dpsi2 = dg2/drdikc
       qkc2 = psi2*psi2 + dpsi2*dpsi2*rkc*rkc
-      pkc2 = .5d0 - atan(rkc*dpsi2/psi2)/pi
+      pkc2 = 0.5_dp - atan(rkc*dpsi2/psi2)/pi
 
       call intout(g, f, v, e, l, nne, kc, dg1, a, b, z, nsra)
 
       psi1 = g(kc)
       dpsi1 = dg1/drdikc
       qkc1 = psi1*psi1 + dpsi1*dpsi1*rkc*rkc
-      pkc1 = .5d0 - atan(rkc*dpsi1/psi1)/pi
+      pkc1 = 0.5_dp - atan(rkc*dpsi1/psi1)/pi
       if (nne==9) nne = 0
 
       if (nne==nn) then
 
         ratio1 = gkc2/g(kc)
         ratio = sqrt(qkc2/qkc1)
-        if (ratio1<0.d0) ratio = -ratio
+        if (ratio1<0.0_dp) ratio = -ratio
         do k = 1, kc
           g(k) = g(k)*ratio
           f(k) = f(k)*ratio
         end do
-        sum = 0.d0
+        sum = 0.0_dp
         if (nsra==1) then
           do k = 1, nre
-            f(k) = 0.0d0
+            f(k) = 0.0_dp
           end do
         end if
         rpb = b/ea
@@ -152,11 +152,11 @@ contains
           sum = sum + rpb*(g(k)*g(k)+f(k)*f(k))
         end do
         sum = sum + sum + rpb*q*(g(nre)*g(nre)+f(nre)*f(nre))
-        sum = a*sum/3.d0
+        sum = a*sum/3.0_dp
         de = pi*qkc2*(pkc2-pkc1)/sum/rkc
         if (niter>=nitmax-10 .or. ipr==2 .and. (t_inc%i_write>0)) write (1337, fmt=140) niter, nne, nre, kc, e1, e, e2, de
-        if (de>0.d0) e1 = e
-        if (de<0.d0) e2 = e
+        if (de>0.0_dp) e1 = e
+        if (de<0.0_dp) e2 = e
         e = e + de
         if (abs(de)>tol .and. niter<nitmax) go to 100
 
@@ -165,7 +165,7 @@ contains
         if (niter>=nitmax-10 .or. ipr==2 .and. (t_inc%i_write>0)) write (1337, fmt=140) niter, nne, nre, kc, e1, e, e2
         if (nne>nn) e2 = e
         if (nne<nn) e1 = e
-        e = .5d0*(e1+e2)
+        e = 0.5_dp*(e1+e2)
         go to 100
 
       end if ! nne==nn
@@ -176,8 +176,8 @@ contains
     do k = 1, nre
       rho(k) = g(k)*g(k) + f(k)*f(k)
     end do
-    if (xxx<=0.d0 .and. (t_inc%i_write>0)) write (1337, fmt=150)
-    if (niter>=nitmax-10 .or. ipr>=1 .or. xxx<=0.d0 .and. (t_inc%i_write>0)) write (1337, fmt=160) l, nn, niter, kc, nre, valu, slop, e, de, sum
+    if (xxx<=0.0_dp .and. (t_inc%i_write>0)) write (1337, fmt=150)
+    if (niter>=nitmax-10 .or. ipr>=1 .or. xxx<=0.0_dp .and. (t_inc%i_write>0)) write (1337, fmt=160) l, nn, niter, kc, nre, valu, slop, e, de, sum
     return
 
 120 format (' l=', i3, '  nn=', i2, '  nr=', i4, '  f1/e/f2=', 3f10.3, /, ' tol=', 1p, d12.3, '  value/slope=', 2d12.3)

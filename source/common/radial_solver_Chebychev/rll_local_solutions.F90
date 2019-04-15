@@ -253,7 +253,7 @@ contains
       end do
       do lm1 = 1, lmsize2
         do icheb = 0, ncheb
-          slv(icheb, lm1, icheb, lm1) = slv(icheb, lm1, icheb, lm1) + 1.d0
+          slv(icheb, lm1, icheb, lm1) = slv(icheb, lm1, icheb, lm1) + 1.0_dp
         end do
       end do
     else if (use_sratrick==1) then
@@ -276,7 +276,7 @@ contains
       end do
       do lm1 = 1, lmsize
         do icheb = 0, ncheb
-          slv1(icheb, lm1, icheb, lm1) = slv1(icheb, lm1, icheb, lm1) + 1.d0
+          slv1(icheb, lm1, icheb, lm1) = slv1(icheb, lm1, icheb, lm1) + 1.0_dp
         end do
       end do
 

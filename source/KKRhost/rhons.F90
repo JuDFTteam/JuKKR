@@ -83,12 +83,12 @@ contains
   subroutine rhons(den,df,drdi,gmat,ek,rho2ns,ipan,ircut,irmin,thetas,ifunm,lmsp,   &
     nsra,qns,pns,ar,cr,pz,fz,qz,sz,cleb,icleb,jend,iend,ekl,denlm,gflle_part)
 
-    use :: mod_datatypes
-    use :: mod_runoptions, only: calc_gmat_lm_full, use_qdos, use_ldau
-    use :: global_variables
-    use :: mod_rhoin
-    use :: mod_rhoout
-    use :: mod_csimpk
+    use :: mod_datatypes, only: dp
+    use :: mod_runoptions, only: calc_gmat_lm_full, use_qdos, use_ldau, write_DOS_lm
+    use :: global_variables, only: lmmaxd, irmd, lmaxd, ncleb, ipand, irmind, lmpotd, nfund, irid
+    use :: mod_rhoin, only: rhoin
+    use :: mod_rhoout, only: rhoout
+    use :: mod_csimpk, only: csimpk
     use :: mod_constants, only: pi
     implicit none
     ! ..
@@ -102,7 +102,7 @@ contains
 #ifndef CPP_MPI
     complex (kind=dp) :: energ     ! lm-dos
 #endif
-    real (kind=dp) :: cleb(*), drdi(irmd), rho2ns(irmd, lmpotd), thetas(irid, nfund)
+    real (kind=dp) :: cleb(ncleb), drdi(irmd), rho2ns(irmd, lmpotd), thetas(irid, nfund)
     integer :: icleb(ncleb, 4), ifunm(*), ircut(0:ipand), jend(lmpotd, 0:lmaxd, 0:lmaxd), lmsp(*)
     ! ..
     ! .. Local Scalars ..
@@ -110,8 +110,8 @@ contains
     integer :: imt1, l, lm, m, irmax, lm1, lm2
     ! ..
     ! .. Local Arrays ..
-    complex (kind=dp) :: cden(irmd, 0:lmaxd), cdenns(irmd), efac(lmmaxd), cdenlm(irmd, lmmaxd), cwr(irmd, lmmaxd, lmmaxd) & ! lm-dos
-      , gflle_part(lmmaxd, lmmaxd)
+    complex (kind=dp) :: cden(irmd, 0:lmaxd), cdenns(irmd), efac(lmmaxd), cdenlm(irmd, lmmaxd), cwr(irmd, lmmaxd, lmmaxd) ! lm-dos
+    complex (kind=dp), optional :: gflle_part(lmmaxd, lmmaxd)
     ! ..
     ! .. External Functions ..
 
@@ -120,7 +120,7 @@ contains
     efac(1) = 1.0d0
     v1 = 1.0d0
     do l = 1, lmaxd
-      v1 = v1*ek/dble(2*l-1)
+      v1 = v1*ek/real(2*l-1, kind=dp)
       do m = -l, l
         lm = l*(l+1) + m + 1
         efac(lm) = v1
@@ -148,7 +148,7 @@ contains
 
     do lm1 = 1, lmmaxd                                          ! lm-dos
       call csimpk(cdenlm(1,lm1), denlm(lm1), ipan, ircut, drdi) ! lm-dos
-      if (calc_gmat_lm_full .or. use_qdos .or. use_ldau) then   ! lmlm-dos & LDAU
+      if (present(gflle_part) .and. calc_gmat_lm_full .or. use_qdos .or. use_ldau) then   ! lmlm-dos & LDAU
         do lm2 = 1, lmmaxd                                      ! lmlm-dos
           call csimpk(cwr(1,lm1,lm2), gflle_part(lm1,lm2), &    ! lmlm-dos &
             ipan, ircut, drdi)                                  ! lmlm-dos
@@ -163,7 +163,7 @@ contains
     ! Therefore the following is a good approximation           ! lm-dos
     ! for energies of a few Ryd:                                ! lm-dos
 #ifndef CPP_MPI
-    if (.not. use_qdos) then
+    if (.not. use_qdos .and. write_DOS_lm) then
       energ = ek**2                ! lm-dos
       write (30, 100) real(energ, kind=dp), (-aimag(denlm(lm))/pi, lm=1, lmmaxd)
 100   format (30e12.4)

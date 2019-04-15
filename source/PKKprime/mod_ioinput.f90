@@ -51,15 +51,20 @@ contains
       !-------------------------------------------------------------------------------
       SUBROUTINE IOinput(CHARKEY,CHAR,ILINE,IFILE,IERROR)
 
+      use mod_verify77, only : VERIFY77
+
       implicit none
-      CHARACTER CHARKEY*10
+      CHARACTER(len=10) :: CHARKEY
       CHARACTER CHAR*80
       INTEGER ILINE,IERROR,IFILE
       integer i,ios,ier,npt,ilen,ipos,ipos1,iklen
       CHARACTER STRING(500)*80
       CHARACTER STRING1*80
       CHARACTER ATEST
-!
+      character(len=*), parameter :: abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_<>'
+      integer, parameter :: NABC = len(abc)
+      integer, parameter :: NCHAR = len(CHARKEY)
+
       IERROR = 0
       CHAR(1:50)='                                                   '
       OPEN(UNIT=ifile,status='OLD',FILE='inputFS',iostat=ios,err=2000)
@@ -82,7 +87,7 @@ contains
 !       ILEN = VERIFY(CHARKEY,ABC)
 !       IKLEN= VERIFY(CHARKEY,' ')
 ! for linux
-        CALL VERIFY77(CHARKEY,ILEN, IKLEN)
+        CALL VERIFY77(NABC,ABC,NCHAR,CHARKEY,ILEN,IKLEN)
 ! for linux
 !        write(6,*) CHARKEY(1:ILEN-1),ILEN,IKLEN
           IF(ILEN.LT.1) THEN 
@@ -146,41 +151,5 @@ contains
  1004 FORMAT(I4)
  1005 FORMAT(4I4)
       END SUBROUTINE IOinput
-
-      !-------------------------------------------------------------------------------
-      !> Summary: Find position of first space and letter
-      !> Author: 
-      !> Category: PKKprime, input-output
-      !> Deprecated: False ! This needs to be set to True for deprecated subroutines
-      !>
-      !> This subroutine returns the position of the first space character
-      !> in ipos2, and the position of the first letter in the string STR1
-      !-------------------------------------------------------------------------------
-      SUBROUTINE VERIFY77(STR1,ipos1,ipos2)
-      implicit none
-
-        CHARACTER STR1*10
-        CHARACTER ABC*37
-        CHARACTER CHAR*1
-        integer ipos,ipos1,ipos2,i,j
-        DATA ABC/'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-'/
-         ipos2 =0
-!
-         ipos1 = INDEX(STR1,' ')
-         do j=1,10
-            char = str1(j:j)
-!           write(6,*) 'char : ',j, char
-            ipos = 0
-            do i=1,37
-               ipos = INDEX(CHAR,ABC(I:I))
-               if (IPOS.GT.0) THEN
-                  ipos2 = j
-                  RETURN
-               end if
-            end do
-
-         end do
-         RETURN
-         END SUBROUTINE VERIFY77
 
 end module mod_ioinput
