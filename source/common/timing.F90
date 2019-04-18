@@ -41,18 +41,29 @@ contains
   !> Deprecated: False
   !> Initialize the printing of the timing information for each rank 
   !-------------------------------------------------------------------------------
-  subroutine timing_init(my_rank)
+  subroutine timing_init(my_rank, disable_serial_number)
     use :: mod_types, only: t_inc
     use :: mod_version_info, only: version_print_header
     implicit none
     integer, intent(in) :: my_rank
     character (len=3) :: ctemp
+    logical, optional, intent(in) :: disable_serial_number
+    logical :: print_serial
+
+    print_serial = .false.
+    if (present(disable_serial_number)) then
+      if (disable_serial_number) then
+        print_serial = .true.
+      else
+        print_serial = .false.
+      end if
+    end if
 
     if (init/=0) stop '[mod_timing] timing already initilized'
     write (ctemp, '(I03.3)') my_rank
     if (t_inc%i_time>0) then
       open (unit=43234059, file='out_timing.'//trim(ctemp)//'.txt')
-      call version_print_header(43234059, disable_print=.false.)
+      call version_print_header(43234059, disable_print=print_serial)
     end if
     init = 1
   end subroutine timing_init

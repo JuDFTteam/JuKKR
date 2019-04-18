@@ -167,7 +167,7 @@ contains
     BZVol = getBZvolume(lattice%recbv)
 
 #ifdef CPP_TIMING
-    call timing_init(myrank)
+    call timing_init(myrank, disable_serial_number=.true.)
     call timing_start('Read in of data')
 #endif
 
@@ -269,7 +269,10 @@ contains
 
       !now apply the symmetries
       call rotate_kpoints(symmetries%rotmat, nkpts1*ndegen1, arrtmp1, nsym, isym, nkpts2, arrtmp2)
-      if(nkpts2 /= nkpts) stop 'nkpts2 /= nkpts'
+      if(nkpts2 /= nkpts*ndegen1) then
+        write(*,*) 'nkpts2', nkpts2, 'nkpts', nkpts, 'ndegen1', ndegen1
+        stop 'nkpts2 /= nkpts'
+      endif
 
       !transform back to old shape
       allocate(torqval(3,ndegen1,nkpts1*nsym), STAT=ierr)
@@ -294,7 +297,7 @@ contains
 
       !now apply the symmetries
       call rotate_kpoints(symmetries%rotmat, inc%natypd*nkpts1*ndegen1, arrtmp1, nsym, isym, nkpts2, arrtmp2)
-      if(nkpts2 /= nkpts*inc%natypd) stop 'nkpts2 /= nkpts*natpyd'
+      if(nkpts2 /= nkpts*inc%natypd*ndegen1) stop 'nkpts2 /= nkpts*natpyd'
 
       !transform back to old shape
       allocate(torqval_atom(3,inc%natypd,ndegen1,nkpts1*nsym), STAT=ierr)
@@ -319,7 +322,7 @@ contains
 
       !now apply the symmetries
       call rotate_kpoints(symmetries%rotmat, inc%natypd*nkpts1*ndegen1, arrtmp1, nsym, isym, nkpts2, arrtmp2)
-      if(nkpts2 /= nkpts*inc%natypd) stop 'nkpts2 /= nkpts*natpyd'
+      if(nkpts2 /= nkpts*inc%natypd*ndegen1) stop 'nkpts2 /= nkpts*natpyd'
 
       !transform back to old shape
       allocate(spinvec_atom(3,inc%natypd,ndegen1,nkpts1*nsym), STAT=ierr)
@@ -1441,7 +1444,7 @@ contains
     use mod_read,       only: read_kpointsfile_vis, read_kpointsfile_int, read_weights, read_fermivelocity
     use mod_parutils,   only: distribute_linear_on_tasks
     use mod_iohelp,     only: open_mpifile_setview, close_mpifile, getBZvolume
-    use mod_ioformat,   only: filemode_vis, filemode_int, filename_eigvect, fmt_fn_ext, filename_lifetime, ext_vtkxml, filename_intmask
+    use mod_ioformat,   only: filemode_vis, filemode_int, filename_eigvect, fmt_fn_ext, filename_lifetime, ext_vtkxml, filename_intmask, ext_mpiio
     use mod_vtkxml,     only: write_pointdata_rot
     use mod_mympi,      only: myrank, nranks, master
     use mod_mathtools,  only: pi
@@ -1598,7 +1601,7 @@ contains
     write(filename,'(A,A)') filename_eigvect, filemode_int
     dimens = (/ inc%lmmaxso,inc%natypd,inc%ndegen, nsqa /)
     itmp1(1) = nkpts_out
-    inquire(file=trim(filename), exist=l_exist)
+    inquire(file=trim(filename)//ext_mpiio, exist=l_exist)
     if(.not.l_exist) stop 'Error: eigenvector file (int) not present but needed for scattering calculations'
     call open_mpifile_setview( trim(filename), 'read', 4, dimens, itmp1, MPI_DOUBLE_COMPLEX, &
                              & 0, 1 , MPI_COMM_WORLD, fh_eigv_out                            )
@@ -1614,7 +1617,7 @@ contains
 
     write(filename,'(A,A)') filename_eigvect, trim(filemode)
     dimens = (/ inc%lmmaxso,inc%natypd,inc%ndegen, nsqa /)
-    inquire(file=trim(filename), exist=l_exist)
+    inquire(file=trim(filename)//ext_mpiio, exist=l_exist)
     if(.not.l_exist) stop 'Error: eigenvector file (vis) not present but needed for scattering calculations'
     call open_mpifile_setview( trim(filename), 'read', 4, dimens, ntot_pT, MPI_DOUBLE_COMPLEX, &
                              & myrank, nranks, MPI_COMM_WORLD, fh_eigv_in                      )
