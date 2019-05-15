@@ -24,7 +24,7 @@
       parameter (NFACED = 100 , NVERTD = 100)
 ! highest valence orbital quantum number     
       integer lmaxd  
-      parameter (LMAXD = 4)
+      parameter (LMAXD = 8)
 ! highest quantum number for shape functions
       integer LMAXD1
       parameter (LMAXD1 = 4*LMAXD )

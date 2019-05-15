@@ -15,20 +15,20 @@
 
 ----
 
-## *UNRELEASED* (last updated: 2019-04-15)
+## *UNRELEASED* (last updated: 2019-05-15)
 
 **Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release.**
 
 Removed a lot of code duplicates among different
 
 ### Added
-- None
+- allow up to LMAX=8 in voronoi code and KKRhost code
 
 ### Changed
 - None
 
 ### Deprecated
-- None
+- 'IMPURITY' option of voronoi code, not working properly and thus commented out
 
 ### Removed
 - None
@@ -61,9 +61,6 @@ Removed a lot of code duplicates among different
 - added lmdos writeout mode for qdos
 - find NPRINCD to lowest possible divisor of NAEZ
 
-### Deprecated
-- None
-
 ### Removed
 - removed code duplicates
 
@@ -86,7 +83,6 @@ Removed a lot of code duplicates among different
 Improved memory consumption for XCPL calculation and small bugfixes.
 
 ### Changed
-- None
 - greatly reduced memory consumption for XCPL calculation and improved performance of loops in shellgen2k
 
 ### Fixed
