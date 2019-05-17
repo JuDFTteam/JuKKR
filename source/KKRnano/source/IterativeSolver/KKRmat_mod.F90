@@ -219,6 +219,9 @@ module KKRmat_mod
     use fillKKRMatrix_mod, only: dump
     use IterativeSolver_mod, only: IterativeSolver, solve
     use DirectSolver_mod, only: DirectSolver, solve
+#ifdef  has_tfQMRgpu
+    ! use tfqmrgpu, only: tfqmrgpu_bsrsv_complete ! all-in-one GPU solver interface for rapid integration
+#endif
     use SparseMatrixDescription_mod, only: dump
     use InitialGuess_mod, only: InitialGuess, load, store
     use KKROperator_mod, only: KKROperator
@@ -257,6 +260,13 @@ module KKRmat_mod
     double complex, allocatable :: dPdE_local(:,:,:), gllke_x(:,:), dgde(:,:), MinvdMdE(:,:,:), TinvMinvdMdE(:,:,:) ! LLY
     double complex :: tracek  ! LLY
          
+#ifdef  has_tfQMRgpu
+    external :: tfqmrgpu_bsrsv_complete ! subroutine
+    integer :: o = 6
+    integer :: ierr = 1
+    integer :: iterations, lda
+    double precision :: residuum
+#endif
 
     integer :: num_trunc_atoms, lmsd, lm1, idx_lly, i1
     double complex :: cfctorinv
@@ -383,6 +393,20 @@ module KKRmat_mod
       ! store the initial guess
       call store(iguess_data, op%mat_X, ik=ikpoint, is=ispin, ie=ienergy)
 
+#ifdef  has_tfQMRgpu
+    case (5) ! GPU solver
+      
+      iterations = 1000
+      residuum = 1e-7
+      lda = size(op%mat_A, 1)
+
+      call tfqmrgpu_bsrsv_complete(op%bsr_A%nRows, lda, &
+        op%bsr_A%RowStart, op%bsr_A%ColIndex, op%mat_A(:,:,:,0), 'n', & !! A (in)
+        op%bsr_X%RowStart, op%bsr_X%ColIndex, op%mat_X, 'n', & !! X (out)
+        op%bsr_B%RowStart, op%bsr_B%ColIndex, op%mat_B, 'n', & !! B (in)
+        iterations, residuum, o, ierr)
+#endif
+      
     case default
       warn(6, "No solver selected! Problem is not solved, solver_type ="+solver_type)
     endselect ! solver_type
