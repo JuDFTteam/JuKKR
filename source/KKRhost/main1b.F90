@@ -35,7 +35,7 @@ contains
 #endif
     use :: mod_mympi, only: myrank, master
     use :: mod_datatypes, only: dp, sp
-    use :: mod_runoptions, only: calc_exchange_couplings, formatted_files, set_gmat_to_zero, use_Chebychev_solver, &
+    use :: mod_runoptions, only: calc_exchange_couplings, formatted_file, set_gmat_to_zero, use_Chebychev_solver, &
       use_qdos, use_readcpa, write_deci_tmat, write_gmat_plain, write_green_host, write_green_imp, write_kkrimp_input, &
       write_pkkr_input, write_pkkr_operators, write_rhoq_input, write_gmat_ascii, set_cheby_nosoc
     use :: mod_constants, only: czero, cone, pi
@@ -268,7 +268,7 @@ contains
     if ((use_qdos) .and. (write_deci_tmat)) then
       stop 'ERROR: qdos and deci-out cannot be used simultaniously'
     else if (use_qdos) then
-      if (.not. formatted_files) then
+      if (.not. formatted_file) then
         ! wlength needs to take double complex values
         open (37, access='direct', recl=wlength*16, file='tmat.qdos', form='unformatted')
       else
@@ -623,7 +623,7 @@ contains
           do isite = 1, naez                                                 ! qdos ruess
             tqdos(:, :, isite) = czero                                       ! qdos ruess
 
-            if ( .not. (formatted_files .or. write_deci_tmat) ) then
+            if ( .not. (formatted_file .or. write_deci_tmat) ) then
               do lm1 = 1, lmmaxd
                 do lm2 = 1, lmmaxd
                   irec = lm2 + (lm1-1)*lmmaxd + lmmaxd**2*(isite-1) + lmmaxd**2*naez*(ie-1) + lmmaxd**2*ielast*naez*(ispin-1)
@@ -681,7 +681,7 @@ contains
               if (t_tgmat%gmat_to_file) then
                 write (70, rec=irec) gmat0
                 ! human readable writeout if test option is hit
-                if (formatted_files) then
+                if (formatted_file) then
                   write (707070, '(i9,200000F15.7)') irec, gmat0
                 end if
               else

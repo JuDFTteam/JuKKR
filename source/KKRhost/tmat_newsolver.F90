@@ -44,7 +44,7 @@ contains
     use :: mod_timing, only: timing_start, timing_stop, timings_1a
 #endif
     use :: mod_datatypes, only: dp
-    use :: mod_runoptions, only: calc_exchange_couplings, disable_tmat_sratrick, formatted_files, stop_1b, &
+    use :: mod_runoptions, only: calc_exchange_couplings, disable_tmat_sratrick, formatted_file, stop_1b, &
       write_BdG_tests, write_pkkr_operators, write_rhoq_input, set_cheby_nospeedup, set_cheby_nosoc, calc_wronskian
     use :: mod_constants, only: czero, cone, cvlight
     use :: global_variables, only: ntotd, ncleb, nrmaxd, mmaxd, nspind, nspotd, iemxd, lmmaxd, korbit
@@ -753,7 +753,7 @@ contains
         if (t_inc%i_write>0) write(1337,*) 'writing tmat to file', ie, ispin, i1, shape(tmatll)
         write (69, rec=irec) tmatll(:, :)
         ! human readable writeout if test option is hit
-        if (formatted_files) then
+        if (formatted_file) then
           write (696969, '(i9,20000F15.7)') irec, tmatll(:, :)
         end if
       else
@@ -769,7 +769,7 @@ contains
         if (t_lloyd%dtmat_to_file) then
           irec = ie + ielast*(ispin-1) + ielast*nspin/(1+korbit)*(i1-1)
           write (691, rec=irec) dtmatll(:, :) ! LLY
-          if (formatted_files) then
+          if (formatted_file) then
             write (691691691, '(i9,20000F15.7)') irec, dtmatll(:, :)
           end if
         else
@@ -779,7 +779,7 @@ contains
         if (t_lloyd%tralpha_to_file) then
           irec = ie + ielast*(ispin-1) + ielast*nspin/(1+korbit)*(i1-1)
           write (692, rec=irec) tralpha ! LLY
-          if (formatted_files) then
+          if (formatted_file) then
             write (692692692, '(i9,20000F15.7)') irec, tralpha
           end if
         else
