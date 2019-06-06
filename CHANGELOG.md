@@ -25,7 +25,7 @@ Removed a lot of code duplicates among different
 - allow up to LMAX=8 in voronoi code and KKRhost code
 
 ### Changed
-- None
+- Renamed keywords that have 'files' in the name to avoid clash with 'FILES' keyword in inputcard
 
 ### Deprecated
 - 'IMPURITY' option of voronoi code, not working properly and thus commented out

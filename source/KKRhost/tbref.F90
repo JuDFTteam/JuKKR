@@ -31,7 +31,7 @@ contains
     use :: mod_mympi, only: find_dims_2d
 #endif
     use :: mod_constants
-    use :: mod_runoptions, only: formatted_files, print_program_flow, write_green_imp
+    use :: mod_runoptions, only: formatted_file, print_program_flow, write_green_imp
     use :: mod_profiling, only: memocc
     use :: global_variables, only: lmgf0d, wlength, naezd, nembd, lm2d, nclsd, naclsd, ncleb, iemxd
     use :: mod_datatypes, only: dp
@@ -271,7 +271,7 @@ contains
         end if                     ! if(t_mpi_c_grid%myrank_ie==0) then
 
         ! human readable writeout if test option is hit
-        if (formatted_files) then
+        if (formatted_file) then
           ! test writeout
           do i1 = 0, nranks - 1
             if (myrank==i1) then
@@ -292,7 +292,7 @@ contains
       if (lly/=0) then             ! LLY Lloyd
         if (t_lloyd%dgref_to_file) then ! LLY Lloyd
           write (681, rec=ie) dginp ! dGref/dE         ! LLY Lloyd
-          if (formatted_files) then
+          if (formatted_file) then
             write (681681, '(i9,200000ES15.7)') ie, dginp
           end if
         else                       ! LLY Lloyd
@@ -300,7 +300,7 @@ contains
         end if                     ! LLY Lloyd
         if (t_lloyd%g0tr_to_file) then ! LLY Lloyd
           write (682, fmt='(2E24.16)') lly_g0tr_ie ! LLY Lloyd
-          if (formatted_files) then
+          if (formatted_file) then
             write (682682, '(i9,200000ES15.7)') ie_num, lly_g0tr_ie
           end if
         else                       ! LLY Lloyd
