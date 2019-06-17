@@ -35,6 +35,7 @@ contains
     use :: mod_sphere_gga, only: sphere_gga
     use :: mod_vxcgga, only: vxcgga
     use :: mod_vxclm, only: vxclm
+    use :: mod_wunfiles, only: t_params
     implicit none
     ! Parameters ..
     integer :: ijd 
@@ -72,6 +73,7 @@ contains
     real (kind=dp), dimension(ijd, 3)           :: rij
     real (kind=dp), dimension(irmd, lmpotd, 2)  :: rho2iat
     real (kind=dp), dimension(ijd,lmpotd) :: dylmf1,dylmf2,dylmt1,dylmt2,dylmtf,wtyr,ylm,yr 
+    integer :: kxc_tmp
 
     ! Local Scalars ..
     integer :: iatyp, icell, ipot, lmx1
@@ -85,6 +87,11 @@ contains
     do iatyp = nstart, nend
       icell = ntcell(iatyp)
       ipot = nspin*(iatyp-1) + 1
+      kxc_tmp = kxc
+      if (kxc>=3 .and. abs(t_params%zat(iatyp))<1.0e-8_dp) then
+        kxc_tmp = 2 ! use LDA also for empty sites
+        write(1337, '(A)') 'WARNING: use LDA (VWN) for empty cells instead of GGA!'
+      end if
       do lmx1 = 1, lmxspd
         ifunmiat(lmx1) = ifunm(icell, lmx1)
         lmspiat(lmx1) = lmsp(icell, lmx1)
@@ -93,15 +100,15 @@ contains
       if (nspin==2 .or. krel==1) then
         call dcopy(irmd*lmpotd, rho2ns(1,1,iatyp,2), 1, rho2iat(1,1,2), 1)
       end if
-      if (kxc<3) then
-        call vxclm(exc,kte,kxc,lpot,nspin,iatyp,rho2iat,vons(1,1,ipot),r(1,iatyp),  &
+      if (kxc_tmp<3) then 
+        call vxclm(exc,kte,kxc_tmp,lpot,nspin,iatyp,rho2iat,vons(1,1,ipot),r(1,iatyp),  &
           drdi(1,iatyp),irws(iatyp),ircut(0,iatyp),ipan(iatyp),kshape,gsh,ilm,      &
           imaxsh,ifunmiat,thetas(1,1,icell),yr,wtyr,ijd,lmspiat)
       else
         !----------------------------------------------------------------------------
         ! GGA EX-COR POTENTIAL
         !----------------------------------------------------------------------------
-        call vxcgga(exc,kte,kxc,lpot,nspin,iatyp,rho2iat,vons(1,1,ipot),r(1,iatyp), &
+        call vxcgga(exc,kte,kxc_tmp,lpot,nspin,iatyp,rho2iat,vons(1,1,ipot),r(1,iatyp), &
           drdi(1,iatyp),a(iatyp),irws(iatyp),ircut(0,iatyp),ipan(iatyp),kshape,gsh, &
           ilm,imaxsh,ifunmiat,thetas(1,1,icell),wtyr,ijd,lmspiat,thet,ylm,dylmt1,   &
           dylmt2,dylmf1,dylmf2,dylmtf)

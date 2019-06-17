@@ -310,7 +310,7 @@ if ( config_runflag('LLYsimple') ) then
   !renormalize weights on every rank
   wez(:) = wez(:)*llyfac
   do idummy=1,ielast
-    write(1337, '(A,I5,A,F20.14,A,F20.14)') 'IE: ',idummy,' new weight: ',real(wez(idummy)), ' ', imag(wez(idummy))
+    write(1337, '(A,I5,A,F20.14,A,F20.14,A,F20.14)') 'IE: ',idummy,' new weight: ',real(wez(idummy)), ' ', imag(wez(idummy)), '; llyfac=', llyfac
   end do
   call log_write('<<<<<<<<<<<<<<<<<<< end NEWWEIGHTS <<<<<<<<<<<<<<<<<<<')
 end if

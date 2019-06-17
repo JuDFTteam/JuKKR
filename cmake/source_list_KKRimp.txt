@@ -37,6 +37,7 @@ add_executable(
     source/common/ymy.f90
     source/common/splint.f90
     source/common/spline.f90
+    source/common/interpolspline.f90
     source/common/radial_solver_Chebychev/intcheb_cell.f90
     source/common/radial_solver_Chebychev/cheb.f90
     source/common/radial_solver_Chebychev/cheb2oldgrid.f90
@@ -144,7 +145,6 @@ add_executable(
     source/KKRimp/rhovalfull.f90
     source/KKRimp/gdyson.f90
     source/KKRimp/mpienergy.f90
-    source/KKRimp/interpolpotspline.f
     source/KKRimp/interpolpot.f
     source/KKRimp/interpolatecell.f90
     source/KKRimp/checkinterpolation.f90

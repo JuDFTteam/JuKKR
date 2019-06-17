@@ -153,7 +153,7 @@ do iatom=1,natom
     Jijmatrix(:,:,iatom,jatom)=Jijmatrix(:,:,iatom,jatom)+dimag(wez*Jijmatrixtemp_complex)
 
     if ( config_testflag('Jij(E)') ) then
-      write(234932875,'(2I5,500E25.14)') iatom, jatom,dimag(wez*Jijmatrixtemp_complex)
+      write(234932875,'(2I5,500E25.14)') iatom, jatom, wez, dimag(wez*Jijmatrixtemp_complex)
       write(234932876,'(2I5,500E25.14)') iatom, jatom,Jijmatrixtemp
     end if 
   end do !jatom

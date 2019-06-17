@@ -15,7 +15,7 @@
 
 ----
 
-## *UNRELEASED* (last updated: 2019-05-15)
+## *UNRELEASED* (last updated: 2019-06-17)
 
 **Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release.**
 
@@ -26,6 +26,7 @@ Removed a lot of code duplicates among different
 
 ### Changed
 - Renamed keywords that have 'files' in the name to avoid clash with 'FILES' keyword in inputcard
+- if GGA is used, set Vxc of empty cells to LDA (VWN)
 
 ### Deprecated
 - 'IMPURITY' option of voronoi code, not working properly and thus commented out
