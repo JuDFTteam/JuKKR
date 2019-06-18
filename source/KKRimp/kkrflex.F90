@@ -304,13 +304,13 @@ if ( config_runflag('LLYsimple') ) then
     write(*,*) 'Renormalize weights with factor:',llyfac
   end if
 #ifdef CPP_MPI
-  call MPI_Bcast(llyfac, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierror)
+  call MPI_Bcast(llyfac, 1, MPI_DOUBLE_COMPLEX, 0, MPI_COMM_WORLD, ierror)
   if(ierror/=0) stop 'Error in MPI_Bcast for llyfac'
 #endif
   !renormalize weights on every rank
   wez(:) = wez(:)*llyfac
   do idummy=1,ielast
-    write(1337, '(A,I5,A,F20.14,A,F20.14,A,F20.14)') 'IE: ',idummy,' new weight: ',real(wez(idummy)), ' ', imag(wez(idummy)), '; llyfac=', llyfac
+    write(1337, '(A,I5,A,2F20.14,A,2F20.14)') 'IE: ',idummy,' new weight: ',wez(idummy), '; llyfac=', llyfac
   end do
   call log_write('<<<<<<<<<<<<<<<<<<< end NEWWEIGHTS <<<<<<<<<<<<<<<<<<<')
 end if
