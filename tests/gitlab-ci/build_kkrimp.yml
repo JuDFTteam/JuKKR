@@ -1,5 +1,7 @@
 build_kkrimp:intel:hybrid:
   stage: build_kkrimp
+  tags:
+    - docker-executor
   script:
     # compile code
     - mkdir build_kkrimp_hybrid && cd build_kkrimp_hybrid
@@ -21,6 +23,8 @@ build_kkrimp:intel:hybrid:
 
 build_kkrimp:intel:mpi:
   stage: build_kkrimp
+  tags:
+    - docker-executor
   script:
     # compile code
     - mkdir build_kkrimp_hybrid && cd build_kkrimp_hybrid

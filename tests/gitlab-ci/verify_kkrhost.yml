@@ -1,6 +1,8 @@
 ### 3. check outcome of the test runs ###
 verify_kkrhost:intel:
   stage: verify_kkrhost
+  tags:
+    - docker-executor
   script:
     # use pip to install pytest
     - pip install pytest
@@ -24,6 +26,8 @@ verify_kkrhost:intel:
 
 verify_kkrhost_parallel:intel:
   stage: verify_kkrhost
+  tags:
+    - docker-executor
   allow_failure: true
   script:
     # use pip to install pytest
@@ -43,6 +47,8 @@ verify_kkrhost_parallel:intel:
 
 verify_kkrhost_qdos:intel:
   stage: verify_kkrhost
+  tags:
+    - docker-executor
   allow_failure: true
   script:
     # use pip to install pytest
@@ -63,6 +69,8 @@ verify_kkrhost_qdos:intel:
 verify_kkrhost:intel:aiida:
   image: iffregistry.fz-juelich.de/docker-images/aiida-kkr:latest
   stage: verify_kkrhost
+  tags:
+    - docker-executor
   allow_failure: true
   services:
     - name: postgres:latest

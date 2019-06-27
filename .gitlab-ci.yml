@@ -58,8 +58,6 @@ test:intel:
     - which codecov || which Codecov
     # needs to be implemented (tests for dependencies e.g. MPI, OpenMP, LAPACK, etc.)
     - cd tests/unit_tests/test_parallel && ./run_parallel_tests.sh
-  tags:
-    - docker-executor
 
 ###############################################################################
 # include build / run / verify scripts for all codes
