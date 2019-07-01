@@ -89,6 +89,7 @@ end if
 !C *                                                                    *
 !C **********************************************************************
       USE TYPE_SHAPEFUN
+      use mod_types, only: t_inc
       IMPLICIT NONE
 !C     ..
 !C     .. Scalar Arguments ..
@@ -208,7 +209,7 @@ end if
 !C LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 !C
       IMAXSH(LM1) = I - 1
-      WRITE (1337,FMT=9000) IMAXSH(LM1),NGSHD
+      if (t_inc%i_write>0) WRITE (1337,FMT=9000) IMAXSH(LM1),NGSHD
       IF ( IMAXSH(LM1).GT.NGSHD ) STOP 'SHAPE   '
 !C
  9000 FORMAT(' >>> SHAPE : IMAXSH(',I6,'),NGSHD :',2I6)

@@ -1,3 +1,7 @@
+# set OpenMP flags
+set_source_files_properties(source/KKRimp/kkrflex.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
+set_source_files_properties(source/common/radial_solver_Chebychev/rllsll.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
+
 # the executable is built from this list of files
 add_executable(
     kkrflex.exe
@@ -54,6 +58,7 @@ add_executable(
     source/common/beshank.f90
     source/common/wronskian.f90
     source/common/mathtools.f90
+    source/common/timing.F90
     source/KKRhost/rhons.F90
     source/KKRhost/rhoin.F90
     source/KKRhost/rhoout.f90
@@ -176,7 +181,6 @@ add_executable(
     source/KKRimp/umatrix.f90
     source/KKRimp/utrafo.f90
     source/KKRimp/cellproperties.f90
-    source/KKRimp/timing.F90
     source/KKRimp/kkrflex.F90
     )
 

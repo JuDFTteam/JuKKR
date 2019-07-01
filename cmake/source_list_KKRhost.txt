@@ -7,7 +7,8 @@ set_source_files_properties(source/KKRhost/strmat.F90 PROPERTIES COMPILE_FLAGS "
 if(ENABLE_MPI) # this works only in hybrid mode at the moment and not with OpenMP only
     set_source_files_properties(source/KKRhost/tmat_newsolver.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
     set_source_files_properties(source/KKRhost/rhovalnew.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
-    set_source_files_properties(source/KKRhost/rllsll.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
+    #set_source_files_properties(source/KKRhost/rllsll.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
+    set_source_files_properties(source/common/radial_solver_Chebychev/rllsll.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
 endif()
 
 # parallelization of global/local solutions broken, probably because local solutions are called within global solutions

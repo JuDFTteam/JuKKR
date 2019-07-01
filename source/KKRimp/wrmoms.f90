@@ -18,6 +18,7 @@
 
       USE nrtype
       USE type_density
+      use mod_types, only: t_inc
       IMPLICIT NONE
 
 ! Dummy arguments
@@ -38,13 +39,13 @@
       CHARACTER(len=80)            ::  FMT1,FMT2,FMT31,FMT32
       INTEGER                      ::  IS,ISPIN,IATOM,L,LF1,LF2
 
-      WRITE (1337,*)
-      WRITE (1337,'(44(1H#))')
-      WRITE (1337,99002)
-      WRITE (1337,'(44(1H#))')
+      if (t_inc%i_write>0) WRITE (1337,*)
+      if (t_inc%i_write>0) WRITE (1337,'(44(1H#))')
+      if (t_inc%i_write>0) WRITE (1337,99002)
+      if (t_inc%i_write>0) WRITE (1337,'(44(1H#))')
 
-      WRITE (1337,*)
-      WRITE (1337,99003)
+      if (t_inc%i_write>0) WRITE (1337,*)
+      if (t_inc%i_write>0) WRITE (1337,99003)
       DO IATOM = 1,NATOM
          MUSPIN(IATOM,LMAXD1+1) = 0D0
          SUMCH(IATOM,1) = 0D0
@@ -65,15 +66,15 @@
       IF ( NSPIN.EQ.1 ) IS = IS + 2
       DO ISPIN = 1,NSPIN
          IS = IS + 1
-         WRITE (1337,99004) TEXTS(IS)
+         if (t_inc%i_write>0) WRITE (1337,99004) TEXTS(IS)
       END DO
 
-      IF (NSPIN.EQ.2) WRITE(1337,99005)
-      WRITE(1337,*)
+      IF (NSPIN.EQ.2 .and. t_inc%i_write>0) WRITE(1337,99005)
+      if (t_inc%i_write>0) WRITE(1337,*)
 
-      WRITE (1337,'(3X,26(1H=),$)')
-      IF (NSPIN.EQ.2) WRITE (1337,'(23(1H=),$)')
-      WRITE(1337,*)
+      if (t_inc%i_write>0) WRITE (1337,'(3X,26(1H=),$)')
+      IF (NSPIN.EQ.2 .and. t_inc%i_write>0) WRITE (1337,'(23(1H=),$)')
+      if (t_inc%i_write>0) WRITE(1337,*)
 
       FMT1 = '(4X,I3,2X,A4,2(F12.8),2X,F8.4'
       FMT2 = '(9X,A4,2(F12.8),2X,F8.4'
@@ -92,57 +93,57 @@
 
       DO IATOM = 1,NATOM
          IF (NSPIN.EQ.2) THEN
-            WRITE (1337,FMT=FMT1) IATOM,TEXTL(0), &
+            if (t_inc%i_write>0) WRITE (1337,FMT=FMT1) IATOM,TEXTL(0), &
                 (DENSITY(IATOM)%NCHARGE(0,ISPIN),ISPIN=1,NSPIN), &
                  MUSPIN(IATOM,0)
          ELSE
-            WRITE (1337,FMT=FMT1) IATOM,TEXTL(0),DENSITY(IATOM)%NCHARGE(0,1)
+            if (t_inc%i_write>0) WRITE (1337,FMT=FMT1) IATOM,TEXTL(0),DENSITY(IATOM)%NCHARGE(0,1)
          END IF
 
          DO L = 1,LMAXATOM(IATOM) !LMAXD
             IF (NSPIN.EQ.2) THEN
-               WRITE (1337,FMT=FMT2) TEXTL(L), &
+               if (t_inc%i_write>0) WRITE (1337,FMT=FMT2) TEXTL(L), &
                     (DENSITY(IATOM)%NCHARGE(L,ISPIN),ISPIN=1,NSPIN), &
                     MUSPIN(IATOM,L)
             ELSE
-               WRITE (1337,FMT=FMT2) TEXTL(L),DENSITY(IATOM)%NCHARGE(L,1)
+               if (t_inc%i_write>0) WRITE (1337,FMT=FMT2) TEXTL(L),DENSITY(IATOM)%NCHARGE(L,1)
             END IF
 
          END DO
 
          IF (NSPIN.EQ.2) THEN
-            WRITE (1337,FMT=FMT2) TEXTNS, &
+            if (t_inc%i_write>0) WRITE (1337,FMT=FMT2) TEXTNS, &
                  (DENSITY(IATOM)%NCHARGE(LMAXATOM(IATOM)+1,ISPIN),ISPIN=1,NSPIN), &
                  MUSPIN(IATOM,LMAXD1)
          ELSE
-            WRITE (1337,FMT=FMT2) TEXTNS,DENSITY(IATOM)%NCHARGE(LMAXATOM(IATOM),1)
+            if (t_inc%i_write>0) WRITE (1337,FMT=FMT2) TEXTNS,DENSITY(IATOM)%NCHARGE(LMAXATOM(IATOM),1)
          END IF
 
 
-         WRITE (1337,'(10x,19(1H-),$)')
+         if (t_inc%i_write>0) WRITE (1337,'(10x,19(1H-),$)')
 
          IF (NSPIN.EQ.2) THEN
-            WRITE (1337,'(17(1H-))')
-            WRITE (1337,FMT=FMT2) ' TOT', &
+            if (t_inc%i_write>0) WRITE (1337,'(17(1H-))')
+            if (t_inc%i_write>0) WRITE (1337,FMT=FMT2) ' TOT', &
 !                  (SUMCH(IATOM,ISPIN),ISPIN=1,NSPIN),MUSPIN(IATOM,LMAXATOM(IATOM)+1)
                  (SUMCH(IATOM,ISPIN),ISPIN=1,NSPIN),MUSPIN(IATOM,LMAXD1+1) !Phivos
-            WRITE (1337,'(25X,F12.8)') CHTOT(IATOM)
+            if (t_inc%i_write>0) WRITE (1337,'(25X,F12.8)') CHTOT(IATOM)
          ELSE
-            WRITE (1337,*)
-            WRITE (1337,FMT=FMT2) ' TOT',SUMCH(IATOM,1)
+            if (t_inc%i_write>0) WRITE (1337,*)
+            if (t_inc%i_write>0) WRITE (1337,FMT=FMT2) ' TOT',SUMCH(IATOM,1)
          END IF
 
 
          IF ( IATOM.NE.NATOM ) THEN
-            WRITE (1337,'(3X,26(1H=),$)')
+            if (t_inc%i_write>0) WRITE (1337,'(3X,26(1H=),$)')
             IF (NSPIN.EQ.2) WRITE(6,'(17(1H=),$)')
-            WRITE (1337,*)
+            if (t_inc%i_write>0) WRITE (1337,*)
          END IF
       END DO
 
-      WRITE (1337,*)
-      WRITE (1337,'(44(1H#))')
-      WRITE (1337,*)
+      if (t_inc%i_write>0) WRITE (1337,*)
+      if (t_inc%i_write>0) WRITE (1337,'(44(1H#))')
+      if (t_inc%i_write>0) WRITE (1337,*)
 
 
 99001 FORMAT (15X,'l-decomposed valence charges and magnetic moments')

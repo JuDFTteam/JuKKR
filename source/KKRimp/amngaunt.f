@@ -19,6 +19,7 @@
 !-------------------------------------------------------------------------------
       SUBROUTINE AMNGAUNT(LMAX,CLEB,ICLEB,IEND,W,YR,n,lassld,ncleb,lm3d)
       use mod_ymy, only: ymy        
+      use mod_types, only: t_inc
       implicit none
 !       include 'gaunt.param'
 !       include 'parameters.file'
@@ -135,7 +136,7 @@ c
         STOP 13
 
       ELSE
-        WRITE (1337,FMT=900) IEND
+        if (t_inc%i_write>0) WRITE (1337,FMT=900) IEND
       END IF
  900  FORMAT ('Gaunt coefs for VINTERS :',I6)
       END SUBROUTINE      

@@ -1,3 +1,12 @@
+
+! define CPP_OMPSTUFF if openMP is used
+#ifdef CPP_HYBRID
+#define CPP_OMPSTUFF
+#endif
+#ifdef CPP_OMP
+#define CPP_OMPSTUFF
+#endif
+
 !------------------------------------------------------------------------------------
 !> Summary: KKRimp program
 !> Author: 
@@ -5,9 +14,11 @@
 !------------------------------------------------------------------------------------
 program kkrflex
 
-
 #ifdef CPP_MPI
   use mpi
+#endif
+#ifdef CPP_OMPSTUFF
+  use omp_lib ! necessary for omp functions
 #endif
 ! modules
   use nrtype
@@ -60,6 +71,7 @@ program kkrflex
   use mod_log, only: log_write
   use mod_calctmat_bauernew !test
   use mod_change_nrmin
+  use mod_types, only: t_inc
 
   use global_variables, only: ipand
 #ifdef CPP_MPI
@@ -131,6 +143,13 @@ program kkrflex
 ! mpi stuff
 !***********************************
   integer                               :: my_rank,mpi_size,ierror
+                                                                                 ! impurity atoms
+!***********************************
+! openmp stuff
+!***********************************
+#ifdef CPP_OMPSTUFF
+  integer                               :: mythread, nthreads
+#endif
 !***********************************
 ! constants
 !***********************************
@@ -192,9 +211,32 @@ mpi_size=1
 ! find serial number that is printed to files
 call construct_serialnr()
 
-call timing_init(my_rank)
-call timing_start('Total running time')
-call timing_start('time until scf starts')
+! ********************************************************** 
+! open the log (and timing) file for each processor 
+! the log file is called out_log.xxx.txt where xxx is 
+! the processor id (my_rank)
+! (timing file called out_timing.xxx.txt)
+! by default this is done only by master rank
+! but output of all ranks can be activated using the 
+! `write_all_ranks` test option
+! ********************************************************** 
+if (myrank==0) then
+  t_inc%i_write = 1
+  t_inc%i_time = 1
+else
+  t_inc%i_write = 0
+  t_inc%i_time = 0
+end if
+
+write(ctemp,'(I03.3)') my_rank
+if (t_inc%i_write>0) open(unit=1337, file='out_log.'//trim(ctemp)//'.txt')
+if (t_inc%i_write>0) call version_print_header(1337)
+
+if (myrank==0) then
+  call timing_init(my_rank)
+  call timing_start('Total running time')
+  call timing_start('time until scf starts')
+end if
 
 if (my_rank==0) then
   write(*,*) ' **************************************************************************'
@@ -211,20 +253,21 @@ if (my_rank==0) then
   write(*,*) ' ##########   MPI Initialization    ############'
   write(*,*) ' ###############################################'
   write(*,*) ' ###    using ',mpi_size,' processors'
+  if(t_inc%i_write) write(1337,*) ' ###    using ',mpi_size,' processors'
   write(*,*) ' ###############################################'
 end if 
 #endif
+#ifdef CPP_OMPSTUFF
+!$omp parallel shared(nthreads) private(mythread)
+mythread = omp_get_thread_num()
+if (myrank==0 .and. mythread==0) then
+  nthreads = omp_get_num_threads()
+  write (*, '(/79("*")//1X,A,I5//79("*")/)') 'Number of OpenMP threads used:', nthreads
+  if(t_inc%i_write) write (1337, '(/79("*")//1X,A,I5//79("*")/)') 'Number of OpenMP threads used:', nthreads
+end if
+!$omp end parallel
+#endif
 
-write(*,*) 'check all matrix inversions. There might be an error due: Hermitian'
-
-! ********************************************************** 
-! open the log file for each processor 
-! file is called out_log.xxx.txt where xxx is 
-! the processor id (my_rank)
-! ********************************************************** 
-write(ctemp,'(I03.3)') my_rank
-open(unit=1337, file='out_log.'//trim(ctemp)//'.txt')
-call version_print_header(1337)
 ! ********************************************************** 
 ! first all parameters are read in from the config
 ! file and stored into the config type
@@ -233,6 +276,17 @@ call log_write('>>>>>>>>>>>>>>>>>>>>> read_config >>>>>>>>>>>>>>>>>>>>>')
 call config_read(config)
 call log_write('<<<<<<<<<<<<<<<<<<< end read_config <<<<<<<<<<<<<<<<<<<')
 nspin=config%nspin
+
+! open log files for other ranks if testflag is found
+if (myrank>0 .and. config_testflag('write_all_ranks')) then
+  t_inc%i_write = 1
+  t_inc%i_time = 1
+  open(unit=1337, file='out_log.'//trim(ctemp)//'.txt')
+  call version_print_header(1337)
+  call timing_init(my_rank)
+  call timing_start('Total running time')
+  call timing_start('time until scf starts')
+end if
 
 ! Check compatibility of config flags   ! lda+u
 if (config_runflag('LDA+U').and..not.config_testflag('tmatnew')) stop &
@@ -304,13 +358,13 @@ if ( config_runflag('LLYsimple') ) then
     write(*,*) 'Renormalize weights with factor:',llyfac
   end if
 #ifdef CPP_MPI
-  call MPI_Bcast(llyfac, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierror)
+  call MPI_Bcast(llyfac, 1, MPI_DOUBLE_COMPLEX, 0, MPI_COMM_WORLD, ierror)
   if(ierror/=0) stop 'Error in MPI_Bcast for llyfac'
 #endif
   !renormalize weights on every rank
   wez(:) = wez(:)*llyfac
   do idummy=1,ielast
-    write(1337, '(A,I5,A,F20.14,A,F20.14,A,F20.14)') 'IE: ',idummy,' new weight: ',real(wez(idummy)), ' ', imag(wez(idummy)), '; llyfac=', llyfac
+    if (t_inc%i_write>0) write(1337, '(A,I5,A,2F20.14,A,2F20.14)') 'IE: ',idummy,' new weight: ',wez(idummy), '; llyfac=', llyfac
   end do
   call log_write('<<<<<<<<<<<<<<<<<<< end NEWWEIGHTS <<<<<<<<<<<<<<<<<<<')
 end if
@@ -578,7 +632,7 @@ call log_write('***********************************************************')
 do itscf=1,config%scfsteps
   write(ctemp,'(I03.3)') itscf
   call timing_start('Iteration number '//ctemp)
-  write(1337,*) ' Iteration Number ',itscf
+  if (t_inc%i_write>0) write(1337,*) ' Iteration Number ',itscf
   if (my_rank==0) write(   *,*) ' Iteration Number ',itscf
 
   if (itscf==1) then
@@ -999,7 +1053,7 @@ end if
                       sum = sum + rv*rv*cell(iatom)%drmeshdi(ir)
                     end do
                     if ( sqrt(sum).lt.config%qbound ) then
-                      write(1337,*) 'cutting pot. ','ispin',ispin,'iatom',iatom,'ilm',ilm,'rms',sqrt(sum)
+                      if (t_inc%i_write>0) write(1337,*) 'cutting pot. ','ispin',ispin,'iatom',iatom,'ilm',ilm,'rms',sqrt(sum)
                       do ir = 1,irc1 ! the 1 was irmin1 before!
                           vpot(ir,ilm,ispin,iatom) = 0.0d0
                       end do
