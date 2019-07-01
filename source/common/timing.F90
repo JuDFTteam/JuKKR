@@ -76,6 +76,7 @@ contains
   !> Start the measurement of a given process identified by `mykey2` 
   !-------------------------------------------------------------------------------
   subroutine timing_start(mykey2)
+    use :: mod_types, only: t_inc
     implicit none
 
     character (len=*), intent(in) :: mykey2
@@ -83,23 +84,27 @@ contains
     integer :: ikey
     character (len=nkeylen) :: mykey
 
+    if (t_inc%i_time>0) then
 
-    if (init/=1) stop '[timing_start] please run init first'
-
-    mykey = mykey2
-
-    ikey = timing_findkey(mykey, 'noerror')
-
-    if (ikey==-1) then
-      ikey = timing_setkey(mykey)
-      interm_time(ikey) = 0.0d0
-    else
-      if (ispaused(ikey)==1) then
-        if (ispaused(ikey)==0) stop '[timing_start] key already present unpaused'
+      if (init/=1) stop '[timing_start] please run init first'
+  
+      mykey = mykey2
+  
+      ikey = timing_findkey(mykey, 'noerror')
+  
+      if (ikey==-1) then
+        ikey = timing_setkey(mykey)
+        interm_time(ikey) = 0.0d0
+      else
+        if (ispaused(ikey)==1) then
+          if (ispaused(ikey)==0) stop '[timing_start] key already present unpaused'
+        end if
       end if
+  
+      call system_clock(count=start_time(ikey)) ! Start timing
+
     end if
 
-    call system_clock(count=start_time(ikey)) ! Start timing
   end subroutine timing_start
 
   !-------------------------------------------------------------------------------
@@ -110,6 +115,7 @@ contains
   !> Pause the timing of the process described by `mykey2` 
   !-------------------------------------------------------------------------------
   subroutine timing_pause(mykey2)
+    use :: mod_types, only: t_inc
     implicit none
 
     character (len=*), intent(in) :: mykey2
@@ -120,16 +126,20 @@ contains
     real (kind=dp) :: timing
     integer :: clock_rate
 
-    mykey = mykey2
-    ikey = timing_findkey(mykey)
+    if (t_inc%i_time>0) then
 
-    call system_clock(count_rate=clock_rate) ! Find the rate
-    call system_clock(count=stop_time) ! Stop timing
+      mykey = mykey2
+      ikey = timing_findkey(mykey)
+     
+      call system_clock(count_rate=clock_rate) ! Find the rate
+      call system_clock(count=stop_time) ! Stop timing
+     
+      timing = (stop_time-start_time(ikey))/real(clock_rate)
+      interm_time(ikey) = interm_time(ikey) + timing
+      call system_clock(count=start_time(ikey))
+      ispaused(ikey) = 1
 
-    timing = (stop_time-start_time(ikey))/real(clock_rate)
-    interm_time(ikey) = interm_time(ikey) + timing
-    call system_clock(count=start_time(ikey))
-    ispaused(ikey) = 1
+    end if
 
   end subroutine timing_pause
 
@@ -152,27 +162,31 @@ contains
     real (kind=dp) :: timing
     integer :: clock_rate
 
-    mykey = mykey2
-    ikey = timing_findkey(mykey)
+    if (t_inc%i_time>0) then
 
-    call system_clock(count_rate=clock_rate) ! Find the rate
-    call system_clock(count=stop_time) ! Stop timing
+      mykey = mykey2
+      ikey = timing_findkey(mykey)
+  
+      call system_clock(count_rate=clock_rate) ! Find the rate
+      call system_clock(count=stop_time) ! Stop timing
+  
+      if (ispaused(ikey)==1) then
+        timing = interm_time(ikey)
+      else
+        timing = (stop_time-start_time(ikey))/real(clock_rate) + interm_time(ikey)
+      end if
+  
+      call timing_delkey(mykey)
+  
+      ispaused(ikey) = 0
+  
+      if (present(save_out)) then
+        save_out = timing
+        return
+      else
+        if (t_inc%i_time>0) write (43234059, *) mykey, '  ', timing
+      end if
 
-    if (ispaused(ikey)==1) then
-      timing = interm_time(ikey)
-    else
-      timing = (stop_time-start_time(ikey))/real(clock_rate) + interm_time(ikey)
-    end if
-
-    call timing_delkey(mykey)
-
-    ispaused(ikey) = 0
-
-    if (present(save_out)) then
-      save_out = timing
-      return
-    else
-      if (t_inc%i_time>0) write (43234059, *) mykey, '  ', timing
     end if
 
   end subroutine timing_stop

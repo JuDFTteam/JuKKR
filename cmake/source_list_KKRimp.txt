@@ -58,6 +58,7 @@ add_executable(
     source/common/beshank.f90
     source/common/wronskian.f90
     source/common/mathtools.f90
+    source/common/timing.F90
     source/KKRhost/rhons.F90
     source/KKRhost/rhoin.F90
     source/KKRhost/rhoout.f90
@@ -180,7 +181,6 @@ add_executable(
     source/KKRimp/umatrix.f90
     source/KKRimp/utrafo.f90
     source/KKRimp/cellproperties.f90
-    source/KKRimp/timing.F90
     source/KKRimp/kkrflex.F90
     )
 
