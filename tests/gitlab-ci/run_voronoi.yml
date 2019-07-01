@@ -1,5 +1,7 @@
 run_voronoi:intel:oldstyle:
   stage: run_voronoi
+  tags:
+    - docker-executor
   script:
     - cd tests/voronoi
     - cp -r test_inputs/test01_oldstyle test_run01
@@ -19,6 +21,8 @@ run_voronoi:intel:oldstyle:
 
 run_voronoi:intel:newstyle:
   stage: run_voronoi
+  tags:
+    - docker-executor
   script:
     - cd tests/voronoi
     - cp -r test_inputs/test02_newstyle test_run02

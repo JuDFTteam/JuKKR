@@ -64,6 +64,7 @@ subroutine energyloop(my_rank,mpi_size,ITSCF,cell, vpot, shapefun,zatom,natom,ns
       use mod_calccouplingconstants, only: calcJijmatrix,calccouplingconstants_writeoutJij
       use mod_checkinterpolation, only: checkinterpolation
       use mod_version_info, only: version_print_header
+      use mod_types, only: t_inc
       implicit none
       integer                         :: ITSCF
       type(cell_type)                 ::  cell(natom)
@@ -182,16 +183,16 @@ if (ITSCF==1) then
     ilm2=ilm2+ilmatom
   end do !iatom=1,natom
   gmat%gmathostdim=nlmhost
-  write(1337,*) '****************************************'
-  write(1337,*) 'GHOST dim is', gmat%gmathostdim
-  write(1337,*) '****************************************'
+  if (t_inc%i_write>0) write(1337,*) '****************************************'
+  if (t_inc%i_write>0) write(1337,*) 'GHOST dim is', gmat%gmathostdim
+  if (t_inc%i_write>0) write(1337,*) '****************************************'
   gmat%gmatdim=gmat%iatom2nlmindex(3,natom)
-  write(1337,*) 'GMAT matrix dimension'
-  write(1337,*) 'GMAT dim is', gmat%gmatdim
+  if (t_inc%i_write>0) write(1337,*) 'GMAT matrix dimension'
+  if (t_inc%i_write>0) write(1337,*) 'GMAT dim is', gmat%gmatdim
   do iatom=1,natom
-    write(1337,*) 'iatom=',iatom,'matrix index', gmat%iatom2nlmindex(1,iatom), gmat%iatom2nlmindex(3,iatom)
+    if (t_inc%i_write>0) write(1337,*) 'iatom=',iatom,'matrix index', gmat%iatom2nlmindex(1,iatom), gmat%iatom2nlmindex(3,iatom)
   end do
-  write(1337,*) '****************************************'
+  if (t_inc%i_write>0) write(1337,*) '****************************************'
 
 end if !ITSCF==1
 
@@ -317,14 +318,14 @@ if (config%ncoll==1) then
   end if
 
 #ifdef CPP_MPI
-      write(1337,*) 'Distributed new angles from my_rank 0 to others'
-    do iatom=1,natom
-      call mpi_bcast(density(iatom)%theta,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierror)
-      call mpi_bcast(density(iatom)%phi,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierror)
-      write(1337,*) 'Atom ',iatom
-      write(1337,*) 'new theta',density(iatom)%theta/2.0D0/pi*360
-      write(1337,*) 'new phi',density(iatom)%phi/2.0D0/pi*360
-    end do
+  if (t_inc%i_write>0) write(1337,*) 'Distributed new angles from my_rank 0 to others'
+  do iatom=1,natom
+    call mpi_bcast(density(iatom)%theta,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierror)
+    call mpi_bcast(density(iatom)%phi,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierror)
+    if (t_inc%i_write>0) write(1337,*) 'Atom ',iatom
+    if (t_inc%i_write>0) write(1337,*) 'new theta',density(iatom)%theta/2.0D0/pi*360
+    if (t_inc%i_write>0) write(1337,*) 'new phi',density(iatom)%phi/2.0D0/pi*360
+  end do
 #endif
 
  call check_angle(density)
@@ -438,7 +439,7 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
     write(*,'(A$)') '|'
   end if
 
-  write(1337,*) '[energyloop] Energy ie=',ie
+  if (t_inc%i_write>0) write(1337,*) '[energyloop] Energy ie=',ie
 
   if ( config_testflag('Jij(E)') .and. config%calcJijmat==1) then
     write(ctemp,'(I03.3)') ie
@@ -490,10 +491,10 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
 
       if (use_fullgmat==1 .and. .not. config_testflag('tmatnew')) then
         tmat(iatom,ispin)%tmat=(0.0D0,0.0D0)
-        write(1337,*) 'call CALCTMATFULL'
+        if (t_inc%i_write>0) write(1337,*) 'call CALCTMATFULL'
         CALL  CALCTMATFULL(EZ(IE),VPOT(:,:,1,IATOM),VPOT(:,:,2,IATOM),CELL(IATOM),ZATOM(IATOM),lmaxatom(iatom), &
                             tmat(iatom,ispin)%tmat,config,nspin,lmaxd ) !  &
-        write(1337,*) 'call CALCTMATFULL'
+        if (t_inc%i_write>0) write(1337,*) 'call CALCTMATFULL'
 
         if ( config_testflag('write_tmat') ) then
           write(43892349,'(2I4,5000e24.16)') ie,iatom,tmat(iatom,ispin)%tmat
@@ -501,13 +502,13 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
 
       else
         tmat(iatom,ispin)%tmat=(0.0D0,0.0D0)
-        write(1337,*) 'call CALCTMAT'
+        if (t_inc%i_write>0) write(1337,*) 'call CALCTMAT'
 
         if ( .not. config_testflag('tmatnew') ) then
 
            CALL  CALCTMAT(EZ(IE),VPOT(:,:,ISPIN,IATOM),CELL(IATOM),ZATOM(IATOM),lmaxatom(iatom), &
                 tmat(iatom,ispin)%tmat,config,ispin,nspin ) !  &
-           write(1337,*) 'call CALCTMAT'
+           if (t_inc%i_write>0) write(1337,*) 'call CALCTMAT'
 
            if ( config_testflag('write_tmat') ) then
               write(43892349,'(3I4,5000g24.16)') ie,ispin,iatom,tmat(iatom,ispin)%tmat
@@ -588,10 +589,10 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
     ! calculate the Greens functions
     !##############################
     call timing_start('gref->gmat')
-    write(1337,*) 'call gdyson'
+    if (t_inc%i_write>0) write(1337,*) 'call gdyson'
     call gdyson(3434560,ie,ispin,nspin,natom,lmaxatom,tmat,use_fullgmat,gmat,& 
                 gmatonsite,ielast,mpi_iebounds(:,my_rank),ITSCF,saveGmat)
-    write(1337,*) 'end call gdyson'
+    if (t_inc%i_write>0) write(1337,*) 'end call gdyson'
     if(config_testflag('gtest')) write(30000+my_rank,'(832E25.14)') gmat%gmat
 
     call timing_stop('gref->gmat')
@@ -641,20 +642,20 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
 
           if (use_fullgmat==0) then
 
-             write(1337,*) 'call RHOVAL, iatom:', iatom
+             if (t_inc%i_write>0) write(1337,*) 'call RHOVAL, iatom:', iatom
              call RHOVAL(ie,ielast,ez(ie) ,WEZ(IE), gmatonsite(iatom,ispin)%gmat,ISPIN, NSPIN, &
                   IATOM,CELL(iatom),VPOT(:,:,ispin,iatom),SHAPEFUN(iatom), GAUNTCOEFF(lmaxatom(iatom)), ZATOM(iatom),&
                   density(iatom), LMAXATOM(iatom), (LMAXATOM(iatom)+1)**2,config ,lmaxd,energyparts,efermi)
-             write(1337,*) 'end RHOVAL'
+             if (t_inc%i_write>0) write(1337,*) 'end RHOVAL'
 
           else
 
              if (ispin==2) stop ' [eloop] use_fullmat==1 but nspin==2'
-             write(1337,*) 'call RHOVAL'
+             if (t_inc%i_write>0) write(1337,*) 'call RHOVAL'
              call RHOVALFULL(ie,ielast,ez(ie) ,WEZ(IE), gmatonsite(iatom,ispin)%gmat, NSPIN, &
                   IATOM,CELL(iatom),VPOT(:,:,1,iatom),VPOT(:,:,2,iatom),SHAPEFUN(iatom), GAUNTCOEFF(lmaxatom(iatom)), ZATOM(iatom),&
                   density(iatom), LMAXATOM(iatom), (LMAXATOM(iatom)+1)**2,config ,lmaxd,energyparts,efermi)
-             write(1337,*) 'end RHOVAL'
+             if (t_inc%i_write>0) write(1337,*) 'end RHOVAL'
 
           end if
 
@@ -671,8 +672,8 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
              if ( config_testflag('rlltodisc') ) then
                 call wavefunctodisc_read(wavefunction(iatom,ispin),cellnew(iatom),iatom,ispin)
              else
-                write(1337,*) 'Single site wavefunctions not allocated for atom',iatom
-                write(1337,*) 'Recalculating wave functions ...'
+                if (t_inc%i_write>0) write(1337,*) 'Single site wavefunctions not allocated for atom',iatom
+                if (t_inc%i_write>0) write(1337,*) 'Recalculating wave functions ...'
                 call calctmat_bauernew (cell(IATOM),tmat(iatom,ispin),lmaxatom(iatom),ez(IE),ZATOM(iatom), &
                      cellnew(iatom),wavefunction(iatom,ispin),ispin,nspin,config%kspinorbit, &
                      use_fullgmat,density(IATOM)%theta,density(IATOM)%phi,config%ncoll,config%nsra,config,idotime, &
@@ -681,13 +682,13 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
              end if
           end if
 
-          write(1337,*) 'entering rhovalnew iatom',iatom
+          if (t_inc%i_write>0) write(1337,*) 'entering rhovalnew iatom',iatom
           call rhoval_new(ez(ie),ie,wez(ie),cellnew(iatom),wavefunction(iatom,ispin), &                  
                cell(iatom),gmatonsite(iatom,ispin)%gmat,iatom,ispin,nspin,SHAPEFUN(iatom), &
                GAUNTCOEFF(lmaxatom(iatom)), ZATOM(iatom), DENSITY(iatom), &
                LMAXATOM(iatom),(LMAXATOM(iatom)+1)**2,config,lmaxd,energyparts,config%kspinorbit,use_fullgmat,nspinden,efermi, &
                ldau(iatom))        ! lda+u
-          write(1337,*) 'exited rhovalnew iatom',iatom
+          if (t_inc%i_write>0) write(1337,*) 'exited rhovalnew iatom',iatom
 
 
           if ( wavefunction(iatom,ispin)%deallocate==1 ) then 

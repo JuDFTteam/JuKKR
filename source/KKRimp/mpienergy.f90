@@ -13,6 +13,7 @@ subroutine mpienergy_distribute(myrank,numbproc,ielast,mpi_iebounds)
 ! This routine tries to distribute the energy points equally
 ! to all processors used in parallel MPI calculations
 ! ##############################################################
+  use mod_types, only: t_inc
 
 !interface
  implicit none
@@ -68,14 +69,14 @@ end do
 ! stop
 
 
-write(1337,*) '###################################'
-write(1337,*) '###  mpi_energy distribution    ###'
-write(1337,*) '###################################'
-write(1337,*) 'number of threads       :',numbproc
-write(1337,*) 'number of energy points :',ielast
-write(1337,*) 'Distribution to threads:'
+if (t_inc%i_write>0) write(1337,*) '###################################'
+if (t_inc%i_write>0) write(1337,*) '###  mpi_energy distribution    ###'
+if (t_inc%i_write>0) write(1337,*) '###################################'
+if (t_inc%i_write>0) write(1337,*) 'number of threads       :',numbproc
+if (t_inc%i_write>0) write(1337,*) 'number of energy points :',ielast
+if (t_inc%i_write>0) write(1337,*) 'Distribution to threads:'
 Do irank=0,numbproc-1
-  write(1337,'(4(A,I4))') ' Thread',irank,' IE=',mpi_iebounds(1,irank),'..',mpi_iebounds(2,irank),' Total: ',mpi_ielast(irank)
+  if (t_inc%i_write>0) write(1337,'(4(A,I4))') ' Thread',irank,' IE=',mpi_iebounds(1,irank),'..',mpi_iebounds(2,irank),' Total: ',mpi_ielast(irank)
 end do
 end subroutine mpienergy_distribute
 

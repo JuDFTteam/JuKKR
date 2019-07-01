@@ -43,6 +43,7 @@ MODULE MOD_RHOTOTB
       use mod_simpk
       use mod_config, only: config_testflag
       use global_variables, only: ipand
+      use mod_types, only: t_inc
       implicit none
 !C     .. Parameters ..
 !       include 'inc.p'
@@ -162,15 +163,15 @@ MODULE MOD_RHOTOTB
 
             IF (ISPIN.NE.1) THEN
                IF (INS.NE.0) THEN
-                  WRITE (1337,FMT=9010) SUM
+                  if (t_inc%i_write>0) WRITE (1337,FMT=9010) SUM
                ELSE
-                  WRITE (1337,FMT=9050) SUM
+                  if (t_inc%i_write>0) WRITE (1337,FMT=9050) SUM
                END IF
             ELSE                      ! (ISPIN.NE.1)
               IF (INS.NE.0) THEN
-                WRITE (1337,FMT=9000) IATOM,SUM
+                if (t_inc%i_write>0) WRITE (1337,FMT=9000) IATOM,SUM
               ELSE
-                WRITE (1337,FMT=9040) IATOM,SUM
+                if (t_inc%i_write>0) WRITE (1337,FMT=9040) IATOM,SUM
               END IF
             END IF                    ! (ISPIN.NE.1)
           END DO                      ! ISPIN = 1,NSPIN
@@ -181,18 +182,18 @@ MODULE MOD_RHOTOTB
 
 
       CHRGNT = CATOM(1,IATOM) - ZATOM(IATOM)
-      WRITE(1337,'(79(1H+))')
-      WRITE (1337,FMT=9020) ITSCF,CHRGNT
+      if (t_inc%i_write>0) WRITE(1337,'(79(1H+))')
+      if (t_inc%i_write>0) WRITE (1337,FMT=9020) ITSCF,CHRGNT
 
 
       IF (NSPIN.EQ.2) THEN
         TOTSMOM = TOTSMOM+CATOM(NSPIN,IATOM) !*CONC(I1)
-        WRITE (1337,FMT=9031) CATOM(NSPIN,IATOM) !TOTSMOM
+        if (t_inc%i_write>0) WRITE (1337,FMT=9031) CATOM(NSPIN,IATOM) !TOTSMOM
         WRITE (*,FMT=9034) IATOM,CATOM(1,IATOM),CATOM(NSPIN,IATOM)!TOTSMOM
       END IF
-      WRITE (1337,*)
+      if (t_inc%i_write>0) WRITE (1337,*)
       END DO !iatom
-      WRITE (1337,FMT=9030) TOTSMOM
+      if (t_inc%i_write>0) WRITE (1337,FMT=9030) TOTSMOM
       WRITE (*,FMT=9030) TOTSMOM
 
 

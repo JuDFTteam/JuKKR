@@ -1,5 +1,7 @@
 build_voronoi:intel:
   stage: build_voronoi
+  tags:
+    - docker-executor
   script:
     - cd prog && make 
     - mkdir build_voronoi && cd build_voronoi

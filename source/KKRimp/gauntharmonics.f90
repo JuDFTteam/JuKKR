@@ -8,6 +8,7 @@ module mod_gauntharmonics
   use nrtype
   use mod_config, only: config_testflag
   use type_gauntcoeff
+  use mod_types, only: t_inc
   type(GAUNTCOEFF_TYPE),allocatable        :: gauntcoeff(:)
 !---------------------------------------------------------------------
 ! old comment out
@@ -45,12 +46,12 @@ lmaxbounds(1)=2
 lmaxbounds(2)=4
 allocate( gauntcoeff( lmaxbounds(1) : lmaxbounds(2) ) )
 
-write(1337,*) '------------------------------------------------------'
-write(1337,*) '------- MODULE: GAUNTHAROMICS           --------------'
-write(1337,*) '------------------------------------------------------'
-write(1337,*) ' min. LMAX VALUE = ',lmaxbounds(1)
-write(1337,*) ' max. LMAX VALUE = ',lmaxbounds(2)
-write(1337,*) ' creating GAUNTCOEFF in this range'
+if (t_inc%i_write>0) write(1337,*) '------------------------------------------------------'
+if (t_inc%i_write>0) write(1337,*) '------- MODULE: GAUNTHAROMICS           --------------'
+if (t_inc%i_write>0) write(1337,*) '------------------------------------------------------'
+if (t_inc%i_write>0) write(1337,*) ' min. LMAX VALUE = ',lmaxbounds(1)
+if (t_inc%i_write>0) write(1337,*) ' max. LMAX VALUE = ',lmaxbounds(2)
+if (t_inc%i_write>0) write(1337,*) ' creating GAUNTCOEFF in this range'
 
 
 do lval = lmaxbounds(1), lmaxbounds(2)

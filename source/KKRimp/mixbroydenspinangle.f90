@@ -17,6 +17,7 @@ contains
    !-------------------------------------------------------------------------------
        subroutine mixbroydenspin (natom,density,max_iter,iter) 
 use type_density
+use mod_types, only: t_inc
 implicit none
 integer            ::  natom
 type(density_type) ::  density(natom)
@@ -120,12 +121,12 @@ do iatom=1,natom
   density(iatom)%theta= acos(magmoment(3)/totmagmoment)
   density(iatom)%phi  = datan2(magmoment(2),magmoment(1))
 
-  write(1337,*) 'Mixing of angles with Broyden mixing'
+  if (t_inc%i_write>0) write(1337,*) 'Mixing of angles with Broyden mixing'
   write(*,*)    'Mixing of angles with Broyden mixing'
   write(*,*)   'new theta1 [deg]',density(iatom)%theta*180/pi
-  write(1337,*)'new theta1 [deg]',density(iatom)%theta*180/pi
+  if (t_inc%i_write>0) write(1337,*)'new theta1 [deg]',density(iatom)%theta*180/pi
   write(*,*)   'new phi1 [deg]',density(iatom)%phi*180/pi
-  write(1337,*)'new phi1 [deg]',density(iatom)%phi*180/pi
+  if (t_inc%i_write>0) write(1337,*)'new phi1 [deg]',density(iatom)%phi*180/pi
 !   write(23452324,'(5000F)') density(iatom)%theta*180/pi,density(iatom)%phi*180/pi
 
 end do

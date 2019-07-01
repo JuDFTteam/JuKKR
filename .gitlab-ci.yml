@@ -48,6 +48,8 @@ stages:
 
 test:intel:
   stage: test
+  tags:
+    - docker-executor
   script:
     # test if dependencies are working
     - echo 'do some tests here'
@@ -89,6 +91,8 @@ include:
 codecov:
   stage: deploy:codecov_kkrhost
   allow_failure: true
+  tags:
+    - docker-executor
   script:
     - cd build && ls -ltr
     - profmerge
@@ -108,6 +112,8 @@ pages:
   stage: deploy:doc_kkrhost
   image: iffregistry.fz-juelich.de/docker-images/kkr-pages:latest
   allow_failure: true
+  tags:
+    - docker-executor
   script:
     - cd docs
     - ford settings_ford.md

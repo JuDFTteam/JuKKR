@@ -14,6 +14,7 @@
                        )
    USE TYPE_CELL, only: cell_type
    USE MOD_CONFIG, only: CONFIG_RUNFLAG
+   use mod_types, only: t_inc
    IMPLICIT NONE
 ! c ************************************************************************
 ! C     .. Parameters ..
@@ -107,12 +108,12 @@
         RMSAVM = RMSAVM + RMSERM !*NSHELL(I)*CONC(I)
 
         IF (NSPIN.EQ.2) THEN
-          WRITE (1337,FMT=9000) IATOM,SQRT(RMSERQ),SQRT(RMSERM)
+          if (t_inc%i_write>0) WRITE (1337,FMT=9000) IATOM,SQRT(RMSERQ),SQRT(RMSERM)
           IF (NATOM<=IATOMMAXDISPLAY) THEN
             WRITE (   *,FMT=9000) IATOM,SQRT(RMSERQ),SQRT(RMSERM)
           END IF
         ELSE
-          WRITE (1337,FMT=9020) IATOM,SQRT(RMSERQ)
+          if (t_inc%i_write>0) WRITE (1337,FMT=9020) IATOM,SQRT(RMSERQ)
           IF (NATOM<=IATOMMAXDISPLAY) THEN
             WRITE (   *,FMT=9020) IATOM,SQRT(RMSERQ)
           END IF
@@ -144,12 +145,12 @@
           RMSAVM = RMSAVM + RMSERM !*NSHELL(I)*CONC(I)
 
           IF (NSPIN.EQ.2) THEN
-            WRITE (1337,FMT=9010) IATOM,SQRT(RMSERQ),SQRT(RMSERM)
+            if (t_inc%i_write>0) WRITE (1337,FMT=9010) IATOM,SQRT(RMSERQ),SQRT(RMSERM)
             IF (NATOM<=IATOMMAXDISPLAY) THEN
               WRITE (   *,FMT=9010) IATOM,SQRT(RMSERQ),SQRT(RMSERM)
             END IF
           ELSE
-            WRITE (1337,FMT=9030) IATOM,SQRT(RMSERQ)
+            if (t_inc%i_write>0) WRITE (1337,FMT=9030) IATOM,SQRT(RMSERQ)
             IF (NATOM<=IATOMMAXDISPLAY) THEN
               WRITE (   *,FMT=9030) IATOM,SQRT(RMSERQ)
             END IF
@@ -164,10 +165,10 @@
 
       WRITE(6,'(79(1H-),/)')
       IF (NSPIN.EQ.2) THEN
-        WRITE (1337,FMT=9040) ITC,RMSAVQ,RMSAVM
+        if (t_inc%i_write>0) WRITE (1337,FMT=9040) ITC,RMSAVQ,RMSAVM
         WRITE (   *,FMT=9040) ITC,RMSAVQ,RMSAVM
       ELSE
-        WRITE (1337,FMT=9050) ITC,RMSAVQ
+        if (t_inc%i_write>0) WRITE (1337,FMT=9050) ITC,RMSAVQ
         WRITE (   *,FMT=9050) ITC,RMSAVQ
       END IF
 !       WRITE(1337,'(79(1H-))')

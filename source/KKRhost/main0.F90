@@ -536,14 +536,14 @@ contains
     call print_versionserial(1337, version1, version2, version3, version4, serialnr)
 
 #ifdef CPP_OMPSTUFF
-    ! $omp parallel shared(nth) private(ith)
+    !$omp parallel shared(nth) private(ith)
     ith = omp_get_thread_num()
     if (ith==0) then
       nth = omp_get_num_threads()
       write (*, '(/79("*")//1X,A,I5//79("*")/)') 'Number of OpenMP threads used:', nth
       write (1337, '(1X,A,I5)') 'Number of OpenMP threads used:', nth
     end if
-    ! $omp end parallel
+    !$omp end parallel
 #endif
 
 #ifdef CPP_MPI

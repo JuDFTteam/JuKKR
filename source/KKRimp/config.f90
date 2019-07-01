@@ -7,6 +7,7 @@
 !-------------------------------------------------------------------------------
 module mod_config
   use nrtype
+  use mod_types, only: t_inc
 ! integer :: INS
 ! integer :: IRMTD
 ! integer :: LMAXD
@@ -344,42 +345,42 @@ end if
 !--  write out config                                  --
 !--------------------------------------------------------
 
-write(1337,*) '########################################'
-write(1337,*) '#######  Config Parameter   ############'
-write(1337,*) '########################################'
-write(1337,*)          'ICST     = ',config%ICST
-write(1337,*)          'INS      = ',config%INS
-write(1337,*)          'KVREL    = ',config%KVREL
-write(1337,*)          'NSRA     = ',config%NSRA
-write(1337,*)          'NSPIN    = ',config%NSPIN
-write(1337,*)          'IMIX      = ',config%IMIX
-write(1337,'(A,F17.3)') 'MIXFAC   = ',config%MIXFAC
-write(1337,'(A,F17.3)') 'FCM      = ',config%FCM
-write(1337,'(A,E22.3)') 'QBOUND   = ',config%QBOUND
-write(1337,*)          'SCFSTEPS =  ',config%SCFSTEPS
+if (t_inc%i_write>0) write(1337,*) '########################################'
+if (t_inc%i_write>0) write(1337,*) '#######  Config Parameter   ############'
+if (t_inc%i_write>0) write(1337,*) '########################################'
+if (t_inc%i_write>0) write(1337,*)          'ICST     = ',config%ICST
+if (t_inc%i_write>0) write(1337,*)          'INS      = ',config%INS
+if (t_inc%i_write>0) write(1337,*)          'KVREL    = ',config%KVREL
+if (t_inc%i_write>0) write(1337,*)          'NSRA     = ',config%NSRA
+if (t_inc%i_write>0) write(1337,*)          'NSPIN    = ',config%NSPIN
+if (t_inc%i_write>0) write(1337,*)          'IMIX      = ',config%IMIX
+if (t_inc%i_write>0) write(1337,'(A,F17.3)') 'MIXFAC   = ',config%MIXFAC
+if (t_inc%i_write>0) write(1337,'(A,F17.3)') 'FCM      = ',config%FCM
+if (t_inc%i_write>0) write(1337,'(A,E22.3)') 'QBOUND   = ',config%QBOUND
+if (t_inc%i_write>0) write(1337,*)          'SCFSTEPS =  ',config%SCFSTEPS
 ! write(1337,*) 'RCUT   =  ',config%RCUT
 ! write out test- and running flag information
-write(1337,*) '########################################'
-write(1337,*) ' TESTFLAG=         '
-write(1337,*) '########################################'
+if (t_inc%i_write>0) write(1337,*) '########################################'
+if (t_inc%i_write>0) write(1337,*) ' TESTFLAG=         '
+if (t_inc%i_write>0) write(1337,*) '########################################'
 
 do itemp = 1,dim_flags
   if (trim(testflag(itemp))/='x') then
-    write(1337,'(A)',advance='no') testflag(itemp)
+    if (t_inc%i_write>0) write(1337,'(A)',advance='no') testflag(itemp)
   end if 
 end do
 
-write(1337,'(A)') ''
-write(1337,*) '########################################'
-write(1337,*) ' RUNFLAGS         '
-write(1337,*) '########################################'
+if (t_inc%i_write>0) write(1337,'(A)') ''
+if (t_inc%i_write>0) write(1337,*) '########################################'
+if (t_inc%i_write>0) write(1337,*) ' RUNFLAGS         '
+if (t_inc%i_write>0) write(1337,*) '########################################'
 do itemp = 1,dim_flags
   if (trim(runflag(itemp))/='x') then
-    write(1337,'(A)',advance='no') runflag(itemp)
+    if (t_inc%i_write>0) write(1337,'(A)',advance='no') runflag(itemp)
   end if 
 end do
-write(1337,*) ''
-write(1337,*) '########################################'
+if (t_inc%i_write>0) write(1337,*) ''
+if (t_inc%i_write>0) write(1337,*) '########################################'
 
 end subroutine config_read
 

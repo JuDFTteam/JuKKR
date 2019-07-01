@@ -29,6 +29,7 @@ MODULE MOD_ETOTB1
   SUBROUTINE ETOTB1(EFERMI,LMAXATOM,ENERGYPARTS,CORESTATE,NSPIN,NATOM,LPOTD)
     USE TYPE_ENERGYPARTS
     USE TYPE_CORESTATE
+    use mod_types, only: t_inc
     IMPLICIT NONE
 
     ! PARAMETER definitions
@@ -58,12 +59,12 @@ MODULE MOD_ETOTB1
     ETOTLDAU = 0.0D0
 
     KPRE=1
-    IF ( KPRE.EQ.1 ) WRITE (1337,FMT=99001)
+    IF ( KPRE.EQ.1  .and. t_inc%i_write>0) WRITE (1337,FMT=99001)
 
     !---> loop over host atoms
     DO IATOM = 1,NATOM
 
-       IF ( KPRE.EQ.1 ) WRITE (1337,FMT=99002) IATOM
+       IF ( KPRE.EQ.1 .and. t_inc%i_write>0) WRITE (1337,FMT=99002) IATOM
 
        EDC = 0.0D0
        ET = 0.0D0
@@ -78,10 +79,10 @@ MODULE MOD_ETOTB1
           IPOT = (IATOM-1)*NSPIN + ISPIN
 
           IF ( KPRE.EQ.1 ) THEN
-           WRITE (1337,FMT=99003) TEXTS(IS)
-           WRITE (1337,FMT=99004) (TEXTL(L),ENERGYPARTS%ESPC(L,ISPIN,IATOM),L=0,corestate(IATOM)%LCOREMAX)
-           WRITE (1337,FMT=99005) (TEXTL(L),ENERGYPARTS%ESPV(L,ISPIN,IATOM),L=0,LMAXATOM(IATOM))
-           WRITE (1337,FMT=99006) TEXTNS,ENERGYPARTS%ESPV(LMAXATOM(IATOM)+1,ISPIN,IATOM)
+           if (t_inc%i_write>0) WRITE (1337,FMT=99003) TEXTS(IS)
+           if (t_inc%i_write>0) WRITE (1337,FMT=99004) (TEXTL(L),ENERGYPARTS%ESPC(L,ISPIN,IATOM),L=0,corestate(IATOM)%LCOREMAX)
+           if (t_inc%i_write>0) WRITE (1337,FMT=99005) (TEXTL(L),ENERGYPARTS%ESPV(L,ISPIN,IATOM),L=0,LMAXATOM(IATOM))
+           if (t_inc%i_write>0) WRITE (1337,FMT=99006) TEXTNS,ENERGYPARTS%ESPV(LMAXATOM(IATOM)+1,ISPIN,IATOM)
           END IF
 
           DO L = 0,corestate(IATOM)%LCOREMAX
@@ -109,15 +110,15 @@ MODULE MOD_ETOTB1
        END DO
 
        IF ( KPRE.EQ.1 ) THEN
-          WRITE (1337,FMT=99007) ET
-          WRITE (1337,FMT=99008) BANDET
-          WRITE (1337,FMT=99009) (L, ENERGYPARTS%ECOU(L,IATOM),L=0,2*LMAXATOM(IATOM))
-          WRITE (1337,FMT=99010)
-          WRITE (1337,FMT=99018) ECOUS
-          WRITE (1337,FMT=99011) (L,ENERGYPARTS%EXC(L,IATOM), L=0,2*LMAXATOM(IATOM))
-          WRITE (1337,FMT=99010)
-          WRITE (1337,FMT=99017) EXCS
-          WRITE (1337,FMT=99015) ENERGYPARTS%EPOTIN(IATOM)
+          if (t_inc%i_write>0) WRITE (1337,FMT=99007) ET
+          if (t_inc%i_write>0) WRITE (1337,FMT=99008) BANDET
+          if (t_inc%i_write>0) WRITE (1337,FMT=99009) (L, ENERGYPARTS%ECOU(L,IATOM),L=0,2*LMAXATOM(IATOM))
+          if (t_inc%i_write>0) WRITE (1337,FMT=99010)
+          if (t_inc%i_write>0) WRITE (1337,FMT=99018) ECOUS
+          if (t_inc%i_write>0) WRITE (1337,FMT=99011) (L,ENERGYPARTS%EXC(L,IATOM), L=0,2*LMAXATOM(IATOM))
+          if (t_inc%i_write>0) WRITE (1337,FMT=99010)
+          if (t_inc%i_write>0) WRITE (1337,FMT=99017) EXCS
+          if (t_inc%i_write>0) WRITE (1337,FMT=99015) ENERGYPARTS%EPOTIN(IATOM)
        END IF
 
        WRITE (22349378,*) IATOM,ET/EFCTOR
@@ -135,13 +136,13 @@ MODULE MOD_ETOTB1
           IF ( KPRE.EQ.1 ) THEN
     !                IF ( IDOLDAU.EQ.1 .AND. LOPT(IATOM).GE.0 )
     !              WRITE(6,99020) -EDCLDAU(IATOM)
-             WRITE (1337,FMT=99016) EDC
+             if (t_inc%i_write>0) WRITE (1337,FMT=99016) EDC
           END IF
 
     !          END IF
 
        IF ( NATOM.GT.1 ) THEN
-          WRITE (1337,FMT=99012) IATOM,ET
+          if (t_inc%i_write>0) WRITE (1337,FMT=99012) IATOM,ET
     !             IF ( KPRE.EQ.1 .AND. IDOLDAU.EQ.1 .AND. LOPT(IATOM).GE.0 )
     !           WRITE(6,99021) EU(IATOM) - EDCLDAU(IATOM)
     !             WRITE (6,FMT=99022)
@@ -152,8 +153,8 @@ MODULE MOD_ETOTB1
 
     END DO                        ! IATOM = 1,NATOM
 
-    WRITE (1337,FMT=99013) BANDESUM
-    WRITE (1337,FMT=99014) ETOT,ETOT/EFCTOR
+    if (t_inc%i_write>0) WRITE (1337,FMT=99013) BANDESUM
+    if (t_inc%i_write>0) WRITE (1337,FMT=99014) ETOT,ETOT/EFCTOR
     !       WRITE (*,FMT=99013) BANDESUM
     WRITE (*,FMT=99014) ETOT,ETOT/EFCTOR
     WRITE (22349375,*) ETOT/EFCTOR

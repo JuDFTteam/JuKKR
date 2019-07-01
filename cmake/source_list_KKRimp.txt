@@ -1,3 +1,7 @@
+# set OpenMP flags
+set_source_files_properties(source/KKRimp/kkrflex.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
+set_source_files_properties(source/common/radial_solver_Chebychev/rllsll.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
+
 # the executable is built from this list of files
 add_executable(
     kkrflex.exe

@@ -1,3 +1,12 @@
+
+! define CPP_OMPSTUFF if openMP is used
+#ifdef CPP_HYBRID
+#define CPP_OMPSTUFF
+#endif
+#ifdef CPP_OMP
+#define CPP_OMPSTUFF
+#endif
+
 !------------------------------------------------------------------------------------
 !> Summary: KKRimp program
 !> Author: 
@@ -5,9 +14,11 @@
 !------------------------------------------------------------------------------------
 program kkrflex
 
-
 #ifdef CPP_MPI
   use mpi
+#endif
+#ifdef CPP_OMPSTUFF
+  use omp_lib ! necessary for omp functions
 #endif
 ! modules
   use nrtype
@@ -60,6 +71,7 @@ program kkrflex
   use mod_log, only: log_write
   use mod_calctmat_bauernew !test
   use mod_change_nrmin
+  use mod_types, only: t_inc
 
   use global_variables, only: ipand
 #ifdef CPP_MPI
@@ -131,6 +143,13 @@ program kkrflex
 ! mpi stuff
 !***********************************
   integer                               :: my_rank,mpi_size,ierror
+                                                                                 ! impurity atoms
+!***********************************
+! openmp stuff
+!***********************************
+#ifdef CPP_OMPSTUFF
+  integer                               :: mythread, nthreads
+#endif
 !***********************************
 ! constants
 !***********************************
@@ -214,6 +233,15 @@ if (my_rank==0) then
   write(*,*) ' ###############################################'
 end if 
 #endif
+#ifdef CPP_OMPSTUFF
+!$omp parallel shared(nthreads) private(mythread)
+mythread = omp_get_thread_num()
+if (myrank==0 .and. mythread==0) then
+  nthreads = omp_get_num_threads()
+  write (*, '(/79("*")//1X,A,I5//79("*")/)') 'Number of OpenMP threads used:', nthreads
+end if
+!$omp end parallel
+#endif
 
 write(*,*) 'check all matrix inversions. There might be an error due: Hermitian'
 
@@ -221,10 +249,14 @@ write(*,*) 'check all matrix inversions. There might be an error due: Hermitian'
 ! open the log file for each processor 
 ! file is called out_log.xxx.txt where xxx is 
 ! the processor id (my_rank)
+! by default this is done only by master rank
 ! ********************************************************** 
+if (myrank==0) t_inc%i_write = 1
+if (myrank/=0) t_inc%i_write = 0
+
 write(ctemp,'(I03.3)') my_rank
-open(unit=1337, file='out_log.'//trim(ctemp)//'.txt')
-call version_print_header(1337)
+if (t_inc%i_write>0) open(unit=1337, file='out_log.'//trim(ctemp)//'.txt')
+if (t_inc%i_write>0) call version_print_header(1337)
 ! ********************************************************** 
 ! first all parameters are read in from the config
 ! file and stored into the config type
@@ -233,6 +265,13 @@ call log_write('>>>>>>>>>>>>>>>>>>>>> read_config >>>>>>>>>>>>>>>>>>>>>')
 call config_read(config)
 call log_write('<<<<<<<<<<<<<<<<<<< end read_config <<<<<<<<<<<<<<<<<<<')
 nspin=config%nspin
+
+! open log files for other ranks if testflag is found
+if (myrank>0 .and. config_testflag('write_all_ranks')) then
+  t_inc%i_write = 1
+  open(unit=1337, file='out_log.'//trim(ctemp)//'.txt')
+  call version_print_header(1337)
+end if
 
 ! Check compatibility of config flags   ! lda+u
 if (config_runflag('LDA+U').and..not.config_testflag('tmatnew')) stop &
@@ -310,7 +349,7 @@ if ( config_runflag('LLYsimple') ) then
   !renormalize weights on every rank
   wez(:) = wez(:)*llyfac
   do idummy=1,ielast
-    write(1337, '(A,I5,A,2F20.14,A,2F20.14)') 'IE: ',idummy,' new weight: ',wez(idummy), '; llyfac=', llyfac
+    if (t_inc%i_write>0) write(1337, '(A,I5,A,2F20.14,A,2F20.14)') 'IE: ',idummy,' new weight: ',wez(idummy), '; llyfac=', llyfac
   end do
   call log_write('<<<<<<<<<<<<<<<<<<< end NEWWEIGHTS <<<<<<<<<<<<<<<<<<<')
 end if
@@ -578,7 +617,7 @@ call log_write('***********************************************************')
 do itscf=1,config%scfsteps
   write(ctemp,'(I03.3)') itscf
   call timing_start('Iteration number '//ctemp)
-  write(1337,*) ' Iteration Number ',itscf
+  if (t_inc%i_write>0) write(1337,*) ' Iteration Number ',itscf
   if (my_rank==0) write(   *,*) ' Iteration Number ',itscf
 
   if (itscf==1) then
@@ -999,7 +1038,7 @@ end if
                       sum = sum + rv*rv*cell(iatom)%drmeshdi(ir)
                     end do
                     if ( sqrt(sum).lt.config%qbound ) then
-                      write(1337,*) 'cutting pot. ','ispin',ispin,'iatom',iatom,'ilm',ilm,'rms',sqrt(sum)
+                      if (t_inc%i_write>0) write(1337,*) 'cutting pot. ','ispin',ispin,'iatom',iatom,'ilm',ilm,'rms',sqrt(sum)
                       do ir = 1,irc1 ! the 1 was irmin1 before!
                           vpot(ir,ilm,ispin,iatom) = 0.0d0
                       end do

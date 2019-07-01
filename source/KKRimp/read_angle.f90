@@ -6,6 +6,7 @@ subroutine read_angle(natom,my_rank,density)
 use type_density
 use mod_config, only: config_runflag
 use mod_version_info
+use mod_types, only: t_inc
 implicit none
 !interface
 integer  :: natom
@@ -39,14 +40,14 @@ if (first==1) then
       write(*,*) 'Initial angles for non-collinear calculation'
       write(*,*) '  ###############################################'
       write(*,*) '        iatom      theta               phi                  moment fixed'
-      write(1337,*) 'Initial angles for non-collinear calculation'
-      write(1337,*) 'iatom  theta                    phi  moment fixed'
+      if (t_inc%i_write>0) write(1337,*) 'Initial angles for non-collinear calculation'
+      if (t_inc%i_write>0) write(1337,*) 'iatom  theta                    phi  moment fixed'
     end if
     do iatom=1,natom
       density(iatom)%theta=0.0D0
       density(iatom)%phi  =0.0D0
       density(iatom)%magmomentfixed=1
-      write(1337,*) iatom,density(iatom)%theta,density(iatom)%phi,density(iatom)%magmomentfixed
+      if (t_inc%i_write>0) write(1337,*) iatom,density(iatom)%theta,density(iatom)%phi,density(iatom)%magmomentfixed
     end do
     return
   else
@@ -63,14 +64,14 @@ if (my_rank==0) then
   write(*,*) '  ###############################################'
   write(*,*) '        iatom      theta               phi                  moment fixed'
 end if
-write(1337,*) 'Initial angles for non-collinear calculation'
-write(1337,*) 'iatom  theta                    phi  moment fixed'
+if (t_inc%i_write>0) write(1337,*) 'Initial angles for non-collinear calculation'
+if (t_inc%i_write>0) write(1337,*) 'iatom  theta                    phi  moment fixed'
 do iatom=1,natom
    string1=this_readline(33952084,ios)
    if (ios/=0) stop '[read_atominfo] Error reading atom info2'
    if (ios==-1) stop '[read_atominfo] EOF'
    read(string1,*) density(iatom)%theta,density(iatom)%phi,density(iatom)%magmomentfixed
-   write(1337,*) iatom,density(iatom)%theta,density(iatom)%phi,density(iatom)%magmomentfixed
+   if (t_inc%i_write>0) write(1337,*) iatom,density(iatom)%theta,density(iatom)%phi,density(iatom)%magmomentfixed
    if (my_rank==0) write(*,*) iatom,density(iatom)%theta,density(iatom)%phi,density(iatom)%magmomentfixed
    density(iatom)%theta = density(iatom)%theta/360.0D0*8.0D0*datan(1.0D0)
    density(iatom)%phi   = density(iatom)%phi  /360.0D0*8.0D0*datan(1.0D0)

@@ -7,6 +7,8 @@
 ## 2.1 simple test systems in serial ##
 run_kkrhost:intel:serial_1:
   stage: run_kkrhost_serial
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_serial.py 1
@@ -27,6 +29,8 @@ run_kkrhost:intel:serial_1:
 
 run_kkrhost:intel:serial_2:
   stage: run_kkrhost_serial
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_serial.py 2
@@ -47,6 +51,8 @@ run_kkrhost:intel:serial_2:
 
 run_kkrhost:intel:serial_3:
   stage: run_kkrhost_serial
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_serial.py 3
@@ -68,6 +74,8 @@ run_kkrhost:intel:serial_3:
 ## 2.2 comparison serial/parallel run ##
 run_kkrhost:intel:parallel_2:
   stage: run_kkrhost_parallel
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_parallel.py 2
@@ -88,6 +96,8 @@ run_kkrhost:intel:parallel_2:
 
 run_kkrhost:intel:MPIatom_7:
   stage: run_kkrhost_parallel
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_parallel.py -7
@@ -108,6 +118,8 @@ run_kkrhost:intel:MPIatom_7:
  
 run_kkrhost:intel:MPIenerg_8:
   stage: run_kkrhost_parallel
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_parallel.py -8
@@ -129,6 +141,8 @@ run_kkrhost:intel:MPIenerg_8:
 run_kkrhost:intel:multi_node_9:
   image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-control:latest
   stage: run_kkrhost_parallel
+  tags:
+    - docker-executor
   allow_failure: true
   services:
      - name: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/slurm-daemon:latest
@@ -162,6 +176,8 @@ run_kkrhost:intel:multi_node_9:
 # parallel SOC mode
 run_kkrhost:intel:MPIatom_SOC_7_1:
   stage: run_kkrhost_parallel
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_parallel.py -1007
@@ -182,6 +198,8 @@ run_kkrhost:intel:MPIatom_SOC_7_1:
  
 run_kkrhost:intel:MPIenerg_SOC_8_1:
   stage: run_kkrhost_parallel
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_parallel.py -1008
@@ -204,6 +222,8 @@ run_kkrhost:intel:MPIenerg_SOC_8_1:
 ## 2.3 special features beyond selfconsistency ##
 run_kkrhost:intel:Jijs_4:
   stage: run_kkrhost_features
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_serial.py 4
@@ -225,6 +245,8 @@ run_kkrhost:intel:Jijs_4:
 
 run_kkrhost:intel:kkrflex_5:
   stage: run_kkrhost_features
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_serial.py 5
@@ -246,6 +268,8 @@ run_kkrhost:intel:kkrflex_5:
 
 run_kkrhost:intel:FERMIOUT_6:
   stage: run_kkrhost_features
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_serial.py 6
@@ -267,6 +291,8 @@ run_kkrhost:intel:FERMIOUT_6:
  
 run_kkrhost:intel:OPERATOR_10:
   stage: run_kkrhost_features
+  tags:
+    - docker-executor
   script:
       - cd tests/KKRhost/ && ./tools/run_test_10.sh
   artifacts:
@@ -286,6 +312,8 @@ run_kkrhost:intel:OPERATOR_10:
 
 run_kkrhost:intel:DTM_GMATLL_11:
   stage: run_kkrhost_features
+  tags:
+    - docker-executor
   script:
       - cd tests/KKRhost/ && ./tools/run_test_11.sh
   artifacts:
@@ -305,6 +333,8 @@ run_kkrhost:intel:DTM_GMATLL_11:
 
 run_kkrhost:intel:qdos_12:
   stage: run_kkrhost_features
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_parallel.py -12
@@ -335,6 +365,8 @@ run_kkrhost:intel:qdos_12:
 
 run_kkrhost:intel:ASA_14:
   stage: run_kkrhost_features
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_parallel.py -14
@@ -355,6 +387,8 @@ run_kkrhost:intel:ASA_14:
 
 run_kkrhost:intel:CPA_15:
   stage: run_kkrhost_features
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_parallel.py -15
@@ -375,6 +409,8 @@ run_kkrhost:intel:CPA_15:
 
 run_kkrhost:intel:Dirac_16:
   stage: run_kkrhost_features
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_parallel.py -16
@@ -395,6 +431,8 @@ run_kkrhost:intel:Dirac_16:
 
 run_kkrhost:intel:lambda_xc_17:
   stage: run_kkrhost_features
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_parallel.py -17
@@ -427,6 +465,8 @@ run_kkrhost:intel:lambda_xc_17:
 
 run_kkrhost:intel:decimate_19:
   stage: run_kkrhost_features
+  tags:
+    - docker-executor
   script:
       - cd tests/KKRhost/ && ./tools/run_test_19.sh
   artifacts:
@@ -446,6 +486,8 @@ run_kkrhost:intel:decimate_19:
 
 run_kkrhost:intel:godfrin_20:
   stage: run_kkrhost_features
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost/ && ./tools/run_test_20.sh
   artifacts:
@@ -465,6 +507,8 @@ run_kkrhost:intel:godfrin_20:
 
 run_kkrhost:intel:XCs_21:
   stage: run_kkrhost_features
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost/ && ./tools/run_test_21.sh
   artifacts:
@@ -484,6 +528,8 @@ run_kkrhost:intel:XCs_21:
 
 run_kkrhost:intel:LDAU_22:
   stage: run_kkrhost_features
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost/ && ./tools/run_test_22.sh
   artifacts:
@@ -503,6 +549,8 @@ run_kkrhost:intel:LDAU_22:
 
 run_kkrhost:intel:DOS_23:
   stage: run_kkrhost_features
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost/ && ./tools/run_test_23.sh
   artifacts:
@@ -524,6 +572,8 @@ run_kkrhost:intel:DOS_23:
 run_kkrhost:intel:aiida-kkr:
   image: iffregistry.fz-juelich.de/docker-images/aiida-kkr:latest
   stage: run_kkrhost_features
+  tags:
+    - docker-executor
   allow_failure: true
   services:
     - name: postgres:latest
@@ -575,6 +625,8 @@ run_kkrhost:intel:aiida-kkr:
 ## 2.5 SOC tests ##
 run_kkrhost:intel:Au_bulk_SOC_1_1:
   stage: run_kkrhost_features_SOC
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_parallel.py -1001
@@ -595,6 +647,8 @@ run_kkrhost:intel:Au_bulk_SOC_1_1:
 
 run_kkrhost:intel:Fe_slab_SOC_2_1:
   stage: run_kkrhost_features_SOC
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_parallel.py -1002
@@ -615,6 +669,8 @@ run_kkrhost:intel:Fe_slab_SOC_2_1:
 
 run_kkrhost:intel:Si_LLY_SOC_3_1:
   stage: run_kkrhost_features_SOC
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_parallel.py -1003
@@ -635,6 +691,8 @@ run_kkrhost:intel:Si_LLY_SOC_3_1:
 
 run_kkrhost:intel:NOSOC_3_2:
   stage: run_kkrhost_features_SOC
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost/ && ./tools/run_test_03_2.sh
   artifacts:
@@ -654,6 +712,8 @@ run_kkrhost:intel:NOSOC_3_2:
 
 run_kkrhost:intel:Jijs_SOC_4_1:
   stage: run_kkrhost_features_SOC
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_parallel.py -1004
@@ -674,6 +734,8 @@ run_kkrhost:intel:Jijs_SOC_4_1:
 
 run_kkrhost:intel:kkrflex_SOC_5_1:
   stage: run_kkrhost_features_SOC
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_parallel.py -1005
@@ -694,6 +756,8 @@ run_kkrhost:intel:kkrflex_SOC_5_1:
 
 run_kkrhost:intel:FERMIOUT_SOC_6_1:
   stage: run_kkrhost_features_SOC
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_parallel.py -1006
@@ -714,6 +778,8 @@ run_kkrhost:intel:FERMIOUT_SOC_6_1:
 
 run_kkrhost:intel:qdos_SOC_12_1:
   stage: run_kkrhost_features_SOC
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_parallel.py -1012
@@ -734,6 +800,8 @@ run_kkrhost:intel:qdos_SOC_12_1:
 
 run_kkrhost:intel:ASA_SOC_14_1:
   stage: run_kkrhost_features_SOC
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_parallel.py -1014
@@ -754,6 +822,8 @@ run_kkrhost:intel:ASA_SOC_14_1:
 
 run_kkrhost:intel:CPA_SOC_15_1:
   stage: run_kkrhost_features_SOC
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRhost
     - ./run_parallel.py -1015
@@ -774,6 +844,8 @@ run_kkrhost:intel:CPA_SOC_15_1:
 
 run_kkrhost:intel:decimate_SOC_19_1:
   stage: run_kkrhost_features_SOC
+  tags:
+    - docker-executor
   script:
       - cd tests/KKRhost/ && ./tools/run_test_19_1.sh
   artifacts:

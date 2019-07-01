@@ -36,6 +36,7 @@ use mod_gauntharmonics, only: gauntcoeff
 use mod_rllsll
 use mod_config, only: config_testflag
 use mod_interpolspline
+use mod_types, only: t_inc
 
 implicit none
 integer                                   :: nstart
@@ -198,16 +199,16 @@ end if ! ilinmesh_panshift==1
 
 ! do only the first time the routine is called
 if (first==1) then
-  write(1337,*) '#########################################'
-  write(1337,*) '          Panel division'
-  write(1337,*) '#########################################'
-    write(1337,*) '        panel # |  start n  |     end r   |     panel width '
+  if (t_inc%i_write>0) write(1337,*) '#########################################'
+  if (t_inc%i_write>0) write(1337,*) '          Panel division'
+  if (t_inc%i_write>0) write(1337,*) '#########################################'
+  if (t_inc%i_write>0) write(1337,*) '        panel # |  start n  |     end r   |     panel width '
   ipan=0
-  write(1337,*) ipan,cellnew%ipan_intervall(ipan),cellnew%rpan_intervall(ipan)
+  if (t_inc%i_write>0) write(1337,*) ipan,cellnew%ipan_intervall(ipan),cellnew%rpan_intervall(ipan)
   do ipan=1,cellnew%npan_tot
-    write(1337,*) ipan,cellnew%ipan_intervall(ipan),cellnew%rpan_intervall(ipan),cellnew%rpan_intervall(ipan)-cellnew%rpan_intervall(ipan-1)
+    if (t_inc%i_write>0) write(1337,*) ipan,cellnew%ipan_intervall(ipan),cellnew%rpan_intervall(ipan),cellnew%rpan_intervall(ipan)-cellnew%rpan_intervall(ipan-1)
   end do
-  write(1337,*) '#########################################'
+  if (t_inc%i_write>0) write(1337,*) '#########################################'
 end if
 
 ! check for errors
@@ -320,7 +321,7 @@ if (config_testflag('rmeshdensity')) then
   write(234918173,'(50000E25.14)') (cellnew%rmeshnew(ir+1)-cellnew%rmeshnew(ir),ir=1,cellnew%nrmaxnew-1)
 end if
 
-write(1337,*) 'exiting interpolecell'
+if (t_inc%i_write>0) write(1337,*) 'exiting interpolecell'
 
 first=0
 end subroutine interpolatecell

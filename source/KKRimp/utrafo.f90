@@ -19,6 +19,7 @@ contains
     use mod_config, only: config_testflag
     use mod_umatrix, only: umatrix
     use nrtype, only: wlength
+    use mod_types, only: t_inc
     implicit none
     !interface
     integer         :: ielast
@@ -53,10 +54,10 @@ contains
     nspinhost=gmatbulk%nspin
     dimgmathost=gmatbulk%hostdim
 
-    write(1337,*) 'Translating void Greensfunction with properties:'
-    write(1337,*) 'natom ',natom
-    write(1337,*) 'lmmaxhost ',lmmaxhost
-    write(1337,*) 'nspinhost ',nspinhost
+    if (t_inc%i_write>0) write(1337,*) 'Translating void Greensfunction with properties:'
+    if (t_inc%i_write>0) write(1337,*) 'natom ',natom
+    if (t_inc%i_write>0) write(1337,*) 'lmmaxhost ',lmmaxhost
+    if (t_inc%i_write>0) write(1337,*) 'nspinhost ',nspinhost
 
     !calculate the Greens function dimension
     nlmhostnew=0
@@ -95,7 +96,7 @@ contains
       end if
 
       do ispin=1,nspinhost
-        write(1337,*) 'proc = ',my_rank,' IE = ',ie,' ispin= ',ispin
+        if (t_inc%i_write>0) write(1337,*) 'proc = ',my_rank,' IE = ',ie,' ispin= ',ispin
         call preconditioning_readgreenfn(ie,ispin,ielast,lmmaxhost,natom,gmatvoid,'doubleprecision')
 
         ! ***************************************************
