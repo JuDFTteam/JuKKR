@@ -368,12 +368,14 @@ SRCS = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.f))
 SRCS90 = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.f90))
 SRCSFPP = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.F))
 SRCS90FPP = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.F90))
+SRCS95TMPL = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.F95))
 
 # notdir extracts only filename
 OBJS =  $(notdir ${SRCS:.f=.o})
 OBJS += $(notdir ${SRCS90:.f90=.o})
 OBJS += $(notdir ${SRCSFPP:.F=.o})
 OBJS += $(notdir ${SRCS90FPP:.F90=.o})
+OBJS += $(notdir ${SRCS95TMPL:.F95=.o})
 
 .PHONY: all
 all:	$(PROGRAM)
@@ -387,17 +389,20 @@ $(PROGRAM): $(OBJS)
 %.o: %.f90
 	$(FC90) $(FCFLAGS) $(EXTRA_FLAGS) $(FC90FLAGS) -c $< -o $(BUILDDIR)/$@
 
-%.o: %.f95
-	$(FC90) $(FCFLAGS) $(EXTRA_FLAGS) $(FC90FLAGS) -c $< -o $(BUILDDIR)/$@
-
 %.o: %.F
 	$(FC) $(FCFLAGS) $(EXTRA_FLAGS) $(PPFLAGS) $(PPFLAGS) -c $< -o $(BUILDDIR)/$@
 
 %.o: %.F90
 	$(FC90) $(FCFLAGS) $(EXTRA_FLAGS) $(FC90FLAGS) $(PPFLAGS) -c $< -o $(BUILDDIR)/$@
 
+### Fortran-templates:
 %.o: %.F95
-	$(FC90) $(FCFLAGS) $(EXTRA_FLAGS) $(FC90FLAGS) $(PPFLAGS) -c $< -o $(BUILDDIR)/$@
+	sed -e 's/_TYPE/D/' $< >  $(BUILDDIR)/$*.F90
+	sed -e 's/_TYPE/C/' $< >> $(BUILDDIR)/$*.F90
+	sed -e 's/_TYPE/Z/' $< >> $(BUILDDIR)/$*.F90
+	sed -e 's/_TYPE/I/' $< >> $(BUILDDIR)/$*.F90
+	$(FC90) $(FCFLAGS) $(EXTRA_FLAGS) $(FC90FLAGS) $(PPFLAGS) -c $(BUILDDIR)/$*.F90 -o $(BUILDDIR)/$@
+
 .PHONY: clean
 clean:
 	rm -f $(BUILDDIR)/*.o 
@@ -407,8 +412,6 @@ clean:
 
 .PHONY: test
 test:
-	@echo $(SRCS)
-	@echo $(SRCS90)
 	@echo $(OBJS)
 	@echo $(VPATH)
 
@@ -421,31 +424,31 @@ depend:
 
 KKRnano.o: Logging_mod.o KKRzero_mod.o PotentialConverter_mod.o KKRnanoParallel_mod.o BasisAtom_mod.o AtomicCore_mod.o RadialMeshData_mod.o main2_aux_mod.o ScatteringCalculation_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o ProcessKKRresults_mod.o InputParams_mod.o EBalanceHandler_mod.o LDAUData_mod.o TimerMpi_mod.o EnergyMesh_mod.o DimParams_mod.o CalculationData_mod.o
 TruncationZone_mod.o: Main2Arrays_mod.o
-KKRmat_mod.o: ExchangeTable_mod.o two_sided_commZ_mod.o arraytest2_mod.o Logging_mod.o TimerMpi_mod.o KKROperator_mod.o one_sided_commZ_mod.o ClusterInfo_mod.o IterativeSolver_mod.o jij_calc_mod.o Truncation_mod.o SparseMatrixDescription_mod.o BCPOperator_mod.o  SolverStats_mod.o InitialGuess_mod.o fillKKRMatrix_mod.o DirectSolver_mod.o
+KKRmat_mod.o: ExchangeTable_mod.o two_sided_comm_mod.o arraytest2_mod.o Logging_mod.o TimerMpi_mod.o KKROperator_mod.o one_sided_comm_mod.o ClusterInfo_mod.o IterativeSolver_mod.o jij_calc_mod.o Truncation_mod.o SparseMatrixDescription_mod.o BCPOperator_mod.o SolverStats_mod.o InitialGuess_mod.o fillKKRMatrix_mod.o DirectSolver_mod.o
 ProcessKKRresults_mod.o: arraytest2_mod.o KKRnanoParallel_mod.o AtomicForce_mod.o Logging_mod.o Lloyds_formula_mod.o wrappers_mod.o brydbm_new_com_mod.o Main2Arrays_mod.o ShapefunData_mod.o EnergyResults_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o CalculationData_mod.o muffin_tin_zero_mod.o RadialMeshData_mod.o MadelungPotential_mod.o broyden_kkr_mod.o EnergyMesh_mod.o BasisAtom_mod.o DensityResults_mod.o Lloyd0_new_mod.o KKRresults_mod.o InputParams_mod.o TimerMpi_mod.o DimParams_mod.o BroydenData_mod.o NearField_calc_mod.o debug_morgan_mod.o total_energy_mod.o
 NearField_kkr_mod.o: Constants_mod.o
 NearField_calc_mod.o: RadialMeshData_mod.o NearField_com_mod.o BasisAtom_mod.o CalculationData_mod.o
 NearField_mod.o: Harmonics_mod.o MadelungCalculator_mod.o Constants_mod.o NearField_kkr_mod.o
-KKRnano_Comm_mod.o: KKRnanoParallel_mod.o  jij_calc_mod.o comm_patternsD_mod.o comm_patternsZ_mod.o comm_patternsC_mod.o Exceptions_mod.o
+KKRnano_Comm_mod.o: KKRnanoParallel_mod.o jij_calc_mod.o comm_patterns_mod.o Exceptions_mod.o
 InputParams_mod.o: ConfigReader_mod.o
 PolygonFaces_mod.o: Constants_mod.o
 ShapeGeometryHelpers_mod.o: Exceptions_mod.o Constants_mod.o
 ShapeStandardMesh_mod.o: Exceptions_mod.o Constants_mod.o
 wrappers_mod.o: Warnings_mod.o ValenceDensity_mod.o SingleSite_mod.o BasisAtom_mod.o RadialMeshData_mod.o ShapefunData_mod.o EnergyMesh_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o NonCollinearMagnetism_mod.o ##AtomicCore_mod.o
-BCPOperator_mod.o:  ClusterInfo_mod.o Exceptions_mod.o
+BCPOperator_mod.o: ClusterInfo_mod.o Exceptions_mod.o
 CalculationData_mod.o: Exceptions_mod.o ExchangeTable_mod.o KKRnanoParallel_mod.o JelliumPotentials_mod.o LatticeVectors_mod.o TruncationZone_mod.o Main2Arrays_mod.o EnergyResults_mod.o LDAUData_mod.o ShapeGauntCoefficients_mod.o GauntCoefficients_mod.o InitialGuess_mod.o MadelungCalculator_mod.o RadialMeshData_mod.o ConstructShapes_mod.o InterpolateBasisAtom_mod.o BasisAtom_mod.o ShapefunData_mod.o DensityResults_mod.o KKRresults_mod.o InputParams_mod.o RefCluster_mod.o DimParams_mod.o ClusterInfo_mod.o BroydenData_mod.o JijData_mod.o Truncation_mod.o ChebMeshData_mod.o NonCollinearMagnetismData_mod.o
-NearField_com_mod.o: Logging_mod.o one_sided_commD_mod.o NearField_mod.o MadelungCalculator_mod.o NearField_kkr_mod.o
+NearField_com_mod.o: Logging_mod.o one_sided_comm_mod.o NearField_mod.o MadelungCalculator_mod.o NearField_kkr_mod.o
 ShapeIntegrationHelpers_mod.o: Constants_mod.o
 ConstructShapes_mod.o: RefCluster_mod.o ShapefunData_mod.o Voronoi_mod.o ShapeFunctions_mod.o LatticeVectors_mod.o
 EnergyMesh_mod.o: EnergyMeshHelpers_mod.o
 InterpolateBasisAtom_mod.o: RadialMeshData_mod.o BasisAtom_mod.o PotentialData_mod.o AtomicCoreData_mod.o
 SingleSiteRef_mod.o: Harmonics_mod.o kkr_helpers_mod.o SingleSiteHelpers_mod.o Exceptions_mod.o
-IterativeSolver_mod.o:  tfQMR_mod.o SolverStats_mod.o TimerMpi_mod.o
+IterativeSolver_mod.o: tfQMR_mod.o SolverStats_mod.o TimerMpi_mod.o
 kloopz1_mod.o: KKROperator_mod.o ClusterInfo_mod.o BCPOperator_mod.o KKRmat_mod.o jij_calc_mod.o IterativeSolver_mod.o InitialGuess_mod.o Constants_mod.o TimerMpi_mod.o
-ShapeCriticalPoints_mod.o: Constants_mod.o ShapeGeometryHelpers_mod.o  PolygonFaces_mod.o
+ShapeCriticalPoints_mod.o: Constants_mod.o ShapeGeometryHelpers_mod.o PolygonFaces_mod.o
 MadelungPotential_mod.o: BasisAtom_mod.o MadelungCalculator_mod.o RadialMeshData_mod.o DensityResults_mod.o EnergyResults_mod.o CalculationData_mod.o
 EBalanceHandler_mod.o: KKRnanoParallel_mod.o Exceptions_mod.o
-ShapeIntegration_mod.o: ShapeIntegrationHelpers_mod.o Constants_mod.o  PolygonFaces_mod.o
+ShapeIntegration_mod.o: ShapeIntegrationHelpers_mod.o Constants_mod.o PolygonFaces_mod.o
 BasisAtom_mod.o: Exceptions_mod.o RadialMeshData_mod.o ShapefunData_mod.o PotentialData_mod.o AtomicCoreData_mod.o ChebMeshData_mod.o
 tfQMR_mod.o: Logging_mod.o SolverStats_mod.o KKROperator_mod.o BCPOperator_mod.o TimerMpi_mod.o
 KKRresults_mod.o: DimParams_mod.o
@@ -459,8 +462,8 @@ ShapeFunctions_mod.o: PolygonFaces_mod.o ShapeCriticalPoints_mod.o Constants_mod
 ConfigReader_mod.o: ConfigReaderDictionary_mod.o
 KKROperator_mod.o: Truncation_mod.o ClusterInfo_mod.o fillKKRMatrix_mod.o SparseMatrixDescription_mod.o bsrmm_mod.o
 Lloyd0_new_mod.o: BasisAtom_mod.o RadialMeshData_mod.o ShapefunData_mod.o EnergyMesh_mod.o LDAUData_mod.o GauntCoefficients_mod.o ValenceDensity_mod.o 
-ClusterInfo_mod.o: Statistics_mod.o TruncationZone_mod.o RefCluster_mod.o two_sided_commI_mod.o ExchangeTable_mod.o
-ScatteringCalculation_mod.o: KKRnanoParallel_mod.o one_sided_commD_mod.o Constants_mod.o SingleSiteRef_mod.o arraytest2_mod.o Logging_mod.o InputParams_mod.o TruncationZone_mod.o wrappers_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o jij_calc_mod.o BCPOperator_mod.o LDAUData_mod.o one_sided_commZ_mod.o GauntCoefficients_mod.o InitialGuess_mod.o CalculationData_mod.o EBalanceHandler_mod.o EnergyMesh_mod.o  KKROperator_mod.o BasisAtom_mod.o KKRresults_mod.o IterativeSolver_mod.o RefCluster_mod.o TimerMpi_mod.o DimParams_mod.o kloopz1_mod.o ClusterInfo_mod.o JijData_mod.o Truncation_mod.o two_sided_commD_mod.o ChebMeshData_mod.o NonCollinearMagnetism_mod.o
+ClusterInfo_mod.o: Statistics_mod.o TruncationZone_mod.o RefCluster_mod.o two_sided_comm_mod.o ExchangeTable_mod.o
+ScatteringCalculation_mod.o: KKRnanoParallel_mod.o Constants_mod.o SingleSiteRef_mod.o arraytest2_mod.o Logging_mod.o InputParams_mod.o TruncationZone_mod.o wrappers_mod.o Main2Arrays_mod.o KKRnano_Comm_mod.o jij_calc_mod.o BCPOperator_mod.o LDAUData_mod.o one_sided_comm_mod.o GauntCoefficients_mod.o InitialGuess_mod.o CalculationData_mod.o EBalanceHandler_mod.o EnergyMesh_mod.o KKROperator_mod.o BasisAtom_mod.o KKRresults_mod.o IterativeSolver_mod.o RefCluster_mod.o TimerMpi_mod.o DimParams_mod.o kloopz1_mod.o ClusterInfo_mod.o JijData_mod.o Truncation_mod.o two_sided_comm_mod.o ChebMeshData_mod.o NonCollinearMagnetism_mod.o
 total_energy_mod.o: Quadrature_mod.o BasisAtom_mod.o RadialMeshData_mod.o ShapefunData_mod.o ShapeGauntCoefficients_mod.o
 vxcgga.o: XCFunctionals_mod.o
 KKRzero_mod.o: Exceptions_mod.o BrillouinZoneMesh_mod.o PositionReader_mod.o MadelungCalculator_mod.o Startb1_mod.o EnergyMesh_mod.o EnergyMeshHelpers_mod.o Lattice_mod.o BrillouinZone_mod.o ConfigReader_mod.o ConfigReaderDictionary_mod.o InputParams_mod.o Main2Arrays_mod.o DimParams_mod.o BasisAtom_mod.o ShapefunData_mod.o PotentialData_mod.o AtomicCoreData_mod.o RadialMeshData_mod.o ShapefunData_mod.o read_formatted_mod.o read_formatted_shapefun_mod.o ldauinfo_read.o ldaustart.o
@@ -494,9 +497,6 @@ EnergyMeshHelpers_mod.o: GaussWeights_mod.o Constants_mod.o
 jij_calc_mod.o: Sorting_mod.o
 PotentialConverter_mod.o: DimParams_mod.o BasisAtom_mod.o RadialMeshData_mod.o PotentialData_mod.o
 Startb1_mod.o: RadialMeshData_mod.o BasisAtom_mod.o read_formatted_mod.o read_formatted_shapefun_mod.o InputParams_mod.o ChebMeshData_mod.o
-one_sided_commZ_mod.o: ChunkIndex_mod.o 
-one_sided_commI_mod.o: ChunkIndex_mod.o 
-one_sided_commD_mod.o: ChunkIndex_mod.o 
 RadialMeshData_mod.o: Exceptions_mod.o
 read_formatted_mod.o: Exceptions_mod.o
 BrillouinZone_mod.o: Exceptions_mod.o BrillouinZoneMesh_mod.o 
@@ -513,9 +513,8 @@ AtomicCore_mod.o: Exceptions_mod.o Quadrature_mod.o Constants_mod.o
 JelliumPotentials_mod.o: Exceptions_mod.o
 DirectSolver_mod.o: Exceptions_mod.o KKROperator_mod.o fillKKRMatrix_mod.o
 ExchangeTable_mod.o: ChunkIndex_mod.o
-two_sided_commZ_mod.o: ExchangeTable_mod.o
-two_sided_commD_mod.o: ExchangeTable_mod.o
-two_sided_commI_mod.o: ExchangeTable_mod.o
+one_sided_comm_mod.o: ChunkIndex_mod.o 
+two_sided_comm_mod.o: ExchangeTable_mod.o
 LocalAtomData_mod.o: Exceptions_mod.o RadialMeshData_mod.o ShapefunData_mod.o BasisAtom_mod.o LDAUData_mod.o JijData_mod.o RefCluster_mod.o MadelungCalculator_mod.o DensityResults_mod.o EnergyResults_mod.o KKRresults_mod.o
 bsrmm_mod.o: CacheOverlap_mod.o
 CacheOverlap_mod.o:

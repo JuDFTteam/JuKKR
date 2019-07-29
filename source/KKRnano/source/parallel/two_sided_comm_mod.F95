@@ -36,6 +36,10 @@
 !>
 !> \endverbatim
 
+!> The file extension .F95 indicates that sed will be applied to this source file
+!> to replace a missing template feature in Fortran.
+!> Do not use more than one name with _TYPE per line!
+
 #define NUMBERZ double complex
 #define NUMBERMPIZ MPI_DOUBLE_COMPLEX
 #define NUMBERC complex
