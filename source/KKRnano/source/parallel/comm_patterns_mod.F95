@@ -19,9 +19,11 @@
 !> Module that implements common communication patterns.
 !> Purpose: For use when collective communication is not possible
 !> Author: Elias Rabel, 2012
+!>         Paul F Baumeister, 2019
 !
-!> Change only comm_patterns_T Y P E_mod.F90, then run create_comm_patterns.sh
-!> This creates the files for the different datatypes needed.
+!> The file extension .F95 indicates that sed will be applied to this source file
+!> to replace a missing template feature in Fortran.
+!> Do not use more than one name with _TYPE per line!
 !
 module comm_patterns_TYPE_mod
   implicit none

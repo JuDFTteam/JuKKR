@@ -36,6 +36,12 @@
 !>
 !> \endverbatim
 
+!> Note by Paul F Baumeister, 2019
+!
+!> The file extension .F95 indicates that sed will be applied to this source file
+!> to replace a missing template feature in Fortran.
+!> Do not use more than one name with _TYPE per line!
+
 #define COMMCHECK(X) if ( (X) /= 0 ) then; write(*,*) "Comm failure", X, __LINE__; STOP; endif
 #define CHECK(X) if ( .not. (X) ) then; write(*,*) "FAIL: ", __LINE__; STOP; endif
 
@@ -209,7 +215,7 @@ endmodule ! one_sided_comm_TYPE_mod
 
 #ifdef TEST_ONE_SIDED_COMM__TYPE__
 ! a test program - not compiled due to conditional compilation
-program test
+program test_one_sided_comm_TYPE
   use ChunkIndex_mod, only: getRankAndLocalIndex
   use one_sided_comm_TYPE_mod
   implicit none
