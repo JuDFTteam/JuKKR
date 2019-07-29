@@ -7,19 +7,20 @@ TYPE ?= nodebug
 ### the user may specify SMP=openmp as a command line argument to make
 SMP ?= none
 
-### can we make use of the tfQMRgpu library
-tfQMRgpu ?= no
-
 PROGRAM = kkr.exe
 
 # Path to put object files and module files
-BUILDDIR = $(HOME)/build
+BUILDDIR = ./build
 
 EXTRA_FLAGS ?=
 
+### can we make use of the tfQMRgpu library?
+tfQMRgpu ?= no
 ifeq ($(tfQMRgpu),yes)
 	EXTRA_FLAGS += -D has_tfQMRgpu
+	CUDA_PATH=-L/usr/local/zam/CUDA/cuda-9.1/lib64
 endif
+
 FC90FLAGS = 
 FCFLAGS =
 PPFLAGS =
@@ -98,7 +99,10 @@ ifeq ($(PLATFORM),gfortran)
 	FC90FLAGS = -ffree-line-length-0
 	PPFLAGS += -D NOLOGGING
 	# FCFLAGS += -D TASKLOCAL_FILES ### breaks when TASKLOCAL_FILES is used
-	LDFLAGS += -L /usr/local/atlas/lib -llapack -lf77blas -lcblas -latlas
+# 	LDFLAGS += -L /usr/local/atlas/lib -llapack -latlas
+	LDFLAGS += -L${MKLROOT}/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 ###-lpthread
+# 	# 	LDFLAGS += -lgfortran
+	### -lf77blas -lcblas -latlas
 endif
 
 
@@ -377,23 +381,36 @@ SRCSFPP = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.F))
 SRCS90FPP = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.F90))
 SRCS95TMPL = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.F95))
 
+OBJS=
+
+LINKER= $(FC90)
+ifeq ($(tfQMRgpu),yes)
+	OBJS += tfqmrgpu_Fortran.o
+	OBJS += tfqmrgpu_Fortran_wrappers.o
+	OBJS += tfqmrgpu.o
+	SRCS90FPP += GPU/tfqmrgpu_Fortran.F90
+# 	LDFLAGS += $(CUDA_PATH) -gfortran -lcudart -lnvToolsExt -lm -lcurand \
+# 	             -L/usr/lib64/gcc/x86_64-suse-linux/4.8 \
+# 	             -L/usr/lib -lstdc++
+	LDFLAGS += $(CUDA_PATH) -lcudart -lnvToolsExt -lm -lcurand
+	LDFLAGS += -L/usr/lib -lstdc++
+# # 	LINKER= gfortran
+endif
+
+
 # notdir extracts only filename
-OBJS =  $(notdir ${SRCS:.f=.o})
+OBJS += $(notdir ${SRCS:.f=.o})
 OBJS += $(notdir ${SRCS90:.f90=.o})
 OBJS += $(notdir ${SRCSFPP:.F=.o})
 OBJS += $(notdir ${SRCS90FPP:.F90=.o})
 OBJS += $(notdir ${SRCS95TMPL:.F95=.o})
 
-ifeq ($(tfQMRgpu),yes)
-	OBJS += tfqmrgpu_Fortran.o tfqmrgpu_Fortran_wrappers.o tfqmrgpu.o
-	LDFLAGS += -L/usr/local/cuda/lib64 -lcudart -lnvToolsExt -lm -lcurand
-endif
 
 .PHONY: all
 all:	$(PROGRAM)
 
 $(PROGRAM): $(OBJS)
-	$(FC90) $(FCFLAGS) -o $(PROGRAM) $(addprefix $(BUILDDIR)/,$(OBJS)) $(LDFLAGS) 
+	$(LINKER) -o $(PROGRAM) $(addprefix $(BUILDDIR)/,$(OBJS)) $(LDFLAGS) 
 
 %.o: %.f
 	$(FC) $(FCFLAGS) $(EXTRA_FLAGS) -c $< -o $(BUILDDIR)/$@

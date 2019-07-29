@@ -674,7 +674,7 @@ end if
 ! klo and khi now bracket the input value of x.
 h=xa(khi)-xa(klo)
 ! the xa's must be distinct.
-if (h == 0.d0) pause 'bad xa input in splint'
+if (h == 0.d0) STOP 'bad xa input in splint' !! used to be PAUSE
 ! cubic spline polynomial is now evaluated.
 a = (xa(khi)-x)/h
 b = (x-xa(klo))/h

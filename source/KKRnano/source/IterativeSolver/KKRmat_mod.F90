@@ -220,7 +220,7 @@ module KKRmat_mod
     use IterativeSolver_mod, only: IterativeSolver, solve
     use DirectSolver_mod, only: DirectSolver, solve
 #ifdef  has_tfQMRgpu
-    ! use tfqmrgpu, only: tfqmrgpu_bsrsv_complete ! all-in-one GPU solver interface for rapid integration
+    use tfqmrgpu, only: tfqmrgpu_bsrsv_complete ! all-in-one GPU solver interface for rapid integration
 #endif
     use SparseMatrixDescription_mod, only: dump
     use InitialGuess_mod, only: InitialGuess, load, store
@@ -261,7 +261,6 @@ module KKRmat_mod
     double complex :: tracek  ! LLY
          
 #ifdef  has_tfQMRgpu
-    external :: tfqmrgpu_bsrsv_complete ! subroutine
     integer :: o = 6
     integer :: ierr = 1
     integer :: iterations, lda
@@ -393,9 +392,9 @@ module KKRmat_mod
       ! store the initial guess
       call store(iguess_data, op%mat_X, ik=ikpoint, is=ispin, ie=ienergy)
 
-#ifdef  has_tfQMRgpu
     case (5) ! GPU solver
       
+#ifdef  has_tfQMRgpu
       iterations = 1000
       residuum = 1e-7
       lda = size(op%mat_A, 1)
@@ -405,8 +404,10 @@ module KKRmat_mod
         op%bsr_X%RowStart, op%bsr_X%ColIndex, op%mat_X, 'n', & !! X (out)
         op%bsr_B%RowStart, op%bsr_B%ColIndex, op%mat_B, 'n', & !! B (in)
         iterations, residuum, o, ierr)
+#else
+      warn(6, "GPU solver needs -D has_tfQMRgpu (Problem is not solved) solver_type ="+solver_type)
 #endif
-      
+
     case default
       warn(6, "No solver selected! Problem is not solved, solver_type ="+solver_type)
     endselect ! solver_type
