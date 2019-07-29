@@ -7,6 +7,9 @@ TYPE ?= nodebug
 ### the user may specify SMP=openmp as a command line argument to make
 SMP ?= none
 
+### can we make use of the tfQMRgpu library
+tfQMRgpu ?= no
+
 PROGRAM = kkr.exe
 
 # Path to put object files and module files
@@ -19,6 +22,12 @@ tfQMRgpu ?= no
 ifeq ($(tfQMRgpu),yes)
 	EXTRA_FLAGS += -D has_tfQMRgpu
 	CUDA_PATH=-L/usr/local/zam/CUDA/cuda-9.1/lib64
+endif
+
+EXTRA_FLAGS ?=
+
+ifeq ($(tfQMRgpu),yes)
+	EXTRA_FLAGS += -D has_tfQMRgpu
 endif
 
 FC90FLAGS = 
@@ -405,6 +414,11 @@ OBJS += $(notdir ${SRCSFPP:.F=.o})
 OBJS += $(notdir ${SRCS90FPP:.F90=.o})
 OBJS += $(notdir ${SRCS95TMPL:.F95=.o})
 
+
+ifeq ($(tfQMRgpu),yes)
+	OBJS += tfqmrgpu_Fortran.o tfqmrgpu_Fortran_wrappers.o tfqmrgpu.o
+	LDFLAGS += -L/usr/local/cuda/lib64 -lcudart -lnvToolsExt -lm -lcurand
+endif
 
 .PHONY: all
 all:	$(PROGRAM)
