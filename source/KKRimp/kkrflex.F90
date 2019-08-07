@@ -74,9 +74,7 @@ program kkrflex
   use mod_types, only: t_inc
 
   use global_variables, only: ipand
-#ifdef CPP_MPI
   use mod_mympi, only: myrank, master
-#endif
 
 
   use mod_mathtools
@@ -206,6 +204,9 @@ mpi_size=1
       CALL MPI_COMM_SIZE(MPI_COMM_WORLD, mpi_size, ierror)
 
       myrank = my_rank
+      master = 0
+#else
+      myrank = 0
       master = 0
 #endif
 ! find serial number that is printed to files
