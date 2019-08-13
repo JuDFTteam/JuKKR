@@ -128,3 +128,12 @@ pages:
     - schedules
     - triggers
     - web
+
+pages:
+  stage: deploy:sourcecode_upload
+  allow_failure: true
+  script:
+    - mkdir -p "public/${PREFIX}"
+    - git clone "${CI_REPOSITORY_URL}"
+    - tar -czf jukkr-git.tgz jukkr/
+    - mv jukkr-git.tgz "public/${PREFIX}/"
