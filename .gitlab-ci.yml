@@ -17,6 +17,7 @@ before_script:
 
 stages: 
   - test
+  - deploy:sourcecode_upload
   # voronoi stages
   - build_voronoi
   - run_voronoi
@@ -137,3 +138,10 @@ pages:
     - git clone "${CI_REPOSITORY_URL}"
     - tar -czf jukkr-git.tgz jukkr/
     - mv jukkr-git.tgz "public/${PREFIX}/"
+  artifacts:
+    paths:
+      - public/${PREFIX}
+  only: 
+    - schedules
+    - triggers
+    - web
