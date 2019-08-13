@@ -133,6 +133,8 @@ pages:
 pages:
   stage: deploy:sourcecode_upload
   allow_failure: true
+  tags:
+    - docker-executor
   script:
     - mkdir -p "public/${PREFIX}"
     - git clone "${CI_REPOSITORY_URL}"
