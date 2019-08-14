@@ -136,7 +136,7 @@ pages:
   tags:
     - docker-executor
   script:
-    - [ -n "${PREFIX}" ]
+    - '[ -n "${PREFIX}" ]'
     - mkdir -p "public/${PREFIX}"
     - git clone "${CI_REPOSITORY_URL}"
     - tar -czf jukkr-git.tgz jukkr/
