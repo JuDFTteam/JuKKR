@@ -17,7 +17,6 @@ before_script:
 
 stages: 
   - test
-  - deploy:sourcecode_upload
   # voronoi stages
   - build_voronoi
   - run_voronoi
@@ -122,20 +121,7 @@ pages:
     - cd ..
     # add code coverage
     - tar -zxvf cov.tar.gz && mv CODE_COVERAGE.HTML public/page/codecov/index.html && mv CodeCoverage public/page/codecov/CodeCoverage
-  artifacts:
-    paths:
-      - public
-  only: 
-    - schedules
-    - triggers
-    - web
-
-pages:
-  stage: deploy:sourcecode_upload
-  allow_failure: true
-  tags:
-    - docker-executor
-  script:
+    # upload code for deploy
     - '[ -n "${PREFIX}" ]'
     - mkdir -p "public/${PREFIX}"
     - git clone "${CI_REPOSITORY_URL}"
@@ -143,9 +129,8 @@ pages:
     - mv jukkr-git.tgz "public/${PREFIX}/"
   artifacts:
     paths:
-      - public/${PREFIX}
+      - public
   only: 
     - schedules
     - triggers
     - web
-    - master
