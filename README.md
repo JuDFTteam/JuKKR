@@ -9,6 +9,8 @@ The Korringa-Kohn-Rostoker (KKR) Greens function method is a highly accurate all
 ### Dependencies
 - a Fortran compiler (tested with `gfortran` and `ifort` but `ifort` is recommended)
 - [cmake](https://cmake.org)
+- an installation of [LAPACK](http://www.netlib.org/lapack/)
+- a compiler supporting MPI (optional but strongly recommended)
 
 ### Compiling the code
 
@@ -16,7 +18,7 @@ The easiest way to set up the code is to execute the `install.py` script which w
 
 ## Further reading
 
-- The code's [wiki page](https://iffwiki.fz-juelich.de/kkr/doku.php)
+- The code's [wiki page](https://iffgit.fz-juelich.de/kkr/jukkr/wikis/home) (still under construction, [see here for the old dokuwiki page](https://iffwiki.fz-juelich.de/kkr/doku.php))
 
 - The [source code documentation](https://kkr.iffgit.fz-juelich.de/jukkr/)
 
