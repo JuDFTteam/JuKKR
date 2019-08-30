@@ -15,21 +15,18 @@
 
 ----
 
-## *UNRELEASED* (last updated: 2019-06-17)
+## *UNRELEASED* (last updated: 2019-08-30)
 
 **Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release.**
 
-Removed a lot of code duplicates among different
-
 ### Added
-- allow up to LMAX=8 in voronoi code and KKRhost code
+- None
 
 ### Changed
-- Renamed keywords that have 'files' in the name to avoid clash with 'FILES' keyword in inputcard
-- if GGA is used, set Vxc of empty cells to LDA (VWN)
+- None
 
 ### Deprecated
-- 'IMPURITY' option of voronoi code, not working properly and thus commented out
+- None
 
 ### Removed
 - None
@@ -37,9 +34,29 @@ Removed a lot of code duplicates among different
 ### Fixed
 - None
 
+
+## v3.4 (2019-08-30)
+
+### Added
+- allow up to LMAX=8 in voronoi code and KKRhost code
+
+### Changed
+- Renamed keywords that have 'files' in the name to avoid clash with 'FILES' keyword in inputcard
+- if GGA is used, set Vxc of empty cells to LDA (VWN)
+- remove a lot of unnessecary files written out by each rank running the KKRimp code. Now by default only the master writes the files (old behavior can be reactivated using the 'write_all_ranks' test flag)
+
+### Deprecated
+- 'IMPURITY' option of voronoi code, not working properly and thus commented out
+
+### Fixed
+- Fix auto tests
+- Small bugfixes
+
 ----
 
 ## v3.3 (2019-04-15)
+
+Removed a lot of code duplicates among different codes.
 
 ### Added
 - script to check the wronskian (see PhD Bauer, p.48)
