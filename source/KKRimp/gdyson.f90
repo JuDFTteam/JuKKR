@@ -198,6 +198,7 @@ end subroutine
 subroutine gdyson_readgmat(igmatnewfile,use_fullgmat,ielast,ie,Gref,greftemp,mpi_iebounds,ITSCF,nlmhost,gmat,ispin)
 use mod_config, only: config_runflag
 use type_gmat
+use mod_types, only: t_inc
   implicit none
 integer :: igmatnewfile
 integer :: use_fullgmat
@@ -224,9 +225,9 @@ if (first==1) then
   if (kgrefsoc/=1 .and. kgrefsoc/=0) then
     stop '[gdyson_readgmat] Gref SOC value not read correctly. Old Juelich-Muenchen code?'
   end if
-  write(1337,*) 'Read Gmat bulk header'
-  write(1337,*) 'NSPINBULK ==',nspinhost
-  write(1337,*) 'kgrefsoc ==',kgrefsoc
+  if (t_inc%i_write>0) write(1337,*) 'Read Gmat bulk header'
+  if (t_inc%i_write>0) write(1337,*) 'NSPINBULK ==',nspinhost
+  if (t_inc%i_write>0) write(1337,*) 'kgrefsoc ==',kgrefsoc
 end if
 
 if (config_runflag('GBULKtomemory') .and. first==1) then
@@ -323,6 +324,7 @@ end subroutine gdyson_readgmat
 
 subroutine gdyson_read_kgrefsoc(kgrefsoc)
 use nrtype, only: wlength
+use mod_types, only: t_inc
 implicit none
  integer :: temp1,temp2,nspinhost,kgrefsoc
   open (13234,access='direct',recl=wlength*4,file='kkrflex_greennew',form='unformatted')
@@ -330,7 +332,7 @@ implicit none
   if (kgrefsoc/=1 .and. kgrefsoc/=0) then
     stop '[gdyson_read_kgrefsoc] Gref SOC value not read correctly. Old Juelich-Muenchen code?'
   end if
-  write(1337,*) '[gdyson_read_kgrefsoc] kgrefsoc ==',kgrefsoc
+  if (t_inc%i_write>0) write(1337,*) '[gdyson_read_kgrefsoc] kgrefsoc ==',kgrefsoc
   close(13234)
 
 end subroutine gdyson_read_kgrefsoc

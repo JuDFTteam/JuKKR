@@ -108,9 +108,9 @@ contains
     complex (kind=dp), intent (in) :: eryd
     ! .. In/Out variables
     real (kind=dp), dimension (irm, nspin*natyp), intent (inout) :: vm2z
-    real (kind=dp), dimension (irmind:irm, lmpot, nspin*natyp), intent (inout) :: vins
+    real (kind=dp), dimension (irmind:irm, lmpot, nspotd*natyp), intent (inout) :: vins
     real (kind=dp), dimension (irm, nspin*natomimp), intent (inout) :: vm2zimp
-    real (kind=dp), dimension (irmind:irm, lmpot, nspin*natomimp), intent (inout) :: vinsimp
+    real (kind=dp), dimension (irmind:irm, lmpot, nspotd*natomimp), intent (inout) :: vinsimp
     complex (kind=dp), dimension ((korbit+1)*lmmax0d*natomimp, (korbit+1)*lmmax0d*natomimp), intent (inout) :: dtmtrx
     ! .. Local variables
     integer :: ipot
@@ -121,10 +121,6 @@ contains
 #endif
     real (kind=dp) :: theta, phi
     complex (kind=dp) :: gmatprefactor
-    integer, dimension (natyp) :: npan_tot
-    integer, dimension (natyp) :: npan_inst
-    integer, dimension (natyp) :: npan_eq_at
-    integer, dimension (natyp) :: npan_log_at
     real (kind=dp), dimension (natomimp) :: phiimp
     real (kind=dp), dimension (natyp) :: phihost
     real (kind=dp), dimension (natomimp) :: thetaimp
@@ -134,6 +130,10 @@ contains
     complex (kind=dp), dimension ((korbit+1)*lmmax0d, (korbit+1)*lmmax0d, ihost) :: tmatll
     complex (kind=dp), dimension ((korbit+1)*lmmax0d, (korbit+1)*lmmax0d) :: dummy_alphaget
     ! .. Allocatable variables
+    integer, allocatable :: npan_tot(:)
+    integer, allocatable :: npan_log_at(:)
+    integer, allocatable :: npan_eq_at(:)
+    integer, allocatable :: npan_inst(:)
     integer, dimension (:), allocatable :: irmdnew
     integer, dimension (:), allocatable :: jlk_index
     integer, dimension (:, :), allocatable :: ipan_intervall
@@ -164,6 +164,17 @@ contains
     else
       nsra = 1
     end if
+
+    ! these are used by both host and impuity and therefore need the maximal
+    ! aray size
+    allocate (npan_tot(max(natyp, natomimp)), stat=i_stat)
+    call memocc(i_stat, product(shape(npan_tot))*kind(npan_tot), 'npan_tot', 'tmatimp_newsolver')
+    allocate (npan_eq_at(max(natyp, natomimp)), stat=i_stat)
+    call memocc(i_stat, product(shape(npan_eq_at))*kind(npan_eq_at), 'npan_eq', 'tmatimp_newsolver')
+    allocate (npan_log_at(max(natyp, natomimp)), stat=i_stat)
+    call memocc(i_stat, product(shape(npan_log_at))*kind(npan_log_at), 'npan_log_at', 'tmatimp_newsolver')
+    allocate (npan_inst(max(natyp, natomimp)), stat=i_stat)
+    call memocc(i_stat, product(shape(npan_inst))*kind(npan_inst), 'npan_inst', 'tmatimp_newsolver')
 
     allocate (jlk_index(2*lmmaxd), stat=i_stat)
     call memocc(i_stat, product(shape(jlk_index))*kind(jlk_index), 'JLK_INDEX', 'tmatimp_newsolver')
@@ -257,7 +268,7 @@ contains
       call memocc(i_stat, product(shape(rpan_intervall))*kind(rpan_intervall), 'RPAN_INTERVALL', 'tmatimp_newsolver')
       allocate (ipan_intervall(0:ntotd,natyp), stat=i_stat)
       call memocc(i_stat, product(shape(ipan_intervall))*kind(ipan_intervall), 'IPAN_INTERVALL', 'tmatimp_newsolver')
-      allocate (vinsnew(irmdnewd,lmpot,nspotd), stat=i_stat) ! NSPIND*max(NATYP,NATOMIMP)))
+      allocate (vinsnew(irmdnewd,lmpot,nspotd*natyp), stat=i_stat) ! NSPIND*max(NATYP,NATOMIMP)))
       call memocc(i_stat, product(shape(vinsnew))*kind(vinsnew), 'VINSNEW', 'tmatimp_newsolver')
 
       call create_newmesh(natyp,irm,ipand,irid,ntotd,nfund,ncheb,irmdnewd,nspin,    &
@@ -266,7 +277,7 @@ contains
         rpan_intervall(0:ntotd,:),ipan_intervall(0:ntotd,:),1)
 
       ! in second step interpolate potential (gain atom by atom with NATYPD==1)
-      call interpolate_poten(lpot,irm,irnsd,natyp,ipand,lmpot,nspotd,ntotd,irmdnewd,&
+      call interpolate_poten(lpot,irm,irnsd,natyp,ipand,lmpot,nspotd*natyp,ntotd,irmdnewd,&
         nspin,rmesh(:,:),irmin(:),t_params%irws(:),ircut(0:ipand,:),                &
         vins(irmind:irm,1:lmpot,:),vm2z(:,:),npan_log_at(:),npan_eq_at(:),          &
         npan_tot(:),rnew(:,:),ipan_intervall(0:ntotd,:),vinsnew)
@@ -556,7 +567,7 @@ contains
     call memocc(i_stat, product(shape(rpan_intervall))*kind(rpan_intervall), 'RPAN_INTERVALL', 'tmatimp_newsolver')
     allocate (ipan_intervall(0:ntotd,natomimp), stat=i_stat)
     call memocc(i_stat, product(shape(ipan_intervall))*kind(ipan_intervall), 'IPAN_INTERVALL', 'tmatimp_newsolver')
-    allocate (vinsnew(irmdnewd,lmpot,nspotd), stat=i_stat)
+    allocate (vinsnew(irmdnewd,lmpot,nspotd*natomimp), stat=i_stat)
     call memocc(i_stat, product(shape(vinsnew))*kind(vinsnew), 'VINSNEW', 'tmatimp_newsolver')
 
     ! initialize with zeros
@@ -570,10 +581,10 @@ contains
       rpan_intervall(0:ntotd,1:natomimp),ipan_intervall(0:ntotd,1:natomimp),1)
 
     ! In second step interpolate potential
-    call interpolate_poten(lpot,irm,irnsd,natomimp,ipand,lmpot,nspotd,ntotd,        &
+    call interpolate_poten(lpot,irm,irnsd,natomimp,ipand,lmpot,nspotd*natomimp,ntotd,        &
       irmdnewd,nspin,rimp(:,1:natomimp),irminimp(1:natomimp),irwsimp(1:natomimp),   &
-      ircutimp(0:ipand,1:natomimp),vinsimp(irmind:irm,1:lmpot,1:natomimp),          &
-      vm2zimp(1:irm,1:natomimp),npan_log_at(1:natomimp),npan_eq_at(1:natomimp),     &
+      ircutimp(0:ipand,1:natomimp),vinsimp(irmind:irm,1:lmpot,1:nspin*natomimp),          &
+      vm2zimp(1:irm,1:nspin*natomimp),npan_log_at(1:natomimp),npan_eq_at(1:natomimp),     &
       npan_tot(1:natomimp),rnew(1:irmdnewd,1:natomimp),                             &
       ipan_intervall(0:ntotd,1:natomimp),vinsnew)
 
@@ -607,7 +618,7 @@ contains
 
       ! Contruct the spin-orbit coupling hamiltonian and add to potential
       call spinorbit_ham(lmax,lmmax0d,vinsnew(1:irmdnew(i1),1:lmpot,ipot:ipot+nspin-1),&
-        rnew(1:irmdnew(i1),i1),eryd,zimp(i1),cvlight,t_params%socscale(i1),nspin,   &
+        rnew(1:irmdnew(i1),i1),eryd,zimp(i1),cvlight,t_imp%socscale(i1),nspin,   &
         lmpot,theta,phi,ipan_intervall(0:ntotd,i1),rpan_intervall(0:ntotd,i1),      &
         npan_tot(i1),ncheb,irmdnew(i1),irmdnew(i1),vnspll0,vnspll1,'1')
 
@@ -703,7 +714,7 @@ contains
 
       ! contruct the spin-orbit coupling hamiltonian and add to potential
       call spinorbit_ham(lmax,lmmax0d,vinsnew(1:irmdnew(i1),1:lmpot,ipot:ipot+nspin-1),&
-        rnew(1:irmdnew(i1),i1),eryd,zimp(i1),cvlight,t_params%socscale(i1),nspin,   &
+        rnew(1:irmdnew(i1),i1),eryd,zimp(i1),cvlight,t_imp%socscale(i1),nspin,   &
         lmpot,theta,phi,ipan_intervall(0:ntotd,i1),rpan_intervall(0:ntotd,i1),      &
         npan_tot(i1),ncheb,irmdnew(i1),irmdnew(i1),vnspll0,vnspll1,'1')
       do ir = 1, irmdnew(i1)

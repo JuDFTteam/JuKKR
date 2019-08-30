@@ -104,6 +104,7 @@
                         NATOM,ITDBRY,IMIX,NTIRD,LMPOTD,IRMD,iobroy)
 ! C     .. Parameters ..
       USE TYPE_CELL
+      use mod_types, only: t_inc
       IMPLICIT NONE
 ! !       INCLUDE 'inc.p'
      REAL(8)            :: VPOT(IRMD,LMPOTD,NSPIN,NATOM)
@@ -188,11 +189,11 @@ allocate(FM1(NTIRD),G(NTIRD),SM(NTIRD),SM1(NTIRD),VI3(NTIRD),UI2(NTIRD),UI3(NTIR
       IF (IMIX.LE.2 .OR. IMIX.GT.5) STOP 'IMIXD   '
 
       IF (MIT.GT.ITDBRY) MIT = 1
-      IF (IMIX.EQ.3) WRITE (IPF,FMT='('' broyden"s 1st method used '')')
-      IF (IMIX.EQ.4) WRITE (IPF,FMT='('' broyden"s 2nd method used '')')
-      IF (IMIX.EQ.5) WRITE (IPF,FMT= &
+      IF (IMIX.EQ.3 .and. t_inc%i_write>0)  WRITE (IPF,FMT='('' broyden"s 1st method used '')')
+      IF (IMIX.EQ.4 .and. t_inc%i_write>0)  WRITE (IPF,FMT='('' broyden"s 2nd method used '')')
+      IF (IMIX.EQ.5 .and. t_inc%i_write>0)  WRITE (IPF,FMT= &
           '('' generalized anderson method used '')')
-      WRITE(IPF,'(A,i4)') ' Iteration index (read in):',MIT
+      if (t_inc%i_write>0) WRITE(IPF,'(A,i4)') ' Iteration index (read in):',MIT
 ! c
 ! write(*,*) '4.2'
       RMIXIV = ONE/MIXFAC
@@ -295,7 +296,7 @@ allocate(FM1(NTIRD),G(NTIRD),SM(NTIRD),SM1(NTIRD),VI3(NTIRD),UI2(NTIRD),UI3(NTIR
 ! c
 ! c----> print amj = the importance of the history of ui
 ! c
-        WRITE (IPF,FMT='(5x,'' amj , ---> j=2,'',i3,/,(9x,1p,7d10.2))')&
+        if (t_inc%i_write>0) WRITE (IPF,FMT='(5x,'' amj , ---> j=2,'',i3,/,(9x,1p,7d10.2))')&
           MIT - 1, (AM(IT),IT=2,MIT-1)
 ! c
 ! c
@@ -339,7 +340,7 @@ allocate(FM1(NTIRD),G(NTIRD),SM(NTIRD),SM1(NTIRD),VI3(NTIRD),UI2(NTIRD),UI3(NTIR
 ! c
 ! c----> print bmj = the importance of the history of vi
 ! c
-          WRITE (IPF,FMT='(5x,'' bmj , ---> j=2,'',i3,/,(9x,1p,7d10.2))' &
+          if (t_inc%i_write>0) WRITE (IPF,FMT='(5x,'' bmj , ---> j=2,'',i3,/,(9x,1p,7d10.2))' &
             ) MIT - 1, (BM(IT),IT=2,MIT-1)
 ! c
         ELSE IF (IMIX.EQ.4) THEN

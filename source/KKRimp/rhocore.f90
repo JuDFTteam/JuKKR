@@ -22,6 +22,7 @@ MODULE MOD_RHOCORE
     use type_config
     use type_corestate
     use type_density
+    use mod_types, only: t_inc
     IMPLICIT NONE
 
     !       INCLUDE 'inc.p'
@@ -85,9 +86,9 @@ MODULE MOD_RHOCORE
     ! --------------------------------------------------------------
     !          write(*,*) 'sdf'
     if (iatom==1 .and. ispin==1) then
-      write(1337,*) '----------------------------------------------------'
-      write(1337,*) '-------           MODULE RHOCORE             -------'
-      write(1337,*) '----------------------------------------------------'
+      if (t_inc%i_write>0) write(1337,*) '----------------------------------------------------'
+      if (t_inc%i_write>0) write(1337,*) '-------           MODULE RHOCORE             -------'
+      if (t_inc%i_write>0) write(1337,*) '----------------------------------------------------'
 
 
     end if
@@ -124,8 +125,8 @@ MODULE MOD_RHOCORE
              IF (IPR.NE.0) WRITE (*,FMT=99001) IATOM
              QC = QC + QC1
              IF (ISPIN.EQ.NSPIN) THEN 
-               write(1337,*) 'ATOM',IATOM
-               WRITE (1337,FMT=99002) ZATOM,QC
+               if (t_inc%i_write>0) write(1337,*) 'ATOM',IATOM
+               if (t_inc%i_write>0) WRITE (1337,FMT=99002) ZATOM,QC
              END IF
     !=======================================================================
     !       ELSE

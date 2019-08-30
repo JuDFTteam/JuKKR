@@ -47,7 +47,7 @@ contains
     use :: mod_timing, only: timing_start, timing_stop, timings_1a
 #endif
     use :: mod_mympi, only: myrank, nranks, master, distribute_work_energies
-    use :: mod_runoptions, only: formatted_files, print_tmat
+    use :: mod_runoptions, only: formatted_file, print_tmat
     use :: mod_types, only: t_tgmat, t_inc, t_mpi_c_grid, init_tgmat, t_lloyd, init_tlloyd
     use :: mod_datatypes, only: dp
     use :: global_variables, only: iemxd, lmmaxd, irmind, irmd, lmpotd, ncleb, krel, lm2d, lmaxd, ipand, mmaxd, nspind
@@ -277,7 +277,7 @@ contains
         if (t_inc%i_write>0) write(1337,*) 'writing tmat to file', ie, ispin, i1, shape(tmatll)
         write (69, rec=irec) tmat0
         ! human readable writeout if test option is hit
-        if (formatted_files) then
+        if (formatted_file) then
           write (696969, '(i9,20000F15.7)') irec, tmatll(:, :)
         end if
       else

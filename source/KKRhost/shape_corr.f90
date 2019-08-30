@@ -42,7 +42,7 @@ contains
     integer :: lpot, natyp
     ! ..
     ! .. Array Arguments ..
-    real (kind=dp) :: gsh(*), w(lassld), yr(lassld, 0:lassld, 0:lassld)
+    real (kind=dp) :: gsh(ngshd), w(lassld), yr(lassld, 0:lassld, 0:lassld)
     integer :: ilm_map(ngshd, 3), imaxsh(0:lmpotd), lmsp(natypd, *), ntcell(*)
     ! ..
     ! .. Local Scalars ..
@@ -137,9 +137,12 @@ contains
 
     imaxsh(lm1) = i - 1
     write (1337, fmt=100) imaxsh(lm1), ngshd
-    if (imaxsh(lm1)>ngshd) call rcstop('SHAPE   ')
+    if (imaxsh(lm1)>ngshd) then
+      write(*,*) 'shape_corr: imaxsh(lm1)>ngshd', lm1, imaxsh(lm1), ngshd
+      stop
+    end if
 
-100 format (' >>> SHAPE : IMAXSH(', i4, '),NGSHD :', 2i6)
+100 format (' >>> SHAPE : IMAXSH(', i9, '),NGSHD :', i9)
 
   end subroutine shape_corr
 

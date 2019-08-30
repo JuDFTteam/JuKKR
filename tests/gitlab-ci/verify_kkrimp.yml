@@ -3,6 +3,8 @@
 
 verify_kkrimp:intel:
   stage: verify_kkrimp
+  tags:
+    - docker-executor
   script:
     - curl -O https://bootstrap.pypa.io/get-pip.py 
     - python get-pip.py 

@@ -3,6 +3,7 @@ contains
 subroutine read_atominfo(cmode,cfilename_atom,natom,ntotatom,ratom,zatom,lmaxd,lmaxatom,killatom,vtotatom)
   use nrtype
   use mod_version_info
+  use mod_types, only: t_inc
   implicit none
 ! the routine reads the atom information using 2 modes
 ! - 'total' reads the information of all atoms, also the once which are beiing killed. 
@@ -100,22 +101,22 @@ lmaxd = maxval(lmaxatom)
 !--------------------------------------------------------
 !--  write out information                             --
 !--------------------------------------------------------
-write(1337,*) ''
-write(1337,*) '-------------------------------------------'
-write(1337,*) '-----      read atominfo               ----'
-write(1337,*) '-------------------------------------------'
-write(1337,*) 'NATOM is    ', natom 
-write(1337,*) 'NTOTATOM is ', ntotatom 
-write(1337,*) 'LMAXD is    ', lmaxd
-write(1337,*) '-------------------------------------------'
-write(1337,'(2A)') '  No.   x        y      z',&
+if (t_inc%i_write>0) write(1337,*) ''
+if (t_inc%i_write>0) write(1337,*) '-------------------------------------------'
+if (t_inc%i_write>0) write(1337,*) '-----      read atominfo               ----'
+if (t_inc%i_write>0) write(1337,*) '-------------------------------------------'
+if (t_inc%i_write>0) write(1337,*) 'NATOM is    ', natom 
+if (t_inc%i_write>0) write(1337,*) 'NTOTATOM is ', ntotatom 
+if (t_inc%i_write>0) write(1337,*) 'LMAXD is    ', lmaxd
+if (t_inc%i_write>0) write(1337,*) '-------------------------------------------'
+if (t_inc%i_write>0) write(1337,'(2A)') '  No.   x        y      z',&
                   '            Z    VATOM?  KILLATOM?  LMAX'
-write(1337,*) '-------------------------------------------'
+if (t_inc%i_write>0) write(1337,*) '-------------------------------------------'
 do iatom=1,numb
-   write(1337,'(I4,8g10.3,F10.2,4I6)') iatom, ratom(:,iatom), zatom(iatom), &
+   if (t_inc%i_write>0) write(1337,'(I4,8g10.3,F10.2,4I6)') iatom, ratom(:,iatom), zatom(iatom), &
                                       vtotatom(iatom),killatom(iatom),lmaxatom(iatom)
 end do !iatom
-write(1337,*) '-------------------------------------------'
+if (t_inc%i_write>0) write(1337,*) '-------------------------------------------'
 
 
 end subroutine read_atominfo

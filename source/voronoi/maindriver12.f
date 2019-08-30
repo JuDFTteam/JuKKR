@@ -244,9 +244,7 @@ c
       CHARACTER*124 TXC(3)
       LOGICAL OPT,TEST
       CHARACTER*3 ELEM_NAME
-      CHARACTER*24 TEXT
       CHARACTER*40 I13
-      REAL*8    A1
       REAL*8 DISTPLANE,PI
       EXTERNAL DISTPLANE
 
@@ -376,26 +374,28 @@ c
       NUMIMP = 0 ! Initialize
       IF (OPT('IMPURITY')) THEN 
 
+      stop 'not working properly'
+
       ! For impurity calculation, the host clusters are used as input, 
       ! while impurity clusters are generated as output.
-         CALL READIMPATOMS12(
-     >        ALATC,LCARTESIAN,
-     <        NUMIMP,RIMPURITY,NKILLATOM,RKILL,DXIMP,DYIMP,DZIMP,
-     <        RMTIMP,IMPSIZE,ZIMP,LCARTESIMP)
-         CALL SCALEVECIMP(
-     >        NUMIMP,NKILLATOM,BRAVAIS,LINTERFACE,LCARTESIMP,
-     X        RIMPURITY,RKILL,DXIMP,DYIMP,DZIMP)
-         CALL CLSGENIMP12(
-     >        NUMIMP,RIMPURITY,NKILLATOM,RKILL,
-     >        CLS,NCLS,NACLS,ATOM,RCLS,
-     >        BRAVAIS,RECBV,NAEZ,RBASIS,RCUTZ,RCUTXY,
-     <        CLSIMP,NCLSIMP,NACLSIMP,ATOMIMP,RCLSIMP,RMTHLFIMP)
-         
-         DO IIMP=1,NUMIMP
-            DO IX=1,3
-               RIMPURITY(IX,IIMP) = RIMPURITY(IX,IIMP)*ALATC
-            END DO
-         END DO  
+!         CALL READIMPATOMS12(
+!     >        ALATC,LCARTESIAN,
+!     <        NUMIMP,RIMPURITY,NKILLATOM,RKILL,DXIMP,DYIMP,DZIMP,
+!     <        RMTIMP,IMPSIZE,ZIMP,LCARTESIMP)
+!         CALL SCALEVECIMP(
+!     >        NUMIMP,NKILLATOM,BRAVAIS,LINTERFACE,LCARTESIMP,
+!     X        RIMPURITY,RKILL,DXIMP,DYIMP,DZIMP)
+!         CALL CLSGENIMP12(
+!     >        NUMIMP,RIMPURITY,NKILLATOM,RKILL,
+!     >        CLS,NCLS,NACLS,ATOM,RCLS,
+!     >        BRAVAIS,RECBV,NAEZ,RBASIS,RCUTZ,RCUTXY,
+!     <        CLSIMP,NCLSIMP,NACLSIMP,ATOMIMP,RCLSIMP,RMTHLFIMP)
+!         
+!         DO IIMP=1,NUMIMP
+!            DO IX=1,3
+!               RIMPURITY(IX,IIMP) = RIMPURITY(IX,IIMP)*ALATC
+!            END DO
+!         END DO  
 
          ! From here on continue as if the impurities were host-sites
          ! and just re-name the arrays.
@@ -975,7 +975,7 @@ c         goto  88    ! skip potentials
            WRITE(6,*) ' Expect to find the following potentials '
             
            DO IAT = ISITEBEGIN,NSITES
-              CALL ELEMENTDATABASE(ZATOM(IAT),ELEM_NAME,TEXT,A1)
+              CALL ELEMENTDATABASE(ZATOM(IAT),ELEM_NAME)
               IF (NSPIN.EQ.2) THEN
                  WRITE(6,1200) ELEM_NAME
                  WRITE(6,1210) ELEM_NAME

@@ -363,8 +363,8 @@ contains
     use :: mod_types, only: t_inc, t_tgmat, t_lloyd, t_cpa
     use :: mod_mympi, only: nranks, mpiatom, mpiadapt
     use :: mod_runoptions, only: impurity_operator_only, relax_SpinAngle_Dirac, use_Chebychev_solver, use_qdos, &
-      write_cpa_projection_files, write_deci_tmat, write_gmat_file, write_green_host, write_green_imp, write_gref_file, &
-      write_kkrimp_input, write_lloyd_cdos_file, write_lloyd_dgref_file, write_lloyd_dtmat_file, write_lloyd_files, &
+      write_cpa_projection_file, write_deci_tmat, write_gmat_file, write_green_host, write_green_imp, write_gref_file, &
+      write_kkrimp_input, write_lloyd_cdos_file, write_lloyd_dgref_file, write_lloyd_dtmat_file, write_lloyd_file, &
       write_lloyd_g0tr_file, write_lloyd_tralpha_file, write_pkkr_input, write_pkkr_operators, write_tmat_file, set_cheby_nosoc
 
     implicit none
@@ -703,7 +703,7 @@ contains
     if (write_tmat_file) t_tgmat%tmat_to_file = .true.
     if (write_gmat_file) t_tgmat%gmat_to_file = .true.
     if (write_gref_file) t_tgmat%gref_to_file = .true.
-    if (write_cpa_projection_files) t_cpa%dmatproj_to_file = .true.
+    if (write_cpa_projection_file) t_cpa%dmatproj_to_file = .true.
 
 
     !--------------------------------------------------------------------------------
@@ -718,12 +718,12 @@ contains
     if (use_qdos) t_tgmat%gmat_to_file = .true. ! for qdos write gmat to file since it scales with NQDOS and can become huge
 
     ! set logical switches in t_lloyd which control if files are written to files or stored in memory
-    ! if(write_tmat_file.or.write_lloyd_files)
-    if (write_lloyd_dtmat_file .or. write_lloyd_files) t_lloyd%dtmat_to_file = .true.
-    if (write_lloyd_tralpha_file .or. write_lloyd_files) t_lloyd%tralpha_to_file = .true.
-    if (write_lloyd_cdos_file .or. write_lloyd_files) t_lloyd%cdos_diff_lly_to_file = .true.
-    if (write_lloyd_dgref_file .or. write_lloyd_files) t_lloyd%dgref_to_file = .true.
-    if (write_lloyd_g0tr_file .or. write_lloyd_files) t_lloyd%g0tr_to_file = .true.
+    ! if(write_tmat_file.or.write_lloyd_file)
+    if (write_lloyd_dtmat_file .or. write_lloyd_file) t_lloyd%dtmat_to_file = .true.
+    if (write_lloyd_tralpha_file .or. write_lloyd_file) t_lloyd%tralpha_to_file = .true.
+    if (write_lloyd_cdos_file .or. write_lloyd_file) t_lloyd%cdos_diff_lly_to_file = .true.
+    if (write_lloyd_dgref_file .or. write_lloyd_file) t_lloyd%dgref_to_file = .true.
+    if (write_lloyd_g0tr_file .or. write_lloyd_file) t_lloyd%g0tr_to_file = .true.
 
     ! set verbosity level in t_inc%i_write = 0,1,2 for default, verbose1, verbose2
     t_inc%i_write = 0                   ! default: write only output.000.txt and reset file after each iteration

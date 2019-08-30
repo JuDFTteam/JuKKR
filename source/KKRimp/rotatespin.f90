@@ -19,6 +19,7 @@ contains
     use mod_config, only: config_testflag
     use mod_mathtools, only: rotvector
     use type_config, only: config_type
+    use mod_types, only: t_inc
     implicit none
     
     type(density_type)    :: density
@@ -93,10 +94,10 @@ contains
     end if
     
     write(*,*) 'magnetic moment is ',magmoment
-    write(1337,*) 'magnetic moment is ',magmoment
+    if (t_inc%i_write>0) write(1337,*) 'magnetic moment is ',magmoment
     
     write(*,*) 'magnetic moment2 is ',magmoment2
-    write(1337,*) 'magnetic moment2 is ',magmoment2
+    if (t_inc%i_write>0) write(1337,*) 'magnetic moment2 is ',magmoment2
     density%magmoment  = magmoment
     density%magmoment2 = magmoment2
 
@@ -105,9 +106,9 @@ contains
       density%magmoment =rotvector(theta_old,phi_old,magmoment ,config%spinmixfac)
       density%magmoment2=rotvector(theta_old,phi_old,magmoment2,config%spinmixfac)
       write(*,*) 'magnetic moment with spinmix is ',density%magmoment
-      write(1337,*) 'magnetic moment with spinmix is ',density%magmoment
+      if (t_inc%i_write>0) write(1337,*) 'magnetic moment with spinmix is ',density%magmoment
       write(*,*) 'magnetic moment2 with spinmix is ',density%magmoment2
-      write(1337,*) 'magnetic moment2 with spinmix is ',density%magmoment2
+      if (t_inc%i_write>0) write(1337,*) 'magnetic moment2 with spinmix is ',density%magmoment2
       magmoment=density%magmoment
       magmoment2=density%magmoment2
     end if
@@ -120,21 +121,21 @@ contains
     
 
     if (density%magmomentfixed/=1) then
-      write(1337,*) 'Version that rotates all moments'
+      if (t_inc%i_write>0) write(1337,*) 'Version that rotates all moments'
         density%theta=acos(magmoment(3)/totmagmoment)
         density%theta2=acos(magmoment2(3)/totmagmoment2)
       write(*,*)   'new theta1 [deg]',density%theta*180/pi
-      write(1337,*)'new theta1 [deg]',density%theta*180/pi
+      if (t_inc%i_write>0) write(1337,*)'new theta1 [deg]',density%theta*180/pi
       write(*,*)   'new theta2 [deg]',density%theta2*180/pi
-      write(1337,*)'new theta2 [deg]',density%theta2*180/pi
+      if (t_inc%i_write>0) write(1337,*)'new theta2 [deg]',density%theta2*180/pi
     
         density%phi=datan2(magmoment(2),magmoment(1))
         density%phi2=datan2(magmoment2(2),magmoment2(1))
       write(*,*)   'new phi1 [deg]',density%phi*180/pi
-      write(1337,*)'new phi1 [deg]',density%phi*180/pi
+      if (t_inc%i_write>0) write(1337,*)'new phi1 [deg]',density%phi*180/pi
       write(*,*)   'new phi2 [deg]',density%phi2*180/pi
-      write(1337,*)'new phi2 [deg]',density%phi2*180/pi
-      write(1337,*) 'the charge and spin density is been rotated'
+      if (t_inc%i_write>0) write(1337,*)'new phi2 [deg]',density%phi2*180/pi
+      if (t_inc%i_write>0) write(1337,*) 'the charge and spin density is been rotated'
     
       write(*,*) 'the charge and spin density is been rotated'
     else

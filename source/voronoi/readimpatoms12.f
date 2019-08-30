@@ -37,7 +37,7 @@
 c#@# KKRtags: VORONOI input-output KKRimp
       INCLUDE 'inc.geometry'
 ! Input:
-      INTEGER ALATC  ! Lattice parameter
+      REAL*8 ALATC  ! Lattice parameter
       LOGICAL LCARTESIAN
 ! Output:
       INTEGER NUMIMP,NKILLATOM  ! Number of impurity atoms to keep and killed atoms

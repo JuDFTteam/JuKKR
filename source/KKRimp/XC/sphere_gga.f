@@ -13,6 +13,7 @@
       SUBROUTINE SPHERE_GGA(LMAX,YR,WTYR,RIJ,IJD,LMMAXD,THET,YLM,
      +                      DYLMT1,DYLMT2,DYLMF1,DYLMF2,DYLMTF)
       USE MOD_YMY
+      use mod_types, only: t_inc
       IMPLICIT NONE
 
 C     .. Scalar Arguments ..
@@ -41,7 +42,8 @@ C     .. Intrinsic Functions ..
       INTRINSIC ABS,ACOS,ATAN,COS,SIN,SQRT
 C     ..
       PI = 4.D0*ATAN(1.D0)
-      WRITE (1337,*) 'SPHERE for GGA: read LEBEDEV mesh'
+      if (t_inc%i_write>0) WRITE (1337,*) 
+     &              'SPHERE for GGA: read LEBEDEV mesh'
       IF (IJD.GT.1000) STOP 'SPHERE'
 c
 c

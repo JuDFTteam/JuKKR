@@ -22,20 +22,21 @@ contains
   !> Deprecated: False 
   !> Write charges and magnetic and orbital moments to file. The output is l-decomposed
   !-------------------------------------------------------------------------------
-  subroutine wrmoms(krel,natyp,nspin,texts,textl,textns,charge,muorb,lmaxd,lmaxd1)
+  subroutine wrmoms(krel,natyp,nspin,charge,muorb,lmaxd,lmaxd1)
 
     implicit none
 
+    ! Parameter
+    character (len=5), parameter :: textns = ' ns ='
+    character (len=4), dimension(0:8), parameter :: textl = [' s =', ' p =', ' d =', ' f =', ' g =', ' h =', ' i =', ' j =', ' k ='] 
+    character (len=7), dimension(3), parameter :: texts = ['spin dn', 'spin up', '       ']
     ! Dummy arguments
     integer, intent(in) :: krel !! Switch for non- (or scalar-) relativistic/relativistic (Dirac) program (0/1). Attention: several other parameters depend explicitly on KREL, they are set automatically Used for Dirac solver in ASA
     integer, intent(in) :: lmaxd  !! Maximum l component in wave function expansion
     integer, intent(in) :: natyp  !! Number of kinds of atoms in unit cell
     integer, intent(in) :: nspin  !! Counter for spin directions
     integer, intent(in) :: lmaxd1 !! lmax+1
-    character (len=5), intent(in) :: textns
     real (kind=dp), dimension(0:lmaxd1, natyp, 2), intent(in) :: charge
-    character (len=4), dimension(0:6), intent(in) :: textl
-    character (len=7), dimension(3), intent(in) :: texts
 
     ! Local variables
     real (kind=dp) :: chval

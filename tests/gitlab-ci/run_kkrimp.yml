@@ -2,6 +2,8 @@
 
 run_kkrimp_parallel:intel:mpi_1:
   stage: run_kkrimp_parallel
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template/ test_run_mpi_1
@@ -23,6 +25,8 @@ run_kkrimp_parallel:intel:mpi_1:
 
 run_kkrimp_parallel:intel:mpi_8:
   stage: run_kkrimp_parallel
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template/ test_run_mpi_8
@@ -44,6 +48,8 @@ run_kkrimp_parallel:intel:mpi_8:
 
 run_kkrimp_parallel:intel:hybrid_1_1:
   stage: run_kkrimp_parallel
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template/ test_run_hybrid_1_1
@@ -65,6 +71,8 @@ run_kkrimp_parallel:intel:hybrid_1_1:
 
 run_kkrimp_parallel:intel:hybrid_1_8:
   stage: run_kkrimp_parallel
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template/ test_run_hybrid_1_8
@@ -86,6 +94,8 @@ run_kkrimp_parallel:intel:hybrid_1_8:
 
 run_kkrimp_parallel:intel:hybrid_8_1:
   stage: run_kkrimp_parallel
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template/ test_run_hybrid_8_1
@@ -107,6 +117,8 @@ run_kkrimp_parallel:intel:hybrid_8_1:
 
 run_kkrimp_parallel:intel:hybrid_2_4:
   stage: run_kkrimp_parallel
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template/ test_run_hybrid_2_4
@@ -128,6 +140,8 @@ run_kkrimp_parallel:intel:hybrid_2_4:
 
 run_kkrimp_parallel:intel:hybrid_4_2:
   stage: run_kkrimp_parallel
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template/ test_run_hybrid_4_2
@@ -152,6 +166,8 @@ run_kkrimp_parallel:intel:hybrid_4_2:
 
 run_kkrimp_features:intel:tmatnew-hybrid:
   stage: run_kkrimp_features
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template_tmatnew/ test_run_tmatnew_hybrid_2_4
@@ -173,6 +189,8 @@ run_kkrimp_features:intel:tmatnew-hybrid:
 
 run_kkrimp_features:intel:tmatnew-mpi:
   stage: run_kkrimp_features
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/
     - cp -r test_run_template_tmatnew/ test_run_tmatnew_mpi_8
@@ -194,6 +212,8 @@ run_kkrimp_features:intel:tmatnew-mpi:
 
 run_kkrimp_features:intel:tmatnew-nosavewf:
   stage: run_kkrimp_features
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_nosavewf/
     - ln -s ../../../../kkrflex.exe_hybrid kkrflex.exe
@@ -213,6 +233,8 @@ run_kkrimp_features:intel:tmatnew-nosavewf:
 
 run_kkrimp_features:intel:tmatnew-nosratrick:
   stage: run_kkrimp_features
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_nosratrick/
     - ln -s ../../../../kkrflex.exe_hybrid kkrflex.exe
@@ -232,6 +254,8 @@ run_kkrimp_features:intel:tmatnew-nosratrick:
 
 run_kkrimp_features:intel:tmatnew-Jij:
   stage: run_kkrimp_features
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_Jij/
     - ln -s ../../../../kkrflex.exe_hybrid kkrflex.exe
@@ -251,6 +275,8 @@ run_kkrimp_features:intel:tmatnew-Jij:
 
 run_kkrimp_features:intel:tmatnew-Jij_nosavewf:
   stage: run_kkrimp_features
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_Jij_savewf/
     - ln -s ../../../../kkrflex.exe_hybrid kkrflex.exe
@@ -270,6 +296,8 @@ run_kkrimp_features:intel:tmatnew-Jij_nosavewf:
 
 run_kkrimp_features:intel:tmatnew-Jij_nosratrick:
   stage: run_kkrimp_features
+  tags:
+    - docker-executor
   script:
     - cd tests/KKRimp/test_case_kkrflex_host_in_host/imp/test_run_Jij_nosratrick/
     - ln -s ../../../../kkrflex.exe_hybrid kkrflex.exe

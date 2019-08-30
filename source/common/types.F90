@@ -181,7 +181,7 @@ module mod_types
   type :: type_imp
 
     integer :: n1       = 12       ! number of scalars for mpi bcast + 2 (for N1,N2)
-    integer :: n2       = 16       ! number of arrays for mpi bcast + 1 (for N2)
+    integer :: n2       = 17       ! number of arrays for mpi bcast + 1 (for N2)
     integer :: natomimp = -1       ! number of atoms in impurity cluster
     integer :: ihost    = -1       ! number of different host atoms (layer indices)
     !--------------------------------------------------------------------------------
@@ -214,6 +214,7 @@ module mod_types
     real (kind=dp), dimension(:,:), allocatable :: vispimp !! impurity potential              ! VISPIMP(IRMD,NATOMIMP*NSPIN)
     real (kind=dp), dimension(:,:,:), allocatable :: vinsimp !! impurity potential ! VINSIMP(IRMIND:IRMD,LMPOTD,NATOMIMP*NSPIN)
     real (kind=dp), dimension(:,:,:), allocatable :: thetasimp !! shape functions of imps ! THETASIMP(IRID,NFUND,NATOMIMP)
+    real (kind=dp), dimension(:), allocatable :: socscale !! scale values of SOC
     complex (kind=dp), dimension(:,:,:,:), allocatable :: rllimp !! impurity wavefunctions ! RLL(NVEC*lmmaxd,lmmaxd,IRMDNEW(I1))
 
   end type type_imp
@@ -561,6 +562,11 @@ contains
       allocate(t_imp%phiimp(natomimp),stat=i_stat)
       if (i_stat/=0) stop 'Problem allocating t_imp%phiimp'
       t_imp%phiimp = 0.0_dp
+    end if
+    if (.not. allocated(t_imp%socscale)) then
+      allocate(t_imp%socscale(natomimp),stat=i_stat)
+      if (i_stat/=0) stop 'Problem allocating t_imp%phiimp'
+      t_imp%socscale = 1.0_dp
     end if
 
     ! complex (kind=dp) arrays
@@ -1128,6 +1134,7 @@ contains
     call mpi_get_address(t_imp%atomimp, disp2(14), ierr)
     call mpi_get_address(t_imp%thetaimp, disp2(15), ierr)
     call mpi_get_address(t_imp%phiimp, disp2(16), ierr)
+    call mpi_get_address(t_imp%socscale, disp2(17), ierr)
 
 
     base = disp2(1)
@@ -1149,12 +1156,13 @@ contains
     blocklen2(14) = t_imp%natomimp
     blocklen2(15) = t_imp%natomimp
     blocklen2(16) = t_imp%natomimp
+    blocklen2(17) = t_imp%natomimp
 
     etype2(1:6) = mpi_integer
     etype2(7:12) = mpi_double_precision
     etype2(13) = mpi_double_complex
     etype2(14) = mpi_integer
-    etype2(15:16) = mpi_double_precision
+    etype2(15:17) = mpi_double_precision
 
     call mpi_type_create_struct(t_imp%n2, blocklen2, disp2, etype2, mympitype2, ierr)
     if (ierr/=mpi_success) stop 'Problem in create_mpimask_tgmat_logicals'

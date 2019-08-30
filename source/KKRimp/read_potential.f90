@@ -7,6 +7,7 @@ subroutine read_potential(filename_pot,filename_shape,natom,lmaxd,zatom,lmaxatom
    use type_corestate
    use type_shapefun
    use mod_config, only: config_testflag
+   use mod_types, only: t_inc
    implicit none
 !interfae variables
    character(len=*),intent(in)      ::  filename_pot                ! filename potential
@@ -93,12 +94,12 @@ NRMIN_NSD=0
 
 ! ------------------------  read SHAPEFUN ---------------------
 
-write(1337,*) '-------------------------------------------'
-write(1337,*) '-----  POTENTIAL SUBROUTINE            ----'
-write(1337,*) '-------------------------------------------'
-write(1337,*) 'natom is ',natom
-write(1337,*) 'ins is ',ins
-write(1337,*) '-------------------------------------------'
+if (t_inc%i_write>0) write(1337,*) '-------------------------------------------'
+if (t_inc%i_write>0) write(1337,*) '-----  POTENTIAL SUBROUTINE            ----'
+if (t_inc%i_write>0) write(1337,*) '-------------------------------------------'
+if (t_inc%i_write>0) write(1337,*) 'natom is ',natom
+if (t_inc%i_write>0) write(1337,*) 'ins is ',ins
+if (t_inc%i_write>0) write(1337,*) '-------------------------------------------'
 
 ALLOCATE (CELL(NATOM),STAT=IERROR)
 IF (IERROR/=0) stop '[read_potential] Error while allocating arrays'
@@ -124,14 +125,14 @@ else
    end do
 end if
 !                         >          >     <      <         <
-write(1337,*) ''
-write(1337,*) '-------------------------------------------'
-write(1337,*) '-----  pre read shape functions        ----'
-write(1337,*) '-------------------------------------------'
-write(1337,'(A,I0,A,I0,A,I0)') 'NPAND= ',NPAND,' NRSHAPED=',SHAPEFUN(1)%NRSHAPED,' NLMSHAPED=',SHAPEFUN(1)%NLMSHAPED
+if (t_inc%i_write>0) write(1337,*) ''
+if (t_inc%i_write>0) write(1337,*) '-------------------------------------------'
+if (t_inc%i_write>0) write(1337,*) '-----  pre read shape functions        ----'
+if (t_inc%i_write>0) write(1337,*) '-------------------------------------------'
+if (t_inc%i_write>0) write(1337,'(A,I0,A,I0,A,I0)') 'NPAND= ',NPAND,' NRSHAPED=',SHAPEFUN(1)%NRSHAPED,' NLMSHAPED=',SHAPEFUN(1)%NLMSHAPED
 
 if (ins==0) then
-  write(1337,*) '-----  skip shape functions            ----'
+  if (t_inc%i_write>0) write(1337,*) '-----  skip shape functions            ----'
   DO IATOM=1,NATOM
     CELL(IATOM)%NPAN=1
   END DO !IATOM
@@ -195,10 +196,10 @@ elseif (ins==1) then
       read(unit=ifile_shape,FMT='(4d20.12)') (SHAPEFUN(IATOM)%THETAS(IR,IFUN),IR=1, SHAPEFUN(IATOM)%NRSHAPE)
     end do !ifun
     if (ilmcount<SHAPEFUN(IATOM)%NLMSHAPE) then
-      write(1337,*) 'too many lm-components are defined in the shape file'
-      write(1337,*) 'I will cut the lm-components of atom',iatom
-      write(1337,*) 'according to its lmax of ',lmaxatom(iatom)
-      write(1337,*) ilmcount,'compoentens are used instead of ',SHAPEFUN(IATOM)%NLMSHAPE
+      if (t_inc%i_write>0) write(1337,*) 'too many lm-components are defined in the shape file'
+      if (t_inc%i_write>0) write(1337,*) 'I will cut the lm-components of atom',iatom
+      if (t_inc%i_write>0) write(1337,*) 'according to its lmax of ',lmaxatom(iatom)
+      if (t_inc%i_write>0) write(1337,*) ilmcount,'compoentens are used instead of ',SHAPEFUN(IATOM)%NLMSHAPE
       SHAPEFUN(IATOM)%NLMSHAPE = ilmcount
     else if (ilmcount>SHAPEFUN(IATOM)%NLMSHAPE) then
      write(*,*) 'shape file for atom',iatom,'has not sufficient lm-'
@@ -208,13 +209,13 @@ elseif (ins==1) then
   END DO !IATOM
   close(ifile_shape)
   
-  write(1337,*) ''
-  write(1337,*) '-------------------------------------------'
-  write(1337,*) '-----      shape functions             ----'
-  write(1337,*) '-------------------------------------------'
-  write(1337,*) '         IATOM      NPAN  NRSHAPE    NMESHPAN(1..NPAN) '
+  if (t_inc%i_write>0) write(1337,*) ''
+  if (t_inc%i_write>0) write(1337,*) '-------------------------------------------'
+  if (t_inc%i_write>0) write(1337,*) '-----      shape functions             ----'
+  if (t_inc%i_write>0) write(1337,*) '-------------------------------------------'
+  if (t_inc%i_write>0) write(1337,*) '         IATOM      NPAN  NRSHAPE    NMESHPAN(1..NPAN) '
   DO IATOM=1,NATOM
-    write(1337,'(I8,I8,I8,100I8)') IATOM, CELL(IATOM)%NPAN,SHAPEFUN(IATOM)%NRSHAPE, CELL(IATOM)%NMESHPAN(:CELL(IATOM)%NPAN)
+    if (t_inc%i_write>0) write(1337,'(I8,I8,I8,100I8)') IATOM, CELL(IATOM)%NPAN,SHAPEFUN(IATOM)%NRSHAPE, CELL(IATOM)%NMESHPAN(:CELL(IATOM)%NPAN)
   END DO
 else !ins
   stop 'INS/=1/0'
@@ -233,25 +234,25 @@ CALL PRE_READ_POTENTIAL(FILENAME_POT,INSGUESS,NCORESTATED,NPOT,NRMAXD)
 do iatom = 1,natom
  cell(iatom)%nrmaxd=nrmaxd
 end do
-write(1337,*) ''
-write(1337,*) '-------------------------------------------'
-write(1337,*) '-----      pre read potential          ----'
-write(1337,*) '-------------------------------------------'
-write(1337,'(A,I0,A,I0,A,I0,A,I0,A,I0)') 'INS(guess)=',INSGUESS,' NCORESTATED=',NCORESTATED,' NPOT=',NPOT,' NRMAXD=',NRMAXD
+if (t_inc%i_write>0) write(1337,*) ''
+if (t_inc%i_write>0) write(1337,*) '-------------------------------------------'
+if (t_inc%i_write>0) write(1337,*) '-----      pre read potential          ----'
+if (t_inc%i_write>0) write(1337,*) '-------------------------------------------'
+if (t_inc%i_write>0) write(1337,'(A,I0,A,I0,A,I0,A,I0,A,I0)') 'INS(guess)=',INSGUESS,' NCORESTATED=',NCORESTATED,' NPOT=',NPOT,' NRMAXD=',NRMAXD
 
 
-write(1337,*) '-------------------------------------------'
+if (t_inc%i_write>0) write(1337,*) '-------------------------------------------'
 if (natom==npot) then
-   write(1337,*) 'According potential file nspin=1 is used'
+   if (t_inc%i_write>0) write(1337,*) 'According potential file nspin=1 is used'
    nspinguess=1
 elseif (natom*2==npot) then
-   write(1337,*) 'According potential file nspin=2 is used'
+   if (t_inc%i_write>0) write(1337,*) 'According potential file nspin=2 is used'
    nspinguess=2
 else
    write(*,*) 'natom =',natom,'npot =',npot
    stop '[read_potential] number of atoms and potentials inconsistent'
 end if
-write(1337,*) '-------------------------------------------'
+if (t_inc%i_write>0) write(1337,*) '-------------------------------------------'
 if (nspinguess/=nspin) then 
   write(*,*) nspinguess, nspin
   stop '[read_potential] conflict between potential file and NSPIN value'
@@ -357,7 +358,7 @@ DO IATOM= 1, NATOM
 
          IF (LMMAXPOT<(2*LMAXATOM(IATOM)+1)**2) then
 !             write(*,*) LMMAXPOT-(2*LMAXATOM(IATOM)+1)**2
-            write(1337,*) '[read_potential] WARNING: the lmax value in potential file is too low'
+            if (t_inc%i_write>0) write(1337,*) '[read_potential] WARNING: the lmax value in potential file is too low'
          END IF
 
          CELL(IATOM)%NRMIN_NS = NRMAX2-CELL(IATOM)%NRNS
@@ -466,37 +467,37 @@ DO IATOM= 1, NATOM
 END DO !IATOM
 
 
-write(1337,*) '-------------------------------------------'
-write(1337,*) '-----  NRCUT                            ----'
-write(1337,*) '-------------------------------------------'
-write(1337,*) 'IATOM     NRCUT'
+if (t_inc%i_write>0) write(1337,*) '-------------------------------------------'
+if (t_inc%i_write>0) write(1337,*) '-----  NRCUT                            ----'
+if (t_inc%i_write>0) write(1337,*) '-------------------------------------------'
+if (t_inc%i_write>0) write(1337,*) 'IATOM     NRCUT'
 DO IATOM=1,NATOM
-   write(1337,'(1000I5)') IATOM, CELL(IATOM)%NRCUT(:)
+   if (t_inc%i_write>0) write(1337,'(1000I5)') IATOM, CELL(IATOM)%NRCUT(:)
 END DO!IATOM
 
 
-write(1337,*) '-------------------------------------------'
-write(1337,*) '-----  Atom stuff                      ----'
-write(1337,*) '-------------------------------------------'
-write(1337,'(2A)') ' IATOM   RCORE   NRCORE   ',&
+if (t_inc%i_write>0) write(1337,*) '-------------------------------------------'
+if (t_inc%i_write>0) write(1337,*) '-----  Atom stuff                      ----'
+if (t_inc%i_write>0) write(1337,*) '-------------------------------------------'
+if (t_inc%i_write>0) write(1337,'(2A)') ' IATOM   RCORE   NRCORE   ',&
                    'RMT   RMAX   NRMAX   RMIN_NS   NRMIN_NS'
 DO IATOM=1,NATOM
   IF (INS==1) THEN
-   write(1337,'(I5,F8.3,I6,F8.3,F8.3,I5,F8.3,I5)') IATOM,CELL(IATOM)%RCORE,CELL(IATOM)%NRCORE, &
+   if (t_inc%i_write>0) write(1337,'(I5,F8.3,I6,F8.3,F8.3,I5,F8.3,I5)') IATOM,CELL(IATOM)%RCORE,CELL(IATOM)%NRCORE, &
                                    CELL(IATOM)%RMT,CELL(IATOM)%RMAX,CELL(IATOM)%NRMAX,CELL(IATOM)%RMESH(CELL(IATOM)%NRMIN_NS),CELL(IATOM)%NRMIN_NS
   ELSE
-   write(1337,'(I5,F8.3,I6,F8.3,F8.3,I5,F8.3,I5)') IATOM,CELL(IATOM)%RCORE,CELL(IATOM)%NRCORE, &
+   if (t_inc%i_write>0) write(1337,'(I5,F8.3,I6,F8.3,F8.3,I5,F8.3,I5)') IATOM,CELL(IATOM)%RCORE,CELL(IATOM)%NRCORE, &
                                    CELL(IATOM)%RMT,CELL(IATOM)%RMAX,CELL(IATOM)%NRMAX
   END IF
 END DO !NATOM
 
-write(1337,*) ''
-write(1337,*) '-------------------------------------------'
-write(1337,*) '-----  Parameters for the radial mesh  ----'
-write(1337,*) '-------------------------------------------'
-write(1337,*) '               A                       B           '
+if (t_inc%i_write>0) write(1337,*) ''
+if (t_inc%i_write>0) write(1337,*) '-------------------------------------------'
+if (t_inc%i_write>0) write(1337,*) '-----  Parameters for the radial mesh  ----'
+if (t_inc%i_write>0) write(1337,*) '-------------------------------------------'
+if (t_inc%i_write>0) write(1337,*) '               A                       B           '
 DO IATOM=1,NATOM
-write(1337,*) IATOM,CELL(IATOM)%LOGPARAMS(:)
+if (t_inc%i_write>0) write(1337,*) IATOM,CELL(IATOM)%LOGPARAMS(:)
 END DO 
 
 IF(CONFIG_TESTFLAG('write_rmesh')) THEN

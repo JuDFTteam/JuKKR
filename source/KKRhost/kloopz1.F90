@@ -30,7 +30,7 @@ contains
     dtrefll, dtmatll, dginp, lly_grtr, tracet, lly) ! LLY Lloyd
 
     use :: mod_datatypes, only: dp
-    use :: mod_runoptions, only: formatted_files, print_gmat, print_program_flow, set_tmat_noinversion, use_Chebychev_solver, &
+    use :: mod_runoptions, only: formatted_file, print_gmat, print_program_flow, set_tmat_noinversion, use_Chebychev_solver, &
       use_qdos, use_readcpa, use_virtual_atoms, write_deci_tmat, write_pkkr_input
     use :: mod_constants, only: czero, cone, nsymaxd
     use :: global_variables, only: krel, kpoibz, nembd2, nsheld, nclsd, nofgij, naclsd, nprincd, lmmaxd, nrd, lmgf0d, nrefd, nembd1
@@ -434,7 +434,7 @@ contains
     ! In first qdos run write out t matrix which is read in for the calculation for every k point
     if (write_deci_tmat .or. (iqdosrun==0)) then ! qdos ruess
       do ih = 1, naez
-        if (.not.formatted_files .and. .not.write_deci_tmat ) then
+        if (.not.formatted_file .and. .not.write_deci_tmat ) then
           irec0 = lmmaxd**2*(ih-1) + lmmaxd**2*naez*(ie-1) + lmmaxd**2*t_inc%ielast*naez*(ispin-1)
         else
           write (37, 150) ie, eryd, ih
@@ -442,7 +442,7 @@ contains
         do lm1 = 1, lmmaxd
           do lm2 = 1, lmmaxd
             if (lm1==lm2) then
-              if (.not.formatted_files .and. .not.write_deci_tmat ) then
+              if (.not.formatted_file .and. .not.write_deci_tmat ) then
                 irec = irec0 + lm2 + lmmaxd*(lm1-1)
                 write (37, rec=irec) mssq(lm1, lm2, ih)*cfctorinv
               else
@@ -450,7 +450,7 @@ contains
               end if
             else ! lm1/=lm2
               if (abs(mssq(lm1,lm2,ih)/mssq(lm1,lm1,ih))>tolmssq) then
-                if (.not.formatted_files .and. .not.write_deci_tmat ) then
+                if (.not.formatted_file .and. .not.write_deci_tmat ) then
                   irec = irec0 + lm2 + lmmaxd*(lm1-1)
                   write (37, rec=irec) mssq(lm1, lm2, ih)*cfctorinv
                 else

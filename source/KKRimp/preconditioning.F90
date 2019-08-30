@@ -11,6 +11,7 @@ module mod_preconditioning
      use mod_log, only: log_write
      use mod_mpienergy, only: mpienergy_distribute
      use type_gmatbulk
+     use mod_types, only: t_inc
 
      implicit none
 !interface
@@ -98,7 +99,7 @@ call log_write('>>>>>>>>>>>>>>>>>>>>> preconditioning_readenergy >>>>>>>>>>>>>>>
 ! ###########################################
 ! read in the energy mesh
 ! ###########################################
-call preconditioning_readenergy(IELAST,NSPIN,EZ,WEZ,NATOMIMPD,NTOTATOM,lmsizehost,kgrefsoc)
+call preconditioning_readenergy(my_rank, IELAST,NSPIN,EZ,WEZ,NATOMIMPD,NTOTATOM,lmsizehost,kgrefsoc)
 call log_write('<<<<<<<<<<<<<<<<<< < end preconditioning_readenergy <<<<<<<<<<<<<<<<<<<')
 
 if (NATOMIMPD/=NTOTATOM) stop '[preconditioning] NATOMIMPD/=NTOTATOM'
@@ -152,10 +153,10 @@ do iatom=1,ntotatom
 end do
 
 if (lattice_relax==1) nlmhostnew=natom*lmsizehost
-write(1337,*) 'Number of lm-components for the ghost matrix:',nlmhostnew
+if (t_inc%i_write>0) write(1337,*) 'Number of lm-components for the ghost matrix:',nlmhostnew
 if (lattice_relax==1) then
-  write(1337,*) 'The lm-components are not cut of because they are needed'
-  write(1337,*) 'by the U-transformation'
+  if (t_inc%i_write>0) write(1337,*) 'The lm-components are not cut of because they are needed'
+  if (t_inc%i_write>0) write(1337,*) 'by the U-transformation'
 end if
 
 allocate(gmathostnew(nlmhostnew,nlmhostnew))
@@ -204,7 +205,7 @@ if (mpi_size/=1) write(*,*) 'Proc = ',my_rank,'ie= ',mpi_iebounds(1,my_rank), ' 
 
 do ie=mpi_iebounds(1,my_rank),mpi_iebounds(2,my_rank)
   do ispin=1,nspin-KGREFSOC
-    write(1337,*) 'proc = ',my_rank,' IE = ',ie,' ispin= ',ispin
+    if (t_inc%i_write>0) write(1337,*) 'proc = ',my_rank,' IE = ',ie,' ispin= ',ispin
 
     call preconditioning_readgreenfn(ie,ispin,ielast,lmsizehost,ntotatom,gmathost,'singleprecision')
 !                                      in    in         in        in     out
@@ -218,7 +219,7 @@ do ie=mpi_iebounds(1,my_rank),mpi_iebounds(2,my_rank)
        if(config_testflag('gtest')) write(20000+my_rank,'(832E25.14)') gmathostnew
 
 
-    write(1337,*) 'proc = ',my_rank,' IE = ',ie,'ispin= ',ispin,'done...'
+    if (t_inc%i_write>0) write(1337,*) 'proc = ',my_rank,' IE = ',ie,'ispin= ',ispin,'done...'
   end do
 end do
 
@@ -249,10 +250,10 @@ end if
 
 ! if (my_rank==0) then
   if(config_testflag('writeout_intercell')) then
-    write(1337,*) 'Intercell potential after substraction'
+    if (t_inc%i_write>0) write(1337,*) 'Intercell potential after substraction'
     do iatom=1,natom
-      write(1337,'(5000g24.16)') intercell_ach(:,iatom)
-      write(1337,*) ' '
+      if (t_inc%i_write>0) write(1337,'(5000g24.16)') intercell_ach(:,iatom)
+      if (t_inc%i_write>0) write(1337,*) ' '
     end do
   end if
 ! end if !my_rank
@@ -415,6 +416,7 @@ end subroutine preconditioning_readcmoms
 subroutine preconditioning_readintercell(ntotatom,lmpothost,ach,alat,vmtzero)
 use nrtype
 use mod_version_info
+use mod_types, only: t_inc
 implicit none
 integer              :: lmpothost,ntotatom
 real(kind=DP)        :: ach(lmpothost,ntotatom)
@@ -431,7 +433,7 @@ call version_check_header(88)
 
 read(cline,*) ntotatomtemp,lmpothosttemp,alat,vmtzero(1),vmtzero(2)
 if (abs(vmtzero(2))<10e-10) then
-  write(1337,*) 'WARNING : VMTZERO(2) is zero, I will set VMTZERO(2)=VMTZERO(1)'
+  if (t_inc%i_write>0) write(1337,*) 'WARNING : VMTZERO(2) is zero, I will set VMTZERO(2)=VMTZERO(1)'
   VMTZERO(2)=VMTZERO(1)
 end if
 if (abs(vmtzero(2)-vmtzero(1))>10e-10) stop '[preconditioning_readintercell] vmtzero do not match'
@@ -471,86 +473,111 @@ end do
 end function this_readline
 
 
-   subroutine preconditioning_readenergy(IELAST,NSPIN,EZ,WEZ,NATOMIMPD,NTOTATOM,lmsizehost,kgrefsoc)
-     use mod_config, only: config_testflag,config_runflag
-     use nrtype, only: wlength
-     implicit none
-     integer          ::   ielast,nspin
-     integer          ::   ielasttemp,nspintemp
-     DOUBLE COMPLEX,allocatable   ::   EZ(:),WEZ(:)
-!      DOUBLE COMPLEX               ::   EZtemp(1000),WEZtemp(1000)
-     integer                      ::   natomimpd,NATOMIMP,ie,recl1,ntotatom,lmsizehost
-     integer :: kgrefsoc,kgrefsoctemp,lmsizehosttemp
-!  *******************************************************************
-!  first open the header of green function file to get information of
-!  dimensions
-!  *******************************************************************
-   OPEN (88,ACCESS='direct',RECL=wlength*2*16,FILE='kkrflex_green',FORM='unformatted')
-     read(88,rec=1) ielasttemp,nspintemp,natomimpd,natomimp,lmsizehosttemp,kgrefsoctemp
+subroutine preconditioning_readenergy(my_rank,IELAST,NSPIN,EZ,WEZ,NATOMIMPD,NTOTATOM,lmsizehost,kgrefsoc)
+  use mod_config, only: config_testflag,config_runflag
+  use nrtype, only: wlength
+#ifdef CPP_MPI
+  use mpi
+#endif
+  use mod_types, only: t_inc
+  implicit none
+  integer          ::   ielast,nspin, my_rank
+  integer          ::   ielasttemp,nspintemp
+  DOUBLE COMPLEX,allocatable   ::   EZ(:),WEZ(:)
+  integer                      ::   natomimpd,NATOMIMP,ie,recl1,ntotatom,lmsizehost
+  integer :: kgrefsoc,kgrefsoctemp,lmsizehosttemp, ierror
+  ! *******************************************************************
+  ! first open the header of green function file to get information of
+  ! dimensions
+  ! *******************************************************************
+  if (my_rank==0) then 
+    write(*,*) 'my_rank=1 reads kkrflex_green and communicates to other processes'
+    OPEN (88,ACCESS='direct',RECL=wlength*2*16,FILE='kkrflex_green',FORM='unformatted')
+      read(88,rec=1) ielasttemp,nspintemp,natomimpd,natomimp,lmsizehosttemp,kgrefsoctemp
+    
+       if (kgrefsoctemp/=kgrefsoc) then
+         print *, '[warning] the value for kgrefsoc does not agree between'
+         print *, '          tmat and green function file'
+         print *, 'Do you use an old JM code? Maybe you should update your JM code'
+         print *, 'Results are probably still correct'
+         if (.not. config_runflag('oldJMcode')) then
+           print *,'please use runflag "oldJMcode" '
+           stop
+         end if
+       end if
+    
+    close(88)
+    if (t_inc%i_write>0) write(1337,*) '[read_energy] number of energy points ',ielast
+    if (t_inc%i_write>0) write(1337,*) '[read_energy] number of spins ',nspintemp
+    if (t_inc%i_write>0) write(1337,*) '[read_energy] number of host atoms ',natomimp
+    if (t_inc%i_write>0) write(1337,*) '[read_energy] maximum number of host atoms ',natomimpd
+    if (t_inc%i_write>0) write(1337,*) '[read_energy] host lmsizehost',lmsizehosttemp
+    if (t_inc%i_write>0) write(1337,*) '[read_energy] Spin orbit coupling used? (1=yes,0=no)',kgrefsoc
+    
+    if (ntotatom/=natomimp) then
+      write(*,*) ntotatom, natomimp
+      stop '[preconditioning_readenergy] ntotatom error'
+    endif
+    if (natomimpd/=natomimp) then
+      write(*,*) natomimpd, natomimp
+      stop '[preconditioning_readenergy] ntotatom error'
+    endif
+    if (ielast/=ielasttemp) then
+      write(*,*) ielast, ielasttemp
+      stop '[preconditioning_readenergy] ielast error'
+    endif
+    if (nspin/=nspintemp) then
+      write(*,*) nspin, nspintemp
+      stop '[preconditioning_readenergy] nspin error'
+    endif
+    if (lmsizehost/=lmsizehosttemp) then
+      write(*,*) lmsizehost, lmsizehosttemp
+      stop '[preconditioning_readenergy] lmsizehost error'
+    endif
+    
+!   *******************************************************************
+!   now reopen the file to read the energy weights
+!   *******************************************************************
+    allocate( ez(ielast), wez(ielast) )
+    RECL1=wlength*2*NATOMIMPD*lmsizehost*NATOMIMPD*lmsizehost
+    OPEN (88,ACCESS='direct',RECL=RECL1,FILE='kkrflex_green',FORM='unformatted')
+    if ( .not. config_runflag('oldJMcode') ) then
+      read(88,rec=1) ielasttemp,nspintemp,natomimpd,NATOMIMP,lmsizehosttemp,kgrefsoctemp,(ez(ie),ie=1,ielast),(wez(ie),ie=1,ielast)
+    else
+      ! old version does not include kgrefsoc value
+      read(88,rec=1) ielasttemp,nspintemp,natomimpd,NATOMIMP,lmsizehosttemp,(ez(ie),ie=1,ielast),(wez(ie),ie=1,ielast)
+    end if
+!     read(88,rec=1) ielast,nspin,natomimp,lmmaxd,(ez(ie),ie=1,ielast),(wez(ie),ie=1,ielast)
+    close(88)
+  else
+    allocate( ez(ielast), wez(ielast) )
+  end if ! my_rank==0
 
-      if (kgrefsoctemp/=kgrefsoc) then
-        print *, '[warning] the value for kgrefsoc does not agree between'
-        print *, '          tmat and green function file'
-        print *, 'Do you use an old JM code? Maybe you should update your JM code'
-        print *, 'Results are probably still correct'
-        if (.not. config_runflag('oldJMcode')) then
-          print *,'please use runflag "oldJMcode" '
-          stop
-        end if
-      end if
-
-   close(88)
-   write(1337,*) '[read_energy] number of energy points ',ielast
-   write(1337,*) '[read_energy] number of spins ',nspintemp
-   write(1337,*) '[read_energy] number of host atoms ',natomimp
-   write(1337,*) '[read_energy] maximum number of host atoms ',natomimpd
-   write(1337,*) '[read_energy] host lmsizehost',lmsizehosttemp
-   write(1337,*) '[read_energy] Spin orbit coupling used? (1=yes,0=no)',kgrefsoc
-
-  if (ntotatom/=natomimp) then
-    write(*,*) ntotatom, natomimp
-    stop '[preconditioning_readenergy] ntotatom error'
-  endif
-  if (natomimpd/=natomimp) then
-    write(*,*) natomimpd, natomimp
-    stop '[preconditioning_readenergy] ntotatom error'
-  endif
-  if (ielast/=ielasttemp) then
-    write(*,*) ielast, ielasttemp
-    stop '[preconditioning_readenergy] ielast error'
-  endif
-  if (nspin/=nspintemp) then
-    write(*,*) nspin, nspintemp
-    stop '[preconditioning_readenergy] nspin error'
-  endif
-  if (lmsizehost/=lmsizehosttemp) then
-    write(*,*) lmsizehost, lmsizehosttemp
-    stop '[preconditioning_readenergy] lmsizehost error'
-  endif
-
-!  *******************************************************************
-!  now reopen the file to read the energy weights
-!  *******************************************************************
-   allocate( ez(ielast), wez(ielast) )
-   RECL1=wlength*2*NATOMIMPD*lmsizehost*NATOMIMPD*lmsizehost
-   OPEN (88,ACCESS='direct',RECL=RECL1,FILE='kkrflex_green',FORM='unformatted')
-   if ( .not. config_runflag('oldJMcode') ) then
-     read(88,rec=1) ielasttemp,nspintemp,natomimpd,NATOMIMP,lmsizehosttemp,kgrefsoctemp,(ez(ie),ie=1,ielast),(wez(ie),ie=1,ielast)
-   else
-     ! old version does not include kgrefsoc value
-     read(88,rec=1) ielasttemp,nspintemp,natomimpd,NATOMIMP,lmsizehosttemp,(ez(ie),ie=1,ielast),(wez(ie),ie=1,ielast)
-   end if
-   write(1337,*) '[read_energy] energies and weights are:'
-   write(1337,*) '[read_energy]   energie           weights'
-   write(1337,*) '[read_energy]  real   imag      real    imag'
-   write(1337,*) '--------------------------------------------'
-!    write(*,*) '[read_energy] energie weights are:',wez
-   do ie=1,ielast
-     write(1337,'(A,I3,2F25.14,A,2F25.14)') '       ',ie,ez(ie),' ',wez(ie)
-   end do
-!    read(88,rec=1) ielast,nspin,natomimp,lmmaxd,(ez(ie),ie=1,ielast),(wez(ie),ie=1,ielast)
-   close(88)
-   end subroutine !read_energy!(IE,LMMAXD,NATOMIMP,GMATHOST)
+  ! now communicate EZ, WEZ, NATOMIMPD, lmsizehost, kgrefsoc
+#ifdef CPP_MPI
+  call mpi_bcast( ez, ielast, MPI_DOUBLE_COMPLEX, 0, MPI_COMM_WORLD, ierror)
+  call mpi_bcast( wez, ielast, MPI_DOUBLE_COMPLEX, 0, MPI_COMM_WORLD, ierror)
+  call mpi_bcast( natomimpd, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierror)
+  call mpi_bcast( lmsizehost, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierror)
+  call mpi_bcast( kgrefsoc, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierror)
+#endif
+  ! some writeout to out_log files
+  if (my_rank>0) then
+    if (t_inc%i_write>0) write(1337,*) '[read_energy] number of energy points ',ielast
+    if (t_inc%i_write>0) write(1337,*) '[read_energy] number of spins ',nspintemp
+    if (t_inc%i_write>0) write(1337,*) '[read_energy] number of host atoms ',natomimp
+    if (t_inc%i_write>0) write(1337,*) '[read_energy] maximum number of host atoms ',natomimpd
+    if (t_inc%i_write>0) write(1337,*) '[read_energy] host lmsizehost',lmsizehosttemp
+    if (t_inc%i_write>0) write(1337,*) '[read_energy] Spin orbit coupling used? (1=yes,0=no)',kgrefsoc
+  end if
+  if (t_inc%i_write>0) write(1337,*) '[read_energy] energies and weights are:'
+  if (t_inc%i_write>0) write(1337,*) '[read_energy]   energie           weights'
+  if (t_inc%i_write>0) write(1337,*) '[read_energy]  real   imag      real    imag'
+  if (t_inc%i_write>0) write(1337,*) '--------------------------------------------'
+  do ie=1,ielast
+    if (t_inc%i_write>0) write(1337,'(A,I3,2F25.14,A,2F25.14)') '       ',ie,ez(ie),' ',wez(ie)
+  end do
+end subroutine !read_energy!(IE,LMMAXD,NATOMIMP,GMATHOST)
 
 
 
@@ -599,6 +626,7 @@ end function this_readline
 
      subroutine preconditioning_readtmatinfo(NTOTATOM,NSPIN,IELAST,lmsizehost,KGREFSOC)
      use mod_version_info
+     use mod_types, only: t_inc
      implicit none
      integer          ::  NTOTATOM,NATOMTEMP,NSPIN,IELAST,lmsizehost,KGREFSOC
      character(len=5) ::  CHAR1 
@@ -617,12 +645,12 @@ end function this_readline
 
 !      end if
      close(6699)
-     write(1337,*) '[preconditioning_readtmatinfo] Information from the T-matrix file'
-     write(1337,*) '[preconditioning_readtmatinfo] NTOTATOMIMP',NATOMTEMP
-     write(1337,*) '[preconditioning_readtmatinfo] NSPIN',NSPIN
-     write(1337,*) '[preconditioning_readtmatinfo] IELAST',IELAST
-     write(1337,*) '[preconditioning_readtmatinfo] lmsizehost',lmsizehost
-     write(1337,*) '[preconditioning_readtmatinfo] KGREFSOC',KGREFSOC
+     if (t_inc%i_write>0) write(1337,*) '[preconditioning_readtmatinfo] Information from the T-matrix file'
+     if (t_inc%i_write>0) write(1337,*) '[preconditioning_readtmatinfo] NTOTATOMIMP',NATOMTEMP
+     if (t_inc%i_write>0) write(1337,*) '[preconditioning_readtmatinfo] NSPIN',NSPIN
+     if (t_inc%i_write>0) write(1337,*) '[preconditioning_readtmatinfo] IELAST',IELAST
+     if (t_inc%i_write>0) write(1337,*) '[preconditioning_readtmatinfo] lmsizehost',lmsizehost
+     if (t_inc%i_write>0) write(1337,*) '[preconditioning_readtmatinfo] KGREFSOC',KGREFSOC
      if (ntotatom/=natomtemp) stop 'preconditioning_readtmatinfo] natom error in tmat file'
 
    end subroutine !precontitioning_start
@@ -661,6 +689,7 @@ end function this_readline
 subroutine correct_virtualintercell(ntotatom,lmaxhost,lmpothost,ach,ratom,isvatom,substract_cmoms)
 use mod_gauntharmonics, only: gauntcoeff
 use mod_shftvout
+use mod_types, only: t_inc
 implicit none
 integer               :: ntotatom
 integer               :: lmaxhost
@@ -687,11 +716,11 @@ do iatom=1,ntotatom
           write(*   ,'(A,I3,A   )') 'by the intercell potential of the real atom',jatom,' and shifted'
           write(*   ,'(A        )') 'by the U-transformation'
           write(*   ,'(A,I3,A   )') '###################################################################'
-          write(1337,'(A,I3,A   )') '###################################################################'
-          write(1337,'(A,I3,A   )') 'intercell potential of virt. atom',iatom,' is replaced'
-          write(1337,'(A,I3,A   )') 'by the intercell potential of the real atom',jatom,' and shifted'
-          write(1337,'(A        )') 'by the U-transformation'
-          write(1337,'(A,I3,A   )') '###################################################################'
+          if (t_inc%i_write>0) write(1337,'(A,I3,A   )') '###################################################################'
+          if (t_inc%i_write>0) write(1337,'(A,I3,A   )') 'intercell potential of virt. atom',iatom,' is replaced'
+          if (t_inc%i_write>0) write(1337,'(A,I3,A   )') 'by the intercell potential of the real atom',jatom,' and shifted'
+          if (t_inc%i_write>0) write(1337,'(A        )') 'by the U-transformation'
+          if (t_inc%i_write>0) write(1337,'(A,I3,A   )') '###################################################################'
         !  copy intercell_ach(lmpothost,jatom) -> intercell_ach(lmpothost,iatom)
         !  intercell_temp=intercell_ach(lmpothost,iatom)
         !  shift intercell_ach(lmpothost,iatom) by 

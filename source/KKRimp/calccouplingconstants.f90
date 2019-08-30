@@ -19,6 +19,7 @@ use type_tmat, only: tmat_type
 use type_gmat, only: gmat_type
 use mod_mathtools, only: matmat
 use mod_config, only: config_testflag
+use mod_types, only: t_inc
 
 implicit none
 type(gmat_type)         :: gmat
@@ -45,9 +46,9 @@ double precision           :: Aimatrixtemp(3)
 double complex             :: Aimatrixtemp_complex(3)
 
 ! double precision           :: pi
-write(1337,*) '##########################################'
-write(1337,*) '  starting calculation of the Jij-matrix'
-write(1337,*) '##########################################'
+if (t_inc%i_write>0) write(1337,*) '##########################################'
+if (t_inc%i_write>0) write(1337,*) '  starting calculation of the Jij-matrix'
+if (t_inc%i_write>0) write(1337,*) '##########################################'
 
 if (.not. allocated (gmat%gmat) ) then
   stop '[calcJijmatrix] gmat not allocated'
@@ -153,7 +154,7 @@ do iatom=1,natom
     Jijmatrix(:,:,iatom,jatom)=Jijmatrix(:,:,iatom,jatom)+dimag(wez*Jijmatrixtemp_complex)
 
     if ( config_testflag('Jij(E)') ) then
-      write(234932875,'(2I5,500E25.14)') iatom, jatom,dimag(wez*Jijmatrixtemp_complex)
+      write(234932875,'(2I5,500E25.14)') iatom, jatom, wez, dimag(wez*Jijmatrixtemp_complex)
       write(234932876,'(2I5,500E25.14)') iatom, jatom,Jijmatrixtemp
     end if 
   end do !jatom

@@ -46,7 +46,6 @@ add_executable(
     source/voronoi/length.f
     source/voronoi/ritesone.f
     source/voronoi/jellstart12.f
-    source/voronoi/pdbplot.f
     source/voronoi/writeshape.f
     source/voronoi/readimpatoms12.f
     source/voronoi/clsgenimp12.f

@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright (c) 2018 Peter Grünberg Institut, Forschungszentrum Jülich, Germany
+Copyright (c) 2019 Peter Grünberg Institut, Forschungszentrum Jülich, Germany
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

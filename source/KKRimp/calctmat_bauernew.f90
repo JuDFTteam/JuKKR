@@ -47,6 +47,7 @@ use mod_basistransform, only: rll_transform, vll_transform, jlk_transform, singl
 use mod_mathtools, only: conjugate2, conjugate3, conjugate4
 use mod_calctmat_bauernew_testtools, only: switch_jlk, switch_vll
 use mod_wronskian, only: calcwronskian
+use mod_types, only: t_inc
 implicit none
 !interface
 type(cell_type),intent(in)                :: cell
@@ -89,7 +90,7 @@ integer                                   :: lmlo,lmhi,mmax,imt1  ! lda+u
 
     character (len=100) :: filename
 
-write(1337,*) 'starting calctmatnew'
+if (t_inc%i_write>0) write(1337,*) 'starting calctmatnew'
 
 eryd=(eryd_in)
 
@@ -223,7 +224,7 @@ if (kspinorbit==1) then
   vnspll1 = czero
   vnspll2 = czero
 
-  write(1337,*) 'spinorbit index','','atom',iatom,cellorbit%use_spinorbit(iatom)
+  if (t_inc%i_write>0) write(1337,*) 'spinorbit index','','atom',iatom,cellorbit%use_spinorbit(iatom)
   if (cellorbit%use_spinorbit(iatom)==1) then
 
     ! for right solution

@@ -95,7 +95,6 @@ contains
     integer :: icell, ipot1, ispin, ihost, iltmp
     real (kind=dp) :: denef
     real (kind=dp) :: chrgsemicore
-    character (len=5) :: textns
     character (len=80) :: tmpdir
     character (len=8) :: qdosopt
     logical :: lmomvec
@@ -125,8 +124,6 @@ contains
     complex (kind=dp), dimension (0:lmaxd, 3, nmvecmax) :: mvevil1
     complex (kind=dp), dimension (0:lmaxd, 3, nmvecmax) :: mvevil2 ! WORK ARRAYS
     complex (kind=dp), dimension (0:lmaxd, natypd, 3, nmvecmax) :: mvevil
-    character (len=7), dimension (3) :: texts
-    character (len=4), dimension (0:6) :: textl
     integer :: withorbmom !! integer flag used to tell wrmoms how output is written
     ! -------------------------------------------------------------------------
     !> @note attention: muorb second index means both spins and total
@@ -178,9 +175,6 @@ contains
     ! .. External Functions ..
     ! ..
     ! .. Data statements ..
-    data textl/' s =', ' p =', ' d =', ' f =', ' g =', ' h =', ' i ='/
-    data texts/'spin dn', 'spin up', '       '/
-    data textns/' ns ='/
     data ldorhoef/.true./
     data ihost/1/                  ! this is the host program
 
@@ -825,7 +819,7 @@ contains
       ! -------------------------------------------------------------------
       withorbmom = krel+korbit
       if (set_cheby_nosoc) withorbmom = nspin-1 !withorbmom+1
-      call wrmoms(withorbmom, natyp, nspinpot, texts, textl, textns, charge, muorb, lmax, lmaxd1)
+      call wrmoms(withorbmom, natyp, nspinpot, charge, muorb, lmax, lmaxd1)
 
       ! ----------------------------------------------------------------------
       ! ITERMDIR

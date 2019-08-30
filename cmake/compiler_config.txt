@@ -29,6 +29,12 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
         set(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -r8")
     endif()
 
+    # add special flags for voronoi code
+    if(COMPILE_VORONOI)
+        set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -mcmodel medium -shared-intel")
+    endif()
+
+
     # for coverage report
     if(ENABLE_COV)
         message("Set profiling flags for test coverage report")

@@ -30,7 +30,7 @@ module mod_runoptions
   logical :: disable_reference_system = .false.        !!deactivate the tight-binding reference system (former: 'lrefsysf')
   logical :: disable_tmat_sratrick = .false.           !!deactivate SRATRICK in solver for t-matirx (former: 'nosph')
   logical :: fix_nonco_angles = .false.                !!fix direction of non-collinear magnetic moments (Chebychev solver) (former: 'FIXMOM')
-  logical :: formatted_files = .false.                 !!write files ascii-format. only effective with some other write-options (former: 'fileverb')
+  logical :: formatted_file = .false.                  !!write files ascii-format. only effective with some other write-options (former: 'fileverb')
   logical :: impurity_operator_only = .false.          !!only for `write_pkkr_operators`: disable costly recalculation of host operators (former: 'IMP_ONLY')
   logical :: modify_soc_Dirac = .false.                !!modify SOC for Dirac solver (former: 'SOC')
   logical :: no_madelung = .false.                     !!do not add some energy terms (coulomb, XC, eff. pot.) to total energy (former: 'NoMadel')
@@ -84,7 +84,7 @@ module mod_runoptions
   logical :: write_green_host = .false.                !!write green function of the host to file `green_host` (former: 'WRTGREEN')
   logical :: write_green_imp = .false.                 !!write out impurity Green function to GMATLL_GES (former: 'GREENIMP')
   logical :: write_complex_qdos = .false.              !!write complex qdos to file (former: 'compqdos')
-  logical :: write_cpa_projection_files = .false.      !!write CPA projectors to file (former: 'projfile')
+  logical :: write_cpa_projection_file = .false.       !!write CPA projectors to file (former: 'projfile')
   logical :: write_deci_pot = .false.                  !!write decimation-potential file (former: 'deci-pot')
   logical :: write_deci_tmat = .false.                 !!write t-matrix to file 'decifile' (former: 'deci-out')
   logical :: write_density_ascii = .false.             !!write density rho2ns to file densitydn.ascii (former: 'den-asci')
@@ -99,7 +99,7 @@ module mod_runoptions
   logical :: write_lloyd_cdos_file = .false.           !!write Lloyd array to file  (former: 'wrtcdos')
   logical :: write_lloyd_dgref_file= .false.           !!write Lloyd array to file  (former: 'wrtdgref')
   logical :: write_lloyd_dtmat_file= .false.           !!write Lloyd array to file  (former: 'wrtdtmat')
-  logical :: write_lloyd_files = .false.               !!write several Lloyd-arrays to files (former: 'llyfiles')
+  logical :: write_lloyd_file = .false.                !!write several Lloyd-arrays to files (former: 'llyfiles')
   logical :: write_lloyd_g0tr_file = .false.           !!write Lloyd array to file  (former: 'wrtgotr')
   logical :: write_lloyd_tralpha_file= .false.         !!write Lloyd array to file  (former: 'wrttral')
   logical :: write_madelung_file = .false.             !!write madelung summation to file 'abvmad.unformatted' instead of keeping it in memory (former: 'madelfil')
@@ -134,7 +134,7 @@ module mod_runoptions
 
     implicit none
 
-    call set_runoption(formatted_files               , '<formatted_files>'               , '<fileverb>')
+    call set_runoption(formatted_file                , '<formatted_file>'               , '<fileverb>')
     call set_runoption(use_ldau                      , '<use_ldau>'                      , '<LDA+U>'   )
     call set_runoption(set_kmesh_large               , '<set_kmesh_large>'               , '<fix mesh>')
     call set_runoption(write_madelung_file           , '<write_madelung_file>'           , '<madelfil>')
@@ -197,7 +197,7 @@ module mod_runoptions
     call set_runoption(set_kmesh_small               , '<set_kmesh_small>'               , '<fix4mesh>')
     call set_runoption(disable_tmat_sratrick         , '<disable_tmat_sratrick>'         , '<nosph>'   )
     call set_runoption(print_refpot                  , '<print_refpot>'                  , '<REFPOT>'  )
-    call set_runoption(write_lloyd_files             , '<write_lloyd_files>'             , '<llyfiles>')
+    call set_runoption(write_lloyd_file              , '<write_lloyd_file>'             , '<llyfile>')
     call set_runoption(symmetrize_potential_madelung , '<symmetrize_potential_madelung>' , '<potsymm>' )
     call set_runoption(set_cheby_nosoc               , '<set_cheby_nosoc>'               , '<NOSOC>'   )
     call set_runoption(set_empty_system              , '<set_empty_system>'              , '<zeropot>' )
@@ -212,7 +212,7 @@ module mod_runoptions
     call set_runoption(set_tmat_noinversion          , '<set_tmat_noinversion>'          , '<testgmat>')
     call set_runoption(calc_exchange_couplings_energy, '<calc_exchange_couplings_energy>', '<Jijenerg>')
     call set_runoption(calc_GF_Efermi                , '<calc_GF_Efermi>'                , '<GF-EF>'   )
-    call set_runoption(write_cpa_projection_files    , '<write_cpa_projection_files>'    , '<projfile>')
+    call set_runoption(write_cpa_projection_file     , '<write_cpa_projection_file>'    , '<projfile>')
     call set_runoption(write_kkrsusc_input           , '<write_kkrsusc_input>'           , '<KKRSUSC>' )
     call set_runoption(calc_exchange_couplings       , '<calc_exchange_couplings>'       , '<XCPL>'    )
     call set_runoption(print_program_flow            , '<print_program_flow>'            , '<flow>'    )
@@ -319,8 +319,8 @@ module mod_runoptions
 
     !now follows a (long) list of straight forward replacements
     else if (keyword == 'FILEVERB') then
-      formatted_files = .true.
-      write (1337, *) "    Enable runoption 'formatted_files'"
+      formatted_file = .true.
+      write (1337, *) "    Enable runoption 'formatted_file'"
     else if (keyword == 'LDA+U   ') then
       use_ldau = .true.
       write (1337, *) "    Enable runoption 'use_ldau'"
@@ -508,8 +508,8 @@ module mod_runoptions
       print_refpot = .true.
       write (1337, *) "    Enable runoption 'print_refpot'"
     else if (keyword == 'LLYFILES') then
-      write_lloyd_files = .true.
-      write (1337, *) "    Enable runoption 'write_lloyd_files'"
+      write_lloyd_file = .true.
+      write (1337, *) "    Enable runoption 'write_lloyd_file'"
     else if (keyword == 'POTSYMM ') then
       symmetrize_potential_madelung = .true.
       write (1337, *) "    Enable runoption 'symmetrize_potential_madelung'"
@@ -553,8 +553,8 @@ module mod_runoptions
       calc_GF_Efermi = .true.
       write (1337, *) "    Enable runoption 'calc_GF_Efermi'"
     else if (keyword == 'PROJFILE') then
-      write_cpa_projection_files = .true.
-      write (1337, *) "    Enable runoption 'write_cpa_projection_files'"
+      write_cpa_projection_file = .true.
+      write (1337, *) "    Enable runoption 'write_cpa_projection_file'"
     else if (keyword == 'KKRSUSC ') then
       write_kkrsusc_input = .true.
       write (1337, *) "    Enable runoption 'write_kkrsusc_input'"
@@ -671,7 +671,7 @@ module mod_runoptions
     implicit none
     integer :: ierr
 
-    call mpi_bcast(formatted_files               , 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(formatted_file                , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(use_ldau                      , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(set_kmesh_large               , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(write_madelung_file           , 1, mpi_logical, master, mpi_comm_world, ierr)
@@ -734,7 +734,7 @@ module mod_runoptions
     call mpi_bcast(set_kmesh_small               , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(disable_tmat_sratrick         , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(print_refpot                  , 1, mpi_logical, master, mpi_comm_world, ierr)
-    call mpi_bcast(write_lloyd_files             , 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(write_lloyd_file              , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(symmetrize_potential_madelung , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(set_cheby_nosoc               , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(set_empty_system              , 1, mpi_logical, master, mpi_comm_world, ierr)
@@ -749,7 +749,7 @@ module mod_runoptions
     call mpi_bcast(set_tmat_noinversion          , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(calc_exchange_couplings_energy, 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(calc_GF_Efermi                , 1, mpi_logical, master, mpi_comm_world, ierr)
-    call mpi_bcast(write_cpa_projection_files    , 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(write_cpa_projection_file     , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(write_kkrsusc_input           , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(calc_exchange_couplings       , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(print_program_flow            , 1, mpi_logical, master, mpi_comm_world, ierr)
