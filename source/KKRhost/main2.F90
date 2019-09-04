@@ -786,10 +786,7 @@ contains
 
     write (1337, fmt=140) mix
     write (1337, '(79("="),/)')
-    ! -------------------------------------------------------------------------
-    if (max(rmsavq,rmsavm)<qbound) then
-      t_inc%i_iteration = t_inc%n_iteration
-    else
+    if (max(rmsavq,rmsavm)>=qbound) then
       ! ----------------------------------------------------------------------
       ! Potential mixing procedures: Broyden or Andersen updating schemes
       ! ----------------------------------------------------------------------
@@ -868,6 +865,7 @@ contains
     end if
     ! -------------------------------------------------------------------------
     if (max(rmsavq,rmsavm)<qbound) then
+      t_inc%i_iteration = t_inc%n_iteration ! setting this stops the calculation (exits while loop in main_all)
       write (6, '(17X,A)') '++++++ SCF ITERATION CONVERGED ++++++'
       write (6, '(79("*"))')
       icont = 0
