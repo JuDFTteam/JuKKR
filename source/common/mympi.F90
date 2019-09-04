@@ -415,7 +415,7 @@ contains
       rest = 0
 
       if (myrank==master) write (1337, *) 'create cartesian grid:', ne, nat, nranks
-      call mpi_cart_create(mpi_comm_world, 2, [ne,nat], [.false.,.false.], [.true.,.true.], mympi_comm_grid, ierr)
+      call mpi_cart_create(mpi_comm_world, 2, [ne,nat], [.false.,.false.], .true., mympi_comm_grid, ierr)
 
       if (myrank==master) write (1337, *) 'MPI_Cart_sub'
       call mpi_cart_sub(mympi_comm_grid, [.true.,.false.], mympi_comm_at, ierr) ! row communicator
