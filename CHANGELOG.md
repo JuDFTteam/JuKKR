@@ -15,12 +15,12 @@
 
 ----
 
-## *UNRELEASED* (last updated: 2019-08-30)
+## *UNRELEASED* (last updated: 2019-10-10)
 
 **Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release.**
 
 ### Added
-- None
+- 'EFSET' option for voronoi: read in whished value of Fermi level from inputcard (core state energies of starting potential is shifted accordingly)
 
 ### Changed
 - None

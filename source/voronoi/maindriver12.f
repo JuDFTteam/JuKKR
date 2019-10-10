@@ -96,7 +96,8 @@ c *******************************************************************
      +     TOLAREA,                 ! Max. tolerance for area of polygon face
      +     TOLEULER,                ! Used in calculation of Euler angles, subr. EULER
      &     TOLHS,                   ! Tolerance for halfspace routine
-     +     VOLUC                    ! volume of unit cell in units of alat**3
+     +     VOLUC,                   ! volume of unit cell in units of alat**3
+     +     EFSET                    ! wished Fermi level of generated potential
 C
 C     .. REAL*8    ARRAYS ....
 C
@@ -329,7 +330,7 @@ c
      &     I13,
      &     NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,    
      &     TLEFT,TRIGHT,LINTERFACE,RCUTZ,RCUTXY,RMTCORE,
-     &     LMTREF,RMTREF,SIZEFAC,NFACELIM)
+     &     LMTREF,RMTREF,SIZEFAC,NFACELIM, EFSET)
 
 
 
@@ -1041,7 +1042,7 @@ c
      &        KSHAPE,IDSHAPE,VOLUMECL,LPOT,AOUT_ALL,RWSCL,RMTCL,
      &        RMTCORE,MESHN_ALL,XRN_ALL,DRN_ALL,THETAS_ALL,LMIFUN_ALL,
      &        NFUN_ALL,IRWS,IRNS,ALATC,
-     &        QBOUND,KXC,TXC)   
+     &        QBOUND,KXC,TXC, EFSET)   
       END IF
       CLOSE(11)
 c     

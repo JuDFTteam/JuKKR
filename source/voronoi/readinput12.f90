@@ -11,7 +11,7 @@
      &           I13, &
      &           NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,   &  
      &           TLEFT,TRIGHT,LINTERFACE,RCUTZ,RCUTXY,RMTCORE, &
-     &           LMTREF,RMTREF,SIZEFAC,NFACELIM)   
+     &           LMTREF,RMTREF,SIZEFAC,NFACELIM, EFSET)   
       use mod_version_info, only: serialnr
 !#@# KKRtags: VORONOI input-output
       implicit none
@@ -48,6 +48,7 @@
       REAL*8        ALAT,E1,E2,ESHIFT,FCM,HFIELD,MIXING,QBOUND,TK, &
      &       VCONST,ABASIS,BBASIS,CBASIS,RCUTZ,RCUTXY,RMTREFDEF
       REAL*8 TOLHS,TOLVDIST,TOLAREA
+      REAL*8 EFSET ! set Fermi level to this value
       INTEGER ICC,ICST,IFILE,IGF,IMIX,INS, &
      &        IPE,IPF,IPFE,IPOTOU,IPRCOR,ISITE, &
      &        IRM,IRNUMX,ISHIFT, &
@@ -707,6 +708,14 @@
 ! End CPA mode        
 
 
+      ! read in whished value of Fermi level (core state energies of starting potential is shifted accordingly)
+      EFSET = -1.0d0 ! default value -1 signals no shift (EF=0.4...)
+      CALL IoInput('EFSET           ',UIO,1,7,IER)
+      IF (IER.EQ.0) READ (UNIT=UIO,FMT=*) EFSET
+      WRITE(*,*) 'readinput: EFSET=',EFSET
+      WRITE(111,*) 'EFSET= ',EFSET
+
+
       WRITE(6,2028) NATYP
       WRITE(6,2104)
       WRITE(6,1029) ( &
@@ -720,8 +729,6 @@
      &     IRNS(I),RMTCORE(I),SIZEFAC(I),I=1,NATYP)
       WRITE(6,2108)
       WRITE(6,2104)
-
-
 
 ! End  chemistry
 ! =============================================================================
