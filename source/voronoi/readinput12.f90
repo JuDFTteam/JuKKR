@@ -825,11 +825,11 @@
 ! =============================================================================
 ! Start read run and test options and files
  
-           
+      TESTC(1:16) = '        ' 
       CALL IoInput('TESTOPT         ',UIO,1,7,IER)
-                     READ(UNIT=UIO,FMT=980)(TESTC(i),i=1,8)
+      IF(IER.EQ.0) READ(UNIT=UIO,FMT=980)(TESTC(i),i=1,8)
       CALL IoInput('TESTOPT         ',UIO,2,7,IER)
-                     READ(UNIT=UIO,FMT=980)(TESTC(8+i),i=1,8)
+      IF(IER.EQ.0) READ(UNIT=UIO,FMT=980)(TESTC(8+i),i=1,8)
       WRITE(6,52) (TESTC(I),I=1,16)                                                 
  52   FORMAT(79('-')/' TEST OPTIONS:'/2(1X,A8,7('//',A8)/)/79('-'))
  
@@ -843,16 +843,16 @@
       IL=1
       I12='                                        '
       CALL IoInput('FILES           ',UIO,IL,7,IER)
-                     IF(IER.EQ.0) READ (UNIT=UIO,FMT='(A40)')  I12
+      IF(IER.EQ.0) READ (UNIT=UIO,FMT='(A40)')  I12
       I13='                                        '
       CALL IoInput('FILES           ',UIO,IL+1,7,IER)
-                     IF(IER.EQ.0) READ (UNIT=UIO,FMT='(A40)')  I13
+      IF(IER.EQ.0) READ (UNIT=UIO,FMT='(A40)')  I13
       I40='                                        '
       CALL IoInput('FILES           ',UIO,IL+2,7,IER)
-                     IF(IER.EQ.0) READ (UNIT=UIO,FMT='(A40)')  I40
+      IF(IER.EQ.0) READ (UNIT=UIO,FMT='(A40)')  I40
       I19='                                        '
       CALL IoInput('FILES           ',UIO,IL+3,7,IER)
-                     IF(IER.EQ.0) READ (UNIT=UIO,FMT='(A40)')  I19
+      IF(IER.EQ.0) READ (UNIT=UIO,FMT='(A40)')  I19
 
       write(6,*) 'I12="',I12,'"'
       write(6,*) 'I13="',I13,'"'

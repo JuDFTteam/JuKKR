@@ -2811,8 +2811,10 @@ contains
 
     allocate (testc(32), stat=i_stat)
     call memocc(i_stat, product(shape(testc))*kind(testc), 'TESTC', 'read_old_runtestoptions')
+    testc(1:32) = '        '
     allocate (optc(32), stat=i_stat)
     call memocc(i_stat, product(shape(optc))*kind(optc), 'OPTC', 'read_old_runtestoptions')
+    optc(1:32) = '        '
 
     oldstyle = .false.
     first    = .true.
