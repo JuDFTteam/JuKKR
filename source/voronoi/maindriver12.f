@@ -330,7 +330,7 @@ c
      &     I13,
      &     NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,    
      &     TLEFT,TRIGHT,LINTERFACE,RCUTZ,RCUTXY,RMTCORE,
-     &     LMTREF,RMTREF,SIZEFAC,NFACELIM, EFSET)
+     &     LMTREF,RMTREF,SIZEFAC,NFACELIM, EFSET, AOUT_ALL)
 
 
 
@@ -474,7 +474,10 @@ c
 
 c The following parameters can be made atom-dependent and e.g. read in.
       DO IAT = 1,NSITES
-         AOUT_ALL(IAT) = 0.025D0 ! Parameter A for exponential mesh of output-pot.
+         if (AOUT_ALL(IAT)<0.d0) then
+           ! set to default value if negative value is found
+           AOUT_ALL(IAT) = 0.025D0  ! Parameter A for exponential mesh of output-pot.
+         end if
          IRWS(IAT) = IRM          ! Index of outmost point.
          IMT(IAT) = NMT
       ENDDO

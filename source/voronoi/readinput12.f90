@@ -11,7 +11,7 @@
      &           I13, &
      &           NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,   &  
      &           TLEFT,TRIGHT,LINTERFACE,RCUTZ,RCUTXY,RMTCORE, &
-     &           LMTREF,RMTREF,SIZEFAC,NFACELIM, EFSET)   
+     &           LMTREF,RMTREF,SIZEFAC,NFACELIM, EFSET, AOUT_ALL)
       use mod_version_info, only: serialnr
 !#@# KKRtags: VORONOI input-output
       implicit none
@@ -39,6 +39,7 @@
       REAL*8  TRIGHT(3,*),TLEFT(3,*),ZPERLEFT(3),ZPERIGHT(3) 
       REAL*8  MTWGHT(0:NTOTD)
       REAL*8  SIZEFAC(-NLEMBD*NEMBD:NTOTD)
+      REAL*8  AOUT_ALL(NATYPD)
       CHARACTER*124 TXC(3)
       CHARACTER*256 UIO
       CHARACTER*40 I12,I13,I19,I25,I40
@@ -561,7 +562,6 @@
       WRITE(*,*) 'End Define volume weights'
       ! End Define volume weights
       ! =============================================================================
-
       
       WRITE(*,*) 'End Structure'
 ! End Structure    
@@ -729,6 +729,19 @@
      &     IRNS(I),RMTCORE(I),SIZEFAC(I),I=1,NATYP)
       WRITE(6,2108)
       WRITE(6,2104)
+
+      ! Read in `a` factor that defines radial mesh 
+      ! r(i) = b*(exp(a*(i-1))-1) where b is determined from a and rmt automatically
+      ! setting to a negative number uses default values (chosen in maindriver)
+      WRITE(111,FMT='(A16)') '<AFAC_RAD>      '
+      AOUT_ALL(1:NATYPD) = -1.0d0
+      DO I=1,NATYP
+         CALL IoInput('<AFAC_RAD>      ',UIO,I,7,IER)
+         IF (IER.EQ.0) THEN
+            READ (UNIT=UIO,FMT=*) AOUT_ALL(I)
+         ENDIF
+         WRITE(111,FMT='(1E24.12)') AOUT_ALL(I)
+      ENDDO ! I=1,NATYPD
 
 ! End  chemistry
 ! =============================================================================
