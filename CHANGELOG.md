@@ -15,12 +15,13 @@
 
 ----
 
-## *UNRELEASED* (last updated: 2019-08-30)
+## *UNRELEASED* (last updated: 2019-10-15)
 
 **Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release.**
 
 ### Added
-- None
+- 'EFSET' option for voronoi: read in whished value of Fermi level from inputcard (core state energies of starting potential is shifted accordingly)
+- '<AFAC_RAD>' input for voronoi: read in a factor of radial mesh (r(i)=b*(exp(a*(i-1))-1)) where b is determined from a and rmt. Default value (a=0.025) is obtained with setting AFAC_RAD to a negative number. If a is increased (decreased) the start of the radial mesh is shifted to a lower (higher) radius.
 
 ### Changed
 - None
