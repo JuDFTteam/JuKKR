@@ -24,6 +24,12 @@ endif()
 #set_source_files_properties(source/KKRhost/rhoval.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
 
 
+# special option, preparation for rllsll standalone test
+if(WRITE_RLLSLL_STANDALONE_INPUT)
+    add_definitions(-Dtest_prep)
+endif()
+
+
 # some static dimensions used in Dirac solver
 execute_process(COMMAND ln -s ../source/KKRhost/sprkkr_rmesh.dim .)
 
@@ -385,5 +391,4 @@ if(ENABLE_BdG)
     if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
         target_link_libraries(kkr_BdG_radial.x ${lapackblas_libraries})
     endif()
-
 endif()

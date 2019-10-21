@@ -28,7 +28,12 @@ option(COMPILE_KKRSUSC "Compile KKRsusc" OFF)
 option(COMPILE_PKKPRIME "Compile PKKprime" ON)
 option(COMPILE_VORONOI "Compile voronoi" ON)
 option(COMPILE_RHOQ "Compile rhoq" ON)
+option(WRITE_RLLSLL_STANDALONE_INPUT "Set option to write out rllsll input files" OFF)
+option(ENABLE_RLLSLL_STANDALONE "Compile rllsll standalone test exec" OFF)
 
+if(ENABLE_RLLSLL_STANDALONE)
+   include( ./cmake/source_list_rllsll_test.txt )
+endif()
 
 if(COMPILE_KKRHOST)
    include( ./cmake/source_list_KKRhost.txt )

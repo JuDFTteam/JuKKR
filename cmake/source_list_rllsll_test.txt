@@ -1,0 +1,19 @@
+# deal with OpenMP flags:
+set_source_files_properties(source/common/radial_solver_Chebychev/rllsll.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
+
+add_definitions(-Dtest_run)
+add_executable(
+    rllsll_standalone.x
+    source/common/radial_solver_Chebychev/rllsll.F90
+    source/common/radial_solver_Chebychev/chebint.f90
+    source/common/DataTypes.f90
+    source/common/timing.F90
+    source/common/constants.f90
+    source/common/types.F90
+    source/common/global_variables.F90
+    source/common/version_info.F90
+    source/common/version.F90
+    )
+if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
+    target_link_libraries(rllsll_standalone.x ${lapackblas_libraries})
+endif()

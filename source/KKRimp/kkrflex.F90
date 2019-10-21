@@ -254,7 +254,7 @@ if (my_rank==0) then
   write(*,*) ' ##########   MPI Initialization    ############'
   write(*,*) ' ###############################################'
   write(*,*) ' ###    using ',mpi_size,' processors'
-  if(t_inc%i_write) write(1337,*) ' ###    using ',mpi_size,' processors'
+  if(t_inc%i_write>0) write(1337,*) ' ###    using ',mpi_size,' processors'
   write(*,*) ' ###############################################'
 end if 
 #endif
