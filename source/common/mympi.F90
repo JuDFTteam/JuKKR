@@ -1202,7 +1202,7 @@ contains
 #ifdef CPP_MPI
   !-------------------------------------------------------------------------------
   !> Summary: MPI Briadcast of global variables
-  !> Author: Jonathan Chico
+  !> Author: Jonathan Chico, Philipp Rüßmann
   !> Category: KKRhost, communication, initialization
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
@@ -1221,7 +1221,7 @@ contains
     integer (kind=mpi_address_kind) :: base !! base address of first entry
   
   
-    n = 59
+    n = 60
     allocate (blocklen1(n), etype1(n), disp1(n), stat=ierr)
     if (ierr/=0) stop 'error allocating arrays in bcast_global_variables'
   
@@ -1284,6 +1284,7 @@ contains
     call mpi_get_address(kBdG, disp1(57), ierr)
     call mpi_get_address(linterface, disp1(58), ierr)
     call mpi_get_address(lnc, disp1(59), ierr)
+    call mpi_get_address(pot_ns_cutoff, disp1(60), ierr)
   
     ! find displacements of variables
     base = disp1(1)
@@ -1293,8 +1294,9 @@ contains
     blocklen1(1:n) = 1
   
     ! set datatype of variables
-    etype1(1:n-2) = mpi_integer
-    etype1(n-1:n) = mpi_logical
+    etype1(1:n-3) = mpi_integer
+    etype1(n-2:n-1) = mpi_logical
+    etype1(n-1:n) = mpi_double_precision
   
     ! create new Type structure for derived data type
     call mpi_type_create_struct(n, blocklen1, disp1, etype1, mympitype1, ierr)

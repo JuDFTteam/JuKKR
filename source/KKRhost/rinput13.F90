@@ -58,7 +58,7 @@ contains
     use :: mod_ioinput, only: ioinput
     use :: global_variables, only: linterface, korbit, krel, irmd, irnsd, nsheld, knosph, iemxd, nrd, knoco, kpoibz, ntrefd, natomimpd, &
       nprincd, ipand, nfund, irid, ngshd, nmaxd, ishld, wlength, naclsd, ntotd, ncleb, nspind, nspindd, npotd, lmmaxd, lmgf0d, &
-      lassld, nembd1, irmind, nofgij, ntperd, nsatypd, nspotd, lnc, lmxspd, lm2d, nclsd, mmaxd, ncleb, kBdG, delta_BdG
+      lassld, nembd1, irmind, nofgij, ntperd, nsatypd, nspotd, lnc, lmxspd, lm2d, nclsd, mmaxd, ncleb, kBdG, delta_BdG, pot_ns_cutoff
 
 
     implicit none
@@ -2290,6 +2290,22 @@ contains
     write (1337, 200) ncls, nref, nineq
     write (1337, 380)
     write (1337, 340)
+
+
+    ! ----------------------------------------------------------------------------
+    ! Special options
+    ! ----------------------------------------------------------------------------
+    call ioinput('POT_NS_CUTOFF   ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) pot_ns_cutoff
+      if (ier/=0) stop 'Error reading `POT_NS_CUTOFF`: check your inputcard'
+      write (111, *) 'POT_NS_CUTOFF= ', pot_ns_cutoff
+    else
+      ! default value is 10% of qbound value
+      pot_ns_cutoff = 0.1_dp*qbound
+      write (111, *) 'Default pot_ns_cutoff= ', pot_ns_cutoff
+    end if
+
 
     ! ----------------------------------------------------------------------------
     kmrot = 0

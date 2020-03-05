@@ -43,7 +43,7 @@ contains
       write_madelung_file, write_potential_tests, write_rho2ns
     use :: global_variables, only: krel, ipand, npotd, natomimpd, lmxspd, iemxd, nspotd, irid, ngshd, linterface, &
       nfund, ncelld, irmd, nembd1, nembd, irmind, lmmaxd, wlength, natypd, naezd, lmpotd, lpotd, lmaxd, nspind, nspotd, &
-      ipand, ngshd, irid, nfund, ncelld
+      ipand, ngshd, irid, nfund, ncelld, pot_ns_cutoff
     use :: mod_main0, only: lcore, ncore, ircut, ipan, ntcell, lpot, nlbasis, nrbasis, nright, nleft, natomimp, atomimp, &
       natyp, naez, lly, lmpot, nsra, ins, nspin, lmax, imix, qbound, fcm, itdbry, irns, kpre, kshape, kte, kvmad, kxc, &
       icc, ishift, ixipol, kforce, ifunm, lmsp, imt, irc, irmin, irws, llmsp, ititle, nfu, hostimp, ilm_map, imaxsh, &
@@ -804,27 +804,41 @@ contains
         irc1 = irc(it)
         call dcopy(irc1, vons(1,1,i), 1, visp(1,i), 1)
 
-        if ((ins/=0) .and. (lpot>0)) then
-          irmin1 = irmin(it)
-          do lm = 2, lmpot
-            do j = irmin1, irc1
-              vins(j, lm, i) = vons(j, lm, i)
-            end do
-            sum = 0.0_dp
-            do ir = irmin1, irc1
-              rv = vins(ir, lm, i)*rmesh(ir, it)
-              sum = sum + rv*rv*drdi(ir, it)
-            end do
-            if (sqrt(sum)<qbound) then
-              do j = irmin1, irc1
-                vins(j, lm, i) = 0.0_dp
-              end do
-            end if
-          end do
-        end if
-      end do
+      end do ! i = 1, nspin*natyp
+
       ! ----------------------------------------------------------------------
     end if
+
+    ! cut non-spherical components of the potential which are smaller than pot_ns_cutoff
+    ! Note: pot_ns_cutoff can be set in inputcard, defaults to 10% of qbound
+    do i = 1, nspin*natyp
+
+      it = i
+      if (nspin==2) it = (i+1)/2
+      irc1 = irc(it)
+
+      if ((ins/=0) .and. (lpot>0)) then
+        irmin1 = irmin(it)
+        do lm = 2, lmpot
+          do j = irmin1, irc1
+            vins(j, lm, i) = vons(j, lm, i)
+          end do
+          sum = 0.0_dp
+          do ir = irmin1, irc1
+            rv = vins(ir, lm, i)*rmesh(ir, it)
+            sum = sum + rv*rv*drdi(ir, it)
+          end do
+          if (sqrt(sum)<pot_ns_cutoff) then
+            write(1337,*) 'POT_NS_CUTOFF INFO: cutting ns component', lm
+            do j = irmin1, irc1
+              vins(j, lm, i) = 0.0_dp
+            end do
+          end if
+        end do
+      end if ! pot_ns_cutoff
+
+    end do ! i = 1, nspin*natyp
+
     ! -------------------------------------------------------------------------
     rewind 11
 

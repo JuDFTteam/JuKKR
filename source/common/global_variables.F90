@@ -85,6 +85,7 @@ module global_variables
   integer :: maxmshd = 30         !! maximal number of different k-meshes
   logical :: linterface = .false. !! use 2D or 3D mode, if True a matching with semi-inifinite surfaces must be performed
   real (kind=dp) :: delta_BdG = 10**-4 !! initial value of Delta_BdG in Ry
+  real (kind=dp) :: pot_ns_cutoff = -1 !! threshold below which non-spherical part of the potential is cut off (done in main2)
 
 
 end module global_variables
