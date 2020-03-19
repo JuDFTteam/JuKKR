@@ -15,16 +15,17 @@
 
 ----
 
-## *UNRELEASED* (last updated: 2019-10-15)
+## *UNRELEASED* (last updated: 2020-03-19)
 
 **Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release.**
 
 ### Added
-- 'EFSET' option for voronoi: read in whished value of Fermi level from inputcard (core state energies of starting potential is shifted accordingly)
-- '<AFAC_RAD>' input for voronoi: read in a factor of radial mesh (r(i)=b*(exp(a*(i-1))-1)) where b is determined from a and rmt. Default value (a=0.025) is obtained with setting AFAC_RAD to a negative number. If a is increased (decreased) the start of the radial mesh is shifted to a lower (higher) radius.
+- `EFSET` option for voronoi: read in whished value of Fermi level from inputcard (core state energies of starting potential is shifted accordingly)
+- `<AFAC_RAD>` input for voronoi: read in a factor of radial mesh (r(i)=b*(exp(a*(i-1))-1)) where b is determined from a and rmt. Default value (a=0.025) is obtained with setting AFAC_RAD to a negative number. If a is increased (decreased) the start of the radial mesh is shifted to a lower (higher) radius.
+- `POT_NS_CUTOFF` option for KKRhost and KKRimp (see issue #124)
 
 ### Changed
-- None
+- cutoff of potential components which are (almost) zero (see issue #124 and `POT_NS_CUTOFF`)
 
 ### Deprecated
 - None
@@ -42,12 +43,12 @@
 - allow up to LMAX=8 in voronoi code and KKRhost code
 
 ### Changed
-- Renamed keywords that have 'files' in the name to avoid clash with 'FILES' keyword in inputcard
+- Renamed keywords that have `files` in the name to avoid clash with `FILES` keyword in inputcard
 - if GGA is used, set Vxc of empty cells to LDA (VWN)
-- remove a lot of unnessecary files written out by each rank running the KKRimp code. Now by default only the master writes the files (old behavior can be reactivated using the 'write_all_ranks' test flag)
+- remove a lot of unnessecary files written out by each rank running the KKRimp code. Now by default only the master writes the files (old behavior can be reactivated using the `write_all_ranks` test flag)
 
 ### Deprecated
-- 'IMPURITY' option of voronoi code, not working properly and thus commented out
+- `IMPURITY` option of voronoi code, not working properly and thus commented out
 
 ### Fixed
 - Fix auto tests
@@ -593,8 +594,8 @@ readinput changed to comply with new inputcard keywords of JM code
 
 - Implemented writeout of Pkk' for option SCATTFIX and LLIFETIME.
 - For option SCATTFIX, changed the implementation such that the INCOMMING k-vector is fixed (before it was outgoing k-vector).
-- To solve memory-issues with very large slab calculations, the paramter 'NROOTMAX' can be set in the inputcard. If NROOTMAX= 0 assumes the maximal possible value.
-- Included checks whether actually TBKKR_torq orr TBKKR_rhod-files are present when they shall be used.
+- To solve memory-issues with very large slab calculations, the paramter `NROOTMAX` can be set in the inputcard. If `NROOTMAX= 0` assumes the maximal possible value.
+- Included checks whether actually TBKKR_torq or TBKKR_rhod-files are present when they shall be used.
 
 ----
 
