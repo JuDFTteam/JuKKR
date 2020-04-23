@@ -205,17 +205,18 @@ end if
 
 if (ITSCF==1) then
 
-
-  open(unit=34536254,file='out_Jijmatrix')
-  call version_print_header(34536254)
-  open(unit=34536256,file='out_JijDij')
-  call version_print_header(34536256)
-  open(unit=34536258,file='out_Jijmatrix_local')
-  call version_print_header(34536258)
-  open(unit=34536259,file='out_JijDij_local')
-  call version_print_header(34536259)
-  open(unit=34536268,file='out_Aimatrix')
-  call version_print_header(34536268)
+  if (config%calcJijmat==1) then
+    open(unit=34536254,file='out_Jijmatrix')
+    call version_print_header(34536254)
+    open(unit=34536256,file='out_JijDij')
+    call version_print_header(34536256)
+    open(unit=34536258,file='out_Jijmatrix_local')
+    call version_print_header(34536258)
+    open(unit=34536259,file='out_JijDij_local')
+    call version_print_header(34536259)
+    open(unit=34536268,file='out_Aimatrix')
+    call version_print_header(34536268)
+  end if
 
   open(unit=22349375,file='out_energytotal_eV')
   call version_print_header(22349375)
@@ -236,8 +237,8 @@ if (ITSCF==1) then
     call version_print_header(73467345)
   end if
 
-  open(unit=2342348,file='test_rmesh')
-  open(unit=2342349,file='test_rmeshnew')
+  !open(unit=2342348,file='test_rmesh')
+  !open(unit=2342349,file='test_rmeshnew')
   if (config%ncoll==1) then
     open(unit=23452324,file='out_magneticmoments_angle_nomix')
     call version_print_header(23452324)
@@ -527,8 +528,8 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
            end if
 
            if (ie==1) then
-              write(2342348,'(50000E25.14)') cell(iatom)%rmesh
-              write(2342349,'(50000E25.14)') cellnew(iatom)%rmeshnew
+              !write(2342348,'(50000E25.14)') cell(iatom)%rmesh
+              !write(2342349,'(50000E25.14)') cellnew(iatom)%rmeshnew
            end if
 
 
@@ -893,10 +894,6 @@ if (config%calcJijmat==1) then
 call log_write('>>>>>>>>>>>>>>>>>>> calcJij >>>>>>>>>>>>>>>>>>>')
 call calccouplingconstants_writeoutJij(natom,Jijmatrix,Aimatrix,density,ITSCF)
 call log_write('<<<<<<<<<<<<<<<<<<< calcJij <<<<<<<<<<<<<<<<<<<')
-
-
-
-
 
 end if
 

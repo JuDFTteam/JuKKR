@@ -355,6 +355,7 @@ if ( config_runflag('LLYsimple') ) then
     open(192837, file='kkrflex_llyfac', form='formatted', iostat=ierror)
     if(ierror/=0) stop 'Error: File kkrflex_llyfac not found, needed for LLYsimple option'
     read(192837, *) llyfac
+    !llyfac = 0.993769945E+00
     close(192837)
     write(*,*) 'Renormalize weights with factor:',llyfac
   end if
