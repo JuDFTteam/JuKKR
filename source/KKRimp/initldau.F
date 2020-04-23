@@ -40,6 +40,7 @@ C
       USE MOD_PHICALC
       use mod_version_info
       use global_variables, only: ipand
+      use mod_mympi, only: myrank, master
       IMPLICIT NONE
 
       TYPE(LDAU_TYPE),ALLOCATABLE    :: LDAU(:)  ! lda+u variables, intended dimension: (natyp) ! lda+u
@@ -153,11 +154,13 @@ C
       DO I1 = 1,100
          FACT(I1) = FACT(I1-1)*DBLE(I1) ! factorial
       END DO
-      WRITE (6,*)
-      WRITE (6,'(79(1H=))')
-      WRITE (6,'(A)') '           LDA+U  INITIALISE Coulomb matrix U'
-      WRITE (6,*)
-      WRITE (6,'(79(1H=))')
+      if (myrank==master) then
+        WRITE (6,*)
+        WRITE (6,'(79(1H=))')
+        WRITE (6,'(A)') '           LDA+U  INITIALISE Coulomb matrix U'
+        WRITE (6,*)
+        WRITE (6,'(79(1H=))')
+      end if
 C
 C AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 C                       Loop over atoms...which need LDA+U ( LOPT >= 0 )
@@ -307,6 +310,8 @@ C
 C
 C UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
 C
+            if (myrank==master) then
+
             WRITE (6,*)
             WRITE (6,'(A,i3)') ' ATOM ',I1
             WRITE (6,*)
@@ -332,6 +337,8 @@ C
      &                          IM3=1,2*LL+1)
             END DO
             WRITE (6,'(79(1H=))')
+
+            end if
 C
 
 

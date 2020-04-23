@@ -466,12 +466,14 @@ end if
       ALLOCATE( LDAU(NATOM) )                                                        !lda+u
       LDAU(:)%LOPT = -1                                                              !lda+u
       IF ( CONFIG_RUNFLAG('LDA+U') ) THEN                                            !lda+u
-         WRITE(*,*) 'LDA+U calculation'                                              !lda+u
+         if (myrank==master) WRITE(*,*) 'LDA+U calculation'                                              !lda+u
          CALL INITLDAU(LMAXD,NATOM,NSPIN,VPOT,ZATOM,1,CELL,LDAU)                     !lda+u
          DO IATOM = 1,NATOM                                                          !lda+u
-            IF (LDAU(IATOM)%LOPT.GE.0) WRITE(*,FMT='(A12,I4,a3,I3,3(A6,F6.3))') &    !lda+u
-            'LDA+U: Atom',IATOM,' l=',LDAU(IATOM)%LOPT,' UEFF=',LDAU(IATOM)%UEFF, &  !lda+u
-            ' JEFF=',LDAU(IATOM)%JEFF,' EREF=',LDAU(IATOM)%EREFLDAU                  !lda+u
+            IF (LDAU(IATOM)%LOPT.GE.0 .and. myrank==master) then
+              WRITE(*,FMT='(A12,I4,a3,I3,3(A6,F6.3))') &    !lda+u
+              'LDA+U: Atom',IATOM,' l=',LDAU(IATOM)%LOPT,' UEFF=',LDAU(IATOM)%UEFF, &  !lda+u
+              ' JEFF=',LDAU(IATOM)%JEFF,' EREF=',LDAU(IATOM)%EREFLDAU                  !lda+u
+            end if
             IF (LDAU(IATOM)%LOPT.GT.LMAXATOM(IATOM)) THEN                            !lda+u
                WRITE(*,*) 'Atom:',IATOM,' LDA+U orbital=',LDAU(IATOM)%LOPT,  &       !lda+u
                     ' but lmax=',LMAXATOM(IATOM)                                     !lda+u
