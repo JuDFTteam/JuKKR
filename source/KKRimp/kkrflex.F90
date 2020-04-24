@@ -165,6 +165,7 @@ program kkrflex
 !***********************************
   real(kind=8)                          :: rmsavq, rmsavm
   real(kind=8)                          :: mixldau ! lda+u
+  logical :: ldau_initial_iter  ! lda+u
 ! !   real(kind=8)                          :: mixing
   real(kind=8)                          :: sum,rv
   integer                               :: irmin1,irc1
@@ -467,7 +468,7 @@ end if
       LDAU(:)%LOPT = -1                                                              !lda+u
       IF ( CONFIG_RUNFLAG('LDA+U') ) THEN                                            !lda+u
          if (myrank==master) WRITE(*,*) 'LDA+U calculation'                                              !lda+u
-         CALL INITLDAU(LMAXD,NATOM,NSPIN,VPOT,ZATOM,1,CELL,LDAU)                     !lda+u
+         CALL INITLDAU(LMAXD,NATOM,NSPIN,VPOT,ZATOM,1,CELL,LDAU,ldau_initial_iter)                     !lda+u
          DO IATOM = 1,NATOM                                                          !lda+u
             IF (LDAU(IATOM)%LOPT.GE.0 .and. myrank==master) then
               WRITE(*,FMT='(A12,I4,a3,I3,3(A6,F6.3))') &    !lda+u
@@ -1115,9 +1116,14 @@ end if
 
   if (my_rank==0) then
     IF (MAX(RMSAVQ,RMSAVM).LT.config%QBOUND) THEN
-      istop_selfcons=1
-      WRITE(*,'(17X,A)') '++++++ SCF ITERATION CONVERGED ++++++'
-      WRITE(*,'(79(1H*))')
+      ! do at least two iterations for LDAU+U
+      if (.not. ldau_initial_iter) then
+        istop_selfcons=1
+        WRITE(*,'(17X,A)') '++++++ SCF ITERATION CONVERGED ++++++'
+        WRITE(*,'(79(1H*))')
+      else
+        write(*,*) 'LDA+U initialization finished, now run self-consistency from next iteration on'
+      end if
     END IF
 
     if ( config_runflag('force_angles') ) then

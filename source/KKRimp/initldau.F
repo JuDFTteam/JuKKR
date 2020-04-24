@@ -12,7 +12,8 @@ C*==initldau.f    processed by SPAG 6.05Rc at 15:27 on  7 Mar 2003
 
 
 
-      SUBROUTINE INITLDAU(LMAXD,NATYP,NSPIN,VPOT,ZATOM,KVREL,CELL,LDAU)
+      SUBROUTINE INITLDAU(LMAXD,NATYP,NSPIN,VPOT,ZATOM,KVREL,CELL,LDAU,
+     &                    initial_iteration)
 C
 C   *******************************************************************
 C   *  Calculates ULDAU                                               *
@@ -72,6 +73,7 @@ C
       INTEGER I1,IM1,IM2,IM3,IM4,IR,IRC1,IRS1,IRUNLDAU,KK
      &        ,L1,LF,LFMAX,LL,M1,M2,M3,M4,NSRA,IAT,ISPIN,IPOT,IPAN1
       INTEGER NINT,IERROR
+      logical :: initial_iteration
 
 
 !      EXTERNAL CGCRAC,GAUNTC1
@@ -90,7 +92,10 @@ C  U calculated anew.
 C
       IF ( IRUNLDAU.NE.0 ) THEN ! read from disk and exit
          CALL RWLDAUPOT(.FALSE.,4,NATYP,NSPIN,LMAXD,IRMD,IRUNLDAU,LDAU)
+         initial_iteration = .false.
          RETURN
+      else
+         initial_iteration = .true.
       ENDIF
 
 ! Allocate arrays
