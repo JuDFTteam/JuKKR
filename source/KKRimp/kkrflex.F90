@@ -355,7 +355,6 @@ if ( config_runflag('LLYsimple') ) then
     open(192837, file='kkrflex_llyfac', form='formatted', iostat=ierror)
     if(ierror/=0) stop 'Error: File kkrflex_llyfac not found, needed for LLYsimple option'
     read(192837, *) llyfac
-    !llyfac = 0.993769945E+00
     close(192837)
     write(*,*) 'Renormalize weights with factor:',llyfac
   end if
@@ -858,7 +857,7 @@ end if
       if (mod(itscf,config%ITDBRY).eq.0) mixldau = config%mixfac                           ! lda+u
     endif                                                                                  ! lda+u
     if ( config_testflag('freezeldau').or.config_runflag('freezeldau') ) mixldau = 0.d0    ! lda+u
-    call calcwldau(nspin,natom,lmaxd,cell(1)%nrmaxd,lmaxatom,density,mixldau,ldau)         ! lda+u
+    call calcwldau(nspin,natom,lmaxd,cell(1)%nrmaxd,lmaxatom,density,mixldau,config%qbound_ldau,ldau)         ! lda+u
 !-------------------------------------------------------------------                       ! lda+u
 
 

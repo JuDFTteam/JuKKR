@@ -351,6 +351,8 @@ do iatom=1,natom
   density(iatom)%ncharge=0.0D0
   density(iatom)%rho2ns_integrated=(0.0D0,0.0D0)
   density(iatom)%rho2ns_integrated_scattering=(0.0D0,0.0D0)
+  density(iatom)%gfint=(0.0D0,0.0D0)
+  density(iatom)%gflle=(0.0D0,0.0D0)
 
   density(iatom)%orbitalmom=(0.0D0,0.0D0)
   density(iatom)%orbitalmom_lm=(0.0D0,0.0D0)
