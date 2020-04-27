@@ -23,6 +23,7 @@ module mod_wunfiles
   use :: mod_profiling
   use :: mod_datatypes
   use :: mod_constants, only: nsymaxd
+  use :: mod_bfield, only: bfield
 
   implicit none
 
@@ -196,12 +197,12 @@ module mod_wunfiles
     real (kind=dp), dimension (:), allocatable :: rmt !! Muffin-tin radius of true system
     real (kind=dp), dimension (:), allocatable :: rws !! Wigner Seitz radius
     real (kind=dp), dimension (:), allocatable :: gsh
-    real (kind=dp), dimension (:), allocatable :: phi
+    real (kind=dp), dimension (:), allocatable :: phi !! Phi angle for a non-collinear calculation
     real (kind=dp), dimension (:), allocatable :: ueff !! input U parameter for each atom
     real (kind=dp), dimension (:), allocatable :: jeff !! input J parameter for each atom
     real (kind=dp), dimension (:), allocatable :: vref
     real (kind=dp), dimension (:), allocatable :: conc !! Concentration of a given atom
-    real (kind=dp), dimension (:), allocatable :: theta
+    real (kind=dp), dimension (:), allocatable :: theta !! Theta angle for a non-collinear calculation (don't confuse with thetas!)
     real (kind=dp), dimension (:), allocatable :: volbz
     real (kind=dp), dimension (:), allocatable :: qmtet !! \(\theta\) angle of the agnetization with respect to the z-axis
     real (kind=dp), dimension (:), allocatable :: qmphi !! \(\phi\) angle of the agnetization with respect to the z-axis
