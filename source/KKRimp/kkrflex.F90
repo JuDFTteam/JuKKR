@@ -459,33 +459,34 @@ if ( config_runflag('SIMULASA') ) then
   vpot(:,2:,:,:)=0.0D0
 end if
 
-! **********************************************************                         !lda+u
-! Start LDA+U initialization                                                         !lda+u
-! In particular, U-matrix ULDAU and basis PHI are created.                           !lda+u
-! Allocate arrays that depend on NATOM. (Arrays dependent on                         !lda+u
-! NATLDAU are allocated in routines INITLDAU,RWLDAUPOT.)                             !lda+u
-      ALLOCATE( LDAU(NATOM) )                                                        !lda+u
-      LDAU(:)%LOPT = -1                                                              !lda+u
-      IF ( CONFIG_RUNFLAG('LDA+U') ) THEN                                            !lda+u
-         if (myrank==master) WRITE(*,*) 'LDA+U calculation'                                              !lda+u
-         CALL INITLDAU(LMAXD,NATOM,NSPIN,VPOT,ZATOM,1,CELL,LDAU,ldau_initial_iter)                     !lda+u
-         DO IATOM = 1,NATOM                                                          !lda+u
-            IF (LDAU(IATOM)%LOPT.GE.0 .and. myrank==master) then
-              WRITE(*,FMT='(A12,I4,a3,I3,3(A6,F6.3))') &    !lda+u
-              'LDA+U: Atom',IATOM,' l=',LDAU(IATOM)%LOPT,' UEFF=',LDAU(IATOM)%UEFF, &  !lda+u
-              ' JEFF=',LDAU(IATOM)%JEFF,' EREF=',LDAU(IATOM)%EREFLDAU                  !lda+u
-            end if
-            IF (LDAU(IATOM)%LOPT.GT.LMAXATOM(IATOM)) THEN                            !lda+u
-               WRITE(*,*) 'Atom:',IATOM,' LDA+U orbital=',LDAU(IATOM)%LOPT,  &       !lda+u
-                    ' but lmax=',LMAXATOM(IATOM)                                     !lda+u
-               STOP 'LDA+U control: lmax'                                            !lda+u
-            ENDIF                                                                    !lda+u
-            LDAU(IATOM)%IELDAUSTART = 1                                              !lda+u
-            LDAU(IATOM)%IELDAUEND = IELAST                                           !lda+u
-         ENDDO                                                                       !lda+u
+! **********************************************************                   !lda+u
+! Start LDA+U initialization                                                   !lda+u
+! In particular, U-matrix ULDAU and basis PHI are created.                     !lda+u
+! Allocate arrays that depend on NATOM. (Arrays dependent on                   !lda+u
+! NATLDAU are allocated in routines INITLDAU,RWLDAUPOT.)                       !lda+u
+ALLOCATE( LDAU(NATOM) )                                                        !lda+u
+LDAU(:)%LOPT = -1                                                              !lda+u
+ldau_initial_iter = .false.                                                    !lda+u
+IF ( CONFIG_RUNFLAG('LDA+U') ) THEN                                            !lda+u
+   if (myrank==master) WRITE(*,*) 'LDA+U calculation'                          !lda+u
+   CALL INITLDAU(LMAXD,NATOM,NSPIN,VPOT,ZATOM,1,CELL,LDAU,ldau_initial_iter)   !lda+u
+   DO IATOM = 1,NATOM                                                          !lda+u
+      IF (LDAU(IATOM)%LOPT.GE.0 .and. myrank==master) then                     !lda+u
+        WRITE(*,FMT='(A12,I4,a3,I3,3(A6,F6.3))') &                             !lda+u
+        'LDA+U: Atom',IATOM,' l=',LDAU(IATOM)%LOPT,' UEFF=',LDAU(IATOM)%UEFF, & !lda+u
+        ' JEFF=',LDAU(IATOM)%JEFF,' EREF=',LDAU(IATOM)%EREFLDAU                 !lda+u
+      end if
+      IF (LDAU(IATOM)%LOPT.GT.LMAXATOM(IATOM)) THEN                            !lda+u
+         WRITE(*,*) 'Atom:',IATOM,' LDA+U orbital=',LDAU(IATOM)%LOPT,  &       !lda+u
+              ' but lmax=',LMAXATOM(IATOM)                                     !lda+u
+         STOP 'LDA+U control: lmax'                                            !lda+u
+      ENDIF                                                                    !lda+u
+      LDAU(IATOM)%IELDAUSTART = 1                                              !lda+u
+      LDAU(IATOM)%IELDAUEND = IELAST                                           !lda+u
+   ENDDO                                                                       !lda+u
 ! CALL AVERAGEWLDAU   ! average read-in interaction over m's                         !lda+u
-         CALL AVERAGEWLDAU(NATOM,NSPIN,LDAU)                                         !lda+u
-      ENDIF                                                                          !lda+u
+   CALL AVERAGEWLDAU(NATOM,NSPIN,LDAU)                                         !lda+u
+ENDIF                                                                          !lda+u
 ! **********************************************************                         !lda+u
 
 
@@ -1123,6 +1124,7 @@ end if
         WRITE(*,'(79(1H*))')
       else
         write(*,*) 'LDA+U initialization finished, now run self-consistency from next iteration on'
+        ldau_initial_iter = .false.
       end if
     END IF
 
