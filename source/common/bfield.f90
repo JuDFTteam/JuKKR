@@ -14,7 +14,6 @@
 !> 
 !------------------------------------------------------------------------------------
 module mod_bfield
-
   !-------------------------------------------------------------------------------
   !> Summary: Type used in t_params to store all relevant information for bfields and constraining fields
   !> Author: Sascha Brinker
@@ -49,7 +48,10 @@ contains
   !> be done after `bcast t_params_scalars` for myrank<>master otherwise are the parameters not set
   !-------------------------------------------------------------------------------
   subroutine init_bfield(natyp,lbfield,lbfield_constr,lbfield_all,ibfield,ibfield_constr,itscf0, &
-    itscf1,bfield_in,bfield_strength,bfield_constr,theta,phi)
+    itscf1)
+
+      implicit none
+
       integer, intent(in) :: natyp ! external magnetic field (turned on via runoption <noncobfield>) non-collinear magnetic field
       integer :: i_stat
       
@@ -86,13 +88,121 @@ contains
       allocate (bfield%bfield_constr(natyp), stat=i_stat)
       call memocc(i_stat, product(shape(bfield%bfield_constr))*kind(bfield%bfield_constr), 'bfield%bfield_constr', 'init_bfield')
       ! init allocated arrays
-      bfield%theta(:) = theta(:)
-      bfield%phi(:) = phi(:)
-      bfield%bfield_strength(:) = bfield_strength(:)
-      ! define bfield out of theta, phi and strength
-      bfield%bfield(:,:) = bfield_in(:,:)
       bfield%bfield_constr(:,:) = 0.d0
+      call read_bfield(bfield,natyp)
   end subroutine init_bfield
+
+
+  !-------------------------------------------------------------------------------
+  !> Summary: Reads the atom-wise magnetic field from bfield.dat
+  !> Author: Sascha Brinker
+  !> Category: KKRhost, bfield
+  !> Deprecated: False
+  !> the file has the format:
+  !> theta  phi  bfield_strength (in Tesla)
+  !-------------------------------------------------------------------------------
+  subroutine read_bfield(bfield,natyp)
+    implicit none
+
+    integer            , intent(in)     :: natyp
+    type(type_bfield)  , intent(inout)  :: bfield
+    !local
+    integer                 :: iatom,ios,ierror
+    character(len=200)      :: string1
+    integer,save            :: first=1
+    
+    if (first==1) then
+    
+      open(unit=57493215, file='bfield.dat', status='old', iostat=ierror)
+      if (ierror/=0) then
+        write(*,*) '[read_bfield] bfield file does not exist'
+        write(*,*) '              setting all bfields to zero'
+        write(*,*) '              disabling magnetic field lbfield = F'
+        bfield%lbfield        = .false.
+        do iatom=1,natyp
+          bfield%theta(iatom)            = 0.0D0
+          bfield%phi(iatom)              = 0.0D0
+          bfield%bfield_strength(iatom)  = 0.0D0
+          bfield%bfield(iatom,:)         = 0.0D0
+        end do
+        return
+      end if
+      call read_numbofbfields(natyp)
+    
+    end if
+    
+    
+    
+    write(*,*) '  ###############################################'
+    write(*,*) '  non-collinear magnetic fields'
+    write(*,*) '  ###############################################'
+    write(*,*) '        iatom      theta               phi                  bfield (in Ry   )'
+    write(1337,*) 'Angles for bfield'
+    write(1337,*) 'iatom  theta                    phi              bfield (in Ry   )'
+    bfield%lbfield                = .true.
+    do iatom=1,natyp
+       string1=this_readline(57493215,ios)
+       if (ios/=0) stop '[read_bfield] Error reading atom info2'
+       if (ios==-1) stop '[read_bfield] EOF'
+       read(string1,*) iatom,bfield%theta(iatom),bfield%phi(iatom),bfield%bfield_strength(iatom)
+       write(1337,*) iatom,bfield%theta(iatom),bfield%phi(iatom),bfield%bfield_strength(iatom)
+       write(*,*) iatom,bfield%theta(iatom),bfield%phi(iatom),bfield%bfield_strength(iatom)
+       bfield%theta(iatom)                  = bfield%theta(iatom)/360.0D0*8.0D0*datan(1.0D0)
+       bfield%phi(iatom)                    = bfield%phi(iatom)  /360.0D0*8.0D0*datan(1.0D0)
+       bfield%bfield_strength(iatom)        = bfield%bfield_strength(iatom)!/235051.787_dp !conversion from Tesla to Ry
+       bfield%bfield(iatom,1)               = bfield%bfield_strength(iatom)*cos(bfield%phi(iatom))*sin(bfield%theta(iatom))
+       bfield%bfield(iatom,2)               = bfield%bfield_strength(iatom)*sin(bfield%phi(iatom))*sin(bfield%theta(iatom))
+       bfield%bfield(iatom,3)               = bfield%bfield_strength(iatom)*cos(bfield%theta(iatom))
+       write(*,*) iatom,bfield%theta(iatom),bfield%phi(iatom),bfield%bfield_strength(iatom),bfield%bfield(iatom,1),bfield%bfield(iatom,2),bfield%bfield(iatom,3)
+    end do
+    ! close(33952084)
+    first=0
+  end subroutine read_bfield
+  
+  subroutine read_numbofbfields(natom)
+    implicit none
+    integer                 :: ios,linecount
+    character(len=200)      :: string1
+    
+    open(unit=55493215, file='bfield.dat', status='old', iostat=ierror)
+    ios=0
+    linecount = -1
+    do while (ios/=-1)
+       string1=this_readline(55493215,ios)
+       linecount=linecount+1
+    end do
+    
+    if (natom/=linecount) then
+      print *,'[read_bfield] number of angles given in file bfield.dat'
+      print *,'             is not correct'
+      print *,'linecount',linecount
+      print *,'natyp',natyp
+      stop
+    end if
+    close(55493215)
+  end subroutine read_numbofbfields
+  
+  function this_readline(ifile,ios)
+    !--------------------------------------------------------
+    !--  reads the next line in file unit ifile            --
+    !--------------------------------------------------------
+    !--  files starting with a dash (#) are treated as     --
+    !--  a comment !!!                                     --
+    !--  OUTPUT: next line which is not commented out      --
+    !--          error variable IOS (should be zero)       --
+    !--------------------------------------------------------
+    ! input variables
+      implicit none
+    integer,intent(in)               :: ifile
+    integer,intent(out)              :: ios
+    ! local variables
+    character(len=200)  ::this_readline
+    do
+      read(unit=ifile,fmt='(A)', iostat=ios) this_readline
+      if (ios/=0 .or. this_readline(1:1)/='#') exit
+    end do
+  end function this_readline
+
 end module mod_bfield
 
 

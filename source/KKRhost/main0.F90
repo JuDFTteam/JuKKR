@@ -106,7 +106,7 @@ module mod_main0
   integer :: kxc = 2               !! Type of xc-potential 0=MJW 1=vBH 2=VWN 3=PW91 4=PBE 5=PBEsol
   integer :: igf = 0               !! Do not print or print (0/1) the KKRFLEX_* files
   integer :: icc = 0               !! Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
-  integer :: ins = 2               !! 0 (MT), 1(ASA), 2(Full Potential)
+ integer :: ins = 2               !! 0 (MT), 1(ASA), 2(Full Potential)
   integer :: irm                   !! Maximum number of radial points
   integer :: ipe = 0               !! Not real used, IPFE should be 0
   integer :: ipf = 0               !! Not real used, IPFE should be 0
@@ -456,6 +456,7 @@ contains
     use :: mod_version, only: version1, version2, version3, version4
     use :: mod_version_info, only: serialnr, version_print_header
     use :: mod_md5sums, only: get_md5sums, md5sum_potential, md5sum_shapefun
+    use :: mod_bfield, only: bfield, init_bfield
     use :: mod_wunfiles, only: wunfiles
     use :: mod_types, only: t_imp, t_inc, init_params_t_imp, init_t_imp
     use :: memoryhandling, only: memocc, allocate_cell, allocate_cpa, allocate_soc, allocate_ldau, allocate_magnetization, allocate_potential, &
@@ -1262,6 +1263,12 @@ contains
         nspin,rmesh,irmin,ipan,ircut,r_log,npan_log,npan_eq,npan_log_at,npan_eq_at, &
         npan_tot,rnew,rpan_intervall,ipan_intervall,ncelld,ntcell,thetas,thetasnew)
     end if
+
+    ! init bfield parameters (stored in a type_bfield, which is given to wunfiles and t_params)
+    !call init_bfield(natyp,lbfield,lbfield_constr,lbfield_all,ibfield,ibfield_constr,bfield_itscf0, &
+    !  bfield_itscf1,bfield_strength,theta,phi)
+    call init_bfield(natyp,.True.,.False.,.True.,0,0,0, &
+      100)
 
     call wunfiles(npol, npnt1, npnt2, npnt3, ielast, tk, emin, emax, ez, wez, efermi, npolsemi, n1semi, n2semi, n3semi, iesemicore, tksemi, ebotsemi, emusemi, fsemicore, vins, &
       visp, vbc, vtrel, btrel, rmrel, drdirel, r2drdirel, zrel, jwsrel, irshift, itscf, scfsteps, cmomhost, ecore, lcore, ncore, qmtet, qmphi, qmphitab, qmtettab, qmgamtab, drotq, &
