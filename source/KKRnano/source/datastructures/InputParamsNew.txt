@@ -118,5 +118,7 @@ i npan_log 30
 i npan_eq 30
 ### [NOCO] number of Chebychev points in panel
 i ncheb 10
+### [NOCO] factor between interval lengthss in logarithmic panel
+d r_fac 2.0D0
 ### [NOCO] size of logarithmic panel
 d r_log 0.1D0

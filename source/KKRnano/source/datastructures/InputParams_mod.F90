@@ -75,6 +75,7 @@ module InputParams_mod
     integer :: npan_log
     integer :: npan_eq
     integer :: ncheb
+    double precision :: r_fac
     double precision :: r_log
   endtype ! InputParams
 
@@ -606,6 +607,15 @@ integer function getValues(filename, self) result(ierror)
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for ncheb."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "r_fac", self%r_fac , def=2.0D0)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for r_fac. Set r_fac to 2.0D0"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for r_fac."
     destroy_and_return
   endif
 
