@@ -77,6 +77,7 @@ module InputParams_mod
     integer :: ncheb
     double precision :: r_fac
     double precision :: r_log
+    logical :: enable_quad_prec
   endtype ! InputParams
 
 
@@ -625,6 +626,15 @@ integer function getValues(filename, self) result(ierror)
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for r_log."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "enable_quad_prec", self%enable_quad_prec , def=.false.)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for enable_quad_prec. Set enable_quad_prec to .false."
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for enable_quad_prec."
     destroy_and_return
   endif
 

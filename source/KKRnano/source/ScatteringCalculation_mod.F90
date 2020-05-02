@@ -267,7 +267,7 @@ implicit none
                                     noco%theta_noco(i1),noco%phi_noco(i1),1,  & !ipot=1 because potential has only one or two entries (spin polarized case)
                                     !dims%lly,        &    
                                     atomdata%potential%lmpot,atomdata%chebmesh_ptr%irmd_new, &
-                                    kkr(ila)%TmatN(:,:,ispin),params%soc)
+                                    kkr(ila)%TmatN(:,:,ispin),params%soc,params%enable_quad_prec)
                
                 call rotatematrix(kkr(ila)%TmatN(:,:,ispin),noco%theta_noco(i1),noco%phi_noco(i1),lmmaxd,0)
               else
@@ -537,7 +537,7 @@ implicit none
     enddo ! iorbit
 
     allocate(uTu_sum(lmmaxd_noco,lmmaxd_noco), uT(lmmaxd_noco,lmmaxd_noco))
-    ! No symmtetrization is performed in case of a NOCO calculation
+    ! No symmetrization is performed in case of a NOCO calculation
     if (korbit == 0) then ! NOCO
       !------------------------------------------------- SYMMETRISE TmatN
       uTu_sum(:,:) = TmatN(:,:) ! copy, since the 1st entry is the unity operation, start loop from 2
