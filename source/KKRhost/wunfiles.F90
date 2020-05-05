@@ -23,7 +23,7 @@ module mod_wunfiles
   use :: mod_profiling
   use :: mod_datatypes
   use :: mod_constants, only: nsymaxd
-  use :: mod_bfield, only: bfield
+  use :: mod_bfield, only: type_bfield
 
   implicit none
 
@@ -110,7 +110,7 @@ module mod_wunfiles
     integer :: naclsd   !! Maximum number of atoms in a TB-cluster
     integer :: lmaxd1
     integer :: nsheld   !! Number of blocks of the GF matrix that need to be calculated (NATYP + off-diagonals in case of impurity)
-    integer :: ncelld   !! Number of cells (shapes) in non-spherical part
+    integer :: ncelld   !! = naez in main0, could/should be replaced to make the code more understandable
     integer :: lmxspd   !! (2*LPOT+1)**2
     integer :: nsymat
     integer :: nprinc   !! Number of atoms in one principal layer
@@ -315,6 +315,7 @@ module mod_wunfiles
     !character (len=8), dimension (:), allocatable :: optc
     !character (len=8), dimension (:), allocatable :: testc
     character (len=124), dimension (:), allocatable :: txc
+    type (type_bfield) :: bfield
 
   end type type_params
 
@@ -350,7 +351,7 @@ contains
     mmaxd,nr,nsheld,naezdpd,natomimpd,nspind,irid,nfund,ncelld,lmxspd,ngshd,        &
     krel,ntotd,ncheb,npan_log,npan_eq,npan_log_at,npan_eq_at,r_log,npan_tot,rnew,   &
     rpan_intervall,ipan_intervall,nspindd,thetasnew,socscale,tolrdif,lly,deltae,    &
-    rclsimp,verbosity,MPI_scheme,special_straight_mixing)
+    rclsimp,verbosity,MPI_scheme,special_straight_mixing,bfield)
     ! **********************************************************************
     ! *                                                                    *
     ! *  This subroutine is part of the MAIN0 program in the tbkkr package *
@@ -611,6 +612,8 @@ contains
     logical, dimension (2), intent (in) :: vacflag
     logical, dimension (nsymaxd), intent (in) :: symunitary !! unitary/antiunitary symmetry flag
     character (len=124), dimension (6), intent (in) :: txc
+    ! Non-collinear Bfield options
+    type (type_bfield), intent (in) :: bfield
     ! .. Local scalars
     integer :: i1
     integer :: ic, naclsmin, naclsmax, nqdos, irmdnew ! variables for t_inc filling
@@ -804,6 +807,13 @@ contains
       write (*, *) 'in combination with option "OPERATOR"' ! fswrt
       stop                         ! fswrt
     end if                         ! fswrt
+    
+
+    !--------------------------------------------------------------------------------
+    ! Non-collinear magnetic field and constraining fields
+    !--------------------------------------------------------------------------------
+    ! store magnetic field information
+    t_params%bfield = bfield
 
     !--------------------------------------------------------------------------------
     ! MPI communication scheme
@@ -847,6 +857,7 @@ contains
     call save_emesh(ielast,ez,wez,emin,emax,iesemicore,fsemicore,npol,tk,npnt1,     &
       npnt2,npnt3,ebotsemi,emusemi,tksemi,npolsemi,n1semi,n2semi,n3semi,iemxd,      &
       t_params)
+
 
   end subroutine wunfiles
 
@@ -1188,6 +1199,22 @@ contains
       call memocc(i_stat, product(shape(t_params%volbz))*kind(t_params%volbz), 't_params%VOLBZ', 'init_t_params')
       allocate (t_params%nofks(t_params%maxmesh), stat=i_stat) ! integer
       call memocc(i_stat, product(shape(t_params%nofks))*kind(t_params%nofks), 't_params%NOFKS', 'init_t_params')
+    end if
+      
+    ! -------------------------------------------------------------------------------
+    ! Non-collinear magnetic field 
+    ! -------------------------------------------------------------------------------
+    if (.not. allocated(t_params%bfield%theta)) then
+      allocate (t_params%bfield%theta(t_params%natyp), stat=i_stat)
+      call memocc(i_stat, product(shape(t_params%bfield%theta))*kind(t_params%bfield%theta), 't_params%bfield%theta', 'init_t_params')
+      allocate (t_params%bfield%phi(t_params%natyp), stat=i_stat)
+      call memocc(i_stat, product(shape(t_params%bfield%phi))*kind(t_params%bfield%phi), 't_params%bfield%phi', 'init_t_params')
+      allocate (t_params%bfield%bfield(t_params%natyp,3), stat=i_stat)
+      call memocc(i_stat, product(shape(t_params%bfield%bfield))*kind(t_params%bfield%bfield), 't_params%bfield%bfield', 'init_t_params')
+      allocate (t_params%bfield%bfield_strength(t_params%natyp), stat=i_stat)
+      call memocc(i_stat, product(shape(t_params%bfield%bfield_strength))*kind(t_params%bfield%bfield_strength), 't_params%bfield%bfield_strength', 'init_t_params')
+      allocate (t_params%bfield%bfield_constr(t_params%natyp,3), stat=i_stat)
+      call memocc(i_stat, product(shape(t_params%bfield%bfield_constr))*kind(t_params%bfield%bfield_constr), 't_params%bfield%bfield_constr', 'init_t_params')
     end if
 
   end subroutine init_t_params
@@ -1532,6 +1559,21 @@ contains
     call mpi_bcast(t_params%npan_eq, 1, mpi_integer, master, mpi_comm_world, ierr)
 
 
+    ! -------------------------------------------------------------------------
+    ! Non-collinear magnetic field
+    ! -------------------------------------------------------------------------
+    ! logicals
+    call mpi_bcast(t_params%bfield%lbfield, 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%lbfield_constr, 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%lbfield_all, 1, mpi_logical, master, mpi_comm_world, ierr)
+
+    ! integer
+    call mpi_bcast(t_params%bfield%ibfield, 1, mpi_integer, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%ibfield_constr, 1, mpi_integer, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%itscf0, 1, mpi_integer, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%itscf1, 1, mpi_integer, master, mpi_comm_world, ierr)
+
+
   end subroutine bcast_t_params_scalars
 
   !-------------------------------------------------------------------------------
@@ -1715,6 +1757,18 @@ contains
     call mpi_bcast(t_params%volcub, (t_params%kpoibz*t_params%maxmesh), mpi_double_precision, master, mpi_comm_world, ierr) ! real (kind=dp)
     call mpi_bcast(t_params%volbz, (t_params%maxmesh), mpi_double_precision, master, mpi_comm_world, ierr) ! real (kind=dp)
     call mpi_bcast(t_params%nofks, (t_params%maxmesh), mpi_integer, master, mpi_comm_world, ierr) ! integer
+    
+
+    ! -------------------------------------------------------------------------
+    ! Non-collinear magnetic field
+    ! -------------------------------------------------------------------------
+    call mpi_bcast(t_params%bfield%bfield, (t_params%natyp*3), mpi_double_precision, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%bfield_constr, (t_params%natyp*3), mpi_double_precision, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%bfield_strength, (t_params%natyp), mpi_double_precision, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%theta, (t_params%natyp), mpi_double_precision, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%phi, (t_params%natyp), mpi_double_precision, master, mpi_comm_world, ierr)
+    
+    call mpi_bcast(t_params%ntcell, (t_params%natyp), mpi_integer, master, mpi_comm_world, ierr)
 
   end subroutine bcast_t_params_arrays
 #endif

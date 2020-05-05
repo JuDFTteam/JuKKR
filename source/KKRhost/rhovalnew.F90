@@ -59,6 +59,8 @@ contains
     use :: mod_rotatespinframe, only: rotatematrix, rotatevector
     use :: mod_vllmatsra, only: vllmatsra
     use :: mod_vllmat, only: vllmat
+    use :: mod_wunfiles, only: t_params
+    use :: mod_bfield, only: add_bfield
 
     implicit none
 
@@ -172,6 +174,7 @@ contains
     complex (kind=dp), dimension (:, :, :, :), allocatable :: vnspll
     complex (kind=dp), dimension (:, :, :, :), allocatable :: r2orbc
     complex (kind=dp), dimension (:, :, :, :), allocatable :: vnspll1
+    complex (kind=dp), dimension (:, :, :), allocatable :: vnspll2
     complex (kind=dp), dimension (:, :, :, :), allocatable :: rllleft
     complex (kind=dp), dimension (:, :, :, :), allocatable :: sllleft
     complex (kind=dp), dimension (:, :, :, :), allocatable :: r2nefc_loop
@@ -228,7 +231,10 @@ contains
     vnspll0 = czero
     allocate (vnspll1(lmmaxd,lmmaxd,irmdnew,0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(vnspll1))*kind(vnspll1), 'VNSPLL1', 'RHOVALNEW')
-    vnspll0 = czero
+    vnspll1 = czero
+    allocate (vnspll2(lmmaxd,lmmaxd,irmdnew), stat=i_stat)
+    call memocc(i_stat, product(shape(vnspll2))*kind(vnspll2), 'VNSPLL2', 'RHOVALNEW')
+    vnspll2 = czero
 
     call vllmat(1, nrmaxd, irmdnew, lmmax0d, lmmaxd, vnspll0, vins, lmpotd, cleb, icleb, iend, nspin/(nspin-korbit), zat, rnew, use_sratrick, ncleb)
     !--------------------------------------------------------------------------------
@@ -469,9 +475,18 @@ contains
       ! contruct the spin-orbit coupling hamiltonian and add to potential
       if ( .not. set_cheby_nosoc) then
         call spinorbit_ham(lmax, lmmax0d, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpotd, theta, phi, ipan_intervall, &
-          rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, vnspll0, vnspll1(:,:,:,ith), '1')
+          rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, vnspll0, vnspll2(:,:,:), '1')
       else
-        vnspll1(:,:,:,ith) = vnspll0(:,:,:)
+        vnspll2(:,:,:) = vnspll0(:,:,:)
+      end if
+  
+      ! Add magnetic field
+      if ( t_params%bfield%lbfield .or. t_params%bfield%lbfield_constr ) then
+        imt1 = ipan_intervall(t_params%npan_log+t_params%npan_eq) + 1
+        call add_bfield(t_params%bfield,i1,lmax,nspin,irmdnew,imt1,iend,ncheb,theta,phi,t_params%ifunm1(:,t_params%ntcell(i1)),&
+                        t_params%icleb,t_params%cleb(:,1),t_params%thetasnew(1:irmdnew,:,t_params%ntcell(i1)),'1',vnspll2(:,:,:),vnspll1(:,:,:,ith))
+      else
+        vnspll1(:,:,:,ith) = vnspll2(:,:,:)
       end if
 
       ! extend matrix for the SRA treatment
@@ -543,9 +558,17 @@ contains
         ! read/recalc wavefunctions left contruct the TRANSPOSE spin-orbit coupling hamiltonian and add to potential
         if ( .not. set_cheby_nosoc) then
           call spinorbit_ham(lmax, lmmax0d, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpotd, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
-            vnspll0, vnspll1(:,:,:,ith), 'transpose')
+            vnspll0, vnspll2(:,:,:), 'transpose')
         else
-          vnspll1(:,:,:,ith) = vnspll0(:,:,:)
+          vnspll2(:,:,:) = vnspll0(:,:,:)
+        end if
+        
+        ! Add magnetic field 
+        if ( t_params%bfield%lbfield .or. t_params%bfield%lbfield_constr ) then
+          call add_bfield(t_params%bfield,i1,lmax,nspin,irmdnew,imt1,iend,ncheb,theta,phi,t_params%ifunm1(:,t_params%ntcell(i1)),&
+                          t_params%icleb,t_params%cleb(:,1),t_params%thetasnew(1:irmdnew,:,t_params%ntcell(i1)),'transpose',vnspll2(:,:,:),vnspll1(:,:,:,ith))
+        else
+          vnspll1(:,:,:,ith) = vnspll2(:,:,:)
         end if
         ! extend matrix for the SRA treatment
         vnspll(:, :, :, ith) = czero
@@ -1052,6 +1075,8 @@ contains
     call memocc(i_stat, i_all, 'VNSPLL0', 'RHOVALNEW')
     i_all = -product(shape(vnspll1))*kind(vnspll1)
     deallocate (vnspll1, stat=i_stat)
+    i_all = -product(shape(vnspll2))*kind(vnspll2)
+    deallocate (vnspll2, stat=i_stat)
     call memocc(i_stat, i_all, 'VNSPLL1', 'RHOVALNEW')
     i_all = -product(shape(vnspll))*kind(vnspll)
     deallocate (vnspll, stat=i_stat)

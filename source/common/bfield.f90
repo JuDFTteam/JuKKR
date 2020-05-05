@@ -14,6 +14,16 @@
 !> 
 !------------------------------------------------------------------------------------
 module mod_bfield
+  
+  use :: mod_profiling
+  use :: mod_datatypes
+  use :: global_variables, only: lmmaxd, ncleb, ntotd, nfund
+  use :: mod_types, only: t_inc
+  use :: mod_rotatespinframe, only: rotatematrix
+  use :: mod_mympi, only: myrank, master
+
+  implicit none
+
   !-------------------------------------------------------------------------------
   !> Summary: Type used in t_params to store all relevant information for bfields and constraining fields
   !> Author: Sascha Brinker
@@ -29,11 +39,11 @@ module mod_bfield
     integer :: ibfield_constr = 0 ! type of contraint (0 = torque, 1 = magnetic moment)
     integer :: itscf0 = 0    ! start magnetic field at iteration itscf0
     integer :: itscf1 = 10000 ! stop applying magnetic field after iteration itscf1
-    real (kind=dp), dimension (:,:), allocatable :: bfield ! external magnetic field in cartesian coordinates, dimensions (natom,3)
-    real (kind=dp), dimension (:), allocatable :: bfield_strength ! absolute value of the external magnetic field, dimensions (natom)
-    real (kind=dp), dimension (:,:), allocatable :: bfield_constr ! constraining field in cartesian coordinates, dimensions (natom,3)
-    real (kind=dp), dimension (:), allocatable :: theta ! polar angle of the magnetic field
-    real (kind=dp), dimension (:), allocatable :: phi   ! azimuthal angle of the magnetic field
+    real (kind=dp), dimension (:,:), allocatable        :: bfield ! external magnetic field in cartesian coordinates, dimensions (natom,3)
+    real (kind=dp), dimension (:), allocatable          :: bfield_strength ! absolute value of the external magnetic field, dimensions (natom)
+    real (kind=dp), dimension (:,:), allocatable        :: bfield_constr ! constraining field in cartesian coordinates, dimensions (natom,3)
+    real (kind=dp), dimension (:), allocatable          :: theta ! polar angle of the magnetic field
+    real (kind=dp), dimension (:), allocatable          :: phi   ! azimuthal angle of the magnetic field
   end type type_bfield
 
   type (type_bfield), save :: bfield
@@ -44,14 +54,13 @@ contains
   !> Author: Sascha Brinker
   !> Category: memory-management, profiling, KKRhost, bfield
   !> Deprecated: False
-  !> Allocate initial parameters to be broadcasted via mpi. allocate arrays, has to
-  !> be done after `bcast t_params_scalars` for myrank<>master otherwise are the parameters not set
   !-------------------------------------------------------------------------------
-  subroutine init_bfield(natyp,lbfield,lbfield_constr,lbfield_all,ibfield,ibfield_constr,itscf0, &
+  subroutine init_bfield(bfield,natyp,lbfield,lbfield_constr,lbfield_all,ibfield,ibfield_constr,itscf0, &
     itscf1)
 
       implicit none
 
+      type(type_bfield), intent(inout) :: bfield
       integer, intent(in) :: natyp ! external magnetic field (turned on via runoption <noncobfield>) non-collinear magnetic field
       integer :: i_stat
       
@@ -62,11 +71,6 @@ contains
       integer, intent(in) :: ibfield_constr 
       integer, intent(in) :: itscf0 
       integer, intent(in) :: itscf1 
-      real (kind=dp), dimension (natyp,3), intent(in) :: bfield_in ! external magnetic field in cartesian coordinates, dimensions (natom,3)
-      real (kind=dp), dimension (natyp),   intent(in) :: bfield_strength ! absolute value of the external magnetic field, dimensions (natom)
-      real (kind=dp), dimension (natyp,3), intent(in) :: bfield_constr ! constraining field in cartesian coordinates, dimensions (natom,3)
-      real (kind=dp), dimension (natyp),   intent(in) :: theta ! polar angle of the magnetic field
-      real (kind=dp), dimension (natyp),   intent(in) :: phi   ! azimuthal angle of the magnetic field
 
       ! init basic parameters
       bfield%lbfield = lbfield
@@ -85,7 +89,7 @@ contains
       call memocc(i_stat, product(shape(bfield%bfield))*kind(bfield%bfield), 'bfield%bfield', 'init_bfield')
       allocate (bfield%bfield_strength(natyp), stat=i_stat)
       call memocc(i_stat, product(shape(bfield%bfield_strength))*kind(bfield%bfield_strength), 'bfield%bfield_strength', 'init_bfield')
-      allocate (bfield%bfield_constr(natyp), stat=i_stat)
+      allocate (bfield%bfield_constr(natyp,3), stat=i_stat)
       call memocc(i_stat, product(shape(bfield%bfield_constr))*kind(bfield%bfield_constr), 'bfield%bfield_constr', 'init_bfield')
       ! init allocated arrays
       bfield%bfield_constr(:,:) = 0.d0
@@ -139,12 +143,11 @@ contains
     write(*,*) '        iatom      theta               phi                  bfield (in Ry   )'
     write(1337,*) 'Angles for bfield'
     write(1337,*) 'iatom  theta                    phi              bfield (in Ry   )'
-    bfield%lbfield                = .true.
     do iatom=1,natyp
        string1=this_readline(57493215,ios)
        if (ios/=0) stop '[read_bfield] Error reading atom info2'
        if (ios==-1) stop '[read_bfield] EOF'
-       read(string1,*) iatom,bfield%theta(iatom),bfield%phi(iatom),bfield%bfield_strength(iatom)
+       read(string1,*) bfield%theta(iatom),bfield%phi(iatom),bfield%bfield_strength(iatom)
        write(1337,*) iatom,bfield%theta(iatom),bfield%phi(iatom),bfield%bfield_strength(iatom)
        write(*,*) iatom,bfield%theta(iatom),bfield%phi(iatom),bfield%bfield_strength(iatom)
        bfield%theta(iatom)                  = bfield%theta(iatom)/360.0D0*8.0D0*datan(1.0D0)
@@ -161,7 +164,8 @@ contains
   
   subroutine read_numbofbfields(natom)
     implicit none
-    integer                 :: ios,linecount
+    integer,intent(in)      :: natom
+    integer                 :: ios,linecount,ierror
     character(len=200)      :: string1
     
     open(unit=55493215, file='bfield.dat', status='old', iostat=ierror)
@@ -176,7 +180,7 @@ contains
       print *,'[read_bfield] number of angles given in file bfield.dat'
       print *,'             is not correct'
       print *,'linecount',linecount
-      print *,'natyp',natyp
+      print *,'natyp',natom
       stop
     end if
     close(55493215)
@@ -202,6 +206,334 @@ contains
       if (ios/=0 .or. this_readline(1:1)/='#') exit
     end do
   end function this_readline
+
+  
+  !------------------------------------------------------------------------------------
+  !> Summary: Adds magnetic field to the LL' expansion of the potential
+  !> Author: Sascha Brinker
+  !> Category: KKRhost, bfield
+  !> Deprecated: False 
+  !> Calculates the LL' expansion of a magnetic field.
+  !> There are two magnetic field, which can be added: a homogeneous magnetic
+  !> field read in from bfield.dat and a constraining field, which compensates
+  !> the magnetic torque.
+  !> @note The magnetic field is added in the following form:
+  !> $ H = H_0 - \sigma \cdot \vec{B} $
+  !> The input magnetic field is read in from bfield.dat.
+  !> It is homogeneous within each cell.
+  !> @endnote
+  !> @note Runs only with the new solver and either spin-orbit coupling or
+  !> noncollinear magnetism.
+  !> @endnote
+  !------------------------------------------------------------------------------------
+  subroutine add_bfield(bfield,iatom,lmax,nspin,irmdnew,imt1,iend,ncheb,theta,phi,ifunm,icleb,cleb,thetasnew,mode,vnspll0,vnspll1)
+
+    implicit none
+
+    type(type_bfield)    , intent (in)    :: bfield       ! contains all relevant information about the magnetic fields
+    integer              , intent (in)    :: iatom        ! atom index
+    integer              , intent (in)    :: lmax         ! angular momentum cut-off
+    integer              , intent (in)    :: nspin        ! number of spins
+    integer              , intent (in)    :: irmdnew      ! number of radials point on the Cheby mesh
+    integer              , intent (in)    :: imt1         ! index muffin-tin radius
+    integer              , intent (in)    :: iend         ! Number of nonzero gaunt coefficients
+    integer              , intent (in)    :: ncheb        ! Number of Chebychev pannels for the new solver
+    real (kind=dp)       , intent (in)    :: theta        ! polar angle of the magnetic moment 
+    real (kind=dp)       , intent (in)    :: phi          ! azimuthal angle of the magnetic moment 
+    integer              , dimension (1:(2*lmax+1)**2)                     , intent (in) :: ifunm        ! pointer array for shapefun     ! Check index and dimensions!!!!!
+    integer, dimension (ncleb, 4), intent (in)                                  :: icleb !! Pointer array
+    real (kind=dp), dimension (ncleb), intent (in)                                  :: cleb !! GAUNT coefficients (GAUNT)    ! CHECK THE DIMENSION AND HOW IT IS USED!!!
+    real (kind=dp)       , dimension (irmdnew, nfund)     , intent (in) :: thetasnew    ! shapefun on the Cheby mesh
+    character (len=*)    , intent (in)                                          :: mode         !! either '1' or 'transpose', depending whether SOC potential is constructed for right or left solution
+    complex (kind=dp)    , dimension(lmmaxd, lmmaxd, irmdnew) , intent (in)    :: vnspll0       !! input potential in (l,m,s) basis
+    complex (kind=dp)    , dimension(lmmaxd, lmmaxd, irmdnew) , intent (out)   :: vnspll1       !! input potential in (l,m,s) basis
+    !------------------------------------------------------------------------------------
+    ! local variables
+    !------------------------------------------------------------------------------------
+    integer                                     :: lmmax
+    integer                                     :: i
+    integer                                     :: j
+    integer                                     :: ilm1
+    integer                                     :: ilm2
+    integer                                     :: ir
+    integer , dimension(2)                      :: lmstart
+    integer , dimension(2)                      :: lmend
+    real(kind=dp) , dimension(1:irmdnew,1:(2*lmax+1)**2,1:(2*lmax+1)**2)   :: thetansll   
+    real(kind=dp) , dimension(3)                :: bin(3)
+    double complex , dimension(2,2)             :: bs ! sigma*b_0
+    character(len=1024)                         :: filename
+    double complex , dimension(1:irmdnew)       :: temp
+    double complex                              :: icompl
+    double complex                              :: temp2
+    logical                                     :: debug=.False.
+    !------------------------------------------------------------------------------------
+    ! old variables
+    !------------------------------------------------------------------------------------
+    !double complex                          :: bxcll(2*(lmax+1)**2,2*(lmax+1)**2,nrmaxnew)
+    !double complex                          :: templl(2*(lmax+1)**2,2*(lmax+1)**2,nrmaxnew)
+    !------------------------------------------------------------------------------------
+    !------------------------------------------------------------------------------------
+    !!write(*,*) bfield       ! contains all relevant information about the magnetic fields
+    !write(*,*) iatom        ! atom index
+    !write(*,*) lmax         ! angular momentum cut-off
+    !write(*,*) nspin        ! number of spins
+    !write(*,*) irmdnew      ! number of radials point on the Cheby mesh
+    !write(*,*) imt1         ! index muffin-tin radius
+    !write(*,*) iend         ! Number of nonzero gaunt coefficients
+    !write(*,*) ncheb        ! Number of Chebychev pannels for the new solver
+    !write(*,*) theta        ! polar angle of the magnetic moment 
+    !write(*,*) phi          ! azimuthal angle of the magnetic moment 
+    !write(*,*) ifunm        ! pointer array for shapefun
+    !write(*,*) icleb !! Pointer array
+    !write(*,*) cleb !! GAUNT coefficients (GAUNT)
+    !------------------------------------------------------------------------------------
+    !------------------------------------------------------------------------------------
+    
+    !lmmax=lmmaxd ! could be replace it is still here due to copy/paste
+    lmmax=(lmax+1)**2
+    icompl=(0d0,1d0) 
+    lmstart(1)= 1
+    lmstart(2)= lmmax+1
+    lmend(1)=lmmax
+    lmend(2)=2*lmmax
+
+    !if(myrank==master .and. debug) then
+    !  write(filename,'("debug_bfield_",i3.3)') iatom
+    !  open(unit=17*iatom**2,file=filename)
+    !  write(17*iatom**2,'(" mode =")')
+    !  write(17*iatom**2,*) mode 
+    !  write(17*iatom**2,'("  lmax= ",i4,"  lmmax= ",i4,"  irmdnew= ",i4,"  imt1= ",i4,"  ncheb= ",i4,"  iend= ",i4,"  iatom= ",i4,"  nspin= ",i4,"  theta= ",f16.8,"  phi= ",f16.8)') lmax,lmmax,irmdnew,imt1,ncheb,iend,iatom,nspin,theta,phi
+    !  write(17*iatom**2,'("  bfield is =",3f16.8,"  theta, phi= ",2f16.8)') bfield%bfield(iatom,:),bfield%theta(iatom),bfield%phi(iatom)
+    !end if
+    
+    ! calc LL' expansion of the shapefunction
+    call thetallmat(thetansll, lmax, iatom, imt1, iend, irmdnew, ncheb, thetasnew, ifunm, icleb, cleb)
+    
+    !if(myrank==master .and. debug) then
+    !  write(17*iatom**2,'("  thetansll = ")')
+    !  do ilm1=1,lmmax
+    !    do ilm2=1,lmmax
+    !      if(sum(abs(thetansll(ilm1,ilm2,:)))>1e-8) then
+    !        write(17*iatom**2,'(2i4,1000es16.8)') ilm1, ilm2, thetansll(ilm1,ilm2,:)
+    !      end if
+    !    end do
+    !  end do
+    !end if
+    
+    ! First add inhomogeneous bfield here (constraining field from xc potential)
+    !if( density%magmomentfixed == 6 ) then ! add xc field as constraining field here
+    !  write(17*iatom**2,'(" Adding xc constraining field")')
+    !  write(17*iatom**2,'(" c_xc= ",10es16.8)') bfield%c_xc(:)
+    !  !bxcll(1:lmmax,1:lmmax,:) = (vpotll(1:lmmax,1:lmmax,:)-vpotll(lmmax+1:2*lmmax,lmmax+1:2*lmmax,:))/2.d0 
+    !  call vllmat(templl,cellnew%vpotnew(:,:,:),lmax,(lmax+1)**2,lmax,1, &
+    !                cellnew%nrmaxnew,gauntcoeff,zatom,cellnew%rmeshnew,2*lmmax,1,nspin,ispin,'NS')
+    !  bxcll(1:lmmax,1:lmmax,:) = (templl(1:lmmax,1:lmmax,:)-templl(lmmax+1:2*lmmax,lmmax+1:2*lmmax,:))/2.d0 
+    !  write(17*iatom**2,'("  bxcll = ")')
+    !  do ilm1=1,lmmax
+    !    do ilm2=1,lmmax
+    !      if(sum(abs(bxcll(ilm1,ilm2,:)))>1e-8) then
+    !        write(17*iatom**2,'(2i4,1000es16.8)') ilm1, ilm2, bxcll(ilm1,ilm2,:)
+    !      end if
+    !    end do
+    !  end do
+    !  bs(:,:)=0.d0
+    !  ! down/down block
+    !  bs(1,1)=-bfield%c_xc(3)
+    !  ! up/up block
+    !  bs(2,2)= bfield%c_xc(3)
+    !  ! down/up block
+    !  bs(1,2)=(bfield%c_xc(1)+icompl*bfield%c_xc(2))
+    !  ! up/down block
+    !  bs(2,1)=(bfield%c_xc(1)-icompl*bfield%c_xc(2))
+    !  if (ncoll==1) then                                        
+    !    call rotatematrix(bs,theta, phi,1,'glob->loc')  
+    !  end if                                                  
+    !  if (mode=='transpose') then                            ! used for the left solution / Bxc is symmetric in LL' by construction
+    !    temp2   = bs(1,2)
+    !    bs(1,2) = bs(2,1)
+    !    bs(2,1) = temp2
+    !  elseif (mode=='1') then
+    !  else
+    !    stop'[bfield] mode not known'
+    !  end if
+    !  do i = 1,2
+    !    do j = 1,2
+    !      vpotll(lmstart(i):lmend(i),lmstart(j):lmend(j),:)=vpotll(lmstart(i):lmend(i),lmstart(j):lmend(j),:)-bs(i,j)*bxcll(:,:,:)
+    !    end do
+    !  end do
+    !end if
+    
+    ! Add different contributions to the magnetic field
+    bin(:) = 0.d0
+    if ( t_inc%i_iteration>=bfield%itscf0 .and. t_inc%i_iteration<=bfield%itscf1 ) then ! preconvergence without adding the constraining field
+      if(myrank==master .and. debug) write(*,'("Adding bfield for iatom="i4)') iatom
+      if(bfield%lbfield) then
+        bin(:) = bfield%bfield(iatom,:)
+      end if
+      if( bfield%lbfield_constr ) then
+        if( bfield%ibfield_constr == 0 .or. bfield%ibfield_constr == 1 ) then ! add homogenous constraining field here
+            bin(:) = bin(:) + bfield%bfield_constr(iatom,:)
+        end if
+      end if
+    end if
+    
+    bs(:,:)=0.d0
+    ! down/down block
+    bs(1,1)=-bin(3)
+    ! up/up block
+    bs(2,2)= bin(3)
+    ! down/up block
+    bs(1,2)=(bin(1)+icompl*bin(2))
+    ! up/down block
+    bs(2,1)=(bin(1)-icompl*bin(2))
+    if(myrank==master .and. debug) write(17*iatom**2,'(" bs(glob) =",8es16.8)') bs(1,1),bs(1,2),bs(2,1),bs(2,2)
+    ! Just always rotate it even for collinear calculations 
+    call rotatematrix(bs,theta, phi,1,1)!'glob->loc')  
+    if(myrank==master .and. debug) write(17*iatom**2,'(" bs(loc) =",8es16.8)') bs(1,1),bs(1,2),bs(2,1),bs(2,2)
+    if (mode=='transpose') then                            ! used for the left solution
+      temp2   = bs(1,2)
+      bs(1,2) = bs(2,1)
+      bs(2,1) = temp2
+    elseif (mode=='1') then
+    else
+      stop'[bfield] mode not known'
+    end if
+    
+    !if(myrank==master .and. debug) then
+    !  write(17*iatom**2,'("  vnspll_old = ")')
+    !  do ilm1=1,lmmaxd
+    !    do ilm2=1,lmmaxd
+    !      if(sum(abs(real(vnspll0(ilm1,ilm2,:))))>1e-8) then
+    !        write(17*iatom**2,'(2i4,1000es16.8)') ilm1, ilm2, vnspll0(ilm1,ilm2,:)
+    !      end if
+    !    end do
+    !  end do
+    !end if
+
+    do i = 1,2
+      do j = 1,2
+        do ir=1,irmdnew
+          vnspll1(lmstart(i):lmend(i),lmstart(j):lmend(j),ir)=vnspll0(lmstart(i):lmend(i),lmstart(j):lmend(j),ir)-bs(i,j)*thetansll(ir,:,:)
+        end do
+      end do
+    end do
+    
+    !if(myrank==master .and. debug) then
+    !  write(17*iatom**2,'("  vnspll_new = ")')
+    !  do ilm1=1,lmmaxd
+    !    do ilm2=1,lmmaxd
+    !      if(sum(abs(real(vnspll1(ilm1,ilm2,:))))>1e-8) then
+    !        write(17*iatom**2,'(2i4,1000es16.8)') ilm1, ilm2, vnspll1(ilm1,ilm2,:)
+    !      end if
+    !    end do
+    !  end do
+    !end if
+ 
+    !close(17*iatom**2)
+  end subroutine add_bfield
+  
+  !------------------------------------------------------------------------------------
+  !> Summary: Shape function LL' expansion
+  !> Author: Sascha Brinker
+  !> Category: KKRhost, geometry, new-mesh, shapefun
+  !> Deprecated: False 
+  !> Calculates the LL' expansion of the shape function similarly to vllmat_new.f90
+  !> @note The input shapefunction (single L) uses pointer arrays for the lm index.
+  !> The output does not need pointers!
+  !> @endnote
+  !------------------------------------------------------------------------------------
+  subroutine thetallmat(thetansll, lmax, iatom, imt1, iend, irmdnew, ncheb, thetasnew, ifunm, icleb, cleb)
+
+    !use :: global_variables, only: ntotd, nfund
+
+    implicit none
+
+    integer                     , intent (in)   :: lmax         ! Angular momentum cut-off
+    integer                     , intent (in)   :: iatom        ! Atom index
+    integer                     , intent (in)   :: imt1         ! index muffin-tin radius
+    integer                     , intent (in)   :: iend         ! Number of nonzero gaunt coefficients
+    integer                     , intent (in)   :: irmdnew      ! number of radials point on the Cheby mesh
+    integer                     , intent (in)   :: ncheb        ! Number of Chebychev pannels for the new solver
+    integer, dimension (ncleb, 4), intent (in)  :: icleb !! Pointer array
+    real (kind=dp), dimension (ncleb), intent (in)  :: cleb !! GAUNT coefficients (GAUNT)
+    real (kind=dp)              , dimension (irmdnew, nfund)                    , intent (in)           :: thetasnew    ! shapefun on the Cheby mesh
+    integer                     , dimension (1:(2*lmax+1)**2)                   , intent (in)           :: ifunm        ! pointer array for shapefun     ! Check index and dimensions!!!!!
+    real(kind=dp)               , dimension(irmdnew,(2*lmax+1)**2,(2*lmax+1)**2)    , intent (out)          :: thetansll    ! LL' expansion of the shapefunction 
+    !------------------------------------------------------------------------------------
+    real(kind=dp),parameter                                     :: rfpi=3.5449077018110318
+    real(kind=dp),dimension(1:irmdnew,1:(2*lmax+1)**2)          :: shapefun_mod  
+    real(kind=dp)                                               :: c0ll
+    integer                                                     :: lmmax
+    integer                                                     :: lmmax2
+    integer                                                     :: ilm
+    integer                                                     :: ifun
+    integer                                                     :: ir
+    integer                                                     :: lm1
+    integer                                                     :: lm2
+    integer                                                     :: lm3
+    integer                                                     :: j
+    logical                                                     :: debug=.False.
+            
+    c0ll                                                    = 1d0/rfpi
+    lmmax                                                   = (lmax+1)**2
+    lmmax2                                                  = (2*lmax+1)**2
+    shapefun_mod(:,:)                                       = 0.d0
+    shapefun_mod(1:imt1,1)                                  = rfpi ! is multipled by C_LL^0
+    shapefun_mod(imt1+1:irmdnew,1)                          = thetasnew(imt1+1:irmdnew,1)
+    ! convert from pointer to real ilmdo ilm=2,lmmax2
+    do ilm=2,lmmax2
+      ifun = ifunm(ilm)
+      if(.not. ifun == 0) then !shapefun%lmused(ilm)==1) then
+        !if(myrank==master .and. debug) write(17*iatom**2,'(" converted ifun= ",i4," to ilm= ",i4)') ifun, ilm
+        shapefun_mod(imt1+1:irmdnew,ilm)           = thetasnew(imt1+1:irmdnew,ifun)
+      end if
+    end do
+    !if(myrank==master .and. debug) write(17*iatom**2,'("  cellnew%shapefun = ")')
+    !do ilm= 1,lmmax2
+    !  if(sum(abs(thetasnew(:,ilm)))>1e-8) then
+    !    if(myrank==master .and. debug) write(17*iatom**2,'(i4,1000es16.8)') ilm, thetasnew(:,ilm)
+    !  end if
+    !end do
+    !if(myrank==master .and. debug) write(17*iatom**2,'("  shapefun_mod = ")')
+    !do ilm= 1,lmmax2
+    !  if(sum(abs(shapefun_mod(:,ilm)))>1e-8) then
+    !    if(myrank==master .and. debug) write(17*iatom**2,'(i4,1000es16.8)') ilm, shapefun_mod(:,ilm)
+    !  end if
+    !end do
+    
+    thetansll(:,:,:)=0.d0
+    ! diagonal part (not contained in gaunt-coeff)
+    do ilm = 1,lmmax
+      thetansll(:,ilm,ilm) = shapefun_mod(:,1)*c0ll
+    end do
+    do j = 1,iend !gauntcoeff%iend
+      lm1 = icleb(j, 1)! gauntcoeff%icleb(j,1) ! lmax
+      lm2 = icleb(j, 2)! gauntcoeff%icleb(j,2) ! lmax
+      lm3 = icleb(j, 3)! gauntcoeff%icleb(j,3) ! 2*lmax
+      write(17*iatom**2,'("lm1,lm2,lm3 =",3i4,2es16.8)') lm1,lm2,lm3,cleb(j)
+      if(lm1<= lmmax .and. lm2 <= lmmax .and. lm3<= lmmax2) then
+        do ir = 1,irmdnew!cellnew%nrmaxnew
+          thetansll(ir,lm1,lm2) = thetansll(ir,lm1,lm2)+cleb(j)*shapefun_mod(ir,lm3)
+        end do
+      end if
+    end do
+    do lm1 = 1,lmmax
+      do lm2 = 1,lm1-1
+        do ir = 1, irmdnew
+          thetansll(ir,lm2,lm1) = thetansll(ir,lm1,lm2)
+        end do
+      end do
+    end do
+    !if(myrank==master .and. debug) write(17*iatom**2,'("  thetansll = ")')
+    !do lm1=1,lmmax
+    !  do lm2=1,lmmax
+    !    if(sum(abs(thetansll(:,lm1,lm2)))>1e-8) then
+    !      if(myrank==master .and. debug) write(17*iatom**2,'(2i4,1000es16.8)') lm1, lm2, thetansll(:,lm1,lm2)
+    !    end if
+    !  end do
+    !end do
+              
+  end subroutine thetallmat
 
 end module mod_bfield
 

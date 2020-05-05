@@ -37,7 +37,8 @@ contains
     tksemi, tolrdif, emusemi, ebotsemi, fsemicore, lambda_xc, deltae, lrhosym, linipol, lcartesian, imt, cls, lmxc, irns, irws, ntcell, refpot, &
     inipol, ixipol, hostimp, kfg, vbc, zperleft, zperight, bravais, rmt, zat, rws, mtfac, rmtref, rmtnew, rmtrefat, fpradius, tleft, tright, &
     rbasis, socscale, cscl, socscl, solver, i12, i13, i19, i25, i40, txc, drotq, ncpa, itcpamax, cpatol, noq, iqat, icpa, kaoez, conc, kmrot, &
-    qmtet, qmphi, kreadldau, lopt, ueff, jeff, erefldau, invmod, verbosity, MPI_scheme, special_straight_mixing)
+    qmtet, qmphi, kreadldau, lopt, ueff, jeff, erefldau, invmod, verbosity, MPI_scheme, special_straight_mixing,lbfield,lbfield_constr, &
+    lbfield_all,ibfield,ibfield_constr,ibfield_itscf0,ibfield_itscf1)
 
     use :: mod_profiling, only: memocc
     use :: mod_runoptions, only: read_runoptions, calc_DOS_Efermi, calc_GF_Efermi, calc_exchange_couplings, &
@@ -233,8 +234,14 @@ contains
     real (kind=dp), dimension (:), allocatable, intent (out) :: ueff !! input U parameter for each atom
     real (kind=dp), dimension (:), allocatable, intent (out) :: jeff !! input J parameter for each atom
     real (kind=dp), dimension (:), allocatable, intent (out) :: erefldau !! the energies of the projector's wave functions (REAL) LDA+U
-    ! ---------------------------------------------------------------------------
-
+    ! ----------------------------------------------------------------------------
+    logical , intent(out) :: lbfield ! external magnetic field (turned on via runoption <noncobfield>) non-collinear magnetic field
+    logical , intent(out) :: lbfield_constr ! constraining fields (turned on via runoption <noncobfield>) non-collinear magnetic field
+    logical , intent(out) :: lbfield_all ! apply same field to all atoms (True) or individual fields to each atom
+    integer , intent(out) :: ibfield  ! spin (0), orbital (1), spin+orbial (2) fields
+    integer , intent(out) :: ibfield_constr  ! type of contraint (0 = torque, 1 = magnetic moment)
+    integer , intent(out) :: ibfield_itscf0  ! start magnetic field at iteration itscf0
+    integer , intent(out) :: ibfield_itscf1  ! stop applying magnetic field after iteration itscf1
     ! ----------------------------------------------------------------------------
     ! Local variables
     ! ----------------------------------------------------------------------------
@@ -927,7 +934,78 @@ contains
       write (1337, *) 'Use Bogoliubov-de-Gennes formalism with initial value of Delta set to ', delta_BdG, 'Ry = ', delta_BdG*ryd*1000, 'meV' 
     end if
 
+    ! ----------------------------------------------------------------------------
+    ! Reading options for non-collinear magnetic fields and constraining fields
+    ! ----------------------------------------------------------------------------
+    lbfield=.false.
+    call ioinput('<NONCOBFIELD>   ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) lbfield
+      if (ier/=0) stop 'Error reading `<NONCOBFIELD>`: check your inputcard'
+      write (111, *) '<NONCOBFIELD>= ', lbfield
+    else
+      write (111, *) 'Default <NONCOBFIELD>= ', lbfield
+    end if
+    
+    lbfield_constr=.false.
+    call ioinput('<CONSTR_FIELD>  ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) lbfield_constr
+      if (ier/=0) stop 'Error reading `<CONSTR_FIELD>`: check your inputcard'
+      write (111, *) '<CONSTR_FIELD>= ', lbfield_constr
+    else
+      write (111, *) 'Default <CONSTR_FIELD>= ', lbfield_constr
+    end if
 
+    lbfield_all=.false.
+    call ioinput('<SAME_BFIELD>   ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) lbfield_all
+      if (ier/=0) stop 'Error reading `<SAME_BFIELD>`: check your inputcard'
+      write (111, *) '<SAME_BFIELD>= ', lbfield_all
+    else
+      write (111, *) 'Default <SAME_BFIELD>= ', lbfield_all
+    end if
+    
+    ibfield= 0
+    call ioinput('<IBFIELD>       ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) ibfield
+      if (ier/=0) stop 'Error reading `<IBFIELD>`: check your inputcard'
+      write (111, *) '<IBFIELD>= ', ibfield
+    else
+      write (111, *) 'Default <IBFIELD>= ', ibfield
+    end if
+    
+    ibfield_constr= 0
+    call ioinput('<ICONSTR>       ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) ibfield_constr
+      if (ier/=0) stop 'Error reading `<ICONSTR>`: check your inputcard'
+      write (111, *) '<ICONSTR>= ', ibfield_constr
+    else
+      write (111, *) 'Default <ICONSTR>= ', ibfield_constr
+    end if
+    
+    ibfield_itscf0= 0
+    call ioinput('<ITBFIELD0>     ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) ibfield_itscf0
+      if (ier/=0) stop 'Error reading `<ITBFIELD0>`: check your inputcard'
+      write (111, *) '<ITBFIELD0>= ', ibfield_itscf0
+    else
+      write (111, *) 'Default <ITBFIELD0>= ', ibfield_itscf0
+    end if
+    
+    ibfield_itscf1= 10000
+    call ioinput('<ITBFIELD1>     ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) ibfield_itscf1
+      if (ier/=0) stop 'Error reading `<ITBFIELD1>`: check your inputcard'
+      write (111, *) '<ITBFIELD1>= ', ibfield_itscf1
+    else
+      write (111, *) 'Default <ITBFIELD1>= ', ibfield_itscf1
+    end if
     ! ----------------------------------------------------------------------------
     ! Start of the reading of variables that used to be in the inc.p
     !--------------------------------------------------------------------------------

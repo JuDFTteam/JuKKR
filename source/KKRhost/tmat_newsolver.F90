@@ -63,6 +63,7 @@ contains
     use :: mod_vllmatsra, only: vllmatsra
     use :: mod_regns, only: zgeinv1
     use :: mod_wronskian, only: calcwronskian
+    use :: mod_bfield, only: add_bfield
 #ifdef CPP_BdG
     use :: mod_ioinput, only: ioinput ! to read in something from inputcard
 #endif
@@ -103,6 +104,7 @@ contains
     integer :: ir, irec, use_sratrick, nvec, lm1, lm2, ie, irmdnew, i11, i_stat
     integer :: lmmax0d !! size of lm-dimension without spin-doubling [ =(lmax+1)**2 ]
     integer :: use_fullgmat !! use (l,m,s) coupled matrices or not for 'NOSOC' test option (1/0)
+    integer :: imt1             !! index muffin-tin radius
     complex (kind=dp) :: eryd !! energy in Ry
     complex (kind=dp), dimension (nspin*(lmax+1)) :: alphasph !! spherical part of alpha-matrix
     ! .. Local allocatable arrays
@@ -125,6 +127,7 @@ contains
     complex (kind=dp), dimension (:, :, :, :), allocatable :: sll !! irregular solution of radial equation
     complex (kind=dp), dimension (:, :, :, :), allocatable :: vnspll
     complex (kind=dp), dimension (:, :, :, :), allocatable :: vnspll1
+    complex (kind=dp), dimension (:, :, :), allocatable :: vnspll2
     complex (kind=dp), dimension (:, :, :, :), allocatable :: rllleft !! regular left solution of radial equation
     complex (kind=dp), dimension (:, :, :, :), allocatable :: sllleft !! irregular left solution of radial equation
 
@@ -186,7 +189,7 @@ contains
 
     ! .. allocate and initialize arrays
     call allocate_locals_tmat_newsolver(1, irmdnew, lmpot, nspin/(nspin-korbit), vins, aux, ipiv, tmat0, tmatll, alpha0, dtmatll, alphall, dalphall, jlk_index, nsra, lmmaxd, nth, lmax, vnspll, &
-      vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
+      vnspll0, vnspll1, vnspll2, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
 
     vins(1:irmdnew, 1:lmpot, 1) = vinsnew(1:irmdnew, 1:lmpot, ipot)
     if (.not.set_cheby_nosoc) vins(1:irmdnew, 1:lmpot, nspin) = vinsnew(1:irmdnew, 1:lmpot, ipot+nspin-1)
@@ -347,9 +350,18 @@ contains
         if ( .not. set_cheby_nosoc) then
           ! Contruct the spin-orbit coupling hamiltonian and add to potential
           call spinorbit_ham(lmax, lmmax0d, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpot, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
-            vnspll0(:,:,:), vnspll1(:,:,:,ith), '1')
+            vnspll0(:,:,:), vnspll2(:,:,:), '1')
         else
-          vnspll1(:,:,:,ith) = vnspll0(:,:,:)
+          vnspll2(:,:,:) = vnspll0(:,:,:)
+        end if
+  
+        ! Add magnetic field
+        if ( t_params%bfield%lbfield .or. t_params%bfield%lbfield_constr ) then
+          imt1 = ipan_intervall(t_params%npan_log+t_params%npan_eq) + 1
+          call add_bfield(t_params%bfield,i1,lmax,nspin,irmdnew,imt1,iend,ncheb,theta,phi,t_params%ifunm1(:,t_params%ntcell(i1)),&
+                          t_params%icleb,t_params%cleb(:,1),t_params%thetasnew(1:irmdnew,:,t_params%ntcell(i1)),'1',vnspll2(:,:,:),vnspll1(:,:,:,ith))
+        else
+          vnspll1(:,:,:,ith) = vnspll2(:,:,:)
         end if
 
 #ifdef CPP_OMP
@@ -402,6 +414,7 @@ contains
 #ifdef CPP_OMP
         !$omp end critical
 #endif
+
 
         ! Calculate the source terms in the Lippmann-Schwinger equation
         ! these are spherical hankel and bessel functions
@@ -609,7 +622,15 @@ contains
         ! Contruct the spin-orbit coupling hamiltonian and add to potential
         call spinorbit_ham(lmax,lmmax0d,vins,rnew,eryd,zat,cvlight,socscale,nspin,   &
           lmpot,theta,phi,ipan_intervall,rpan_intervall,npan_tot,ncheb,irmdnew,     &
-          nrmaxd,vnspll0(:,:,:),vnspll1(:,:,:,ith),'transpose')
+          nrmaxd,vnspll0(:,:,:),vnspll2(:,:,:),'transpose')
+        
+        ! Add magnetic field 
+        if ( t_params%bfield%lbfield .or. t_params%bfield%lbfield_constr ) then
+          call add_bfield(t_params%bfield,i1,lmax,nspin,irmdnew,imt1,iend,ncheb,theta,phi,t_params%ifunm1(:,t_params%ntcell(i1)),&
+                          t_params%icleb,t_params%cleb(:,1),t_params%thetasnew(1:irmdnew,:,t_params%ntcell(i1)),'transpose',vnspll2(:,:,:),vnspll1(:,:,:,ith))
+        else
+          vnspll1(:,:,:,ith) = vnspll2(:,:,:)
+        end if
 
         ! Extend matrix for the SRA treatment
         vnspll(:, :, :, ith) = czero
@@ -624,6 +645,7 @@ contains
         else
           vnspll(:, :, :, ith) = vnspll1(:, :, :, ith)
         end if
+        
 
         ! Calculate the source terms in the Lippmann-Schwinger equation
         ! these are spherical hankel and bessel functions
@@ -826,7 +848,7 @@ contains
     ! deallocate arrays
     call allocate_locals_tmat_newsolver(-1,irmdnew,lmpot,nspin,vins,aux,ipiv,tmat0, &
       tmatll,alpha0,dtmatll,alphall,dalphall,jlk_index,nsra,lmmaxd,nth,lmax,vnspll,&
-      vnspll0,vnspll1,hlk,jlk,hlk2,jlk2,tmatsph,rll,sll,rllleft,sllleft)
+      vnspll0,vnspll1,vnspll2,hlk,jlk,hlk2,jlk2,tmatsph,rll,sll,rllleft,sllleft)
 
   end subroutine tmat_newsolver
 
@@ -842,7 +864,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine allocate_locals_tmat_newsolver(allocmode,irmdnew,lmpot,nspin,vins,aux, &
     ipiv,tmat0,tmatll,alpha0,dtmatll,alphall,dalphall,jlk_index,nsra,lmmaxd,nth,   &
-    lmax,vnspll,vnspll0,vnspll1,hlk,jlk,hlk2,jlk2,tmatsph,rll,sll,rllleft,sllleft)
+    lmax,vnspll,vnspll0,vnspll1,vnspll2,hlk,jlk,hlk2,jlk2,tmatsph,rll,sll,rllleft,sllleft)
     use :: mod_datatypes, only: dp
     use :: mod_runoptions, only: calc_exchange_couplings, write_rhoq_input, calc_wronskian
     use :: mod_constants, only: czero
@@ -868,6 +890,7 @@ contains
     complex (kind=dp), allocatable, dimension (:, :, :, :), intent (inout) :: vnspll
     complex (kind=dp), allocatable, dimension (:, :, :), intent (inout) :: vnspll0
     complex (kind=dp), allocatable, dimension (:, :, :, :), intent (inout) :: vnspll1
+    complex (kind=dp), allocatable, dimension (:, :, :), intent (inout) :: vnspll2
     complex (kind=dp), allocatable, dimension (:, :, :), intent (inout) :: jlk
     complex (kind=dp), allocatable, dimension (:, :, :), intent (inout) :: hlk
     complex (kind=dp), allocatable, dimension (:, :, :), intent (inout) :: jlk2
@@ -895,6 +918,9 @@ contains
       allocate (vnspll1(lmmaxd,lmmaxd,irmdnew,0:nth-1), stat=i_stat)
       call memocc(i_stat, product(shape(vnspll1))*kind(vnspll1), 'VNSPLL1', 'allocate_locals_tmat_newsolver')
       vnspll1 = czero
+      allocate (vnspll2(lmmaxd,lmmaxd,irmdnew), stat=i_stat)
+      call memocc(i_stat, product(shape(vnspll2))*kind(vnspll2), 'VNSPLL1', 'allocate_locals_tmat_newsolver')
+      vnspll2 = czero
 
       ! source terms (bessel and hankel functions)
       allocate (hlk(1:nsra*(1+korbit)*(lmax+1),irmdnew,0:nth-1), stat=i_stat)
@@ -984,6 +1010,8 @@ contains
       call memocc(i_stat, -product(shape(vnspll0))*kind(vnspll0), 'VNSPLL0', 'allocate_locals_tmat_newsolver')
       deallocate (vnspll1, stat=i_stat)
       call memocc(i_stat, -product(shape(vnspll1))*kind(vnspll1), 'VNSPLL1', 'allocate_locals_tmat_newsolver')
+      deallocate (vnspll2, stat=i_stat)
+      call memocc(i_stat, -product(shape(vnspll2))*kind(vnspll2), 'VNSPLL1', 'allocate_locals_tmat_newsolver')
 
       deallocate (hlk, stat=i_stat)
       call memocc(i_stat, -product(shape(hlk))*kind(hlk), 'HLK', 'allocate_locals_tmat_newsolver')
