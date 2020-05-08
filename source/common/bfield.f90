@@ -44,6 +44,11 @@ module mod_bfield
     real (kind=dp), dimension (:,:), allocatable        :: bfield_constr ! constraining field in cartesian coordinates, dimensions (natom,3)
     real (kind=dp), dimension (:), allocatable          :: theta ! polar angle of the magnetic field
     real (kind=dp), dimension (:), allocatable          :: phi   ! azimuthal angle of the magnetic field
+    !------------------------------------------------------------------------------------
+    ! Magnetic torque 
+    !------------------------------------------------------------------------------------
+    real(kind=dp),dimension(:,:), allocatable           :: mag_torque
+
   end type type_bfield
 
   type (type_bfield), save :: bfield
@@ -94,6 +99,10 @@ contains
       ! init allocated arrays
       bfield%bfield_constr(:,:) = 0.d0
       call read_bfield(bfield,natyp)
+      
+
+      allocate (bfield%mag_torque(natyp,3), stat=i_stat)
+      call memocc(i_stat, product(shape(bfield%mag_torque   ))*kind(bfield%mag_torque   ), 'bfield%mag_torque', 'init_bfield')
   end subroutine init_bfield
 
 

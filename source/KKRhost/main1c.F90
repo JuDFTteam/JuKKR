@@ -388,7 +388,7 @@ contains
 
       call interpolate_poten(lpotd, irmd, irnsd, natyp, ipand, lmpotd, nspotd, ntotd, ntotd*(ncheb+1), nspin, rmesh, irmin, irws, ircut, vins, visp, npan_log_at, npan_eq_at, &
         npan_tot, rnew, ipan_intervall, vinsnew)
-    end if !(.not. use_Chebychev_solver)
+    end if !( use_Chebychev_solver)
 
 
     ! find boundaries for atom loop (MPI parallelization level)

@@ -345,6 +345,7 @@ add_library(lib_kkrhost STATIC
     source/KKRhost/testdim.f90
     source/KKRhost/tmat_newsolver.F90
     source/KKRhost/tmatimp_newsolver.F90
+    source/KKRhost/torque.f90
     source/KKRhost/vadd.f90
     source/KKRhost/veq.f90
     source/KKRhost/vinterface.f90

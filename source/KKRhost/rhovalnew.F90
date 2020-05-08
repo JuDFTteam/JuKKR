@@ -61,6 +61,7 @@ contains
     use :: mod_vllmat, only: vllmat
     use :: mod_wunfiles, only: t_params
     use :: mod_bfield, only: add_bfield
+    use :: mod_torque, only: calc_torque
 
     implicit none
 
@@ -148,7 +149,7 @@ contains
 
     ! .. Local allocatable arrays
     real (kind=dp), dimension (:, :), allocatable :: qvec ! qdos ruess: q-vectors for qdos
-    real (kind=dp), dimension (:, :, :), allocatable :: vins
+    real (kind=dp), dimension (:, :, :), allocatable :: vins  ! vins in the new mesh!! corresponds to the vinsnew in main1c but only for the two spin channels
     complex (kind=dp), dimension (:, :), allocatable :: tmatsph
     complex (kind=dp), dimension (:, :), allocatable :: cdentemp
     complex (kind=dp), dimension (:, :), allocatable :: rhotemp
@@ -682,13 +683,14 @@ contains
                 ipan_intervall,npan_tot,ncheb,irmdnew)
               denlm(lm1, ie, iq, jspin) = dentemp
             end do
-            cdentemp(:, ith) = czero
-            dentemp = czero
-            cdentemp(1:irmdnew, ith) = cdenns(1:irmdnew, jspin, ith)
-            call intcheb_cell(cdentemp(:,ith), dentemp, rpan_intervall, ipan_intervall, npan_tot, ncheb, irmdnew)
+          end if
+          cdentemp(:, ith) = czero
+          dentemp = czero
+          cdentemp(1:irmdnew, ith) = cdenns(1:irmdnew, jspin, ith)
+          call intcheb_cell(cdentemp(:,ith), dentemp, rpan_intervall, ipan_intervall, npan_tot, ncheb, irmdnew)
+          rho2int(jspin) = rho2int(jspin) + dentemp*df
+          if (jspin<=2) then
             den(lmaxd1, ie, iq, jspin) = dentemp
-            rho2int(jspin) = rho2int(jspin) + den(lmaxd1, ie, iq, jspin)*df
-
             espv(0:lmaxd1, jspin) = espv(0:lmaxd1, jspin) + aimag(eryd*den(0:lmaxd1,ie,iq,jspin)*df)
           end if
         end do                     ! JSPIN
@@ -898,8 +900,15 @@ contains
 
     ! MPI: do these writeout/data collection steps only on master and broadcast important results afterwards
     if (t_mpi_c_grid%myrank_at==master) then
+!    if (myrank==master) then
 #endif
       ! CPP_MPI
+      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! Magnetic torques
+      ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      call calc_torque(i1,lmax,irmdnew,nspin,rpan_intervall,ipan_intervall,npan_tot,ncheb,theta,phi,rho2nsc,vins, &
+                        t_params%ifunm1(:,t_params%ntcell(i1)), iend, t_params%icleb,t_params%cleb(:,1),&
+                        t_params%thetasnew(1:irmdnew,:,t_params%ntcell(i1)))
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! LDAU
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1018,7 +1027,7 @@ contains
         moment(1) = aimag(rho2int(3)+rho2int(4))
         moment(2) = -real(rho2int(3)-rho2int(4))
         moment(3) = aimag(-rho2int(1)+rho2int(2))
-
+        
         totmoment = sqrt(moment(1)**2+moment(2)**2+moment(3)**2)
         totxymoment = sqrt(moment(1)**2+moment(2)**2)
 
@@ -1054,7 +1063,7 @@ contains
 
 #ifdef CPP_MPI
     end if                         ! (myrank==master)
-
+    
     ! communicate den_out to all processors with the same atom number
     idim = (lmax+2)*ielast*nspin/(nspin-korbit)
     call mpi_bcast(den_out, idim, mpi_double_complex, master, t_mpi_c_grid%mympi_comm_at, ierr)

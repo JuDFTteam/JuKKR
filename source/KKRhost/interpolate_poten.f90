@@ -41,11 +41,11 @@ contains
     integer, dimension (0:ipand, natyp), intent (in) :: ircut !! R points of panel borders
     integer, dimension (0:ntotd, natyp), intent (in) :: ipan_intervall !! 
     real (kind=dp), dimension (irm, natyp), intent (in) :: r !! 
-    real (kind=dp), dimension (irm, nspotd), intent (in) :: visp !! 
-    real (kind=dp), dimension ((irm-irnsd):irm, (lpot+1)**2, nspotd), intent (in) :: vins !! 
+    real (kind=dp), dimension (irm, nspotd), intent (in) :: visp !!  spherical part of the input potential
+    real (kind=dp), dimension ((irm-irnsd):irm, (lpot+1)**2, nspotd), intent (in) :: vins !!  non-spherical part of the input potential
 
     ! .. Output variables
-    real (kind=dp), dimension (irmdnew, (lpot+1)**2, nspotd), intent (out) :: vinsnew !! 
+    real (kind=dp), dimension (irmdnew, (lpot+1)**2, nspotd), intent (out) :: vinsnew !!  output containing spherical and non-spherical parts!!!
 
     ! .. Local variables
     integer :: i1, ipot, ipotm, imin, imax, ip, ir, lm1, ispin, iminnew, imaxnew, ir2
