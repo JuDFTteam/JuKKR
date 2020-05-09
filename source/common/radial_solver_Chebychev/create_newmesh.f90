@@ -71,7 +71,8 @@ contains
     real (kind=dp), dimension (ntotd*(ncheb+1), nfund, ncelld), intent (inout), optional :: thetasnew !! interpolated shape function in Chebychev radial mesh
 
     ! .. Local variables
-    real (kind=dp), parameter :: fac=2e0_dp
+!   real (kind=dp), parameter :: fac=2e0_dp
+    real (kind=dp), parameter :: fac=1.2e0_dp
     integer :: npan_inst, i_stat, i_all
     integer :: i1, ir2, ip, icell
     integer :: imin, imax, iminnew, imaxnew, lm1
@@ -178,7 +179,10 @@ contains
             call interpolspline(rmesh(imin:imax,i1), rnew(iminnew:imaxnew,i1), thetasin(imin-ircut(1,i1):imax-ircut(1,i1),lm1,icell), thetasnew(iminnew:imaxnew,lm1,icell), imax-imin+1, &
               imaxnew-iminnew+1)
           end do
+
         end do
+
+
       end if ! present(ntcell)
 
     end do ! i1

@@ -121,6 +121,7 @@ contains
     complex (kind=dp), dimension (:, :, :), allocatable :: hlk2
     complex (kind=dp), dimension (:, :, :), allocatable :: jlk2
     complex (kind=dp), dimension (:, :, :), allocatable :: vnspll0
+    complex (kind=dp), dimension (:, :, :, :), allocatable :: ull !! regular solution of radial equation
     complex (kind=dp), dimension (:, :, :, :), allocatable :: rll !! regular solution of radial equation
     complex (kind=dp), dimension (:, :, :, :), allocatable :: sll !! irregular solution of radial equation
     complex (kind=dp), dimension (:, :, :, :), allocatable :: vnspll
@@ -186,7 +187,7 @@ contains
 
     ! .. allocate and initialize arrays
     call allocate_locals_tmat_newsolver(1, irmdnew, lmpot, nspin/(nspin-korbit), vins, aux, ipiv, tmat0, tmatll, alpha0, dtmatll, alphall, dalphall, jlk_index, nsra, lmmaxd, nth, lmax, vnspll, &
-      vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
+      vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, ull, rll, sll, rllleft, sllleft)
 
     vins(1:irmdnew, 1:lmpot, 1) = vinsnew(1:irmdnew, 1:lmpot, ipot)
     if (.not.set_cheby_nosoc) vins(1:irmdnew, 1:lmpot, nspin) = vinsnew(1:irmdnew, 1:lmpot, ipot+nspin-1)
@@ -415,6 +416,7 @@ contains
         else
           use_fullgmat = 1
         end if
+!RZ
         call rllsllsourceterms(nsra, nvec, eryd, rnew, irmdnew, nrmaxd, lmax, lmmaxd, use_fullgmat, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor)
 
 #ifdef CPP_OMP
@@ -494,8 +496,10 @@ contains
         ! no irregular solutions are needed in self-consistent iterations
         ! because the t-matrix depends only on RLL
         if (.not. set_cheby_nospeedup .and. .not. (calc_exchange_couplings .or. write_pkkr_operators) .and. .not.calc_wronskian) then
-          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), tmat0(:,:), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
-            jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alpha0(:,:))
+!         call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), ull(:,:,:,ith), rll(:,:,:,ith), tmat0(:,:), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
+!           jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick,               alpha0(:,:))
+          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), ull(:,:,:,ith), rll(:,:,:,ith), tmatll, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, &
+            hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
         else
           call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), sll(:,:,:,ith), tmat0(:,:), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
             jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alpha0(:,:))
@@ -826,7 +830,7 @@ contains
     ! deallocate arrays
     call allocate_locals_tmat_newsolver(-1,irmdnew,lmpot,nspin,vins,aux,ipiv,tmat0, &
       tmatll,alpha0,dtmatll,alphall,dalphall,jlk_index,nsra,lmmaxd,nth,lmax,vnspll,&
-      vnspll0,vnspll1,hlk,jlk,hlk2,jlk2,tmatsph,rll,sll,rllleft,sllleft)
+      vnspll0,vnspll1,hlk,jlk,hlk2,jlk2,tmatsph,ull,rll,sll,rllleft,sllleft)
 
   end subroutine tmat_newsolver
 
@@ -842,7 +846,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine allocate_locals_tmat_newsolver(allocmode,irmdnew,lmpot,nspin,vins,aux, &
     ipiv,tmat0,tmatll,alpha0,dtmatll,alphall,dalphall,jlk_index,nsra,lmmaxd,nth,   &
-    lmax,vnspll,vnspll0,vnspll1,hlk,jlk,hlk2,jlk2,tmatsph,rll,sll,rllleft,sllleft)
+    lmax,vnspll,vnspll0,vnspll1,hlk,jlk,hlk2,jlk2,tmatsph,ull,rll,sll,rllleft,sllleft)
     use :: mod_datatypes, only: dp
     use :: mod_runoptions, only: calc_exchange_couplings, write_rhoq_input, calc_wronskian
     use :: mod_constants, only: czero
@@ -873,6 +877,7 @@ contains
     complex (kind=dp), allocatable, dimension (:, :, :), intent (inout) :: jlk2
     complex (kind=dp), allocatable, dimension (:, :, :), intent (inout) :: hlk2
     complex (kind=dp), allocatable, dimension (:, :), intent (inout) :: tmatsph
+    complex (kind=dp), allocatable, dimension (:, :, :, :), intent (inout) :: ull
     complex (kind=dp), allocatable, dimension (:, :, :, :), intent (inout) :: rll
     complex (kind=dp), allocatable, dimension (:, :, :, :), intent (inout) :: sll
     complex (kind=dp), allocatable, dimension (:, :, :, :), intent (inout) :: rllleft
@@ -916,6 +921,9 @@ contains
       tmatsph = czero
 
       ! Regular and irregular wavefunctions
+      allocate (ull(nsra*lmmaxd,lmmaxd,irmdnew,0:nth-1), stat=i_stat)
+      call memocc(i_stat, product(shape(ull))*kind(ull), 'ULL', 'allocate_locals_tmat_newsolver')
+      ull = czero
       allocate (rll(nsra*lmmaxd,lmmaxd,irmdnew,0:nth-1), stat=i_stat)
       call memocc(i_stat, product(shape(rll))*kind(rll), 'RLL', 'allocate_locals_tmat_newsolver')
       rll = czero
@@ -997,6 +1005,8 @@ contains
       deallocate (tmatsph, stat=i_stat)
       call memocc(i_stat, -product(shape(tmatsph))*kind(tmatsph), 'TMATSPH', 'allocate_locals_tmat_newsolver')
 
+      deallocate (ull, stat=i_stat)
+      call memocc(i_stat, -product(shape(ull))*kind(ull), 'ULL', 'allocate_locals_tmat_newsolver')
       deallocate (rll, stat=i_stat)
       call memocc(i_stat, -product(shape(rll))*kind(rll), 'RLL', 'allocate_locals_tmat_newsolver')
       deallocate (sll, stat=i_stat)
