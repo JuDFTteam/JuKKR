@@ -20,6 +20,7 @@ module mod_runoptions
   logical :: calc_GF_Efermi = .false.                  !!calculation of cluster Green function at E Fermi (former: 'GF-EF')
   logical :: set_cheby_nospeedup = .false.             !!always calculate irregular solution in Chebychev solver (even if not needed) (former: 'norllsll')
   logical :: set_cheby_nosoc     = .false.             !!decouple matrices in Chebychev solver neglecting SOC (former: 'NOSOC')
+  logical :: use_cheby_quadprec  = .false.             !!use quadruple precision in Chebychev solver for irregular solution (former: 'quadprec')
   logical :: calc_complex_bandstructure = .false.      !!complex band structure (former: 'COMPLEX')
   logical :: calc_exchange_couplings = .false.         !!calculate magnetic exchange coupling parameters (former: 'XCPL')
   logical :: calc_exchange_couplings_energy = .false.  !!write energy-resolved Jij-files also if npol/=0 (former: 'Jijenerg')
@@ -201,6 +202,7 @@ module mod_runoptions
     call set_runoption(print_refpot                  , '<print_refpot>'                  , '<REFPOT>'  )
     call set_runoption(write_lloyd_file              , '<write_lloyd_file>'             , '<llyfile>')
     call set_runoption(symmetrize_potential_madelung , '<symmetrize_potential_madelung>' , '<potsymm>' )
+    call set_runoption(use_cheby_quadprec            , '<use_cheby_quadprec>'            , '<quadprec>')
     call set_runoption(set_cheby_nosoc               , '<set_cheby_nosoc>'               , '<NOSOC>'   )
     call set_runoption(set_empty_system              , '<set_empty_system>'              , '<zeropot>' )
     call set_runoption(write_tmat_file               , '<write_tmat_file>'               , '<tmatfile>')
@@ -517,6 +519,9 @@ module mod_runoptions
     else if (keyword == 'POTSYMM ') then
       symmetrize_potential_madelung = .true.
       write (1337, *) "    Enable runoption 'symmetrize_potential_madelung'"
+    else if (keyword == 'QUADPREC') then
+      use_cheby_quadprec = .true.
+      write (1337, *) "    Enable runoption 'use_cheby_quadprec'"
     else if (keyword == 'NOSOC   ') then
       set_cheby_nosoc = .true.
       write (1337, *) "    Enable runoption 'set_cheby_nosoc'"
@@ -739,6 +744,7 @@ module mod_runoptions
     call mpi_bcast(print_refpot                  , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(write_lloyd_file              , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(symmetrize_potential_madelung , 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(use_cheby_quadprec            , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(set_cheby_nosoc               , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(set_empty_system              , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(write_tmat_file               , 1, mpi_logical, master, mpi_comm_world, ierr)
