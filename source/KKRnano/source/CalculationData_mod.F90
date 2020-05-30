@@ -521,7 +521,7 @@ module CalculationData_mod
           call create(self%cheb_mesh_a(ila), irmd_cheb, npan_tot_cheb, self%cell_a(ila)%nfu, params) ! create data for new radial mesh for atom iatom
         endif
         if (dims%korbit == 1) then ! NOCO
-          call construct(params%r_fac,params%r_log,params%npan_log,params%npan_eq,params%ncheb, &
+          call construct(params%r_log,params%npan_log,params%npan_eq,params%ncheb, &
                       self%cheb_mesh_a(ila)%npan_lognew,self%cheb_mesh_a(ila)%npan_eqnew, &
                       self%cheb_mesh_a(ila)%npan_tot,self%cheb_mesh_a(ila)%rnew, &
                       self%cheb_mesh_a(ila)%rpan_intervall,self%cheb_mesh_a(ila)%ipan_intervall, &
