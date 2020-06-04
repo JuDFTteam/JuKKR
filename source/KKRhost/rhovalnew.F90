@@ -906,9 +906,11 @@ contains
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! Magnetic torques
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      call calc_torque(i1,lmax,irmdnew,nspin,rpan_intervall,ipan_intervall,npan_tot,ncheb,theta,phi,rho2nsc,vins, &
-                        t_params%ifunm1(:,t_params%ntcell(i1)), iend, t_params%icleb,t_params%cleb(:,1),&
-                        t_params%thetasnew(1:irmdnew,:,t_params%ntcell(i1)))
+      if(t_params%bfield%ltorque) then
+        call calc_torque(i1,lmax,irmdnew,nspin,rpan_intervall,ipan_intervall,npan_tot,ncheb,theta,phi,rho2nsc,vins, &
+                         t_params%ifunm1(:,t_params%ntcell(i1)), iend, t_params%icleb,t_params%cleb(:,1),&
+                         t_params%thetasnew(1:irmdnew,:,t_params%ntcell(i1)))
+      end if
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! LDAU
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

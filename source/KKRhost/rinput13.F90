@@ -38,7 +38,7 @@ contains
     inipol, ixipol, hostimp, kfg, vbc, zperleft, zperight, bravais, rmt, zat, rws, mtfac, rmtref, rmtnew, rmtrefat, fpradius, tleft, tright, &
     rbasis, socscale, cscl, socscl, solver, i12, i13, i19, i25, i40, txc, drotq, ncpa, itcpamax, cpatol, noq, iqat, icpa, kaoez, conc, kmrot, &
     qmtet, qmphi, kreadldau, lopt, ueff, jeff, erefldau, invmod, verbosity, MPI_scheme, special_straight_mixing,lbfield,lbfield_constr, &
-    lbfield_all,ibfield,ibfield_constr,ibfield_itscf0,ibfield_itscf1)
+    lbfield_all,lbfield_trans,lbfield_mt,ltorque,ibfield,ibfield_constr,ibfield_itscf0,ibfield_itscf1)
 
     use :: mod_profiling, only: memocc
     use :: mod_runoptions, only: read_runoptions, calc_DOS_Efermi, calc_GF_Efermi, calc_exchange_couplings, &
@@ -238,6 +238,9 @@ contains
     logical , intent(out) :: lbfield ! external magnetic field (turned on via runoption <noncobfield>) non-collinear magnetic field
     logical , intent(out) :: lbfield_constr ! constraining fields (turned on via runoption <noncobfield>) non-collinear magnetic field
     logical , intent(out) :: lbfield_all ! apply same field to all atoms (True) or individual fields to each atom
+    logical , intent(out) :: lbfield_trans ! apply only transversal bfield
+    logical , intent(out) :: lbfield_mt  ! apply magnetic field only in the muffin-tin
+    logical , intent(out) :: ltorque ! calculate magnetic torque
     integer , intent(out) :: ibfield  ! spin (0), orbital (1), spin+orbial (2) fields
     integer , intent(out) :: ibfield_constr  ! type of contraint (0 = torque, 1 = magnetic moment)
     integer , intent(out) :: ibfield_itscf0  ! start magnetic field at iteration itscf0
@@ -965,6 +968,36 @@ contains
       write (111, *) '<SAME_BFIELD>= ', lbfield_all
     else
       write (111, *) 'Default <SAME_BFIELD>= ', lbfield_all
+    end if
+    
+    lbfield_trans=.false.
+    call ioinput('<TRANS_BFIELD>   ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) lbfield_trans
+      if (ier/=0) stop 'Error reading `<TRANS_BFIELD>`: check your inputcard'
+      write (111, *) '<TRANS_BFIELD>= ', lbfield_trans
+    else
+      write (111, *) 'Default <TRANS_BFIELD>= ', lbfield_trans
+    end if
+    
+    lbfield_mt=.false.
+    call ioinput('<MT_BFIELD>   ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) lbfield_mt
+      if (ier/=0) stop 'Error reading `<MT_BFIELD>`: check your inputcard'
+      write (111, *) '<MT_BFIELD>= ', lbfield_mt
+    else
+      write (111, *) 'Default <MT_BFIELD>= ', lbfield_mt
+    end if
+    
+    ltorque=.false.
+    call ioinput('<TORQUE>   ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) ltorque
+      if (ier/=0) stop 'Error reading `<TORQUE>`: check your inputcard'
+      write (111, *) '<TORQUE>= ', ltorque
+    else
+      write (111, *) 'Default <TORQUE>= ', ltorque
     end if
     
     ibfield= 0

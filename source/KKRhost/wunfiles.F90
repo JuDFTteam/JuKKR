@@ -1566,6 +1566,9 @@ contains
     call mpi_bcast(t_params%bfield%lbfield, 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%bfield%lbfield_constr, 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%bfield%lbfield_all, 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%lbfield_trans, 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%lbfield_mt, 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%ltorque, 1, mpi_logical, master, mpi_comm_world, ierr)
 
     ! integer
     call mpi_bcast(t_params%bfield%ibfield, 1, mpi_integer, master, mpi_comm_world, ierr)

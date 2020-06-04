@@ -35,6 +35,9 @@ module mod_bfield
     logical :: lbfield = .False. ! external magnetic field (turned on via runoption <noncobfield>) non-collinear magnetic field
     logical :: lbfield_constr = .False. ! constraining fields (turned on via runoption <noncobfield>) non-collinear magnetic field
     logical :: lbfield_all = .False. ! apply same field to all atoms (True) or individual fields to each atom
+    logical :: lbfield_trans = .False. ! apply only transversal field
+    logical :: lbfield_mt = .False. ! apply only field in muffin-tin
+    logical :: ltorque = .False. ! calculate magnetic torque
     integer :: ibfield = 0 ! spin (0), orbital (1), spin+orbial (2) fields
     integer :: ibfield_constr = 0 ! type of contraint (0 = torque, 1 = magnetic moment)
     integer :: itscf0 = 0    ! start magnetic field at iteration itscf0
@@ -44,6 +47,7 @@ module mod_bfield
     real (kind=dp), dimension (:,:), allocatable        :: bfield_constr ! constraining field in cartesian coordinates, dimensions (natom,3)
     real (kind=dp), dimension (:), allocatable          :: theta ! polar angle of the magnetic field
     real (kind=dp), dimension (:), allocatable          :: phi   ! azimuthal angle of the magnetic field
+    real (kind=dp), dimension (:,:,:), allocatable      :: thetallmat ! shapefun in the ll' expansion
     !------------------------------------------------------------------------------------
     ! Magnetic torque 
     !------------------------------------------------------------------------------------
@@ -60,8 +64,8 @@ contains
   !> Category: memory-management, profiling, KKRhost, bfield
   !> Deprecated: False
   !-------------------------------------------------------------------------------
-  subroutine init_bfield(bfield,natyp,lbfield,lbfield_constr,lbfield_all,ibfield,ibfield_constr,itscf0, &
-    itscf1)
+  subroutine init_bfield(bfield,natyp,lbfield,lbfield_constr,lbfield_all,lbfield_trans,lbfield_mt,ltorque,ibfield,ibfield_constr,itscf0, &
+    itscf1,irmdnew,nfund,ncelld,lmax,thetasnew)
 
       implicit none
 
@@ -72,15 +76,31 @@ contains
       logical, intent(in) :: lbfield 
       logical, intent(in) :: lbfield_constr 
       logical, intent(in) :: lbfield_all 
+      logical, intent(in) :: lbfield_trans
+      logical, intent(in) :: lbfield_mt
+      logical, intent(in) :: ltorque
       integer, intent(in) :: ibfield 
       integer, intent(in) :: ibfield_constr 
       integer, intent(in) :: itscf0 
       integer, intent(in) :: itscf1 
+      logical, intent(in) :: irmdnew
+      logical, intent(in) :: nfund
+      logical, intent(in) :: ncelld
+      logical, intent(in) :: lmax
+      integer, intent (in):: imt1         ! index muffin-tin radius
+      integer, intent (in):: iend         ! Number of nonzero gaunt coefficients
+      integer, dimension (1:(2*lmax+1)**2), intent (in)                 :: ifunm        ! pointer array for shapefun     ! Check index and dimensions!!!!!
+      integer, dimension (ncleb, 4), intent (in)                        :: icleb !! Pointer array
+      real (kind=dp), dimension (ncleb), intent (in)                    :: cleb !! GAUNT coefficients (GAUNT)
+      real (kind=dp), dimension (irmdnew, nfund, ncelld), intent (in)   :: thetasnew !! interpolated shape function in Chebychev radial mesh
 
       ! init basic parameters
       bfield%lbfield = lbfield
       bfield%lbfield_constr = lbfield_constr
       bfield%lbfield_all = lbfield_all
+      bfield%lbfield_trans = lbfield_trans
+      bfield%lbfield_mt = lbfield_mt
+      bfield%ltorque = ltorque
       bfield%ibfield = ibfield
       bfield%ibfield_constr = ibfield_constr
       bfield%itscf0 = itscf0
@@ -98,11 +118,18 @@ contains
       call memocc(i_stat, product(shape(bfield%bfield_constr))*kind(bfield%bfield_constr), 'bfield%bfield_constr', 'init_bfield')
       ! init allocated arrays
       bfield%bfield_constr(:,:) = 0.d0
-      call read_bfield(bfield,natyp)
+      if(lbfield) call read_bfield(bfield,natyp)
       
 
       allocate (bfield%mag_torque(natyp,3), stat=i_stat)
       call memocc(i_stat, product(shape(bfield%mag_torque   ))*kind(bfield%mag_torque   ), 'bfield%mag_torque', 'init_bfield')
+      if(lbfield) then
+        allocate (bfield%thetallmat((lmax+1)**2,(lmax+1)**2,irmdnew,ncelld), stat=i_stat)
+        call memocc(i_stat, product(shape(bfield%thetallmat   ))*kind(bfield%thetallmat   ), 'bfield%mag_torque', 'init_bfield')
+        do icell=1,ncelld
+          call calc_thetallmat(bfield%thetallmat(:,:,:,icell), lmax, imt1, iend, irmdnew, thetasnew(:,:,icell), ifunm, icleb, cleb)
+        end do
+      end if
   end subroutine init_bfield
 
 
@@ -146,26 +173,23 @@ contains
     
     
     
-    write(*,*) '  ###############################################'
-    write(*,*) '  non-collinear magnetic fields'
-    write(*,*) '  ###############################################'
-    write(*,*) '        iatom      theta               phi                  bfield (in Ry   )'
-    write(1337,*) 'Angles for bfield'
-    write(1337,*) 'iatom  theta                    phi              bfield (in Ry   )'
+    write(1337,*) '  ###############################################'
+    write(1337,*) '  non-collinear magnetic fields'
+    write(1337,*) '  ###############################################'
+    write(1337,*) '  iatom      theta       phi         bfield (in Ry   )'
     do iatom=1,natyp
        string1=this_readline(57493215,ios)
        if (ios/=0) stop '[read_bfield] Error reading atom info2'
        if (ios==-1) stop '[read_bfield] EOF'
        read(string1,*) bfield%theta(iatom),bfield%phi(iatom),bfield%bfield_strength(iatom)
-       write(1337,*) iatom,bfield%theta(iatom),bfield%phi(iatom),bfield%bfield_strength(iatom)
-       write(*,*) iatom,bfield%theta(iatom),bfield%phi(iatom),bfield%bfield_strength(iatom)
+       write(1337,'("  ",i4,3es16.8)') iatom,bfield%theta(iatom),bfield%phi(iatom),bfield%bfield_strength(iatom)
        bfield%theta(iatom)                  = bfield%theta(iatom)/360.0D0*8.0D0*datan(1.0D0)
        bfield%phi(iatom)                    = bfield%phi(iatom)  /360.0D0*8.0D0*datan(1.0D0)
        bfield%bfield_strength(iatom)        = bfield%bfield_strength(iatom)!/235051.787_dp !conversion from Tesla to Ry
        bfield%bfield(iatom,1)               = bfield%bfield_strength(iatom)*cos(bfield%phi(iatom))*sin(bfield%theta(iatom))
        bfield%bfield(iatom,2)               = bfield%bfield_strength(iatom)*sin(bfield%phi(iatom))*sin(bfield%theta(iatom))
        bfield%bfield(iatom,3)               = bfield%bfield_strength(iatom)*cos(bfield%theta(iatom))
-       write(*,*) iatom,bfield%theta(iatom),bfield%phi(iatom),bfield%bfield_strength(iatom),bfield%bfield(iatom,1),bfield%bfield(iatom,2),bfield%bfield(iatom,3)
+       !write(*,*) iatom,bfield%theta(iatom),bfield%phi(iatom),bfield%bfield_strength(iatom),bfield%bfield(iatom,1),bfield%bfield(iatom,2),bfield%bfield(iatom,3)
     end do
     ! close(33952084)
     first=0
@@ -265,10 +289,12 @@ contains
     integer                                     :: ilm1
     integer                                     :: ilm2
     integer                                     :: ir
+    integer                                     :: irend
     integer , dimension(2)                      :: lmstart
     integer , dimension(2)                      :: lmend
     real(kind=dp) , dimension(1:irmdnew,1:(2*lmax+1)**2,1:(2*lmax+1)**2)   :: thetansll   
     real(kind=dp) , dimension(3)                :: bin(3)
+    real(kind=dp),dimension(3)                  :: magdir ! direction of the magnetic moment
     double complex , dimension(2,2)             :: bs ! sigma*b_0
     character(len=1024)                         :: filename
     double complex , dimension(1:irmdnew)       :: temp
@@ -297,6 +323,12 @@ contains
     !write(*,*) cleb !! GAUNT coefficients (GAUNT)
     !------------------------------------------------------------------------------------
     !------------------------------------------------------------------------------------
+    
+    if(mode=='1') then
+      write(1337,'("===============================================================================")')
+      write(1337,'("                      Magnetic fields for atom ",i4)') iatom
+      write(1337,'("===============================================================================")')
+    end if
     
     !lmmax=lmmaxd ! could be replace it is still here due to copy/paste
     lmmax=(lmax+1)**2
@@ -375,7 +407,7 @@ contains
     ! Add different contributions to the magnetic field
     bin(:) = 0.d0
     if ( t_inc%i_iteration>=bfield%itscf0 .and. t_inc%i_iteration<=bfield%itscf1 ) then ! preconvergence without adding the constraining field
-      if(myrank==master .and. debug) write(*,'("Adding bfield for iatom="i4)') iatom
+      !if(myrank==master .and. debug) write(*,'("Adding bfield for iatom="i4)') iatom
       if(bfield%lbfield) then
         bin(:) = bfield%bfield(iatom,:)
       end if
@@ -385,6 +417,14 @@ contains
         end if
       end if
     end if
+
+    if(bfield%lbfield_trans) then
+      magdir(1) = sin(theta)*cos(phi)
+      magdir(2) = sin(theta)*sin(phi)
+      magdir(3) = cos(theta)
+      bin(:) = bin(:) - magdir*dot_product(magdir(:),bin(:))
+    end if
+    if(mode=='1') write(1337,'("iatom, bin=",i4,3es16.8)') iatom, bin
     
     bs(:,:)=0.d0
     ! down/down block
@@ -419,11 +459,21 @@ contains
     !  end do
     !end if
 
+    if(bfield%lbfield_mt) then
+      irend = imt1
+    else
+      irend = irmdnew
+    end if
     do i = 1,2
       do j = 1,2
-        do ir=1,irmdnew
+        do ir=1,irend
           vnspll1(lmstart(i):lmend(i),lmstart(j):lmend(j),ir)=vnspll0(lmstart(i):lmend(i),lmstart(j):lmend(j),ir)-bs(i,j)*thetansll(ir,:,:)
         end do
+        if(bfield%lbfield_mt) then !add non-spherical part of normal potential
+          do ir=irend+1,irmdnew
+            vnspll1(lmstart(i):lmend(i),lmstart(j):lmend(j),ir)=vnspll0(lmstart(i):lmend(i),lmstart(j):lmend(j),ir)
+          end do
+        end if
       end do
     end do
     
@@ -451,23 +501,21 @@ contains
   !> The output does not need pointers!
   !> @endnote
   !------------------------------------------------------------------------------------
-  subroutine thetallmat(thetansll, lmax, iatom, imt1, iend, irmdnew, ncheb, thetasnew, ifunm, icleb, cleb)
+  subroutine calc_thetallmat(thetansll, lmax, imt1, iend, irmdnew, thetasnew, ifunm, icleb, cleb)
 
     !use :: global_variables, only: ntotd, nfund
 
     implicit none
 
     integer                     , intent (in)   :: lmax         ! Angular momentum cut-off
-    integer                     , intent (in)   :: iatom        ! Atom index
     integer                     , intent (in)   :: imt1         ! index muffin-tin radius
     integer                     , intent (in)   :: iend         ! Number of nonzero gaunt coefficients
     integer                     , intent (in)   :: irmdnew      ! number of radials point on the Cheby mesh
-    integer                     , intent (in)   :: ncheb        ! Number of Chebychev pannels for the new solver
     integer, dimension (ncleb, 4), intent (in)  :: icleb !! Pointer array
     real (kind=dp), dimension (ncleb), intent (in)  :: cleb !! GAUNT coefficients (GAUNT)
     real (kind=dp)              , dimension (irmdnew, nfund)                    , intent (in)           :: thetasnew    ! shapefun on the Cheby mesh
     integer                     , dimension (1:(2*lmax+1)**2)                   , intent (in)           :: ifunm        ! pointer array for shapefun     ! Check index and dimensions!!!!!
-    real(kind=dp)               , dimension(irmdnew,(2*lmax+1)**2,(2*lmax+1)**2)    , intent (out)          :: thetansll    ! LL' expansion of the shapefunction 
+    real(kind=dp)               , dimension((2*lmax+1)**2,(2*lmax+1)**2,irmdnew)    , intent (out)          :: thetansll    ! LL' expansion of the shapefunction 
     !------------------------------------------------------------------------------------
     real(kind=dp),parameter                                     :: rfpi=3.5449077018110318
     real(kind=dp),dimension(1:irmdnew,1:(2*lmax+1)**2)          :: shapefun_mod  
@@ -513,26 +561,30 @@ contains
     thetansll(:,:,:)=0.d0
     ! diagonal part (not contained in gaunt-coeff)
     do ilm = 1,lmmax
-      thetansll(:,ilm,ilm) = shapefun_mod(:,1)*c0ll
+      thetansll(ilm,ilm,:) = shapefun_mod(:,1)*c0ll
     end do
     do j = 1,iend !gauntcoeff%iend
       lm1 = icleb(j, 1)! gauntcoeff%icleb(j,1) ! lmax
       lm2 = icleb(j, 2)! gauntcoeff%icleb(j,2) ! lmax
       lm3 = icleb(j, 3)! gauntcoeff%icleb(j,3) ! 2*lmax
-      write(17*iatom**2,'("lm1,lm2,lm3 =",3i4,2es16.8)') lm1,lm2,lm3,cleb(j)
+      !write(17*iatom**2,'("lm1,lm2,lm3 =",3i4,2es16.8)') lm1,lm2,lm3,cleb(j)
       if(lm1<= lmmax .and. lm2 <= lmmax .and. lm3<= lmmax2) then
-        do ir = 1,irmdnew!cellnew%nrmaxnew
-          thetansll(ir,lm1,lm2) = thetansll(ir,lm1,lm2)+cleb(j)*shapefun_mod(ir,lm3)
-        end do
+        ifun = ifunm(lm3)
+        if(.not. ifun == 0) then !shapefun%lmused(ilm)==1) then
+          do ir = 1,irmdnew!cellnew%nrmaxnew
+            thetansll(lm1,lm2,ir) = thetansll(lm1,lm2,ir)+cleb(j)*shapefun_mod(ir,lm3)
+            thetansll(lm2,lm1,ir) = thetansll(lm2,lm1,ir)+cleb(j)*shapefun_mod(ir,lm3)
+          end do
+        end if
       end if
     end do
-    do lm1 = 1,lmmax
-      do lm2 = 1,lm1-1
-        do ir = 1, irmdnew
-          thetansll(ir,lm2,lm1) = thetansll(ir,lm1,lm2)
-        end do
-      end do
-    end do
+    !do lm1 = 1,lmmax
+    !  do lm2 = 1,lm1-1
+    !    do ir = 1, irmdnew
+    !      thetansll(ir,lm2,lm1) = thetansll(ir,lm1,lm2)
+    !    end do
+    !  end do
+    !end do
     !if(myrank==master .and. debug) write(17*iatom**2,'("  thetansll = ")')
     !do lm1=1,lmmax
     !  do lm2=1,lmmax
@@ -542,7 +594,7 @@ contains
     !  end do
     !end do
               
-  end subroutine thetallmat
+  end subroutine calc_thetallmat
 
 end module mod_bfield
 

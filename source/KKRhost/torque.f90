@@ -94,6 +94,9 @@ contains
     !------------------------------------------------------------------------------------
     
     !write(*,'(" >>>>>> entering calctorque >>>>>>>>>")')
+    write(1337,'("===============================================================================")')
+    write(1337,'("                      Magnetic torques for atom ",i4)') iatom
+    write(1337,'("===============================================================================")')
     
     lmmax=(lmax+1)**2
     cone  = (1d0,0d0)
@@ -126,6 +129,34 @@ contains
         mag_den_glob(ir,ilm,3)      = aimag( rho2ns_temp(2,2) - rho2ns_temp(1,1) )
       end do !ir
     end do !ilm
+
+    ! --------------------------------------------------------------------------------------
+    ! Mangetic moment in the new mesh (mainly to separate the moment in r<rmt
+    ! and get acess to lm components
+    mag_den_convol(:,:,:)=0.d0
+    call calc_magmom_newmesh(lmax,imt1,irmdnew,t_params%ntcell(iatom),iend,ifunm,icleb,cleb,thetasnew,mag_den_glob,mag_den_convol)
+    do i= 1,3
+      do ilm=1,lmmax 
+          integrand(:) = (0.d0,0.d0)
+          temp= (0.d0,0.d0)
+          integrand(:) = mag_den_convol(:,ilm,i)*cone
+          call intcheb_cell(integrand(:),temp,rpan_intervall,ipan_intervall,npan_tot,ncheb,irmdnew)
+          mag(ilm,i) = real(temp*rfpi)    
+          ! same for mt only
+          integrand(:) = (0.d0,0.d0)
+          temp= (0.d0,0.d0)
+          integrand(:imt1) = mag_den_convol(:imt1,ilm,i)*cone
+          call intcheb_cell(integrand(:),temp,rpan_intervall,ipan_intervall,npan_tot,ncheb,irmdnew)
+          mag_mt(ilm,i) = real(temp*rfpi)    
+      end do
+    end do
+
+    write(1337,'("Magnetic moment")') 
+    do ilm=1,lmmax  
+      write(1337,'("iatom, ilm, mag, mag_mt",2i4,6es16.8)') iatom, ilm, mag(ilm,:), mag_mt(ilm,:)
+    end do
+    totmag = sqrt(dot_product(mag(1,:),mag(1,:)))
+    ! --------------------------------------------------------------------------------------
     
     !do ilm= 1,lmpotd
     !  !write(*,'("ilm,mag_den_glob1=",i4,1000es16.8)') ilm, mag_den_glob(:,ilm,1)
@@ -160,32 +191,6 @@ contains
     
     write(1337,'("iatom, torque, torque_mt = ",i4,6es16.8)') iatom, torque(:), torque_mt(:)
     
-    ! --------------------------------------------------------------------------------------
-    ! Mangetic moment in the new mesh (mainly to separate the moment in r<rmt
-    ! and get acess to lm components
-    mag_den_convol(:,:,:)=0.d0
-    call calc_magmom_newmesh(lmax,imt1,irmdnew,t_params%ntcell(iatom),iend,ifunm,icleb,cleb,thetasnew,mag_den_glob,mag_den_convol)
-    do i= 1,3
-      do ilm=1,lmmax 
-          integrand(:) = (0.d0,0.d0)
-          temp= (0.d0,0.d0)
-          integrand(:) = mag_den_convol(:,ilm,i)*cone
-          call intcheb_cell(integrand(:),temp,rpan_intervall,ipan_intervall,npan_tot,ncheb,irmdnew)
-          mag(ilm,i) = real(temp*rfpi)    
-          ! same for mt only
-          integrand(:) = (0.d0,0.d0)
-          temp= (0.d0,0.d0)
-          integrand(:imt1) = mag_den_convol(:imt1,ilm,i)*cone
-          call intcheb_cell(integrand(:),temp,rpan_intervall,ipan_intervall,npan_tot,ncheb,irmdnew)
-          mag_mt(ilm,i) = real(temp*rfpi)    
-      end do
-    end do
-
-    write(1337,'("Magnetic moment")') 
-    do ilm=1,lmmax  
-      write(1337,'("ilm,mag,mag_mt",i4,6es16.8)') ilm, mag(ilm,:), mag_mt(ilm,:)
-    end do
-    totmag = sqrt(dot_product(mag(1,:),mag(1,:)))
     
     ! --------------------------------------------------------------------------------------
     ! calculate the perpendicular component of the torque
@@ -196,32 +201,30 @@ contains
     torque_mt(:) = torque_mt(:) - magdir*dot_product(magdir(:),torque_mt(:))
     write(1337,'("iatom, torque_perp, torque_mt_perp = ",i4,6es16.8)') iatom, torque(:), torque_mt(:)
     t_params%bfield%mag_torque(iatom,:) = torque(:)
-    if(t_params%bfield%ibfield_constr == 5) then ! constraining fields
-      ! sum up the torques for all iterations, which yields a scf with constraining fields
-      bfac                                  = 1.d0
-      write(1337,*) allocated(t_params%npan_tot)
-      write(1337,*) allocated(t_params%bfield%theta)
-      write(1337,*) allocated(t_params%bfield%phi)
-      write(1337,*) allocated(t_params%bfield%bfield)
-      write(1337,*) allocated(t_params%bfield%bfield_constr)
-      t_params%bfield%bfield_constr(iatom,:)         = t_params%bfield%bfield_constr(iatom,:) - torque(:)/totmag*bfac
-      !bfield%bfield_strength_constr         = sqrt(dot_product(bfield%bfield_constr(:),bfield%bfield_constr(:))) 
-      !bfield%theta_constr                   = acos(bfield%bfield_constr(3)/bfield%bfield_strength_constr)
-      !bfield%phi_constr                     = datan2(bfield%bfield_constr(2),bfield%bfield_constr(1))
-      write(1337,'(3i4,100f16.8)') t_params%itscf, iatom ,t_params%bfield%ibfield_constr , t_params%bfield%bfield_constr(iatom,:)
-    end if
-    !if(density%magmomentfixed == 6) then ! constraining fields
-    !  temp2 = 0.d0
-    !  do ilm=1,lmmax
-    !    integrand(:) = cone*bxc(:,ilm)*(density%rho2ns_complexnew(:,ilm,2)-density%rho2ns_complexnew(:,ilm,1))
-    !    call intcheb_cell(integrand,cellnew,temp)
-    !    !call simpk(integrand,temp,cell%npan,cell%nrcut(:),cell%drmeshdi(:),cell%npan)
-    !    temp2    = temp2 + Dreal(temp*rfpi) ! this is a spherical quantity =>sqrt(4*pi)
-    !  end do !ilm
-    !end if
-    if(t_params%bfield%ibfield_constr == 7 .and. t_params%itscf == 1 ) then ! constraining fields to constrain scf cycle
-      bfac                                  = 1.d0
-      t_params%bfield%bfield_constr(iatom,:)               = t_params%bfield%bfield_constr(iatom,:) - torque(:)/totmagmoment*bfac
+    if(t_params%bfield%lbfield_constr) then !constraining fields
+      if(t_params%bfield%ibfield_constr == 5 ) then ! constraining fields based on magnetic torques
+        ! sum up the torques for all iterations, which yields a scf with constraining fields
+        bfac                                  = 1.d0
+        t_params%bfield%bfield_constr(iatom,:)         = t_params%bfield%bfield_constr(iatom,:) - torque(:)/totmag*bfac
+        !bfield%bfield_strength_constr         = sqrt(dot_product(bfield%bfield_constr(:),bfield%bfield_constr(:))) 
+        !bfield%theta_constr                   = acos(bfield%bfield_constr(3)/bfield%bfield_strength_constr)
+        !bfield%phi_constr                     = datan2(bfield%bfield_constr(2),bfield%bfield_constr(1))
+        write(1337,'(" itscf, iatom, ibfield_constr, bfield_constr= ",3i4,100f16.8)') t_params%itscf, iatom ,t_params%bfield%ibfield_constr , t_params%bfield%bfield_constr(iatom,:)
+      end if
+      if(t_params%bfield%ibfield_constr == 7 .and. t_params%itscf == 1 ) then ! constraining fields to constrain scf cycle
+        bfac                                  = 1.d0
+        t_params%bfield%bfield_constr(iatom,:)               = t_params%bfield%bfield_constr(iatom,:) - torque(:)/totmagmoment*bfac
+        write(1337,'(" itscf, iatom, ibfield_constr, bfield_constr= ",3i4,100f16.8)') t_params%itscf, iatom ,t_params%bfield%ibfield_constr , t_params%bfield%bfield_constr(iatom,:)
+      end if
+      !if(density%magmomentfixed == 6) then ! constraining fields
+      !  temp2 = 0.d0
+      !  do ilm=1,lmmax
+      !    integrand(:) = cone*bxc(:,ilm)*(density%rho2ns_complexnew(:,ilm,2)-density%rho2ns_complexnew(:,ilm,1))
+      !    call intcheb_cell(integrand,cellnew,temp)
+      !    !call simpk(integrand,temp,cell%npan,cell%nrcut(:),cell%drmeshdi(:),cell%npan)
+      !    temp2    = temp2 + Dreal(temp*rfpi) ! this is a spherical quantity =>sqrt(4*pi)
+      !  end do !ilm
+      !end if
     end if
 
   end subroutine calc_torque

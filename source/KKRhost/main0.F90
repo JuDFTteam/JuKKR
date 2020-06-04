@@ -95,7 +95,7 @@ module mod_main0
   !character
   public :: txc
   !logical
-  public :: vacflag, para, symunitary, emeshfile, lbfield, lbfield_constr, lbfield_all
+  public :: vacflag, para, symunitary, emeshfile, lbfield, lbfield_constr, lbfield_all, lbfield_trans, lbfield_mt, ltorque
   ! ------------- < arrays < ------------- 
 
   
@@ -419,6 +419,9 @@ module mod_main0
   logical  :: lbfield ! external magnetic field (turned on via runoption <noncobfield>) non-collinear magnetic field
   logical  :: lbfield_constr ! constraining fields (turned on via runoption <noncobfield>) non-collinear magnetic field
   logical  :: lbfield_all ! apply same field to all atoms (True) or individual fields to each atom
+  logical  :: lbfield_trans ! apply only transversal field
+  logical  :: lbfield_mt ! apply same field to all atoms (True) or individual fields to each atom
+  logical  :: ltorque ! apply same field to all atoms (True) or individual fields to each atom
   integer  :: ibfield  ! spin (0), orbital (1), spin+orbial (2) fields
   integer  :: ibfield_constr  ! type of contraint (0 = torque, 1 = magnetic moment)
   integer  :: ibfield_itscf0  ! start magnetic field at iteration itscf0
@@ -585,8 +588,8 @@ contains
       fpradius,tleft,tright,rbasis,socscale,cscl,socscl,solver,i12,i13,i19,i25,i40, &
       txc,drotq,ncpa,itcpamax,cpatol,noq,iqat,icpa,kaoez,conc,kmrot,qmtet,qmphi,    &
       kreadldau,lopt,ueff,jeff,erefldau,invmod,verbosity,MPI_scheme,                &
-      special_straight_mixing,lbfield,lbfield_constr,lbfield_all,ibfield,ibfield_constr,&
-      ibfield_itscf0,ibfield_itscf1)
+      special_straight_mixing,lbfield,lbfield_constr,lbfield_all,lbfield_trans,     &
+      lbfield_mt,ltorque,ibfield,ibfield_constr,ibfield_itscf0,ibfield_itscf1)
 
     ! Some consistency checks
     if ((krel<0) .or. (krel>1)) stop ' set KREL=0/1 (non/fully) relativistic mode in the inputcard'
@@ -1278,7 +1281,7 @@ contains
     end if
 
     ! init bfield parameters (stored in a type_bfield, which is given to wunfiles and t_params)
-    call init_bfield(bfield,natyp,lbfield,lbfield_constr,lbfield_all,ibfield,ibfield_constr,ibfield_itscf0,ibfield_itscf1)
+    call init_bfield(bfield,natyp,lbfield,lbfield_constr,lbfield_all,lbfield_trans,lbfield_mt,ltorque,ibfield,ibfield_constr,ibfield_itscf0,ibfield_itscf1,thetasnew,ntotd*(ncheb+1),nfund,ncelld)
     
     call wunfiles(npol, npnt1, npnt2, npnt3, ielast, tk, emin, emax, ez, wez, efermi, npolsemi, n1semi, n2semi, n3semi, iesemicore, tksemi, ebotsemi, emusemi, fsemicore, vins, &
       visp, vbc, vtrel, btrel, rmrel, drdirel, r2drdirel, zrel, jwsrel, irshift, itscf, scfsteps, cmomhost, ecore, lcore, ncore, qmtet, qmphi, qmphitab, qmtettab, qmgamtab, drotq, &
