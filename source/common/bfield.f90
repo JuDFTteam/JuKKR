@@ -47,7 +47,7 @@ module mod_bfield
     real (kind=dp), dimension (:,:), allocatable        :: bfield_constr ! constraining field in cartesian coordinates, dimensions (natom,3)
     real (kind=dp), dimension (:), allocatable          :: theta ! polar angle of the magnetic field
     real (kind=dp), dimension (:), allocatable          :: phi   ! azimuthal angle of the magnetic field
-    real (kind=dp), dimension (:,:,:), allocatable      :: thetallmat ! shapefun in the ll' expansion
+    real (kind=dp), dimension (:,:,:,:), allocatable    :: thetallmat ! shapefun in the ll' expansion
     !------------------------------------------------------------------------------------
     ! Magnetic torque 
     !------------------------------------------------------------------------------------
@@ -65,12 +65,12 @@ contains
   !> Deprecated: False
   !-------------------------------------------------------------------------------
   subroutine init_bfield(bfield,natyp,lbfield,lbfield_constr,lbfield_all,lbfield_trans,lbfield_mt,ltorque,ibfield,ibfield_constr,itscf0, &
-    itscf1,irmdnew,nfund,ncelld,lmax,thetasnew)
+    itscf1,npan_log,npan_eq,ncheb,ntotd,nfund,ncelld,lmax,iend,ntcell,ipan_intervall,ifunm,icleb,cleb,thetasnew)
 
       implicit none
 
       type(type_bfield), intent(inout) :: bfield
-      integer, intent(in) :: natyp ! external magnetic field (turned on via runoption <noncobfield>) non-collinear magnetic field
+      integer, intent(in) :: natyp 
       integer :: i_stat
       
       logical, intent(in) :: lbfield 
@@ -83,16 +83,24 @@ contains
       integer, intent(in) :: ibfield_constr 
       integer, intent(in) :: itscf0 
       integer, intent(in) :: itscf1 
-      logical, intent(in) :: irmdnew
-      logical, intent(in) :: nfund
-      logical, intent(in) :: ncelld
-      logical, intent(in) :: lmax
-      integer, intent (in):: imt1         ! index muffin-tin radius
+      integer, intent(in) :: npan_log
+      integer, intent(in) :: npan_eq
+      integer, intent(in) :: ncheb
+      integer, intent(in) :: ntotd
+      integer, intent(in) :: nfund
+      integer, intent(in) :: ncelld
+      integer, intent(in) :: lmax
       integer, intent (in):: iend         ! Number of nonzero gaunt coefficients
+      integer, dimension (natyp), intent (in)                           :: ntcell ! pointer from natyp to ndcell
+      integer, dimension (0:ntotd, natyp), intent (in)                  :: ipan_intervall
       integer, dimension (1:(2*lmax+1)**2), intent (in)                 :: ifunm        ! pointer array for shapefun     ! Check index and dimensions!!!!!
       integer, dimension (ncleb, 4), intent (in)                        :: icleb !! Pointer array
       real (kind=dp), dimension (ncleb), intent (in)                    :: cleb !! GAUNT coefficients (GAUNT)
-      real (kind=dp), dimension (irmdnew, nfund, ncelld), intent (in)   :: thetasnew !! interpolated shape function in Chebychev radial mesh
+      real (kind=dp), dimension (ntotd*(ncheb+1), nfund, ncelld), intent (in)   :: thetasnew !! interpolated shape function in Chebychev radial mesh
+      
+      integer   :: icell
+      integer   :: i1
+      logical, dimension(ncelld)   :: celldone
 
       ! init basic parameters
       bfield%lbfield = lbfield
@@ -124,12 +132,28 @@ contains
       allocate (bfield%mag_torque(natyp,3), stat=i_stat)
       call memocc(i_stat, product(shape(bfield%mag_torque   ))*kind(bfield%mag_torque   ), 'bfield%mag_torque', 'init_bfield')
       if(lbfield) then
-        allocate (bfield%thetallmat((lmax+1)**2,(lmax+1)**2,irmdnew,ncelld), stat=i_stat)
+        allocate (bfield%thetallmat((lmax+1)**2,(lmax+1)**2,ntotd*(ncheb+1),ncelld), stat=i_stat)
         call memocc(i_stat, product(shape(bfield%thetallmat   ))*kind(bfield%thetallmat   ), 'bfield%mag_torque', 'init_bfield')
-        do icell=1,ncelld
-          call calc_thetallmat(bfield%thetallmat(:,:,:,icell), lmax, imt1, iend, irmdnew, thetasnew(:,:,icell), ifunm, icleb, cleb)
+        celldone(:) = .False.
+        do i1=1,natyp
+          icell = ntcell(i1)
+          write(*,'("icell = ",i4," i1 = ",i4)') icell, i1 
+          if(.not. celldone(icell)) then 
+            write(*,*)  shape(bfield%thetallmat(:,:,:,icell))
+            write(*,*)  shape(lmax) , lmax
+            write(*,*)  shape(ipan_intervall(npan_log+npan_eq,i1) + 1) , ipan_intervall(npan_log+npan_eq,i1) + 1
+            write(*,*)  shape(iend) , iend 
+            write(*,*)  shape(ntotd*(ncheb+1)) , ntotd*(ncheb+1)
+            write(*,*)  shape(thetasnew(:,:,icell))
+            write(*,*)  shape(ifunm)
+            write(*,*)  shape(icleb)
+            write(*,*)  shape(cleb)
+            call calc_thetallmat(bfield%thetallmat(:,:,:,icell), lmax, ipan_intervall(npan_log+npan_eq,i1) + 1, iend, ntotd*(ncheb+1), thetasnew(:,:,icell), ifunm, icleb, cleb)
+          end if
+          celldone(icell) = .True.
         end do
       end if
+      write(*,'("init_bfield done")')
   end subroutine init_bfield
 
 
@@ -348,7 +372,7 @@ contains
     !end if
     
     ! calc LL' expansion of the shapefunction
-    call thetallmat(thetansll, lmax, iatom, imt1, iend, irmdnew, ncheb, thetasnew, ifunm, icleb, cleb)
+    call calc_thetallmat(thetansll, lmax, imt1, iend, irmdnew, thetasnew, ifunm, icleb, cleb)
     
     !if(myrank==master .and. debug) then
     !  write(17*iatom**2,'("  thetansll = ")')

@@ -1278,11 +1278,12 @@ contains
       call create_newmesh(natyp,irmd,ipand,irid,ntotd,nfund,ncheb,ntotd*(ncheb+1),  &
         nspin,rmesh,irmin,ipan,ircut,r_log,npan_log,npan_eq,npan_log_at,npan_eq_at, &
         npan_tot,rnew,rpan_intervall,ipan_intervall,ncelld,ntcell,thetas,thetasnew)
+      ! init bfield parameters (stored in a type_bfield, which is given to wunfiles and t_params)
+      call init_bfield(bfield,natyp,lbfield,lbfield_constr,lbfield_all,lbfield_trans,lbfield_mt,ltorque, &
+                       ibfield,ibfield_constr,ibfield_itscf0,ibfield_itscf1,npan_log,npan_eq,ncheb,ntotd,nfund,ncelld,lmax, &
+                       iend,ntcell,ipan_intervall,ifunm,icleb,cleb(:,1),thetasnew)
     end if
 
-    ! init bfield parameters (stored in a type_bfield, which is given to wunfiles and t_params)
-    call init_bfield(bfield,natyp,lbfield,lbfield_constr,lbfield_all,lbfield_trans,lbfield_mt,ltorque,ibfield,ibfield_constr,ibfield_itscf0,ibfield_itscf1,thetasnew,ntotd*(ncheb+1),nfund,ncelld)
-    
     call wunfiles(npol, npnt1, npnt2, npnt3, ielast, tk, emin, emax, ez, wez, efermi, npolsemi, n1semi, n2semi, n3semi, iesemicore, tksemi, ebotsemi, emusemi, fsemicore, vins, &
       visp, vbc, vtrel, btrel, rmrel, drdirel, r2drdirel, zrel, jwsrel, irshift, itscf, scfsteps, cmomhost, ecore, lcore, ncore, qmtet, qmphi, qmphitab, qmtettab, qmgamtab, drotq, &
       nsra, ins, natypd, naezd, nineq, nref, nspin, ncls, icst, ipan, ircut, alat, zat, rmesh, drdi, refpot, rmtref, vref, iend, jend, cleb, icleb, atom, cls, rcls, nacls, loflm, &
