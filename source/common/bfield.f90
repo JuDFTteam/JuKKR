@@ -131,29 +131,21 @@ contains
 
       allocate (bfield%mag_torque(natyp,3), stat=i_stat)
       call memocc(i_stat, product(shape(bfield%mag_torque   ))*kind(bfield%mag_torque   ), 'bfield%mag_torque', 'init_bfield')
+      ! Calculate the LL' expansion of hte shape function in the new mesh which
+      ! is needed to convolute the magnetic field (only done once and stored to
+      ! safe computing time) 
       if(lbfield) then
-        allocate (bfield%thetallmat((lmax+1)**2,(lmax+1)**2,ntotd*(ncheb+1),ncelld), stat=i_stat)
-        call memocc(i_stat, product(shape(bfield%thetallmat   ))*kind(bfield%thetallmat   ), 'bfield%mag_torque', 'init_bfield')
+        allocate (bfield%thetallmat((2*lmax+1)**2,(2*lmax+1)**2,ntotd*(ncheb+1),ncelld), stat=i_stat)
+        call memocc(i_stat, product(shape(bfield%thetallmat   ))*kind(bfield%thetallmat   ), 'bfield%thetallmat', 'init_bfield')
         celldone(:) = .False.
         do i1=1,natyp
           icell = ntcell(i1)
-          write(*,'("icell = ",i4," i1 = ",i4)') icell, i1 
           if(.not. celldone(icell)) then 
-            write(*,*)  shape(bfield%thetallmat(:,:,:,icell))
-            write(*,*)  shape(lmax) , lmax
-            write(*,*)  shape(ipan_intervall(npan_log+npan_eq,i1) + 1) , ipan_intervall(npan_log+npan_eq,i1) + 1
-            write(*,*)  shape(iend) , iend 
-            write(*,*)  shape(ntotd*(ncheb+1)) , ntotd*(ncheb+1)
-            write(*,*)  shape(thetasnew(:,:,icell))
-            write(*,*)  shape(ifunm)
-            write(*,*)  shape(icleb)
-            write(*,*)  shape(cleb)
             call calc_thetallmat(bfield%thetallmat(:,:,:,icell), lmax, ipan_intervall(npan_log+npan_eq,i1) + 1, iend, ntotd*(ncheb+1), thetasnew(:,:,icell), ifunm, icleb, cleb)
           end if
           celldone(icell) = .True.
         end do
       end if
-      write(*,'("init_bfield done")')
   end subroutine init_bfield
 
 
