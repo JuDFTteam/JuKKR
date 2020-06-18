@@ -485,7 +485,8 @@ contains
       if ( t_params%bfield%lbfield .or. t_params%bfield%lbfield_constr ) then
         imt1 = ipan_intervall(t_params%npan_log+t_params%npan_eq) + 1
         call add_bfield(t_params%bfield,i1,lmax,nspin,irmdnew,imt1,iend,ncheb,theta,phi,t_params%ifunm1(:,t_params%ntcell(i1)),&
-                        t_params%icleb,t_params%cleb(:,1),t_params%thetasnew(1:irmdnew,:,t_params%ntcell(i1)),'1',vnspll2(:,:,:),vnspll1(:,:,:,ith))
+                        t_params%icleb,t_params%cleb(:,1),t_params%thetasnew(1:irmdnew,:,t_params%ntcell(i1)),'1',vnspll2(:,:,:), &
+                        vnspll1(:,:,:,ith),t_params%bfield%thetallmat(:,:,1:irmdnew,t_params%ntcell(i1)))
       else
         vnspll1(:,:,:,ith) = vnspll2(:,:,:)
       end if
@@ -567,7 +568,8 @@ contains
         ! Add magnetic field 
         if ( t_params%bfield%lbfield .or. t_params%bfield%lbfield_constr ) then
           call add_bfield(t_params%bfield,i1,lmax,nspin,irmdnew,imt1,iend,ncheb,theta,phi,t_params%ifunm1(:,t_params%ntcell(i1)),&
-                          t_params%icleb,t_params%cleb(:,1),t_params%thetasnew(1:irmdnew,:,t_params%ntcell(i1)),'transpose',vnspll2(:,:,:),vnspll1(:,:,:,ith))
+                          t_params%icleb,t_params%cleb(:,1),t_params%thetasnew(1:irmdnew,:,t_params%ntcell(i1)),'transpose',vnspll2(:,:,:), &
+                          vnspll1(:,:,:,ith),t_params%bfield%thetallmat(:,:,1:irmdnew,t_params%ntcell(i1)))
         else
           vnspll1(:,:,:,ith) = vnspll2(:,:,:)
         end if

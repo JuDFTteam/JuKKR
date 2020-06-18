@@ -93,7 +93,7 @@ contains
       integer, intent (in):: iend         ! Number of nonzero gaunt coefficients
       integer, dimension (natyp), intent (in)                           :: ntcell ! pointer from natyp to ndcell
       integer, dimension (0:ntotd, natyp), intent (in)                  :: ipan_intervall
-      integer, dimension (1:(2*lmax+1)**2), intent (in)                 :: ifunm        ! pointer array for shapefun     ! Check index and dimensions!!!!!
+      integer, dimension (1:(2*lmax+1)**2,natyp), intent (in)           :: ifunm        ! pointer array for shapefun     ! Check index and dimensions!!!!!
       integer, dimension (ncleb, 4), intent (in)                        :: icleb !! Pointer array
       real (kind=dp), dimension (ncleb), intent (in)                    :: cleb !! GAUNT coefficients (GAUNT)
       real (kind=dp), dimension (ntotd*(ncheb+1), nfund, ncelld), intent (in)   :: thetasnew !! interpolated shape function in Chebychev radial mesh
@@ -102,6 +102,7 @@ contains
       integer   :: i1
       logical, dimension(ncelld)   :: celldone
 
+      !write(*,'("Init bfield")')
       ! init basic parameters
       bfield%lbfield = lbfield
       bfield%lbfield_constr = lbfield_constr
@@ -135,17 +136,18 @@ contains
       ! is needed to convolute the magnetic field (only done once and stored to
       ! safe computing time) 
       if(lbfield) then
-        allocate (bfield%thetallmat((2*lmax+1)**2,(2*lmax+1)**2,ntotd*(ncheb+1),ncelld), stat=i_stat)
+        allocate (bfield%thetallmat((lmax+1)**2,(lmax+1)**2,ntotd*(ncheb+1),ncelld), stat=i_stat)
         call memocc(i_stat, product(shape(bfield%thetallmat   ))*kind(bfield%thetallmat   ), 'bfield%thetallmat', 'init_bfield')
         celldone(:) = .False.
         do i1=1,natyp
           icell = ntcell(i1)
           if(.not. celldone(icell)) then 
-            call calc_thetallmat(bfield%thetallmat(:,:,:,icell), lmax, ipan_intervall(npan_log+npan_eq,i1) + 1, iend, ntotd*(ncheb+1), thetasnew(:,:,icell), ifunm, icleb, cleb)
+            call calc_thetallmat(bfield%thetallmat(:,:,:,icell), lmax, ipan_intervall(npan_log+npan_eq,i1) + 1, iend, ntotd*(ncheb+1), thetasnew(:,:,icell), ifunm(:,i1), icleb, cleb)
           end if
           celldone(icell) = .True.
         end do
       end if
+      !write(*,'("Init bfield done")')
   end subroutine init_bfield
 
 
@@ -275,7 +277,7 @@ contains
   !> noncollinear magnetism.
   !> @endnote
   !------------------------------------------------------------------------------------
-  subroutine add_bfield(bfield,iatom,lmax,nspin,irmdnew,imt1,iend,ncheb,theta,phi,ifunm,icleb,cleb,thetasnew,mode,vnspll0,vnspll1)
+  subroutine add_bfield(bfield,iatom,lmax,nspin,irmdnew,imt1,iend,ncheb,theta,phi,ifunm,icleb,cleb,thetasnew,mode,vnspll0,vnspll1,thetansll)
 
     implicit none
 
@@ -296,6 +298,7 @@ contains
     character (len=*)    , intent (in)                                          :: mode         !! either '1' or 'transpose', depending whether SOC potential is constructed for right or left solution
     complex (kind=dp)    , dimension(lmmaxd, lmmaxd, irmdnew) , intent (in)    :: vnspll0       !! input potential in (l,m,s) basis
     complex (kind=dp)    , dimension(lmmaxd, lmmaxd, irmdnew) , intent (out)   :: vnspll1       !! input potential in (l,m,s) basis
+    real(kind=dp) , dimension(1:(lmax+1)**2,1:(lmax+1)**2,1:irmdnew), intent(in)   :: thetansll
     !------------------------------------------------------------------------------------
     ! local variables
     !------------------------------------------------------------------------------------
@@ -308,7 +311,6 @@ contains
     integer                                     :: irend
     integer , dimension(2)                      :: lmstart
     integer , dimension(2)                      :: lmend
-    real(kind=dp) , dimension(1:irmdnew,1:(2*lmax+1)**2,1:(2*lmax+1)**2)   :: thetansll   
     real(kind=dp) , dimension(3)                :: bin(3)
     real(kind=dp),dimension(3)                  :: magdir ! direction of the magnetic moment
     double complex , dimension(2,2)             :: bs ! sigma*b_0
@@ -363,19 +365,20 @@ contains
     !  write(17*iatom**2,'("  bfield is =",3f16.8,"  theta, phi= ",2f16.8)') bfield%bfield(iatom,:),bfield%theta(iatom),bfield%phi(iatom)
     !end if
     
-    ! calc LL' expansion of the shapefunction
-    call calc_thetallmat(thetansll, lmax, imt1, iend, irmdnew, thetasnew, ifunm, icleb, cleb)
-    
-    !if(myrank==master .and. debug) then
-    !  write(17*iatom**2,'("  thetansll = ")')
-    !  do ilm1=1,lmmax
-    !    do ilm2=1,lmmax
-    !      if(sum(abs(thetansll(ilm1,ilm2,:)))>1e-8) then
-    !        write(17*iatom**2,'(2i4,1000es16.8)') ilm1, ilm2, thetansll(ilm1,ilm2,:)
-    !      end if
-    !    end do
-    !  end do
-    !end if
+    !!!! calc LL' expansion of the shapefunction
+    !!!call calc_thetallmat(thetansll, lmax, imt1, iend, irmdnew, thetasnew, ifunm, icleb, cleb)
+    !!!
+    !!!if(myrank==master) then
+    !!!  write(*,'("  thetansll = ")')
+    !!!  do ilm1=1,lmmax
+    !!!    do ilm2=1,lmmax
+    !!!      if(sum(abs(thetansll(ilm1,ilm2,:)))>1e-8 .or. sum(abs(thetansll_new(ilm1,ilm2,:)))>1e-8) then
+    !!!        write(*,'(2i4,1000es16.8)') ilm1, ilm2, thetansll(ilm1,ilm2,:)
+    !!!        write(*,'(2i4,1000es16.8)') ilm1, ilm2, thetansll_new(ilm1,ilm2,:)
+    !!!      end if
+    !!!    end do
+    !!!  end do
+    !!!end if
     
     ! First add inhomogeneous bfield here (constraining field from xc potential)
     !if( density%magmomentfixed == 6 ) then ! add xc field as constraining field here
@@ -483,7 +486,7 @@ contains
     do i = 1,2
       do j = 1,2
         do ir=1,irend
-          vnspll1(lmstart(i):lmend(i),lmstart(j):lmend(j),ir)=vnspll0(lmstart(i):lmend(i),lmstart(j):lmend(j),ir)-bs(i,j)*thetansll(ir,:,:)
+          vnspll1(lmstart(i):lmend(i),lmstart(j):lmend(j),ir)=vnspll0(lmstart(i):lmend(i),lmstart(j):lmend(j),ir)-bs(i,j)*thetansll(1:lmmax,1:lmmax,ir)
         end do
         if(bfield%lbfield_mt) then !add non-spherical part of normal potential
           do ir=irend+1,irmdnew
@@ -531,7 +534,7 @@ contains
     real (kind=dp), dimension (ncleb), intent (in)  :: cleb !! GAUNT coefficients (GAUNT)
     real (kind=dp)              , dimension (irmdnew, nfund)                    , intent (in)           :: thetasnew    ! shapefun on the Cheby mesh
     integer                     , dimension (1:(2*lmax+1)**2)                   , intent (in)           :: ifunm        ! pointer array for shapefun     ! Check index and dimensions!!!!!
-    real(kind=dp)               , dimension((2*lmax+1)**2,(2*lmax+1)**2,irmdnew)    , intent (out)          :: thetansll    ! LL' expansion of the shapefunction 
+    real(kind=dp)               , dimension((lmax+1)**2,(lmax+1)**2,irmdnew)    , intent (out)          :: thetansll    ! LL' expansion of the shapefunction 
     !------------------------------------------------------------------------------------
     real(kind=dp),parameter                                     :: rfpi=3.5449077018110318
     real(kind=dp),dimension(1:irmdnew,1:(2*lmax+1)**2)          :: shapefun_mod  
@@ -579,6 +582,7 @@ contains
     do ilm = 1,lmmax
       thetansll(ilm,ilm,:) = shapefun_mod(:,1)*c0ll
     end do
+    !write(*,'("ifunm=",1000i4)') ifunm(:)
     do j = 1,iend !gauntcoeff%iend
       lm1 = icleb(j, 1)! gauntcoeff%icleb(j,1) ! lmax
       lm2 = icleb(j, 2)! gauntcoeff%icleb(j,2) ! lmax
@@ -587,6 +591,7 @@ contains
       if(lm1<= lmmax .and. lm2 <= lmmax .and. lm3<= lmmax2) then
         ifun = ifunm(lm3)
         if(.not. ifun == 0) then !shapefun%lmused(ilm)==1) then
+          !write(*,'("lm1,lm2,lm3,cleb",3i4,10e16.8)') lm1,lm2,lm3,cleb(j)
           do ir = 1,irmdnew!cellnew%nrmaxnew
             thetansll(lm1,lm2,ir) = thetansll(lm1,lm2,ir)+cleb(j)*shapefun_mod(ir,lm3)
             thetansll(lm2,lm1,ir) = thetansll(lm2,lm1,ir)+cleb(j)*shapefun_mod(ir,lm3)
