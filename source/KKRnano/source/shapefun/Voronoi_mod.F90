@@ -576,7 +576,10 @@ module Voronoi_mod
 #ifndef NDEBUG
     if (sum(abs(p(1:3))) < 1.d-80) die_here('halfspace: a,b,c too small.')
 #endif
-    half_space = (p(0)*(p(1)*v(1) + p(2)*v(2) + p(3)*v(3)) <= p(0)*p(0))
+!   half_space = (p(0)*(p(1)*v(1) + p(2)*v(2) + p(3)*v(3)) <= p(0)*p(0))
+! reintroduced tolerance value 1.d-16, seems to be necessary for large-scale
+! MnGe B20 system (R.Zeller June 2020)
+    half_space = (p(0)*(p(1)*v(1) + p(2)*v(2) + p(3)*v(3)) <= p(0)*p(0) +1.d-16)
   endfunction ! halfspace
   
   function normal_plane(v1, tau) result(p)
