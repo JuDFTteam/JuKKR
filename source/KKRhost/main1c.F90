@@ -700,10 +700,16 @@ contains
             call version_print_header(13, disable_print=disable_print_serialnumber)
             do i1 = 1, natyp
               ! save to file in converted units (degrees)
-              write (13, *) angles_new(1, i1)/(2.0_dp*pi)*360.0_dp, angles_new(2, i1)/(2.0_dp*pi)*360.0_dp
-              ! use internal units here
-              t_params%theta(i1) = angles_new(1, i1)
-              t_params%phi(i1) = angles_new(2, i1)
+              if (t_params%fixdir(i1)) then
+                ! keep the old angles
+                write (13, *) t_params%theta(i1)/pi*180.0_dp, t_params%phi(i1)/pi*180.0_dp, t_params%fixdir(i1)
+              else
+                ! update angles
+                write (13, *) angles_new(1, i1)/pi*180.0_dp, angles_new(2, i1)/pi*180.0_dp, t_params%fixdir(i1)
+                ! use internal units here
+                t_params%theta(i1) = angles_new(1, i1)
+                t_params%phi(i1) = angles_new(2, i1)
+              end if
             end do
             close (13)
         

@@ -311,6 +311,7 @@ module mod_wunfiles
     integer, dimension (:, :, :), allocatable :: irrel
     logical, dimension (:), allocatable :: vacflag
     logical, dimension (:), allocatable :: symunitary !! unitary/antiunitary symmetry flag
+    logical, dimension (:), allocatable :: fixdir !! flag to control which directions should be kept fixed in noco calculation
     !character (len=8), dimension (:), allocatable :: optc
     !character (len=8), dimension (:), allocatable :: testc
     character (len=124), dimension (:), allocatable :: txc
@@ -1017,6 +1018,8 @@ contains
       call memocc(i_stat, product(shape(t_params%theta))*kind(t_params%theta), 't_params%THETA', 'init_t_params')
       allocate (t_params%phi(t_params%natyp), stat=i_stat) ! real (kind=dp)
       call memocc(i_stat, product(shape(t_params%phi))*kind(t_params%phi), 't_params%PHI', 'init_t_params')
+      allocate (t_params%fixdir(t_params%natyp), stat=i_stat) ! logical
+      call memocc(i_stat, product(shape(t_params%fixdir))*kind(t_params%fixdir), 't_params%fixdir', 'init_t_params')
     end if
     ! -------------------------------------------------------------------------
     ! End of allocation of real (kind=dp) arrays
@@ -1696,6 +1699,7 @@ contains
     ! -------------------------------------------------------------------------
     call mpi_bcast(t_params%symunitary, nsymaxd, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%vacflag, 2, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%fixdir, t_params%natyp, mpi_logical, master, mpi_comm_world, ierr)
 
     ! -------------------------------------------------------------------------
     ! CHARACTER arrays
@@ -3592,38 +3596,67 @@ contains
     real (kind=dp), dimension (natyp), intent (out) :: theta
     real (kind=dp), dimension (natyp), intent (out) :: phi
 
-    logical :: lread, lcheckangles
+    logical, dimension (natyp) :: fixdir
+    logical :: lread, lcheckangles, has_fixdir
     integer :: i1, i_stat
     real (kind=dp) :: th1, ph1
     real (kind=dp), parameter :: eps = 1.0e-5_dp
     ! if executed first in wunfiles theta is not allocated, thus read angles from file
     if (.not. allocated(t_params%theta)) then
 
-      theta(:) = 0.0_dp
+      ! initialize values
+      theta(:) = 0.0_dp ! angles in radians
       phi(:) = 0.0_dp
+      fixdir(:) = .false.
       lread = .false.
       lcheckangles = .false.
+      ! read in nonco angles from file if it exists
       inquire (file='nonco_angle.dat', exist=lread)
       if (lread) then
         open (unit=10, file='nonco_angle.dat', form='FORMATTED')
         call version_check_header(10)
+
+        ! try reading new style giving fixdir, if this fails in the first line we assume that the old style without giving fixdir is provided
+        read (10, *, iostat=i_stat, err=111) th1, ph1, fixdir(1)
+111     if (i_stat/=0) then
+          has_fixdir = .false.
+        else
+          has_fixdir = .true.
+        end if
+        ! now rewind the file and  start reading file
+        rewind(10)
+        call version_check_header(10)
+
+        ! read angles for all atoms
         do i1 = 1, natyp
-          read (10, *) th1, ph1
+          if (has_fixdir) then
+            write(*,*) 'read newstyle', i1
+            read (10, *) th1, ph1, fixdir(i1)
+          else
+            write(*,*) 'read oldstyle', i1
+            read (10, *) th1, ph1
+            fixdir(i1) = .false.
+          end if ! has_fixdir
+
           if ((abs(th1)<(pi+eps) .and. abs(th1)>eps) .or. (abs(ph1)<(2*pi+eps) .and. abs(ph1)>eps)) then
             lcheckangles = .true.
           end if
+          ! convert to radians
           theta(i1) = th1*(pi/180.0_dp)
           phi(i1) = ph1*(pi/180.0_dp)
         end do
         close (10)
+
         if (lcheckangles .and. ((t_inc%i_write>0) .or. (myrank==master))) then
           write (1337, *) 'WARNING: Check if your nonco_angels file is correct! Found only values that are smaller than pi for theta and 2pi for &
             &phi, respectively. But angles are given in degree (0...360)'
         end if
-        write (1337, '(A)') '      I1  THETA[deg]  PHI[deg]'
+
+        write (1337, '(A)') '      I1  THETA[deg]  PHI[deg] FIXDIR[boolean]'
         do i1 = 1, natyp
-          write (1337, '(I8,2F12.6)') i1, theta(i1)*180.0_dp/pi, phi(i1)*180.0_dp/pi
+          write (1337, '(I8,2F12.6,1L)') i1, theta(i1)*180.0_dp/pi, phi(i1)*180.0_dp/pi, fixdir(i1)
         end do                     ! i1
+
       end if                       ! LREAD
 
       ! now save this also to t_params
@@ -3633,13 +3666,18 @@ contains
       allocate (t_params%phi(natyp), stat=i_stat)
       call memocc(i_stat, product(shape(t_params%phi))*kind(t_params%phi), 't_params%PHI', 'read_angles')
 
+      allocate (t_params%fixdir(natyp), stat=i_stat)
+      call memocc(i_stat, product(shape(t_params%fixdir))*kind(t_params%fixdir), 't_params%fixdir', 'read_angles')
+
       t_params%theta = theta
       t_params%phi = phi
+      t_params%fixdir = fixdir
 
     else                           ! not first run: information saved in t_params
 
       theta = t_params%theta
       phi = t_params%phi
+      fixdir = t_params%fixdir
 
     end if
 
