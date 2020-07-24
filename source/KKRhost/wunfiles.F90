@@ -3630,10 +3630,8 @@ contains
         ! read angles for all atoms
         do i1 = 1, natyp
           if (has_fixdir) then
-            write(*,*) 'read newstyle', i1
             read (10, *) th1, ph1, fixdir(i1)
           else
-            write(*,*) 'read oldstyle', i1
             read (10, *) th1, ph1
             fixdir(i1) = .false.
           end if ! has_fixdir
