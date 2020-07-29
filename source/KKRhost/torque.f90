@@ -167,6 +167,7 @@ contains
     ! calculate the torque
     ! sum_L int dr r^2 m_L(r) B_L^xc(r)
     torque(:)=0.d0
+    torque_mt(:)=0.d0
     do i=1,3
       if ( .False. ) then
         integrand(:) = (0.d0,0.d0)
@@ -202,7 +203,7 @@ contains
     write(1337,'("iatom, torque_perp, torque_mt_perp = ",i4,6es16.8)') iatom, torque(:), torque_mt(:)
     t_params%bfield%mag_torque(iatom,:) = torque(:)
     if(t_params%bfield%lbfield_constr) then !constraining fields
-      if(t_params%bfield%ibfield_constr == 5 ) then ! constraining fields based on magnetic torques
+      if(t_params%bfield%ibfield_constr == 0 ) then ! constraining fields based on magnetic torques
         ! sum up the torques for all iterations, which yields a scf with constraining fields
         bfac                                  = 1.d0
         t_params%bfield%bfield_constr(iatom,:)         = t_params%bfield%bfield_constr(iatom,:) - torque(:)/totmag*bfac
@@ -211,7 +212,7 @@ contains
         !bfield%phi_constr                     = datan2(bfield%bfield_constr(2),bfield%bfield_constr(1))
         write(1337,'(" itscf, iatom, ibfield_constr, bfield_constr= ",3i4,100f16.8)') t_params%itscf, iatom ,t_params%bfield%ibfield_constr , t_params%bfield%bfield_constr(iatom,:)
       end if
-      if(t_params%bfield%ibfield_constr == 7 .and. t_params%itscf == 1 ) then ! constraining fields to constrain scf cycle
+      if(t_params%bfield%ibfield_constr == 1 .and. t_params%itscf == 1 ) then ! constraining fields to constrain scf cycle
         bfac                                  = 1.d0
         t_params%bfield%bfield_constr(iatom,:)               = t_params%bfield%bfield_constr(iatom,:) - torque(:)/totmagmoment*bfac
         write(1337,'(" itscf, iatom, ibfield_constr, bfield_constr= ",3i4,100f16.8)') t_params%itscf, iatom ,t_params%bfield%ibfield_constr , t_params%bfield%bfield_constr(iatom,:)
