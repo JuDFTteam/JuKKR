@@ -1219,6 +1219,8 @@ contains
       call memocc(i_stat, product(shape(t_params%bfield%mag_torque))*kind(t_params%bfield%mag_torque), 't_params%bfield%mag_torque', 'init_t_params')
       allocate (t_params%bfield%thetallmat((t_params%lmax+1)**2,(t_params%lmax+1)**2,t_params%ntotd*(t_params%ncheb+1),t_params%ncelld), stat=i_stat)
       call memocc(i_stat, product(shape(t_params%bfield%thetallmat   ))*kind(t_params%bfield%thetallmat   ), 't_params%bfield%thetallmat', 'init_t_params')
+      allocate (t_params%bfield%lfix_moment(t_params%natyp), stat=i_stat)
+      call memocc(i_stat, product(shape(t_params%bfield%lfix_moment))*kind(t_params%bfield%lfix_moment), 't_params%bfield%lfix_moment', 'init_t_params')
     end if
 
   end subroutine init_t_params
@@ -1775,6 +1777,7 @@ contains
     call mpi_bcast(t_params%bfield%theta, (t_params%natyp), mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%bfield%phi, (t_params%natyp), mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%bfield%mag_torque, (t_params%natyp*3), mpi_double_precision, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%lfix_moment, (t_params%natyp), mpi_logical, master, mpi_comm_world, ierr)
     if(t_params%bfield%lbfield) call mpi_bcast(t_params%bfield%thetallmat, ((t_params%lmax+1)**4*t_params%ntotd*(t_params%ncheb+1)*t_params%ncelld), mpi_double_precision, master, mpi_comm_world, ierr)
     
     call mpi_bcast(t_params%ntcell, (t_params%natyp), mpi_integer, master, mpi_comm_world, ierr)

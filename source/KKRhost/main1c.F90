@@ -695,15 +695,17 @@ contains
 
         if (myrank==master) then
           ! rewrite new theta and phi to nonco_angle_out.dat, nonco_angle.dat is the input
-          if (.not. fix_nonco_angles) then
+          if (.not. fix_nonco_angles .or. t_params%bfield%lbfield_constr) then
             open (unit=13, file='nonco_angle_out.dat', form='formatted')
             call version_print_header(13, disable_print=disable_print_serialnumber)
             do i1 = 1, natyp
               ! save to file in converted units (degrees)
               write (13, *) angles_new(1, i1)/(2.0_dp*pi)*360.0_dp, angles_new(2, i1)/(2.0_dp*pi)*360.0_dp
-              ! use internal units here
-              t_params%theta(i1) = angles_new(1, i1)
-              t_params%phi(i1) = angles_new(2, i1)
+              if(.not. t_params%bfield%lfix_moment(i1)) then 
+                ! use internal units here
+                t_params%theta(i1) = angles_new(1, i1)
+                t_params%phi(i1) = angles_new(2, i1)
+              end if
             end do
             close (13)
         
