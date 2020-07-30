@@ -310,10 +310,9 @@ contains
     write (1337, '(A)' ) '*** Inspecting run- and test-options ***'
 
     call read_old_runtestoptions(invmod,verbosity,MPI_scheme,oldstyle)
-    if(.not.oldstyle) then
-        write (1337, *) '  <<< Reading in new style of run-options. >>>'
-        call read_runoptions()
-    end if
+    write (1337, *) '  <<< Reading in new style of run-options. >>>'
+    if (oldstyle) write (1337, *) '  WARNING: this may overwrite old-style run-options'
+    call read_runoptions()
 
 
 
