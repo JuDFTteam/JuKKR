@@ -1015,7 +1015,7 @@ contains
       deallocate (rhonewtemp, stat=i_stat)
       call memocc(i_stat, i_all, 'RHONEWTEMP', 'RHOVALNEW')
       ! calculate new THETA and PHI for non-colinear
-      if (.not. fix_nonco_angles .and. .not.set_cheby_nosoc) then
+      if ((.not. fix_nonco_angles .and. .not.set_cheby_nosoc) .or. t_params%bfield%lbfield_constr) then
         rho2ns_temp(1, 1) = rho2int(1)
         rho2ns_temp(2, 2) = rho2int(2)
         rho2ns_temp(1, 2) = rho2int(3)
@@ -1053,8 +1053,13 @@ contains
           write (1337, *) thetanew/(2.0_dp*pi)*360.0_dp, phinew/(2.0_dp*pi)*360.0_dp
         end if
         ! only on master different from zero:
-        angles_new(1) = thetanew
-        angles_new(2) = phinew
+        if(t_params%bfield%lfix_moment(i1)) then
+          angles_new(1) = theta
+          angles_new(2) = phi
+        else
+          angles_new(1) = thetanew
+          angles_new(2) = phinew
+        end if
         call rotatevector(rho2nsnew,rho2ns,irws,lmpotd,thetanew,phinew,theta,phi,irmd)
         call rotatevector(r2nefnew,r2nef,irws,lmpotd,thetanew,phinew,theta,phi,irmd)
       else

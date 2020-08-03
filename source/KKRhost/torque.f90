@@ -35,6 +35,7 @@ contains
     use :: mod_intcheb_cell, only: intcheb_cell
     use :: mod_rotatespinframe, only: rotatematrix!, rotatevector
     use :: mod_wunfiles, only: t_params
+    use :: mod_types, only: t_inc
 
     implicit none
 
@@ -202,11 +203,13 @@ contains
     torque_mt(:) = torque_mt(:) - magdir*dot_product(magdir(:),torque_mt(:))
     write(1337,'("iatom, torque_perp, torque_mt_perp = ",i4,6es16.8)') iatom, torque(:), torque_mt(:)
     t_params%bfield%mag_torque(iatom,:) = torque(:)
-    if(t_params%bfield%lbfield_constr) then !constraining fields
+    if(t_params%bfield%lbfield_constr .and. t_inc%i_iteration>=t_params%bfield%itscf0 .and. t_inc%i_iteration<=t_params%bfield%itscf1) then !constraining fields
       if(t_params%bfield%ibfield_constr == 0 ) then ! constraining fields based on magnetic torques
         ! sum up the torques for all iterations, which yields a scf with constraining fields
         bfac                                  = 1.d0
-        t_params%bfield%bfield_constr(iatom,:)         = t_params%bfield%bfield_constr(iatom,:) - torque(:)/totmag*bfac
+        if(t_params%bfield%lfix_moment(iatom)) then
+          t_params%bfield%bfield_constr(iatom,:)         = t_params%bfield%bfield_constr(iatom,:) - torque(:)/totmag*bfac
+        end if
         !bfield%bfield_strength_constr         = sqrt(dot_product(bfield%bfield_constr(:),bfield%bfield_constr(:))) 
         !bfield%theta_constr                   = acos(bfield%bfield_constr(3)/bfield%bfield_strength_constr)
         !bfield%phi_constr                     = datan2(bfield%bfield_constr(2),bfield%bfield_constr(1))

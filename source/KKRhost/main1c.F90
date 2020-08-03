@@ -698,9 +698,11 @@ contains
           if (.not. fix_nonco_angles .or. t_params%bfield%lbfield_constr) then
             open (unit=13, file='nonco_angle_out.dat', form='formatted')
             call version_print_header(13, disable_print=disable_print_serialnumber)
+            write (1337, '("Non-collinear magnetic configuration: theta[deg] phi[deg]")')
             do i1 = 1, natyp
               ! save to file in converted units (degrees)
               write (13, *) angles_new(1, i1)/(2.0_dp*pi)*360.0_dp, angles_new(2, i1)/(2.0_dp*pi)*360.0_dp
+              write (1337, *) angles_new(1, i1)/(2.0_dp*pi)*360.0_dp, angles_new(2, i1)/(2.0_dp*pi)*360.0_dp
               if(.not. t_params%bfield%lfix_moment(i1)) then 
                 ! use internal units here
                 t_params%theta(i1) = angles_new(1, i1)
