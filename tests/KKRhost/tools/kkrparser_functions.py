@@ -11,9 +11,9 @@ from __future__ import division
 from __future__ import absolute_import
 from __future__ import print_function
 from numpy import ndarray, array, loadtxt, shape
-from masci_tools.io.common_functions import (search_string, get_version_info, get_Ry2eV, angles_to_vec,
-                                             get_corestates_from_potential, get_highest_core_state, open_general, convert_to_pystd)
-from six.moves import range
+# adapt import here to import from local file instead of masci-tools dependence
+from common_functions import (search_string, get_version_info, get_Ry2eV, angles_to_vec,
+                              get_corestates_from_potential, get_highest_core_state, open_general, convert_to_pystd)
 import traceback
 
 __copyright__ = (u"Copyright (c), 2017, Forschungszentrum Jülich GmbH,"
