@@ -86,6 +86,9 @@ contains
     real(kind=dp),dimension(3)                                  :: torque_mt ! magnetic torque calcualte from mt only
     real(kind=dp),dimension(3)                                  :: magdir !initial magnetization direction
     real(kind=dp),dimension(3)                                  :: magmoment  !! magnetic moment in local frame
+    real(kind=dp),dimension(3)                                  :: c_old
+    real(kind=dp),dimension(3)                                  :: magdir_it
+    real(kind=dp),dimension(3)                                  :: magdir_old
     real(kind=dp),dimension(1:irmdnew,1:lmpotd)          :: bxc
     real(kind=dp),dimension(1:irmdnew,1:lmpotd,1:3)      :: mag_den_glob ! magnetization density in in the global frame (no shapefun)
     real(kind=dp),dimension(1:irmdnew,1:(lmax+1)**2 ,1:3)      :: mag_den_convol ! magnetization density convoluted with the shapefunction
@@ -157,6 +160,7 @@ contains
       write(1337,'("iatom, ilm, mag, mag_mt",2i4,6es16.8)') iatom, ilm, mag(ilm,:), mag_mt(ilm,:)
     end do
     totmag = sqrt(dot_product(mag(1,:),mag(1,:)))
+    magdir_it = mag(1,:)/totmag
     ! --------------------------------------------------------------------------------------
     
     !do ilm= 1,lmpotd
@@ -215,9 +219,16 @@ contains
         !bfield%phi_constr                     = datan2(bfield%bfield_constr(2),bfield%bfield_constr(1))
         write(1337,'(" itscf, iatom, ibfield_constr, bfield_constr= ",3i4,100f16.8)') t_params%itscf, iatom ,t_params%bfield%ibfield_constr , t_params%bfield%bfield_constr(iatom,:)
       end if
-      if(t_params%bfield%ibfield_constr == 1 .and. t_params%itscf == 1 ) then ! constraining fields to constrain scf cycle
-        bfac                                  = 1.d0
-        t_params%bfield%bfield_constr(iatom,:)               = t_params%bfield%bfield_constr(iatom,:) - torque(:)/totmagmoment*bfac
+      if(t_params%bfield%ibfield_constr == 1) then ! constraining fields to constrain scf cycle
+        c_old                = t_params%bfield%bfield_constr(iatom,:)
+        bfac                 = 0.030d0
+        magdir_old(1)         = cos(t_params%phi(iatom))*sin(t_params%theta(iatom))
+        magdir_old(2)         = sin(t_params%phi(iatom))*sin(t_params%theta(iatom))
+        magdir_old(3)         = cos(t_params%theta(iatom))
+        write(1337,'(" itscf, iatom, magdir, magdir_old = ",2i4,100f16.8)') t_params%itscf, iatom , magdir_it(:), magdir_old(:)
+        if(t_params%bfield%lfix_moment(iatom)) then
+          t_params%bfield%bfield_constr(iatom,:) = c_old - dot_product(c_old,magdir_old)*magdir_old - (magdir_it - dot_product(magdir_it,magdir_old)*magdir_old)*bfac
+        end if
         write(1337,'(" itscf, iatom, ibfield_constr, bfield_constr= ",3i4,100f16.8)') t_params%itscf, iatom ,t_params%bfield%ibfield_constr , t_params%bfield%bfield_constr(iatom,:)
       end if
       !if(density%magmomentfixed == 6) then ! constraining fields
