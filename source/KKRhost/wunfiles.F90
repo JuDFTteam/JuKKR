@@ -3587,6 +3587,7 @@ contains
     use :: mod_mympi, only: myrank, master
     use :: mod_version_info
     use :: mod_constants, only: pi
+    use :: mod_runoptions, only: fix_nonco_angles
 
     implicit none
 
@@ -3656,6 +3657,12 @@ contains
         end do                     ! i1
 
       end if                       ! LREAD
+
+      ! MdSD: introduce override for fixdir
+      if (fix_nonco_angles) then
+        fixdir(1:natyp) = .true.
+        write(1337,'("WARNING: <fix_nonco_angles>=T overrides fixdir from nonco_angles.dat file!")')
+      end if
 
       ! now save this also to t_params
       allocate (t_params%theta(natyp), stat=i_stat)

@@ -22,7 +22,7 @@ contains
   !> Calculation of the density for the new solver
   !-------------------------------------------------------------------------------
   subroutine rhovalnew(ldorhoef, ielast, nsra, nspin, lmax, ez, wez, zat, socscale, cleb, icleb, iend, ifunm, lmsp, ncheb, &
-    npan_tot, npan_log, npan_eq, rmesh, irws, rpan_intervall, ipan_intervall, rnew, vinsnew, thetasnew, theta, phi, i1, ipot, &
+    npan_tot, npan_log, npan_eq, rmesh, irws, rpan_intervall, ipan_intervall, rnew, vinsnew, thetasnew, theta, phi, fixdir, i1, ipot, &
     den_out, espv, rho2ns, r2nef, muorb, angles_new, idoldau, lopt, wldau, denmatn, natyp, ispin)
 
 #ifdef CPP_OMP
@@ -92,6 +92,7 @@ contains
     ! .. In/Out variables
     real (kind=dp), intent (inout) :: phi
     real (kind=dp), intent (inout) :: theta
+    logical, intent(in) :: fixdir
     real (kind=dp), dimension (nrmaxd), intent (inout) :: rnew
     real (kind=dp), dimension (0:ntotd), intent (inout) :: rpan_intervall
     real (kind=dp), dimension (0:lmax+2, 3), intent (inout) :: muorb
@@ -978,8 +979,14 @@ contains
       i_all = -product(shape(rhonewtemp))*kind(rhonewtemp)
       deallocate (rhonewtemp, stat=i_stat)
       call memocc(i_stat, i_all, 'RHONEWTEMP', 'RHOVALNEW')
+      rho2ns(1:irmd, 1:lmpotd, 1:nspin/(nspin-korbit)) = aimag(rho2nsnew(1:irmd, 1:lmpotd,1:nspin/(nspin-korbit)))
+      r2nef(1:irmd, 1:lmpotd, 1:nspin/(nspin-korbit)) = aimag(r2nefnew(1:irmd, 1:lmpotd,1:nspin/(nspin-korbit)))
+      ! MdSD: Should this also be corrected if the angles change?
+      den_out(0:lmaxd1, 1:ielast, 1:nspin/(nspin-korbit)) = den(0:lmaxd1, 1:ielast, 1, 1:nspin/(nspin-korbit))
       ! calculate new THETA and PHI for non-colinear
-      if (.not. fix_nonco_angles .and. .not.set_cheby_nosoc) then
+      ! if (.not. fix_nonco_angles .and. .not.set_cheby_nosoc) then
+      ! MdSD: now the new directions are always calculated, which can be useful for information purposes
+      if (.not.set_cheby_nosoc) then
         rho2ns_temp(1, 1) = rho2int(1)
         rho2ns_temp(2, 2) = rho2int(2)
         rho2ns_temp(1, 2) = rho2int(3)
@@ -1019,15 +1026,12 @@ contains
         ! only on master different from zero:
         angles_new(1) = thetanew
         angles_new(2) = phinew
-        call rotatevector(rho2nsnew,rho2ns,irws,lmpotd,thetanew,phinew,theta,phi,irmd)
-        call rotatevector(r2nefnew,r2nef,irws,lmpotd,thetanew,phinew,theta,phi,irmd)
-      else
-        rho2ns(1:irmd, 1:lmpotd, 1:nspin/(nspin-korbit)) = aimag(rho2nsnew(1:irmd, 1:lmpotd,1:nspin/(nspin-korbit)))
-        r2nef(1:irmd, 1:lmpotd, 1:nspin/(nspin-korbit)) = aimag(r2nefnew(1:irmd, 1:lmpotd,1:nspin/(nspin-korbit)))
+        ! MdSD: use new angles to correct local frame, which defines the z-component of the spin density
+        if (.not.fixdir) then
+          call rotatevector(rho2nsnew,rho2ns,irws,lmpotd,thetanew,phinew,theta,phi,irmd)
+          call rotatevector(r2nefnew,r2nef,irws,lmpotd,thetanew,phinew,theta,phi,irmd)
+        end if
       end if
-
-      den_out(0:lmaxd1, 1:ielast, 1:nspin/(nspin-korbit)) = den(0:lmaxd1, 1:ielast, 1, 1:nspin/(nspin-korbit))
-
 
 #ifdef CPP_MPI
     end if                         ! (myrank==master)

@@ -50,7 +50,7 @@ contains
     use :: mod_rotatespinframe, only: rotatematrix
     use :: mod_types, only: t_tgmat, t_inc, t_lloyd, t_cpa, init_t_cpa, t_imp
     use :: mod_timing, only: timing_start, timing_pause, timing_stop, timings_1b, print_time_and_date
-    use :: mod_wunfiles, only: get_params_1b, t_params, read_angles
+    use :: mod_wunfiles, only: get_params_1b, t_params !, read_angles
     use :: mod_tbxccpljij, only: tbxccpljij
     use :: mod_tbxccpljijdij, only: tbxccpljijdij
     use :: mod_rhoqtools, only: rhoq_save_refpot
@@ -438,7 +438,9 @@ contains
     nspin1 = nspin/(1+korbit) ! factor (1+korbit) takes care of NOSOC option
     if (use_Chebychev_solver) then
       ! nonco angles
-      call read_angles(t_params, natyp, theta_at, phi_at)
+!      call read_angles(t_params, natyp, theta_at, phi_at)
+      theta_at(1:natyp) = t_params%theta(1:natyp)
+      phi_at(1:natyp) = t_params%phi(1:natyp)
     end if
 
     ! find boundaries of qdos and energy loops

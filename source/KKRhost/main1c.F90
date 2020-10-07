@@ -47,7 +47,7 @@ contains
     use :: mod_mympi, only: myrank, master
     use :: mod_types, only: t_tgmat, t_inc, t_lloyd
     use :: mod_version_info, only: version_print_header
-    use :: mod_wunfiles, only: t_params, get_params_1c, read_angles, save_density
+    use :: mod_wunfiles, only: t_params, get_params_1c, save_density !, read_angles
     use :: mod_mvecglobal, only: mvecglobal
     use :: mod_mixldau, only: mixldau
     use :: mod_interpolate_poten, only: interpolate_poten
@@ -108,6 +108,7 @@ contains
     real (kind=dp), dimension (natypd) :: edc
     real (kind=dp), dimension (natypd) :: phi
     real (kind=dp), dimension (natypd) :: theta
+    logical, dimension(natypd) :: fixdir
     real (kind=dp), dimension (natypd) :: denefat
     real (kind=dp), dimension (nspind) :: charge_lly ! LLY
     real (kind=dp), dimension (0:lmaxd+1, npotd) :: espv
@@ -379,7 +380,10 @@ contains
     ! interpolate to Chebychev mesh
     if (use_Chebychev_solver) then
       ! nonco angles
-      call read_angles(t_params, natyp, theta, phi)
+      ! call read_angles(t_params, natyp, theta, phi)
+      theta(1:natyp) = t_params%theta(1:natyp)
+      phi(1:natyp) = t_params%phi(1:natyp)
+      fixdir(1:natyp) = t_params%fixdir(1:natyp)
 
       ! interpolate potential
       if (idoldau==1) then
@@ -486,7 +490,7 @@ contains
 #endif
             call rhovalnew(ldorhoef, ielast, nsra, nspin, lmax, ez, wez, zat(i1), socscale(i1), cleb(1,1), icleb, iend, &
               ifunm1(1,icell), lmsp1(1,icell), ncheb, npan_tot(i1), npan_log_at(i1), npan_eq_at(i1), rmesh(1,i1), irws(i1), &
-              rpan_intervall(0,i1), ipan_intervall(0,i1), rnew(1,i1), vinsnew, thetasnew(1,1,icell), theta(i1), phi(i1), i1, &
+              rpan_intervall(0,i1), ipan_intervall(0,i1), rnew(1,i1), vinsnew, thetasnew(1,1,icell), theta(i1), phi(i1), fixdir(i1), i1, &
               ipot, den(0,1,1,ipot), espv(0,ipot), rho2n1(1,1,ispin), rho2n2(1,1,ispin), muorb(0,1,i1), angles_new(:,i1), &
               idoldau, lopt(i1), wldau(1,1,1,i1), denmatn(1,1,1,1,i1), natyp, ispin) ! LDAU
 #ifdef CPP_TIMING
@@ -694,6 +698,15 @@ contains
 #endif
 
         if (myrank==master) then
+          ! MdSD: information on new angles
+          if (.not.set_cheby_nosoc) then
+            write (1337,*)
+            write (1337, '("      I1    In/Out THETA[deg]       In/Out PHI[deg]        FIXDIR[boolean]")')
+            do i1 = 1, natyp
+              write (1337, '(I8,4F12.6,3x,1L)') i1, theta(i1)*180.0_dp/pi, angles_new(1, i1)/pi*180.0_dp, &
+                  phi(i1)*180.0_dp/pi, angles_new(2, i1)/pi*180.0_dp, fixdir(i1)
+            end do                     ! i1
+          end if
           ! rewrite new theta and phi to nonco_angle_out.dat, nonco_angle.dat is the input
           if (.not. fix_nonco_angles) then
             open (unit=13, file='nonco_angle_out.dat', form='formatted')
