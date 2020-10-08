@@ -1006,17 +1006,18 @@ contains
         totmoment = sqrt(moment(1)**2+moment(2)**2+moment(3)**2)
         totxymoment = sqrt(moment(1)**2+moment(2)**2)
 
+        ! MdSD: theta not 0 or pi
         if (abs(totxymoment)>1d-05) then
-          if (abs(moment(3))<1d-05) then
-            thetanew = pi/2.0_dp
+          thetanew = acos(moment(3)/totmoment)
+          phinew = atan2(moment(2), moment(1))
+        ! MdSD: theta is 0 or pi
+        else
+          if (moment(3) < 0.0_dp) then
+            thetanew = pi
           else
-            thetanew = acos(moment(3)/totmoment)
+            thetanew = 0.0_dp
           end if
-          if (totxymoment<1d-05) then
-            phinew = 0.0_dp
-          else
-            phinew = atan2(moment(2), moment(1))
-          end if
+          phinew = 0.0_dp
         end if
 
         if (t_inc%i_write>0) then
