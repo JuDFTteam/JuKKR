@@ -22,7 +22,7 @@ contains
     use mod_datatypes, only: dp
     use mod_constants, only: pi
     use mod_wunfiles, only: t_params
-    use global_variables, only: mixfac_broydenspin, ninit_broydenspin, memlen_broydenspin
+    use global_variables, only: mixfac_broydenspin, ninit_broydenspin, memlen_broydenspin, qbound_broydenspin
     use mod_runoptions, only: write_angles_alliter
     use mod_broyden, only: broyden
     implicit none
@@ -36,7 +36,7 @@ contains
     integer :: ipos !! for loop indices etc.
     integer :: vlen !! length of vector
     real (kind=dp), allocatable :: vector(:, :) !! magnetization directions (first index=1 is old values, =2 is new values)
-    real (kind=dp) :: rms, moment(3), totmoment, totxymoment, theta, phi
+    real (kind=dp) :: rms, moment(3), totmoment, totxymoment, theta, phi, alpha
     integer :: i1
 
     ! get number of fixed angles (we need to use the rest only for the mixing)
@@ -79,8 +79,12 @@ contains
     end do
     rms = sqrt(rms)
 
+    ! different alpha for simple mixing and broyden mixing steps
+    alpha = mixfac_broydenspin
+    if (iter<=ninit_broydenspin) alpha = 1.0_dp ! always use alpha=1 for simple mixing steps
+
     ! now do Broyden mixing
-    call broyden (vector, vlen, mixfac_broydenspin, rms, iter, &
+    call broyden (vector, vlen, alpha, rms, iter, &
                   ninit_broydenspin, memlen_broydenspin, vlen)
 
     write(*,*) 'spinmix_broyden', iter, natyp-nfixed, rms
@@ -122,6 +126,14 @@ contains
       write (iounit, *) t_params%theta(i1)/pi*180.0_dp, t_params%phi(i1)/pi*180.0_dp, t_params%fixdir(i1)
       if (write_angles_alliter) write (iounit+1, *) t_params%theta(i1)/pi*180.0_dp, t_params%phi(i1)/pi*180.0_dp, t_params%fixdir(i1)
     end do
+
+    ! check if spin directions are already converged and fix the directions
+    if (rms<qbound_broydenspin) then
+      write(*,*) 'spinmix_broyden: rms<qbound_broydenspin', rms, qbound_broydenspin
+      do i1 = 1, natyp
+        t_params%fixdir(i1) = .true.
+      end do
+    end if
 
     ! cleanup allocations of working arrays
     deallocate(vector, stat=ipos)

@@ -1221,7 +1221,7 @@ contains
     integer (kind=mpi_address_kind) :: base !! base address of first entry
   
   
-    n = 63
+    n = 64
     allocate (blocklen1(n), etype1(n), disp1(n), stat=ierr)
     if (ierr/=0) stop 'error allocating arrays in bcast_global_variables'
   
@@ -1288,6 +1288,7 @@ contains
     call mpi_get_address(lnc, disp1(61), ierr)
     call mpi_get_address(pot_ns_cutoff, disp1(62), ierr)
     call mpi_get_address(mixfac_broydenspin, disp1(63), ierr)
+    call mpi_get_address(qbound_broydenspin, disp1(64), ierr)
   
     ! find displacements of variables
     base = disp1(1)
@@ -1297,9 +1298,9 @@ contains
     blocklen1(1:n) = 1
   
     ! set datatype of variables
-    etype1(1:n-4) = mpi_integer
-    etype1(n-3:n-2) = mpi_logical
-    etype1(n-2:n) = mpi_double_precision
+    etype1(1:n-5) = mpi_integer
+    etype1(n-4:n-3) = mpi_logical
+    etype1(n-3:n) = mpi_double_precision
   
     ! create new Type structure for derived data type
     call mpi_type_create_struct(n, blocklen1, disp1, etype1, mympitype1, ierr)

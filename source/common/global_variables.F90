@@ -88,7 +88,8 @@ module global_variables
   logical :: linterface = .false. !! use 2D or 3D mode, if True a matching with semi-inifinite surfaces must be performed
   real (kind=dp) :: delta_BdG = 10**-4 !! initial value of Delta_BdG in Ry
   real (kind=dp) :: pot_ns_cutoff = -1 !! threshold below which non-spherical part of the potential is cut off (done in main2)
-  real (kind=dp) :: mixfac_broydenspin = 1.0 !! broyden spin mixing factor, also used in first ninit_broydenspin simple mixing steps
+  real (kind=dp) :: mixfac_broydenspin = 0.1 !! broyden spin mixing factor
+  real (kind=dp) :: qbound_broydenspin = 1.0e-4_dp !! broyden spin mixing qbound (if rms of spin directions is < qbound all angles are fixed
 
 end module global_variables
 

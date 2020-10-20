@@ -59,7 +59,7 @@ contains
     use :: global_variables, only: linterface, korbit, krel, irmd, irnsd, nsheld, knosph, iemxd, nrd, knoco, kpoibz, ntrefd, natomimpd, &
       nprincd, ipand, nfund, irid, ngshd, nmaxd, ishld, wlength, naclsd, ntotd, ncleb, nspind, nspindd, npotd, lmmaxd, lmgf0d, &
       lassld, nembd1, irmind, nofgij, ntperd, nsatypd, nspotd, lnc, lmxspd, lm2d, nclsd, mmaxd, ncleb, kBdG, delta_BdG, pot_ns_cutoff, &
-       mixfac_broydenspin, ninit_broydenspin, memlen_broydenspin
+       mixfac_broydenspin, ninit_broydenspin, memlen_broydenspin, qbound_broydenspin
 
 
     implicit none
@@ -2017,6 +2017,14 @@ contains
       write (111, *) 'SPINMIXMEMLEN= ', memlen_broydenspin
     else
       write (111, *) 'Default SPINMIXMEMLEN= ', memlen_broydenspin
+    end if
+    call ioinput('SPINMIXQBOUND   ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) qbound_broydenspin
+      if (ier/=0) stop 'Error reading `SPINMIXQBOUND`: check your inputcard'
+      write (111, *) 'SPINMIXQBOUND= ', qbound_broydenspin
+    else
+      write (111, *) 'Default SPINMIXQBOUND= ', qbound_broydenspin
     end if
 
     call ioinput('RMAX            ', uio, 1, 7, ier)
