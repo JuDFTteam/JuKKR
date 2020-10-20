@@ -31,44 +31,45 @@ contains
   subroutine main1c()
 
 #ifdef CPP_MPI
-    use :: mpi
-    use :: mod_types, only: gather_tmat, t_mpi_c_grid, save_t_mpi_c_grid, get_ntot_pt_ioff_pt_2d
-    use :: mod_mympi, only: nranks, find_dims_2d, distribute_linear_on_tasks, mympi_main1c_comm, mympi_main1c_comm_newsosol2
+    use mpi
+    use mod_types, only: gather_tmat, t_mpi_c_grid, save_t_mpi_c_grid, get_ntot_pt_ioff_pt_2d
+    use mod_mympi, only: nranks, find_dims_2d, distribute_linear_on_tasks, mympi_main1c_comm, mympi_main1c_comm_newsosol2
 #endif
 #ifdef CPP_TIMING
-    use :: mod_timing
+    use mod_timing
 #endif
-    use :: mod_datatypes, only: dp
-    use :: mod_runoptions, only: calc_gmat_lm_full, fix_nonco_angles, relax_SpinAngle_Dirac, use_Chebychev_solver, &
+    use mod_datatypes, only: dp
+    use mod_runoptions, only: calc_gmat_lm_full, fix_nonco_angles, relax_SpinAngle_Dirac, use_Chebychev_solver, &
       use_decimation, use_qdos, write_DOS, write_complex_qdos, write_density_ascii, write_rho2ns, write_DOS_lm, &
-      set_cheby_nosoc, disable_print_serialnumber
-    use :: mod_constants, only: czero, pi
-    use :: mod_profiling, only: memocc
-    use :: mod_mympi, only: myrank, master
-    use :: mod_types, only: t_tgmat, t_inc, t_lloyd
-    use :: mod_version_info, only: version_print_header
-    use :: mod_wunfiles, only: t_params, get_params_1c, save_density !, read_angles
-    use :: mod_mvecglobal, only: mvecglobal
-    use :: mod_mixldau, only: mixldau
-    use :: mod_interpolate_poten, only: interpolate_poten
-    use :: mod_rhoval, only: rhoval
-    use :: mod_rhoval0, only: rhoval0
-    use :: mod_rhocore, only: rhocore
-    use :: mod_renorm_lly, only: renorm_lly
-    use :: mod_getscratch, only: opendafile
-    use :: mod_rhovalnew, only: rhovalnew
-    use :: mod_wmatldau, only: wmatldau
-    use :: mod_wmatldausoc, only: wmatldausoc
-    use :: mod_wrldaupot, only: wrldaupot
-    use :: mod_wrldos, only: wrldos
-    use :: mod_wrmoms, only: wrmoms
-    use :: mod_cinit, only: cinit
-    use :: mod_rinit, only: rinit
+      set_cheby_nosoc, disable_print_serialnumber, use_boyden_spinmix, write_angles_alliter
+    use mod_constants, only: czero, pi
+    use mod_profiling, only: memocc
+    use mod_mympi, only: myrank, master
+    use mod_types, only: t_tgmat, t_inc, t_lloyd
+    use mod_version_info, only: version_print_header
+    use mod_wunfiles, only: t_params, get_params_1c, save_density !, read_angles
+    use mod_mvecglobal, only: mvecglobal
+    use mod_mixldau, only: mixldau
+    use mod_interpolate_poten, only: interpolate_poten
+    use mod_rhoval, only: rhoval
+    use mod_rhoval0, only: rhoval0
+    use mod_rhocore, only: rhocore
+    use mod_renorm_lly, only: renorm_lly
+    use mod_getscratch, only: opendafile
+    use mod_rhovalnew, only: rhovalnew
+    use mod_wmatldau, only: wmatldau
+    use mod_wmatldausoc, only: wmatldausoc
+    use mod_wrldaupot, only: wrldaupot
+    use mod_wrldos, only: wrldos
+    use mod_wrmoms, only: wrmoms
+    use mod_cinit, only: cinit
+    use mod_rinit, only: rinit
+    use mod_mixbroydenspin, only: spinmix_broyden
     ! array dimensions
-    use :: global_variables, only: iemxd, mmaxd, krel, lmaxd, natypd, npotd, irmd, nrmaxd, lmpotd, nspotd, naezd, ncleb, lm2d, ipand, &
+    use global_variables, only: iemxd, mmaxd, krel, lmaxd, natypd, npotd, irmd, nrmaxd, lmpotd, nspotd, naezd, ncleb, lm2d, ipand, &
       nfund, ntotd, mmaxd, ncelld, irmind, nspind, nspotd, irid, irnsd, knosph, korbit, lmmaxd, lmxspd, lpotd, wlength
     ! stuff defined in main0 already
-    use :: mod_main0, only: ielast, nsra, ins, nspin, icst, kmrot, iqat, idoldau, irws, ipan, ircut, iend, icleb, loflm, jend, ifunm1, &
+    use mod_main0, only: ielast, nsra, ins, nspin, icst, kmrot, iqat, idoldau, irws, ipan, ircut, iend, icleb, loflm, jend, ifunm1, &
       lmsp1, nfu, llmsp, lcore, ncore, ntcell, irmin, ititle, intervx, intervy, intervz, lly, npan_eq_at, ipan_intervall, &
       npan_log_at, npan_tot, ntldau, lopt, itldau, ielast, iesemicore, npol, irshift, jwsrel, zrel, itrunldau, qmtet, qmphi, conc, alat, zat, &
       drdi, rmesh, a, b, cleb, thetas, socscale, rpan_intervall, cscl, rnew, socscl, thetasnew, efermi, erefldau, ueff, jeff, emin, emax, tk, &
@@ -709,25 +710,40 @@ contains
           end if
           ! rewrite new theta and phi to nonco_angle_out.dat, nonco_angle.dat is the input
           if (.not. fix_nonco_angles) then
+
             open (unit=13, file='nonco_angle_out.dat', form='formatted')
             call version_print_header(13, disable_print=disable_print_serialnumber)
-            do i1 = 1, natyp
-              ! save to file in converted units (degrees)
-              if (t_params%fixdir(i1)) then
-                ! keep the old angles
-                write (13, *) t_params%theta(i1)/pi*180.0_dp, t_params%phi(i1)/pi*180.0_dp, t_params%fixdir(i1)
-              else
-                ! update angles
-                write (13, *) angles_new(1, i1)/pi*180.0_dp, angles_new(2, i1)/pi*180.0_dp, t_params%fixdir(i1)
-                ! use internal units here
-                t_params%theta(i1) = angles_new(1, i1)
-                t_params%phi(i1) = angles_new(2, i1)
-              end if
-            end do
+            if (write_angles_alliter) open(unit=14, file='nonco_angle_out_all_iter.dat', form='formatted', position='append')
+
+            if (.not.use_boyden_spinmix) then
+
+              ! conventional scheme: use output angles as input
+              do i1 = 1, natyp
+                ! save to file in converted units (degrees)
+                if (t_params%fixdir(i1)) then
+                  ! keep the old angles
+                  write (13, *) t_params%theta(i1)/pi*180.0_dp, t_params%phi(i1)/pi*180.0_dp, t_params%fixdir(i1)
+                else
+                  ! update angles
+                  write (13, *) angles_new(1, i1)/pi*180.0_dp, angles_new(2, i1)/pi*180.0_dp, t_params%fixdir(i1)
+                  ! use internal units here
+                  t_params%theta(i1) = angles_new(1, i1)
+                  t_params%phi(i1) = angles_new(2, i1)
+                end if
+                if (write_angles_alliter) write (14, *) t_params%theta(i1)/pi*180.0_dp, t_params%phi(i1)/pi*180.0_dp, t_params%fixdir(i1)
+              end do
+            else ! use_broyden_spinmix
+
+              ! use spin moxing as in impurity code
+              call spinmix_broyden(t_inc%i_iteration, natyp, angles_new, 13) 
+
+            end if ! use_broyden_spinmix
+
             close (13)
+            if (write_angles_alliter) close(14)
         
-          end if                     ! .not.fix_nonco_angles
-        end if                       ! (myrank==master)
+          end if ! .not.fix_nonco_angles
+        end if ! (myrank==master)
 
       end if ! new spin-orbit solver
 

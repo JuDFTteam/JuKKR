@@ -65,7 +65,7 @@ contains
     !cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
     
     implicit none
-    
+
     ! constants
     real (kind=dp), parameter :: zero=0.0_dp, one=1.0_dp
 
@@ -74,7 +74,7 @@ contains
     integer, intent(in) :: mvlen !! mvlen -> maximum length of vectors
 
     integer, intent(in) :: vlen !! vlen -> length of vector
-    real (kind=dp), intent(in) :: alpha !! alpha -> linear mixing factor
+    real (kind=dp), intent(in) :: alpha !! alpha -> mixing factor
     integer, intent(in) :: iter !! iter -> iteration number (if 1, linear mixing, broyden reset)
     integer, intent(in) :: n_init !! number of simple mixing iterations before broyden mixing starts (>=1)
     ! are updated in each iteration:
@@ -99,9 +99,8 @@ contains
     integer :: i,j,k,info,ntasks
     integer :: lastit,lastm1,nn
     real (kind=dp) :: fac1,fac2,fnorm,dfnorm,w0,work,aij,gmi,cmj,wtmp 
-    real (kind=dp) :: amix
 
-    save :: lastit, amix 
+    save :: lastit 
         
     if (.not. allocated(u)) then
       allocate(u(mvlen,broylen))
@@ -120,16 +119,14 @@ contains
 
       lastit = iter-1          ! initialize pointers
       lastm1 = lastit-1 
-      
-      amix = alpha           ! for safety reasons
-      
+            
       do k = 1,vlen
         f(k) = vector(k,2) - vector(k,1)
         vold(k) = vector(k,1)
       enddo 
       
       do k = 1,vlen          ! this is the linear mixing
-        vector(k,2) = vector(k,1) + amix * f(k)
+        vector(k,2) = vector(k,1) + alpha * f(k)
       enddo 
     
     else ! (iter<=n_init)
@@ -172,7 +169,7 @@ contains
       
       !---- set: vector(2) := alpha*df/|df| + (vector(1) - vold)/|df|
       fac2 = one/dfnorm
-      fac1 = amix*fac2
+      fac1 = alpha*fac2
       
       do k = 1,vlen
         vector(k,2) = fac1*df(k) + fac2*(vector(k,1) - vold(k))
@@ -238,7 +235,7 @@ contains
       
       !---- mix vectors: 
       do k=1,vlen
-        vector(k,2)= vold(k) + amix * f(k)
+        vector(k,2)= vold(k) + alpha * f(k)
       enddo
       do i=1,nn
         gmi = zero

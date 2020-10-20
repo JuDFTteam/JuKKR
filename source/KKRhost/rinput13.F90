@@ -58,7 +58,8 @@ contains
     use :: mod_ioinput, only: ioinput
     use :: global_variables, only: linterface, korbit, krel, irmd, irnsd, nsheld, knosph, iemxd, nrd, knoco, kpoibz, ntrefd, natomimpd, &
       nprincd, ipand, nfund, irid, ngshd, nmaxd, ishld, wlength, naclsd, ntotd, ncleb, nspind, nspindd, npotd, lmmaxd, lmgf0d, &
-      lassld, nembd1, irmind, nofgij, ntperd, nsatypd, nspotd, lnc, lmxspd, lm2d, nclsd, mmaxd, ncleb, kBdG, delta_BdG, pot_ns_cutoff
+      lassld, nembd1, irmind, nofgij, ntperd, nsatypd, nspotd, lnc, lmxspd, lm2d, nclsd, mmaxd, ncleb, kBdG, delta_BdG, pot_ns_cutoff, &
+       mixfac_broydenspin, ninit_broydenspin, memlen_broydenspin
 
 
     implicit none
@@ -1989,6 +1990,33 @@ contains
       write (111, *) 'BRYMIX= ', brymix
     else
       write (111, *) 'Default BRYMIX= ', brymix
+    end if
+
+    ! for broyden spin mixing of noncollinear directions
+    ! activated with the <use_boyden_spinmix> run option
+    call ioinput('SPINMIXALPHA    ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) mixfac_broydenspin
+      if (ier/=0) stop 'Error reading `SPINMIXALPHA`: check your inputcard'
+      write (111, *) 'SPINMIXALPHA= ', mixfac_broydenspin
+    else
+      write (111, *) 'Default SPINMIXALPHA= ', mixfac_broydenspin
+    end if
+    call ioinput('SPINMIXNSIMPLE  ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) ninit_broydenspin
+      if (ier/=0) stop 'Error reading `SPINMIXNSIMPLE`: check your inputcard'
+      write (111, *) 'SPINMIXNSIMPLE= ', ninit_broydenspin
+    else
+      write (111, *) 'Default SPINMIXNSIMPLE= ', ninit_broydenspin
+    end if
+    call ioinput('SPINMIXMEMLEN   ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) memlen_broydenspin
+      if (ier/=0) stop 'Error reading `SPINMIXMEMLEN`: check your inputcard'
+      write (111, *) 'SPINMIXMEMLEN= ', memlen_broydenspin
+    else
+      write (111, *) 'Default SPINMIXMEMLEN= ', memlen_broydenspin
     end if
 
     call ioinput('RMAX            ', uio, 1, 7, ier)
