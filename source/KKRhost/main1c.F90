@@ -67,7 +67,7 @@ contains
     use mod_mixbroydenspin, only: spinmix_broyden
     ! array dimensions
     use global_variables, only: iemxd, mmaxd, krel, lmaxd, natypd, npotd, irmd, nrmaxd, lmpotd, nspotd, naezd, ncleb, lm2d, ipand, &
-      nfund, ntotd, mmaxd, ncelld, irmind, nspind, nspotd, irid, irnsd, knosph, korbit, lmmaxd, lmxspd, lpotd, wlength
+      nfund, ntotd, mmaxd, ncelld, irmind, nspind, nspotd, irid, irnsd, knosph, korbit, lmmaxd, lmxspd, lpotd, wlength, qbound_spin
     ! stuff defined in main0 already
     use mod_main0, only: ielast, nsra, ins, nspin, icst, kmrot, iqat, idoldau, irws, ipan, ircut, iend, icleb, loflm, jend, ifunm1, &
       lmsp1, nfu, llmsp, lcore, ncore, ntcell, irmin, ititle, intervx, intervy, intervz, lly, npan_eq_at, ipan_intervall, &
@@ -107,9 +107,12 @@ contains
     integer, dimension (20, npotd) :: kapcore !! The (maximum 2) values of KAPPA
     real (kind=dp), dimension (natypd) :: eu
     real (kind=dp), dimension (natypd) :: edc
-    real (kind=dp), dimension (natypd) :: phi
-    real (kind=dp), dimension (natypd) :: theta
-    logical, dimension(natypd) :: fixdir
+    real (kind=dp), dimension (natypd) :: phi !! phi nonco angles in rad
+    real (kind=dp), dimension (natypd) :: theta !! theta nonco angles in rad
+    real (kind=dp), dimension (natypd) :: diff_angles_sq !! squared difference in nonco angles in rad
+    logical, dimension(natypd) :: fixdir  !! booleans to fix nocon angles
+    real (kind=dp) :: diff_phi !! for difference in phi nonco angles
+    logical :: all_fixed !! True if all nonco angles are fixed
     real (kind=dp), dimension (natypd) :: denefat
     real (kind=dp), dimension (nspind) :: charge_lly ! LLY
     real (kind=dp), dimension (0:lmaxd+1, npotd) :: espv
@@ -699,14 +702,35 @@ contains
 #endif
 
         if (myrank==master) then
-          ! MdSD: information on new angles
+          ! MdSD,PR: information on new angles
           if (.not.set_cheby_nosoc) then
             write (1337,*)
-            write (1337, '("      I1    In/Out THETA[deg]       In/Out PHI[deg]        FIXDIR[boolean]")')
+            write (1337, '("      I1    In/Out THETA[deg]       In/Out PHI[deg]        FIXDIR[boolean]   RMS(angles)[deg]")')
             do i1 = 1, natyp
-              write (1337, '(I8,4F12.6,3x,1L)') i1, theta(i1)*180.0_dp/pi, angles_new(1, i1)/pi*180.0_dp, &
-                  phi(i1)*180.0_dp/pi, angles_new(2, i1)/pi*180.0_dp, fixdir(i1)
+              if (.not.fixdir(i1)) then
+                ! renormalize to difference in phi in range [0,180]
+                diff_phi = phi(i1) - angles_new(2, i1)
+                if (diff_phi>pi) diff_phi = diff_phi - pi
+                ! now compute squared difference of the angles
+                diff_angles_sq(i1) = (theta(i1)-angles_new(1, i1))**2 + diff_phi**2
+              else
+                diff_angles_sq(i1) = 0.0_dp
+              end if
+              write (1337, '(I8,4F12.6,3x,1L,17x,1F12.6)') i1, theta(i1)*180.0_dp/pi, angles_new(1, i1)/pi*180.0_dp, &
+                  phi(i1)*180.0_dp/pi, angles_new(2, i1)/pi*180.0_dp, fixdir(i1), sqrt(diff_angles_sq(i1))/pi*180.0_dp
+              if (i1==1) all_fixed = .true. ! initialize
+              if(.not.fixdir(i1)) all_fixed = .false. ! if at least one is not fixed we set this to False
             end do                     ! i1
+            write (1337, '(A, 1F12.6)') "Total RMS(angles) [deg]:", sqrt(sum(diff_angles_sq))/pi*180.0_dp
+            ! write also to std out
+            write (*, '(A, 1F12.6)') "Total RMS(angles) [deg]:", sqrt(sum(diff_angles_sq))/pi*180.0_dp
+            if ((.not.all_fixed) .and. sqrt(sum(diff_angles_sq))/pi*180.0_dp < qbound_spin) then
+              write(*,*) 'TOTAL RMS(angles) < qbound_spin:', sqrt(sum(diff_angles_sq))/pi*180.0_dp, qbound_spin
+              write(*,*) 'Fix all angles from now on'
+              do i1 = 1, natyp
+                t_params%fixdir(i1) = .true.
+              end do
+            end if
           end if
           ! rewrite new theta and phi to nonco_angle_out.dat, nonco_angle.dat is the input
           if (.not. fix_nonco_angles) then

@@ -43,7 +43,7 @@ contains
       write_madelung_file, write_potential_tests, write_rho2ns
     use :: global_variables, only: krel, ipand, npotd, natomimpd, lmxspd, iemxd, nspotd, irid, ngshd, linterface, &
       nfund, ncelld, irmd, nembd1, nembd, irmind, lmmaxd, wlength, natypd, naezd, lmpotd, lpotd, lmaxd, nspind, nspotd, &
-      ipand, ngshd, irid, nfund, ncelld, pot_ns_cutoff
+      ipand, ngshd, irid, nfund, ncelld, pot_ns_cutoff, nsimplemixfirst
     use :: mod_main0, only: lcore, ncore, ircut, ipan, ntcell, lpot, nlbasis, nrbasis, nright, nleft, natomimp, atomimp, &
       natyp, naez, lly, lmpot, nsra, ins, nspin, lmax, imix, qbound, fcm, itdbry, irns, kpre, kshape, kte, kvmad, kxc, &
       icc, ishift, ixipol, kforce, ifunm, lmsp, imt, irc, irmin, irws, llmsp, ititle, nfu, hostimp, ilm_map, imaxsh, &
@@ -791,8 +791,12 @@ contains
       ! Potential mixing procedures: Broyden or Andersen updating schemes
       ! ----------------------------------------------------------------------
       if (imix>=3) then
-        call brydbm(visp, vons, vins, vspsmdum, vspsmdum, ins, lmpot, rmesh, drdi, mix, &
-          conc, irc, irmin, nspin, 1, natyp, itdbry, imix, iobroy, ipf, lsmear)
+        if (itscf>nsimplemixfirst) then
+          call brydbm(visp, vons, vins, vspsmdum, vspsmdum, ins, lmpot, rmesh, drdi, mix, &
+            conc, irc, irmin, nspin, 1, natyp, itdbry, imix, iobroy, ipf, lsmear)
+        else
+          write(*,*) 'NSIMPLEMIXFIRST found: Do simple mixing for', nsimplemixfirst-itscf, ' further steps'
+       end if
       end if
       ! ----------------------------------------------------------------------
       ! Reset to start new iteration

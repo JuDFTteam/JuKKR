@@ -22,7 +22,7 @@ contains
     use mod_datatypes, only: dp
     use mod_constants, only: pi
     use mod_wunfiles, only: t_params
-    use global_variables, only: mixfac_broydenspin, ninit_broydenspin, memlen_broydenspin, qbound_broydenspin
+    use global_variables, only: mixfac_broydenspin, ninit_broydenspin, memlen_broydenspin
     use mod_runoptions, only: write_angles_alliter
     use mod_broyden, only: broyden
     implicit none
@@ -87,8 +87,6 @@ contains
     call broyden (vector, vlen, alpha, rms, iter, &
                   ninit_broydenspin, memlen_broydenspin, vlen)
 
-    write(*,*) 'spinmix_broyden', iter, natyp-nfixed, rms
-    
     ! output 
     ipos = 0
     do i1 = 1, natyp
@@ -126,14 +124,6 @@ contains
       write (iounit, *) t_params%theta(i1)/pi*180.0_dp, t_params%phi(i1)/pi*180.0_dp, t_params%fixdir(i1)
       if (write_angles_alliter) write (iounit+1, *) t_params%theta(i1)/pi*180.0_dp, t_params%phi(i1)/pi*180.0_dp, t_params%fixdir(i1)
     end do
-
-    ! check if spin directions are already converged and fix the directions
-    if (rms<qbound_broydenspin) then
-      write(*,*) 'spinmix_broyden: rms<qbound_broydenspin', rms, qbound_broydenspin
-      do i1 = 1, natyp
-        t_params%fixdir(i1) = .true.
-      end do
-    end if
 
     ! cleanup allocations of working arrays
     deallocate(vector, stat=ipos)

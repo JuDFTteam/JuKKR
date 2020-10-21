@@ -39,27 +39,27 @@ contains
     rbasis, socscale, cscl, socscl, solver, i12, i13, i19, i25, i40, txc, drotq, ncpa, itcpamax, cpatol, noq, iqat, icpa, kaoez, conc, kmrot, &
     qmtet, qmphi, kreadldau, lopt, ueff, jeff, erefldau, invmod, verbosity, MPI_scheme, special_straight_mixing)
 
-    use :: mod_profiling, only: memocc
-    use :: mod_runoptions, only: read_runoptions, calc_DOS_Efermi, calc_GF_Efermi, calc_exchange_couplings, &
+    use mod_profiling, only: memocc
+    use mod_runoptions, only: read_runoptions, calc_DOS_Efermi, calc_GF_Efermi, calc_exchange_couplings, &
       dirac_scale_SpeefOfLight, disable_charge_neutrality, disable_print_serialnumber, modify_soc_Dirac, relax_SpinAngle_Dirac, search_Efermi, &
     set_kmesh_large, stop_1b, stop_1c, use_BdG, use_Chebychev_solver, use_cond_LB, use_decimation, use_lloyd, use_qdos, &
     use_rigid_Efermi, use_semicore, use_virtual_atoms, write_green_host, write_green_imp, write_kkrimp_input, &
     write_pkkr_input, write_pkkr_operators, use_ldau, set_cheby_nospeedup, set_cheby_nosoc, write_tb_coupling
-    use :: mod_constants, only: cvlight, ryd
-    use :: mod_wunfiles, only: t_params
-    use :: memoryhandling, only: allocate_semi_inf_host, allocate_magnetization, allocate_cell, allocate_cpa, allocate_soc, allocate_ldau
-    use :: mod_types, only: t_inc
-    use :: mod_save_wavefun, only: t_wavefunctions
-    use :: mod_version_info, only: version_print_header, serialnr
-    use :: mod_datatypes, only: dp
-    use :: godfrin, only: t_godfrin ! GODFRIN Flaviano
-    use :: mod_rcstop, only: rcstop
-    use :: mod_idreals, only: idreals
-    use :: mod_ioinput, only: ioinput
-    use :: global_variables, only: linterface, korbit, krel, irmd, irnsd, nsheld, knosph, iemxd, nrd, knoco, kpoibz, ntrefd, natomimpd, &
+    use mod_constants, only: cvlight, ryd
+    use mod_wunfiles, only: t_params
+    use memoryhandling, only: allocate_semi_inf_host, allocate_magnetization, allocate_cell, allocate_cpa, allocate_soc, allocate_ldau
+    use mod_types, only: t_inc
+    use mod_save_wavefun, only: t_wavefunctions
+    use mod_version_info, only: version_print_header, serialnr
+    use mod_datatypes, only: dp
+    use godfrin, only: t_godfrin ! GODFRIN Flaviano
+    use mod_rcstop, only: rcstop
+    use mod_idreals, only: idreals
+    use mod_ioinput, only: ioinput
+    use global_variables, only: linterface, korbit, krel, irmd, irnsd, nsheld, knosph, iemxd, nrd, knoco, kpoibz, ntrefd, natomimpd, &
       nprincd, ipand, nfund, irid, ngshd, nmaxd, ishld, wlength, naclsd, ntotd, ncleb, nspind, nspindd, npotd, lmmaxd, lmgf0d, &
       lassld, nembd1, irmind, nofgij, ntperd, nsatypd, nspotd, lnc, lmxspd, lm2d, nclsd, mmaxd, ncleb, kBdG, delta_BdG, pot_ns_cutoff, &
-       mixfac_broydenspin, ninit_broydenspin, memlen_broydenspin, qbound_broydenspin
+      mixfac_broydenspin, ninit_broydenspin, memlen_broydenspin, qbound_spin, nsimplemixfirst
 
 
     implicit none
@@ -2020,11 +2020,21 @@ contains
     end if
     call ioinput('SPINMIXQBOUND   ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*, iostat=ier) qbound_broydenspin
+      read (unit=uio, fmt=*, iostat=ier) qbound_spin
       if (ier/=0) stop 'Error reading `SPINMIXQBOUND`: check your inputcard'
-      write (111, *) 'SPINMIXQBOUND= ', qbound_broydenspin
+      write (111, *) 'SPINMIXQBOUND= ', qbound_spin
     else
-      write (111, *) 'Default SPINMIXQBOUND= ', qbound_broydenspin
+      write (111, *) 'Default SPINMIXQBOUND= ', qbound_spin
+    end if
+
+    ! do NSIMPLEMIXFIRST simple mixing iterations even for Broyden or Anderson mixing
+    call ioinput('NSIMPLEMIXFIRST ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) nsimplemixfirst
+      if (ier/=0) stop 'Error reading `NSIMPLEMIXFIRST`: check your inputcard'
+      write (111, *) 'NSIMPLEMIXFIRST= ', nsimplemixfirst
+    else
+      write (111, *) 'Default NSIMPLEMIXFIRST= ', nsimplemixfirst
     end if
 
     call ioinput('RMAX            ', uio, 1, 7, ier)
