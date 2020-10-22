@@ -23,7 +23,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine rhovalnew(ldorhoef, ielast, nsra, nspin, lmax, ez, wez, zat, socscale, cleb, icleb, iend, ifunm, lmsp, ncheb, &
     npan_tot, npan_log, npan_eq, rmesh, irws, rpan_intervall, ipan_intervall, rnew, vinsnew, thetasnew, theta, phi, fixdir, i1, ipot, &
-    den_out, espv, rho2ns, r2nef, muorb, angles_new, idoldau, lopt, wldau, denmatn, natyp, ispin)
+    den_out, espv, rho2ns, r2nef, muorb, angles_new, totmoment, idoldau, lopt, wldau, denmatn, natyp, ispin)
 
 #ifdef CPP_OMP
     use :: omp_lib
@@ -105,6 +105,7 @@ contains
     real (kind=dp), dimension (0:lmax+1, 2/(nspin-korbit)), intent (out) :: espv
     real (kind=dp), dimension (irmd, lmpotd, nspin/(nspin-korbit)*(1+korbit)), intent (out) :: r2nef
     real (kind=dp), dimension (irmd, lmpotd, nspin/(nspin-korbit)*(1+korbit)), intent (out) :: rho2ns
+    real (kind=dp), intent(out) :: totmoment
     complex (kind=dp), dimension (0:lmax+1, ielast, nspin/(nspin-korbit)), intent (out) :: den_out
 
     ! .. Local variables
@@ -119,7 +120,6 @@ contains
     integer :: ix, m1              ! qdos ruess
 
     real (kind=dp) :: thetanew, phinew
-    real (kind=dp) :: totmoment
     real (kind=dp) :: totxymoment
     complex (kind=dp) :: ek
     complex (kind=dp) :: df
@@ -1044,6 +1044,8 @@ contains
     idim = 2
     call mpi_bcast(angles_new,idim,mpi_double_precision,master,t_mpi_c_grid%mympi_comm_at,ierr)
     if (ierr/=mpi_success) stop 'error bcast angles_new in rhovalnew'
+    call mpi_bcast(totmoment,1,mpi_double_precision,master,t_mpi_c_grid%mympi_comm_at,ierr)
+    if (ierr/=mpi_success) stop 'error bcast totmoment in rhovalnew'
 #endif
 
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
