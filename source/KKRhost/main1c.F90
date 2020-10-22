@@ -41,7 +41,7 @@ contains
     use mod_datatypes, only: dp
     use mod_runoptions, only: calc_gmat_lm_full, fix_nonco_angles, relax_SpinAngle_Dirac, use_Chebychev_solver, &
       use_decimation, use_qdos, write_DOS, write_complex_qdos, write_density_ascii, write_rho2ns, write_DOS_lm, &
-      set_cheby_nosoc, disable_print_serialnumber, use_boyden_spinmix, write_angles_alliter
+      set_cheby_nosoc, disable_print_serialnumber
     use mod_constants, only: czero, pi
     use mod_profiling, only: memocc
     use mod_mympi, only: myrank, master
@@ -64,10 +64,10 @@ contains
     use mod_wrmoms, only: wrmoms
     use mod_cinit, only: cinit
     use mod_rinit, only: rinit
-    use mod_mixbroydenspin, only: spinmix_broyden
+    use mod_mixnocospin, only: spinmix_noco
     ! array dimensions
     use global_variables, only: iemxd, mmaxd, krel, lmaxd, natypd, npotd, irmd, nrmaxd, lmpotd, nspotd, naezd, ncleb, lm2d, ipand, &
-      nfund, ntotd, mmaxd, ncelld, irmind, nspind, nspotd, irid, irnsd, knosph, korbit, lmmaxd, lmxspd, lpotd, wlength, qbound_spin
+      nfund, ntotd, mmaxd, ncelld, irmind, nspind, nspotd, irid, irnsd, knosph, korbit, lmmaxd, lmxspd, lpotd, wlength
     ! stuff defined in main0 already
     use mod_main0, only: ielast, nsra, ins, nspin, icst, kmrot, iqat, idoldau, irws, ipan, ircut, iend, icleb, loflm, jend, ifunm1, &
       lmsp1, nfu, llmsp, lcore, ncore, ntcell, irmin, ititle, intervx, intervy, intervz, lly, npan_eq_at, ipan_intervall, &
@@ -109,16 +109,14 @@ contains
     real (kind=dp), dimension (natypd) :: edc
     real (kind=dp), dimension (natypd) :: phi !! phi nonco angles in rad
     real (kind=dp), dimension (natypd) :: theta !! theta nonco angles in rad
-    real (kind=dp), dimension (natypd) :: diff_angles_sq !! squared difference in nonco angles in rad
     logical, dimension(natypd) :: fixdir  !! booleans to fix nocon angles
-    real (kind=dp) :: diff_phi !! for difference in phi nonco angles
-    logical :: all_fixed !! True if all nonco angles are fixed
     real (kind=dp), dimension (natypd) :: denefat
     real (kind=dp), dimension (nspind) :: charge_lly ! LLY
     real (kind=dp), dimension (0:lmaxd+1, npotd) :: espv
     real (kind=dp), dimension (0:lmaxd+1, 2) :: dostot
     real (kind=dp), dimension (krel*20+(1-krel), npotd) :: ecorerel !! for a given (n,l) state the core energies corresponding first/second KAPPA value, AVERAGED over \mu's  These values are written out to the  potential file (routine <RITES>), but the read in (routine <STARTB1>) updates the ECORE array
-    real (kind=dp), dimension (2, natypd) :: angles_new
+    real (kind=dp), dimension (2, natypd) :: angles_new ! output directions of the nonco magnetic moments
+    real (kind=dp), dimension(natypd) :: totmoment ! size of the output magnetic moments
     real (kind=dp), dimension (0:lmaxd+1, natypd, 2) :: charge
     real (kind=dp), dimension (mmaxd, mmaxd, nspind, natypd) :: wldauold
     complex (kind=dp), dimension (iemxd) :: df
@@ -205,6 +203,7 @@ contains
     vinsnew = 0.0_dp
     thetasnew = 0.0_dp
     angles_new = 0.0_dp
+    totmoment = 0.0_dp
     espv(:, :) = 0.0_dp
     call rinit(natyp, denefat)
 
@@ -495,7 +494,7 @@ contains
             call rhovalnew(ldorhoef, ielast, nsra, nspin, lmax, ez, wez, zat(i1), socscale(i1), cleb(1,1), icleb, iend, &
               ifunm1(1,icell), lmsp1(1,icell), ncheb, npan_tot(i1), npan_log_at(i1), npan_eq_at(i1), rmesh(1,i1), irws(i1), &
               rpan_intervall(0,i1), ipan_intervall(0,i1), rnew(1,i1), vinsnew, thetasnew(1,1,icell), theta(i1), phi(i1), fixdir(i1), i1, &
-              ipot, den(0,1,1,ipot), espv(0,ipot), rho2n1(1,1,ispin), rho2n2(1,1,ispin), muorb(0,1,i1), angles_new(:,i1), &
+              ipot, den(0,1,1,ipot), espv(0,ipot), rho2n1(1,1,ispin), rho2n2(1,1,ispin), muorb(0,1,i1), angles_new(:,i1), totmoment(i1), &
               idoldau, lopt(i1), wldau(1,1,1,i1), denmatn(1,1,1,1,i1), natyp, ispin) ! LDAU
 #ifdef CPP_TIMING
             call timing_pause('main1c - rhovalnew')
@@ -693,7 +692,7 @@ contains
         ! reset NQDOS to 1 to avoid endless communication
         nqdos = 1
         call mympi_main1c_comm_newsosol2(lmaxd1, lmmaxd, ielast, nqdos, npotd, natyp, lmpotd, irmd, mmaxd, den, denlm, muorb, espv, r2nef, rho2ns, denefat, denef, denmatn, &
-          angles_new, t_mpi_c_grid%mympi_comm_ie)
+          angles_new, totmoment, t_mpi_c_grid%mympi_comm_ie)
 #endif
 
 #ifdef CPP_TIMING
@@ -701,73 +700,8 @@ contains
         if (i1_end>=i1_start) call timing_stop('main1c - rhovalnew')
 #endif
 
-        if (myrank==master) then
-          ! MdSD,PR: information on new angles
-          if (.not.set_cheby_nosoc) then
-            write (1337,*)
-            write (1337, '("      I1    In/Out THETA[deg]       In/Out PHI[deg]        FIXDIR[boolean]   RMS(angles)[deg]")')
-            do i1 = 1, natyp
-              if (.not.fixdir(i1)) then
-                ! renormalize to difference in phi in range [0,180]
-                diff_phi = phi(i1) - angles_new(2, i1)
-                if (diff_phi>pi) diff_phi = diff_phi - pi
-                ! now compute squared difference of the angles
-                diff_angles_sq(i1) = (theta(i1)-angles_new(1, i1))**2 + diff_phi**2
-              else
-                diff_angles_sq(i1) = 0.0_dp
-              end if
-              write (1337, '(I8,4F12.6,3x,1L,17x,1F12.6)') i1, theta(i1)*180.0_dp/pi, angles_new(1, i1)/pi*180.0_dp, &
-                  phi(i1)*180.0_dp/pi, angles_new(2, i1)/pi*180.0_dp, fixdir(i1), sqrt(diff_angles_sq(i1))/pi*180.0_dp
-              if (i1==1) all_fixed = .true. ! initialize
-              if(.not.fixdir(i1)) all_fixed = .false. ! if at least one is not fixed we set this to False
-            end do                     ! i1
-            write (1337, '(A, 1F12.6)') "Total RMS(angles) [deg]:", sqrt(sum(diff_angles_sq))/pi*180.0_dp
-            ! write also to std out
-            write (*, '(A, 1F12.6)') "Total RMS(angles) [deg]:", sqrt(sum(diff_angles_sq))/pi*180.0_dp
-            if ((.not.all_fixed) .and. sqrt(sum(diff_angles_sq))/pi*180.0_dp < qbound_spin) then
-              write(*,*) 'TOTAL RMS(angles) < qbound_spin:', sqrt(sum(diff_angles_sq))/pi*180.0_dp, qbound_spin
-              write(*,*) 'Fix all angles from now on'
-              do i1 = 1, natyp
-                t_params%fixdir(i1) = .true.
-              end do
-            end if
-          end if
-          ! rewrite new theta and phi to nonco_angle_out.dat, nonco_angle.dat is the input
-          if (.not. fix_nonco_angles) then
-
-            open (unit=13, file='nonco_angle_out.dat', form='formatted')
-            call version_print_header(13, disable_print=disable_print_serialnumber)
-            if (write_angles_alliter) open(unit=14, file='nonco_angle_out_all_iter.dat', form='formatted', position='append')
-
-            if (.not.use_boyden_spinmix) then
-
-              ! conventional scheme: use output angles as input
-              do i1 = 1, natyp
-                ! save to file in converted units (degrees)
-                if (t_params%fixdir(i1)) then
-                  ! keep the old angles
-                  write (13, *) t_params%theta(i1)/pi*180.0_dp, t_params%phi(i1)/pi*180.0_dp, t_params%fixdir(i1)
-                else
-                  ! update angles
-                  write (13, *) angles_new(1, i1)/pi*180.0_dp, angles_new(2, i1)/pi*180.0_dp, t_params%fixdir(i1)
-                  ! use internal units here
-                  t_params%theta(i1) = angles_new(1, i1)
-                  t_params%phi(i1) = angles_new(2, i1)
-                end if
-                if (write_angles_alliter) write (14, *) t_params%theta(i1)/pi*180.0_dp, t_params%phi(i1)/pi*180.0_dp, t_params%fixdir(i1)
-              end do
-            else ! use_broyden_spinmix
-
-              ! use spin moxing as in impurity code
-              call spinmix_broyden(t_inc%i_iteration, natyp, angles_new, 13) 
-
-            end if ! use_broyden_spinmix
-
-            close (13)
-            if (write_angles_alliter) close(14)
-        
-          end if ! .not.fix_nonco_angles
-        end if ! (myrank==master)
+        ! do mixing of nonco angles with master rank (writes nocno_angles)out.dat file)
+        if (myrank==master) call spinmix_noco(t_inc%i_iteration, natyp, theta, phi, fixdir, angles_new, totmoment, 13)
 
       end if ! new spin-orbit solver
 

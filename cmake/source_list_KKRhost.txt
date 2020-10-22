@@ -263,7 +263,7 @@ add_library(lib_kkrhost STATIC
     source/KKRhost/md5sums.F90
     source/KKRhost/mdirnewang.f90
     source/KKRhost/memoryhandling.f90
-    source/KKRhost/mixbroydenspin.f90 
+    source/KKRhost/mixnocospin.f90 
     source/KKRhost/mixldau.f90
     source/KKRhost/mixstr.f90
     source/KKRhost/mssinit.f90
