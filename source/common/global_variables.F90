@@ -83,10 +83,14 @@ module global_variables
   integer :: lpotd
   integer :: nchebd
   integer :: maxmshd = 30         !! maximal number of different k-meshes
+  integer :: ninit_broydenspin = 1    !! number of simple mixing steps in broyden spin mixing for noncollinear directions
+  integer :: memlen_broydenspin = 20  !! length of broyden memory for noncollinear spin mixing
+  integer :: nsimplemixfirst = -1 !! number of simple mixing steps that are done before Broyden or anderson mixing is started, -1 means no simple mixing steps first
   logical :: linterface = .false. !! use 2D or 3D mode, if True a matching with semi-inifinite surfaces must be performed
   real (kind=dp) :: delta_BdG = 10**-4 !! initial value of Delta_BdG in Ry
   real (kind=dp) :: pot_ns_cutoff = -1 !! threshold below which non-spherical part of the potential is cut off (done in main2)
-
+  real (kind=dp) :: mixfac_broydenspin = 0.01 !! broyden spin mixing factor
+  real (kind=dp) :: qbound_spin = -1 !! spin mixing qbound in degrees (if rms of spin directions is < qbound all angles are fixed, defaut negative value means no automatic fixing)
 
 end module global_variables
 

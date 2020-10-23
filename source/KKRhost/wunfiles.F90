@@ -3651,9 +3651,9 @@ contains
             &phi, respectively. But angles are given in degree (0...360)'
         end if
 
-        write (1337, '(A)') '      I1  THETA[deg]  PHI[deg] FIXDIR[boolean]'
+        write (1337, '("      I1  THETA[deg]   PHI[deg]    FIXDIR[boolean]")')
         do i1 = 1, natyp
-          write (1337, '(I8,2F12.6,1L)') i1, theta(i1)*180.0_dp/pi, phi(i1)*180.0_dp/pi, fixdir(i1)
+          write (1337, '(I8,2F12.6,5x,1L)') i1, theta(i1)*180.0_dp/pi, phi(i1)/pi*180.0_dp, fixdir(i1)
         end do                     ! i1
 
       end if                       ! LREAD
