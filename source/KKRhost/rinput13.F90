@@ -1527,6 +1527,15 @@ contains
       intervz = 1
     end if
 
+    call ioinput('<set_kmesh_large>', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) set_kmesh_large
+      if (ier/=0) stop 'Error reading `set_kmesh_large`: check your inputcard'
+      write (111, fmt='(A18,A2)') '<set_kmesh_large>=', set_kmesh_large
+    else
+      write (111, fmt='(A26,A2)') 'Default <set_kmesh_large>=', set_kmesh_large
+    end if
+
     ! Energy contour
     npol = 7
     call ioinput('NPOL            ', uio, 1, 7, ier)
@@ -1904,6 +1913,8 @@ contains
     if (calc_exchange_couplings) then
       nsteps = 1
       write (1337, *) 'RUNOPT XCPL used, setting NSTEPS to 1'
+      set_kmesh_large = .true.
+      write (1337, *) 'RUNOPT XCPL used, enabling set_kmesh_large'
     end if
     if (write_kkrimp_input) then
       nsteps = 1
