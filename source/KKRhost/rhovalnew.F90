@@ -41,7 +41,7 @@ contains
     use :: mod_save_wavefun, only: t_wavefunctions, read_wavefunc
     use :: mod_runoptions, only: calc_exchange_couplings, calc_gmat_lm_full, disable_tmat_sratrick, fix_nonco_angles, &
                                  use_qdos, write_complex_qdos, write_pkkr_operators, write_DOS_lm, set_cheby_nospeedup, &
-                                 set_cheby_nosoc, disable_print_serialnumber
+                                 set_cheby_nosoc, disable_print_serialnumber, set_gmat_to_zero
     use :: mod_version_info, only: version_print_header
     use :: global_variables, only: lmmaxd, iemxd, ncleb, lmxspd, irmd, ntotd, nrmaxd, lmpotd, nspotd, nfund, korbit, mmaxd, nspind
     use :: mod_constants, only: czero, cvlight, cone, pi, ci
@@ -626,6 +626,10 @@ contains
         else
           irec = iq + nqdos*(ie_num-1) + nqdos*ie_end*(ispin-1) + nqdos*ie_end*nspin/(1+korbit)*(i1-1)
           gmat0(:, :) = t_tgmat%gmat(:, :, irec)
+        end if
+        if (set_gmat_to_zero) then
+          write(*,*) 'WARNING: setting GMAT to zero! Output density is onsite part only.'
+          gmat0(:, :) = czero
         end if
 #ifdef CPP_OMP
         ! $omp end critical
