@@ -2003,7 +2003,7 @@ contains
     end if
 
     ! for broyden spin mixing of noncollinear directions
-    ! activated with the <use_boyden_spinmix> run option
+    ! only used with the <use_broyden_spinmix> run option
     call ioinput('SPINMIXALPHA    ', uio, 1, 7, ier)
     if (ier==0) then
       read (unit=uio, fmt=*, iostat=ier) mixfac_broydenspin

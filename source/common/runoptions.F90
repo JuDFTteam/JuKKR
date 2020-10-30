@@ -111,7 +111,7 @@ module mod_runoptions
   logical :: write_tmat_file = .false.                 !!write t-matix to file (former: 'tmatfile')
   logical :: write_tb_coupling = .false.               !!write couplings in tight-binging reference system to file `couplings.dat` (former: 'godfrin')
   logical :: calc_wronskian = .false.                  !!calculate the wronskian relations of first and second kind for the wavefunctions (see PhD Bauer pp 48)
-  logical :: use_boyden_spinmix = .false.              !! use broyden spin mixing for noncollinear angles
+  logical :: use_broyden_spinmix = .false.             !! use broyden spin mixing for noncollinear angles
   logical :: write_angles_alliter= .false.             !! use broyden spin mixing for noncollinear angles
 
   !some old run and test options have been removed:
@@ -231,7 +231,7 @@ module mod_runoptions
     call set_runoption(use_lloyd                     , '<use_lloyd>'                     , '<LLOYD>'   )
     call set_runoption(write_gmat_file               , '<write_gmat_file>'               , '<gmatfile>')
     call set_runoption(calc_wronskian                , '<calc_wronskian>'                , '<wronskian>')
-    call set_runoption(use_boyden_spinmix            , '<use_boyden_spinmix>'            , '<bryspinmix>')
+    call set_runoption(use_broyden_spinmix           , '<use_broyden_spinmix>'            , '<bryspinmix>')
     call set_runoption(write_angles_alliter          , '<write_angles_alliter>')
 
   end subroutine read_runoptions
@@ -769,7 +769,7 @@ module mod_runoptions
     call mpi_bcast(use_lloyd                     , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(write_gmat_file               , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(calc_wronskian                , 1, mpi_logical, master, mpi_comm_world, ierr)
-    call mpi_bcast(use_boyden_spinmix            , 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(use_broyden_spinmix            , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(write_angles_alliter          , 1, mpi_logical, master, mpi_comm_world, ierr)
 
   end subroutine bcast_runoptions

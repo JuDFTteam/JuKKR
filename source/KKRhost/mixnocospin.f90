@@ -23,7 +23,7 @@ contains
   subroutine spinmix_noco(iter, natyp, theta, phi, fixdir, angles_new, totmoment, iounit)
     use mod_datatypes, only: dp
     use mod_constants, only: pi
-    use mod_runoptions, only: use_boyden_spinmix, write_angles_alliter, disable_print_serialnumber, fix_nonco_angles, set_cheby_nosoc
+    use mod_runoptions, only: use_broyden_spinmix, write_angles_alliter, disable_print_serialnumber, fix_nonco_angles, set_cheby_nosoc
     use global_variables, only: qbound_spin
     use mod_version_info, only: version_print_header
     use mod_wunfiles, only: t_params
@@ -87,7 +87,7 @@ contains
       call version_print_header(iounit, disable_print=disable_print_serialnumber)
       if (write_angles_alliter) open(unit=iounit+1, file='nonco_angle_out_all_iter.dat', form='formatted', position='append')
 
-      if (.not.use_boyden_spinmix) then
+      if (.not.use_broyden_spinmix) then
 
         ! conventional scheme: use output angles as input
         do i1 = 1, natyp
