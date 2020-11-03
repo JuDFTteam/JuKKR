@@ -19,7 +19,7 @@ class Test_serial():
 
     def test_2_Fe_slab(self):
         path0 = 'test_run02_serial_1_1/'
-        standard_verify(path0, rms_threshold=7*10**-8)
+        standard_verify(path0, rms_threshold=7*10**-8, debug=True)
 
     def test_3_Si_lloyd(self):
         path0 = 'test_run03_serial_1_1/'
@@ -308,12 +308,12 @@ class Test_SOC():
         
 # helper functions
 
-def standard_verify(path0, rms_threshold=10**-8, rms_threshold_end=10**-8, neutr_threshold=10**-6):
+def standard_verify(path0, rms_threshold=10**-8, rms_threshold_end=10**-8, neutr_threshold=10**-6, debug=False):
     """
     wrapper for standard tests reading output and comparins rms and charge neutrality
     """
     # use parser function from aiida-kkr
-    success, parser_msgs, out_dict = parse_kkr_outputfile({}, path0+'out_kkr', path0+'output.0.txt', path0+'output.000.txt', path0+'out_timing.000.txt', path0+'out_potential', path0+'nonco_angle_out.dat')
+    success, parser_msgs, out_dict = parse_kkr_outputfile({}, path0+'out_kkr', path0+'output.0.txt', path0+'output.000.txt', path0+'out_timing.000.txt', path0+'out_potential', path0+'nonco_angle_out.dat', debug=debug)
     pprint.pprint(parser_msgs)
     pprint.pprint(out_dict)
     # first check if parsing was successful
