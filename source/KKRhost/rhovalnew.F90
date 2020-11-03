@@ -41,7 +41,7 @@ contains
     use :: mod_save_wavefun, only: t_wavefunctions, read_wavefunc
     use :: mod_runoptions, only: calc_exchange_couplings, calc_gmat_lm_full, disable_tmat_sratrick, fix_nonco_angles, &
                                  use_qdos, write_complex_qdos, write_pkkr_operators, write_DOS_lm, set_cheby_nospeedup, &
-                                 set_cheby_nosoc, disable_print_serialnumber
+                                 decouple_spins_cheby, disable_print_serialnumber
     use :: mod_version_info, only: version_print_header
     use :: global_variables, only: lmmaxd, iemxd, ncleb, lmxspd, irmd, ntotd, nrmaxd, lmpotd, nspotd, nfund, korbit, mmaxd, nspind
     use :: mod_constants, only: czero, cvlight, cone, pi, ci
@@ -221,7 +221,7 @@ contains
     call memocc(i_stat, product(shape(vins))*kind(vins), 'VINS', 'RHOVALNEW')
     vins = 0.0_dp
     vins(1:irmdnew, 1:lmpotd, 1) = vinsnew(1:irmdnew, 1:lmpotd, ipot)
-    if (.not.set_cheby_nosoc)  vins(1:irmdnew, 1:lmpotd, nspin) = vinsnew(1:irmdnew, 1:lmpotd, ipot+nspin-1)
+    if (.not.decouple_spins_cheby)  vins(1:irmdnew, 1:lmpotd, nspin) = vinsnew(1:irmdnew, 1:lmpotd, ipot+nspin-1)
 
     ! set up the non-spherical ll' matrix for potential VLL'
     allocate (vnspll0(lmmaxd,lmmaxd,irmdnew), stat=i_stat)
@@ -468,7 +468,7 @@ contains
 
       ! recalculate wavefuntions, also include left solution
       ! contruct the spin-orbit coupling hamiltonian and add to potential
-      if ( .not. set_cheby_nosoc) then
+      if ( .not. decouple_spins_cheby) then
         call spinorbit_ham(lmax, lmmax0d, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpotd, theta, phi, ipan_intervall, &
           rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, vnspll0, vnspll1(:,:,:,ith), '1')
       else
@@ -499,7 +499,7 @@ contains
         jlk2(:, :, ith) = czero
         gmatprefactor = czero
         jlk_index = 0
-        if (set_cheby_nosoc) then
+        if (decouple_spins_cheby) then
           use_fullgmat = 0
         else
           use_fullgmat = 1
@@ -542,7 +542,7 @@ contains
       !------------------------------------------------------------------------------
       if ((t_wavefunctions%nwfsavemax>0 .and. (.not. (rllleft_was_read_in .and. sllleft_was_read_in))) .or. (t_wavefunctions%nwfsavemax==0)) then
         ! read/recalc wavefunctions left contruct the TRANSPOSE spin-orbit coupling hamiltonian and add to potential
-        if ( .not. set_cheby_nosoc) then
+        if ( .not. decouple_spins_cheby) then
           call spinorbit_ham(lmax, lmmax0d, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpotd, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
             vnspll0, vnspll1(:,:,:,ith), 'transpose')
         else
@@ -619,7 +619,7 @@ contains
         ! $omp end critical
 #endif
 
-        if ( .not. set_cheby_nosoc) then
+        if ( .not. decouple_spins_cheby) then
           ! rotate gmat from global frame to local frame
           call rotatematrix(gmat0, theta, phi, lmmax0d, 1)
         end if
@@ -685,7 +685,7 @@ contains
       !------------------------------------------------------------------------------
       ! Get orbital moment
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      if (.not. set_cheby_nosoc) then
+      if (.not. decouple_spins_cheby) then
         do iorb = 1, 3
           call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, cone, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll(:,:,:,ith), & ! SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
             rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), r2orbc(:,:,:,ith), iorb, gflle_part(:,:,ith), rpan_intervall, ipan_intervall, nspin)
@@ -724,7 +724,7 @@ contains
             muorb(lmaxd1+1, 1:3) = muorb(lmaxd1+1, 1:3) + muorb(lm1, 1:3)
           end do
         end do ! IORB
-      end if ! .not. set_cheby_nosoc
+      end if ! .not. decouple_spins_cheby
 
     end do                         ! IE loop
 #ifdef CPP_OMP
@@ -984,9 +984,9 @@ contains
       ! MdSD: Should this also be corrected if the angles change?
       den_out(0:lmaxd1, 1:ielast, 1:nspin/(nspin-korbit)) = den(0:lmaxd1, 1:ielast, 1, 1:nspin/(nspin-korbit))
       ! calculate new THETA and PHI for non-colinear
-      ! if (.not. fix_nonco_angles .and. .not.set_cheby_nosoc) then
+      ! if (.not. fix_nonco_angles .and. .not.decouple_spins_cheby) then
       ! MdSD: now the new directions are always calculated, which can be useful for information purposes
-      if (.not.set_cheby_nosoc) then
+      if (.not.decouple_spins_cheby) then
         rho2ns_temp(1, 1) = rho2int(1)
         rho2ns_temp(2, 2) = rho2int(2)
         rho2ns_temp(1, 2) = rho2int(3)

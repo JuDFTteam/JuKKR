@@ -19,7 +19,8 @@ module mod_runoptions
   logical :: calc_DOS_Efermi = .false.                 !!calculate DOS at Fermi energy only (former: 'DOS-EF')
   logical :: calc_GF_Efermi = .false.                  !!calculation of cluster Green function at E Fermi (former: 'GF-EF')
   logical :: set_cheby_nospeedup = .false.             !!always calculate irregular solution in Chebychev solver (even if not needed) (former: 'norllsll')
-  logical :: set_cheby_nosoc     = .false.             !!decouple matrices in Chebychev solver neglecting SOC (former: 'NOSOC')
+  logical :: decouple_spins_cheby = .false.            !!decouple spin matrices in Chebychev solver neglecting SOC and for collinear calculations only
+  logical :: set_cheby_nosoc     = .false.             !!set SOC strength to 0 for all atoms (former: 'NOSOC')
   logical :: calc_complex_bandstructure = .false.      !!complex band structure (former: 'COMPLEX')
   logical :: calc_exchange_couplings = .false.         !!calculate magnetic exchange coupling parameters (former: 'XCPL')
   logical :: calc_exchange_couplings_energy = .false.  !!write energy-resolved Jij-files also if npol/=0 (former: 'Jijenerg')
@@ -112,7 +113,7 @@ module mod_runoptions
   logical :: write_tb_coupling = .false.               !!write couplings in tight-binging reference system to file `couplings.dat` (former: 'godfrin')
   logical :: calc_wronskian = .false.                  !!calculate the wronskian relations of first and second kind for the wavefunctions (see PhD Bauer pp 48)
   logical :: use_broyden_spinmix = .false.             !! use broyden spin mixing for noncollinear angles
-  logical :: write_angles_alliter= .false.             !! use broyden spin mixing for noncollinear angles
+  logical :: write_angles_alliter= .false.             !! write out noncollinear angles for all iterations
 
   !some old run and test options have been removed:
   !  'atptshft': replaced by presence or absence of IVSHIFT in inputcard
@@ -202,6 +203,7 @@ module mod_runoptions
     call set_runoption(write_lloyd_file              , '<write_lloyd_file>'             , '<llyfile>')
     call set_runoption(symmetrize_potential_madelung , '<symmetrize_potential_madelung>' , '<potsymm>' )
     call set_runoption(set_cheby_nosoc               , '<set_cheby_nosoc>'               , '<NOSOC>'   )
+    call set_runoption(decouple_spins_cheby          , '<decouple_spins_cheby>')
     call set_runoption(set_empty_system              , '<set_empty_system>'              , '<zeropot>' )
     call set_runoption(write_tmat_file               , '<write_tmat_file>'               , '<tmatfile>')
     call set_runoption(write_tb_coupling             , '<write_tb_coupling>'             , '<godfrin>' )
@@ -740,6 +742,7 @@ module mod_runoptions
     call mpi_bcast(write_lloyd_file              , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(symmetrize_potential_madelung , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(set_cheby_nosoc               , 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(decouple_spins_cheby          , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(set_empty_system              , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(write_tmat_file               , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(write_tb_coupling             , 1, mpi_logical, master, mpi_comm_world, ierr)
@@ -774,5 +777,119 @@ module mod_runoptions
 
   end subroutine bcast_runoptions
 #endif
+
+  !-------------------------------------------------------------------------------
+  !> Summary: Write out the runoptions to file with iounit unit
+  !> Author: Philipp Ruessmann
+  !> Category: KKRhost
+  !> Deprecated: False ! This needs to be set to True for deprecated subroutines
+  !>
+  !> needs to be updated if new runoptions are added!
+  !-------------------------------------------------------------------------------
+  subroutine print_runoptions(iounit)
+
+    implicit none
+    integer, intent(in) :: iounit !! unit for the writeout of the runoptions
+
+    write(iounit, '(A)') "# List of run options:"
+    write(iounit, '(A35,1x,1L,3x,A)') '<calc_GF_Efermi>=', calc_GF_Efermi, "calculation of cluster Green function at E Fermi (former: 'GF-EF')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<set_cheby_nospeedup>=', set_cheby_nospeedup, "always calculate irregular solution in Chebychev solver (even if not needed) (former: 'norllsll')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<set_cheby_nosoc>=', set_cheby_nosoc, "set SOC strength to 0 for all atoms (former: 'NOSOC')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<decouple_spins_cheby>=', decouple_spins_cheby, "decouple spin matrices in Chebychev solver neglecting SOC and for collinear calculations only"
+    write(iounit, '(A35,1x,1L,3x,A)') '<calc_complex_bandstructure>=', calc_complex_bandstructure, "complex band structure (former: 'COMPLEX')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<calc_exchange_couplings>=', calc_exchange_couplings, "calculate magnetic exchange coupling parameters (former: 'XCPL')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<calc_exchange_couplings_energy>=', calc_exchange_couplings_energy, "write energy-resolved Jij-files also if npol/=0 (former: 'Jijenerg')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<calc_gmat_lm_full>=', calc_gmat_lm_full, "calculate all lm-lm components of systems greens function and store to file `gflle` (former: 'lmlm-dos')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<dirac_scale_SpeefOfLight>=', dirac_scale_SpeefOfLight, "scale the speed of light for Dirac solver (former: 'CSCALE')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<disable_charge_neutrality>=', disable_charge_neutrality, "no charge neutrailty required: leaving Fermi level unaffected (former: 'no-neutr')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<disable_print_serialnumber>=', disable_print_serialnumber, "deactivate writing of serial number and version information to files (for backwards compatibility) (former: 'noserial')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<disable_reference_system>=', disable_reference_system, "deactivate the tight-binding reference system (former: 'lrefsysf')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<disable_tmat_sratrick>=', disable_tmat_sratrick, "deactivate SRATRICK in solver for t-matirx (former: 'nosph')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<fix_nonco_angles>=', fix_nonco_angles, "fix direction of non-collinear magnetic moments (Chebychev solver) (former: 'FIXMOM')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<formatted_file>=', formatted_file, "write files ascii-format. only effective with some other write-options (former: 'fileverb')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<impurity_operator_only>=', impurity_operator_only, "only for `write_pkkr_operators`: disable costly recalculation of host operators (former: 'IMP_ONLY')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<modify_soc_Dirac>=', modify_soc_Dirac, "modify SOC for Dirac solver (former: 'SOC')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<no_madelung>=', no_madelung, "do not add some energy terms (coulomb, XC, eff. pot.) to total energy (former: 'NoMadel')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<print_Gij>=', print_Gij, "print cluster G_ij matrices to outfile (former: 'Gmatij')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<print_gmat>=', print_gmat, "print Gmat to outfile (former: 'Gmat')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<print_ickeck>=', print_ickeck, "enable test-output of ICHECK matrix from gfmask (former: 'ICHECK')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<print_kmesh>=', print_kmesh, "output of k-mesh (former: 'k-net')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<print_kpoints>=', print_kpoints, "print k-points to outfile (former: 'BZKP')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<print_program_flow>=', print_program_flow, "monitor the program flow in some parts of the code (former: 'flow')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<print_radial_mesh>=', print_radial_mesh, "write mesh information to output (former: 'RMESH')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<print_refpot>=', print_refpot, "test output of refpot (former: 'REFPOT')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<print_tau_structure>=', print_tau_structure, "write extensive information about k-mesh symmetrization and structure of site-diagonal tau matrices to output (former: 'TAUSTRUC')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<print_tmat>=', print_tmat, "print t-matrix to outfile (former: 'tmat')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<relax_SpinAngle_Dirac>=', relax_SpinAngle_Dirac, "relax the spin angle in a SCF calculation [only DIRAC mode] (former: 'ITERMDIR')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<search_Efermi>=', search_Efermi, "modify convergence parameters to scan for fermi energy only (to reach charge neutrality). (former: 'SEARCHEF')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<set_gmat_to_zero>=', set_gmat_to_zero, "set GMAT=0 in evaluation of density (former: 'GMAT=0')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<set_empty_system>=', set_empty_system, "set potential and nuclear charge to zero (former: 'zeropot')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<set_kmesh_large>=', set_kmesh_large, "set equal k-mesh (largest) for all energy points (former: 'fix mesh')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<set_kmesh_small>=', set_kmesh_small, "set equal k-mesh (smallest) for all energy points (former: 'fix4mesh')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<set_tmat_noinversion>=', set_tmat_noinversion, "do not perform inversion to get msst = Delta t^-1, but msst = Delta t. (former: 'testgmat')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<simulate_asa>=', simulate_asa, "set non-spherical potential to zero in full-potential calculation with Chebychev solver (former: 'simulasa')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<slow_mixing_Efermi>=', slow_mixing_Efermi, "renormalize Fermi-energy shift by mixing factor during mixing (former: 'slow-neu')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<stop_1a>=', stop_1a, "stop after main1a (former: 'STOP1A')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<stop_1b>=', stop_1b, "stop after main1b (former: 'STOP1B')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<stop_1c>=', stop_1c, "stop after main1c (former: 'STOP1C')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<symmetrize_gmat>=', symmetrize_gmat, "use symmetrization [G(k) + G(-k)]/2 in k-point loop (former: 'symG(k)')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<symmetrize_potential_cubic>=', symmetrize_potential_cubic, "keep only symmetric part of potential (L=1,11,21,25,43,47). (former: 'potcubic')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<symmetrize_potential_madelung>=', symmetrize_potential_madelung, "symmetrize potential in consistency to madelung potential (former: 'potsymm')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<torque_operator_onlyMT>=', torque_operator_onlyMT, "for torque operator: include only the part within the muffin tin (former: 'ONLYMT')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<torque_operator_onlySph>=', torque_operator_onlySph, "for torque operator: include only the spherically symmetric part (former: 'ONLYSPH')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<use_BdG>=', use_BdG, "use Bogoliubov-de-Gennes Formalism (former: 'useBdG')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<use_Chebychev_solver>=', use_Chebychev_solver, "use the Chebychev solver (former: 'NEWSOSOL')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<use_cond_LB>=', use_cond_LB, "perform calculation of conductance in Landauer-Büttiker formalism (former: 'CONDUCT')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<use_cont>=', use_cont, "no usage of embedding points. NEMB is set to 0. (former: 'CONT')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<use_deci_onebulk>=', use_deci_onebulk, "in case of decimation: use same bulk on right and left. Speeds up calculations. (former: 'ONEBULK')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<use_decimation>=', use_decimation, "use Decimation technique for semi-infinite systems (former: 'DECIMATE')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<use_ewald_2d>=', use_ewald_2d, "use 2D ewald sum instead of 3D sum (Attention: does not work always!) (former: 'ewald2d')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<use_full_BZ>=', use_full_BZ, "use full Brillouin zone, i.e. switch off symmetries for k-space integration (former: 'fullBZ')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<use_ldau>=', use_ldau, "use LDA+U as exchange-correlation potential (former: 'LDA+U')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<use_lloyd>=', use_lloyd, "use Lloyds formula to correct finite angular momentum cutoff (former: 'LLOYD')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<use_qdos>=', use_qdos, "writes out qdos files for band structure calculations. (former: 'qdos')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<use_readcpa>=', use_readcpa, "read cpa t-matrix from file (former: 'readcpa')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<use_rigid_Efermi>=', use_rigid_Efermi, "keep the Fermi energy fixed during self-consistency (former: 'rigid-ef')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<use_semicore>=', use_semicore, "use semicore contour (former: 'SEMICORE')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<use_spherical_potential_only>=', use_spherical_potential_only, "keeping only spherical component of potential (former: 'Vspher')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<use_virtual_atoms>=', use_virtual_atoms, "add virtual atoms (former: 'VIRATOMS')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_BdG_tests>=', write_BdG_tests, "test options for Bogouliubov-deGennes (former: 'BdG_dev')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_DOS>=', write_DOS, "write out DOS files in any case (also if npol!=0) (former: 'DOS')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_DOS_lm>=', write_DOS_lm, "write out DOS files with decomposition into l and m components (former: 'lmdos')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_gmat_plain>=', write_gmat_plain, "write out Green function as plain text file (former: 'GPLAIN')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_green_host>=', write_green_host, "write green function of the host to file `green_host` (former: 'WRTGREEN')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_green_imp>=', write_green_imp, "write out impurity Green function to GMATLL_GES (former: 'GREENIMP')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_complex_qdos>=', write_complex_qdos, "write complex qdos to file (former: 'compqdos')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_cpa_projection_file>=', write_cpa_projection_file, "write CPA projectors to file (former: 'projfile')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_deci_pot>=', write_deci_pot, "write decimation-potential file (former: 'deci-pot')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_deci_tmat>=', write_deci_tmat, "write t-matrix to file 'decifile' (former: 'deci-out')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_density_ascii>=', write_density_ascii, "write density rho2ns to file densitydn.ascii (former: 'den-asci')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_energy_mesh>=', write_energy_mesh, "write out the energy mesh to file `emesh.scf` (former: 'EMESH')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_generalized_potential>=', write_generalized_potential, "write potential in general format. Usually prepares for running the VORONOI program. (former: 'GENPOT')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_gmat_file>=', write_gmat_file, "write GMAT to file (former: 'gmatfile')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_gref_file>=', write_gref_file, "write GREF to file (former: 'greffile')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_gmat_ascii>=', write_gmat_ascii, "write GMAT to formatted file `gmat.ascii` (former: 'gmatasci')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_kkrimp_input>=', write_kkrimp_input, "write out files for KKRimp-code (former: 'KKRFLEX')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_kkrsusc_input>=', write_kkrsusc_input, "write out files for KKRsusc-code (former: 'KKRSUSC')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_kpts_file>=', write_kpts_file, "write and read k-mesh to/from file `kpoints` (former: 'kptsfile')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_lloyd_cdos_file>=', write_lloyd_cdos_file, "write Lloyd array to file  (former: 'wrtcdos')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_lloyd_dgref_file>=', write_lloyd_dgref_file, "write Lloyd array to file  (former: 'wrtdgref')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_lloyd_dtmat_file>=', write_lloyd_dtmat_file, "write Lloyd array to file  (former: 'wrtdtmat')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_lloyd_file>=', write_lloyd_file, "write several Lloyd-arrays to files (former: 'llyfiles')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_lloyd_g0tr_file>=', write_lloyd_g0tr_file, "write Lloyd array to file  (former: 'wrtgotr')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_lloyd_tralpha_file>=', write_lloyd_tralpha_file, "write Lloyd array to file  (former: 'wrttral')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_madelung_file>=', write_madelung_file, "write madelung summation to file 'abvmad.unformatted' instead of keeping it in memory (former: 'madelfil')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_pkkr_input>=', write_pkkr_input, "write out files for Pkkprime-code (former: 'FERMIOUT')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_pkkr_operators>=', write_pkkr_operators, "for Fermi-surface output: calculate various operators in KKR basis. (former: 'OPERATOR')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_potential_tests>=', write_potential_tests, "write potential at different steps in main2 to different files (former: 'vintrasp' and 'vpotout')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_rho2ns>=', write_rho2ns, "write array rho2ns into file out_rhoval (from main1c) and out_rhotot (from main2) (former: 'RHOVALTW' and 'RHOVALW')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_rhoq_input>=', write_rhoq_input, "write out files needed for rhoq module (Quasiparticle interference) (former: 'rhoqtest')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_tmat_file>=', write_tmat_file, "write t-matix to file (former: 'tmatfile')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_tb_coupling>=', write_tb_coupling, "write couplings in tight-binging reference system to file `couplings.dat` (former: 'godfrin')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<calc_wronskian>=', calc_wronskian, "calculate the wronskian relations of first and second kind for the wavefunctions (see PhD Bauer pp 48)"
+    write(iounit, '(A35,1x,1L,3x,A)') '<use_broyden_spinmix>=', use_broyden_spinmix, "use broyden spin mixing for noncollinear angles"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_angles_alliter>=', write_angles_alliter, "write out noncollinear angles for all iterations"
+
+  end subroutine print_runoptions
 
 end module mod_runoptions

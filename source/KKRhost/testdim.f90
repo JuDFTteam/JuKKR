@@ -31,7 +31,7 @@ contains
   subroutine testdim(nspin,naez,nemb,natyp,ins,insref,nref,irns,nlayer,krel,nspind, &
     nprincd,knosph,irnsd,korbit,invmod)
 
-    use :: mod_runoptions, only: calc_complex_bandstructure, use_Chebychev_solver, use_cont, use_virtual_atoms, set_cheby_nosoc
+    use :: mod_runoptions, only: calc_complex_bandstructure, use_Chebychev_solver, use_cont, use_virtual_atoms, decouple_spins_cheby
     implicit none
 
     integer, intent (in) :: ins    !! 0 (MT), 1(ASA), 2(Full Potential)
@@ -103,7 +103,7 @@ contains
     end if
 
     if (use_Chebychev_solver .and. korbit==0) then
-      if (set_cheby_nosoc) then
+      if (decouple_spins_cheby) then
         write (6, *) 'Using NEWSOSOL for decoupled spin channels.'
       else
         write (6, *) 'Using option NEWSOSOL, change KORBIT in the inputcard from', korbit, 'to 1'

@@ -29,7 +29,7 @@ contains
   subroutine renorm_lly(cdos_lly, ielast, nspin, natyp, cden, lmaxp1, conc, iestart, ieend, wez, ircut, ipan, ez, zat, rho2ns, r2nef, denef, denefat, espv)
 
     use :: mod_datatypes, only: dp
-    use :: mod_runoptions, only: use_Chebychev_solver, set_cheby_nosoc
+    use :: mod_runoptions, only: use_Chebychev_solver, decouple_spins_cheby
     use :: mod_constants, only: czero, pi
     use :: global_variables, only: ipand, natypd, lmaxd, npotd, iemxd, irmd, lmpotd, krel, nspind 
     implicit none
@@ -91,7 +91,7 @@ contains
       end do
     end do
     ! Now the locally-summed charge/energy is in cdos_loc, charge/energy/atom in chadd
-    if (.not. use_Chebychev_solver .or. set_cheby_nosoc) then
+    if (.not. use_Chebychev_solver .or. decouple_spins_cheby) then
       do ie = iestart, ieend
         do ispin = 1, nspin
           ! Renormalization factor per energy:
@@ -130,7 +130,7 @@ contains
     !    ENDDO
     !   ENDDO
 
-    if (nspin==1 .or. (use_Chebychev_solver .and. .not. set_cheby_nosoc) ) cren(:, 2) = cren(:, 1)
+    if (nspin==1 .or. (use_Chebychev_solver .and. .not. decouple_spins_cheby) ) cren(:, 2) = cren(:, 1)
 
 
     ! Now apply renormalization to energy-integrated density

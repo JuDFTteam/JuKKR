@@ -366,7 +366,7 @@ contains
     use :: mod_runoptions, only: impurity_operator_only, relax_SpinAngle_Dirac, use_Chebychev_solver, use_qdos, &
       write_cpa_projection_file, write_deci_tmat, write_gmat_file, write_green_host, write_green_imp, write_gref_file, &
       write_kkrimp_input, write_lloyd_cdos_file, write_lloyd_dgref_file, write_lloyd_dtmat_file, write_lloyd_file, &
-      write_lloyd_g0tr_file, write_lloyd_tralpha_file, write_pkkr_input, write_pkkr_operators, write_tmat_file, set_cheby_nosoc
+      write_lloyd_g0tr_file, write_lloyd_tralpha_file, write_pkkr_input, write_pkkr_operators, write_tmat_file, decouple_spins_cheby
 
     implicit none
     ! ..
@@ -691,7 +691,7 @@ contains
     t_inc%naclsmax = naclsmax
     t_inc%nshell0 = nshell(0)
     if (use_Chebychev_solver) t_inc%newsosol = .true.
-    if (set_cheby_nosoc) t_inc%nosoc = .true.
+    if (decouple_spins_cheby) t_inc%nosoc = .true.
     if (write_deci_tmat) t_inc%deci_out = .true.
     !--------------------------------------------------------------------------------
     ! t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc t_inc

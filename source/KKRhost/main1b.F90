@@ -37,7 +37,7 @@ contains
     use :: mod_datatypes, only: dp, sp
     use :: mod_runoptions, only: calc_exchange_couplings, formatted_file, set_gmat_to_zero, use_Chebychev_solver, &
       use_qdos, use_readcpa, write_deci_tmat, write_gmat_plain, write_green_host, write_green_imp, write_kkrimp_input, &
-      write_pkkr_input, write_pkkr_operators, write_rhoq_input, write_gmat_ascii, set_cheby_nosoc
+      write_pkkr_input, write_pkkr_operators, write_rhoq_input, write_gmat_ascii, decouple_spins_cheby
     use :: mod_constants, only: czero, cone, pi
     use :: mod_operators_for_fscode, only: operators_for_fscode
     use :: mod_getscratch, only: opendafile
@@ -522,9 +522,9 @@ contains
             end if
             do i = 1, lm1
               trefll(i, i, i1) = wn1(i, i)
-              if (use_Chebychev_solver .and. .not.set_cheby_nosoc) trefll(lm1+i, lm1+i, i1) = wn1(i, i)
+              if (use_Chebychev_solver .and. .not.decouple_spins_cheby) trefll(lm1+i, lm1+i, i1) = wn1(i, i)
               dtrefll(i, i, i1) = wn2(i, i)                              ! LLY
-              if (use_Chebychev_solver .and. .not.set_cheby_nosoc) dtrefll(lm1+i, lm1+i, i1) = wn2(i, i) ! LLY
+              if (use_Chebychev_solver .and. .not.decouple_spins_cheby) dtrefll(lm1+i, lm1+i, i1) = wn2(i, i) ! LLY
             end do
 
             if (write_rhoq_input) then
@@ -567,7 +567,7 @@ contains
             tmat(:, :) = t_tgmat%tmat(:, :, irec)
           end if
 
-          if (use_Chebychev_solver .and. .not. set_cheby_nosoc) then
+          if (use_Chebychev_solver .and. .not. decouple_spins_cheby) then
             ! read in theta and phi for noncolinear
             theta = theta_at(i1)
             phi = phi_at(i1)
@@ -587,7 +587,7 @@ contains
               tmat(:, :) = t_lloyd%dtmat(:, :, irec)
             end if
 
-            if (use_Chebychev_solver .and. .not. set_cheby_nosoc) call rotatematrix(tmat, theta, phi, lmgf0d, 0) ! LLY
+            if (use_Chebychev_solver .and. .not. decouple_spins_cheby) call rotatematrix(tmat, theta, phi, lmgf0d, 0) ! LLY
 
             dtmatll(1:lmmaxd, 1:lmmaxd, i1) = tmat(1:lmmaxd, 1:lmmaxd) ! LLY
             if (t_lloyd%dtmat_to_file) then
@@ -752,7 +752,7 @@ contains
 
         if (lly/=0) then           ! LLY
 
-          if (use_Chebychev_solver .and. .not.set_cheby_nosoc) then
+          if (use_Chebychev_solver .and. .not.decouple_spins_cheby) then
             cdos_lly(ie, ispin) = tralpha(ie, ispin) - lly_grtr(ie, ispin)/volbz(1) + 2.0_dp*lly_g0tr(ie) ! LLY
           else
             if (lly/=2) then       ! LLY Lloyd
