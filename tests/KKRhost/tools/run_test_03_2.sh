@@ -11,5 +11,9 @@ cd ..
 cd NEWSOSOL_SOCSCL0/
 mpirun -np 3 ../../../kkr.x | tee out_kkr
 grep -A10000 'Information on renormalization by Lloyds formula' output.000.txt > out_last.txt
-cd ../../
+cd ../
 
+cd NEWSOSOL_DECOUPLED_SPINS/
+mpirun -np 3 ../../../kkr.x | tee out_kkr
+grep -A10000 'Information on renormalization by Lloyds formula' output.000.txt > out_last.txt
+cd ../../

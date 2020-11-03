@@ -241,9 +241,14 @@ class Test_SOC():
         # check convergence of both runs
         standard_verify(path0+'NEWSOSOL_NOSOC/', rms_threshold=1.5*10**-6, rms_threshold_end=1.5*10**-6, neutr_threshold=8*10**-5)
         standard_verify(path0+'NEWSOSOL_SOCSCL0/', rms_threshold=1.5*10**-6, rms_threshold_end=1.5*10**-6, neutr_threshold=8*10**-5)
+        standard_verify(path0+'NEWSOSOL_DECOUPLED_SPINS//', rms_threshold=1.5*10**-6, rms_threshold_end=1.5*10**-6, neutr_threshold=8*10**-5)
         # cross check both runs against each other (comparing output writte to 'out_last.txt')
         num, text = read_file(path0+'NEWSOSOL_NOSOC/out_last.txt')
         num_ref, text_ref = read_file(path0+'NEWSOSOL_SOCSCL0/out_last.txt')
+        assert std(num-num_ref)<5*10**-12
+        assert set(text)-set(text_ref)==set()
+        # compare also to decoupled spin channels
+        num, text = read_file(path0+'NEWSOSOL_DECOUPLED_SPINS/out_last.txt')
         assert std(num-num_ref)<5*10**-12
         assert set(text)-set(text_ref)==set()
 
