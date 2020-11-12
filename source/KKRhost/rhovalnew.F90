@@ -542,6 +542,7 @@ contains
             hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alphall)
         end if
         if (nsra==2) then
+          ull(lmmaxd+1:nvec*lmmaxd, :, :, ith) = ull(lmmaxd+1:nvec*lmmaxd, :, :, ith)/cvlight
           rll(lmmaxd+1:nvec*lmmaxd, :, :, ith) = rll(lmmaxd+1:nvec*lmmaxd, :, :, ith)/cvlight
           sll(lmmaxd+1:nvec*lmmaxd, :, :, ith) = sll(lmmaxd+1:nvec*lmmaxd, :, :, ith)/cvlight
         end if
@@ -610,6 +611,7 @@ contains
             jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alphall)
         end if
         if (nsra==2) then
+          ullleft(lmmaxd+1:nvec*lmmaxd, :, :, ith) = ullleft(lmmaxd+1:nvec*lmmaxd, :, :, ith)/cvlight
           rllleft(lmmaxd+1:nvec*lmmaxd, :, :, ith) = rllleft(lmmaxd+1:nvec*lmmaxd, :, :, ith)/cvlight
           sllleft(lmmaxd+1:nvec*lmmaxd, :, :, ith) = sllleft(lmmaxd+1:nvec*lmmaxd, :, :, ith)/cvlight
         end if
