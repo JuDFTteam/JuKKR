@@ -306,7 +306,7 @@ contains
     end do
     end if
  
-    write(6,*) 'dllpmax',dllpmax,'iter_beta',iter_beta
+    !write(6,*) 'dllpmax',dllpmax,'iter_beta',iter_beta
 
     end do ! niter_beta
 

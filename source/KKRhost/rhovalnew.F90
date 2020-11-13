@@ -971,29 +971,29 @@ contains
       allocate (rhonewtemp(irws,lmpotd), stat=i_stat)
       call memocc(i_stat, product(shape(rhonewtemp))*kind(rhonewtemp), 'RHONEWTEMP', 'RHOVALNEW')
 
-      open (131,file='rho2',form='formatted')
-      write(131,fmt='(A,I8)') '# ',irmdnew
-      do jspin = 1, nspin/(nspin-korbit)*(1+korbit)
-        do lm1 = 1, lmpotd
-          rsum = 0.0d0
-          do ir = 1, irmdnew
-            rsum = rsum + abs(aimag(rho2nsc(ir, lm1, jspin)))
-          end do
-          if(rsum.gt.1.d-10) then
-          write(131,fmt='(A,I8)') '# ',lm1
-          do ir = 1, irmdnew
-            if(abs(thetasnew(ir,1)).gt.1.d-6) then
-            write(131,*) rnew(ir),aimag(rho2nsc(ir, lm1, jspin))/rnew(ir)**2,aimag(rho2nsc(ir, lm1, jspin))/rnew(ir)**2*thetasnew(ir,1)
-            else
-            write(131,*) rnew(ir),aimag(rho2nsc(ir, lm1, jspin))/rnew(ir)**2,aimag(rho2nsc(ir, lm1, jspin))/rnew(ir)**2*3.544907701811032d0
-            end if
-          end do
-          end if
-        end do
-      end do
-      lm1 =999999
-      write(131,fmt='(A,I8)') '# ',lm1
-      close (131)
+      !open (131,file='rho2',form='formatted')
+      !write(131,fmt='(A,I8)') '# ',irmdnew
+      !do jspin = 1, nspin/(nspin-korbit)*(1+korbit)
+      !  do lm1 = 1, lmpotd
+      !    rsum = 0.0d0
+      !    do ir = 1, irmdnew
+      !      rsum = rsum + abs(aimag(rho2nsc(ir, lm1, jspin)))
+      !    end do
+      !    if(rsum.gt.1.d-10) then
+      !    write(131,fmt='(A,I8)') '# ',lm1
+      !    do ir = 1, irmdnew
+      !      if(abs(thetasnew(ir,1)).gt.1.d-6) then
+      !      write(131,*) rnew(ir),aimag(rho2nsc(ir, lm1, jspin))/rnew(ir)**2,aimag(rho2nsc(ir, lm1, jspin))/rnew(ir)**2*thetasnew(ir,1)
+      !      else
+      !      write(131,*) rnew(ir),aimag(rho2nsc(ir, lm1, jspin))/rnew(ir)**2,aimag(rho2nsc(ir, lm1, jspin))/rnew(ir)**2*3.544907701811032d0
+      !      end if
+      !    end do
+      !    end if
+      !  end do
+      !end do
+      !lm1 =999999
+      !write(131,fmt='(A,I8)') '# ',lm1
+      !close (131)
 
       do jspin = 1, nspin/(nspin-korbit)*(1+korbit)
         rhotemp = czero
