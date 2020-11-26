@@ -52,10 +52,13 @@ class Tests_scf_SOC():
    def test_Jij(self):
       check_Jijs('test_run_Jij', refpath='host_in_host_Jijs')
 
-   def test_Jij(self):
+   def test_Jij_hybrid(self):
+      check_Jijs('test_run_Jij_hybrid', refpath='host_in_host_Jijs')
+
+   def test_Jij_savewf(self):
       check_Jijs('test_run_Jij_savewf', refpath='host_in_host_Jijs')
 
-   def test_Jij(self):
+   def test_Jij_nosratrick(self):
       check_Jijs('test_run_Jij_nosratrick', refpath='host_in_host_Jijs', sracomp=True)
 
 

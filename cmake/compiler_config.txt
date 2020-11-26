@@ -90,7 +90,6 @@ elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
     set(CMAKE_Fortran_FLAGS_DEBUG "-O0 -g3 -fcheck=all -fbacktrace -Wall -Wextra -mtune=native")
 
     # release flags
-    # release flags
     if(OPTFLAGS_AMD)
       set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -march=znver1 -mtune=znver1 -mfma -mavx2 -m3dnow -fomit-frame-pointer")
     else()

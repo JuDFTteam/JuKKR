@@ -399,7 +399,7 @@ if(ENABLE_BdG)
         source/KKRhost/main1a_dummy_BdG.f90 
         )
     target_link_libraries(kkr_BdG_radial.x lib_kkrhost)
-    if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
+    if(CMAKE_Fortran_COMPILER_ID MATCHES GNU OR USE_LIBFLAME)
         target_link_libraries(kkr_BdG_radial.x ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
     endif()
 endif()
