@@ -265,7 +265,7 @@ mythread = omp_get_thread_num()
 if (myrank==0 .and. mythread==0) then
   nthreads = omp_get_num_threads()
   write (*, '(/79("*")//1X,A,I5//79("*")/)') 'Number of OpenMP threads used:', nthreads
-  if(t_inc%i_write) write (1337, '(/79("*")//1X,A,I5//79("*")/)') 'Number of OpenMP threads used:', nthreads
+  if(t_inc%i_write>0) write (1337, '(/79("*")//1X,A,I5//79("*")/)') 'Number of OpenMP threads used:', nthreads
 end if
 !$omp end parallel
 #endif
