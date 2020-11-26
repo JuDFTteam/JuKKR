@@ -1,10 +1,28 @@
+
+# automatically activate USE_LIBFLAME if BLIS_PATH and/or FLAME_PATH is given
+if(BLIS_PATH OR FLAME_PATH)
+    message("BLIS_PATH or FLAME_PATH was given in the input. This triggers using the FLAME and BLIS libraries instead of BLAS+LAPACK.")
+    set(USE_LIBFLAME "ON")
+else()
+    # this means we don't use libflame
+    set(USE_LIBFLAME "OFF")
+endif()
+
+# now compiler flags etc. first intel, then gfortran
+
 if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
 
     message("Intel compiler found")
     set(compver "intel")
 
     # standard compiler flags
-    set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -traceback")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -traceback")
+    if(ENABLE_DEBUG_SYMBOLS)
+        set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g")
+    endif()
+    if(ENABLE_OPTRPT)
+        set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -qopt-report=5")
+    endif() 
 
     # increase stacksize on mac
     if(CMAKE_SYSTEM_NAME MATCHES Darwin)
@@ -12,33 +30,44 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
         set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -Wl,-stack_size,0x80000000,-stack_addr,0xf0000000")
     endif()
 
-    # link serial or parallel mkl
-    if(ENABLE_OMP)
-        set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -mkl=parallel")
+    if(USE_LIBFLAME)
+        # tell the BLIS and FLAME libs are set later, for the intel compiler we additionally need to deactovate the PARDISO solver which is part of mkl but not in libflame
+        add_definitions(-DNO_PARDISO)
     else()
-        set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -mkl=sequential")
+        # link serial or parallel mkl
+        if(ENABLE_OMP)
+            set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -mkl=parallel")
+        else()
+            set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -mkl=sequential")
+        endif()
     endif()
 
     # debug flags
-    set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -r8 -CB -check all -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -g -sox")
-    #set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -r8 -CB -check all -check uninit -gen-interfaces -warn all -warn notruncated_source -debug extended -traceback -g -sox")
+    set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -r8 -CB -check all,noarg_temp_created -check uninit -ftrapuv -gen-interfaces -warn all -warn notruncated_source -fpe0 -debug extended -traceback -g -sox")
+    #set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -r8 -CB -check all,noarg_temp_created -check uninit -gen-interfaces -warn all -warn notruncated_source -debug extended -traceback -g -sox")
 
     # release flags
-    set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -ip -xHOST")
+    if(OPTFLAGS_xHOST)
+      set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -ip -xHOST")
+    elseif(OPTFLAGS_AMD)
+      set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -march=core-avx2 -align array64byte -fma -ftz -fomit-frame-pointer")
+    elseif(OPTFLAGS_AVX512)
+      set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -ip -xCORE-AVX512")
+    endif()
     if(NOT COMPILE_KKRIMP)
         set(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -r8")
     endif()
 
     # add special flags for voronoi code
     if(COMPILE_VORONOI)
-        set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -mcmodel medium -shared-intel")
+        set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -mcmodel medium -shared-intel")
     endif()
 
 
     # for coverage report
     if(ENABLE_COV)
         message("Set profiling flags for test coverage report")
-        set(CMAKE_Fortran_FLAGS     "${CMAKE_Fortran_FLAGS} -prof-gen:srcpos")
+        set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -prof-gen:srcpos")
     endif()
 
     # the old compiler (e.g. v12.1.3 on iff003) does not recognize
@@ -54,35 +83,46 @@ elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
     set(compver "gnu")
 
     # standard compiler flags
-    #set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -ffree-line-length-none -fdefault-real-8 -fimplicit-none")
-    set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -lblas -llapack -ffree-line-length-none")
+    #set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ffree-line-length-none -fdefault-real-8 -fimplicit-none")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ffree-line-length-none")
 
     # debug flags # -finit-local-zero
-    set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g3 -fcheck=all -fbacktrace -Wall -Wextra -mtune=native")
+    set(CMAKE_Fortran_FLAGS_DEBUG "-O0 -g3 -fcheck=all -fbacktrace -Wall -Wextra -mtune=native")
 
     # release flags
-    set(CMAKE_Fortran_FLAGS_RELEASE "-Ofast -march=native -fbacktrace")
+    # release flags
+    if(OPTFLAGS_AMD)
+      set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -march=znver1 -mtune=znver1 -mfma -mavx2 -m3dnow -fomit-frame-pointer")
+    else()
+      set(CMAKE_Fortran_FLAGS_RELEASE "-Ofast -march=native -fbacktrace")
+    endif()
 
     # flags for code-coverage
     if(ENABLE_COV)
         message("Set profiling flags for test coverage report")
-        set(CMAKE_Fortran_FLAGS     "${CMAKE_Fortran_FLAGS} -fprofile-arcs -ftest-coverage -fPIC")
+        set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fprofile-arcs -ftest-coverage -fPIC")
+    endif()
+
+    # flags for thread sanitizer
+    if(ENABLE_TSAN)
+        set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fsanitize=thread -g")
+        set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -DNDEBUG")
     endif()
 
     # disable MD5 sums for GNU compiler
     add_definitions(-DCPP_NOMD5)
 
-   # lapack lib on iff machines
-   #set(MKLROOT "/usr/local/intel/mkl")
-   #find_package(BLAS REQUIRED)
-   #message("Found BLAS version ${BLAS_VERSION}")
-   #find_package(LAPACK REQUIRED)
-   #message("Found LAPACK version ${LAPACK_VERSION}")
+   # BLAS for thread sanitizer (POP analysis)
+   if(ENABLE_TSAN)
+       set(BLA_VENDOR "Intel10_64lp")
+   endif()
 
-   find_package(BLAS)
-   find_package(LAPACK)
-   if(LAPACK_FOUND AND BLAS_FOUND)
-      set(lapackblas_libraries ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+   if(NOT USE_LIBFLAME)
+       # try to find BLAS and LAPACK automatically
+       find_package(BLAS REQUIRED)
+       message("Found BLAS version ${BLAS_VERSION}: ${BLAS_LIBRARIES}")
+       find_package(LAPACK REQUIRED)
+       message("Found LAPACK version ${LAPACK_VERSION}: ${LAPACK_LIBRARIES}")
    endif()
   
 
@@ -92,11 +132,39 @@ elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES NAG)
 
     message("NAG compiler found")
-    set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} -Imodules -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core")
-    set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -C=all")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Imodules -L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core")
+    set(CMAKE_Fortran_FLAGS_DEBUG "-O0 -C=all")
     set(CMAKE_Fortran_FLAGS_RELEASE "-O3")
     # disable MD5 sums for gnu compiler
     add_definitions(-DCPP_NOMD5)
     set(compver "nag")
 
+endif()
+
+
+if(USE_LIBFLAME)
+    # tell CMAKE to ues libflame in libs directory (there we link blis and libflame from where they are compiled)
+    # check if path to BLIS lib is given
+    if(BLIS_PATH)
+        message("BLIS_PATH was given in the input. We use this library for all BLAS calls.")
+        set(BLAS_LIBRARIES "${BLIS_PATH}")
+    else()
+        message(FATAL_ERROR "BLIS_PATH not set. Please specify the location of the BLIS library with -DBLIS_PATH=<path-to-libblis-mt.a>")
+    endif()
+    # check if path to FLAME lib is given
+    if(FLAME_PATH)
+        message("FLAME_PATH was given in the input. We use this library for all LAPACK calls.")
+        set(LAPACK_LIBRARIES "${FLAME_PATH}")
+    else()
+        message(FATAL_ERROR "FLAME_PATH not set. Please specify the location of the FLAME library with -FLAME_PATH=<path-to-libflame.a>")
+    endif()
+    set(complib "libflame")
+    message("Use BLIS: ${BLAS_LIBRARIES}")
+    message("Use LAPACK: ${LAPACK_LIBRARIES}")
+    # we need to make sure that these are linked with the openmp flags since on the cluster they are compiled like that
+    if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
+        set(LAPACK_LIBRARIES "-qopenmp ${LAPACK_LIBRARIES}")
+    elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
+        set(LAPACK_LIBRARIES "-fopenmp ${LAPACK_LIBRARIES}")
+    endif()
 endif()

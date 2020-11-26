@@ -62,5 +62,5 @@ add_executable(
     )
 
 if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
-    target_link_libraries(voronoi.exe ${lapackblas_libraries})
+    target_link_libraries(voronoi.exe ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 endif()
