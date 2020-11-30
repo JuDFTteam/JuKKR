@@ -219,7 +219,7 @@ contains
           phi = atan2(moment(2), moment(1))
         ! theta is 0 or pi
         else
-          if (moment(3) < 0.0_dp) then
+          if (moment(3) < 0.0_dp .and. abs(moment(3)) > 1e-14_dp) then
             theta = pi
           else
             theta = 0.0_dp
