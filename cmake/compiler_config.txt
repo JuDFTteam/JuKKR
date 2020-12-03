@@ -48,12 +48,25 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
 
     # release flags
     if(OPTFLAGS_xHOST)
+
       set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -ip -xHOST")
+
     elseif(OPTFLAGS_AMD)
+
       set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -march=core-avx2 -align array64byte -fma -ftz -fomit-frame-pointer")
+      if(ENABLE_PATCH_INTEL)
+        set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Wl,--allow-multiple-definition -static-intel -mkl")
+        #set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Wl,--allow-multiple-definition -static-intel -mkl -assume byterecl")
+        #set(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -O3 -march=core-avx2 -mtune=core-avx2 -g")
+        set(complib "mklpatch ${complib}")
+      endif()
+
     elseif(OPTFLAGS_AVX512)
+
       set(CMAKE_Fortran_FLAGS_RELEASE "-O2 -ip -xCORE-AVX512")
+
     endif()
+
     if(NOT COMPILE_KKRIMP)
         set(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -r8")
     endif()
@@ -158,6 +171,7 @@ if(USE_LIBFLAME)
         message(FATAL_ERROR "FLAME_PATH not set. Please specify the location of the FLAME library with -FLAME_PATH=<path-to-libflame.a>")
     endif()
     set(complib "libflame")
+    set(complib "${complib} libflame")
     message("Use BLIS: ${BLAS_LIBRARIES}")
     message("Use LAPACK: ${LAPACK_LIBRARIES}")
     # we need to make sure that these are linked with the openmp flags since on the cluster they are compiled like that

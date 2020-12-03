@@ -25,6 +25,7 @@ option(ENABLE_OPTRPT "Generate optimization reports (*.optrpt files) at compilat
 option(OPTFLAGS_xHOST "Turn on xHost optimization flag for release build" ON)
 option(OPTFLAGS_AVX512 "Use AVX512 instruction set for release build" OFF)
 option(OPTFLAGS_AMD "FLAGS for AMD64 node on iffslurm (see compiler_config.txt)" OFF)
+option(ENABLE_PATCH_INTEL "Use patch to make MKL think it works on intel hardware (EXPERIMENTAL!!!)" OFF)
 option(ENABLE_MPI "Enable MPI parallelization" ON)
 option(ENABLE_OMP "Enable OpenMP parallelization" OFF)
 option(ENABLE_OMP_EVERYWHERE "Add openmp compile flags everywhere" OFF)

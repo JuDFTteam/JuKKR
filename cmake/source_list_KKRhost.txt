@@ -109,8 +109,23 @@ add_library(lib_common STATIC
     source/common/wronskian.f90
     source/common/mathtools.f90
 )
-# disable cmake auto add pf 'lib' prefix to .so file
+# disable cmake auto add of 'lib' prefix to .so file
 SET_TARGET_PROPERTIES(lib_common PROPERTIES PREFIX "")
+
+
+if(ENABLE_PATCH_INTEL)
+    # disable cmake auto add of 'lib' prefix to .so file
+    add_library(lib_patch_intel STATIC
+        source/common/patch_intel.c
+        source/common/patch_intel.f90
+    )
+    SET_TARGET_PROPERTIES(lib_patch_intel PROPERTIES PREFIX "")
+    # activate preprcessor flag to call patch_intel subroutine
+    add_definitions(-DCPP_PATCH_INTEL)
+    target_link_libraries(lib_common lib_patch_intel)
+endif()
+
+
 add_library(lib_kkrhost STATIC
     source/KKRhost/addvirtual14.f90
     source/KKRhost/amemagvec.f90
@@ -373,12 +388,9 @@ add_library(lib_kkrhost STATIC
     source/KKRhost/wunfiles.F90
     source/KKRhost/ylag.f90
 )
-# disable cmake auto add pf 'lib' prefix to .so file
+# disable cmake auto add of 'lib' prefix to .so file
 SET_TARGET_PROPERTIES(lib_kkrhost PROPERTIES PREFIX "")
 target_link_libraries(lib_kkrhost lib_common)
-#target_link_libraries(lib_common lib_npy_for_fortran)
-#target_link_libraries(lib_kkrhost lib_npy_for_fortran)
-
 
 
 # the executable is built from this list of files
