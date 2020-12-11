@@ -1007,12 +1007,12 @@ contains
         totxymoment = sqrt(moment(1)**2+moment(2)**2)
 
         ! MdSD: theta not 0 or pi
-        if (abs(totxymoment)>1d-05) then
+        if (abs(totxymoment)>1e-05_dp) then
           thetanew = acos(moment(3)/totmoment)
           phinew = atan2(moment(2), moment(1))
         ! MdSD: theta is 0 or pi
         else
-          if (moment(3) < 0.0_dp) then
+          if (moment(3) < 0.0_dp .and. abs(moment(3)) > 1e-14_dp) then
             thetanew = pi
           else
             thetanew = 0.0_dp
@@ -1021,8 +1021,8 @@ contains
         end if
 
         if (t_inc%i_write>0) then
-          write (1337, *) 'moment', myrank, moment(1), moment(2), moment(3)
-          write (1337, *) thetanew/(2.0_dp*pi)*360.0_dp, phinew/(2.0_dp*pi)*360.0_dp
+          write (1337, '(A,i5,3es16.7)') 'moment', myrank, moment(1), moment(2), moment(3)
+          write (1337, '(2es16.7)') thetanew/(2.0_dp*pi)*360.0_dp, phinew/(2.0_dp*pi)*360.0_dp
         end if
         ! only on master different from zero:
         angles_new(1) = thetanew

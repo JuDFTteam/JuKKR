@@ -230,7 +230,7 @@ class Test_SOC():
 
     def test_2_Fe_slab(self):
         path0 = 'test_run02.1_hybrid_1_3/'
-        standard_verify(path0, rms_threshold=1*10**-8, rms_threshold_end=1*10**-8)
+        standard_verify(path0, rms_threshold=2*10**-8, rms_threshold_end=1*10**-8)
 
     def test_3_Si_lloyd(self):
         path0 = 'test_run03.1_hybrid_1_3/'
