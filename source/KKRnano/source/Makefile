@@ -70,7 +70,7 @@ ifeq ($(PLATFORM),ifort)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all
 		PPFLAGS += -D USE_MTRADII -D USE_OLD_MESH -D NOLOGGING
  	else ifeq ($(TYPE),voronoi_mesh)
-		FCFLAGS += -O2 -xHost 
+		FCFLAGS += -O2 
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
  	else ifeq ($(TYPE),voronoi_mesh_debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
@@ -83,7 +83,7 @@ ifeq ($(PLATFORM),ifort)
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH -D PRINT_MTRADII
 
 	else
-		FCFLAGS += -O2 -xHost
+		FCFLAGS += -O2 
 		PPFLAGS += -D NOLOGGING
 	endif
 endif
@@ -116,7 +116,6 @@ endif
 
 
 # ================== JURECA ======================
-# optimal setup on one node seems to be 8MPI/3OMP for 64 atoms
 # The following software stages were tested and work:
 # module --force purge
 # module use /usr/local/software/jureca/OtherStages
@@ -132,21 +131,21 @@ ifeq ($(PLATFORM),jureca)
 	FCFLAGS += -module $(BUILDDIR)
 	FCFLAGS += -I $(BUILDDIR)
 	# PPFLAGS += -D TASKLOCAL_FILES
-	FCFLAGS += -g
+	FCFLAGS += -g -march=core-avx2
 	LDFLAGS += -g -L${MKLROOT}/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -lm -ldl 
 	ifeq ($(TYPE),debug_light)
 		FCFLAGS += -O0 -g
 	else ifeq ($(TYPE),debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
 	else ifeq ($(TYPE),mtradii)
-		FCFLAGS += -O2 -xHost 
+		FCFLAGS += -O2
 		PPFLAGS += -D USE_MTRADII 
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
 	else ifeq ($(TYPE),debug_mtradii)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all
 		PPFLAGS += -D USE_MTRADII
  	else ifeq ($(TYPE),voronoi_mesh)
-		FCFLAGS += -O2 -xHost 
+		FCFLAGS += -O2
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
  	else ifeq ($(TYPE),voronoi_mesh_debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
@@ -155,7 +154,7 @@ ifeq ($(PLATFORM),jureca)
 		FCFLAGS += -O0 -g
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
 	else
-		FCFLAGS += -O2 -xHost 
+		FCFLAGS += -O2
 		PPFLAGS += -D NOLOGGING
 	endif
 endif
@@ -204,14 +203,14 @@ ifeq ($(PLATFORM),jureca_knl)
 		PPFLAGS += -D NOLOGGING
 	endif
 endif
-# ================== HAZEL HEN ======================
+# ================== HAWK ===========================
 # Usage of Intel compiler and Intel MKL seems to give best results:
 # module swap PrgEnv-cray PrgEnv-intel
 # module unload cray-libsci
 # Remarks: - Bad GGA performance -> Use LDA!
 #  	   - Home directory slow -> Use Workspace (see HLRS wiki)
 #  	   - If 'seg 0' error occurs, add 'module unload craype-hugepages16M' to job file
-ifeq ($(PLATFORM),hazelhen)
+ifeq ($(PLATFORM),hawk)
 	FC = ftn
 	FC90 = ftn
 	# -module <path> specifies where to put .mod files
@@ -565,5 +564,6 @@ ChebMeshData_mod.o: InputParams_mod.o RadialMeshData_mod.o
 Truncation_mod.o: Logging_mod.o Exceptions_mod.o TruncationZone_mod.o
 NonCollinearMagnetism_mod.o: RadialMeshData_mod.o ChebMeshData_mod.o read_formatted_shapefun_mod.o
 NonCollinearMagnetismData_mod.o: Exceptions_mod.o
+vintras_new.o: SingleSiteHelpers_mod.o
 
 # DO NOT DELETE
