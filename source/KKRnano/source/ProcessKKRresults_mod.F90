@@ -451,6 +451,7 @@ module ProcessKKRresults_mod
     double precision :: chrgNt_local
     double precision :: new_fermi
     double precision :: CHRGSEMICORE !< total semicore charge over all atoms
+    double precision :: fsemicore_in
     integer :: ila, r1fu
     integer :: num_local_atoms
 
@@ -659,7 +660,12 @@ module ProcessKKRresults_mod
       ! --> Sum up semicore charges from different MPI ranks
       call sumChargeSemi_com(CHRGSEMICORE, mp%mySEComm)
       ! --> Recalculate the semicore contour factor FSEMICORE
-      if (mp%isMasterRank) call calcFactorSemi(CHRGSEMICORE, emesh%FSEMICORE, params%fsemicore)
+      if(iter==1) then
+      fsemicore_in = params%fsemicore
+      else
+      fsemicore_in = emesh%FSEMICORE
+      endif
+      if (mp%isMasterRank) call calcFactorSemi(CHRGSEMICORE, emesh%FSEMICORE, fsemicore_in)
     endif
 
     emesh%E2 = new_fermi  ! Assumes that for every atom the same Fermi correction
