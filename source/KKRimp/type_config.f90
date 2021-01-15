@@ -76,6 +76,7 @@ integer                        ::  spinmixbound=99999
 real(kind=8)                   ::  mixfac   = 0.1      		!! mixing factor 
 real(kind=8)                   ::  fcm      = 2.0         	!! 
 real(kind=8)                   ::  qbound   = 1d-8     		!! 
+real(kind=8)                   ::  qbound_ldau   = 1d-4    	!! qbound for mixing of ldau potential (see calcwldau)
 integer                        ::  itdbry   = 40          	!! number of iterations which are used for the broyden mixing
 ! -------------------------
 ! lattice relaxation

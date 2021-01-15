@@ -476,7 +476,7 @@ loop:     do lm3 = 1, nstore
 
 100   format ('# off-diagonal exchange coupling constants ', /, '# for atom IT = ', i5, ' on site IQ = ', i5, ' impurity site = ', i5, /, &
         '# R_IQ,JQ      J_IT,JT     D_IT,JT   S_IT,JT     A_IT,JT       Rvec    JT', /, '# ( ALAT )       ( Ry )', /, '#      ')
-110   format (f12.8, 4e16.8, 2x, 3f12.8, 2x, 2i5)
+110   format (f12.8, 4e16.8, 2x, 3es16.8, 2x, 2i5)
 
       ! stop 'test stop'
   end subroutine tbxccpljijdij

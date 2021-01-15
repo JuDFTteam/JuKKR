@@ -48,7 +48,6 @@ module mod_bfield
     real (kind=dp), dimension (:), allocatable          :: theta ! polar angle of the magnetic field
     real (kind=dp), dimension (:), allocatable          :: phi   ! azimuthal angle of the magnetic field
     real (kind=dp), dimension (:,:,:,:), allocatable    :: thetallmat ! shapefun in the ll' expansion
-    logical, dimension(:), allocatable                  :: lfix_moment ! fix magnetic moment for constraining calculation (read from bfield.dat)
     !------------------------------------------------------------------------------------
     ! Magnetic torque 
     !------------------------------------------------------------------------------------
@@ -126,8 +125,6 @@ contains
       call memocc(i_stat, product(shape(bfield%bfield_strength))*kind(bfield%bfield_strength), 'bfield%bfield_strength', 'init_bfield')
       allocate (bfield%bfield_constr(natyp,3), stat=i_stat)
       call memocc(i_stat, product(shape(bfield%bfield_constr))*kind(bfield%bfield_constr), 'bfield%bfield_constr', 'init_bfield')
-      allocate (bfield%lfix_moment(natyp), stat=i_stat)
-      call memocc(i_stat, product(shape(bfield%lfix_moment))*kind(bfield%lfix_moment), 'bfield%lfix_moment', 'init_bfield')
       ! init allocated arrays
       bfield%bfield_constr(:,:) = 0.d0
       if(lbfield) call read_bfield(bfield,natyp)
@@ -185,7 +182,6 @@ contains
           bfield%phi(iatom)              = 0.0D0
           bfield%bfield_strength(iatom)  = 0.0D0
           bfield%bfield(iatom,:)         = 0.0D0
-          bfield%lfix_moment             = bfield%lbfield_constr ! constr field => fix moment
         end do
         return
       end if
@@ -203,8 +199,8 @@ contains
        string1=this_readline(57493215,ios)
        if (ios/=0) stop '[read_bfield] Error reading atom info2'
        if (ios==-1) stop '[read_bfield] EOF'
-       read(string1,*) bfield%theta(iatom),bfield%phi(iatom),bfield%bfield_strength(iatom),bfield%lfix_moment(iatom)
-       write(1337,'("  ",i4,3es16.8)') iatom,bfield%theta(iatom),bfield%phi(iatom),bfield%bfield_strength(iatom), bfield%lfix_moment(iatom)
+       read(string1,*) bfield%theta(iatom),bfield%phi(iatom),bfield%bfield_strength(iatom)
+       write(1337,'("  ",i4,3es16.8)') iatom,bfield%theta(iatom),bfield%phi(iatom),bfield%bfield_strength(iatom)
        bfield%theta(iatom)                  = bfield%theta(iatom)/360.0D0*8.0D0*datan(1.0D0)
        bfield%phi(iatom)                    = bfield%phi(iatom)  /360.0D0*8.0D0*datan(1.0D0)
        bfield%bfield_strength(iatom)        = bfield%bfield_strength(iatom)!/235051.787_dp !conversion from Tesla to Ry

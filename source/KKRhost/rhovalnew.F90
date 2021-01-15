@@ -22,8 +22,8 @@ contains
   !> Calculation of the density for the new solver
   !-------------------------------------------------------------------------------
   subroutine rhovalnew(ldorhoef, ielast, nsra, nspin, lmax, ez, wez, zat, socscale, cleb, icleb, iend, ifunm, lmsp, ncheb, &
-    npan_tot, npan_log, npan_eq, rmesh, irws, rpan_intervall, ipan_intervall, rnew, vinsnew, thetasnew, theta, phi, i1, ipot, &
-    den_out, espv, rho2ns, r2nef, muorb, angles_new, idoldau, lopt, wldau, denmatn, natyp, ispin)
+    npan_tot, npan_log, npan_eq, rmesh, irws, rpan_intervall, ipan_intervall, rnew, vinsnew, thetasnew, theta, phi, fixdir, i1, ipot, &
+    den_out, espv, rho2ns, r2nef, muorb, angles_new, totmoment, idoldau, lopt, wldau, denmatn, natyp, ispin)
 
 #ifdef CPP_OMP
     use :: omp_lib
@@ -41,7 +41,7 @@ contains
     use :: mod_save_wavefun, only: t_wavefunctions, read_wavefunc
     use :: mod_runoptions, only: calc_exchange_couplings, calc_gmat_lm_full, disable_tmat_sratrick, fix_nonco_angles, &
                                  use_qdos, write_complex_qdos, write_pkkr_operators, write_DOS_lm, set_cheby_nospeedup, &
-                                 set_cheby_nosoc, disable_print_serialnumber
+                                 decouple_spins_cheby, disable_print_serialnumber
     use :: mod_version_info, only: version_print_header
     use :: global_variables, only: lmmaxd, iemxd, ncleb, lmxspd, irmd, ntotd, nrmaxd, lmpotd, nspotd, nfund, korbit, mmaxd, nspind
     use :: mod_constants, only: czero, cvlight, cone, pi, ci
@@ -95,6 +95,7 @@ contains
     ! .. In/Out variables
     real (kind=dp), intent (inout) :: phi
     real (kind=dp), intent (inout) :: theta
+    logical, intent(in) :: fixdir
     real (kind=dp), dimension (nrmaxd), intent (inout) :: rnew
     real (kind=dp), dimension (0:ntotd), intent (inout) :: rpan_intervall
     real (kind=dp), dimension (0:lmax+2, 3), intent (inout) :: muorb
@@ -107,6 +108,7 @@ contains
     real (kind=dp), dimension (0:lmax+1, 2/(nspin-korbit)), intent (out) :: espv
     real (kind=dp), dimension (irmd, lmpotd, nspin/(nspin-korbit)*(1+korbit)), intent (out) :: r2nef
     real (kind=dp), dimension (irmd, lmpotd, nspin/(nspin-korbit)*(1+korbit)), intent (out) :: rho2ns
+    real (kind=dp), intent(out) :: totmoment
     complex (kind=dp), dimension (0:lmax+1, ielast, nspin/(nspin-korbit)), intent (out) :: den_out
 
     ! .. Local variables
@@ -121,7 +123,6 @@ contains
     integer :: ix, m1              ! qdos ruess
 
     real (kind=dp) :: thetanew, phinew
-    real (kind=dp) :: totmoment
     real (kind=dp) :: totxymoment
     complex (kind=dp) :: ek
     complex (kind=dp) :: df
@@ -224,7 +225,7 @@ contains
     call memocc(i_stat, product(shape(vins))*kind(vins), 'VINS', 'RHOVALNEW')
     vins = 0.0_dp
     vins(1:irmdnew, 1:lmpotd, 1) = vinsnew(1:irmdnew, 1:lmpotd, ipot)
-    if (.not.set_cheby_nosoc)  vins(1:irmdnew, 1:lmpotd, nspin) = vinsnew(1:irmdnew, 1:lmpotd, ipot+nspin-1)
+    if (.not.decouple_spins_cheby)  vins(1:irmdnew, 1:lmpotd, nspin) = vinsnew(1:irmdnew, 1:lmpotd, ipot+nspin-1)
 
     ! set up the non-spherical ll' matrix for potential VLL'
     allocate (vnspll0(lmmaxd,lmmaxd,irmdnew), stat=i_stat)
@@ -474,7 +475,7 @@ contains
 
       ! recalculate wavefuntions, also include left solution
       ! contruct the spin-orbit coupling hamiltonian and add to potential
-      if ( .not. set_cheby_nosoc) then
+      if ( .not. decouple_spins_cheby) then
         call spinorbit_ham(lmax, lmmax0d, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpotd, theta, phi, ipan_intervall, &
           rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, vnspll0, vnspll2(:,:,:), '1')
       else
@@ -515,7 +516,7 @@ contains
         jlk2(:, :, ith) = czero
         gmatprefactor = czero
         jlk_index = 0
-        if (set_cheby_nosoc) then
+        if (decouple_spins_cheby) then
           use_fullgmat = 0
         else
           use_fullgmat = 1
@@ -558,7 +559,7 @@ contains
       !------------------------------------------------------------------------------
       if ((t_wavefunctions%nwfsavemax>0 .and. (.not. (rllleft_was_read_in .and. sllleft_was_read_in))) .or. (t_wavefunctions%nwfsavemax==0)) then
         ! read/recalc wavefunctions left contruct the TRANSPOSE spin-orbit coupling hamiltonian and add to potential
-        if ( .not. set_cheby_nosoc) then
+        if ( .not. decouple_spins_cheby) then
           call spinorbit_ham(lmax, lmmax0d, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpotd, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
             vnspll0, vnspll2(:,:,:), 'transpose')
         else
@@ -644,7 +645,7 @@ contains
         ! $omp end critical
 #endif
 
-        if ( .not. set_cheby_nosoc) then
+        if ( .not. decouple_spins_cheby) then
           ! rotate gmat from global frame to local frame
           call rotatematrix(gmat0, theta, phi, lmmax0d, 1)
         end if
@@ -711,7 +712,7 @@ contains
       !------------------------------------------------------------------------------
       ! Get orbital moment
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      if (.not. set_cheby_nosoc) then
+      if (.not. decouple_spins_cheby) then
         do iorb = 1, 3
           call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, cone, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll(:,:,:,ith), & ! SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
             rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), r2orbc(:,:,:,ith), iorb, gflle_part(:,:,ith), rpan_intervall, ipan_intervall, nspin)
@@ -750,7 +751,7 @@ contains
             muorb(lmaxd1+1, 1:3) = muorb(lmaxd1+1, 1:3) + muorb(lm1, 1:3)
           end do
         end do ! IORB
-      end if ! .not. set_cheby_nosoc
+      end if ! .not. decouple_spins_cheby
 
     end do                         ! IE loop
 #ifdef CPP_OMP
@@ -1014,8 +1015,14 @@ contains
       i_all = -product(shape(rhonewtemp))*kind(rhonewtemp)
       deallocate (rhonewtemp, stat=i_stat)
       call memocc(i_stat, i_all, 'RHONEWTEMP', 'RHOVALNEW')
+      rho2ns(1:irmd, 1:lmpotd, 1:nspin/(nspin-korbit)) = aimag(rho2nsnew(1:irmd, 1:lmpotd,1:nspin/(nspin-korbit)))
+      r2nef(1:irmd, 1:lmpotd, 1:nspin/(nspin-korbit)) = aimag(r2nefnew(1:irmd, 1:lmpotd,1:nspin/(nspin-korbit)))
+      ! MdSD: Should this also be corrected if the angles change?
+      den_out(0:lmaxd1, 1:ielast, 1:nspin/(nspin-korbit)) = den(0:lmaxd1, 1:ielast, 1, 1:nspin/(nspin-korbit))
       ! calculate new THETA and PHI for non-colinear
-      if ((.not. fix_nonco_angles .and. .not.set_cheby_nosoc) .or. t_params%bfield%lbfield_constr) then
+      ! if (.not. fix_nonco_angles .and. .not.decouple_spins_cheby) then
+      ! MdSD: now the new directions are always calculated, which can be useful for information purposes
+      if (.not.decouple_spins_cheby) then
         rho2ns_temp(1, 1) = rho2int(1)
         rho2ns_temp(2, 2) = rho2int(2)
         rho2ns_temp(1, 2) = rho2int(3)
@@ -1035,40 +1042,33 @@ contains
         totmoment = sqrt(moment(1)**2+moment(2)**2+moment(3)**2)
         totxymoment = sqrt(moment(1)**2+moment(2)**2)
 
-        if (abs(totxymoment)>1d-05) then
-          if (abs(moment(3))<1d-05) then
-            thetanew = pi/2.0_dp
+        ! MdSD: theta not 0 or pi
+        if (abs(totxymoment)>1e-05_dp) then
+          thetanew = acos(moment(3)/totmoment)
+          phinew = atan2(moment(2), moment(1))
+        ! MdSD: theta is 0 or pi
+        else
+          if (moment(3) < 0.0_dp .and. abs(moment(3)) > 1e-14_dp) then
+            thetanew = pi
           else
-            thetanew = acos(moment(3)/totmoment)
+            thetanew = 0.0_dp
           end if
-          if (totxymoment<1d-05) then
-            phinew = 0.0_dp
-          else
-            phinew = atan2(moment(2), moment(1))
-          end if
+          phinew = 0.0_dp
         end if
 
         if (t_inc%i_write>0) then
-          write (1337, *) 'moment', myrank, moment(1), moment(2), moment(3)
-          write (1337, *) thetanew/(2.0_dp*pi)*360.0_dp, phinew/(2.0_dp*pi)*360.0_dp
+          write (1337, '(A,i5,3es16.7)') 'moment', myrank, moment(1), moment(2), moment(3)
+          write (1337, '(2es16.7)') thetanew/(2.0_dp*pi)*360.0_dp, phinew/(2.0_dp*pi)*360.0_dp
         end if
         ! only on master different from zero:
-        if(t_params%bfield%lfix_moment(i1)) then
-          angles_new(1) = theta
-          angles_new(2) = phi
-        else
-          angles_new(1) = thetanew
-          angles_new(2) = phinew
+        angles_new(1) = thetanew
+        angles_new(2) = phinew
+        ! MdSD: use new angles to correct local frame, which defines the z-component of the spin density
+        if (.not.fixdir) then
+          call rotatevector(rho2nsnew,rho2ns,irws,lmpotd,thetanew,phinew,theta,phi,irmd)
+          call rotatevector(r2nefnew,r2nef,irws,lmpotd,thetanew,phinew,theta,phi,irmd)
         end if
-        call rotatevector(rho2nsnew,rho2ns,irws,lmpotd,thetanew,phinew,theta,phi,irmd)
-        call rotatevector(r2nefnew,r2nef,irws,lmpotd,thetanew,phinew,theta,phi,irmd)
-      else
-        rho2ns(1:irmd, 1:lmpotd, 1:nspin/(nspin-korbit)) = aimag(rho2nsnew(1:irmd, 1:lmpotd,1:nspin/(nspin-korbit)))
-        r2nef(1:irmd, 1:lmpotd, 1:nspin/(nspin-korbit)) = aimag(r2nefnew(1:irmd, 1:lmpotd,1:nspin/(nspin-korbit)))
       end if
-
-      den_out(0:lmaxd1, 1:ielast, 1:nspin/(nspin-korbit)) = den(0:lmaxd1, 1:ielast, 1, 1:nspin/(nspin-korbit))
-
 
 #ifdef CPP_MPI
     end if                         ! (myrank==master)
@@ -1080,6 +1080,8 @@ contains
     idim = 2
     call mpi_bcast(angles_new,idim,mpi_double_precision,master,t_mpi_c_grid%mympi_comm_at,ierr)
     if (ierr/=mpi_success) stop 'error bcast angles_new in rhovalnew'
+    call mpi_bcast(totmoment,1,mpi_double_precision,master,t_mpi_c_grid%mympi_comm_at,ierr)
+    if (ierr/=mpi_success) stop 'error bcast totmoment in rhovalnew'
 #endif
 
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

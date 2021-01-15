@@ -1288,13 +1288,28 @@ contains
       if(cfg%lspin==1 .or. force_spin) then
 
         call IoInput('LSPINATOM ',uio,1,7,ierr)
-        read(unit=uio,fmt=*) cfg%lspinperatom
+        if(ierr==0) then
+          read(unit=uio,fmt=*) cfg%lspinperatom
+        else ! ensures compatibility of old format input files
+          write(*,*) "Warning : LSPINATOM set to 0 by default !"
+          cfg%lspinperatom=0
+        end if!ierr==0
 
         call IoInput('LTORQ     ',uio,1,7,ierr)
-        read(unit=uio,fmt=*) cfg%ltorq
+        if(ierr==0) then
+          read(unit=uio,fmt=*) cfg%ltorq
+        else ! ensures compatibility of old format input files
+          write(*,*) "Warning : LTORQ set to 0 by default !"
+          cfg%ltorq=0
+        end if!ierr==0
 
         call IoInput('LTORQATOM ',uio,1,7,ierr)
-        read(unit=uio,fmt=*) cfg%ltorqperatom
+        if(ierr==0) then
+          read(unit=uio,fmt=*) cfg%ltorqperatom
+        else ! ensures compatibility of old format input files
+          write(*,*) "Warning : LTORQATOM set to 0 by default !"
+          cfg%ltorqperatom=0
+        end if!ierr==0
 
         call IoInput('LSPINFLUX ',uio,1,7,ierr)
         if(ierr==0) then
@@ -1313,7 +1328,12 @@ contains
         end if!ierr==0
 
         call IoInput('SIMPSON   ',uio,1,7,ierr)
-        read(unit=uio,fmt=*) cfg%simpson
+        if(ierr==0) then
+          read(unit=uio,fmt=*) cfg%simpson
+        else ! ensures compatibility of old format input files
+          write(*,*) "Warning : SIMPSON set to F by default !"
+          cfg%simpson = .false.
+        end if!ierr==0
 
         call IoInput('LSAVEEIGV ',uio,1,7,ierr)
         read(unit=uio,fmt=*) inum
@@ -1324,7 +1344,12 @@ contains
         end if
 
         call IoInput('LRASHBA   ',uio,1,7,ierr)
-        read(unit=uio,fmt=*) cfg%lrashba
+        if(ierr==0) then
+          read(unit=uio,fmt=*) cfg%lrashba
+        else ! ensures compatibility of old format input files
+          write(*,*) "Warning : LRASHBA set to F by default !"
+          cfg%lrashba = 0
+        end if!ierr==0
         if(cfg%lrashba==1)then
           call IoInput('ILAYER    ',uio,1,7,ierr)
           read(unit=uio,fmt=*) cfg%ilayer

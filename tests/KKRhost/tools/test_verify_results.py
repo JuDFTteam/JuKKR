@@ -19,7 +19,7 @@ class Test_serial():
 
     def test_2_Fe_slab(self):
         path0 = 'test_run02_serial_1_1/'
-        standard_verify(path0, rms_threshold=7*10**-8)
+        standard_verify(path0, rms_threshold=7*10**-8, debug=True)
 
     def test_3_Si_lloyd(self):
         path0 = 'test_run03_serial_1_1/'
@@ -230,7 +230,7 @@ class Test_SOC():
 
     def test_2_Fe_slab(self):
         path0 = 'test_run02.1_hybrid_1_3/'
-        standard_verify(path0, rms_threshold=1*10**-8, rms_threshold_end=1*10**-8)
+        standard_verify(path0, rms_threshold=2*10**-8, rms_threshold_end=1*10**-8)
 
     def test_3_Si_lloyd(self):
         path0 = 'test_run03.1_hybrid_1_3/'
@@ -241,9 +241,14 @@ class Test_SOC():
         # check convergence of both runs
         standard_verify(path0+'NEWSOSOL_NOSOC/', rms_threshold=1.5*10**-6, rms_threshold_end=1.5*10**-6, neutr_threshold=8*10**-5)
         standard_verify(path0+'NEWSOSOL_SOCSCL0/', rms_threshold=1.5*10**-6, rms_threshold_end=1.5*10**-6, neutr_threshold=8*10**-5)
+        standard_verify(path0+'NEWSOSOL_DECOUPLED_SPINS//', rms_threshold=1.5*10**-6, rms_threshold_end=1.5*10**-6, neutr_threshold=8*10**-5)
         # cross check both runs against each other (comparing output writte to 'out_last.txt')
         num, text = read_file(path0+'NEWSOSOL_NOSOC/out_last.txt')
         num_ref, text_ref = read_file(path0+'NEWSOSOL_SOCSCL0/out_last.txt')
+        assert std(num-num_ref)<5*10**-12
+        assert set(text)-set(text_ref)==set()
+        # compare also to decoupled spin channels
+        num, text = read_file(path0+'NEWSOSOL_DECOUPLED_SPINS/out_last.txt')
         assert std(num-num_ref)<5*10**-12
         assert set(text)-set(text_ref)==set()
 
@@ -308,12 +313,12 @@ class Test_SOC():
         
 # helper functions
 
-def standard_verify(path0, rms_threshold=10**-8, rms_threshold_end=10**-8, neutr_threshold=10**-6):
+def standard_verify(path0, rms_threshold=10**-8, rms_threshold_end=10**-8, neutr_threshold=10**-6, debug=False):
     """
     wrapper for standard tests reading output and comparins rms and charge neutrality
     """
     # use parser function from aiida-kkr
-    success, parser_msgs, out_dict = parse_kkr_outputfile({}, path0+'out_kkr', path0+'output.0.txt', path0+'output.000.txt', path0+'out_timing.000.txt', path0+'out_potential', path0+'nonco_angle_out.dat')
+    success, parser_msgs, out_dict = parse_kkr_outputfile({}, path0+'out_kkr', path0+'output.0.txt', path0+'output.000.txt', path0+'out_timing.000.txt', path0+'out_potential', path0+'nonco_angle_out.dat', debug=debug)
     pprint.pprint(parser_msgs)
     pprint.pprint(out_dict)
     # first check if parsing was successful

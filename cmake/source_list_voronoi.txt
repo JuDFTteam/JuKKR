@@ -61,6 +61,6 @@ add_executable(
     source/voronoi/inc.geometry
     )
 
-if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
-    target_link_libraries(voronoi.exe ${lapackblas_libraries})
+if(CMAKE_Fortran_COMPILER_ID MATCHES GNU OR USE_LIBFLAME)
+    target_link_libraries(voronoi.exe ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 endif()

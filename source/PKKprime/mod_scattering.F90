@@ -102,7 +102,7 @@ contains
     use mod_mympi,      only: myrank, nranks, master
     use mod_mathtools,  only: pi
 #ifdef CPP_TIMING
-    use mod_timing,     only: timing_init, timing_start, timing_stop
+    use mod_timing,     only: timing_start, timing_stop
 #endif
     use mpi
     implicit none
@@ -167,7 +167,6 @@ contains
     BZVol = getBZvolume(lattice%recbv)
 
 #ifdef CPP_TIMING
-    call timing_init(myrank, disable_serial_number=.true.)
     call timing_start('Read in of data')
 #endif
 

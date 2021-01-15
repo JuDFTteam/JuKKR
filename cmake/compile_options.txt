@@ -11,13 +11,14 @@ endif()
 
 # common preprocessing options for all compilers
 add_definitions(-DCPP_TIMING)
+if(TIMING_DETAIL)
+    add_definitions(-DCPP_TIMING_DETAIL)
+endif()
 
 # compiler flags etc for parallelization
 # MPI option (enable with '-DENABLE_MPI=ON')
 # and OpenMP option (enable with '-DENABLE_OMP=ON')
 # hybrid version with -DENABLE_MPI=ON and -DENABLE_OMP=ON
-option(ENABLE_MPI "Enable MPI parallelization" ON)
-option(ENABLE_OMP "Enable OpenMP parallelization" OFF)
 set(ompflags "") # default
 if(ENABLE_MPI)
     message("MPI is enabled")
@@ -29,6 +30,9 @@ if(ENABLE_MPI)
             set(ompflags "-qopenmp")
         elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
             set(ompflags "-fopenmp")
+            if(ENABLE_TSAN)
+                set(ompflags "${ompflags} -lomp")
+            endif()
         endif()
         set(compflag "hybrid")
     else()
@@ -41,10 +45,24 @@ elseif(ENABLE_OMP)
         set(ompflags "-qopenmp")
     elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
         set(ompflags "-fopenmp")
+        if(ENABLE_TSAN)
+            set(ompflags "${ompflags} -lomp")
+        endif()
     endif()
     set(compflag "openmp")
 else()
     message("both MPI and OpenMP are disabled")
+endif()
+if(ENABLE_OMP_EVERYWHERE)
+    if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
+        set(ompflags "-qopenmp")
+    elseif(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
+        set(ompflags "-fopenmp")
+        if(ENABLE_TSAN)
+            set(ompflags "${ompflags} -lomp")
+        endif()
+    endif()
+    set(CMAKE_Fortran_FLAGS         "${CMAKE_Fortran_FLAGS} ${ompflags}")
 endif()
 
 # extract version info
@@ -56,10 +74,4 @@ add_definitions(-DCOMPVER1="${GIT_VERSION}")
 add_definitions(-DCOMPVER2="${compver}")
 add_definitions(-DCOMPVER3="${compflag}")
 add_definitions(-DCOMPVER4="${complib}")
-
-
-
-if(ENABLE_BdG)
-    add_definitions(-DCPP_BdG)
-endif()
 

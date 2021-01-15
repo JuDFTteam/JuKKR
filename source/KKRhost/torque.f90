@@ -211,7 +211,7 @@ contains
       if(t_params%bfield%ibfield_constr == 0 ) then ! constraining fields based on magnetic torques
         ! sum up the torques for all iterations, which yields a scf with constraining fields
         bfac                                  = 1.d0
-        if(t_params%bfield%lfix_moment(iatom)) then
+        if(t_params%fixdir(iatom)) then
           t_params%bfield%bfield_constr(iatom,:)         = t_params%bfield%bfield_constr(iatom,:) - torque(:)/totmag*bfac
         end if
         !bfield%bfield_strength_constr         = sqrt(dot_product(bfield%bfield_constr(:),bfield%bfield_constr(:))) 
@@ -226,7 +226,7 @@ contains
         magdir_old(2)         = sin(t_params%phi(iatom))*sin(t_params%theta(iatom))
         magdir_old(3)         = cos(t_params%theta(iatom))
         write(1337,'(" itscf, iatom, magdir, magdir_old = ",2i4,100f16.8)') t_params%itscf, iatom , magdir_it(:), magdir_old(:)
-        if(t_params%bfield%lfix_moment(iatom)) then
+        if(t_params%fixdir(iatom)) then
           t_params%bfield%bfield_constr(iatom,:) = c_old - dot_product(c_old,magdir_old)*magdir_old - (magdir_it - dot_product(magdir_it,magdir_old)*magdir_old)*bfac
         end if
         write(1337,'(" itscf, iatom, ibfield_constr, bfield_constr= ",3i4,100f16.8)') t_params%itscf, iatom ,t_params%bfield%ibfield_constr , t_params%bfield%bfield_constr(iatom,:)

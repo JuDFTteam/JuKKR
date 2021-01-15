@@ -162,6 +162,12 @@ subroutine config_read(config)
                write(*,*) 'error in config ', keyword1
                stop
             end if
+         case ('QBOUND_LDAU')
+            read(string1,*,iostat=ios2) keyword1, config%qbound_ldau
+            if (ios2 /= 0) then
+               write(*,*) 'error in config ', keyword1
+               stop
+            end if
          case ('IMIX')
             read(string1,*,iostat=ios2) keyword1, config%IMIX
             if (ios2 /= 0) then

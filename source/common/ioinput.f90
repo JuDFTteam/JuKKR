@@ -153,7 +153,7 @@ contains
     integer, intent(in) :: ifile
     integer, parameter :: maxcol = 2048
 
-    integer :: ierror, ios, nlinetmp, ncoltmp, iline
+    integer :: ierror, ios, nlinetmp, ncoltmp, iline, ipos
     character(len=maxcol) :: line
     character(len=:), allocatable :: linetmp
 
@@ -195,6 +195,17 @@ contains
       rewind (ifile)
       do iline = 1, nlines
         read (ifile, fmt='(A)') linetmp
+
+        ! now remove comments which follow the '#' sign
+        ! to do this we overwrite linetmp starting from the '#' sign with spaces
+        ipos = index(linetmp, '#')
+        if (ipos>0) then
+          write(1337,'(A)') 'WARNING: Found "#" in inputcard and change line for reading'
+          write(1337,'(2A)') 'Original line:', linetmp
+          linetmp(ipos:) = ' '
+          write(1337,'(2A)') 'Changed to:', linetmp
+        end if
+ 
         call capitalize_escaped_keywords(linetmp, linetxt(iline), ierror)
         if (ierror==1) then
           write(1337,'(A,I5,A)') 'Warning capitalizing line ', iline, ' of inputcard.'
@@ -204,16 +215,18 @@ contains
           write(*,   '(A,I5,A)') 'Error capitalizing line ', iline, ' of inputcard.'
           stop
         end if
-      end do
+
+      end do ! iline
 
       !--------------------------------------------------------------------------------
       ! close inputcard and finish up
       !--------------------------------------------------------------------------------
       close (ifile)
       inputcard_is_read = .true.
-    end if
+
+    end if ! .not.inputcard_is_read
     
-  end subroutine
+  end subroutine read_inputcard
 
   !-------------------------------------------------------------------------------
   !> Summary: Capitalize all escaped keywords in a string
