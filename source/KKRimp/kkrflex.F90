@@ -79,6 +79,9 @@ program kkrflex
 
   use mod_mathtools
   use mod_version_info
+#ifdef CPP_PATCH_INTEL
+  use mod_patch_intel, only: patch_intel
+#endif
   implicit none 
 
 !***********************************
@@ -212,6 +215,14 @@ mpi_size=1
 #endif
 ! find serial number that is printed to files
 call construct_serialnr()
+
+
+#ifdef CPP_PATCH_INTEL
+  ! this makes the MKL think it works on intel hardware even if it runs on AMD
+  ! seems to give better performance than unpatched MKL or BLIS+LIBFLAME
+  call patch_intel()
+#endif
+
 
 ! ********************************************************** 
 ! open the log (and timing) file for each processor 
