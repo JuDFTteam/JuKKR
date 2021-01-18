@@ -11,8 +11,8 @@
 !> assigning a "shell" pointer (used to set up the GF matrix), to each representative pair.
 !------------------------------------------------------------------------------------
 module mod_shellgen2k
-  use :: mod_datatypes, only: dp
-  private :: dp
+  use mod_datatypes, only: dp
+  private dp
 
 contains
 
@@ -58,7 +58,8 @@ contains
     ! * RATOM(3,NS) diference vector R_i(NS) - R_j(NS)                     *
     ! *                                                                    *
     ! **********************************************************************
-    use :: mod_constants, only: nsymaxd 
+    use mod_constants, only: nsymaxd 
+    use mod_runoptions, only: calc_exchange_couplings
     implicit none
     ! ..
     ! .. Scalar arguments
@@ -193,10 +194,13 @@ contains
               if (r1<small) then
                 lfound = .true.
                 nshelli(ns) = nshelli(ns) + 1
-                if (nshelli(ns)>2*nsymaxd) stop 'dimension error in shellgen2k: nshelli > 2*nsymaxd'
-                if (ns<=nshell(0)) write (1337, 130) ai, (rcls(ii,i), ii=1, 3), aj, (rcls(ii,j), ii=1, 3), ns
-                ish(ns, nshelli(ns)) = i
-                jsh(ns, nshelli(ns)) = j
+                ! this check is only used for jij mode since otherwise ish/jsh arrays are not used anywhere
+                if (calc_exchange_couplings) then
+                  if (nshelli(ns)>2*nsymaxd) stop 'dimension error in shellgen2k: nshelli > 2*nsymaxd'
+                  if (ns<=nshell(0)) write (1337, 130) ai, (rcls(ii,i), ii=1, 3), aj, (rcls(ii,j), ii=1, 3), ns
+                  ish(ns, nshelli(ns)) = i
+                  jsh(ns, nshelli(ns)) = j
+                end if
               end if
 
             end if
@@ -221,8 +225,11 @@ contains
           nsh1i(nshell(0)+nsnew) = ai
           nsh2i(nshell(0)+nsnew) = aj
           nshelli(nshell(0)+nsnew) = 1
-          ish(nshell(0)+nsnew, 1) = i
-          jsh(nshell(0)+nsnew, 1) = j
+          if (calc_exchange_couplings) then
+            ! ish and jsh only needed fot Jij mode
+            ish(nshell(0)+nsnew, 1) = i
+            jsh(nshell(0)+nsnew, 1) = j
+          end if
           do ii = 1, 3
             ratomi(ii, nshell(0)+nsnew) = rcls(ii, j) - rcls(ii, i)
           end do

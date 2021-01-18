@@ -767,16 +767,18 @@ end module mod_rllsll
 !-------------------------------------------------------------------------------
 program test_rllsll
 
-  use :: mod_timing, only: 
-  use :: mod_constants, only: 
+  use omp_lib, only: omp_get_num_threads, omp_get_thread_num
+  use :: mod_timing, only: timing_start, timing_init, timing_stop
+  use :: mod_constants, only: czero 
   use :: mod_datatypes, only: dp
+  use :: mod_rllsll, only: rllsll
 
   implicit none
 
   integer :: ir
-  logical, parameter :: output = .true.
+  logical :: output = .true.
 
-  integer :: ncheb, npan, lmsize, lmsize2, nvec, nrmax, lbessel, use_sratrick1
+  integer :: ncheb, npan, lmsize, lmsize2, nvec, nrmax, lbessel, use_sratrick1, write_output
   complex (kind=dp) :: gmatprefactor
   character (len=1) :: cmoderll, cmodesll, cmodetest
 
@@ -793,18 +795,20 @@ program test_rllsll
   write (*, '(A)') '  start reading data from file data_rllsll.txt'
 
   open (1234, file='data_rllsll.txt')
+  read (1234, *) write_output
+  if (write_output==0) output = .false.
   read (1234, '(7i9)') lbessel, nrmax, lmsize, nvec, npan, ncheb, use_sratrick1
   read (1234, '(3a5)') cmoderll, cmodesll, cmodetest
 
   lmsize2 = nvec*lmsize
 
   write (*, '(A)') '  read in parameters:'
-  write (*, '(A,3I9)') '  lbessel, nrmax, lmsize, nvec = ', lbessel, nrmax, lmsize, nvec
+  write (*, '(A,4I9)') '  lbessel, nrmax, lmsize, nvec = ', lbessel, nrmax, lmsize, nvec
   write (*, '(A,2I9)') '  npan, ncheb = ', npan, ncheb
   write (*, '(A,I9)') '  use_sratrick1 = ', use_sratrick1
   write (*, '(A,3A9)') '  cmoderll, cmodesll, cmodetest = ', cmoderll, cmodesll, cmodetest
 
-  write (*, '(A)') '  reding in arrays ...'
+  write (*, '(A)') '  reading in arrays ...'
 
   allocate (hlk(lbessel,nrmax), jlk(lbessel,nrmax), hlk2(lbessel,nrmax), jlk2(lbessel,nrmax))
   allocate (jlk_index(nvec*lmsize))
@@ -832,10 +836,15 @@ program test_rllsll
 
   write (*, '(A)')
   write (*, '(A)') '  starting rllsll ...'
+!$OMP PARALLEL
+  if(omp_get_thread_num()==0) then
+    write (*, '(A,i5,A)') ' use', omp_get_num_threads(), ' OpenMP threads'
+  end if
+!$OMP END PARALLEL
   write (*, '(A)')
 
   call timing_start('total rllsll')
-  call rllsll(rpanbound, rmesh, vll, rll, sll, tllp, ncheb, npan, lmsize, lmsize2, lbessel, nrmax, nrmax, nvec, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, cmoderll, &
+  call rllsll(rpanbound, rmesh, vll, rll, sll, tllp, ncheb, npan, lmsize, lmsize2, lbessel, nrmax, nvec, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, cmoderll, &
     cmodesll, cmodetest, use_sratrick1, alphaget) ! lly
   call timing_stop('total rllsll')
 
@@ -894,7 +903,7 @@ subroutine write_rllsll_test_input(ncheb,npan,lmsize,nvec,nrmax,lbessel,        
   use_sratrick1,gmatprefactor,cmoderll,cmodesll,cmodetest,hlk,jlk,hlk2,jlk2,      &
   jlk_index,rpanbound,rmesh,sll,rll,tllp,vll,alphaget)
 
-  use :: mod_datatypes, only :: dp
+  use mod_datatypes, only: dp
   implicit none
 
   integer :: ir
@@ -913,6 +922,7 @@ subroutine write_rllsll_test_input(ncheb,npan,lmsize,nvec,nrmax,lbessel,        
   write (*, '(A)') '  === starting writeout routine for rllsll ==='
 
   open (1234, file='data_rllsll.txt')
+  write (1234, '(i9)') 1 ! first number says whether or not output files are written, can be set manually to 0 if no output files are desired
   write (1234, '(7i9)') lbessel, nrmax, lmsize, nvec, npan, ncheb, use_sratrick1
   write (1234, '(3a5)') cmoderll, cmodesll, cmodetest
 

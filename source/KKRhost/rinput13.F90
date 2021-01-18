@@ -39,26 +39,27 @@ contains
     rbasis, socscale, cscl, socscl, solver, i12, i13, i19, i25, i40, txc, drotq, ncpa, itcpamax, cpatol, noq, iqat, icpa, kaoez, conc, kmrot, &
     qmtet, qmphi, kreadldau, lopt, ueff, jeff, erefldau, invmod, verbosity, MPI_scheme, special_straight_mixing)
 
-    use :: mod_profiling, only: memocc
-    use :: mod_runoptions, only: read_runoptions, calc_DOS_Efermi, calc_GF_Efermi, calc_exchange_couplings, &
+    use mod_profiling, only: memocc
+    use mod_runoptions, only: read_runoptions, print_runoptions, calc_DOS_Efermi, calc_GF_Efermi, calc_exchange_couplings, &
       dirac_scale_SpeefOfLight, disable_charge_neutrality, disable_print_serialnumber, modify_soc_Dirac, relax_SpinAngle_Dirac, search_Efermi, &
     set_kmesh_large, stop_1b, stop_1c, use_BdG, use_Chebychev_solver, use_cond_LB, use_decimation, use_lloyd, use_qdos, &
     use_rigid_Efermi, use_semicore, use_virtual_atoms, write_green_host, write_green_imp, write_kkrimp_input, &
-    write_pkkr_input, write_pkkr_operators, use_ldau, set_cheby_nospeedup, set_cheby_nosoc, write_tb_coupling
-    use :: mod_constants, only: cvlight, ryd
-    use :: mod_wunfiles, only: t_params
-    use :: memoryhandling, only: allocate_semi_inf_host, allocate_magnetization, allocate_cell, allocate_cpa, allocate_soc, allocate_ldau
-    use :: mod_types, only: t_inc
-    use :: mod_save_wavefun, only: t_wavefunctions
-    use :: mod_version_info, only: version_print_header, serialnr
-    use :: mod_datatypes, only: dp
-    use :: godfrin, only: t_godfrin ! GODFRIN Flaviano
-    use :: mod_rcstop, only: rcstop
-    use :: mod_idreals, only: idreals
-    use :: mod_ioinput, only: ioinput
-    use :: global_variables, only: linterface, korbit, krel, irmd, irnsd, nsheld, knosph, iemxd, nrd, knoco, kpoibz, ntrefd, natomimpd, &
+    write_pkkr_input, write_pkkr_operators, use_ldau, set_cheby_nospeedup, decouple_spins_cheby, write_tb_coupling, set_cheby_nosoc
+    use mod_constants, only: cvlight, ryd
+    use mod_wunfiles, only: t_params
+    use memoryhandling, only: allocate_semi_inf_host, allocate_magnetization, allocate_cell, allocate_cpa, allocate_soc, allocate_ldau
+    use mod_types, only: t_inc
+    use mod_save_wavefun, only: t_wavefunctions
+    use mod_version_info, only: version_print_header, serialnr
+    use mod_datatypes, only: dp
+    use godfrin, only: t_godfrin ! GODFRIN Flaviano
+    use mod_rcstop, only: rcstop
+    use mod_idreals, only: idreals
+    use mod_ioinput, only: ioinput
+    use global_variables, only: linterface, korbit, krel, irmd, irnsd, nsheld, knosph, iemxd, nrd, knoco, kpoibz, ntrefd, natomimpd, &
       nprincd, ipand, nfund, irid, ngshd, nmaxd, ishld, wlength, naclsd, ntotd, ncleb, nspind, nspindd, npotd, lmmaxd, lmgf0d, &
-      lassld, nembd1, irmind, nofgij, ntperd, nsatypd, nspotd, lnc, lmxspd, lm2d, nclsd, mmaxd, ncleb, kBdG, delta_BdG
+      lassld, nembd1, irmind, nofgij, ntperd, nsatypd, nspotd, lnc, lmxspd, lm2d, nclsd, mmaxd, ncleb, kBdG, delta_BdG, pot_ns_cutoff, &
+      mixfac_broydenspin, ninit_broydenspin, memlen_broydenspin, qbound_spin, nsimplemixfirst
 
 
     implicit none
@@ -309,10 +310,11 @@ contains
     write (1337, '(A)' ) '*** Inspecting run- and test-options ***'
 
     call read_old_runtestoptions(invmod,verbosity,MPI_scheme,oldstyle)
-    if(.not.oldstyle) then
-        write (1337, *) '  <<< Reading in new style of run-options. >>>'
-        call read_runoptions()
-    end if
+    write (1337, *) '  <<< Reading in new style of run-options. >>>'
+    if (oldstyle) write (1337, *) '  WARNING: this may overwrite old-style run-options'
+    call read_runoptions()
+    ! write all runoptions
+    call print_runoptions(1337)! write to output.0.txt
 
 
 
@@ -884,9 +886,9 @@ contains
 
     if (use_Chebychev_solver) korbit = 1
 
-    if (set_cheby_nosoc) then
-      write (*, '(A)') 'Warning: detected test option <set_cheby_nosoc>: use spin-decoupled radial equations with new solver'
-      write (1337, *)  'Warning: detected test option <set_cheby_nosoc>: reset KORBIT to zero but use NEWSOSOL for spin-decoupled matrices with explicit spin-loop'
+    if (decouple_spins_cheby) then
+      write (*, '(A)') 'Warning: detected test option <decouple_spins_cheby>: use spin-decoupled radial equations with new solver'
+      write (1337, *)  'Warning: detected test option <decouple_spins_cheby>: reset KORBIT to zero but use NEWSOSOL for spin-decoupled matrices with explicit spin-loop'
       korbit = 0
     end if
 
@@ -1165,7 +1167,7 @@ contains
     ! End of allocation of SOC arrays
     !--------------------------------------------------------------------------------
     if (use_Chebychev_solver) then      ! Spin-orbit
-      if (use_Chebychev_solver .and. (nspin/=2) .and. .not.set_cheby_nosoc) stop ' set NSPIN = 2 for SOC solver in inputcard'
+      if (use_Chebychev_solver .and. (nspin/=2) .and. .not.decouple_spins_cheby) stop ' set NSPIN = 2 for SOC solver in inputcard'
       npan_log = 30
       npan_eq = 30
       ncheb = 10
@@ -1193,7 +1195,7 @@ contains
     end if
 
     call ioinput('<SOCSCL>        ', uio, 1, 7, ier)
-    if (ier==0) then
+    if (ier==0 .and. .not.(set_cheby_nosoc .or. decouple_spins_cheby)) then
       write (111, '(A10)') '<SOCSCL>  '
       do i = 1, natyp
         call ioinput('<SOCSCL>        ', uio, i, 7, ier)
@@ -1207,6 +1209,10 @@ contains
       ! !Bernd - old way
       ! write(111,FMT='(A10,50E10.2)') '<SOCSCL>= ',(SOCSCALE(I1),I1=1,NATYP)
       ! !Bernd - old way
+    elseif (set_cheby_nosoc .or. decouple_spins_cheby) then
+      write(*,*) 'Skipped reading <SOCSCL> because <set_cheby_nosoc>= T or <decouple_spins_cheby>= T. Automatically use <SOCSCL>=0.'
+      socscale(:) = 0.0_dp
+      write (111, fmt='(A18,50E10.2)') '<SOCSCL>= ', (socscale(i1), i1=1, natyp)
     else
       write (111, fmt='(A18,50E10.2)') 'Default <SOCSCL>= ', (socscale(i1), i1=1, natyp)
     end if
@@ -1525,6 +1531,15 @@ contains
       intervx = 1
       intervy = 1
       intervz = 1
+    end if
+
+    call ioinput('<set_kmesh_large>', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) set_kmesh_large
+      if (ier/=0) stop 'Error reading `set_kmesh_large`: check your inputcard'
+      write (111, fmt='(A18,A2)') '<set_kmesh_large>=', set_kmesh_large
+    else
+      write (111, fmt='(A26,A2)') 'Default <set_kmesh_large>=', set_kmesh_large
     end if
 
     ! Energy contour
@@ -1904,6 +1919,8 @@ contains
     if (calc_exchange_couplings) then
       nsteps = 1
       write (1337, *) 'RUNOPT XCPL used, setting NSTEPS to 1'
+      set_kmesh_large = .true.
+      write (1337, *) 'RUNOPT XCPL used, enabling set_kmesh_large'
     end if
     if (write_kkrimp_input) then
       nsteps = 1
@@ -1989,6 +2006,51 @@ contains
       write (111, *) 'BRYMIX= ', brymix
     else
       write (111, *) 'Default BRYMIX= ', brymix
+    end if
+
+    ! for broyden spin mixing of noncollinear directions
+    ! only used with the <use_broyden_spinmix> run option
+    call ioinput('SPINMIXALPHA    ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) mixfac_broydenspin
+      if (ier/=0) stop 'Error reading `SPINMIXALPHA`: check your inputcard'
+      write (111, *) 'SPINMIXALPHA= ', mixfac_broydenspin
+    else
+      write (111, *) 'Default SPINMIXALPHA= ', mixfac_broydenspin
+    end if
+    call ioinput('SPINMIXNSIMPLE  ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) ninit_broydenspin
+      if (ier/=0) stop 'Error reading `SPINMIXNSIMPLE`: check your inputcard'
+      write (111, *) 'SPINMIXNSIMPLE= ', ninit_broydenspin
+    else
+      write (111, *) 'Default SPINMIXNSIMPLE= ', ninit_broydenspin
+    end if
+    call ioinput('SPINMIXMEMLEN   ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) memlen_broydenspin
+      if (ier/=0) stop 'Error reading `SPINMIXMEMLEN`: check your inputcard'
+      write (111, *) 'SPINMIXMEMLEN= ', memlen_broydenspin
+    else
+      write (111, *) 'Default SPINMIXMEMLEN= ', memlen_broydenspin
+    end if
+    call ioinput('SPINMIXQBOUND   ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) qbound_spin
+      if (ier/=0) stop 'Error reading `SPINMIXQBOUND`: check your inputcard'
+      write (111, *) 'SPINMIXQBOUND= ', qbound_spin
+    else
+      write (111, *) 'Default SPINMIXQBOUND= ', qbound_spin
+    end if
+
+    ! do NSIMPLEMIXFIRST simple mixing iterations even for Broyden or Anderson mixing
+    call ioinput('NSIMPLEMIXFIRST ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) nsimplemixfirst
+      if (ier/=0) stop 'Error reading `NSIMPLEMIXFIRST`: check your inputcard'
+      write (111, *) 'NSIMPLEMIXFIRST= ', nsimplemixfirst
+    else
+      write (111, *) 'Default NSIMPLEMIXFIRST= ', nsimplemixfirst
     end if
 
     call ioinput('RMAX            ', uio, 1, 7, ier)
@@ -2290,6 +2352,22 @@ contains
     write (1337, 200) ncls, nref, nineq
     write (1337, 380)
     write (1337, 340)
+
+
+    ! ----------------------------------------------------------------------------
+    ! Special options
+    ! ----------------------------------------------------------------------------
+    call ioinput('POT_NS_CUTOFF   ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) pot_ns_cutoff
+      if (ier/=0) stop 'Error reading `POT_NS_CUTOFF`: check your inputcard'
+      write (111, *) 'POT_NS_CUTOFF= ', pot_ns_cutoff
+    else
+      ! default value is 10% of qbound value
+      pot_ns_cutoff = 0.1_dp*qbound
+      write (111, *) 'Default pot_ns_cutoff= ', pot_ns_cutoff
+    end if
+
 
     ! ----------------------------------------------------------------------------
     kmrot = 0
@@ -2811,8 +2889,10 @@ contains
 
     allocate (testc(32), stat=i_stat)
     call memocc(i_stat, product(shape(testc))*kind(testc), 'TESTC', 'read_old_runtestoptions')
+    testc(1:32) = '        '
     allocate (optc(32), stat=i_stat)
     call memocc(i_stat, product(shape(optc))*kind(optc), 'OPTC', 'read_old_runtestoptions')
+    optc(1:32) = '        '
 
     oldstyle = .false.
     first    = .true.

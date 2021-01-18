@@ -31,44 +31,45 @@ contains
   subroutine main1c()
 
 #ifdef CPP_MPI
-    use :: mpi
-    use :: mod_types, only: gather_tmat, t_mpi_c_grid, save_t_mpi_c_grid, get_ntot_pt_ioff_pt_2d
-    use :: mod_mympi, only: nranks, find_dims_2d, distribute_linear_on_tasks, mympi_main1c_comm, mympi_main1c_comm_newsosol2
+    use mpi
+    use mod_types, only: gather_tmat, t_mpi_c_grid, save_t_mpi_c_grid, get_ntot_pt_ioff_pt_2d
+    use mod_mympi, only: nranks, find_dims_2d, distribute_linear_on_tasks, mympi_main1c_comm, mympi_main1c_comm_newsosol2
 #endif
 #ifdef CPP_TIMING
-    use :: mod_timing
+    use mod_timing
 #endif
-    use :: mod_datatypes, only: dp
-    use :: mod_runoptions, only: calc_gmat_lm_full, fix_nonco_angles, relax_SpinAngle_Dirac, use_Chebychev_solver, &
+    use mod_datatypes, only: dp
+    use mod_runoptions, only: calc_gmat_lm_full, fix_nonco_angles, relax_SpinAngle_Dirac, use_Chebychev_solver, &
       use_decimation, use_qdos, write_DOS, write_complex_qdos, write_density_ascii, write_rho2ns, write_DOS_lm, &
-      set_cheby_nosoc, disable_print_serialnumber
-    use :: mod_constants, only: czero, pi
-    use :: mod_profiling, only: memocc
-    use :: mod_mympi, only: myrank, master
-    use :: mod_types, only: t_tgmat, t_inc, t_lloyd
-    use :: mod_version_info, only: version_print_header
-    use :: mod_wunfiles, only: t_params, get_params_1c, read_angles, save_density
-    use :: mod_mvecglobal, only: mvecglobal
-    use :: mod_mixldau, only: mixldau
-    use :: mod_interpolate_poten, only: interpolate_poten
-    use :: mod_rhoval, only: rhoval
-    use :: mod_rhoval0, only: rhoval0
-    use :: mod_rhocore, only: rhocore
-    use :: mod_renorm_lly, only: renorm_lly
-    use :: mod_getscratch, only: opendafile
-    use :: mod_rhovalnew, only: rhovalnew
-    use :: mod_wmatldau, only: wmatldau
-    use :: mod_wmatldausoc, only: wmatldausoc
-    use :: mod_wrldaupot, only: wrldaupot
-    use :: mod_wrldos, only: wrldos
-    use :: mod_wrmoms, only: wrmoms
-    use :: mod_cinit, only: cinit
-    use :: mod_rinit, only: rinit
+      decouple_spins_cheby, disable_print_serialnumber
+    use mod_constants, only: czero, pi
+    use mod_profiling, only: memocc
+    use mod_mympi, only: myrank, master
+    use mod_types, only: t_tgmat, t_inc, t_lloyd
+    use mod_version_info, only: version_print_header
+    use mod_wunfiles, only: t_params, get_params_1c, save_density !, read_angles
+    use mod_mvecglobal, only: mvecglobal
+    use mod_mixldau, only: mixldau
+    use mod_interpolate_poten, only: interpolate_poten
+    use mod_rhoval, only: rhoval
+    use mod_rhoval0, only: rhoval0
+    use mod_rhocore, only: rhocore
+    use mod_renorm_lly, only: renorm_lly
+    use mod_getscratch, only: opendafile
+    use mod_rhovalnew, only: rhovalnew
+    use mod_wmatldau, only: wmatldau
+    use mod_wmatldausoc, only: wmatldausoc
+    use mod_wrldaupot, only: wrldaupot
+    use mod_wrldos, only: wrldos
+    use mod_wrmoms, only: wrmoms
+    use mod_cinit, only: cinit
+    use mod_rinit, only: rinit
+    use mod_mixnocospin, only: spinmix_noco
     ! array dimensions
-    use :: global_variables, only: iemxd, mmaxd, krel, lmaxd, natypd, npotd, irmd, nrmaxd, lmpotd, nspotd, naezd, ncleb, lm2d, ipand, &
+    use global_variables, only: iemxd, mmaxd, krel, lmaxd, natypd, npotd, irmd, nrmaxd, lmpotd, nspotd, naezd, ncleb, lm2d, ipand, &
       nfund, ntotd, mmaxd, ncelld, irmind, nspind, nspotd, irid, irnsd, knosph, korbit, lmmaxd, lmxspd, lpotd, wlength
     ! stuff defined in main0 already
-    use :: mod_main0, only: ielast, nsra, ins, nspin, icst, kmrot, iqat, idoldau, irws, ipan, ircut, iend, icleb, loflm, jend, ifunm1, &
+    use mod_main0, only: ielast, nsra, ins, nspin, icst, kmrot, iqat, idoldau, irws, ipan, ircut, iend, icleb, loflm, jend, ifunm1, &
       lmsp1, nfu, llmsp, lcore, ncore, ntcell, irmin, ititle, intervx, intervy, intervz, lly, npan_eq_at, ipan_intervall, &
       npan_log_at, npan_tot, ntldau, lopt, itldau, ielast, iesemicore, npol, irshift, jwsrel, zrel, itrunldau, qmtet, qmphi, conc, alat, zat, &
       drdi, rmesh, a, b, cleb, thetas, socscale, rpan_intervall, cscl, rnew, socscl, thetasnew, efermi, erefldau, ueff, jeff, emin, emax, tk, &
@@ -106,14 +107,16 @@ contains
     integer, dimension (20, npotd) :: kapcore !! The (maximum 2) values of KAPPA
     real (kind=dp), dimension (natypd) :: eu
     real (kind=dp), dimension (natypd) :: edc
-    real (kind=dp), dimension (natypd) :: phi
-    real (kind=dp), dimension (natypd) :: theta
+    real (kind=dp), dimension (natypd) :: phi !! phi nonco angles in rad
+    real (kind=dp), dimension (natypd) :: theta !! theta nonco angles in rad
+    logical, dimension(natypd) :: fixdir  !! booleans to fix nocon angles
     real (kind=dp), dimension (natypd) :: denefat
     real (kind=dp), dimension (nspind) :: charge_lly ! LLY
     real (kind=dp), dimension (0:lmaxd+1, npotd) :: espv
     real (kind=dp), dimension (0:lmaxd+1, 2) :: dostot
     real (kind=dp), dimension (krel*20+(1-krel), npotd) :: ecorerel !! for a given (n,l) state the core energies corresponding first/second KAPPA value, AVERAGED over \mu's  These values are written out to the  potential file (routine <RITES>), but the read in (routine <STARTB1>) updates the ECORE array
-    real (kind=dp), dimension (2, natypd) :: angles_new
+    real (kind=dp), dimension (2, natypd) :: angles_new ! output directions of the nonco magnetic moments
+    real (kind=dp), dimension(natypd) :: totmoment ! size of the output magnetic moments
     real (kind=dp), dimension (0:lmaxd+1, natypd, 2) :: charge
     real (kind=dp), dimension (mmaxd, mmaxd, nspind, natypd) :: wldauold
     complex (kind=dp), dimension (iemxd) :: df
@@ -200,6 +203,7 @@ contains
     vinsnew = 0.0_dp
     thetasnew = 0.0_dp
     angles_new = 0.0_dp
+    totmoment = 0.0_dp
     espv(:, :) = 0.0_dp
     call rinit(natyp, denefat)
 
@@ -379,7 +383,10 @@ contains
     ! interpolate to Chebychev mesh
     if (use_Chebychev_solver) then
       ! nonco angles
-      call read_angles(t_params, natyp, theta, phi)
+      ! call read_angles(t_params, natyp, theta, phi)
+      theta(1:natyp) = t_params%theta(1:natyp)
+      phi(1:natyp) = t_params%phi(1:natyp)
+      fixdir(1:natyp) = t_params%fixdir(1:natyp)
 
       ! interpolate potential
       if (idoldau==1) then
@@ -486,8 +493,8 @@ contains
 #endif
             call rhovalnew(ldorhoef, ielast, nsra, nspin, lmax, ez, wez, zat(i1), socscale(i1), cleb(1,1), icleb, iend, &
               ifunm1(1,icell), lmsp1(1,icell), ncheb, npan_tot(i1), npan_log_at(i1), npan_eq_at(i1), rmesh(1,i1), irws(i1), &
-              rpan_intervall(0,i1), ipan_intervall(0,i1), rnew(1,i1), vinsnew, thetasnew(1,1,icell), theta(i1), phi(i1), i1, &
-              ipot, den(0,1,1,ipot), espv(0,ipot), rho2n1(1,1,ispin), rho2n2(1,1,ispin), muorb(0,1,i1), angles_new(:,i1), &
+              rpan_intervall(0,i1), ipan_intervall(0,i1), rnew(1,i1), vinsnew, thetasnew(1,1,icell), theta(i1), phi(i1), fixdir(i1), i1, &
+              ipot, den(0,1,1,ipot), espv(0,ipot), rho2n1(1,1,ispin), rho2n2(1,1,ispin), muorb(0,1,i1), angles_new(:,i1), totmoment(i1), &
               idoldau, lopt(i1), wldau(1,1,1,i1), denmatn(1,1,1,1,i1), natyp, ispin) ! LDAU
 #ifdef CPP_TIMING
             call timing_pause('main1c - rhovalnew')
@@ -685,7 +692,7 @@ contains
         ! reset NQDOS to 1 to avoid endless communication
         nqdos = 1
         call mympi_main1c_comm_newsosol2(lmaxd1, lmmaxd, ielast, nqdos, npotd, natyp, lmpotd, irmd, mmaxd, den, denlm, muorb, espv, r2nef, rho2ns, denefat, denef, denmatn, &
-          angles_new, t_mpi_c_grid%mympi_comm_ie)
+          angles_new, totmoment, t_mpi_c_grid%mympi_comm_ie)
 #endif
 
 #ifdef CPP_TIMING
@@ -693,22 +700,8 @@ contains
         if (i1_end>=i1_start) call timing_stop('main1c - rhovalnew')
 #endif
 
-        if (myrank==master) then
-          ! rewrite new theta and phi to nonco_angle_out.dat, nonco_angle.dat is the input
-          if (.not. fix_nonco_angles) then
-            open (unit=13, file='nonco_angle_out.dat', form='formatted')
-            call version_print_header(13, disable_print=disable_print_serialnumber)
-            do i1 = 1, natyp
-              ! save to file in converted units (degrees)
-              write (13, *) angles_new(1, i1)/(2.0_dp*pi)*360.0_dp, angles_new(2, i1)/(2.0_dp*pi)*360.0_dp
-              ! use internal units here
-              t_params%theta(i1) = angles_new(1, i1)
-              t_params%phi(i1) = angles_new(2, i1)
-            end do
-            close (13)
-        
-          end if                     ! .not.fix_nonco_angles
-        end if                       ! (myrank==master)
+        ! do mixing of nonco angles with master rank (writes nocno_angles)out.dat file)
+        if (myrank==master) call spinmix_noco(t_inc%i_iteration, natyp, theta, phi, fixdir, angles_new, totmoment, 13)
 
       end if ! new spin-orbit solver
 
@@ -818,7 +811,7 @@ contains
       ! Write out lm charges and moments
       ! -------------------------------------------------------------------
       withorbmom = krel+korbit
-      if (set_cheby_nosoc) withorbmom = nspin-1 !withorbmom+1
+      if (decouple_spins_cheby) withorbmom = nspin-1 !withorbmom+1
       call wrmoms(withorbmom, natyp, nspinpot, charge, muorb, lmax, lmaxd1)
 
       ! ----------------------------------------------------------------------

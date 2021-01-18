@@ -24,6 +24,9 @@ contains
     use mod_fermisurf_3D,    only: find_fermisurface_3D
     use mod_fermisurf_2D,    only: find_fermisurface_2D
     use mod_fermisurf_basic, only: save_kpointsfile_int
+#ifdef CPP_TIMING
+    use mod_timing, only: timing_start, timing_stop
+#endif
 
     implicit none
 
@@ -44,12 +47,21 @@ contains
 
 
 
+#ifdef CPP_TIMING
+    call timing_start('  prepare FS calculation')
+#endif
     call read_fscfg(lfsurf, nCub3, nFSiter, nROOTiter, nstepsconnect, nCut_iter, roottype, rooteps, lrefine, nrefinenew)
     if(lfsurf/=1) return
 
     !initialize symmetries
     call set_symmetries(inc, lattice, symmetries)
+#ifdef CPP_TIMING
+    call timing_stop('  prepare FS calculation')
+#endif
 
+#ifdef CPP_TIMING
+    call timing_start('  calculate FS')
+#endif
     select case (inc%nBZdim)
       case(2);  call find_fermisurface_2D( inc, lattice, cluster, tgmatrx, symmetries, nCub3, nFSiter, nROOTiter, nstepsconnect, &
                                          & nCut_iter, roottype, rooteps, lrefine, nrefinenew, nkpts_int, kpoints_int, areas_int  )
@@ -57,6 +69,9 @@ contains
                                          & nCut_iter, roottype, rooteps, lrefine, nrefinenew, nkpts_int, kpoints_int, areas_int  )
       case default; stop 'dimens must be 2 or 3'
     end select
+#ifdef CPP_TIMING
+    call timing_stop('  calculate FS')
+#endif
 
 
 !   save the integration k-points and areas to a file

@@ -37,7 +37,7 @@ contains
 
     use :: mod_types, only: t_tgmat
     use :: mod_runoptions, only: write_kkrimp_input, disable_print_serialnumber
-    use :: mod_wunfiles, only: t_params, read_angles
+    use :: mod_wunfiles, only: t_params !, read_angles
     use :: mod_version_info, only: version_print_header
     use :: mod_md5sums
     use :: global_variables
@@ -84,7 +84,8 @@ contains
       end if
 
       ! read in non-collinear angles
-      call read_angles(t_params, natyp, theta, phi)
+      theta(1:natyp) = t_params%theta(1:natyp)
+      phi(1:natyp) = t_params%phi(1:natyp)
 
       do iatom = 1, natomimp
         i1 = atomimp(iatom)

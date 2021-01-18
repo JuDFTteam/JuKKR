@@ -157,9 +157,9 @@ contains
     ! CLOSE (52)
 100 format (3f12.5, f15.8)
 110 format (5x, '< BZKMESH > : creating k-mesh,', ' write to file kpoints', /)
-120 format (8x, 'number of different k-meshes :', i2, /, 8x, 'the direct lattice', i3, ' symmetries will be used', /, /, 8x, 35('-'), /, 8x, 'k-mesh NofKs N kx N ky N kz vol BZ', &
+120 format (8x, 'number of different k-meshes :', i2, /, 8x, 'the direct lattice', i3, ' symmetries will be used', /, /, 8x, 35('-'), /, 8x, '   k-mesh    NofKs N kx N ky N kz vol BZ', &
       /, 8x, 35('-'))
-130 format (8x, 2i6, 3i5, f8.4)
+130 format (8x, 2i9, 3i5, f8.4)
 140 format (8x, 35('-'), /)
   end subroutine bzkmesh
 

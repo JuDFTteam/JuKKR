@@ -67,7 +67,4 @@ NPAN_EQ=    3
 NCHEB=      6
 R_LOG=   0.600000000000000     
 
-NPAN_LOG=   5
-NPAN_EQ=    3
-NCHEB=      6
-R_LOG=   0.600000000000000     
+<set_kmesh_large>= T

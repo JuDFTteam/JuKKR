@@ -177,6 +177,7 @@ if (ldau%lopt.ge.0.and.ie.ge.ldau%ieldaustart.and.ie.le.ldau%ieldauend) then    
 
    lmlo = ldau%lopt**2 + 1                                                           ! lda+u
    lmhi = (ldau%lopt + 1)**2                                                         ! lda+u
+   mmax = lmhi - lmlo + 1
 
  
    if (use_fullgmat.eq.1) then    ! 2x2 in spin space                                ! lda+u

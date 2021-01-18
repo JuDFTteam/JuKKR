@@ -73,12 +73,15 @@ program kkrflex
   use mod_change_nrmin
   use mod_types, only: t_inc
 
-  use global_variables, only: ipand
+  use global_variables, only: ipand, pot_ns_cutoff
   use mod_mympi, only: myrank, master
 
 
   use mod_mathtools
   use mod_version_info
+#ifdef CPP_PATCH_INTEL
+  use mod_patch_intel, only: patch_intel
+#endif
   implicit none 
 
 !***********************************
@@ -165,6 +168,7 @@ program kkrflex
 !***********************************
   real(kind=8)                          :: rmsavq, rmsavm
   real(kind=8)                          :: mixldau ! lda+u
+  logical :: ldau_initial_iter  ! lda+u
 ! !   real(kind=8)                          :: mixing
   real(kind=8)                          :: sum,rv
   integer                               :: irmin1,irc1
@@ -212,6 +216,14 @@ mpi_size=1
 ! find serial number that is printed to files
 call construct_serialnr()
 
+
+#ifdef CPP_PATCH_INTEL
+  ! this makes the MKL think it works on intel hardware even if it runs on AMD
+  ! seems to give better performance than unpatched MKL or BLIS+LIBFLAME
+  call patch_intel()
+#endif
+
+
 ! ********************************************************** 
 ! open the log (and timing) file for each processor 
 ! the log file is called out_log.xxx.txt where xxx is 
@@ -254,7 +266,7 @@ if (my_rank==0) then
   write(*,*) ' ##########   MPI Initialization    ############'
   write(*,*) ' ###############################################'
   write(*,*) ' ###    using ',mpi_size,' processors'
-  if(t_inc%i_write) write(1337,*) ' ###    using ',mpi_size,' processors'
+  if(t_inc%i_write>0) write(1337,*) ' ###    using ',mpi_size,' processors'
   write(*,*) ' ###############################################'
 end if 
 #endif
@@ -264,7 +276,7 @@ mythread = omp_get_thread_num()
 if (myrank==0 .and. mythread==0) then
   nthreads = omp_get_num_threads()
   write (*, '(/79("*")//1X,A,I5//79("*")/)') 'Number of OpenMP threads used:', nthreads
-  if(t_inc%i_write) write (1337, '(/79("*")//1X,A,I5//79("*")/)') 'Number of OpenMP threads used:', nthreads
+  if(t_inc%i_write>0) write (1337, '(/79("*")//1X,A,I5//79("*")/)') 'Number of OpenMP threads used:', nthreads
 end if
 !$omp end parallel
 #endif
@@ -458,31 +470,34 @@ if ( config_runflag('SIMULASA') ) then
   vpot(:,2:,:,:)=0.0D0
 end if
 
-! **********************************************************                         !lda+u
-! Start LDA+U initialization                                                         !lda+u
-! In particular, U-matrix ULDAU and basis PHI are created.                           !lda+u
-! Allocate arrays that depend on NATOM. (Arrays dependent on                         !lda+u
-! NATLDAU are allocated in routines INITLDAU,RWLDAUPOT.)                             !lda+u
-      ALLOCATE( LDAU(NATOM) )                                                        !lda+u
-      LDAU(:)%LOPT = -1                                                              !lda+u
-      IF ( CONFIG_RUNFLAG('LDA+U') ) THEN                                            !lda+u
-         WRITE(*,*) 'LDA+U calculation'                                              !lda+u
-         CALL INITLDAU(LMAXD,NATOM,NSPIN,VPOT,ZATOM,1,CELL,LDAU)                     !lda+u
-         DO IATOM = 1,NATOM                                                          !lda+u
-            IF (LDAU(IATOM)%LOPT.GE.0) WRITE(*,FMT='(A12,I4,a3,I3,3(A6,F6.3))') &    !lda+u
-            'LDA+U: Atom',IATOM,' l=',LDAU(IATOM)%LOPT,' UEFF=',LDAU(IATOM)%UEFF, &  !lda+u
-            ' JEFF=',LDAU(IATOM)%JEFF,' EREF=',LDAU(IATOM)%EREFLDAU                  !lda+u
-            IF (LDAU(IATOM)%LOPT.GT.LMAXATOM(IATOM)) THEN                            !lda+u
-               WRITE(*,*) 'Atom:',IATOM,' LDA+U orbital=',LDAU(IATOM)%LOPT,  &       !lda+u
-                    ' but lmax=',LMAXATOM(IATOM)                                     !lda+u
-               STOP 'LDA+U control: lmax'                                            !lda+u
-            ENDIF                                                                    !lda+u
-            LDAU(IATOM)%IELDAUSTART = 1                                              !lda+u
-            LDAU(IATOM)%IELDAUEND = IELAST                                           !lda+u
-         ENDDO                                                                       !lda+u
+! **********************************************************                   !lda+u
+! Start LDA+U initialization                                                   !lda+u
+! In particular, U-matrix ULDAU and basis PHI are created.                     !lda+u
+! Allocate arrays that depend on NATOM. (Arrays dependent on                   !lda+u
+! NATLDAU are allocated in routines INITLDAU,RWLDAUPOT.)                       !lda+u
+ALLOCATE( LDAU(NATOM) )                                                        !lda+u
+LDAU(:)%LOPT = -1                                                              !lda+u
+ldau_initial_iter = .false.                                                    !lda+u
+IF ( CONFIG_RUNFLAG('LDA+U') ) THEN                                            !lda+u
+   if (myrank==master) WRITE(*,*) 'LDA+U calculation'                          !lda+u
+   CALL INITLDAU(LMAXD,NATOM,NSPIN,VPOT,ZATOM,1,CELL,LDAU,ldau_initial_iter)   !lda+u
+   DO IATOM = 1,NATOM                                                          !lda+u
+      IF (LDAU(IATOM)%LOPT.GE.0 .and. myrank==master) then                     !lda+u
+        WRITE(*,FMT='(A12,I4,a3,I3,3(A6,F6.3))') &                             !lda+u
+        'LDA+U: Atom',IATOM,' l=',LDAU(IATOM)%LOPT,' UEFF=',LDAU(IATOM)%UEFF, & !lda+u
+        ' JEFF=',LDAU(IATOM)%JEFF,' EREF=',LDAU(IATOM)%EREFLDAU                 !lda+u
+      end if
+      IF (LDAU(IATOM)%LOPT.GT.LMAXATOM(IATOM)) THEN                            !lda+u
+         WRITE(*,*) 'Atom:',IATOM,' LDA+U orbital=',LDAU(IATOM)%LOPT,  &       !lda+u
+              ' but lmax=',LMAXATOM(IATOM)                                     !lda+u
+         STOP 'LDA+U control: lmax'                                            !lda+u
+      ENDIF                                                                    !lda+u
+      LDAU(IATOM)%IELDAUSTART = 1                                              !lda+u
+      LDAU(IATOM)%IELDAUEND = IELAST                                           !lda+u
+   ENDDO                                                                       !lda+u
 ! CALL AVERAGEWLDAU   ! average read-in interaction over m's                         !lda+u
-         CALL AVERAGEWLDAU(NATOM,NSPIN,LDAU)                                         !lda+u
-      ENDIF                                                                          !lda+u
+   CALL AVERAGEWLDAU(NATOM,NSPIN,LDAU)                                         !lda+u
+ENDIF                                                                          !lda+u
 ! **********************************************************                         !lda+u
 
 
@@ -855,7 +870,7 @@ end if
       if (mod(itscf,config%ITDBRY).eq.0) mixldau = config%mixfac                           ! lda+u
     endif                                                                                  ! lda+u
     if ( config_testflag('freezeldau').or.config_runflag('freezeldau') ) mixldau = 0.d0    ! lda+u
-    call calcwldau(nspin,natom,lmaxd,cell(1)%nrmaxd,lmaxatom,density,mixldau,ldau)         ! lda+u
+    call calcwldau(nspin,natom,lmaxd,cell(1)%nrmaxd,lmaxatom,density,mixldau,config%qbound_ldau,ldau)         ! lda+u
 !-------------------------------------------------------------------                       ! lda+u
 
 
@@ -1030,44 +1045,46 @@ end if
     !  - remove the non-spherical part if rms of (potential-0) is below
     !    the scf cut-off value (because of numerical reasons)
     ! ********************************************************** 
-            do ispin = 1,nspin
-              do iatom = 1,natom
-                
-                if (vpot_out(1,1,ispin,iatom)>1.0e3) then 
-                  write(*,*) '[WARNING] potential of atom', iatom, 'spin', ispin,'is too high'
-                end if
-                irc1 = cell(iatom)%nrmax !irc(it)
-    !            call dcopy(irc1,vpot_out(1,1,ispin,iatom),1,vpot(1,1,ispin,iatom),1)
-                if (config%ins==1) then
-                  vpot    (:,:,ispin,iatom) = vpot_out(:,:,ispin,iatom)
-                elseif ( config%ins==0 ) then
-                  vpot    (:,1,ispin,iatom) = vpot_out(:,1,ispin,iatom)
-                end if
-                vpot_out(:,:,ispin,iatom) = 0.0d0
-                if ( ( config%ins.ne.0 ) ) then
-                  irmin1 = cell(iatom)%nrmin_ns !irmin(it)
-                  do ilm = 2,(2*lmaxatom(iatom)+1)**2!lmpot
-                    sum = 0.0d0
-                    do ir = irmin1,irc1
-                      rv = vpot(ir,ilm,ispin,iatom)*cell(iatom)%rmesh(ir)
-!                       write(*,*) 'rv',vpot(ir,ilm,ispin,iatom),cell(iatom)%rmesh(ir)
-                      sum = sum + rv*rv*cell(iatom)%drmeshdi(ir)
-                    end do
-                    if ( sqrt(sum).lt.config%qbound ) then
-                      if (t_inc%i_write>0) write(1337,*) 'cutting pot. ','ispin',ispin,'iatom',iatom,'ilm',ilm,'rms',sqrt(sum)
-                      do ir = 1,irc1 ! the 1 was irmin1 before!
-                          vpot(ir,ilm,ispin,iatom) = 0.0d0
-                      end do
-                    end if
-                    if ( .not. config_testflag('nocut_sphpart') ) then
-                      do ir = 1,irmin1-1 
-                          vpot(ir,ilm,ispin,iatom) = 0.0d0
-                      end do
-                    end if
-                  end do
-                end if
-              end do !iatom
-            end do !ispin
+    do ispin = 1,nspin
+      do iatom = 1,natom
+        
+        if (vpot_out(1,1,ispin,iatom)>1.0e3) then 
+          write(*,*) '[WARNING] potential of atom', iatom, 'spin', ispin,'is too high'
+        end if
+        irc1 = cell(iatom)%nrmax !irc(it)
+
+        if (config%ins==1) then
+          vpot    (:,:,ispin,iatom) = vpot_out(:,:,ispin,iatom)
+        elseif ( config%ins==0 ) then
+          vpot    (:,1,ispin,iatom) = vpot_out(:,1,ispin,iatom)
+        end if
+        vpot_out(:,:,ispin,iatom) = 0.0d0
+
+        ! cut non-spherical components of the potential which are smaller than pot_ns_cutoff
+        ! Note: pot_ns_cutoff can be set in inputcard, defaults to 10% of qbound
+        if ( ( config%ins.ne.0 ) ) then
+          irmin1 = cell(iatom)%nrmin_ns 
+          do ilm = 2,(2*lmaxatom(iatom)+1)**2 !lmpot
+            sum = 0.0d0
+            do ir = irmin1,irc1
+              rv = vpot(ir,ilm,ispin,iatom)*cell(iatom)%rmesh(ir)
+              sum = sum + rv*rv*cell(iatom)%drmeshdi(ir)
+            end do
+            if ( sqrt(sum)<pot_ns_cutoff ) then
+              if (t_inc%i_write>0) write(1337,*) 'cutting pot. ','ispin',ispin,'iatom',iatom,'ilm',ilm,'rms',sqrt(sum)
+              do ir = irmin1,irc1
+                  vpot(ir,ilm,ispin,iatom) = 0.0d0
+              end do
+            end if
+            if ( .not. config_testflag('nocut_sphpart') ) then
+              do ir = 1,irmin1-1 
+                  vpot(ir,ilm,ispin,iatom) = 0.0d0
+              end do
+            end if
+          end do
+        end if
+      end do !iatom
+    end do !ispin
     call log_write('<<<<<<<<<<<<<<<<<<< end copy pot <<<<<<<<<<<<<<<<<<<')
   
     do ispin = 1,nspin
@@ -1111,9 +1128,15 @@ end if
 
   if (my_rank==0) then
     IF (MAX(RMSAVQ,RMSAVM).LT.config%QBOUND) THEN
-      istop_selfcons=1
-      WRITE(*,'(17X,A)') '++++++ SCF ITERATION CONVERGED ++++++'
-      WRITE(*,'(79(1H*))')
+      ! do at least two iterations for LDAU+U
+      if (.not. ldau_initial_iter) then
+        istop_selfcons=1
+        WRITE(*,'(17X,A)') '++++++ SCF ITERATION CONVERGED ++++++'
+        WRITE(*,'(79(1H*))')
+      else
+        write(*,*) 'LDA+U initialization finished, now run self-consistency from next iteration on'
+        ldau_initial_iter = .false.
+      end if
     END IF
 
     if ( config_runflag('force_angles') ) then

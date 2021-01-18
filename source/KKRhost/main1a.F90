@@ -61,7 +61,7 @@ contains
     use :: mod_calctmat, only: calctmat
     use :: mod_types, only: t_tgmat, t_inc, t_lloyd, t_dtmatjij, init_t_dtmatjij, init_t_dtmatjij_at, t_mpi_c_grid
     use :: mod_mympi, only: nranks, master, myrank, distribute_work_atoms, distribute_work_energies, mpiatom
-    use :: mod_wunfiles, only: get_params_1a, t_params, read_angles
+    use :: mod_wunfiles, only: get_params_1a, t_params !, read_angles
     use :: mod_jijhelp, only: set_jijcalc_flags
     ! array dimensions
     use :: global_variables, only: natypd, wlength, lmmaxd, nrmaxd, lmpotd, nspotd, irmd, naclsd, nclsd, nrefd, ncleb, nembd, &
@@ -227,7 +227,9 @@ contains
       end if                       ! OPT('XCPL')
 
       ! nonco angles: defined in mod_wunfiles
-      call read_angles(t_params, natyp, theta, phi)
+!      call read_angles(t_params, natyp, theta, phi)
+      theta(1:natyp) = t_params%theta(1:natyp)
+      phi(1:natyp) = t_params%phi(1:natyp)
 
       ! Interpolate potential
       call interpolate_poten(lpotd,irmd,irnsd,natyp,ipand,lmpotd,nspotd,ntotd,      &

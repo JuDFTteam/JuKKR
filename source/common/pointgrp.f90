@@ -24,9 +24,13 @@ contains
   !> This subroutine defines the rotation matrices for all the 32 point groups and names them after
   !> J.F. Cornwell (Group Theory??) second edition Appendix D, p 324-325
   !-------------------------------------------------------------------------------
-  subroutine pointgrp(rotmat, rotname)
+  subroutine pointgrp(rotmat, rotname, writesymfile)
 
     implicit none
+
+    ! optional input, can trigger writeout of symmetry matrices to sym.out file
+    logical, optional :: writesymfile
+    integer, parameter :: iou=3514 ! file unit for sym.out file
 
     ! .. Output variables
     real (kind=dp), dimension(64, 3, 3), intent(out) :: rotmat !! Rotation matrices
@@ -242,6 +246,20 @@ contains
       end do
       rotname(56+is) = 'I' // rotname(48+is)
     end do
+
+    ! for FS code we should be able to write out the symmetries to a file
+    if (present(writesymfile)) then
+      if(writesymfile)then
+        open(unit=iou,file='sym.out',form='formatted',action='write')
+        write(iou,'(I0)') 64
+        do is=1,64
+          write(iou,'(A)') ROTNAME(is)
+          write(iou,'(3ES25.16)') ROTMAT(is,:,:)
+        end do
+        close(iou)
+        writesymfile = .false.
+      end if ! writesymfile
+    end if ! present(writesymfile)
 
     ! ccccccccccccccccccccccccccccccccccccccccccccccccc
   end subroutine pointgrp

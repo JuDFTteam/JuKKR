@@ -15,7 +15,7 @@
 
 ----
 
-## *UNRELEASED* (last updated: 2019-08-30)
+## *UNRELEASED* (last updated: 2021-01-18)
 
 **Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release.**
 
@@ -34,6 +34,40 @@
 ### Fixed
 - None
 
+----
+
+## v3.5 (2021-01-18)
+
+Some improvements and bugfixes to use with AiiDA-KKR plugin.
+
+### Added
+- `EFSET` option for voronoi: read in whished value of Fermi level from inputcard (core state energies of starting potential is shifted accordingly)
+- `<AFAC_RAD>` input for voronoi: read in a factor of radial mesh (r(i)=b*(exp(a*(i-1))-1)) where b is determined from a and rmt. Default value (a=0.025) is obtained with setting AFAC_RAD to a negative number. If a is increased (decreased) the start of the radial mesh is shifted to a lower (higher) radius.
+- `POT_NS_CUTOFF` option for KKRhost and KKRimp (see issue #124)
+- improved cmake settings (compile options `TIMING_DETAIL`, `ENABLE_DEBUG_SYMBOLS`, `OPTFLAGS_xHOST`. `OPTFLAGS_AMD`, `OPTFLAGS_AVX512`, `ENABLE_OMP_EVERYWHERE` and `ENABLE_OPTRPT`)
+- add MKL patch for AMD hardware with `ENABLE_PATCH_INTEL` compile option (needs `mpiifort`, MPI+OpenMP parallelization and `OPTFLAGS_AMD` to be active)
+- add broyden spin mixing for nonco angles
+- add `NSIMPLEMIXFIRST` input to do some simplemixing steps before Broyden starts
+- add `set_kmesh_large` run option to force the largest k-mesh on all energy points
+- timing information for PKKprime
+- use '#' as comment sign in inputcard (see issue #128)
+
+### Changed
+- cutoff of potential components which are (almost) zero (see issue #124 and `POT_NS_CUTOFF`)
+- rename `set_cheby_nosoc` to `decouple_spins_cheby` (now `set_cheby_nosoc` again gives the expected behavior of setting `SOCSCALE` to 0, see issue #120)
+- print run and test options in the beginning to `output.000.txt`
+
+### Removed
+- `mixbroydenspinangle` in KKRimp that was unused and a copy of `mixbroydenspin`
+
+### Fixed
+- writeout of test and run options which printed garbage becaus of missing initialization
+- behavior when `VCONST` and `IVSHIFT` are in input
+- open some output file of KKRimp only when necessary
+- small fixes for LDA+U
+- small bugfixes
+
+----
 
 ## v3.4 (2019-08-30)
 
@@ -41,12 +75,12 @@
 - allow up to LMAX=8 in voronoi code and KKRhost code
 
 ### Changed
-- Renamed keywords that have 'files' in the name to avoid clash with 'FILES' keyword in inputcard
+- Renamed keywords that have `files` in the name to avoid clash with `FILES` keyword in inputcard
 - if GGA is used, set Vxc of empty cells to LDA (VWN)
-- remove a lot of unnessecary files written out by each rank running the KKRimp code. Now by default only the master writes the files (old behavior can be reactivated using the 'write_all_ranks' test flag)
+- remove a lot of unnessecary files written out by each rank running the KKRimp code. Now by default only the master writes the files (old behavior can be reactivated using the `write_all_ranks` test flag)
 
 ### Deprecated
-- 'IMPURITY' option of voronoi code, not working properly and thus commented out
+- `IMPURITY` option of voronoi code, not working properly and thus commented out
 
 ### Fixed
 - Fix auto tests
@@ -592,8 +626,8 @@ readinput changed to comply with new inputcard keywords of JM code
 
 - Implemented writeout of Pkk' for option SCATTFIX and LLIFETIME.
 - For option SCATTFIX, changed the implementation such that the INCOMMING k-vector is fixed (before it was outgoing k-vector).
-- To solve memory-issues with very large slab calculations, the paramter 'NROOTMAX' can be set in the inputcard. If NROOTMAX= 0 assumes the maximal possible value.
-- Included checks whether actually TBKKR_torq orr TBKKR_rhod-files are present when they shall be used.
+- To solve memory-issues with very large slab calculations, the paramter `NROOTMAX` can be set in the inputcard. If `NROOTMAX= 0` assumes the maximal possible value.
+- Included checks whether actually TBKKR_torq or TBKKR_rhod-files are present when they shall be used.
 
 ----
 
