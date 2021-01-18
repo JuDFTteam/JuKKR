@@ -50,10 +50,11 @@ Some improvements and bugfixes to use with AiiDA-KKR plugin.
 - add `NSIMPLEMIXFIRST` input to do some simplemixing steps before Broyden starts
 - add `set_kmesh_large` run option to force the largest k-mesh on all energy points
 - timing information for PKKprime
+- use '#' as comment sign in inputcard (see issue #128)
 
 ### Changed
 - cutoff of potential components which are (almost) zero (see issue #124 and `POT_NS_CUTOFF`)
-- rename `set_cheby_nosoc` to `decouple_spins_cheby` (now `set_cheby_nosoc` again gives the expected behavior of setting `SOCSCALE` to 0)
+- rename `set_cheby_nosoc` to `decouple_spins_cheby` (now `set_cheby_nosoc` again gives the expected behavior of setting `SOCSCALE` to 0, see issue #120)
 - print run and test options in the beginning to `output.000.txt`
 
 ### Removed
