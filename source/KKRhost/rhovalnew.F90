@@ -23,7 +23,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine rhovalnew(ldorhoef, ielast, nsra, nspin, lmax, ez, wez, zat, socscale, cleb, icleb, iend, ifunm, lmsp, ncheb, &
     npan_tot, npan_log, npan_eq, rmesh, irws, rpan_intervall, ipan_intervall, rnew, vinsnew, thetasnew, theta, phi, fixdir, i1, ipot, &
-    den_out, espv, rho2ns, r2nef, muorb, angles_new, totmoment, idoldau, lopt, wldau, denmatn, natyp, ispin)
+    den_out, espv, rho2ns, r2nef, muorb, angles_new, totmoment, bconstr, idoldau, lopt, wldau, denmatn, natyp, ispin)
 
 #ifdef CPP_OMP
     use :: omp_lib
@@ -110,6 +110,7 @@ contains
     real (kind=dp), dimension (irmd, lmpotd, nspin/(nspin-korbit)*(1+korbit)), intent (out) :: rho2ns
     real (kind=dp), intent(out) :: totmoment
     complex (kind=dp), dimension (0:lmax+1, ielast, nspin/(nspin-korbit)), intent (out) :: den_out
+    real (kind=dp), dimension (3), intent(out) :: bconstr ! MdSD: constraining field 
 
     ! .. Local variables
     integer :: lmmax0d !! (lmax+1)**2
@@ -218,6 +219,9 @@ contains
     else
       use_sratrick = 0
     end if
+
+    ! MdSD: constraining fields
+    bconstr(:) = 0.0_dp
 
     irmdnew = npan_tot*(ncheb+1)
     imt1 = ipan_intervall(npan_log+npan_eq) + 1
@@ -913,6 +917,9 @@ contains
         call calc_torque(i1,lmax,irmdnew,nspin,rpan_intervall,ipan_intervall,npan_tot,ncheb,theta,phi,rho2nsc,vins, &
                          t_params%ifunm1(:,t_params%ntcell(i1)), iend, t_params%icleb,t_params%cleb(:,1),&
                          t_params%thetasnew(1:irmdnew,:,t_params%ntcell(i1)))
+        ! MdSD: constraining fields
+        bconstr(:) = t_params%bfield%bfield_constr(i1,:)
+        if (t_inc%i_write>0) write (1337,'("calc_torque: myrank=",i8,"  iatom=",i8,"  bfield_constr=",3es16.8)') myrank, i1, bconstr(:)
       end if
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! LDAU

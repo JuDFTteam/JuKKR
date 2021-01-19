@@ -854,7 +854,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine mympi_main1c_comm_newsosol2(lmaxd1,lmmaxd,ielast,nqdos,npotd,natypd,   &
     lmpotd,irmd,mmaxd,den,denlm,muorb,espv,r2nef,rho2ns,denefat,denef,denmatn,      &
-    angles_new,totmoment,mympi_comm)
+    angles_new,totmoment,bconstr,mympi_comm)
 
     use :: mpi
     use :: mod_datatypes, only: dp
@@ -878,6 +878,7 @@ contains
     real (kind=dp), dimension(natypd), intent (inout)     :: denefat
     real (kind=dp), dimension(natypd, 2), intent (inout)  :: angles_new
     real (kind=dp), dimension(natypd), intent (inout)  :: totmoment
+    real (kind=dp), dimension(3, natypd), intent (inout)  :: bconstr ! MdSD: constraining fields
     real (kind=dp), dimension(0:lmaxd1, npotd), intent (inout) :: espv
     real (kind=dp), dimension(0:lmaxd1+1, 3, natypd), intent (inout) :: muorb !! orbital magnetic moment
     real (kind=dp), dimension(irmd, lmpotd, natypd, 2), intent (inout) :: r2nef
@@ -986,6 +987,15 @@ contains
     call mpi_reduce(totmoment, work(:,1,1,1), idim, mpi_double_precision, mpi_sum, master, mympi_comm, ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for totmoment'
     call dcopy(idim, work, 1, totmoment, 1)
+    deallocate (work)
+
+    ! MdSD: constraining fields
+    idim = 3*natypd
+    allocate (work(3,natypd,1,1))
+    work = 0.0_dp
+    call mpi_reduce(bconstr, work(:,:,1,1), idim, mpi_double_precision, mpi_sum, master, mympi_comm, ierr)
+    if (ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for bconstr'
+    call dcopy(idim, work, 1, bconstr, 1)
     deallocate (work)
 
   end subroutine mympi_main1c_comm_newsosol2

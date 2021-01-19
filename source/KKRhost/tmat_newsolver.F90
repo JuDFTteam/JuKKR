@@ -357,6 +357,13 @@ contains
   
         ! Add magnetic field
         if ( t_params%bfield%lbfield .or. t_params%bfield%lbfield_constr ) then
+          ! MdSD: constraining fields
+          if (t_inc%i_write>0) then
+            write (1337,'("tmat_newsolver: myrank=",i8,"  iatom=",i8)') myrank, i1
+            do ir=1,t_params%natyp
+              write (1337,'("  iatom=",i8,"  bfield=",3es16.8,"  bconstr=",3es16.8)') ir, t_params%bfield%bfield(ir,:), t_params%bfield%bfield_constr(ir,:)
+            end do
+          end if
           imt1 = ipan_intervall(t_params%npan_log+t_params%npan_eq) + 1
           call add_bfield(t_params%bfield,i1,lmax,nspin,irmdnew,imt1,iend,ncheb,theta,phi,t_params%ifunm1(:,t_params%ntcell(i1)),&
                           t_params%icleb,t_params%cleb(:,1),t_params%thetasnew(1:irmdnew,:,t_params%ntcell(i1)),'1',vnspll2(:,:,:), &
