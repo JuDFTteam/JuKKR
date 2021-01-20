@@ -1648,9 +1648,9 @@ contains
     if (ier==0) then
       read (unit=uio, fmt=*, iostat=ier) set_kmesh_large
       if (ier/=0) stop 'Error reading `set_kmesh_large`: check your inputcard'
-      write (111, fmt='(A18,A2)') '<set_kmesh_large>=', set_kmesh_large
+      write (111, fmt='(A18,L2)') '<set_kmesh_large>=', set_kmesh_large
     else
-      write (111, fmt='(A26,A2)') 'Default <set_kmesh_large>=', set_kmesh_large
+      write (111, fmt='(A26,L2)') 'Default <set_kmesh_large>=', set_kmesh_large
     end if
 
     ! Energy contour
