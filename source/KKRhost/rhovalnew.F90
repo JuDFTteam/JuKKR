@@ -110,7 +110,7 @@ contains
     real (kind=dp), dimension (irmd, lmpotd, nspin/(nspin-korbit)*(1+korbit)), intent (out) :: rho2ns
     real (kind=dp), intent(out) :: totmoment
     complex (kind=dp), dimension (0:lmax+1, ielast, nspin/(nspin-korbit)), intent (out) :: den_out
-    real (kind=dp), dimension (3), intent(out) :: bconstr ! MdSD: constraining field 
+    real (kind=dp), dimension (4), intent(out) :: bconstr ! MdSD: constraining field 
 
     ! .. Local variables
     integer :: lmmax0d !! (lmax+1)**2
@@ -916,10 +916,8 @@ contains
       if(t_params%bfield%ltorque) then
         call calc_torque(i1,lmax,irmdnew,nspin,rpan_intervall,ipan_intervall,npan_tot,ncheb,theta,phi,rho2nsc,vins, &
                          t_params%ifunm1(:,t_params%ntcell(i1)), iend, t_params%icleb,t_params%cleb(:,1),&
-                         t_params%thetasnew(1:irmdnew,:,t_params%ntcell(i1)))
-        ! MdSD: constraining fields
-        bconstr(:) = t_params%bfield%bfield_constr(i1,:)
-        if (t_inc%i_write>0) write (1337,'("calc_torque: myrank=",i8,"  iatom=",i8,"  bfield_constr=",3es16.8)') myrank, i1, bconstr(:)
+                         t_params%thetasnew(1:irmdnew,:,t_params%ntcell(i1)),bconstr)
+        if (t_inc%i_write>1) write (1337,'("calc_torque: myrank=",i8,"  iatom=",i8,"  bfield_constr=",3es16.8,"  mspin=",es16.8)') myrank, i1, bconstr(1:3), bconstr(4)
       end if
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! LDAU

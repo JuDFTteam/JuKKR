@@ -878,7 +878,7 @@ contains
     real (kind=dp), dimension(natypd), intent (inout)     :: denefat
     real (kind=dp), dimension(natypd, 2), intent (inout)  :: angles_new
     real (kind=dp), dimension(natypd), intent (inout)  :: totmoment
-    real (kind=dp), dimension(3, natypd), intent (inout)  :: bconstr ! MdSD: constraining fields
+    real (kind=dp), dimension(4, natypd), intent (inout)  :: bconstr ! MdSD: constraining fields
     real (kind=dp), dimension(0:lmaxd1, npotd), intent (inout) :: espv
     real (kind=dp), dimension(0:lmaxd1+1, 3, natypd), intent (inout) :: muorb !! orbital magnetic moment
     real (kind=dp), dimension(irmd, lmpotd, natypd, 2), intent (inout) :: r2nef
@@ -990,8 +990,8 @@ contains
     deallocate (work)
 
     ! MdSD: constraining fields
-    idim = 3*natypd
-    allocate (work(3,natypd,1,1))
+    idim = 4*natypd
+    allocate (work(4,natypd,1,1))
     work = 0.0_dp
     call mpi_reduce(bconstr, work(:,:,1,1), idim, mpi_double_precision, mpi_sum, master, mympi_comm, ierr)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for bconstr'

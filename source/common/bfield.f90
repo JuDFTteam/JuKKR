@@ -126,8 +126,10 @@ contains
       allocate (bfield%bfield_constr(natyp,3), stat=i_stat)
       call memocc(i_stat, product(shape(bfield%bfield_constr))*kind(bfield%bfield_constr), 'bfield%bfield_constr', 'init_bfield')
       ! init allocated arrays
-      bfield%bfield_constr(:,:) = 0.d0
+      ! bfield%bfield_constr(:,:) = 0.d0
       if(lbfield) call read_bfield(bfield,natyp)
+      ! MdSD: constraining fields
+      if(lbfield_constr) call read_bconstr(natyp,bfield%bfield_constr)
       
 
       allocate (bfield%mag_torque(natyp,3), stat=i_stat)
@@ -149,6 +151,73 @@ contains
       end if
       !write(*,'("Init bfield done")')
   end subroutine init_bfield
+
+
+  !-------------------------------------------------------------------------------
+  !> Summary: Writes the atom-wise constraining field to bconstr_out.dat
+  !> Author: MdSD
+  !> Category: KKRhost, bfield
+  !> Deprecated: False
+  !> the file has the format:
+  !> bz  by  bz (in Ry), mspin (in muB)
+  !-------------------------------------------------------------------------------
+  subroutine save_bconstr(natyp,bconstr_in,bconstr_out)
+
+    implicit none
+
+    integer                          , intent(in)  :: natyp
+    real(kind=dp), dimension(4,natyp), intent(in)  :: bconstr_in  !! bx, by, bz, mspin
+    real(kind=dp), dimension(natyp,3), intent(out) :: bconstr_out !! bx, by, bz
+    ! local
+    integer                 :: iatom
+    
+    open(unit=57493215, file='bconstr_out.dat', status='replace')
+    write(57493215,'("# bconstr_x [Ry], bconstr_y [Ry], bconstr_z [Ry]")')
+    do iatom=1,natyp
+      write(57493215,'(4es16.8)') bconstr_in(:,iatom)
+      bconstr_out(iatom,:) = bconstr_in(1:3,iatom)
+    end do
+    close(57493215)
+  end subroutine save_bconstr
+
+
+  !-------------------------------------------------------------------------------
+  !> Summary: Reads the atom-wise constraining field from bconstr.dat
+  !> Author: MdSD
+  !> Category: KKRhost, bfield
+  !> Deprecated: False
+  !> the file has the format:
+  !> bz  by  bz (in Ry), mspin (in muB)
+  !-------------------------------------------------------------------------------
+  subroutine read_bconstr(natyp,bconstr_out)
+
+    implicit none
+
+    integer                          , intent(in)  :: natyp
+    real(kind=dp), dimension(natyp,3), intent(out) :: bconstr_out !! bx, by, bz
+    ! local
+    integer                 :: iatom
+    logical                 :: file_exists
+   
+    inquire(file='bconstr_in.dat',exist=file_exists)
+    if (file_exists) then 
+      open(unit=57493215, file='bconstr_in.dat')
+      read(57493215,*)  ! skip header
+      do iatom=1,natyp
+        read(57493215,*) bconstr_out(iatom,:)
+      end do
+      close(57493215)
+    else
+      bconstr_out(:,:) = 0.0_dp
+    end if
+    write(1337,*) '  ############################################################'
+    write(1337,*) '  input constraining fields'
+    write(1337,*) '  ############################################################'
+    write(1337,*) '  iatom      Bx              By              Bz        (in Ry)'
+    do iatom=1,natyp
+      write(1337,'("  ",i4,3es16.8)') iatom, bconstr_out(iatom,:)
+    end do
+  end subroutine read_bconstr
 
 
   !-------------------------------------------------------------------------------
@@ -342,7 +411,7 @@ contains
     !------------------------------------------------------------------------------------
     !------------------------------------------------------------------------------------
     
-    if(mode=='1') then
+    if (t_inc%i_write>1 .and. mode=='1') then
       write(1337,'("===============================================================================")')
       write(1337,'("                      Magnetic fields for atom ",i4)') iatom
       write(1337,'("===============================================================================")')
@@ -443,7 +512,7 @@ contains
       magdir(3) = cos(theta)
       bin(:) = bin(:) - magdir*dot_product(magdir(:),bin(:))
     end if
-    if(mode=='1') write(1337,'("iatom, bin=",i4,3es16.8)') iatom, bin
+    if (t_inc%i_write>1 .and. mode=='1') write(1337,'("iatom, bin=",i4,3es16.8)') iatom, bin
     
     bs(:,:)=0.d0
     ! down/down block

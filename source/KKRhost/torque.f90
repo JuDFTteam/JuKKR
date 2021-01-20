@@ -28,7 +28,7 @@ contains
   !> The XC magnetic field is extracted from the potential (convoluted with the
   !> shape function) thus rho2nsc has to be used instead of cden and cdenns!
   !-------------------------------------------------------------------------------
-  subroutine calc_torque(iatom,lmax,irmdnew,nspin,rpan_intervall,ipan_intervall,npan_tot,ncheb,theta,phi,rho2nsc,vpot,ifunm,iend,icleb,cleb,thetasnew)
+  subroutine calc_torque(iatom,lmax,irmdnew,nspin,rpan_intervall,ipan_intervall,npan_tot,ncheb,theta,phi,rho2nsc,vpot,ifunm,iend,icleb,cleb,thetasnew,bconstr)
     
     use :: global_variables, only: lmmaxd, ncleb, ntotd, nfund, korbit, lmpotd
     use :: mod_datatypes, only: dp
@@ -56,6 +56,7 @@ contains
     integer, dimension (ncleb, 4), intent (in)                                  :: icleb !! Pointer array
     real (kind=dp), dimension (ncleb), intent (in)                              :: cleb !! GAUNT coefficients (GAUNT)    ! CHECK THE DIMENSION AND HOW IT IS USED!!!
     real (kind=dp)       , dimension (irmdnew, nfund)   , intent (in)           :: thetasnew    ! shapefun on the Cheby mesh
+    real (kind=dp)       , dimension (4)   , intent (out)                       :: bconstr    ! variables to be saved
     !------------------------------------------------------------------------------------
     ! local variables
     !------------------------------------------------------------------------------------
@@ -98,9 +99,9 @@ contains
     !------------------------------------------------------------------------------------
     
     !write(*,'(" >>>>>> entering calctorque >>>>>>>>>")')
-    write(1337,'("===============================================================================")')
-    write(1337,'("                      Magnetic torques for atom ",i4)') iatom
-    write(1337,'("===============================================================================")')
+    if (t_inc%i_write>1) write(1337,'("===============================================================================")')
+    if (t_inc%i_write>1) write(1337,'("                      Magnetic torques for atom ",i4)') iatom
+    if (t_inc%i_write>1) write(1337,'("===============================================================================")')
     
     lmmax=(lmax+1)**2
     cone  = (1d0,0d0)
@@ -155,12 +156,16 @@ contains
       end do
     end do
 
-    write(1337,'("Magnetic moment")') 
-    do ilm=1,lmmax  
-      write(1337,'("iatom, ilm, mag, mag_mt",2i4,6es16.8)') iatom, ilm, mag(ilm,:), mag_mt(ilm,:)
-    end do
+    if (t_inc%i_write>1) then
+      write(1337,'("Magnetic moment")') 
+      do ilm=1,lmmax  
+        write(1337,'("iatom, ilm, mag, mag_mt",2i4,6es16.8)') iatom, ilm, mag(ilm,:), mag_mt(ilm,:)
+      end do
+    end if
     totmag = sqrt(dot_product(mag(1,:),mag(1,:)))
     magdir_it = mag(1,:)/totmag
+    ! MdSD: constraining fields
+    bconstr(1:3) = 0.0_dp; bconstr(4) = totmag
     ! --------------------------------------------------------------------------------------
     
     !do ilm= 1,lmpotd
@@ -195,7 +200,7 @@ contains
       end if
     end do !i
     
-    write(1337,'("iatom, torque, torque_mt = ",i4,6es16.8)') iatom, torque(:), torque_mt(:)
+    if (t_inc%i_write>1) write(1337,'("iatom, torque, torque_mt = ",i4,6es16.8)') iatom, torque(:), torque_mt(:)
     
     
     ! --------------------------------------------------------------------------------------
@@ -205,7 +210,7 @@ contains
     magdir(3) = cos(theta)
     torque(:) = torque(:) - magdir*dot_product(magdir(:),torque(:))
     torque_mt(:) = torque_mt(:) - magdir*dot_product(magdir(:),torque_mt(:))
-    write(1337,'("iatom, torque_perp, torque_mt_perp = ",i4,6es16.8)') iatom, torque(:), torque_mt(:)
+    if (t_inc%i_write>1) write(1337,'("iatom, torque_perp, torque_mt_perp = ",i4,6es16.8)') iatom, torque(:), torque_mt(:)
     t_params%bfield%mag_torque(iatom,:) = torque(:)
     if(t_params%bfield%lbfield_constr .and. t_inc%i_iteration>=t_params%bfield%itscf0 .and. t_inc%i_iteration<=t_params%bfield%itscf1) then !constraining fields
       if(t_params%bfield%ibfield_constr == 0 ) then ! constraining fields based on magnetic torques
@@ -217,7 +222,7 @@ contains
         !bfield%bfield_strength_constr         = sqrt(dot_product(bfield%bfield_constr(:),bfield%bfield_constr(:))) 
         !bfield%theta_constr                   = acos(bfield%bfield_constr(3)/bfield%bfield_strength_constr)
         !bfield%phi_constr                     = datan2(bfield%bfield_constr(2),bfield%bfield_constr(1))
-        write(1337,'(" itscf, iatom, ibfield_constr, bfield_constr= ",3i4,100f16.8)') t_params%itscf, iatom ,t_params%bfield%ibfield_constr , t_params%bfield%bfield_constr(iatom,:)
+        if (t_inc%i_write>1) write(1337,'(" itscf, iatom, ibfield_constr, bfield_constr= ",3i4,100f16.8)') t_params%itscf, iatom ,t_params%bfield%ibfield_constr , t_params%bfield%bfield_constr(iatom,:)
       end if
       if(t_params%bfield%ibfield_constr == 1) then ! constraining fields to constrain scf cycle
         c_old                = t_params%bfield%bfield_constr(iatom,:)
@@ -225,11 +230,13 @@ contains
         magdir_old(1)         = cos(t_params%phi(iatom))*sin(t_params%theta(iatom))
         magdir_old(2)         = sin(t_params%phi(iatom))*sin(t_params%theta(iatom))
         magdir_old(3)         = cos(t_params%theta(iatom))
-        write(1337,'(" itscf, iatom, magdir, magdir_old = ",2i4,100f16.8)') t_params%itscf, iatom , magdir_it(:), magdir_old(:)
+        if (t_inc%i_write>1) write(1337,'(" itscf, iatom, magdir, magdir_old = ",2i4,100f16.8)') t_params%itscf, iatom , magdir_it(:), magdir_old(:)
         if(t_params%fixdir(iatom)) then
           t_params%bfield%bfield_constr(iatom,:) = c_old - dot_product(c_old,magdir_old)*magdir_old - (magdir_it - dot_product(magdir_it,magdir_old)*magdir_old)*bfac
         end if
-        write(1337,'(" itscf, iatom, ibfield_constr, bfield_constr= ",3i4,100f16.8)') t_params%itscf, iatom ,t_params%bfield%ibfield_constr , t_params%bfield%bfield_constr(iatom,:)
+        if (t_inc%i_write>1) write(1337,'(" itscf, iatom, ibfield_constr, bfield_constr= ",3i4,100f16.8)') t_params%itscf, iatom ,t_params%bfield%ibfield_constr , t_params%bfield%bfield_constr(iatom,:)
+        ! MdSD: constraining fields
+        bconstr(1:3) = t_params%bfield%bfield_constr(iatom,:)
       end if
       !if(density%magmomentfixed == 6) then ! constraining fields
       !  temp2 = 0.d0

@@ -65,6 +65,7 @@ contains
     use mod_cinit, only: cinit
     use mod_rinit, only: rinit
     use mod_mixnocospin, only: spinmix_noco
+    use mod_bfield, only: save_bconstr ! MdSD: constraining fields
     ! array dimensions
     use global_variables, only: iemxd, mmaxd, krel, lmaxd, natypd, npotd, irmd, nrmaxd, lmpotd, nspotd, naezd, ncleb, lm2d, ipand, &
       nfund, ntotd, mmaxd, ncelld, irmind, nspind, nspotd, irid, irnsd, knosph, korbit, lmmaxd, lmxspd, lpotd, wlength
@@ -117,7 +118,7 @@ contains
     real (kind=dp), dimension (krel*20+(1-krel), npotd) :: ecorerel !! for a given (n,l) state the core energies corresponding first/second KAPPA value, AVERAGED over \mu's  These values are written out to the  potential file (routine <RITES>), but the read in (routine <STARTB1>) updates the ECORE array
     real (kind=dp), dimension (2, natypd) :: angles_new ! output directions of the nonco magnetic moments
     real (kind=dp), dimension(natypd) :: totmoment ! size of the output magnetic moments
-    real (kind=dp), dimension(3, natypd) :: bconstr ! MdSD: constraining fields
+    real (kind=dp), dimension(4, natypd) :: bconstr ! MdSD: constraining fields
     real (kind=dp), dimension (0:lmaxd+1, natypd, 2) :: charge
     real (kind=dp), dimension (mmaxd, mmaxd, nspind, natypd) :: wldauold
     complex (kind=dp), dimension (iemxd) :: df
@@ -707,11 +708,7 @@ contains
 
         ! MdSD: constraining fields
         if (t_params%bfield%lbfield_constr) then
-          if (myrank==master) then
-            do i1 = 1, natyp
-              t_params%bfield%bfield_constr(i1,:) = bconstr(:,i1)
-            end do
-          end if
+          if (myrank==master) call save_bconstr(natyp,bconstr,t_params%bfield%bfield_constr)
 #ifdef CPP_MPI
           call mpi_bcast(t_params%bfield%bfield_constr, 3*natyp, mpi_double_precision, master, mpi_comm_world, ierr)
 #endif
