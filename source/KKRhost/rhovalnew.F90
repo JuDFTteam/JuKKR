@@ -1078,7 +1078,6 @@ contains
 
 #ifdef CPP_MPI
     end if                         ! (myrank==master)
-    write(1337,'("TEST: myrank=",i8,"  angles_cutoff=",es16.8)') myrank, angles_cutoff
     
     ! communicate den_out to all processors with the same atom number
     idim = (lmax+2)*ielast*nspin/(nspin-korbit)
