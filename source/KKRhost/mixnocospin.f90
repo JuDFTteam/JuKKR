@@ -24,7 +24,7 @@ contains
     use mod_datatypes, only: dp
     use mod_constants, only: pi
     use mod_runoptions, only: use_broyden_spinmix, write_angles_alliter, disable_print_serialnumber, fix_nonco_angles, decouple_spins_cheby
-    use global_variables, only: qbound_spin
+    use global_variables, only: qbound_spin, angles_cutoff  !! MdSD: criterion to fix angles (see also rhovalnew)
     use mod_version_info, only: version_print_header
     use mod_wunfiles, only: t_params
     implicit none
@@ -96,11 +96,16 @@ contains
             ! keep the old angles
             write (iounit, *) t_params%theta(i1)/pi*180.0_dp, t_params%phi(i1)/pi*180.0_dp, t_params%fixdir(i1)
           else
-            ! update angles
-            write (iounit, *) angles_new(1, i1)/pi*180.0_dp, angles_new(2, i1)/pi*180.0_dp, t_params%fixdir(i1)
-            ! use internal units here
-            t_params%theta(i1) = angles_new(1, i1)
-            t_params%phi(i1) = angles_new(2, i1)
+            ! MdSD: don't change the angles if the spin moment is too small
+            if (totmoment(i1) > angles_cutoff) then
+              ! update angles
+              write (iounit, *) angles_new(1, i1)/pi*180.0_dp, angles_new(2, i1)/pi*180.0_dp, t_params%fixdir(i1)
+              ! use internal units here
+              t_params%theta(i1) = angles_new(1, i1)
+              t_params%phi(i1) = angles_new(2, i1)
+            else
+              write (iounit, *) t_params%theta(i1)/pi*180.0_dp, t_params%phi(i1)/pi*180.0_dp, t_params%fixdir(i1)
+            end if
           end if
           if (write_angles_alliter) write (iounit+1, *) t_params%theta(i1)/pi*180.0_dp, t_params%phi(i1)/pi*180.0_dp, t_params%fixdir(i1)
         end do

@@ -43,7 +43,7 @@ contains
                                  use_qdos, write_complex_qdos, write_pkkr_operators, write_DOS_lm, set_cheby_nospeedup, &
                                  decouple_spins_cheby, disable_print_serialnumber
     use :: mod_version_info, only: version_print_header
-    use :: global_variables, only: lmmaxd, iemxd, ncleb, lmxspd, irmd, ntotd, nrmaxd, lmpotd, nspotd, nfund, korbit, mmaxd, nspind
+    use :: global_variables, only: lmmaxd, iemxd, ncleb, lmxspd, irmd, ntotd, nrmaxd, lmpotd, nspotd, nfund, korbit, mmaxd, nspind, angles_cutoff
     use :: mod_constants, only: czero, cvlight, cone, pi, ci
     use :: mod_profiling, only: memocc 
     use :: mod_datatypes, only: dp
@@ -1069,7 +1069,8 @@ contains
         angles_new(1) = thetanew
         angles_new(2) = phinew
         ! MdSD: use new angles to correct local frame, which defines the z-component of the spin density
-        if (.not.fixdir) then
+        ! MdSD: avoid rotating to the new frame and later deciding to fix the angles
+        if (.not.fixdir .and. totmoment > angles_cutoff) then
           call rotatevector(rho2nsnew,rho2ns,irws,lmpotd,thetanew,phinew,theta,phi,irmd)
           call rotatevector(r2nefnew,r2nef,irws,lmpotd,thetanew,phinew,theta,phi,irmd)
         end if
@@ -1077,6 +1078,7 @@ contains
 
 #ifdef CPP_MPI
     end if                         ! (myrank==master)
+    write(1337,'("TEST: myrank=",i8,"  angles_cutoff=",es16.8)') myrank, angles_cutoff
     
     ! communicate den_out to all processors with the same atom number
     idim = (lmax+2)*ielast*nspin/(nspin-korbit)

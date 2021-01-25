@@ -1240,7 +1240,7 @@ contains
     integer (kind=mpi_address_kind) :: base !! base address of first entry
   
   
-    n = 65
+    n = 66
     allocate (blocklen1(n), etype1(n), disp1(n), stat=ierr)
     if (ierr/=0) stop 'error allocating arrays in bcast_global_variables'
   
@@ -1309,6 +1309,7 @@ contains
     call mpi_get_address(pot_ns_cutoff, disp1(63), ierr)
     call mpi_get_address(mixfac_broydenspin, disp1(64), ierr)
     call mpi_get_address(qbound_spin, disp1(65), ierr)
+    call mpi_get_address(angles_cutoff, disp1(66), ierr)
   
     ! find displacements of variables
     base = disp1(1)

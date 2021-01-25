@@ -60,7 +60,7 @@ contains
     use global_variables, only: linterface, korbit, krel, irmd, irnsd, nsheld, knosph, iemxd, nrd, knoco, kpoibz, ntrefd, natomimpd, &
       nprincd, ipand, nfund, irid, ngshd, nmaxd, ishld, wlength, naclsd, ntotd, ncleb, nspind, nspindd, npotd, lmmaxd, lmgf0d, &
       lassld, nembd1, irmind, nofgij, ntperd, nsatypd, nspotd, lnc, lmxspd, lm2d, nclsd, mmaxd, ncleb, kBdG, delta_BdG, pot_ns_cutoff, &
-      mixfac_broydenspin, ninit_broydenspin, memlen_broydenspin, qbound_spin, nsimplemixfirst
+      mixfac_broydenspin, ninit_broydenspin, memlen_broydenspin, qbound_spin, angles_cutoff, nsimplemixfirst
 
 
     implicit none
@@ -2152,6 +2152,14 @@ contains
       write (111, *) 'SPINMIXQBOUND= ', qbound_spin
     else
       write (111, *) 'Default SPINMIXQBOUND= ', qbound_spin
+    end if
+    call ioinput('ANGLES_CUTOFF   ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) angles_cutoff
+      if (ier/=0) stop 'Error reading `ANGLES_CUTOFF`: check your inputcard'
+      write (111, *) 'ANGLES_CUTOFF= ', angles_cutoff
+    else
+      write (111, *) 'Default ANGLES_CUTOFF= ', angles_cutoff
     end if
 
     ! do NSIMPLEMIXFIRST simple mixing iterations even for Broyden or Anderson mixing
