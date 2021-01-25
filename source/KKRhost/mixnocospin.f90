@@ -145,6 +145,7 @@ contains
     real (kind=dp), intent(in) :: totmoment_atoms(natyp) !! length of the magentization vectors
     integer, intent(in) :: iounit !! output unit where the nonco_angles output file is written
     ! local
+    real (kind=dp), parameter :: tol = 1.0e-12_dp !! MdSD: shifting problems with Broyden to the future
     integer :: nfixed !! number of fixed angles
     integer :: ipos !! for loop indices etc.
     integer :: vlen !! length of vector
@@ -196,6 +197,12 @@ contains
     ! different alpha for simple mixing and broyden mixing steps
     alpha = mixfac_broydenspin
     if (iter<=ninit_broydenspin) alpha = 1.0_dp ! always use alpha=1 for simple mixing steps
+
+    ! MdSD: there are special high-symmetry situations where the rms for the angles is zero
+    ! MdSD: linear mixing is fine with that, but if broyden is called it will cause a NaN
+    ! MdSD: this line delays using Broyden
+    if (rms < tol .and. iter == ninit_broydenspin) ninit_broydenspin = ninit_broydenspin + 1
+
 
     ! now do Broyden mixing
     call broyden (vector, vlen, alpha, rms, iter, &
