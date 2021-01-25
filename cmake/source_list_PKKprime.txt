@@ -26,6 +26,7 @@ add_library(lib_pkkr STATIC
     source/common/global_variables.F90
     source/common/version_info.F90
     source/common/version.F90
+    source/common/profiling.f90
     source/PKKprime/type_inc.F90
     source/PKKprime/mod_mympi.F90
     source/PKKprime/mod_ioformat.f90
@@ -59,8 +60,8 @@ add_executable(
     source/PKKprime/main.f90
 )
 target_link_libraries(Pkkr.x lib_pkkr)
-if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
-    target_link_libraries(Pkkr.x ${lapackblas_libraries})
+if(CMAKE_Fortran_COMPILER_ID MATCHES GNU OR USE_LIBFLAME)
+    target_link_libraries(Pkkr.x ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 endif()
 
 
@@ -71,8 +72,8 @@ add_executable(
     source/PKKprime/bands.f90
 )
 target_link_libraries(band.x lib_pkkr)
-if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
-    target_link_libraries(band.x ${lapackblas_libraries})
+if(CMAKE_Fortran_COMPILER_ID MATCHES GNU OR USE_LIBFLAME)
+    target_link_libraries(band.x ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 endif()
 
 
@@ -82,8 +83,8 @@ add_executable(
     source/PKKprime/mergerefined.F90
 )
 target_link_libraries(mergerefined.x lib_pkkr)
-if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
-    target_link_libraries(mergerefined.x ${lapackblas_libraries})
+if(CMAKE_Fortran_COMPILER_ID MATCHES GNU OR USE_LIBFLAME)
+    target_link_libraries(mergerefined.x ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 endif()
 
 
@@ -93,8 +94,8 @@ add_executable(
     source/PKKprime/refineBZparts.f90
 )
 target_link_libraries(refineBZparts.x lib_pkkr)
-if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
-    target_link_libraries(refineBZparts.x ${lapackblas_libraries})
+if(CMAKE_Fortran_COMPILER_ID MATCHES GNU OR USE_LIBFLAME)
+    target_link_libraries(refineBZparts.x ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 endif()
 
 
@@ -104,8 +105,8 @@ add_executable(
     source/PKKprime/Amatprecalc.f90
 )
 target_link_libraries(Amatprecalc.x lib_pkkr)
-if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
-    target_link_libraries(Amatprecalc.x ${lapackblas_libraries})
+if(CMAKE_Fortran_COMPILER_ID MATCHES GNU OR USE_LIBFLAME)
+    target_link_libraries(Amatprecalc.x ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 endif()
 
 
@@ -115,8 +116,8 @@ add_executable(
     source/PKKprime/calculate_spinmixing.F90
 )
 target_link_libraries(calculate_spinmixing.x lib_pkkr)
-if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
-    target_link_libraries(calculate_spinmixing.x ${lapackblas_libraries})
+if(CMAKE_Fortran_COMPILER_ID MATCHES GNU OR USE_LIBFLAME)
+    target_link_libraries(calculate_spinmixing.x ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 endif()
 
 
@@ -126,8 +127,8 @@ add_executable(
     source/PKKprime/visdata.F90
 )
 target_link_libraries(visdata.x lib_pkkr)
-if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
-    target_link_libraries(visdata.x ${lapackblas_libraries})
+if(CMAKE_Fortran_COMPILER_ID MATCHES GNU OR USE_LIBFLAME)
+    target_link_libraries(visdata.x ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 endif()
 
 
@@ -137,8 +138,8 @@ add_executable(
     source/PKKprime/vis2int.F90
 )
 target_link_libraries(vis2int.x lib_pkkr)
-if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
-    target_link_libraries(vis2int.x ${lapackblas_libraries})
+if(CMAKE_Fortran_COMPILER_ID MATCHES GNU OR USE_LIBFLAME)
+    target_link_libraries(vis2int.x ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 endif()
 
 
@@ -148,7 +149,7 @@ add_executable(
     source/PKKprime/test.F90
 )
 target_link_libraries(test.x lib_pkkr)
-if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
-    target_link_libraries(test.x ${lapackblas_libraries})
+if(CMAKE_Fortran_COMPILER_ID MATCHES GNU OR USE_LIBFLAME)
+    target_link_libraries(test.x ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 endif()
 

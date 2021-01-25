@@ -45,7 +45,7 @@ contains
 #endif
     use :: mod_datatypes, only: dp
     use :: mod_runoptions, only: calc_exchange_couplings, disable_tmat_sratrick, formatted_file, stop_1b, &
-      write_BdG_tests, write_pkkr_operators, write_rhoq_input, set_cheby_nospeedup, set_cheby_nosoc, calc_wronskian
+      write_BdG_tests, write_pkkr_operators, write_rhoq_input, set_cheby_nospeedup, decouple_spins_cheby, calc_wronskian
     use :: mod_constants, only: czero, cone, cvlight
     use :: global_variables, only: ntotd, ncleb, nrmaxd, mmaxd, nspind, nspotd, iemxd, lmmaxd, korbit
     use :: mod_wunfiles, only: t_params
@@ -190,7 +190,7 @@ contains
       vnspll0, vnspll1, hlk, jlk, hlk2, jlk2, tmatsph, ull, rll, sll, rllleft, sllleft)
 
     vins(1:irmdnew, 1:lmpot, 1) = vinsnew(1:irmdnew, 1:lmpot, ipot)
-    if (.not.set_cheby_nosoc) vins(1:irmdnew, 1:lmpot, nspin) = vinsnew(1:irmdnew, 1:lmpot, ipot+nspin-1)
+    if (.not.decouple_spins_cheby) vins(1:irmdnew, 1:lmpot, nspin) = vinsnew(1:irmdnew, 1:lmpot, ipot+nspin-1)
 
     KBdG = 0
 #ifdef CPP_BdG
@@ -345,7 +345,7 @@ contains
         !$omp end critical
 #endif
 
-        if ( .not. set_cheby_nosoc) then
+        if ( .not. decouple_spins_cheby) then
           ! Contruct the spin-orbit coupling hamiltonian and add to potential
           call spinorbit_ham(lmax, lmmax0d, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpot, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
             vnspll0(:,:,:), vnspll1(:,:,:,ith), '1')
@@ -411,7 +411,7 @@ contains
         hlk2(:, :, ith) = czero
         jlk2(:, :, ith) = czero
         gmatprefactor = czero
-        if (set_cheby_nosoc) then
+        if (decouple_spins_cheby) then
           use_fullgmat = 0
         else
           use_fullgmat = 1

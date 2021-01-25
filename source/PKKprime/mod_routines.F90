@@ -28,6 +28,10 @@ contains
 #ifdef CPP_MPI
     use mpi
 #endif
+#ifdef CPP_TIMING
+    use mod_timing,     only: timing_init, timing_start, timing_stop
+    use mod_types, only: t_inc ! needed to set i_time=0 for all but the master rank
+#endif
 
     implicit none
 
@@ -46,13 +50,23 @@ contains
 #endif
     call mympi_init()
 
-    !Read in TBKKR-data
-    call read_inc(inc)
+#ifdef CPP_TIMING
+    if (myrank/=master) t_inc%i_time = 0 ! diable writeing of the timing file for all but the master rank
+    call timing_init(myrank, disable_serial_number=.true.)
+#endif
 
+    !Read in TBKKR-data
+#ifdef CPP_TIMING
+    call timing_start('Read TBkkr-data')
+#endif
+    call read_inc(inc)
     call read_TBkkrdata(inc, lattice, cluster, tgmatrx)
 
     !Perform tests
     if(myrank==master) call testpath(inc, lattice, cluster, tgmatrx)
+#ifdef CPP_TIMING
+    call timing_stop('Read TBkkr-data')
+#endif
 
     !Calculate the Fermi Surface
     call fermisurface(inc, lattice, cluster, tgmatrx, nkpts, kpoints, areas)

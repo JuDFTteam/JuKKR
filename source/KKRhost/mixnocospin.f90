@@ -23,7 +23,7 @@ contains
   subroutine spinmix_noco(iter, natyp, theta, phi, fixdir, angles_new, totmoment, iounit)
     use mod_datatypes, only: dp
     use mod_constants, only: pi
-    use mod_runoptions, only: use_boyden_spinmix, write_angles_alliter, disable_print_serialnumber, fix_nonco_angles, set_cheby_nosoc
+    use mod_runoptions, only: use_broyden_spinmix, write_angles_alliter, disable_print_serialnumber, fix_nonco_angles, decouple_spins_cheby
     use global_variables, only: qbound_spin
     use mod_version_info, only: version_print_header
     use mod_wunfiles, only: t_params
@@ -45,7 +45,7 @@ contains
 
 
     ! MdSD,PR: write information on new angles to output file
-    if (.not.set_cheby_nosoc) then
+    if (.not.decouple_spins_cheby) then
 
       write (1337,*)
       write (1337, '("      I1    In/Out THETA[deg]       In/Out PHI[deg]        FIXDIR[boolean]   RMS(angles)[deg]")')
@@ -77,7 +77,7 @@ contains
         end do
       end if
 
-    end if ! .not.set_cheby_nosoc
+    end if ! .not.decouple_spins_cheby
   
     ! rewrite new theta and phi to nonco_angle_out.dat, nonco_angle.dat is the input
     if (.not. fix_nonco_angles) then
@@ -87,7 +87,7 @@ contains
       call version_print_header(iounit, disable_print=disable_print_serialnumber)
       if (write_angles_alliter) open(unit=iounit+1, file='nonco_angle_out_all_iter.dat', form='formatted', position='append')
 
-      if (.not.use_boyden_spinmix) then
+      if (.not.use_broyden_spinmix) then
 
         ! conventional scheme: use output angles as input
         do i1 = 1, natyp
@@ -219,7 +219,7 @@ contains
           phi = atan2(moment(2), moment(1))
         ! theta is 0 or pi
         else
-          if (moment(3) < 0.0_dp) then
+          if (moment(3) < 0.0_dp .and. abs(moment(3)) > 1e-14_dp) then
             theta = pi
           else
             theta = 0.0_dp

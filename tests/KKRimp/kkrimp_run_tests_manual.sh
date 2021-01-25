@@ -117,6 +117,14 @@ fi
 if [[ ! -f test_case_kkrflex_host_in_host/imp/test_run_Jij/out ]]; then
   echo "test 12"
   cd test_case_kkrflex_host_in_host/imp/test_run_Jij/
+  ln -s ../../../../kkrflex.exe_mpi kkrflex.exe
+  export OMP_NUM_THREADS=1; mpirun -np 8 ./kkrflex.exe | tee out
+  cd ../../../
+fi
+  
+if [[ ! -f test_case_kkrflex_host_in_host/imp/test_run_Jij_hybrid/out ]]; then
+  echo "test 12"
+  cd test_case_kkrflex_host_in_host/imp/test_run_Jij_hybrid/
   ln -s ../../../../kkrflex.exe_hybrid kkrflex.exe
   export OMP_NUM_THREADS=1; mpirun -np 8 ./kkrflex.exe | tee out
   cd ../../../
@@ -125,7 +133,7 @@ fi
 if [[ ! -f test_case_kkrflex_host_in_host/imp/test_run_Jij_savewf/out ]]; then
   echo "test 13"
   cd test_case_kkrflex_host_in_host/imp/test_run_Jij_savewf/
-  ln -s ../../../../kkrflex.exe_hybrid kkrflex.exe
+  ln -s ../../../../kkrflex.exe_mpi kkrflex.exe
   export OMP_NUM_THREADS=1; mpirun -np 8 ./kkrflex.exe | tee out
   cd ../../../
 fi
@@ -133,7 +141,7 @@ fi
 if [[ ! -f test_case_kkrflex_host_in_host/imp/test_run_Jij_nosratrick/out ]]; then
   echo "test 14"
   cd test_case_kkrflex_host_in_host/imp/test_run_Jij_nosratrick/
-  ln -s ../../../../kkrflex.exe_hybrid kkrflex.exe
+  ln -s ../../../../kkrflex.exe_mpi kkrflex.exe
   export OMP_NUM_THREADS=1; mpirun -np 8 ./kkrflex.exe | tee out
   cd ../../../
 fi

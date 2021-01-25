@@ -84,7 +84,6 @@ contains
       end if
 
       ! read in non-collinear angles
-!      call read_angles(t_params, natyp, theta, phi)
       theta(1:natyp) = t_params%theta(1:natyp)
       phi(1:natyp) = t_params%phi(1:natyp)
 

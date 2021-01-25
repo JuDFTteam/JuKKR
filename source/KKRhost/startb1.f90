@@ -496,7 +496,7 @@ contains
             do j = 1, irmin(ih)
               vm2z(j, i) = vm2z(j, i) + vconst
             end do
-          else if (abs(vconst)>eps) then
+          else if (abs(vconst)>eps .and. ivshift==0) then
             write (1337, *) 'shifting potential by VCONST=', vconst
             do j = 1, nr
               vm2z(j, i) = vm2z(j, i) + vconst

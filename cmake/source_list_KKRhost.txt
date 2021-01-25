@@ -12,8 +12,6 @@ if(ENABLE_MPI) # this works only in hybrid mode at the moment and not with OpenM
 endif()
 
 # parallelization of global/local solutions broken, probably because local solutions are called within global solutions
-#set_source_files_properties(source/KKRhost/rll_global_solutions.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
-#set_source_files_properties(source/KKRhost/sll_global_solutons.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
 #set_source_files_properties(source/KKRhost/rll_local_solutions.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
 #set_source_files_properties(source/KKRhost/sll_local_solutons.F90 PROPERTIES COMPILE_FLAGS "${ompflags}")
 
@@ -28,10 +26,18 @@ endif()
 if(WRITE_RLLSLL_STANDALONE_INPUT)
     add_definitions(-Dtest_prep)
 endif()
+if(WRITE_KLOOP_STANDALONE_INPUT)
+    add_definitions(-DCPP_WRITE_KLOOP_TEST_INPUT)
+endif()
 
 
 # some static dimensions used in Dirac solver
 execute_process(COMMAND ln -s ../source/KKRhost/sprkkr_rmesh.dim .)
+
+
+# external libraries (need their own CMakeLists!)
+#add_subdirectory(source/external/NPY-for-Fortran)
+
 
 # these are the source files of KKRhost, create kkr_library to be able to conveniently reuse parts of if in BdG development version
 add_library(lib_common STATIC
@@ -103,8 +109,23 @@ add_library(lib_common STATIC
     source/common/wronskian.f90
     source/common/mathtools.f90
 )
-# disable cmake auto add pf 'lib' prefix to .so file
+# disable cmake auto add of 'lib' prefix to .so file
 SET_TARGET_PROPERTIES(lib_common PROPERTIES PREFIX "")
+
+
+if(ENABLE_PATCH_INTEL)
+    # disable cmake auto add of 'lib' prefix to .so file
+    add_library(lib_patch_intel STATIC
+        source/common/patch_intel.c
+        source/common/patch_intel.f90
+    )
+    SET_TARGET_PROPERTIES(lib_patch_intel PROPERTIES PREFIX "")
+    # activate preprcessor flag to call patch_intel subroutine
+    add_definitions(-DCPP_PATCH_INTEL)
+    target_link_libraries(lib_common lib_patch_intel)
+endif()
+
+
 add_library(lib_kkrhost STATIC
     source/KKRhost/addvirtual14.f90
     source/KKRhost/amemagvec.f90
@@ -367,7 +388,7 @@ add_library(lib_kkrhost STATIC
     source/KKRhost/wunfiles.F90
     source/KKRhost/ylag.f90
 )
-# disable cmake auto add pf 'lib' prefix to .so file
+# disable cmake auto add of 'lib' prefix to .so file
 SET_TARGET_PROPERTIES(lib_kkrhost PROPERTIES PREFIX "")
 target_link_libraries(lib_kkrhost lib_common)
 
@@ -378,8 +399,8 @@ add_executable(
     source/KKRhost/main_all.F90
     )
 target_link_libraries(kkr.x lib_kkrhost)
-if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
-    target_link_libraries(kkr.x ${lapackblas_libraries})
+if(CMAKE_Fortran_COMPILER_ID MATCHES GNU OR USE_LIBFLAME)
+    target_link_libraries(kkr.x ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 endif()
 target_link_libraries(kkr.x "${ompflags}")
 
@@ -391,7 +412,7 @@ if(ENABLE_BdG)
         source/KKRhost/main1a_dummy_BdG.f90 
         )
     target_link_libraries(kkr_BdG_radial.x lib_kkrhost)
-    if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
-        target_link_libraries(kkr_BdG_radial.x ${lapackblas_libraries})
+    if(CMAKE_Fortran_COMPILER_ID MATCHES GNU OR USE_LIBFLAME)
+        target_link_libraries(kkr_BdG_radial.x ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
     endif()
 endif()

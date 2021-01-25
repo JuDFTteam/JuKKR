@@ -79,6 +79,9 @@ program kkrflex
 
   use mod_mathtools
   use mod_version_info
+#ifdef CPP_PATCH_INTEL
+  use mod_patch_intel, only: patch_intel
+#endif
   implicit none 
 
 !***********************************
@@ -213,6 +216,14 @@ mpi_size=1
 ! find serial number that is printed to files
 call construct_serialnr()
 
+
+#ifdef CPP_PATCH_INTEL
+  ! this makes the MKL think it works on intel hardware even if it runs on AMD
+  ! seems to give better performance than unpatched MKL or BLIS+LIBFLAME
+  call patch_intel()
+#endif
+
+
 ! ********************************************************** 
 ! open the log (and timing) file for each processor 
 ! the log file is called out_log.xxx.txt where xxx is 
@@ -265,7 +276,7 @@ mythread = omp_get_thread_num()
 if (myrank==0 .and. mythread==0) then
   nthreads = omp_get_num_threads()
   write (*, '(/79("*")//1X,A,I5//79("*")/)') 'Number of OpenMP threads used:', nthreads
-  if(t_inc%i_write) write (1337, '(/79("*")//1X,A,I5//79("*")/)') 'Number of OpenMP threads used:', nthreads
+  if(t_inc%i_write>0) write (1337, '(/79("*")//1X,A,I5//79("*")/)') 'Number of OpenMP threads used:', nthreads
 end if
 !$omp end parallel
 #endif

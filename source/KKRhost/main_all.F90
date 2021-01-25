@@ -4,6 +4,7 @@
 ! of the MIT license as expressed in the LICENSE.md file in more detail.                  !
 !-----------------------------------------------------------------------------------------!
 
+
 ! -----------------------------------------------------------------------------------
 !> Summary: Main program for the JM-KKR
 !> Author: Philipp Ruessmann, Bernd Zimmermann, Phivos Mavropoulos, R. Zeller, and many others ...
@@ -59,7 +60,9 @@ program kkrcode
     rc, rcls, rclsimp, refpot, righttinvll, rmesh, rmtnew, rmtrefat, rnew, rpan_intervall, rr, rrel, rrot, rs, rws, s, rmt, rmtref, &
     socscale, socscl, srrel, thesme, thetas, thetasnew, tleft, tright, rmrel, uldau, vins, visp, vref, vtrel, wez, wg, wldau, &
     yrg, zat, zrel, ueff
-
+#ifdef CPP_PATCH_INTEL
+  use mod_patch_intel, only: patch_intel
+#endif
 
   implicit none
 
@@ -89,6 +92,16 @@ program kkrcode
   ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< initialize MPI !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
+#ifdef CPP_PATCH_INTEL
+  ! this makes the MKL think it works on intel hardware even if it runs on AMD
+  ! seems to give better performance than unpatched MKL or BLIS+LIBFLAME
+  call patch_intel()
+#endif
+
+
 
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! start KKR with main0 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

@@ -29,6 +29,9 @@ contains
     use mod_ioformat,   only: filename_cubesinfo, ext_formatted, fmt_fn_ext
     use mod_iohelp,     only: file_present
     use mod_fermisurf_basic, only: get_cubesinfo_filename, read_cubesfile, save_cubesfile, mark_cubes_FScross, find_kpoints_irredset, save_kpointsfile_vis
+#ifdef CPP_TIMING
+    use mod_timing, only: timing_start, timing_stop
+#endif
     implicit none
 
     type(inc_type),     intent(in) :: inc
@@ -59,6 +62,9 @@ contains
     character(len=256) :: filename, filetest
     logical :: l_cubesfile, l_exist
 
+#ifdef CPP_TIMING
+    call timing_start('  FS 3D - get cubes')
+#endif
 
     call get_IBZwedge_faces(lattice%recbv, symmetries%nsym_used, symmetries%rotmat, symmetries%isym_used, nfaces, nvec, dscal, bounds)
 
@@ -134,12 +140,18 @@ contains
         end do!icube
       end if!iterstart==1
 
+#ifdef CPP_TIMING
+    call timing_stop('  FS 3D - get cubes')
+#endif
 
       !======
       != scan the cubes for intersections
       !======
       do iter=iterstart,nFSiter
 
+#ifdef CPP_TIMING
+        call timing_start('  FS 3D - FS iter - mark cubes in IBZ')
+#endif
         !=== mark the cubes that lie (at least with one corner) within the first BZ ===!
         call mark_cubes_in_IBZ(nCub3, nfaces, nvec, dscal, bounds, nmarked, imarked)
         if(myrank==master) then
@@ -148,7 +160,13 @@ contains
           write(*,'("***** Iteration ",I0," *****")') iter
           write(*,'(2X,2(A,I0),(A,F5.1,A))') 'Cubes found within the IBZ: ', nmarked, ' of ', ntotal, ' (= ', real(nmarked*100)/ntotal,' %)'
         end if!myrank==master
+#ifdef CPP_TIMING
+        call timing_stop('  FS 3D - FS iter - mark cubes in IBZ')
+#endif
 
+#ifdef CPP_TIMING
+        call timing_start('  FS 3D - FS iter - find FS crossings')
+#endif
         !========= mark the cubes that cross the Fermi surface =========!
         !=== (only searching across the four diagonals of the cubes) ===!
         ntotal = nmarked
@@ -161,7 +179,13 @@ contains
           write(*,'(2X,2(A,I0),(A,F5.1,A))') 'Cubes found intersecting with FS: ', nmarked, ' of ', ntotal, ' (= ', real(nmarked*100)/ntotal,' %)'
           call save_cubesfile(nCub3, nmarked, imarked, lintermediate=.true.)
         end if!myrank==master
+#ifdef CPP_TIMING
+        call timing_stop('  FS 3D - FS iter - find FS crossings')
+#endif
 
+#ifdef CPP_TIMING
+        call timing_start('  FS 3D - FS iter - divide cubes')
+#endif
         !=== cut the remaining cubes into smaller pieces and update the indices ===!
 !       write(1000+myrank,*) iter, nCut_iter(iter)
         call cut_and_update_cubes(nCut_iter(iter), nCub3, nmarked, imarked)
@@ -170,6 +194,9 @@ contains
           write(filename,'("cubes_iter=",I0,"_step=",I0,"_",(A),".vtp")') iter, 3, 'cut'
           call cubes2VTK(filename, nCub3, nmarked, imarked, bounds)
         end if!myrank==master
+#ifdef CPP_TIMING
+        call timing_stop('  FS 3D - FS iter - divide cubes')
+#endif
 
       end do!iter
 
@@ -238,6 +265,10 @@ contains
 !     dtmp=dtmp+datan(ii*0.1d0)/ii
 !   end do!ii
 
+#ifdef CPP_TIMING
+    call timing_start('  FS 3D - find FS intersections')
+#endif
+
 !   write(*,*) 'before sub find_intesection_triangles, myrank=',myrank
     call find_intesection_triangles( inc, lattice, cluster, tgmatrx, symmetries,  &
                                    & nCub3, bounds, nmarked, imarked,             &
@@ -248,6 +279,9 @@ contains
 
     call find_kpoints_irredset( bounds, nkpts_vis, kpoints_vis, nkpts_irr, kpt2irr, irr2kpt)
 
+#ifdef CPP_TIMING
+    call timing_stop('  FS 3D - find FS intersections')
+#endif
 
     !save the visualization k-points to a file
     if(myrank==master) call save_kpointsfile_vis(nkpts_vis, nkpts_irr, kpoints_vis, symmetries%nsym_used, symmetries%isym_used, kpt2irr, irr2kpt, vis2int)
@@ -277,6 +311,9 @@ contains
     use mod_fermisurf_basic, only: roots_along_edge, compare_two_eigv_in_substeps, ROOT_IMAG, ROOT_REAL, generate_cubevertices
 #ifdef CPP_MPI
     use mpi
+#endif
+#ifdef CPP_TIMING
+    use mod_timing,     only: timing_start, timing_stop
 #endif
     implicit none
 
@@ -407,6 +444,10 @@ contains
 
       !update statusbar
       if(mod(icub,printstep)==0 .and. myrank==master) write(*,FMT=200)
+#ifdef CPP_TIMING
+      if (icub==1) call timing_start('  FS 3D - find FS intersections - time1')
+      if (icub==1) call timing_start('  FS 3D - find FS intersections - time10')
+#endif
 
 !     write(iofile,'(A,I0)') 'starting cube ', imarked(icub+ioff)
 
@@ -432,6 +473,11 @@ contains
                              & RVroot(:,:,:,iedge), eigwroot(:,:,iedge), -1,        &
                              & eigwends(:,:,iedge)                                  )
       end do!iedge
+
+#ifdef CPP_TIMING
+      if (icub==1) call timing_stop('  FS 3D - find FS intersections - time1')
+      if (icub==10) call timing_stop('  FS 3D - find FS intersections - time10')
+#endif
 
 #ifdef CPP_DEBUG
       write(iofile,'(2X,"#roots found on the edges:")')

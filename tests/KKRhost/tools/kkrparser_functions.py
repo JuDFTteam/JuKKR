@@ -20,7 +20,7 @@ __copyright__ = (u"Copyright (c), 2017, Forschungszentrum Jülich GmbH,"
                  "IAS-1/PGI-1, Germany. All rights reserved.")
 __license__ = "MIT license, see LICENSE.txt file"
 __contributors__ = u"Philipp Rüßmann"
-__version__ = "1.7"
+__version__ = "1.8"
 
 ####################################################################################
 
@@ -76,6 +76,19 @@ def get_rms(outfile, outfile2, debug=False):
     natoms = int(len(rms_charge_atoms)//niter) # number of atoms in system, needed to take only atom resolved rms of last iteration
     if debug: print(natoms)
     return rms_charge, rms_spin, rms_charge_atoms[-natoms:], rms_spin_atoms[-natoms:]
+
+
+def get_noco_rms(outfile, debug=False):
+    """
+    Get average noco rms error
+    """
+    if debug: print(outfile)
+    try:
+        rms_noco = parse_array_float(outfile, 'Total RMS(angles)', [1, ':', 1], debug=debug)
+    except:
+        rms_noco = []
+        if debug: traceback.print_exc()
+    return rms_noco
 
 
 def get_neutr(outfile):
@@ -395,10 +408,16 @@ def use_newsosol(outfile_0init):
     f = open_general(outfile_0init)
     tmptxt = f.readlines()
     f.close()
-    itmp = search_string('NEWSOSOL', tmptxt)
     newsosol = False
-    if itmp>=0:
+    # old style (RUNOPT output)
+    itmp = search_string('NEWSOSOL', tmptxt)
+    if itmp>=0 and tmptxt[itmp].split()[0]=='NEWSOSOL':
         newsosol = True
+    itmp = search_string('<use_Chebychev_solver>=', tmptxt)
+    # new style: check for output of runoptions
+    if itmp>=0 :
+        if tmptxt[itmp].split()[1][:1]=='T':
+            newsosol = True    
     return newsosol
 
 
@@ -725,6 +744,18 @@ def parse_kkr_outputfile(out_dict, outfile, outfile_0init, outfile_000, timing_f
                     out_dict['magnetism_group'] = tmp_dict
         except:
             msg = "Error parsing output of KKR: orbital moment"
+            msg_list.append(msg)
+            if debug: traceback.print_exc()
+
+        # get RMS info for nonco angles
+        try:
+            if nspin>1 and newsosol:
+                result = get_noco_rms(outfile, debug)
+                if len(result)>0:
+                    out_dict['convergence_group']['noco_angles_rms_all_iterations'] = result[:]
+                    out_dict['convergence_group']['noco_angles_rms_all_iterations_unit'] = 'degrees'
+        except:
+            msg = "Error parsing output of KKR: noco angles rms value"
             msg_list.append(msg)
             if debug: traceback.print_exc()
 
