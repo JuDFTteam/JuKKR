@@ -172,7 +172,7 @@ contains
     integer                 :: iatom
     
     open(unit=57493215, file='bconstr_out.dat', status='replace')
-    write(57493215,'("# bconstr_x [Ry], bconstr_y [Ry], bconstr_z [Ry]")')
+    write(57493215,'("# bconstr_x [Ry], bconstr_y [Ry], bconstr_z [Ry], m_spin [mu_B]")')
     do iatom=1,natyp
       write(57493215,'(4es16.8)') bconstr_in(:,iatom)
       bconstr_out(iatom,:) = bconstr_in(1:3,iatom)
