@@ -306,6 +306,7 @@ contains
     end do
     end if
  
+    ! test writeout
     !write(6,*) 'dllpmax',dllpmax,'iter_beta',iter_beta
 
     end do ! niter_beta
