@@ -760,7 +760,7 @@ contains
         !----------------------------------------------------------------------------
         ! Orbital magnetic moments
         !----------------------------------------------------------------------------
-        if (krel==1) then
+        if ((krel+korbit)==1) then
           do ispin = 1, 3
             do l = 0, lmax + 1
               muorb(lmaxd1+1, ispin, i1) = muorb(lmaxd1+1, ispin, i1) + muorb(l, ispin, i1)
