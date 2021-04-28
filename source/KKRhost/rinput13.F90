@@ -150,7 +150,6 @@ contains
     real (kind=dp), intent (inout) :: emusemi !! Top of semicore contour in Ryd.
     real (kind=dp), intent (inout) :: ebotsemi !! Bottom of semicore contour in Ryd
     real (kind=dp), intent (inout) :: fsemicore !! Initial normalization factor for semicore states (approx. 1.)
-    real (kind=dp), intent (inout) :: lambda_xc !! Scale magnetic moment (0 < Lambda_XC < 1,0=zero moment, 1= full moment)
     complex (kind=dp), intent (inout) :: deltae !! LLY Energy difference for numerical derivative
     logical, intent (inout) :: lrhosym
     logical, intent (inout) :: linipol !! True: Initial spin polarization; false: no initial spin polarization
@@ -184,6 +183,7 @@ contains
     real (kind=dp), dimension (:, :), allocatable, intent (out) :: rbasis !! Position of atoms in the unit cell in units of bravais vectors
     ! variables for spin-orbit/speed of light scaling
     real (kind=dp), dimension (:), allocatable, intent (out) :: socscale !! Spin-orbit scaling
+    real (kind=dp), dimension (:), allocatable, intent (out) :: lambda_xc !! Scale magnetic moment (0 < Lambda_XC < 1,0=zero moment, 1= full moment)
     real (kind=dp), dimension (:, :), allocatable, intent (out) :: cscl !! Speed of light scaling
     real (kind=dp), dimension (:, :), allocatable, intent (out) :: socscl
     character (len=10), intent (inout) :: solver !! Type of solver
@@ -257,7 +257,7 @@ contains
     integer :: ndim  !! Dimension for the Bravais lattice for slab or bulk (2/3)
     integer :: nasoc
     integer :: i, il, j, ier, ier2, i1, ii, ir, idosemicore, i_stat, i_all
-    real (kind=dp) :: soscale, ctlscale
+    real (kind=dp) :: soscale, ctlscale, lambda_xc_all
     real (kind=dp) :: brymix, strmix, tx, ty, tz
     character (len=43) :: tshape
     character (len=:), allocatable :: uio  ! NCOLIO=256
@@ -1409,14 +1409,35 @@ contains
 
     ! Scale magnetic moment (0 < Lambda_XC < 1,  0=zero moment, 1= full
     ! moment)
-    lambda_xc = 1.0_dp
+    ! MdSD: now atom dependent
+    allocate (lambda_xc(natyp), stat=i_stat)
+    call memocc(i_stat, product(shape(lambda_xc))*kind(lambda_xc), 'LAMBDA_XC', 'rinput13')
+    ! MdSD: default behavior
+    lambda_xc(1:natyp) = 1.0_dp
+    ! MdSD: check if there is atom-dependent info for xc
+    call ioinput('<BXCSCL>        ', uio, 1, 7, ier)
+    if (ier==0) then
+      write (111, '(A10)') '<BXCSCL>  '
+      do i = 1, natyp
+        call ioinput('<BXCSCL>        ', uio, i, 7, ier)
+        if (ier==0) then
+          read (unit=uio, fmt=*, iostat=ier) lambda_xc(i)
+          if (ier/=0) stop 'Error reading `<BXCSCL>`: check your inputcard'
+          write (111, fmt='(F6.3)') lambda_xc(i)
+        end if
+      end do
+    else
+      write (111, *) 'Default LAMBDA_XC= ', lambda_xc(1)
+    end if
+    ! MdSD: old option is used as override
     call ioinput('LAMBDA_XC       ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*, iostat=ier) lambda_xc
+      read (unit=uio, fmt=*, iostat=ier) lambda_xc_all
       if (ier/=0) stop 'Error reading `LAMBDA_XC`: check your inputcard'
-      write (111, *) 'LAMBDA_XC= ', lambda_xc
+      write (111, *) 'LAMBDA_XC= ', lambda_xc_all
+      lambda_xc(1:natyp) = lambda_xc_all
     else
-      write (111, *) 'Default LAMBDA_XC= ', lambda_xc
+      write (111, *) 'Default LAMBDA_XC= ', lambda_xc(1)
     end if
 
     !--------------------------------------------------------------------------------

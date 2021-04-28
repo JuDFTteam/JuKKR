@@ -560,7 +560,7 @@ contains
     ! Recalculate XC-potential with zero spin density for magn. moment scaling
     vxcnm(:, :, :) = 0.0_dp          ! Initialize
     excnm(:, :) = 0.0_dp
-    if (abs(lambda_xc-1.0_dp)>eps .and. nspin==2) then
+    if (any(abs(lambda_xc-1.0_dp)>eps) .and. nspin==2) then
       rho2nsnm(:, :, :, 1) = rho2ns(:, :, :, 1) ! Copy charge density
       rho2nsnm(:, :, :, 2) = 0.0_dp  ! Set spin density to zero
       call vxcdrv(excnm, kte, kxc, lpot, nspin, 1, natyp, rho2nsnm, vxcnm, rmesh, drdi, &
@@ -572,12 +572,18 @@ contains
           excdiff = excdiff + exc(lm, i1) - excnm(lm, i1)
         end do
       end do
-      write (1337, *) 'LAMBDA_XC=', lambda_xc, 'EXCDIF=', excdiff
+      write (1337, *) 'LAMBDA_XC=', lambda_xc(1), 'EXCDIF=', excdiff
     end if
 
     ! Add xc-potential with magn. part weighted by lambda_xc
-    vons(:, :, :) = vons(:, :, :) + lambda_xc*vxcm(:, :, :) + (1.0_dp-lambda_xc)*vxcnm(:, :, :)
-    exc(:, :) = lambda_xc*exc(:, :) + (1.0_dp-lambda_xc)*excnm(:, :)
+    do i1 = 1, natyp
+      write (1337, *) 'ATOM=', i1, 'LAMBDA_XC=', lambda_xc(i1)
+      do i2 = 1, nspin
+        ipot = nspin*(i1-1) + i2
+        vons(:, :, ipot) = vons(:, :, ipot) + lambda_xc(i1)*vxcm(:, :, ipot) + (1.0_dp-lambda_xc(i1))*vxcnm(:, :, ipot)
+      end do
+      exc(:, i1) = lambda_xc(i1)*exc(:, i1) + (1.0_dp-lambda_xc(i1))*excnm(:, i1)
+    end do
 
 
     if (write_potential_tests) then     ! bauer
