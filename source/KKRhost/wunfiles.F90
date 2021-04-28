@@ -163,7 +163,6 @@ module mod_wunfiles
     real (kind=dp) :: emusemi
     real (kind=dp) :: ebotsemi
     real (kind=dp) :: fsemicore
-    real (kind=dp) :: lambda_xc    !! Scale magnetic moment (0! Lambda_XC! 1, 0=zero moment, 1= full moment)
     real (kind=dp) :: chrgsemicore
     complex (kind=dp) :: deltae    !! Energy difference for numerical derivative
     logical :: lnc                 !! Coupled equations in two spins (switches true if KREL=1 or KORBIT=1 or KNOCO=1)
@@ -210,6 +209,7 @@ module mod_wunfiles
     real (kind=dp), dimension (:), allocatable :: denefat
     real (kind=dp), dimension (:), allocatable :: erefldau !! the energies of the projector's wave functions (REAL)
     real (kind=dp), dimension (:), allocatable :: socscale !! Spin-orbit scaling
+    real (kind=dp), dimension (:), allocatable :: lambda_xc !! Scale magnetic moment (0! Lambda_XC! 1, 0=zero moment, 1= full moment)
     real (kind=dp), dimension (:, :, :), allocatable :: vins !! Non-spherical part of the potential
     real (kind=dp), dimension (:, :), allocatable :: rmesh !! Radial mesh ( in units a Bohr)
     real (kind=dp), dimension (:, :), allocatable :: rr
@@ -477,7 +477,6 @@ contains
     real (kind=dp), intent (in) :: tolrdif !! Tolerance for r<tolrdif (a.u.) to handle vir. atoms
     real (kind=dp), intent (in) :: ebotsemi
     real (kind=dp), intent (in) :: fsemicore
-    real (kind=dp), intent (in) :: lambda_xc !! Scale magnetic moment (0! Lambda_XC! 1, 0=zero moment, 1= full moment)
     logical, intent (in) :: lrhosym
     logical, intent (in) :: linterface !! If True a matching with semi-inifinite surfaces must be performed
     character (len=10), intent (in) :: solver                           !! Type of solver
@@ -514,6 +513,7 @@ contains
     real (kind=dp), dimension (natyp), intent (in) :: rmtnew !! Adapted muffin-tin radius
     real (kind=dp), dimension (natyp), intent (in) :: erefldau !! the energies of the projector's wave functions (REAL)
     real (kind=dp), dimension (natyp), intent (in) :: socscale !! Spin-orbit scaling
+    real (kind=dp), dimension (natyp), intent (in) :: lambda_xc !! Scale magnetic moment (0! Lambda_XC! 1, 0=zero moment, 1= full moment)
     real (kind=dp), dimension (irm, natyp), intent (in) :: r !! Radial mesh ( in units a Bohr)
     real (kind=dp), dimension (3, 0:nr), intent (in) :: rr
     real (kind=dp), dimension (irm, natyp), intent (in) :: drdi !! Derivative dr/di
@@ -819,7 +819,7 @@ contains
       maxmesh,nsymat,natomimp,invmod,nqcalc,intervx,intervy,intervz,lpot,nright,    &
       nleft,imix,itdbry,kpre,kshape,kte,kvmad,kxc,ishift,kforce,idoldau,itrunldau,  &
       ntldau,npolsemi,n1semi,n2semi,n3semi,iesemicore,ebotsemi,emusemi,tksemi,      &
-      fsemicore,r_log,emin,emax,tk,efermi,alat,cpatol,mixing,qbound,fcm,lambda_xc,  &
+      fsemicore,r_log,emin,emax,tk,efermi,alat,cpatol,mixing,qbound,fcm,            &
       tolrdif,linterface,lrhosym,solver,tmpdir,itmpdir,iltmp,ntotd,ncheb,deltae,    &
       special_straight_mixing,                                                      &
       t_params)
@@ -841,7 +841,7 @@ contains
       ijtabsym,ijtabsh,ish,jsh,iqcalc,icheck,atomimp,refpot,irrel,nrrel,ifunm1,     &
       ititle,lmsp1,ntcell,ixipol,irns,ifunm,llmsp,lmsp,imt,irc,irmin,irws,nfu,      &
       hostimp,ilm_map,imaxsh,npan_log,npan_eq,npan_log_at,npan_eq_at,npan_tot,      &
-      ipan_intervall,symunitary,vacflag,txc,rclsimp,krel)
+      ipan_intervall,symunitary,vacflag,txc,rclsimp,krel,lambda_xc)
 
     ! save information about the energy mesh
     call save_emesh(ielast,ez,wez,emin,emax,iesemicore,fsemicore,npol,tk,npnt1,     &
@@ -911,6 +911,8 @@ contains
     call memocc(i_stat, product(shape(t_params%btrel))*kind(t_params%btrel), 't_params%BTREL', 'init_t_params')
     allocate (t_params%socscale(t_params%natyp), stat=i_stat)
     call memocc(i_stat, product(shape(t_params%socscale))*kind(t_params%socscale), 't_params%SOCSCALE', 'init_t_params')
+    allocate (t_params%lambda_xc(t_params%natyp), stat=i_stat)
+    call memocc(i_stat, product(shape(t_params%lambda_xc))*kind(t_params%lambda_xc), 't_params%LAMBDA_XC', 'init_t_params')
     allocate (t_params%drdirel(t_params%irm,t_params%natyp), stat=i_stat)
     call memocc(i_stat, product(shape(t_params%drdirel))*kind(t_params%drdirel), 't_params%DRDIREL', 'init_t_params')
     allocate (t_params%r2drdirel(t_params%irm,t_params%natyp), stat=i_stat)
@@ -1503,7 +1505,6 @@ contains
     call mpi_bcast(t_params%mixing, 1, mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%qbound, 1, mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%fcm, 1, mpi_double_precision, master, mpi_comm_world, ierr)
-    call mpi_bcast(t_params%lambda_xc, 1, mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%tolrdif, 1, mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%efold, 1, mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%chrgold, 1, mpi_double_precision, master, mpi_comm_world, ierr)
@@ -1578,6 +1579,7 @@ contains
     call mpi_bcast(t_params%vtrel, (t_params%irm*t_params%natyp), mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%btrel, (t_params%irm*t_params%natyp), mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%socscale, (t_params%natyp), mpi_double_precision, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%lambda_xc, (t_params%natyp), mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%drdirel, (t_params%irm*t_params%natyp), mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%r2drdirel, (t_params%irm*t_params%natyp), mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%rmrel, (t_params%irm*t_params%natyp), mpi_double_precision, master, mpi_comm_world, ierr)
@@ -1737,7 +1739,7 @@ contains
     natomimp,invmod,nqcalc,intervx,intervy,intervz,lpot,nright,nleft,imix,itdbry,   &
     kpre,kshape,kte,kvmad,kxc,ishift,kforce,idoldau,itrunldau,ntldau,npolsemi,      &
     n1semi,n2semi,n3semi,iesemicore,ebotsemi,emusemi,tksemi,fsemicore,r_log,emin,   &
-    emax,tk,efermi,alat,cpatol,mixing,qbound,fcm,lambda_xc,tolrdif,linterface,      &
+    emax,tk,efermi,alat,cpatol,mixing,qbound,fcm,tolrdif,linterface,                &
     lrhosym,solver,tmpdir,itmpdir,iltmp,ntotd,ncheb,deltae,special_straight_mixing, &
     t_params)
     ! fill scalars into t_params
@@ -1849,7 +1851,6 @@ contains
     real (kind=dp), intent (in) :: tolrdif !! Tolerance for r<tolrdif (a.u.) to handle vir. atoms
     real (kind=dp), intent (in) :: ebotsemi
     real (kind=dp), intent (in) :: fsemicore
-    real (kind=dp), intent (in) :: lambda_xc !! Scale magnetic moment (0! Lambda_XC! 1, 0=zero moment, 1= full moment)
     complex (kind=dp), intent (in) :: deltae !! Energy difference for numerical derivative
     logical, intent (in) :: lrhosym
     logical, intent (in) :: linterface !! If True a matching with semi-inifinite surfaces must be performed
@@ -1965,7 +1966,6 @@ contains
     t_params%tolrdif = tolrdif
     t_params%ebotsemi = ebotsemi
     t_params%fsemicore = fsemicore
-    t_params%lambda_xc = lambda_xc
     ! Double complex
     t_params%deltae = deltae
     ! Logical
@@ -2000,7 +2000,7 @@ contains
     ijtabsh,ish,jsh,iqcalc,icheck,atomimp,refpot,irrel,nrrel,ifunm1,ititle,lmsp1,   &
     ntcell,ixipol,irns,ifunm,llmsp,lmsp,imt,irc,irmin,irws,nfu,hostimp,ilm_map,     &
     imaxsh,npan_log,npan_eq,npan_log_at,npan_eq_at,npan_tot,ipan_intervall,         &
-    symunitary,vacflag,txc,rclsimp,krel)
+    symunitary,vacflag,txc,rclsimp,krel,lambda_xc)
     ! ..
     implicit none
 
@@ -2074,6 +2074,7 @@ contains
     real (kind=dp), dimension (natyp), intent (in) :: rmtnew !! Adapted muffin-tin radius
     real (kind=dp), dimension (natyp), intent (in) :: erefldau !! the energies of the projector's wave functions (REAL)
     real (kind=dp), dimension (natyp), intent (in) :: socscale !! Spin-orbit scaling
+    real (kind=dp), dimension (natyp), intent (in) :: lambda_xc !! Scale magnetic moment (0! Lambda_XC! 1, 0=zero moment, 1= full moment)
 
     real (kind=dp), dimension (irm, natyp), intent (in) :: r !! Radial mesh ( in units a Bohr)
     real (kind=dp), dimension (3, 0:nr), intent (in) :: rr !! Set of real space vectors (in a.u.)
@@ -2194,6 +2195,7 @@ contains
     if (t_params%krel>0) t_params%vtrel = vtrel
     if (t_params%krel>0) t_params%btrel = btrel
     t_params%socscale = socscale
+    t_params%lambda_xc = lambda_xc
     if (t_params%krel>0) t_params%drdirel = drdirel
     if (t_params%krel>0) t_params%r2drdirel = r2drdirel
     if (t_params%krel>0) t_params%rmrel = rmrel
@@ -3175,7 +3177,7 @@ contains
     real (kind=dp), intent (inout) :: chrgold
     real (kind=dp), intent (inout) :: emusemi
     real (kind=dp), intent (inout) :: ebotsemi
-    real (kind=dp), intent (inout) :: lambda_xc
+    real (kind=dp), dimension (natyp), intent (inout) :: lambda_xc
     real (kind=dp), dimension (natyp), intent (inout) :: a
     real (kind=dp), dimension (natyp), intent (inout) :: b
     real (kind=dp), dimension (2), intent (inout) :: vbc

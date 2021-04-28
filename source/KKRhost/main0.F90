@@ -72,7 +72,7 @@ module mod_main0
     iesemicore, idosemicore
   !real(kind=dp)
   public :: tk, fcm, e2in, emin, emax, alat, rmax, gmax, r_log, rcutz, rcutxy, qbound, vconst, hfield, mixing, abasis, bbasis, &
-    cbasis, efermi, eshift, tksemi, tolrdif, alatnew, volume0, emusemi, ebotsemi, fsemicore, lambda_xc
+    cbasis, efermi, eshift, tksemi, tolrdif, alatnew, volume0, emusemi, ebotsemi, fsemicore
   !character
   public :: solver, i12, i13, i19, i25, i40
   !logicals
@@ -87,7 +87,7 @@ module mod_main0
     kreadldau, lopt, itldau, lly, irrel
   !real
   public :: vbc, zperight, zperleft, recbv, bravais, rsymat, a, b, wg, gsh, zat, rmt, rws, vref, mtfac, rmtnew, rmtref, &
-    rmtrefat, fpradius, socscale, rmesh, s, rr, drdi, dror, cleb, visp, cscl, rnew, ratom, ecore, tleft, tright, socscl, &
+    rmtrefat, fpradius, socscale, rmesh, s, rr, drdi, dror, cleb, visp, cscl, rnew, ratom, ecore, tleft, tright, socscl, lambda_xc, &
     rbasis, rclsimp, cmomhost, rpan_intervall, rs, yrg, vins, rcls, rrot, qmtet, qmphi, qmgam, qmgamtab, qmphitab, qmtettab, cpatol, &
     conc, fact, vtrel, btrel, rmrel, drdirel, r2drdirel, thesme, thetas, thetasnew, ueff, jeff, erefldau, wldau, uldau
   !complex
@@ -202,7 +202,6 @@ module mod_main0
   real (kind=dp) :: emusemi = 0.0_dp    !! Top of semicore contour in Ryd.
   real (kind=dp) :: ebotsemi = -0.50_dp !! Bottom of semicore contour in Ryd
   real (kind=dp) :: fsemicore = 0.00_dp !! Initial normalization factor for semicore states (approx. 1.)
-  real (kind=dp) :: lambda_xc = 1.0_dp !! Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
   character (len=10) :: solver = 'BS        ' !! Type of solver
   character (len=40) :: i12 = '                                        ' !! File identifiers
   character (len=40) :: i13 = 'potential                               ' !! Potential file name
@@ -286,6 +285,7 @@ module mod_main0
   real (kind=dp), dimension (:), allocatable :: rmtrefat
   real (kind=dp), dimension (:), allocatable :: fpradius !! R point at which full-potential treatment starts
   real (kind=dp), dimension (:), allocatable :: socscale !! Spin-orbit scaling
+  real (kind=dp), dimension (:), allocatable :: lambda_xc !! Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
   real (kind=dp), dimension (:, :), allocatable :: rmesh !! Radial mesh ( in units a Bohr)
   real (kind=dp), dimension (:, :), allocatable :: s
   real (kind=dp), dimension (:, :), allocatable :: rr   !! Set of real space vectors (in a.u.)
