@@ -8,13 +8,15 @@ image: iffregistry.fz-juelich.de/docker-images/centos8-intel-compilers:latest-ip
 
 before_script:
   # set +e prevents sourced scripts from aborting if single commands fail (GitLab CI sets `-e` by default)
-  - set +e && source compilervars.sh intel64 ; set -e
+  - set +e && source compilervars.sh intel64
   # set environment variables to avoind stack size issue
   - export OMP_NUM_THREADS=1
   - export OMP_STACKSIZE=1g
   - ulimit -s unlimited
   # install numpy
-  - pip3 install numpy
+  - pip3 install nump
+  # now reactivate `-e` setting again to stop on each error that follows
+  - set -e
 
 stages: 
   - test
