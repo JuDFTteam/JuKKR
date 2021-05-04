@@ -4,6 +4,7 @@ set -x
 
 ulimit -s unlimited
 export OMP_STACKSIZE=1G
+export I_MPI_DEBUG=12
 
 #source compiler-select intel
 #export FI_PROVIDER=tcp
