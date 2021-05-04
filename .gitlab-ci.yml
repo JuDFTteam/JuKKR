@@ -14,7 +14,7 @@ before_script:
   - export OMP_STACKSIZE=1g
   - ulimit -s unlimited
   # install numpy
-  - pip3 install nump
+  - pip3 install numpy
   # now reactivate `-e` setting again to stop on each error that follows
   - set -e
 
