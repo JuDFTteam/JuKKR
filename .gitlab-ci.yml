@@ -8,7 +8,7 @@ image: iffregistry.fz-juelich.de/docker-images/centos8-intel-compilers:latest-ip
 
 before_script:
   # set +e prevents sourced scripts from aborting if single commands fail (GitLab CI sets `-e` by default)
-  #- set +e && source compilervars.sh intel64 && set -e
+  - set +e && source compilervars.sh intel64 ; set -e
   # set environment variables to avoind stack size issue
   - export OMP_NUM_THREADS=1
   - export OMP_STACKSIZE=1g
@@ -60,9 +60,9 @@ test:intel:
     - which gfortran
     - which profmerge
     - which codecov || which Codecov
-    - which python && python --version
+    #- which python && python --version
     - which python3 && python3 --version
-    - which pip && pip --version
+    #- which pip && pip --version
     - which pip3 && pip3 --version
     # needs to be implemented (tests for dependencies e.g. MPI, OpenMP, LAPACK, etc.)
     - cd tests/unit_tests/test_parallel && ./run_parallel_tests.sh
