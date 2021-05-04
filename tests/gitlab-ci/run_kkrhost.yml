@@ -568,6 +568,25 @@ run_kkrhost:intel:DOS_23:
     - develop-kkrhost
     - GROUP3
 
+run_kkrhost:intel:BXCSCL_24:
+  stage: run_kkrhost_features
+  tags:
+    - docker-executor
+  script:
+    - cd tests/KKRhost/ && ./tools/run_test_24.sh
+  artifacts:
+    paths:
+      - tests/KKRhost/test_run*
+      - build/*dyn
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - develop-kkrhost
+
 ## 2.4 integration with aiida ##
 run_kkrhost:intel:aiida-kkr:
   image: iffregistry.fz-juelich.de/docker-images/aiida-kkr:latest

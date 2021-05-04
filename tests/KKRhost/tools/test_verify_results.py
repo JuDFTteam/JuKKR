@@ -219,6 +219,10 @@ class Test_features():
            num_ref, text_ref = read_file(path00+'/ref/'+fname)
            assert std(num-num_ref)<10**-13
 
+    def test_24_BXCSCL(self):
+        path00 = 'test_run24_hybrid_1_3'
+        standard_verify(path00+'/', rms_threshold=1*10**-7, rms_threshold_end=10**-7)
+
 
 class Test_SOC():
     """
