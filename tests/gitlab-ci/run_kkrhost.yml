@@ -11,7 +11,7 @@ run_kkrhost:intel:serial_1:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_serial.py 1
+    - python3 ./run_serial.py 1
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -33,7 +33,7 @@ run_kkrhost:intel:serial_2:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_serial.py 2
+    - python3 ./run_serial.py 2
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -55,7 +55,7 @@ run_kkrhost:intel:serial_3:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_serial.py 3
+    - python3 ./run_serial.py 3
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -78,7 +78,7 @@ run_kkrhost:intel:parallel_2:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_parallel.py 2
+    - python3 ./run_parallel.py 2
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -100,7 +100,7 @@ run_kkrhost:intel:MPIatom_7:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_parallel.py -7
+    - python3 ./run_parallel.py -7
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -122,7 +122,7 @@ run_kkrhost:intel:MPIenerg_8:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_parallel.py -8
+    - python3 ./run_parallel.py -8
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -155,7 +155,7 @@ run_kkrhost:intel:multi_node_9:
        alias: c4
   script:
     - cd tests/KKRhost
-    - ./run_multi_node.py
+    - python3 ./run_multi_node.py
     # run this test here since it needs 25 mpi ranks
     - ./tools/run_test_03_1_energ25.sh
   artifacts:
@@ -180,7 +180,7 @@ run_kkrhost:intel:MPIatom_SOC_7_1:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_parallel.py -1007
+    - python3 ./run_parallel.py -1007
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -202,7 +202,7 @@ run_kkrhost:intel:MPIenerg_SOC_8_1:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_parallel.py -1008
+    - python3 ./run_parallel.py -1008
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -226,8 +226,8 @@ run_kkrhost:intel:Jijs_4:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_serial.py 4
-    - ./run_parallel.py -4
+    - python3 ./run_serial.py 4
+    - python3 ./run_parallel.py -4
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -249,8 +249,8 @@ run_kkrhost:intel:kkrflex_5:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_serial.py 5
-    - ./run_parallel.py -5
+    - python3 ./run_serial.py 5
+    - python3 ./run_parallel.py -5
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -272,8 +272,8 @@ run_kkrhost:intel:FERMIOUT_6:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_serial.py 6
-    - ./run_parallel.py -6
+    - python3 ./run_serial.py 6
+    - python3 ./run_parallel.py -6
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -337,7 +337,7 @@ run_kkrhost:intel:qdos_12:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_parallel.py -12
+    - python3 ./run_parallel.py -12
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -369,7 +369,7 @@ run_kkrhost:intel:ASA_14:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_parallel.py -14
+    - python3 ./run_parallel.py -14
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -391,7 +391,7 @@ run_kkrhost:intel:CPA_15:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_parallel.py -15
+    - python3 ./run_parallel.py -15
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -413,7 +413,7 @@ run_kkrhost:intel:Dirac_16:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_parallel.py -16
+    - python3 ./run_parallel.py -16
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -435,7 +435,7 @@ run_kkrhost:intel:lambda_xc_17:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_parallel.py -17
+    - python3 ./run_parallel.py -17
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -456,7 +456,7 @@ run_kkrhost:intel:lambda_xc_17:
 #  stage: run_kkrhost_features
 #  script:
 #    - cd tests/KKRhost
-#    - ./run_parallel.py -18
+#    - python3 ./run_parallel.py -18
 #  artifacts:
 #    paths:
 #      - tests/KKRhost/test_run*
@@ -629,7 +629,7 @@ run_kkrhost:intel:Au_bulk_SOC_1_1:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_parallel.py -1001
+    - python3 ./run_parallel.py -1001
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -651,7 +651,7 @@ run_kkrhost:intel:Fe_slab_SOC_2_1:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_parallel.py -1002
+    - python3 ./run_parallel.py -1002
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -673,7 +673,7 @@ run_kkrhost:intel:Si_LLY_SOC_3_1:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_parallel.py -1003
+    - python3 ./run_parallel.py -1003
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -716,7 +716,7 @@ run_kkrhost:intel:Jijs_SOC_4_1:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_parallel.py -1004
+    - python3 ./run_parallel.py -1004
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -738,7 +738,7 @@ run_kkrhost:intel:kkrflex_SOC_5_1:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_parallel.py -1005
+    - python3 ./run_parallel.py -1005
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -760,7 +760,7 @@ run_kkrhost:intel:FERMIOUT_SOC_6_1:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_parallel.py -1006
+    - python3 ./run_parallel.py -1006
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -782,7 +782,7 @@ run_kkrhost:intel:qdos_SOC_12_1:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_parallel.py -1012
+    - python3 ./run_parallel.py -1012
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -804,7 +804,7 @@ run_kkrhost:intel:ASA_SOC_14_1:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_parallel.py -1014
+    - python3 ./run_parallel.py -1014
   artifacts:
     paths:
       - tests/KKRhost/test_run*
@@ -826,7 +826,7 @@ run_kkrhost:intel:CPA_SOC_15_1:
     - docker-executor
   script:
     - cd tests/KKRhost
-    - ./run_parallel.py -1015
+    - python3 ./run_parallel.py -1015
   artifacts:
     paths:
       - tests/KKRhost/test_run*

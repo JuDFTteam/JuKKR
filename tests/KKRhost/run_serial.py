@@ -9,7 +9,7 @@ if len(sys.argv)>1:
     try:
         test_coverage = int(sys.argv[1])
     except:
-        print 'Error! argument can only be an integer but got {}'.format(sys.argv[1])
+        print('Error! argument can only be an integer but got {}'.format(sys.argv[1]))
         sys.exit()
 else:
     test_coverage = 0
@@ -44,15 +44,15 @@ for mode in modes:
                 path = testcase+'_'+mode+'_'+str(npara[0])+'_'+str(npara[1])
                 if path not in os.listdir('.'):
                     job = 'mkdir '+path
-                    print job
+                    print(job)
                     call(job, shell=True)
                     job = 'cd '+path+'; '
                     job+= 'ln -s ../test_inputs/test_%s_*/* .; '%(testcase.replace('test_run',''))
                     if global_options != '':
                         job+= global_options+'; '
                     job+= 'export OMP_NUM_THREADS=%i; mpirun -np %i ../../kkr.x | tee out_kkr'%(npara[0], npara[1])
-                    print job
+                    print(job)
                     call(job, shell=True)
                     job = 'cd '+path+'; rm -f gmat tmat gref *for* inputcard_generated.txt'
-                    print job
+                    print(job)
                     call(job, shell=True)
