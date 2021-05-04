@@ -3,7 +3,8 @@
 ###############################################################################
 
 # docker image containing Developlement Tools and the current Intel compilers based on CentOS 7 with cmake
-image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/extended_intel2016
+#image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/extended_intel2016
+image: iffregistry.fz-juelich.de/docker-images/centos8-intel-compilers:latest-ipython3
 
 before_script:
   # set +e prevents sourced scripts from aborting if single commands fail (GitLab CI sets `-e` by default)
@@ -53,6 +54,7 @@ test:intel:
   script:
     # test if dependencies are working
     - echo 'do some tests here'
+    - which cmake
     - which ifort
     - which mpiifort
     - which gfortran
