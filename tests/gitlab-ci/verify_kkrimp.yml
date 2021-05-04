@@ -6,10 +6,7 @@ verify_kkrimp:intel:
   tags:
     - docker-executor
   script:
-    - curl -O https://bootstrap.pypa.io/get-pip.py 
-    - python get-pip.py 
-    - pip install numpy
-    - pip install pytest
+    - pip3 install numpy pytest
     # prepare and execute verification using pytest
     - cd tests/KKRimp
     - pytest -v
