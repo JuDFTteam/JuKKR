@@ -65,6 +65,7 @@ test:intel:
     #- which pip && pip --version
     - which pip3 && pip3 --version
     # needs to be implemented (tests for dependencies e.g. MPI, OpenMP, LAPACK, etc.)
+    - df -h /dev/shm # check if shm is big enough (https://software.intel.com/content/www/us/en/develop/documentation/mpi-developer-guide-linux/top/troubleshooting/problem-mpi-limitation-for-docker.html)
     - cd tests/unit_tests/test_parallel && ./run_parallel_tests.sh
 
 ###############################################################################
