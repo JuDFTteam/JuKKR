@@ -9,12 +9,12 @@ if len(sys.argv)>1:
     try:
         test_coverage = int(sys.argv[1])
     except:
-        print 'Error! argument can only be an integer but got {}'.format(sys.argv[1])
+        print('Error! argument can only be an integer but got {}'.format(sys.argv[1]))
         sys.exit()
 else:
     test_coverage = 0
 
-print 'test coverage input:', test_coverage
+print('test coverage input:', test_coverage)
 
 # some global settings
 modes = ['omp',  'mpi', 'hybrid']  #['serial', 'omp',  'mpi', 'hybrid']
@@ -50,11 +50,11 @@ if test_coverage<0:
         npara_pairs = [[1,1]]
     test_coverage = -test_coverage
 
-print 'settings:'
-print 'modes:', modes
-print 'para_pairs:', npara_pairs
-print 'testcase', array(test_systems)[test_coverages[test_coverage]]
-print 'SOCrun:', SOCrun
+print('settings:')
+print('modes:', modes)
+print('para_pairs:', npara_pairs)
+print('testcase', array(test_systems)[test_coverages[test_coverage]])
+print('SOCrun:', SOCrun)
 
 # loop over all combinations
 for mode in modes:
@@ -83,7 +83,7 @@ for mode in modes:
                 path = testcase+'_'+mode+'_'+str(npara[0])+'_'+str(npara[1])
                 if path not in os.listdir('.'):
                     job = 'mkdir '+path
-                    print job
+                    print(job)
                     call(job, shell=True)
                     job = 'cd '+path+'; '
                     job+= 'ln -s ../test_inputs/test_%s_*/* .; '%(testcase.replace('test_run',''))
@@ -92,8 +92,8 @@ for mode in modes:
                     if global_options != '':
                         job+= global_options+'; '
                     job+= 'export OMP_NUM_THREADS=%i; mpirun -np %i ../../kkr.x | tee out_kkr'%(npara[0], npara[1])
-                    print job
+                    print(job)
                     call(job, shell=True)
                     job = 'cd '+path+'; rm -f gmat tmat gref *for* inputcard_generated.txt'
-                    print job
+                    print(job)
                     call(job, shell=True)
