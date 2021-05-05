@@ -95,8 +95,8 @@ def check_Jijs(path, refpath, sracomp=False):
    d0= loadtxt('test_case_kkrflex_host_in_host/imp/'+refpath+'/out_Jijmatrix')
 
    if not sracomp:
-      assert mean(abs(d-d0)) < 10**-13
-      assert std(abs(d-d0)) < 10**-13
+      assert mean(abs(d-d0)) < 5e-10
+      assert std(abs(d-d0)) < 5e-10
    else:
-      assert mean(abs(d-d0)) < 5*10**-8
-      assert std(abs(d-d0)) < 5*10**-8
+      assert mean(abs(d-d0)) < 5e-8
+      assert std(abs(d-d0)) < 5e-8
