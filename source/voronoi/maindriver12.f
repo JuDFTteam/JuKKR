@@ -119,6 +119,8 @@ c
      +     ZATOM(NTOTD)             ! Nuclear charge
       INTEGER ICC,                  ! center of cluster for output of GF
      +     ICLS, NAEZ,              ! number of atoms in unit cell
+     +     NVAC,                    ! number of empty cells
+     +     NVAC_IT,                 
      +     NATYP,                   ! number of kinds of atoms in unit cell
      +     NCLS,                    ! number of reference clusters
      +     NEMB,                    ! number of 'embedding' positions
@@ -145,6 +147,8 @@ c
      &     ROUT_ALL(NTOTD),         ! Outer cell-radius per atom
      &     DISTNN(NAEZD+NIMPD),     ! Distance from cell center to nearest-neighbor cell center (2*RMTHLF)
      &     VOLUME_ALL(NTOTD),       ! Volume per atom
+     &     VCENTER_ALL(3,NTOTD),    ! Center of the voronoi cells
+     &     VCENTER_SQSUM,
      &     A3_ALL(NFACED,NTOTD),    ! A3,B3,C3,D3: Defining the faces per atom
      &     B3_ALL(NFACED,NTOTD),
      &     C3_ALL(NFACED,NTOTD),
@@ -226,7 +230,7 @@ c
      &          VOLUMECL(NSHAPED),RWSCL(NSHAPED),RMTCL(NSHAPED)
       REAL*8    DX(NTOTD),DY(NTOTD),DZ(NTOTD)
       REAL*8    ROUT,RTEST,DLT,CRAD,RX,RY,RZ,MTRADIUS,VTOT,
-     &                 SHAPESHIFT(3,NTOTD)
+     &                 SHAPESHIFT(3,NTOTD),VCENTER(3)
       CHARACTER*256 UIO
       INTEGER NATOMS,NSITES,NSHAPE ! Number of atoms, sites, shapes
       INTEGER LMAX,KEYPAN,NPOI,NA,IAT,JAT,ICL,N1A,I2,II,ISITE
@@ -269,7 +273,7 @@ c
 c     -----------------------------------------------------------------------
       DATA BBOX/2.0d0,2.0d0,3.0d0/
       DATA DLT/0.05d0/  ! Parameter for theta-integration (Gauss-Legendre rule). Usually 0.05
-      DATA NPOI/125/    ! Total number of shapefunction points
+      DATA NPOI/555/    ! Total number of shapefunction points
       DATA NRAD/10/     ! Muffintinization points
       DATA NMIN/7/      ! Minimum number of points in panel
       DATA NSMALL/10000/ ! A large number to start (See subr. divpanels)
@@ -319,7 +323,7 @@ c
       CALL READINPUT(BRAVAIS,LCARTESIAN,RBASIS,ABASIS,BBASIS,CBASIS,
      &     DX,DY,DZ,
      &     ALATC,BLATC,CLATC,
-     &     IRNS,NAEZ,NEMB,KAOEZ,IRM,ZATOM,SITEAT,
+     &     IRNS,NAEZ,NVAC,NEMB,KAOEZ,IRM,ZATOM,SITEAT,
      &     INS,KSHAPE,
      &     LMAX,LMMAX,LPOT, 
      &     NATYP,NSPIN,
@@ -356,6 +360,9 @@ c     Rationalise basis vectors
      X       TRIGHT)
       ENDIF
 c
+      DO NVAC_IT = 1,20
+c the number 20 is an empirical value for the number of iterations used
+c to update the empty-cell positions
       CALL CLSGEN_VORONOI(NATYP,NAEZ,NEMB,RR,NR,RBASIS,
      &        KAOEZ,ZATOM,CLS,NCLS,
      &        NACLS,ATOM,EZOA,
@@ -363,6 +370,7 @@ c
      &        ZPERIGHT,TLEFT,TRIGHT,
      &        RCLS,RMTHLF,RCUTZ,RCUTXY,LINTERFACE,
      &        ALATC)
+      CLOSE (8)
 
       DISTNN(1:NAEZ) = 2.D0*RMTHLF(1:NAEZ)
 
@@ -525,12 +533,14 @@ c           Therefore, sizefac(0) = 1.0 is defined earlier.
          WRITE(6,*) 'Entering VORONOI12 for atom=',IAT            
          CALL VORONOI12(
      >    NVEC,RVEC,NVERTD,NFACED,WEIGHT0,WEIGHT,TOLVDIST,TOLAREA,TOLHS,
-     <    RMT0,ROUT,VOLUME,NFACE,A3,B3,C3,D3,NVERT,XVERT,YVERT,ZVERT)
+     <    RMT0,ROUT,VOLUME,NFACE,A3,B3,C3,D3,NVERT,XVERT,YVERT,ZVERT,
+     <    VCENTER)
 
 c        Now store results in atom-dependent array.
          RMT0_ALL(IAT) = RMT0
          ROUT_ALL(IAT) = ROUT
          VOLUME_ALL(IAT) = VOLUME
+         VCENTER_ALL(:,IAT) = VCENTER(:)
          NFACE_ALL(IAT) = NFACE
          A3_ALL(:,IAT) = A3(:)
          B3_ALL(:,IAT) = B3(:)
@@ -543,6 +553,29 @@ c        Now store results in atom-dependent array.
 
 
  20   ENDDO                 ! DO 20 IAT = 1,NSITES 
+      
+      IF(NVAC.GT.0) THEN
+         OPEN(333,file='empty_cell.dat',form='formatted')
+         WRITE(6,FMT='(I6,A)') NVAC,
+     +                         ' empty cell positions will be updated'
+      VCENTER_SQSUM = 0.0D0
+         DO IAT = 1,NVAC
+           VCENTER_SQSUM = VCENTER_SQSUM + SQRT(VCENTER_ALL(1,IAT)**2+
+     +         VCENTER_ALL(2,IAT)**2+VCENTER_ALL(3,IAT)**2)
+c an empirical factor 0.2D0 is used to avoid overshooting of the iterations 
+           DO J = 1,3
+             VCENTER_ALL(J,IAT) = VCENTER_ALL(J,IAT)*0.2D0
+           END DO
+           RBASIS(:,IAT) = RBASIS(:,IAT) + VCENTER_ALL(:,IAT)
+           WRITE(6,FMT='(3F16.9)') RBASIS(:,IAT)
+           WRITE(333,FMT='(3F16.9)') RBASIS(:,IAT)
+         END DO
+         WRITE(6,FMT='(F16.9,A)') VCENTER_SQSUM,
+     +   ' is a quality measure for the empty cell positions'
+         CLOSE(333)
+      END IF
+      IF(NVAC.EQ.0.OR.ABS(VCENTER_SQSUM).LT.1.D-6) EXIT
+      END DO
 
 
 c-------------------------------------------------------------------------------
