@@ -268,7 +268,7 @@ program KKRnano
       enddo ! ila
 
       ! Core relaxation - only mastergroup needs results
-      if (mp%isInMasterGroup) then
+      if (mp%isInMasterGroup.and.params%npol /= 0) then
         ! Not threadsafe: intcor, intin, intout have a save statement
         ebot = emesh%E1; if (any(params%npntsemi > 0)) ebot = emesh%EBOTSEMI
         !!!$omp parallel do private(ila, atomdata)
