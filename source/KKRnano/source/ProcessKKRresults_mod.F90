@@ -1538,6 +1538,9 @@ module ProcessKKRresults_mod
     double precision moment_x !NOCO
     double precision moment_y !NOCO
     double precision moment_z !NOCO
+    double precision sum_moment_x !NOCO
+    double precision sum_moment_y !NOCO
+    double precision sum_moment_z !NOCO
     double precision max_delta_theta !NOCO
     double precision max_delta_phi !NOCO
     double precision max_delta_angle !NOCO
@@ -1578,6 +1581,9 @@ module ProcessKKRresults_mod
       if (korbit == 1) open(14,file='nonco_moment_out.txt',form='formatted') ! NOCO
     
       ! moments output
+        sum_moment_x = 0.0d0
+        sum_moment_y = 0.0d0
+        sum_moment_z = 0.0d0
       do i1 = 1, natoms
         if (npol == 0) then 
           read(71, rec=i1) qc,catom,charge,ecore,muorb,phi_noco,theta_noco,phi_noco_old,theta_noco_old,angle_fixed, &
@@ -1619,8 +1625,14 @@ module ProcessKKRresults_mod
                       theta_noco/(2.0D0*PI)*360.0D0, &
                       phi_noco/(2.0D0*PI)*360.0D0, &
                       angle_fixed
+        sum_moment_x = sum_moment_x + moment_x
+        sum_moment_y = sum_moment_y + moment_y
+        sum_moment_z = sum_moment_z + moment_z
         endif
       enddo ! i1
+        if (korbit == 1) then ! NOCO
+          write(14,"(3f12.5)") sum_moment_x, sum_moment_y, sum_moment_z
+         endif
 
       if (korbit == 1)  close(13)
       if (korbit == 1)  close(14)
