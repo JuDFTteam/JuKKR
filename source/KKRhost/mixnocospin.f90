@@ -139,7 +139,7 @@ contains
     use mod_datatypes, only: dp
     use mod_constants, only: pi
     use mod_wunfiles, only: t_params
-    use global_variables, only: mixfac_broydenspin, ninit_broydenspin, memlen_broydenspin
+    use global_variables, only: mixfac_broydenspin, ninit_broydenspin, memlen_broydenspin, angles_cutoff  !! MdSD: criterion to fix angles (see also rhovalnew)
     use mod_runoptions, only: write_angles_alliter
     use mod_broyden, only: broyden
     implicit none
@@ -161,7 +161,7 @@ contains
     ! get number of fixed angles (we need to use the rest only for the mixing)
     nfixed = 0
     do i1 = 1, natyp
-        if (t_params%fixdir(i1)) nfixed = nfixed + 1
+        if (t_params%fixdir(i1) .or. totmoment_atoms(i1) < angles_cutoff) nfixed = nfixed + 1
     end do
 
     ! allocate working arrays
@@ -173,7 +173,7 @@ contains
     ! convert angles to magnetization direction vectors 
     ipos = 0
     do i1 = 1, natyp
-      if (.not. t_params%fixdir(i1)) then
+      if (.not. (t_params%fixdir(i1) .or. totmoment_atoms(i1) < angles_cutoff)) then
         ! we use the same vector length (i.e. the output length since we can assume that it will not change much)
         ! set old vector
         theta = t_params%theta(i1)
@@ -217,7 +217,7 @@ contains
     ! output 
     ipos = 0
     do i1 = 1, natyp
-      if (.not. t_params%fixdir(i1)) then
+      if (.not. (t_params%fixdir(i1) .or. totmoment_atoms(i1) < angles_cutoff)) then
         ! transform back to angles (vector(:,2) now is the output direction vector)
         moment(1) = vector(1+3*ipos, 2)
         moment(2) = vector(2+3*ipos, 2)
