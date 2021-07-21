@@ -162,10 +162,18 @@ contains
         write(1337,'("iatom, ilm, mag, mag_mt",2i4,6es16.8)') iatom, ilm, mag(ilm,:), mag_mt(ilm,:)
       end do
     end if
-    totmag = sqrt(dot_product(mag(1,:),mag(1,:)))
-    magdir_it = mag(1,:)/totmag
+
+    ! MdSD: muffin-tin or full cell, these will be used below
+    if (t_params%bfield%lbfield_mt) then
+      totmag = sqrt(dot_product(mag_mt(1,:),mag_mt(1,:)))
+      magdir_it = mag_mt(1,:)/totmag
+    else
+      totmag = sqrt(dot_product(mag(1,:),mag(1,:)))
+      magdir_it = mag(1,:)/totmag
+    end if
     ! MdSD: constraining fields
     bconstr(1:3) = 0.0_dp; bconstr(4) = totmag
+
     ! --------------------------------------------------------------------------------------
     
     !do ilm= 1,lmpotd
@@ -205,19 +213,28 @@ contains
     
     ! --------------------------------------------------------------------------------------
     ! calculate the perpendicular component of the torque
+    ! MdSD: here theta and phi are the input/fixed angles
     magdir(1) = sin(theta)*cos(phi)
     magdir(2) = sin(theta)*sin(phi)
     magdir(3) = cos(theta)
     torque(:) = torque(:) - magdir*dot_product(magdir(:),torque(:))
     torque_mt(:) = torque_mt(:) - magdir*dot_product(magdir(:),torque_mt(:))
     if (t_inc%i_write>1) write(1337,'("iatom, torque_perp, torque_mt_perp = ",i4,6es16.8)') iatom, torque(:), torque_mt(:)
-    t_params%bfield%mag_torque(iatom,:) = torque(:)
+
+    ! MdSD: muffin-tin or full cell
+    if (t_params%bfield%lbfield_mt) then
+      t_params%bfield%mag_torque(iatom,:) = torque_mt(:)
+      torque(:) = torque_mt(:)  ! to use below and avoid another if-statement
+    else
+      t_params%bfield%mag_torque(iatom,:) = torque(:)
+    end if
+
     if(t_params%bfield%lbfield_constr .and. t_inc%i_iteration>=t_params%bfield%itscf0 .and. t_inc%i_iteration<=t_params%bfield%itscf1) then !constraining fields
       if(t_params%bfield%ibfield_constr == 0 ) then ! constraining fields based on magnetic torques
         ! sum up the torques for all iterations, which yields a scf with constraining fields
-        bfac                                  = 1.d0
+        bfac = 1.d0
         if(t_params%fixdir(iatom)) then
-          t_params%bfield%bfield_constr(iatom,:)         = t_params%bfield%bfield_constr(iatom,:) - torque(:)/totmag*bfac
+          t_params%bfield%bfield_constr(iatom,:) = t_params%bfield%bfield_constr(iatom,:) - torque(:)/totmag*bfac
         end if
         !bfield%bfield_strength_constr         = sqrt(dot_product(bfield%bfield_constr(:),bfield%bfield_constr(:))) 
         !bfield%theta_constr                   = acos(bfield%bfield_constr(3)/bfield%bfield_strength_constr)
@@ -227,9 +244,12 @@ contains
       if(t_params%bfield%ibfield_constr == 1) then ! constraining fields to constrain scf cycle
         c_old                = t_params%bfield%bfield_constr(iatom,:)
         bfac                 = 0.030d0
-        magdir_old(1)         = cos(t_params%phi(iatom))*sin(t_params%theta(iatom))
-        magdir_old(2)         = sin(t_params%phi(iatom))*sin(t_params%theta(iatom))
-        magdir_old(3)         = cos(t_params%theta(iatom))
+        ! magdir_old(1)         = cos(t_params%phi(iatom))*sin(t_params%theta(iatom))
+        ! magdir_old(2)         = sin(t_params%phi(iatom))*sin(t_params%theta(iatom))
+        ! magdir_old(3)         = cos(t_params%theta(iatom))
+        magdir_old(1)         = cos(phi)*sin(theta)
+        magdir_old(2)         = sin(phi)*sin(theta)
+        magdir_old(3)         = cos(theta)
         if (t_inc%i_write>1) write(1337,'(" itscf, iatom, magdir, magdir_old = ",2i4,100f16.8)') t_params%itscf, iatom , magdir_it(:), magdir_old(:)
         if(t_params%fixdir(iatom)) then
           t_params%bfield%bfield_constr(iatom,:) = c_old - dot_product(c_old,magdir_old)*magdir_old - (magdir_it - dot_product(magdir_it,magdir_old)*magdir_old)*bfac

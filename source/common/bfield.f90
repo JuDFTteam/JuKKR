@@ -165,19 +165,27 @@ contains
 
     implicit none
 
-    integer                          , intent(in)  :: natyp
-    real(kind=dp), dimension(4,natyp), intent(in)  :: bconstr_in  !! bx, by, bz, mspin
-    real(kind=dp), dimension(natyp,3), intent(out) :: bconstr_out !! bx, by, bz
+    integer                          , intent(in)    :: natyp
+    real(kind=dp), dimension(4,natyp), intent(in)    :: bconstr_in  !! bx, by, bz, mspin
+    real(kind=dp), dimension(natyp,3), intent(inout) :: bconstr_out !! bx, by, bz
     ! local
-    integer                 :: iatom
-    
+    integer       :: iatom, nrms
+    real(kind=dp) :: rms
+
     open(unit=57493215, file='bconstr_out.dat', status='replace')
     write(57493215,'("# bconstr_x [Ry], bconstr_y [Ry], bconstr_z [Ry], m_spin [mu_B]")')
+    rms = 0.d0; nrms = 0
     do iatom=1,natyp
+!     check if this atom is actually being constrained
+      if (dot_product(bconstr_in(1:3,iatom), bconstr_in(1:3,iatom)) > 1.d-16) then
+        rms = rms + dot_product(bconstr_out(iatom,:)-bconstr_in(1:3,iatom), bconstr_out(iatom,:)-bconstr_in(1:3,iatom))
+        nrms = nrms + 1
+      end if
       write(57493215,'(4es16.8)') bconstr_in(:,iatom)
       bconstr_out(iatom,:) = bconstr_in(1:3,iatom)
     end do
     close(57493215)
+    write(1337,'("Number of constrained atoms=",i8,"  rms for constraining fields=",es16.8)') nrms, sqrt(rms)/max(nrms,1)
   end subroutine save_bconstr
 
 
