@@ -214,15 +214,14 @@ contains
 
     ! set up the non-spherical ll' matrix for potential VLL' (done in VLLMAT)
     call vllmat(1, nrmaxd, irmdnew, lmmax0d, lmmaxd, vnspll0, vins, lmpot, cleb, icleb, iend, nspin/(nspin-korbit), zat, rnew, use_sratrick, ncleb)
-#ifdef CPP_BdG
     ! test writeout of VNSPLL1
     if (write_BdG_tests) then
-      open (7352834, file='vnspll.txt', form='formatted')
+      write (filename, '(A,I0.3,A)') 'vnspll_', i1, '.txt'
+      open (7352834, file=trim(filename), form='formatted')
       write (7352834, '(A,3I9)') '# lmmaxd,lmmaxd,IRMDNEW=', lmmaxd, lmmaxd, irmdnew
-      write (7352834, '(2ES25.16)') vnspll0(:, :, :)
+      write (7352834, '(2ES25.9)') vnspll0(:, :, :)
       close (7352834)
     end if
-#endif
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! LDAU
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -356,15 +355,14 @@ contains
 #ifdef CPP_OMP
         !$omp critical
 #endif
-#ifdef CPP_BdG
         ! test writeout of VNSPLL1
         if (write_BdG_tests) then
-          open (7352834, file='vnspll_SOC.txt', form='formatted')
+          write (filename, '(A,I0.3,A,I0.3,A)') 'vnspll_SOC_', i1, '_energ_', ie, '.txt'
+          open (7352834, file=trim(filename), form='formatted')
           write (7352834, '(A,3I9)') '# lmmaxd,lmmaxd,IRMDNEW=', lmmaxd, lmmaxd, irmdnew
-          write (7352834, '(2ES25.16)') vnspll1(:, :, :, ith)
+          write (7352834, '(2ES25.9)') vnspll1(:, :, :, ith)
           close (7352834)
         end if
-#endif
 #ifdef CPP_OMP
         !$omp end critical
 #endif
@@ -387,19 +385,18 @@ contains
 #ifdef CPP_OMP
         !$omp critical
 #endif
-#ifdef CPP_BdG
         ! test writeout of VNPSLL
         if (write_BdG_tests) then
-          open (7352834, file='vnspll_sra.txt', form='formatted')
+          write (filename, '(A,I0.3,A,I0.3,A)') 'vnspll_sra_', i1, '_energ_', ie, '.txt'
+          open (7352834, file=trim(filename), form='formatted')
           if (nsra==2) then
             write (7352834, '(A,3I9)') '# 2*lmmaxd,2*lmmaxd,IRMDNEW=', 2*lmmaxd, 2*lmmaxd, irmdnew
           else
             write (7352834, '(A,3I9)') '# lmmaxd,lmmaxd,IRMDNEW=', lmmaxd, lmmaxd, irmdnew
           end if
-          write (7352834, '(2ES25.16)') vnspll(:, :, :, ith)
+          write (7352834, '(2ES25.9)') vnspll(:, :, :, ith)
           close (7352834)
         end if
-#endif
 #ifdef CPP_OMP
         !$omp end critical
 #endif
