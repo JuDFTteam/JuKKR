@@ -555,7 +555,7 @@ contains
         ! read/recalc wavefunctions left contruct the TRANSPOSE spin-orbit coupling hamiltonian and add to potential
         if ( .not. set_cheby_nosoc) then
           call spinorbit_ham(lmax, lmmax0d, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpotd, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
-            vnspll0, vnspll1(:,:,:,ith), 'rll')
+            vnspll0, vnspll1(:,:,:,ith), 'transpose')
         else
           vnspll1(:,:,:,ith) = vnspll0(:,:,:)
         end if
