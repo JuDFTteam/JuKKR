@@ -541,7 +541,7 @@ contains
       bs(2,1) = temp2
     elseif (mode=='1') then
     else
-      stop'[bfield] mode not known'
+      stop '[bfield] mode not known'
     end if
     
     !if(myrank==master .and. debug) then
