@@ -1,0 +1,40 @@
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ !!! Most output written to output.myrank.txt files !!!
+ !!! please check these files as well               !!!
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     Screened Korringa-Kohn-Rostoker Electronic Structure Code
+                      for Bulk and Interfaces
+                    Juelich-Munich 2001 - 2018
+
+  Code version: v3.1-1756-g658ea893
+  Compile options: intel mpi 
+  serial number for files: JuKKR_v3.1-1756-g658ea893_intel_20210720193451
+ Number of MPI ranks used:   64
+
+*******************************************************************************
+
+ Calling MADELUNG3D
+ Exited MADELUNG3D
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ +++            SCF ITERATIONS START                +++
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+started on 2021/ 7/20 at 19:34:52
+Total RMS(angles) [deg]:    0.000000
+               Ne spin dn  Ne spin up    m_spin    m_orb   spin dn  spin up
+          TOT  2.89516353  5.10483691    2.2097    0.1842  0.1185 -0.0292
+          TOT  2.89516353  5.10483691    2.2097   -0.1003  0.0030 -0.0084
+      ITERATION   1 charge neutrality in unit cell =     0.000000
+                    TOTAL mag. moment in unit cell =     4.419347
+                new E FERMI   0.7019852061  DOS(E_F) =    20.957174
+      ITERATION   1 average rms-error : v+ + v- =  4.1284D-08
+                                        v+ - v- =  4.4590D-08
+TOTAL ENERGY in ryd. :            -5082.22756134
+
+                 ++++++ SCF ITERATION CONVERGED ++++++
+*******************************************************************************
+Iteration finished on 2021/ 7/20 at 19:34:56
+ -------------------MEMORY CONSUMPTION REPORT-----------------------
+ 257 allocations and 370 deallocations, remaining memory(B):-13691642
+ Memory occupation peak: 87406 kB
+ For the array: "lorbit_onel" in routine "calc_orbitalmoment"
+ -----------------END MEMORY CONSUMPTION REPORT---------------------
