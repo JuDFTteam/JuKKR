@@ -1,0 +1,38 @@
+================================================================================
+   * * *   G E O M E T R Y   * * *
+================================================================================
+ALATBASIS= 5.423       lattice constant (in a.u.)
+BRAVAIS                   (units of lattice constant)
+  1.0  0.0  0.0
+  0.0  1.0  0.0
+  0.0  0.0  1.0
+NAEZ= 2   (Number of sites in the unit cell)
+CARTESIAN= T
+<RBASIS>              <ZATOM>  <SHAPE>  <BXCSCL>
+ 0.0   0.0   0.0        26.      1       1.1
+ 0.5   0.5   0.5        26.      1       0.9
+
+================================================================================
+   * * *   A C C U R A C Y   * * *
+================================================================================
+NSPIN= 2      				(1/2 paramagnetic/spin polarized calc.)
+LMAX= 3       				(cutoff in the expansion:2 in OK, 3 good, 4 very good)
+INS= 1        				(0/1: asa/full-pot)
+KSHAPE= 2     				(0/2: asa/full-pot, needed for voronoi)
+RCLUSTZ=  2.00d0 			(parameters for the screening clusters)
+BZDIVIDE= 10  10  10 			(Brillouin zone mesh)
+<set_kmesh_large>= T
+ICST= 3    				(Born iterations)
+<MPI_SCHEME>= 2
+KEXCOR= 2
+--------------------------------------------------------------------------------
+EMIN      EMAX       TEMPR      NPOL      NPT1    NPT2     NPT3 (energy contour: only next line is read in)
+-0.30     1.10       502.78d0    10         4      14        4    <-- for scf
+--------------------------------------------------------------------------------
+RMAX= 7.0d0     GMAX= 65.0d0     (parameters for Madelung sums)
+================================================================================
+   * * *   C O N V E R G E N C E   * * *
+================================================================================
+QBOUND    NSTEPS   IMIX    STRMIX    BRYMIX    ITDBRY    FCM
+ 5.E-8     1         5       0.05      0.05      40       20.0
+--------------------------------------------------------------------------------

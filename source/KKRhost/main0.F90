@@ -1499,7 +1499,7 @@ contains
 
     write (iunit, '(1A)') '     Screened Korringa-Kohn-Rostoker Electronic Structure Code'
     write (iunit, '(1A)') '                      for Bulk and Interfaces'
-    write (iunit, '(1A)') '                    Juelich-Munich 2001 - 2018'
+    write (iunit, '(1A)') '                    Juelich-Munich 2001 - 2021'
     write (iunit, '(1A)') ''
     write (iunit, '(2A)') '  Code version: ', trim(version1)
     write (iunit, '(6A)') '  Compile options: ', trim(version2), ' ', trim(version3), ' ', trim(version4)

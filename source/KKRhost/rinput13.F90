@@ -186,6 +186,7 @@ contains
     real (kind=dp), dimension (:), allocatable, intent (out) :: lambda_xc !! Scale magnetic moment (0 < Lambda_XC < 1,0=zero moment, 1= full moment)
     real (kind=dp), dimension (:, :), allocatable, intent (out) :: cscl !! Speed of light scaling
     real (kind=dp), dimension (:, :), allocatable, intent (out) :: socscl
+    real (kind=dp), dimension (:), allocatable, intent(out) :: lambda_xc !! Scale magnetic moment (0 < Lambda_XC < 1,0=zero moment, 1= full moment)
     character (len=10), intent (inout) :: solver !! Type of solver
     character (len=40), intent (inout) :: i12 !! File identifiers
     character (len=40), intent (inout) :: i13 !! Potential file name

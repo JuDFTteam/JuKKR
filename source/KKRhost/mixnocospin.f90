@@ -204,7 +204,6 @@ contains
     alpha = mixfac_broydenspin
     if (iter<=ninit_broydenspin) alpha = 1.0_dp ! always use alpha=1 for simple mixing steps
 
-
     ! MdSD: there are special high-symmetry situations where the rms for the angles is zero
     ! MdSD: linear mixing is fine with that, but if broyden is called it will cause a NaN
     ! MdSD: this line delays using Broyden

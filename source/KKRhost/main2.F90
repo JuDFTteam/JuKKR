@@ -558,6 +558,7 @@ contains
     if (use_spherical_potential_only) vons(1:irmd, 2:lmpot, 1:npotd) = 0.0_dp
 
     ! Recalculate XC-potential with zero spin density for magn. moment scaling
+    ! MdSD: now atom-dependent
     vxcnm(:, :, :) = 0.0_dp          ! Initialize
     excnm(:, :) = 0.0_dp
     if (any(abs(lambda_xc-1.0_dp)>eps) .and. nspin==2) then
@@ -574,7 +575,6 @@ contains
       end do
       write (1337, *) 'LAMBDA_XC=', lambda_xc(1), 'EXCDIF=', excdiff
     end if
-
     ! Add xc-potential with magn. part weighted by lambda_xc
     do i1 = 1, natyp
       write (1337, *) 'ATOM=', i1, 'LAMBDA_XC=', lambda_xc(i1)

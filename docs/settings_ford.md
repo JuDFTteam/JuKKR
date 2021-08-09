@@ -3,7 +3,7 @@ summary: Source code documentation of the Jülich KKR code family
 author: The Jülich KKR team
 email: p.ruessmann@fz-juelich.de
 license: by-nc
-version: 3.4
+version: 3.5
 project_website: https://iffgit.fz-juelich.de/kkr/jukkr
 project_download: https://iffgit.fz-juelich.de/kkr/jukkr
 src_dir: ../source/common/
