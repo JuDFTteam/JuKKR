@@ -132,6 +132,7 @@ contains
     complex (kind=dp) :: dentemp
     complex (kind=dp) :: gmatprefactor
     integer, dimension (nsra*lmmaxd) :: jlk_index
+    real (kind=dp), dimension (3) :: proj  ! MdSD: projection of orbital moment on local spin direction
     real (kind=dp), dimension (3) :: moment
     real (kind=dp), dimension (3) :: denorbmom
     real (kind=dp), dimension (3) :: denorbmomns
@@ -717,6 +718,10 @@ contains
       ! Get orbital moment
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if (.not. decouple_spins_cheby) then
+        ! MdSD: test projection of orbital moment
+        proj(1) = cos(phi)*sin(theta)
+        proj(2) = sin(phi)*sin(theta)
+        proj(3) = cos(theta)
         do iorb = 1, 3
           call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, cone, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll(:,:,:,ith), & ! SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
             rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), r2orbc(:,:,:,ith), iorb, gflle_part(:,:,ith), rpan_intervall, ipan_intervall, nspin)
@@ -731,7 +736,8 @@ contains
                 call intcheb_cell(cdentemp(:,ith), dentemp, rpan_intervall, ipan_intervall, npan_tot, ncheb, irmdnew)
         
                 rho2(jspin) = dentemp
-                muorb(lm1, jspin) = muorb(lm1, jspin) - aimag(rho2(jspin)*df)
+                ! MdSD: projection of orbital moment on local spin direction
+                muorb(lm1, jspin) = muorb(lm1, jspin) - proj(iorb)*aimag(rho2(jspin)*df)
                 denorbmom(iorb) = denorbmom(iorb) - aimag(rho2(jspin)*df)
                 denorbmomsp(jspin, iorb) = denorbmomsp(jspin, iorb) - aimag(rho2(jspin)*df)
                 denorbmomlm(lm1, iorb) = denorbmomlm(lm1, iorb) - aimag(rho2(jspin)*df)
@@ -745,16 +751,11 @@ contains
               end do ! lm1
             end if
           end do ! jspin
-          ! fill summed values of orbital moment
-          do jspin=1, nspin
-            ! fill muorb(:,3,:) with sum of both spin channels
-            muorb(0:lmaxd1, 3) = muorb(0:lmaxd1, 3) + muorb(0:lmaxd1, jspin)
-          end do
-          ! sum over l-channels
-          do lm1 = 0, lmaxd1
-            muorb(lmaxd1+1, 1:3) = muorb(lmaxd1+1, 1:3) + muorb(lm1, 1:3)
-          end do
+          ! write(*,'("i1,ie,iorb=",3i8)') i1,ie,iorb
+          ! write(*,'("muorb=",6es16.8)') muorb(:,:)
+
         end do ! IORB
+
       end if ! .not. decouple_spins_cheby
 
     end do                         ! IE loop

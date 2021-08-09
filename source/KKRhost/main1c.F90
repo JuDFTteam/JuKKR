@@ -499,6 +499,8 @@ contains
               rpan_intervall(0,i1), ipan_intervall(0,i1), rnew(1,i1), vinsnew, thetasnew(1,1,icell), theta(i1), phi(i1), fixdir(i1), i1, &
               ipot, den(0,1,1,ipot), espv(0,ipot), rho2n1(1,1,ispin), rho2n2(1,1,ispin), muorb(0,1,i1), angles_new(:,i1), totmoment(i1), bconstr(:,i1), &
               idoldau, lopt(i1), wldau(1,1,1,i1), denmatn(1,1,1,1,i1), natyp, ispin) ! LDAU
+            ! write(*,'("i1,ispin=",3i8)') i1, ispin
+            ! write(*,'("muorb=",6es16.8)') muorb(:,:,i1)
 #ifdef CPP_TIMING
             call timing_pause('main1c - rhovalnew')
 #endif
@@ -753,7 +755,6 @@ contains
       ! NATYP loop for summed charge, spin and orbital moments
       ! ----------------------------------------------------------------------
       chrgsemicore = 0.0_dp
-      muorb(lmaxd1+1, :, :) = 0.0_dp ! sum of all l-channels (including lmaxd1 for ns contribution)
       eu(:) = 0_dp
       edc(:) = 0_dp
       do i1 = 1, natyp
@@ -775,12 +776,10 @@ contains
         !----------------------------------------------------------------------------
         ! Orbital magnetic moments
         !----------------------------------------------------------------------------
+        ! MdSD: this fixed some strange serial & MPI bug
         if ((krel+korbit)==1) then
-          do ispin = 1, 3
-            do l = 0, lmax + 1
-              muorb(lmaxd1+1, ispin, i1) = muorb(lmaxd1+1, ispin, i1) + muorb(l, ispin, i1)
-            end do
-          end do
+          muorb(0:lmaxd1, 3, i1) = sum(muorb(0:lmaxd1, 1:2, i1), dim=2)
+          muorb(lmaxd1+1, 1:3, i1) = sum(muorb(0:lmaxd1, 1:3, i1), dim=1) ! sum of all l-channels (including lmaxd1 for ns contribution)
         end if
       end do
       ! ----------------------------------------------------------------------
