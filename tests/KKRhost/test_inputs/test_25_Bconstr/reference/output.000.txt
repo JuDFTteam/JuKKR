@@ -1,42 +1,25 @@
-# serial: JuKKR_v3.1-1756-g658ea893_intel_20210720193451
+# serial: JuKKR_v3.1-1785-g693046e_intel_20210809231657
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 1,#of points= 1
-Task 1 treats points 2 to 2,#of points= 1
+Task 0 treats points 1 to 2,#of points= 2
  ==========================================
  atom:            1  NSRA:           2
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 1,#of points= 1
-Task 1 treats points 2 to 2,#of points= 1
-Task 2 treats points 3 to 3,#of points= 1
-Task 3 treats points 4 to 4,#of points= 1
-Task 4 treats points 5 to 5,#of points= 1
-Task 5 treats points 6 to 6,#of points= 1
-Task 6 treats points 7 to 7,#of points= 1
-Task 7 treats points 8 to 8,#of points= 1
-Task 8 treats points 9 to 9,#of points= 1
-Task 9 treats points 10 to 10,#of points= 1
-Task 10 treats points 11 to 11,#of points= 1
-Task 11 treats points 12 to 12,#of points= 1
-Task 12 treats points 13 to 13,#of points= 1
-Task 13 treats points 14 to 14,#of points= 1
-Task 14 treats points 15 to 15,#of points= 1
-Task 15 treats points 16 to 16,#of points= 1
-Task 16 treats points 17 to 17,#of points= 1
-Task 17 treats points 18 to 18,#of points= 1
-Task 18 treats points 19 to 19,#of points= 1
-Task 19 treats points 20 to 20,#of points= 1
-Task 20 treats points 21 to 21,#of points= 1
-Task 21 treats points 22 to 22,#of points= 1
-Task 22 treats points 23 to 23,#of points= 1
-Task 23 treats points 24 to 24,#of points= 1
-Task 24 treats points 25 to 25,#of points= 1
-Task 25 treats points 26 to 26,#of points= 1
-Task 26 treats points 27 to 27,#of points= 1
-Task 27 treats points 28 to 28,#of points= 1
-Task 28 treats points 29 to 29,#of points= 1
-Task 29 treats points 30 to 30,#of points= 1
-Task 30 treats points 31 to 31,#of points= 1
-Task 31 treats points 32 to 32,#of points= 1
+Task 0 treats points 1 to 2,#of points= 2
+Task 1 treats points 3 to 4,#of points= 2
+Task 2 treats points 5 to 6,#of points= 2
+Task 3 treats points 7 to 8,#of points= 2
+Task 4 treats points 9 to 10,#of points= 2
+Task 5 treats points 11 to 12,#of points= 2
+Task 6 treats points 13 to 14,#of points= 2
+Task 7 treats points 15 to 16,#of points= 2
+Task 8 treats points 17 to 18,#of points= 2
+Task 9 treats points 19 to 20,#of points= 2
+Task 10 treats points 21 to 22,#of points= 2
+Task 11 treats points 23 to 24,#of points= 2
+Task 12 treats points 25 to 26,#of points= 2
+Task 13 treats points 27 to 28,#of points= 2
+Task 14 treats points 29 to 30,#of points= 2
+Task 15 treats points 31 to 32,#of points= 2
  ==========================================
    ==> find_isave_wavefun
    (maxmem given per rank for storage:           0.00MB
@@ -46,11 +29,36 @@ Task 31 treats points 32 to 32,#of points= 1
     memory demand per atom and energy point for rll, rllleft, sll and sllleft respectively:           9.75MB)  <==
     Number of saved wavefunctions per atom and energy:  1; save rll:T; save sll:F; save rllleft:F; save sllleft:F
  energy:           1  (-0.500000000000000,1.389220682457870E-002)
+ energy:           2  (-0.500000000000000,6.602964357289150E-002)
+ atom:            2  NSRA:           2
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 2,#of points= 2
+Task 1 treats points 3 to 4,#of points= 2
+Task 2 treats points 5 to 6,#of points= 2
+Task 3 treats points 7 to 8,#of points= 2
+Task 4 treats points 9 to 10,#of points= 2
+Task 5 treats points 11 to 12,#of points= 2
+Task 6 treats points 13 to 14,#of points= 2
+Task 7 treats points 15 to 16,#of points= 2
+Task 8 treats points 17 to 18,#of points= 2
+Task 9 treats points 19 to 20,#of points= 2
+Task 10 treats points 21 to 22,#of points= 2
+Task 11 treats points 23 to 24,#of points= 2
+Task 12 treats points 25 to 26,#of points= 2
+Task 13 treats points 27 to 28,#of points= 2
+Task 14 treats points 29 to 30,#of points= 2
+Task 15 treats points 31 to 32,#of points= 2
+ ==========================================
+ energy:           1  (-0.500000000000000,1.389220682457870E-002)
+ energy:           2  (-0.500000000000000,6.602964357289150E-002)
            0 start tbref e-loop
 TBREF: GREF for energy:    1   -0.50000000    0.01389221
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
 Task 0 treats points 1 to 1,#of points= 1
-Task 1 treats points 2 to 1,#of points= 0
+ ==========================================
+TBREF: GREF for energy:    2   -0.50000000    0.06602964
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1,#of points= 1
  ==========================================
 ===============================================================================
                               < KKR1a finished >
@@ -60,10 +68,16 @@ Task 1 treats points 2 to 1,#of points= 0
       Inversion algorithm used : FULL MATRIX                        
 ===============================================================================
  ************ IE =   1 ENERGY =  -0.500000   0.013892 KMESH =   1
- kkrmat k loop:        8000           2
+ kkrmat k loop:        8000           1
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 4000,#of points= 4000
-Task 1 treats points 4001 to 8000,#of points= 4000
+Task 0 treats points 1 to 8000,#of points= 8000
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 ||||||||||||||||||||||||||||||||||||||||||||||||||||
+ ************ IE =   2 ENERGY =  -0.500000   0.066030 KMESH =   1
+ kkrmat k loop:        8000           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 8000,#of points= 8000
  ==========================================
 Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
                  ||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -72,19 +86,24 @@ Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
 ===============================================================================
 
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 1,#of points= 1
-Task 1 treats points 2 to 2,#of points= 1
+Task 0 treats points 1 to 2,#of points= 2
  ==========================================
  atom:            1
  energy:           1  (-0.500000000000000,1.389220682457870E-002)
+ energy:           2  (-0.500000000000000,6.602964357289150E-002)
 moment    0   1.5624755E+00   0.0000000E+00   1.5624745E+00
    4.5000019E+01   0.0000000E+00
+ atom:            2
+ energy:           1  (-0.500000000000000,1.389220682457870E-002)
+ energy:           2  (-0.500000000000000,6.602964357289150E-002)
+moment    0  -1.5624755E+00   0.0000000E+00   1.5624745E+00
+   4.5000019E+01  -1.8000000E+02
  
       I1    In/Out THETA[deg]       In/Out PHI[deg]        FIXDIR[boolean]   RMS(angles)[deg]
        1   45.000000   45.000019    0.000000    0.000000    T                     0.000000
-       2   45.000000   45.000019  180.000000  180.000000    T                     0.000000
+       2   45.000000   45.000019  180.000000 -180.000000    T                     0.000000
 Total RMS(angles) [deg]:    0.000000
-Number of constrained atoms=       2  rms for constraining fields=  4.88179591E-09
+Number of constrained atoms=       2  rms for constraining fields=  0.00000000E+00
  
 ##############################################################################
                l-decomposed valence charges and magnetic moments
@@ -93,22 +112,22 @@ Number of constrained atoms=       2  rms for constraining fields=  4.88179591E-
    ATOM        Ne spin dn  Ne spin up    m_spin    m_orb   spin dn  spin up
    ========================================================================
       1   s =  0.31457562  0.33085531    0.0163    0.0000  0.0000  0.0000
-          p =  0.39659740  0.38159296   -0.0150   -0.0002  0.0042 -0.0041
-          d =  2.14540122  4.34976847    2.2044    0.1832  0.1151 -0.0255
-          f =  0.04149529  0.04275982    0.0013    0.0012 -0.0008  0.0005
+          p =  0.39659740  0.38159296   -0.0150    0.0000  0.0029 -0.0029
+          d =  2.14540122  4.34976847    2.2044    0.0634  0.0814 -0.0180
+          f =  0.04149529  0.04275982    0.0013   -0.0002 -0.0005  0.0003
           ns  -0.00290600 -0.00013965    0.0028    0.0000  0.0000  0.0000
           ---------------------------------------------------------------
-          TOT  2.89516353  5.10483691    2.2097    0.1842  0.1185 -0.0292
-                           8.00000045              2.3938
+          TOT  2.89516353  5.10483691    2.2097    0.0632  0.0838 -0.0206
+                           8.00000045              2.2729
    ==================================================================
       2   s =  0.31457562  0.33085531    0.0163    0.0000  0.0000  0.0000
-          p =  0.39659740  0.38159296   -0.0150    0.0007  0.0003  0.0000
-          d =  2.14540122  4.34976847    2.2044   -0.0977  0.0034 -0.0074
-          f =  0.04149529  0.04275982    0.0013   -0.0033 -0.0007 -0.0010
+          p =  0.39659740  0.38159296   -0.0150    0.0000  0.0029 -0.0029
+          d =  2.14540122  4.34976847    2.2044    0.0634  0.0814 -0.0180
+          f =  0.04149529  0.04275982    0.0013   -0.0002 -0.0005  0.0003
           ns  -0.00290600 -0.00013965    0.0028    0.0000  0.0000  0.0000
           ---------------------------------------------------------------
-          TOT  2.89516353  5.10483691    2.2097   -0.1003  0.0030 -0.0084
-                           8.00000045              2.1094
+          TOT  2.89516353  5.10483691    2.2097    0.0632  0.0838 -0.0206
+                           8.00000045              2.2729
  
 ##############################################################################
  
@@ -128,7 +147,7 @@ Number of constrained atoms=       2  rms for constraining fields=  4.88179591E-
 
 
 *******************************************************************************
-                   ****** ITERATION :   1 OUT OF 100 ******
+                   ****** ITERATION :   1 OUT OF   1 ******
 *******************************************************************************
 
   Atom    1 charge in wigner seitz cell = 26.000000
@@ -141,7 +160,7 @@ Number of constrained atoms=       2  rms for constraining fields=  4.88179591E-
       ITERATION   1 charge neutrality in unit cell =     0.000000
                     TOTAL mag. moment in unit cell =     4.419347
  
-                old E Fermi   0.7019852120 Delta E_F =   0.59181164E-08
+                old E Fermi   0.7019852120 Delta E_F =   0.59181166E-08
                 new E FERMI   0.7019852061  DOS(E_F) =    20.957174
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -351,14 +370,14 @@ Number of constrained atoms=       2  rms for constraining fields=  4.88179591E-
 
      coulomb  contribution :   0   1067.03705529  1      0.00000000
                                2      0.00000001  3      0.00000000
-                               4     -0.00079774  5     -0.00000000
+                               4     -0.00079774  5      0.00000000
                                6      0.00009008
      --------------------------------------------------------------------
      tot. coulomb contribution :   1067.03634763
 
      ex.-cor. contribution :   0   -107.32093861  1     -0.00000000
                                2     -0.00000000  3     -0.00000000
-                               4      0.00273490  5      0.00000000
+                               4      0.00273490  5     -0.00000000
                                6     -0.00115507
      --------------------------------------------------------------------
      tot. ex.-cor. contribution :   -107.31935878
@@ -388,7 +407,7 @@ Number of constrained atoms=       2  rms for constraining fields=  4.88179591E-
 
      coulomb  contribution :   0   1067.03705529  1      0.00000000
                                2      0.00000001  3      0.00000000
-                               4     -0.00079774  5      0.00000000
+                               4     -0.00079774  5     -0.00000000
                                6      0.00009008
      --------------------------------------------------------------------
      tot. coulomb contribution :   1067.03634763

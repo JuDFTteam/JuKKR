@@ -1,12 +1,12 @@
-# serial: JuKKR_v3.1-1756-g658ea893_intel_20210720193451
+# serial: JuKKR_v3.1-1785-g693046e_intel_20210809231657
      Screened Korringa-Kohn-Rostoker Electronic Structure Code
                       for Bulk and Interfaces
-                    Juelich-Munich 2001 - 2018
+                    Juelich-Munich 2001 - 2021
 
-  Code version: v3.1-1756-g658ea893
+  Code version: v3.1-1785-g693046e
   Compile options: intel mpi 
-  serial number for files: JuKKR_v3.1-1756-g658ea893_intel_20210720193451
- Number of MPI ranks used:   64
+  serial number for files: JuKKR_v3.1-1785-g693046e_intel_20210809231657
+ Number of MPI ranks used:   16
 
 *******************************************************************************
 
@@ -144,7 +144,7 @@ SITE                BASIS VECTORS                 THETA   PHI CPA OCC KAOEZ
 ---+---+-------+---+---+---+-------+---+---------------------------------------
 ---+---------------------------------------------------------------------------
  NSTEPS
- 100
+   1
 ---+---------------------------------------------------------------------------
  I12="                                        "
  I13="potential                               "
@@ -315,8 +315,8 @@ CLSGEN_TB: Atom    2 Refpot    1 Rmtref 2.3200000 Vref 8.0000000 TB-cluster    1
  <#Fe26 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
  <#Fe26 POTENTIAL SPIN DOWN            exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
  <#Fe26 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
-Doing calculation with potential: 8550c22e5ff21ddd64e6e91faf087b93  potential
-Doing calculation with shapefun: ce34783ef30065813552ba8e55df7018  shapefun
+Doing calculation with potential: MD5 (potential) = 8550c22e5ff21ddd64e6e91faf087b93
+Doing calculation with shapefun: MD5 (shapefun) = ce34783ef30065813552ba8e55df7018
  
 ===============================================================================
                     EPATHTB: generates a complex E contour
@@ -411,15 +411,11 @@ Doing calculation with shapefun: ce34783ef30065813552ba8e55df7018  shapefun
                                < KKR0 finished >
 ===============================================================================
 
- create_newcomms_group_ie input:          64          32           2
- create cartesian grid:          32           2          64
- MPI_Cart_sub
- MPI_Comm_rank
- MPI_Comm_size
+ create_newcomms_group_ie input:          16          16           1
 ==================================================
-    MPI parallelization: use   64 ranks
-    create processor array of size (nat x ne)   2 x  32
-    nranks_at:    32, nranks_ie:    2
+    MPI parallelization: use   16 ranks
+    create processor array of size (nat x ne)   1 x  16
+    nranks_at:    16, nranks_ie:    1
                 N_E
          <--------------->
        ^ ( | | | | | | | )
