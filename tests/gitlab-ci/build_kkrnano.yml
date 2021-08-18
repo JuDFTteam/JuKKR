@@ -18,3 +18,4 @@ build_kkrnano:intel:hybrid:
     - master
     - develop
     - kkrnano-activate-tests
+    - kkrnano-chebyshev-tfQMRgpu

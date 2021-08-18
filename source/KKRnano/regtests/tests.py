@@ -12,7 +12,7 @@ TESTDIR = os.getcwd() ### perform the calculation in the current working directo
 DECIMALS = 6 ### 8=all digits, 6 should be enough
 DEFAULT_lmax = 3
 DEFAULT_nranks = 1
-DEFAULT_nthreads = 2
+DEFAULT_nthreads = 4
 direct = 4 ##
 iterative = 3 ##
 DEFAULT_solver = iterative
@@ -117,18 +117,18 @@ class Test_copper(unittest.TestCase):
         for r in range(0, AllMPIs*2+1): # nranks=[1, 2, 4]
             self.assertAlmostEqual(KKRnano("Cu4", solver=direct, nranks=2**r), Etot, DECIMALS)
         if HighLmax:
-            self.assertAlmostEqual(KKRnano("Cu4", solver=direct, lmax=4), -13219.716163, DECIMALS)
-            self.assertAlmostEqual(KKRnano("Cu4", solver=direct, lmax=5), -13219.6016203, DECIMALS) # about 30 seconds
-            self.assertAlmostEqual(KKRnano("Cu4", solver=direct, lmax=6), -13219.5603038, DECIMALS) # about 60 seconds
+            self.assertAlmostEqual(KKRnano("Cu4", solver=direct, lmax=4, nranks=4), -13219.716163, DECIMALS)
+            self.assertAlmostEqual(KKRnano("Cu4", solver=direct, lmax=5, nranks=4), -13219.6016203, DECIMALS) # about 30 seconds
+            self.assertAlmostEqual(KKRnano("Cu4", solver=direct, lmax=6, nranks=4), -13219.5603038, DECIMALS) # about 60 seconds
         # total time ~1.6min
 
     def test_Cu1_lmax(self):
         """Test with high lmax. Works only with -heap-arrays on ifort, 1 Cu atoms in the FCC unit cell"""
-        self.assertAlmostEqual(KKRnano("Cu1", solver=direct), -3308.14107181, DECIMALS) # about  2 seconds
+        self.assertAlmostEqual(KKRnano("Cu1", solver=direct, nranks=1), -3308.14107181, DECIMALS) # about  2 seconds
         if HighLmax:
-            self.assertAlmostEqual(KKRnano("Cu1", solver=direct, lmax=4), -3308.26072261, DECIMALS) # about  4 seconds
-            self.assertAlmostEqual(KKRnano("Cu1", solver=direct, lmax=5), -3308.22046659, DECIMALS) # about  8 seconds
-            self.assertAlmostEqual(KKRnano("Cu1", solver=direct, lmax=6), -3308.15010032, DECIMALS) # about 16 seconds
+            self.assertAlmostEqual(KKRnano("Cu1", solver=direct, lmax=4, nranks=1), -3308.26072261, DECIMALS) # about  4 seconds
+            self.assertAlmostEqual(KKRnano("Cu1", solver=direct, lmax=5, nranks=1), -3308.22046659, DECIMALS) # about  8 seconds
+            self.assertAlmostEqual(KKRnano("Cu1", solver=direct, lmax=6, nranks=1), -3308.15010032, DECIMALS) # about 16 seconds
         # total time ~1min
 
 class Test_semiconductors(unittest.TestCase):
