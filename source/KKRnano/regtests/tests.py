@@ -21,12 +21,14 @@ ShowMD5 = True
 AllMPIs = 1 # 1=Yes, 0=No
 HighLmax = True
 testNocoSOC = True
-verbose = False
+verbose = True
 MPIEXEC = 'mpirun' # 'srun'
 
 def run_it(cmd):
     """Run cmd, suppressing output. Returns output from stdout and exit code"""
     start_time = time.time()
+    if verbose:
+        print 'start running comman "{0}" at {1}'.format(cmd, start_time)
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, close_fds=True, preexec_fn=os.setsid, shell=True)
     out, err = proc.communicate()
     end_time = time.time()
@@ -48,6 +50,7 @@ def KKRnano(inputdir, nranks=DEFAULT_nranks, nthreads=DEFAULT_nthreads, solver=D
     """Run KKR-calculation with input from 'inputdir' and returns the total energy"""
     if verbose:
         print "start KKR for", inputdir, "with  lmax=",lmax, ", solver=",solver, ", nthreads=",nthreads, "nranks=",nranks
+        print 'test dir:', TESTDIR
     out, err, tim = run_it("./clearfiles.sh")
 
     global ShowMD5
