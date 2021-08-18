@@ -11,8 +11,8 @@ import time
 TESTDIR = os.getcwd() ### perform the calculation in the current working directory
 DECIMALS = 6 ### 8=all digits, 6 should be enough
 DEFAULT_lmax = 3
-DEFAULT_nranks = 8
-DEFAULT_nthreads = 4
+DEFAULT_nranks = 1
+DEFAULT_nthreads = 2
 direct = 4 ##
 iterative = 3 ##
 DEFAULT_solver = iterative
