@@ -21,8 +21,8 @@ ShowMD5 = True
 AllMPIs = 1 # 1=Yes, 0=No
 HighLmax = True
 testNocoSOC = True
-verbose = True
-MPIEXEC = 'srun'
+verbose = False
+MPIEXEC = 'mpirun' # 'srun'
 
 def run_it(cmd):
     """Run cmd, suppressing output. Returns output from stdout and exit code"""
@@ -78,9 +78,10 @@ def KKRnano(inputdir, nranks=DEFAULT_nranks, nthreads=DEFAULT_nthreads, solver=D
     if MPIEXEC=='srun':
         mpirun = 'srun -n'
     out, err, tim = run_it("OMP_STACKSIZE=80M OMP_NUM_THREADS={0} ".format(int(nthreads)) + mpirun + " {0} kkr.exe".format(int(nranks)))
-    #print 'out', out
-    #print 'err', err
-    #print 'tim', tim
+    if verbose:
+        print 'out', out
+        print 'err', err
+        print 'tim', tim
     ### grep the result
     total_energy = get_energy(out)
     print "KKR for",inputdir," with lmax=",lmax," gives",total_energy,"Ryd",
@@ -95,6 +96,8 @@ def KKRnano(inputdir, nranks=DEFAULT_nranks, nthreads=DEFAULT_nthreads, solver=D
     print " in", tim," sec"
     out, err, tim = run_it("./clearfiles.sh")
     return total_energy
+
+######################################################################################
 
 class Test_alloys(unittest.TestCase):
     def test_Fe8Co8(self):
