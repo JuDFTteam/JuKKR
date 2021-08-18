@@ -21,7 +21,7 @@ ShowMD5 = True
 AllMPIs = 1 # 1=Yes, 0=No
 HighLmax = True
 testNocoSOC = True
-verbose = True
+verbose = False
 MPIEXEC = 'mpirun' # 'srun'
 
 def run_it(cmd):
