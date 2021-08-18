@@ -5,6 +5,8 @@ run_kkrnano:intel:Cu1:
   script:
     - cd source/KKRnano/regtests
     - mkdir -p test_Cu1; cd test_Cu1; ln -s ../* .
+    - ls -la
+    - ls -la ..
     - python2.7 ./tests.py Test_copper.test_Cu1_lmax
   artifacts:
     paths:
