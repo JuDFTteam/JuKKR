@@ -39,10 +39,13 @@ stages:
     # to be implemented ...
   # pkkprime stages
   - build_pkkprime
-    # run and verift stages not defined yet
+    # run and verify stages not defined yet
   # rhoq stages
   - build_rhoq
-    # run and verift stages not defined yet
+    # run and verify stages not defined yet
+  # kkrnano stages
+  - build_kkrnano
+  - run_kkrnano
 
 ###############################################################################
 
@@ -72,12 +75,14 @@ include:
     - tests/gitlab-ci/build_pkkprime.yml
     - tests/gitlab-ci/build_voronoi.yml
     - tests/gitlab-ci/build_rhoq.yml
+    - tests/gitlab-ci/build_kkrnano.yml
     ### 2. run tests ###
     - tests/gitlab-ci/run_kkrhost.yml
     - tests/gitlab-ci/run_kkrimp.yml
     #- tests/gitlab-ci/run_kkrsusc.yml
     #- tests/gitlab-ci/run_pkkprime.yml
     - tests/gitlab-ci/run_voronoi.yml
+    - tests/gitlab-ci/run_kkrnano.yml
     ### 3. verify results ###
     - tests/gitlab-ci/verify_kkrhost.yml
     - tests/gitlab-ci/verify_kkrimp.yml

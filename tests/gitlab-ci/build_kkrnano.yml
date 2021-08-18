@@ -1,0 +1,20 @@
+build_kkrnano:intel:hybrid:
+  stage: build_kkrnano
+  tags:
+    - docker-executor
+  script:
+    # compile code
+    - cd source/KKRnano/source && mkdir -p build
+    - make -j4 PLATFORM=ifort SMP=openmp
+    - cp kkr.exe ../regtests/kkr.exe
+  artifacts:
+    paths:
+      - source/KKRnano/regtests/kkr.exe
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - kkrnano-activate-tests
