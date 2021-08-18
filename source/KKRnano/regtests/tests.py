@@ -28,7 +28,7 @@ def run_it(cmd):
     """Run cmd, suppressing output. Returns output from stdout and exit code"""
     start_time = time.time()
     if verbose:
-        print 'start running comman "{0}" at {1}'.format(cmd, start_time)
+        print 'Run command "{0}"'.format(cmd)
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, close_fds=True, preexec_fn=os.setsid, shell=True)
     out, err = proc.communicate()
     end_time = time.time()
@@ -80,7 +80,7 @@ def KKRnano(inputdir, nranks=DEFAULT_nranks, nthreads=DEFAULT_nthreads, solver=D
     mpirun = 'mpirun -np'
     if MPIEXEC=='srun':
         mpirun = 'srun -n'
-    out, err, tim = run_it("OMP_STACKSIZE=80M OMP_NUM_THREADS={0} ".format(int(nthreads)) + mpirun + " {0} kkr.exe".format(int(nranks)))
+    out, err, tim = run_it("OMP_STACKSIZE=80M OMP_NUM_THREADS={0} ".format(int(nthreads)) + mpirun + " {0} ./kkr.exe".format(int(nranks)))
     if verbose:
         print 'out', out
         print 'err', err
