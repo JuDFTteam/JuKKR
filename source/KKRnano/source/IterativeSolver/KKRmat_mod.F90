@@ -221,6 +221,8 @@ module KKRmat_mod
     use DirectSolver_mod, only: DirectSolver, solve
 #ifdef  has_tfQMRgpu
     use tfqmrgpu, only: tfqmrgpu_bsrsv_complete ! all-in-one GPU solver interface for rapid integration
+    use SolverStats_mod, only: reduce
+    use TimerMpi_mod, only: startTimer, stopTimer
 #endif
     use SparseMatrixDescription_mod, only: dump
     use InitialGuess_mod, only: InitialGuess, load, store
@@ -261,10 +263,8 @@ module KKRmat_mod
     double complex :: tracek  ! LLY
          
 #ifdef  has_tfQMRgpu
-    integer :: o = 6
-    integer :: ierr = 1
-    integer :: iterations, lda
-    double precision :: residuum
+    integer (kind=4) :: o, ierr, iterations, lda
+    real (kind=8) :: residual
 #endif
 
     integer :: num_trunc_atoms, lmsd, lm1, idx_lly, i1
@@ -395,15 +395,23 @@ module KKRmat_mod
     case (5) ! GPU solver
       
 #ifdef  has_tfQMRgpu
-      iterations = 1000
-      residuum = 1e-7
-      lda = size(op%mat_A, 1)
 
+       o=0
+       ierr=0
+
+      iterations = 2000
+      residual = iterative_solver%qmrbound
+      lda = size(op%mat_A, 1)
+      call startTimer(kernel_timer)
+   !   write(*,*) "Written by us: ", size(op%bsr_X%ColIndex)
       call tfqmrgpu_bsrsv_complete(op%bsr_A%nRows, lda, &
-        op%bsr_A%RowStart, op%bsr_A%ColIndex, op%mat_A(:,:,:,0), 'n', & !! A (in)
-        op%bsr_X%RowStart, op%bsr_X%ColIndex, op%mat_X, 'n', & !! X (out)
-        op%bsr_B%RowStart, op%bsr_B%ColIndex, op%mat_B, 'n', & !! B (in)
-        iterations, residuum, o, ierr)
+        op%bsr_A%RowStart, op%bsr_A%ColIndex, op%mat_A(:,:,:,0), 't', & !! A (in)
+        op%bsr_X%RowStart, op%bsr_X%ColIndex, op%mat_X, 't', & !! X (out)
+        op%bsr_B%RowStart, op%bsr_B%ColIndex, op%mat_B, 't', & !! B (in)
+        iterations, residual, o, ierr)
+      call stopTimer(kernel_timer)  
+      call reduce(iterative_solver%stats, iterations, residual, 0_8)
+           
 #else
       warn(6, "GPU solver needs -D has_tfQMRgpu (Problem is not solved) solver_type ="+solver_type)
 #endif
@@ -411,6 +419,10 @@ module KKRmat_mod
     case default
       warn(6, "No solver selected! Problem is not solved, solver_type ="+solver_type)
     endselect ! solver_type
+    
+    !call dump(op%mat_X, "solution_form.dat", formatted=.true.)
+    !call dump(op%mat_B, "rhs_form.dat", formatted=.true.)
+    !stop __FILE__
     
     TESTARRAYLOG(3, op%mat_B)
     TESTARRAYLOG(3, op%mat_X)
