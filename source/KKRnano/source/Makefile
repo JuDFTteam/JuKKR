@@ -18,7 +18,7 @@ EXTRA_FLAGS ?=
 tfQMRgpu ?= no
 ifeq ($(tfQMRgpu),yes)
 	EXTRA_FLAGS += -D has_tfQMRgpu
-    TFQMRGPU_PATH = $(HOME)/tfQMRgpu
+	TFQMRGPU_PATH = $(HOME)/tfQMRgpu
 endif
 
 
@@ -318,7 +318,7 @@ PPFLAGS = -WF,-DUSE_VOROWEIGHTS -WF,-DCOMPUTE_tref_LOCALLY -WF,-DNOLOGGING
 
 ifeq ($(SMP),openmp)
 	FCFLAGS += -qsmp=omp
-        PPFLAGS += -WF,-DCPP_hybrid
+	PPFLAGS += -WF,-DCPP_hybrid
 endif
 
 #ESSL
@@ -328,16 +328,16 @@ endif
 LDFLAGS = -L/bgsys/local/lib -lesslsmpbg -L/opt/ibmcmp/xlsmp/3.1/bglib64 -lxlsmp -L/bgsys/local/fftw3/3.3.2/fftw_g/lib/ -lfftw3 
 
 ifeq ($(TYPE),debug)
-  FCFLAGS += -q64 -O0 -qstrict -g -qnosave -C -qinitauto=7FF7FFFF -WF,-DDEBUG1
+	FCFLAGS += -q64 -O0 -qstrict -g -qnosave -C -qinitauto=7FF7FFFF -WF,-DDEBUG1
 else ifeq ($(TYPE),scorep)
-  FC = scorep mpixlf77_r	
-  FC90 = scorep mpixlf90_r
-  FCFLAGS += -q64 -O3 -qstrict
+	FC = scorep mpixlf77_r	
+	FC90 = scorep mpixlf90_r
+	FCFLAGS += -q64 -O3 -qstrict
 else ifeq ($(TYPE),voronoi_mesh)
-  FCFLAGS += -q64 -O3 -qstrict
-  PPFLAGS += -WF,-DUSE_OLD_MESH 
+	FCFLAGS += -q64 -O3 -qstrict
+	PPFLAGS += -WF,-DUSE_OLD_MESH 
 else
-  FCFLAGS += -q64 -O3 -qstrict
+	FCFLAGS += -q64 -O3 -qstrict
 endif
 
 #ifeq ($(USETOOL),scalasca)
@@ -380,13 +380,15 @@ SRCS90 = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.f90))
 SRCSFPP = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.F))
 SRCS90FPP = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.F90))
 SRCS95TMPL = $(foreach DIR,$(DIRS),$(wildcard $(DIR)/*.F95))
-ifeq ($(tfQMRgpu),yes)
-	SRCS90FPP += $(TFQMRGPU_PATH)/tfqmrgpu_Fortran_example.F90
-	LDFLAGS += -L$(TFQMRGPU_PATH)/lib64 -ltfQMRgpu_Fortran -ltfQMRgpu
-endif
 
 
 OBJS=
+
+ifeq ($(tfQMRgpu),yes)
+	LDFLAGS += -L$(TFQMRGPU_PATH)/lib64 -ltfQMRgpu_Fortran -ltfQMRgpu
+	OBJS += tfQMRgpu_mod.o
+endif
+
 
 LINKER= $(FC90)
 
@@ -418,8 +420,10 @@ $(PROGRAM): $(OBJS)
 	$(FC90) $(FCFLAGS) $(EXTRA_FLAGS) $(FC90FLAGS) $(PPFLAGS) -c $< -o $(BUILDDIR)/$@
 
 ifeq ($(tfQMRgpu),yes)
-#	tfqmrgpu_Fortran_example.o: $(TFQMRGPU_PATH)/example/tfqmrgpu_Fortran_example.F90 
-#	$(FC90) $(FCFLAGS) $(EXTRA_FLAGS) $(FC90FLAGS) $(PPFLAGS) -c $< -o $(BUILDDIR)/$@
+# add a target tfQMRgpu
+tfQMRgpu: $(TFQMRGPU_PATH)/example/tfqmrgpu_Fortran_example.F90
+	$(FC90) -I $(TFQMRGPU_PATH)/tfQMRgpu/include $(FCFLAGS) $(EXTRA_FLAGS) \
+	$(FC90FLAGS) $(PPFLAGS) -c $< -o $(BUILDDIR)/tfQMRgpu_mod.o
 endif
 
 
@@ -450,7 +454,8 @@ depend:
 	makedepend
 
 ifeq ($(tfQMRgpu),yes)
-    KKRmat_mod.o: tfqmrgpu_Fortran_example.o
+	# manually add a dependency
+	KKRmat_mod.o: tfQMRgpu_mod.o
 endif
 
 

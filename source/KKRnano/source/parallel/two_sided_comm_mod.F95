@@ -40,6 +40,8 @@
 !> to replace a missing template feature in Fortran.
 !> Do not use more than one name with _TYPE per line!
 
+! #define DEBUG
+
 #define NUMBERZ double complex
 #define NUMBERMPIZ MPI_DOUBLE_COMPLEX
 #define NUMBERC complex
@@ -84,11 +86,12 @@ module two_sided_comm_TYPE_mod
     include 'mpif.h' ! only: MPI_STATUS_SIZE, MPI_INTEGER, MPI_REQUEST_NULL
 
     assert( self%comm /= 0 )
-    
+
     call MPI_Comm_rank(self%comm, myrank, ierr)
 
     allocate(sreq(self%send_n), sstats(MPI_STATUS_SIZE,self%send_n), &
-             rreq(self%recv_n), rstats(MPI_STATUS_SIZE,self%recv_n), stat=ist) ! ToDo: catch status
+             rreq(self%recv_n), rstats(MPI_STATUS_SIZE,self%recv_n), stat=ist)
+    if (ist /= 0) call MPI_Abort(self%comm, ist, ierr)
     sreq(:) = MPI_REQUEST_NULL
     rreq(:) = MPI_REQUEST_NULL
 
@@ -103,19 +106,19 @@ module two_sided_comm_TYPE_mod
         do inz = self%send_start(ipair), self%send_start(ipair + 1) - 1
           tag = inz - self%send_start(ipair)
           iinp = self%send_index(inz)
-          call MPI_Isend(Ginp(:,iinp), ncount, NUMBERMPI_TYPE, rank, tag, self%comm, sreq(inz), ierr)
 #ifdef DEBUG
           write(*, '(9(a,i0))') "send local _TYPE-element ",iinp,"@",myrank," with tag ",tag," to rank ",rank
 #endif
+          call MPI_Isend(Ginp(:,iinp), ncount, NUMBERMPI_TYPE, rank, tag, self%comm, sreq(inz), ierr)
         enddo ! inz
 
         do inz = self%recv_start(ipair), self%recv_start(ipair + 1) - 1
           tag = inz - self%recv_start(ipair)
           iout = self%recv_index(inz)
-          call MPI_Irecv(Gout(:,iout), ncount, NUMBERMPI_TYPE, rank, tag, self%comm, rreq(inz), ierr)
 #ifdef DEBUG
           write(*, '(9(a,i0))') "I (rank ",myrank,") want to receive a _TYPE-element with tag ",tag," from rank ",rank
 #endif
+          call MPI_Irecv(Gout(:,iout), ncount, NUMBERMPI_TYPE, rank, tag, self%comm, rreq(inz), ierr)
         enddo ! inz
 
       else  ! rank /= myrank
@@ -132,7 +135,7 @@ module two_sided_comm_TYPE_mod
           write(*, '(9(a,i0))') "copy local _TYPE-element ",iinp,"@",myrank," locally"
 #endif
         enddo ! inz
-        
+
       endif ! rank /= myrank
 
     enddo ! ipair

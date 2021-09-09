@@ -107,7 +107,7 @@ implicit none
     integer :: omp_threads !DEBUGGING
     logical :: xccpl
     double precision :: rMTref
-    double precision, allocatable :: rMTs(:)
+    double precision, allocatable :: rMTs(:,:), rMTrefs(:,:)
     
     double complex, allocatable :: tmatLL(:,:,:,:) !< all t-matrices inside the truncation zone
     double complex, allocatable :: GmatN_buffer(:,:,:) !< GmatN for all local atoms
@@ -187,9 +187,12 @@ implicit none
         enddo
      endif
 !---------------------------------------------------------
-    allocate(rMTs(calc%trunc_zone%naez_trc))
-    call distribute(calc%xTable, 1, calc%atomdata_a(:)%rMTref, rMTs) ! communicate the Muffin-Tin radii within the truncation zone
-    
+    allocate(rMTs(1,calc%trunc_zone%naez_trc), rMTrefs(1,num_local_atoms))
+    rMTrefs(1,:) = calc%atomdata_a(:)%rMTref
+    ! communicate the Muffin-Tin radii within the truncation zone
+    call distribute(calc%xTable, 1, rMTrefs, rMTs)
+    deallocate(rMTrefs, stat=ist) ! ignore status
+
   ! IE ====================================================================
   !     BEGIN do loop over energies (EMPID-parallel)
   ! IE ====================================================================
@@ -212,7 +215,7 @@ implicit none
           do iacls = 1, calc%ref_cluster_a(ila)%nacls
             ! this calls tref several times with the same parameters if the local atoms are close to each other
 !           rMTref = kkr(ila)%rMTref(iacls) ! possible if it has been communicated earlier
-            rMTref = rMTs(calc%trunc_zone%trunc_atom_idx(calc%ref_cluster_a(ila)%atom(iacls)))
+            rMTref = rMTs(1,calc%trunc_zone%trunc_atom_idx(calc%ref_cluster_a(ila)%atom(iacls)))
             call tref(emesh%EZ(IE), params%vref, dims%lmaxd, rMTref, &
                       kkr(ila)%Tref_ell(:,iacls), kkr(ila)%dTref_ell(:,iacls), derive=(dims%Lly > 0))
             !if (dims%korbit == 1) then ! NOCO
