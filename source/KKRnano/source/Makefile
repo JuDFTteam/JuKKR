@@ -26,6 +26,10 @@ FC90FLAGS =
 FCFLAGS =
 PPFLAGS =
 PPFLAGS += -D USE_VOROWEIGHTS
+ifeq ($(TYPE),debug)
+	PPFLAGS += -D DEBUG
+endif
+# PPFLAGS += -D NDEBUG
 
 # PPFLAGS += -D BENCHMARK_tfQMR
 # PPFLAGS += -D EXPORT_tfQMR_PROBLEM
@@ -33,7 +37,6 @@ PPFLAGS += -D USE_VOROWEIGHTS
 # PPFLAGS += -D TRANSPOSE_TO_ROW_MAJOR
 ### TRANSPOSE_TO_ROW_MAJOR seems to work, however, there was a bug in col_norms about the non-linearity of DZNRM2, so we have to see which references went wrong
 #PPFLAGS += -D SUPERCELL_ELECTROSTATICS=8
-#  -D NDEBUG
 LDFLAGS =
 
 # ========= IFF Workstations ============
@@ -42,9 +45,9 @@ ifeq ($(PLATFORM),ifort)
 	FC = mpiifort -warn all
 	FC90 = mpiifort -warn all
 	# -module <path> specifies where to put .mod files
-  	ifeq ($(SMP),openmp)
- 		FCFLAGS += -qopenmp
-        endif
+	ifeq ($(SMP),openmp)
+		FCFLAGS += -qopenmp
+	endif
 	FCFLAGS += -module $(BUILDDIR)
 	FCFLAGS += -I $(BUILDDIR)
 	# PPFLAGS += -D TASKLOCAL_FILES
@@ -62,7 +65,7 @@ ifeq ($(PLATFORM),ifort)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all
 		PPFLAGS += -D USE_MTRADII -D USE_OLD_MESH -D NOLOGGING
  	else ifeq ($(TYPE),voronoi_mesh)
-		FCFLAGS += -O2 
+		FCFLAGS += -O2
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH
  	else ifeq ($(TYPE),voronoi_mesh_debug)
 		FCFLAGS += -O0 -g -check bounds -traceback -debug all -check all -fpe1
@@ -73,7 +76,6 @@ ifeq ($(PLATFORM),ifort)
 	else ifeq ($(TYPE),voronoi_mesh_print_mtradii)
 		FCFLAGS += -O0 -g
 		PPFLAGS += -D NOLOGGING -D USE_OLD_MESH -D PRINT_MTRADII
-
 	else
 		FCFLAGS += -O2 
 		PPFLAGS += -D NOLOGGING
