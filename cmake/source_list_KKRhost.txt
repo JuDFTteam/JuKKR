@@ -389,6 +389,7 @@ add_library(lib_kkrhost STATIC
     source/KKRhost/wrmoms.f90
     source/KKRhost/wunfiles.F90
     source/KKRhost/ylag.f90
+    source/KKRhost/write_gflle_npy.f90
 )
 # disable cmake auto add of 'lib' prefix to .so file
 SET_TARGET_PROPERTIES(lib_kkrhost PROPERTIES PREFIX "")

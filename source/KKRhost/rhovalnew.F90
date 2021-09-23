@@ -41,7 +41,7 @@ contains
     use :: mod_save_wavefun, only: t_wavefunctions, read_wavefunc
     use :: mod_runoptions, only: calc_exchange_couplings, calc_gmat_lm_full, disable_tmat_sratrick, fix_nonco_angles, &
                                  use_qdos, write_complex_qdos, write_pkkr_operators, write_DOS_lm, set_cheby_nospeedup, &
-                                 decouple_spins_cheby, disable_print_serialnumber
+                                 decouple_spins_cheby, disable_print_serialnumber, gflle_to_npy
     use :: mod_version_info, only: version_print_header
     use :: global_variables, only: lmmaxd, iemxd, ncleb, lmxspd, irmd, ntotd, nrmaxd, lmpotd, nspotd, nfund, korbit, mmaxd, nspind, angles_cutoff
     use :: mod_constants, only: czero, cvlight, cone, pi, ci
@@ -62,6 +62,7 @@ contains
     use :: mod_wunfiles, only: t_params
     use :: mod_bfield, only: add_bfield
     use :: mod_torque, only: calc_torque
+    use mod_write_gflle, only: write_gflle_to_npy
 
     implicit none
 
@@ -400,7 +401,7 @@ contains
 #else
     i1_myrank = i1                 ! lmlm-dos ruess
 #endif
-    if ((calc_gmat_lm_full) .and. (i1_myrank==1)) then ! lmlm-dos ruess
+    if ((calc_gmat_lm_full) .and. (i1_myrank==1) .and..not.gflle_to_npy) then ! lmlm-dos ruess
       lrecgflle = nspin*(1+korbit)*lmmaxd*lmmaxd*ielast*nqdos ! lmlm-dos ruess
       open (91, access='direct', recl=lrecgflle, file='gflle' & ! lmlm-dos ruess
         , form='unformatted', status='replace', err=110, iostat=ierr) ! lmlm-dos ruess
@@ -984,7 +985,11 @@ contains
         if (t_inc%i_write>0) then  ! lmlm-dos
           write (1337, *) 'gflle:', shape(gflle), shape(gflle_part), lrecgflle ! lmlm-dos
         end if                     ! lmlm-dos
-        write (91, rec=i1) gflle   ! lmlm-dos
+        if (gflle_to_npy) then
+          call write_gflle_to_npy(lmmaxd, ielast, nqdos, i1, gflle)
+        else
+          write (91, rec=i1) gflle   ! lmlm-dos
+        end if
       end if                       ! lmlm-dos
 
       allocate (rhotemp(irmdnew,lmpotd), stat=i_stat)
