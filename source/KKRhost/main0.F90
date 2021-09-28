@@ -1444,7 +1444,7 @@ contains
       imt1 = ircut(1, ih)
       irc1 = irc(ih)
       irmin1 = irmin(ih)
-      write(*,'("imt1, irc1, irmin1 = ",10i4)') imt1, irc1, irmin1
+      ! write(*,'("imt1, irc1, irmin1 = ",10i4)') imt1, irc1, irmin1
 
       do ispin = 1, nspin
         ! shift potential spin dependent

@@ -1,7 +1,7 @@
-# serial: kkrjm_v2.3-64-g8cc70fc_mpi_20180831103131; MD5 (potential) = 230666442204bee643ef39a7eadccd62; MD5 (shapefun) = 435c0c91db9d41eeb0f4313fcee12283
+# serial: JuKKR_v3.1-1745-g790bf3ad_intel_20210928120413; MD5 (potential) = a36a00bf3fd5b0003f6884062f69ed69; MD5 (shapefun) = 435c0c91db9d41eeb0f4313fcee12283
 #NATOM   NTOTATOM
            9           9
-#Impurity positions x,y,z|Core Charge|Virtu                Atom?|Remove Atom?|LMAX
+#Impurity positions x,y,z|Core Charge|Virtual Atom?|Remove Atom?|LMAX
        0.0000000000000000       0.0000000000000000       0.0000000000000000 14.00    0    0    2
       -0.2500000000000000      -0.2500000000000000      -0.2500000000000000 14.00    0    0    2
        0.2500000000000000      -0.2500000000000000      -0.2500000000000000  0.00    0    0    2

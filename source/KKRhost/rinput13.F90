@@ -45,7 +45,7 @@ contains
       dirac_scale_SpeefOfLight, disable_charge_neutrality, disable_print_serialnumber, modify_soc_Dirac, relax_SpinAngle_Dirac, search_Efermi, &
     set_kmesh_large, stop_1b, stop_1c, use_BdG, use_Chebychev_solver, use_cond_LB, use_decimation, use_lloyd, use_qdos, &
     use_rigid_Efermi, use_semicore, use_virtual_atoms, write_green_host, write_green_imp, write_kkrimp_input, &
-    write_pkkr_input, write_pkkr_operators, use_ldau, set_cheby_nospeedup, decouple_spins_cheby, write_tb_coupling, set_cheby_nosoc
+    write_pkkr_input, write_pkkr_operators, use_ldau, set_cheby_nospeedup, decouple_spin_cheby, write_tb_coupling, set_cheby_nosoc
     use mod_constants, only: cvlight, ryd
     use mod_wunfiles, only: t_params
     use memoryhandling, only: allocate_semi_inf_host, allocate_magnetization, allocate_cell, allocate_cpa, allocate_soc, allocate_ldau
@@ -896,9 +896,9 @@ contains
 
     if (use_Chebychev_solver) korbit = 1
 
-    if (decouple_spins_cheby) then
-      write (*, '(A)') 'Warning: detected test option <decouple_spins_cheby>: use spin-decoupled radial equations with new solver'
-      write (1337, *)  'Warning: detected test option <decouple_spins_cheby>: reset KORBIT to zero but use NEWSOSOL for spin-decoupled matrices with explicit spin-loop'
+    if (use_Chebychev_solver .and. decouple_spin_cheby) then
+      write (*, '(A)') 'Warning: detected test option <decouple_spin_cheby>: use spin-decoupled radial equations with new solver'
+      write (1337, *)  'Warning: detected test option <decouple_spin_cheby>: reset KORBIT to zero but use NEWSOSOL for spin-decoupled matrices with explicit spin-loop'
       korbit = 0
     end if
 
@@ -1278,7 +1278,7 @@ contains
     ! End of allocation of SOC arrays
     !--------------------------------------------------------------------------------
     if (use_Chebychev_solver) then      ! Spin-orbit
-      if (use_Chebychev_solver .and. (nspin/=2) .and. .not.decouple_spins_cheby) stop ' set NSPIN = 2 for SOC solver in inputcard'
+      if (use_Chebychev_solver .and. (nspin/=2) .and. .not.decouple_spin_cheby) stop ' set NSPIN = 2 for SOC solver in inputcard'
       npan_log = 30
       npan_eq = 30
       ncheb = 10
@@ -1306,7 +1306,7 @@ contains
     end if
 
     call ioinput('<SOCSCL>        ', uio, 1, 7, ier)
-    if (ier==0 .and. .not.(set_cheby_nosoc .or. decouple_spins_cheby)) then
+    if (ier==0 .and. .not.(set_cheby_nosoc .or. decouple_spin_cheby)) then
       write (111, '(A10)') '<SOCSCL>  '
       do i = 1, natyp
         call ioinput('<SOCSCL>        ', uio, i, 7, ier)
@@ -1320,8 +1320,8 @@ contains
       ! !Bernd - old way
       ! write(111,FMT='(A10,50E10.2)') '<SOCSCL>= ',(SOCSCALE(I1),I1=1,NATYP)
       ! !Bernd - old way
-    elseif (set_cheby_nosoc .or. decouple_spins_cheby) then
-      write(*,*) 'Skipped reading <SOCSCL> because <set_cheby_nosoc>= T or <decouple_spins_cheby>= T. Automatically use <SOCSCL>=0.'
+    elseif (set_cheby_nosoc .or. decouple_spin_cheby) then
+      write(*,*) 'Skipped reading <SOCSCL> because <set_cheby_nosoc>= T or <decouple_spin_cheby>= T. Automatically use <SOCSCL>=0.'
       socscale(:) = 0.0_dp
       write (111, fmt='(A18,50E10.2)') '<SOCSCL>= ', (socscale(i1), i1=1, natyp)
     else

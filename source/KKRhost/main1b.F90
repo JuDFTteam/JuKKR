@@ -37,24 +37,24 @@ contains
     use :: mod_datatypes, only: dp, sp
     use :: mod_runoptions, only: calc_exchange_couplings, formatted_file, set_gmat_to_zero, use_Chebychev_solver, &
       use_qdos, use_readcpa, write_deci_tmat, write_gmat_plain, write_green_host, write_green_imp, write_kkrimp_input, &
-      write_pkkr_input, write_pkkr_operators, write_rhoq_input, write_gmat_ascii, decouple_spins_cheby
-    use :: mod_constants, only: czero, cone, pi
-    use :: mod_operators_for_fscode, only: operators_for_fscode
-    use :: mod_getscratch, only: opendafile
-    use :: mod_kloopz1, only: kloopz1_qdos
-    use :: mod_greenimp, only: greenimp
-    use :: mod_changerep, only: changerep
-    use :: mod_tmatimp_newsolver, only: tmatimp_newsolver
-    use :: mod_setfactl, only: setfactl
-    use :: mod_calctref13, only: calctref13
-    use :: mod_rotatespinframe, only: rotatematrix
-    use :: mod_types, only: t_tgmat, t_inc, t_lloyd, t_cpa, init_t_cpa, t_imp
-    use :: mod_timing, only: timing_start, timing_pause, timing_stop, timings_1b, print_time_and_date
-    use :: mod_wunfiles, only: get_params_1b, t_params !, read_angles
-    use :: mod_tbxccpljij, only: tbxccpljij
-    use :: mod_tbxccpljijdij, only: tbxccpljijdij
-    use :: mod_rhoqtools, only: rhoq_save_refpot
-    use :: mod_cinit, only: cinit
+      write_pkkr_input, write_pkkr_operators, write_rhoq_input, write_gmat_ascii, decouple_spin_cheby
+    use mod_constants, only: czero, cone, pi
+    use mod_operators_for_fscode, only: operators_for_fscode
+    use mod_getscratch, only: opendafile
+    use mod_kloopz1, only: kloopz1_qdos
+    use mod_greenimp, only: greenimp
+    use mod_changerep, only: changerep
+    use mod_tmatimp_newsolver, only: tmatimp_newsolver
+    use mod_setfactl, only: setfactl
+    use mod_calctref13, only: calctref13
+    use mod_rotatespinframe, only: rotatematrix
+    use mod_types, only: t_tgmat, t_inc, t_lloyd, t_cpa, init_t_cpa, t_imp
+    use mod_timing, only: timing_start, timing_pause, timing_stop, timings_1b, print_time_and_date
+    use mod_wunfiles, only: get_params_1b, t_params
+    use mod_tbxccpljij, only: tbxccpljij
+    use mod_tbxccpljijdij, only: tbxccpljijdij
+    use mod_rhoqtools, only: rhoq_save_refpot
+    use mod_cinit, only: cinit
     ! array dimensions
     use :: global_variables, only: maxmshd, iemxd, natypd, naezd, kpoibz, lmmaxd, lmgf0d, lmaxd, nrefd, nsheld, wlength, nofgij, &
       naclsd, nspind, nclsd, nembd, krel, korbit, natomimpd, nrd, nembd1, nspindd, nprincd, irmind, nspotd, irmd, lpotd, &
@@ -522,9 +522,9 @@ contains
             end if
             do i = 1, lm1
               trefll(i, i, i1) = wn1(i, i)
-              if (use_Chebychev_solver .and. .not.decouple_spins_cheby) trefll(lm1+i, lm1+i, i1) = wn1(i, i)
+              if (use_Chebychev_solver .and. .not.decouple_spin_cheby) trefll(lm1+i, lm1+i, i1) = wn1(i, i)
               dtrefll(i, i, i1) = wn2(i, i)                              ! LLY
-              if (use_Chebychev_solver .and. .not.decouple_spins_cheby) dtrefll(lm1+i, lm1+i, i1) = wn2(i, i) ! LLY
+              if (use_Chebychev_solver .and. .not.decouple_spin_cheby) dtrefll(lm1+i, lm1+i, i1) = wn2(i, i) ! LLY
             end do
 
             if (write_rhoq_input) then
@@ -567,7 +567,7 @@ contains
             tmat(:, :) = t_tgmat%tmat(:, :, irec)
           end if
 
-          if (use_Chebychev_solver .and. .not. decouple_spins_cheby) then
+          if (use_Chebychev_solver .and. .not. decouple_spin_cheby) then
             ! read in theta and phi for noncolinear
             theta = theta_at(i1)
             phi = phi_at(i1)
@@ -587,7 +587,7 @@ contains
               tmat(:, :) = t_lloyd%dtmat(:, :, irec)
             end if
 
-            if (use_Chebychev_solver .and. .not. decouple_spins_cheby) call rotatematrix(tmat, theta, phi, lmgf0d, 0) ! LLY
+            if (use_Chebychev_solver .and. .not. decouple_spin_cheby) call rotatematrix(tmat, theta, phi, lmgf0d, 0) ! LLY
 
             dtmatll(1:lmmaxd, 1:lmmaxd, i1) = tmat(1:lmmaxd, 1:lmmaxd) ! LLY
             if (t_lloyd%dtmat_to_file) then
@@ -752,7 +752,7 @@ contains
 
         if (lly/=0) then           ! LLY
 
-          if (use_Chebychev_solver .and. .not.decouple_spins_cheby) then
+          if (use_Chebychev_solver .and. .not.decouple_spin_cheby) then
             cdos_lly(ie, ispin) = tralpha(ie, ispin) - lly_grtr(ie, ispin)/volbz(1) + 2.0_dp*lly_g0tr(ie) ! LLY
           else
             if (lly/=2) then       ! LLY Lloyd

@@ -41,7 +41,7 @@ contains
     use mod_datatypes, only: dp
     use mod_runoptions, only: calc_gmat_lm_full, fix_nonco_angles, relax_SpinAngle_Dirac, use_Chebychev_solver, &
       use_decimation, use_qdos, write_DOS, write_complex_qdos, write_density_ascii, write_rho2ns, write_DOS_lm, &
-      decouple_spins_cheby, disable_print_serialnumber
+      decouple_spin_cheby, disable_print_serialnumber
     use mod_constants, only: czero, pi
     use mod_profiling, only: memocc
     use mod_mympi, only: myrank, master
@@ -825,8 +825,8 @@ contains
       ! Write out lm charges and moments
       ! -------------------------------------------------------------------
       withorbmom = krel+korbit
-      if (decouple_spins_cheby) withorbmom = nspin-1 !withorbmom+1
-      call wrmoms(withorbmom, natyp, nspinpot, charge, muorb, lmax, lmaxd1)
+      if (decouple_spin_cheby) withorbmom = nspin-1
+      if (.not. use_qdos) call wrmoms(withorbmom, natyp, nspinpot, charge, muorb, lmax, lmaxd1)
 
       ! ----------------------------------------------------------------------
       ! ITERMDIR

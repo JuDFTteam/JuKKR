@@ -404,6 +404,7 @@ target_link_libraries(kkr.x lib_kkrhost)
 if(CMAKE_Fortran_COMPILER_ID MATCHES GNU OR USE_LIBFLAME)
     target_link_libraries(kkr.x ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 endif()
+target_link_libraries(kkr.x "${ompflags}")
 
 if(ENABLE_BdG)
     # for wf testing (BdG)

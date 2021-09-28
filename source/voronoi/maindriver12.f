@@ -828,7 +828,11 @@ c
   
 c           ! Redefine
             RMTCL(ISHAPE) = XRN_ALL(1   ,ISHAPE)*ALATC
-            RWSCL(ISHAPE) = XRN_ALL(NMESH+NRAD,ISHAPE)*ALATC
+            IF (.NOT.OPT('SIMULASA')) THEN
+              RWSCL(ISHAPE) = XRN_ALL(NMESH+NRAD,ISHAPE)*ALATC
+            ELSE
+              RWSCL(ISHAPE) = XRN_ALL(MESHN_ALL(ISHAPE),ISHAPE)*ALATC
+            END IF
             WRITE(6,*) 'rmt  = ',RMTCL(ISHAPE)
             WRITE(6,*) 'rmax = ',RWSCL(ISHAPE)
             LCONSTRUCTED(ISHAPE) = .TRUE.

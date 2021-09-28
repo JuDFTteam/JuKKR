@@ -1,25 +1,17 @@
-# serial: JuKKR_v3.1-1785-g693046e_intel_20210809231657
+# serial: JuKKR_v3.1-1746-g74fd0769_intel_20210928150011
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
 Task 0 treats points 1 to 2,#of points= 2
  ==========================================
  atom:            1  NSRA:           2
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 2,#of points= 2
-Task 1 treats points 3 to 4,#of points= 2
-Task 2 treats points 5 to 6,#of points= 2
-Task 3 treats points 7 to 8,#of points= 2
-Task 4 treats points 9 to 10,#of points= 2
-Task 5 treats points 11 to 12,#of points= 2
-Task 6 treats points 13 to 14,#of points= 2
-Task 7 treats points 15 to 16,#of points= 2
-Task 8 treats points 17 to 18,#of points= 2
-Task 9 treats points 19 to 20,#of points= 2
-Task 10 treats points 21 to 22,#of points= 2
-Task 11 treats points 23 to 24,#of points= 2
-Task 12 treats points 25 to 26,#of points= 2
-Task 13 treats points 27 to 28,#of points= 2
-Task 14 treats points 29 to 30,#of points= 2
-Task 15 treats points 31 to 32,#of points= 2
+Task 0 treats points 1 to 4,#of points= 4
+Task 1 treats points 5 to 8,#of points= 4
+Task 2 treats points 9 to 12,#of points= 4
+Task 3 treats points 13 to 16,#of points= 4
+Task 4 treats points 17 to 20,#of points= 4
+Task 5 treats points 21 to 24,#of points= 4
+Task 6 treats points 25 to 28,#of points= 4
+Task 7 treats points 29 to 32,#of points= 4
  ==========================================
    ==> find_isave_wavefun
    (maxmem given per rank for storage:           0.00MB
@@ -30,33 +22,37 @@ Task 15 treats points 31 to 32,#of points= 2
     Number of saved wavefunctions per atom and energy:  1; save rll:T; save sll:F; save rllleft:F; save sllleft:F
  energy:           1  (-0.500000000000000,1.389220682457870E-002)
  energy:           2  (-0.500000000000000,6.602964357289150E-002)
+ energy:           3  (-0.500000000000000,0.134054438652649)
+ energy:           4  (-0.500000000000000,0.186191875400962)
  atom:            2  NSRA:           2
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 2,#of points= 2
-Task 1 treats points 3 to 4,#of points= 2
-Task 2 treats points 5 to 6,#of points= 2
-Task 3 treats points 7 to 8,#of points= 2
-Task 4 treats points 9 to 10,#of points= 2
-Task 5 treats points 11 to 12,#of points= 2
-Task 6 treats points 13 to 14,#of points= 2
-Task 7 treats points 15 to 16,#of points= 2
-Task 8 treats points 17 to 18,#of points= 2
-Task 9 treats points 19 to 20,#of points= 2
-Task 10 treats points 21 to 22,#of points= 2
-Task 11 treats points 23 to 24,#of points= 2
-Task 12 treats points 25 to 26,#of points= 2
-Task 13 treats points 27 to 28,#of points= 2
-Task 14 treats points 29 to 30,#of points= 2
-Task 15 treats points 31 to 32,#of points= 2
+Task 0 treats points 1 to 4,#of points= 4
+Task 1 treats points 5 to 8,#of points= 4
+Task 2 treats points 9 to 12,#of points= 4
+Task 3 treats points 13 to 16,#of points= 4
+Task 4 treats points 17 to 20,#of points= 4
+Task 5 treats points 21 to 24,#of points= 4
+Task 6 treats points 25 to 28,#of points= 4
+Task 7 treats points 29 to 32,#of points= 4
  ==========================================
  energy:           1  (-0.500000000000000,1.389220682457870E-002)
  energy:           2  (-0.500000000000000,6.602964357289150E-002)
+ energy:           3  (-0.500000000000000,0.134054438652649)
+ energy:           4  (-0.500000000000000,0.186191875400962)
            0 start tbref e-loop
 TBREF: GREF for energy:    1   -0.50000000    0.01389221
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
 Task 0 treats points 1 to 1,#of points= 1
  ==========================================
 TBREF: GREF for energy:    2   -0.50000000    0.06602964
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1,#of points= 1
+ ==========================================
+TBREF: GREF for energy:    3   -0.50000000    0.13405444
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 1,#of points= 1
+ ==========================================
+TBREF: GREF for energy:    4   -0.50000000    0.18619188
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
 Task 0 treats points 1 to 1,#of points= 1
  ==========================================
@@ -81,6 +77,20 @@ Task 0 treats points 1 to 8000,#of points= 8000
  ==========================================
 Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
                  ||||||||||||||||||||||||||||||||||||||||||||||||||||
+ ************ IE =   3 ENERGY =  -0.500000   0.134054 KMESH =   1
+ kkrmat k loop:        8000           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 8000,#of points= 8000
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 ||||||||||||||||||||||||||||||||||||||||||||||||||||
+ ************ IE =   4 ENERGY =  -0.500000   0.186192 KMESH =   1
+ kkrmat k loop:        8000           1
+ ==== DISTRIBUTION OF POINTS ON TASKS: ====
+Task 0 treats points 1 to 8000,#of points= 8000
+ ==========================================
+Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
+                 ||||||||||||||||||||||||||||||||||||||||||||||||||||
 ===============================================================================
                               < KKR1b finished >
 ===============================================================================
@@ -91,17 +101,21 @@ Task 0 treats points 1 to 2,#of points= 2
  atom:            1
  energy:           1  (-0.500000000000000,1.389220682457870E-002)
  energy:           2  (-0.500000000000000,6.602964357289150E-002)
-moment    0   1.5624755E+00   0.0000000E+00   1.5624745E+00
-   4.5000019E+01   0.0000000E+00
+ energy:           3  (-0.500000000000000,0.134054438652649)
+ energy:           4  (-0.500000000000000,0.186191875400962)
+moment    0   1.5633390E+00   1.6444771E-09   1.5633482E+00
+   4.4999831E+01   6.0269460E-08
  atom:            2
  energy:           1  (-0.500000000000000,1.389220682457870E-002)
  energy:           2  (-0.500000000000000,6.602964357289150E-002)
-moment    0  -1.5624755E+00   0.0000000E+00   1.5624745E+00
-   4.5000019E+01  -1.8000000E+02
+ energy:           3  (-0.500000000000000,0.134054438652649)
+ energy:           4  (-0.500000000000000,0.186191875400962)
+moment    0  -1.5633390E+00  -1.6444764E-09   1.5633482E+00
+   4.4999831E+01  -1.8000000E+02
  
       I1    In/Out THETA[deg]       In/Out PHI[deg]        FIXDIR[boolean]   RMS(angles)[deg]
-       1   45.000000   45.000019    0.000000    0.000000    T                     0.000000
-       2   45.000000   45.000019  180.000000 -180.000000    T                     0.000000
+       1   45.000000   44.999831    0.000000    0.000000    T                     0.000000
+       2   45.000000   44.999831  180.000000 -180.000000    T                     0.000000
 Total RMS(angles) [deg]:    0.000000
 Number of constrained atoms=       2  rms for constraining fields=  0.00000000E+00
  
@@ -111,27 +125,27 @@ Number of constrained atoms=       2  rms for constraining fields=  0.00000000E+
  
    ATOM        Ne spin dn  Ne spin up    m_spin    m_orb   spin dn  spin up
    ========================================================================
-      1   s =  0.31457562  0.33085531    0.0163    0.0000  0.0000  0.0000
-          p =  0.39659740  0.38159296   -0.0150    0.0000  0.0029 -0.0029
-          d =  2.14540122  4.34976847    2.2044    0.0634  0.0814 -0.0180
-          f =  0.04149529  0.04275982    0.0013   -0.0002 -0.0005  0.0003
-          ns  -0.00290600 -0.00013965    0.0028    0.0000  0.0000  0.0000
+      1   s =  0.31457457  0.33085225    0.0163    0.0000  0.0000  0.0000
+          p =  0.39657312  0.38156204   -0.0150    0.0000  0.0029 -0.0029
+          d =  2.14484122  4.35044305    2.2056    0.0633  0.0815 -0.0182
+          f =  0.04146279  0.04272686    0.0013   -0.0002 -0.0006  0.0003
+          ns  -0.00290156 -0.00013230    0.0028    0.0000  0.0000  0.0000
           ---------------------------------------------------------------
-          TOT  2.89516353  5.10483691    2.2097    0.0632  0.0838 -0.0206
-                           8.00000045              2.2729
+          TOT  2.89455014  5.10545189    2.2109    0.0631  0.0839 -0.0208
+                           8.00000204              2.2740
    ==================================================================
-      2   s =  0.31457562  0.33085531    0.0163    0.0000  0.0000  0.0000
-          p =  0.39659740  0.38159296   -0.0150    0.0000  0.0029 -0.0029
-          d =  2.14540122  4.34976847    2.2044    0.0634  0.0814 -0.0180
-          f =  0.04149529  0.04275982    0.0013   -0.0002 -0.0005  0.0003
-          ns  -0.00290600 -0.00013965    0.0028    0.0000  0.0000  0.0000
+      2   s =  0.31457457  0.33085225    0.0163    0.0000  0.0000  0.0000
+          p =  0.39657312  0.38156204   -0.0150    0.0000  0.0029 -0.0029
+          d =  2.14484122  4.35044305    2.2056    0.0633  0.0815 -0.0182
+          f =  0.04146279  0.04272686    0.0013   -0.0002 -0.0006  0.0003
+          ns  -0.00290156 -0.00013230    0.0028    0.0000  0.0000  0.0000
           ---------------------------------------------------------------
-          TOT  2.89516353  5.10483691    2.2097    0.0632  0.0838 -0.0206
-                           8.00000045              2.2729
+          TOT  2.89455014  5.10545189    2.2109    0.0631  0.0839 -0.0208
+                           8.00000204              2.2740
  
 ##############################################################################
  
- Sum of valence charges of atoms (local summation)   16.0000008946269     
+ Sum of valence charges of atoms (local summation)   16.0000040770865     
  
 ##############################################################################
                                  CORE  STATES
@@ -150,18 +164,18 @@ Number of constrained atoms=       2  rms for constraining fields=  0.00000000E+
                    ****** ITERATION :   1 OUT OF   1 ******
 *******************************************************************************
 
-  Atom    1 charge in wigner seitz cell = 26.000000
-       spin moment in wigner seitz cell =  2.209673
+  Atom    1 charge in wigner seitz cell = 26.000002
+       spin moment in wigner seitz cell =  2.210902
   =============================================================================
-  Atom    2 charge in wigner seitz cell = 26.000000
-       spin moment in wigner seitz cell =  2.209673
+  Atom    2 charge in wigner seitz cell = 26.000002
+       spin moment in wigner seitz cell =  2.210902
  
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      ITERATION   1 charge neutrality in unit cell =     0.000000
-                    TOTAL mag. moment in unit cell =     4.419347
+      ITERATION   1 charge neutrality in unit cell =     0.000003
+                    TOTAL mag. moment in unit cell =     4.421804
  
-                old E Fermi   0.7019852120 Delta E_F =   0.59181166E-08
-                new E FERMI   0.7019852061  DOS(E_F) =    20.957174
+                old E Fermi   0.7019489946 Delta E_F =   0.82125769E-07
+                new E FERMI   0.7019489125  DOS(E_F) =    20.944898
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ===============================================================================
@@ -169,8 +183,8 @@ Number of constrained atoms=       2  rms for constraining fields=  0.00000000E+
 
                           ATOM   Delta_Q       VMAD
                          ------------------------------
-                            1    0.000000    -0.017708
-                            2    0.000000    -0.017708
+                            1    0.000002    -0.017709
+                            2    0.000002    -0.017709
  ICC in VMADELBLK           0
                          ------------------------------
 
@@ -200,18 +214,18 @@ Number of constrained atoms=       2  rms for constraining fields=  0.00000000E+
  Including cutoff of vxc for small density
  ATOM=           1 LAMBDA_XC=   1.00000000000000     
  ATOM=           2 LAMBDA_XC=   1.00000000000000     
-  VOL INT.    54.229132671  VAV INT.   -41.236600341  VMT ZERO     0.760414160
+  VOL INT.    54.229132671  VAV INT.   -41.236216755  VMT ZERO     0.760407086
 ===============================================================================
 
  MIXSTR  5.000000000000000E-002
-      rms-error for atom  1 :v+ + v- =  3.8797D-08  ,  v+ - v- =  4.0928D-08
-      rms-error non spherical contribution for atom   1 :v+ + v- =  1.4111D-08  ,  v+ - v- =  1.7697D-08
-      rms-error for atom  2 :v+ + v- =  3.8797D-08  ,  v+ - v- =  4.0928D-08
-      rms-error non spherical contribution for atom   2 :v+ + v- =  1.4111D-08  ,  v+ - v- =  1.7697D-08
+      rms-error for atom  1 :v+ + v- =  2.1002D-07  ,  v+ - v- =  5.0995D-07
+      rms-error non spherical contribution for atom   1 :v+ + v- =  1.6782D-07  ,  v+ - v- =  2.1394D-07
+      rms-error for atom  2 :v+ + v- =  2.1002D-07  ,  v+ - v- =  5.0995D-07
+      rms-error non spherical contribution for atom   2 :v+ + v- =  1.6782D-07  ,  v+ - v- =  2.1394D-07
 -------------------------------------------------------------------------------
 
-      ITERATION   1 average rms-error : v+ + v- =  4.1284D-08
-                                        v+ - v- =  4.4590D-08
+      ITERATION   1 average rms-error : v+ + v- =  2.6883D-07
+                                        v+ - v- =  5.5301D-07
 -------------------------------------------------------------------------------
                     mixing factor used :     5.00D-02
 ===============================================================================
@@ -228,10 +242,8 @@ Number of constrained atoms=       2  rms for constraining fields=  0.00000000E+
  POT_NS_CUTOFF INFO: cutting ns component          14
  POT_NS_CUTOFF INFO: cutting ns component          15
  POT_NS_CUTOFF INFO: cutting ns component          16
- POT_NS_CUTOFF INFO: cutting ns component          17
  POT_NS_CUTOFF INFO: cutting ns component          18
  POT_NS_CUTOFF INFO: cutting ns component          19
- POT_NS_CUTOFF INFO: cutting ns component          20
  POT_NS_CUTOFF INFO: cutting ns component          26
  POT_NS_CUTOFF INFO: cutting ns component          27
  POT_NS_CUTOFF INFO: cutting ns component          28
@@ -261,10 +273,37 @@ Number of constrained atoms=       2  rms for constraining fields=  0.00000000E+
  POT_NS_CUTOFF INFO: cutting ns component          14
  POT_NS_CUTOFF INFO: cutting ns component          15
  POT_NS_CUTOFF INFO: cutting ns component          16
- POT_NS_CUTOFF INFO: cutting ns component          17
+ POT_NS_CUTOFF INFO: cutting ns component          19
+ POT_NS_CUTOFF INFO: cutting ns component          26
+ POT_NS_CUTOFF INFO: cutting ns component          27
+ POT_NS_CUTOFF INFO: cutting ns component          28
+ POT_NS_CUTOFF INFO: cutting ns component          29
+ POT_NS_CUTOFF INFO: cutting ns component          30
+ POT_NS_CUTOFF INFO: cutting ns component          31
+ POT_NS_CUTOFF INFO: cutting ns component          32
+ POT_NS_CUTOFF INFO: cutting ns component          33
+ POT_NS_CUTOFF INFO: cutting ns component          34
+ POT_NS_CUTOFF INFO: cutting ns component          35
+ POT_NS_CUTOFF INFO: cutting ns component          36
+ POT_NS_CUTOFF INFO: cutting ns component          37
+ POT_NS_CUTOFF INFO: cutting ns component          41
+ POT_NS_CUTOFF INFO: cutting ns component          42
+ POT_NS_CUTOFF INFO: cutting ns component          45
+ POT_NS_CUTOFF INFO: cutting ns component          49
+ POT_NS_CUTOFF INFO: cutting ns component           2
+ POT_NS_CUTOFF INFO: cutting ns component           3
+ POT_NS_CUTOFF INFO: cutting ns component           4
+ POT_NS_CUTOFF INFO: cutting ns component           5
+ POT_NS_CUTOFF INFO: cutting ns component           6
+ POT_NS_CUTOFF INFO: cutting ns component          10
+ POT_NS_CUTOFF INFO: cutting ns component          11
+ POT_NS_CUTOFF INFO: cutting ns component          12
+ POT_NS_CUTOFF INFO: cutting ns component          13
+ POT_NS_CUTOFF INFO: cutting ns component          14
+ POT_NS_CUTOFF INFO: cutting ns component          15
+ POT_NS_CUTOFF INFO: cutting ns component          16
  POT_NS_CUTOFF INFO: cutting ns component          18
  POT_NS_CUTOFF INFO: cutting ns component          19
- POT_NS_CUTOFF INFO: cutting ns component          20
  POT_NS_CUTOFF INFO: cutting ns component          26
  POT_NS_CUTOFF INFO: cutting ns component          27
  POT_NS_CUTOFF INFO: cutting ns component          28
@@ -294,10 +333,7 @@ Number of constrained atoms=       2  rms for constraining fields=  0.00000000E+
  POT_NS_CUTOFF INFO: cutting ns component          14
  POT_NS_CUTOFF INFO: cutting ns component          15
  POT_NS_CUTOFF INFO: cutting ns component          16
- POT_NS_CUTOFF INFO: cutting ns component          17
- POT_NS_CUTOFF INFO: cutting ns component          18
  POT_NS_CUTOFF INFO: cutting ns component          19
- POT_NS_CUTOFF INFO: cutting ns component          20
  POT_NS_CUTOFF INFO: cutting ns component          26
  POT_NS_CUTOFF INFO: cutting ns component          27
  POT_NS_CUTOFF INFO: cutting ns component          28
@@ -310,124 +346,90 @@ Number of constrained atoms=       2  rms for constraining fields=  0.00000000E+
  POT_NS_CUTOFF INFO: cutting ns component          35
  POT_NS_CUTOFF INFO: cutting ns component          36
  POT_NS_CUTOFF INFO: cutting ns component          37
- POT_NS_CUTOFF INFO: cutting ns component          38
- POT_NS_CUTOFF INFO: cutting ns component          39
- POT_NS_CUTOFF INFO: cutting ns component          40
  POT_NS_CUTOFF INFO: cutting ns component          41
  POT_NS_CUTOFF INFO: cutting ns component          42
- POT_NS_CUTOFF INFO: cutting ns component           2
- POT_NS_CUTOFF INFO: cutting ns component           3
- POT_NS_CUTOFF INFO: cutting ns component           4
- POT_NS_CUTOFF INFO: cutting ns component           5
- POT_NS_CUTOFF INFO: cutting ns component           6
- POT_NS_CUTOFF INFO: cutting ns component          10
- POT_NS_CUTOFF INFO: cutting ns component          11
- POT_NS_CUTOFF INFO: cutting ns component          12
- POT_NS_CUTOFF INFO: cutting ns component          13
- POT_NS_CUTOFF INFO: cutting ns component          14
- POT_NS_CUTOFF INFO: cutting ns component          15
- POT_NS_CUTOFF INFO: cutting ns component          16
- POT_NS_CUTOFF INFO: cutting ns component          17
- POT_NS_CUTOFF INFO: cutting ns component          18
- POT_NS_CUTOFF INFO: cutting ns component          19
- POT_NS_CUTOFF INFO: cutting ns component          20
- POT_NS_CUTOFF INFO: cutting ns component          26
- POT_NS_CUTOFF INFO: cutting ns component          27
- POT_NS_CUTOFF INFO: cutting ns component          28
- POT_NS_CUTOFF INFO: cutting ns component          29
- POT_NS_CUTOFF INFO: cutting ns component          30
- POT_NS_CUTOFF INFO: cutting ns component          31
- POT_NS_CUTOFF INFO: cutting ns component          32
- POT_NS_CUTOFF INFO: cutting ns component          33
- POT_NS_CUTOFF INFO: cutting ns component          34
- POT_NS_CUTOFF INFO: cutting ns component          35
- POT_NS_CUTOFF INFO: cutting ns component          36
- POT_NS_CUTOFF INFO: cutting ns component          37
- POT_NS_CUTOFF INFO: cutting ns component          38
- POT_NS_CUTOFF INFO: cutting ns component          39
- POT_NS_CUTOFF INFO: cutting ns component          40
- POT_NS_CUTOFF INFO: cutting ns component          41
- POT_NS_CUTOFF INFO: cutting ns component          42
+ POT_NS_CUTOFF INFO: cutting ns component          45
+ POT_NS_CUTOFF INFO: cutting ns component          49
 ================================ TOTAL ENERGIES ===============================
 
    Total energies atom   1
    -----------------------
      single particle energies  spin down   
-         core   contribution :  s =  -576.35633588 p =  -159.35779929
+         core   contribution :  s =  -576.35616155 p =  -159.35740978
 
-       valence  contribution :  s =     0.10644428 p =     0.19747126
-                                d =     1.22081575 f =     0.02269561
-                                ns     -0.00235770
+       valence  contribution :  s =     0.10644826 p =     0.19746232
+                                d =     1.22048184 f =     0.02267645
+                                ns     -0.00235465
      single particle energies  spin  up    
-         core   contribution :  s =  -576.62323656 p =  -160.07918720
+         core   contribution :  s =  -576.62319740 p =  -160.07916439
 
-       valence  contribution :  s =     0.11268456 p =     0.18540537
-                                d =     2.27200277 f =     0.02389509
-                                ns     -0.00141992
+       valence  contribution :  s =     0.11267809 p =     0.18538064
+                                d =     2.27222240 f =     0.02387420
+                                ns     -0.00141528
      --------------------------------------------------------------------
-     total contribution of the single particle energies :  -1468.27892185
-                                   band energy per atom :    4.1376370787
+     total contribution of the single particle energies :  -1468.27847885
+                                   band energy per atom :    4.1374542729
 
-     coulomb  contribution :   0   1067.03705529  1      0.00000000
+     coulomb  contribution :   0   1067.03845686  1      0.00000000
                                2      0.00000001  3      0.00000000
-                               4     -0.00079774  5      0.00000000
-                               6      0.00009008
+                               4     -0.00079713  5      0.00000000
+                               6      0.00009011
      --------------------------------------------------------------------
-     tot. coulomb contribution :   1067.03634763
+     tot. coulomb contribution :   1067.03774985
 
-     ex.-cor. contribution :   0   -107.32093861  1     -0.00000000
+     ex.-cor. contribution :   0   -107.32106425  1     -0.00000000
                                2     -0.00000000  3     -0.00000000
-                               4      0.00273490  5     -0.00000000
-                               6     -0.00115507
+                               4      0.00272907  5     -0.00000000
+                               6     -0.00115547
      --------------------------------------------------------------------
-     tot. ex.-cor. contribution :   -107.31935878
+     tot. ex.-cor. contribution :   -107.31949066
 
-     eff. pot. contribution     :  -2032.55184767
-     total double counting contribution                 :  -1072.83485882
+     eff. pot. contribution     :  -2032.55379724
+     total double counting contribution                 :  -1072.83553805
 
-   Total contribution of atom  1 = -2541.11378067
+   Total contribution of atom  1 = -2541.11401691
    ----------------------------------------------------------------------
    Total energies atom   2
    -----------------------
      single particle energies  spin down   
-         core   contribution :  s =  -576.35633588 p =  -159.35779929
+         core   contribution :  s =  -576.35616155 p =  -159.35740978
 
-       valence  contribution :  s =     0.10644428 p =     0.19747126
-                                d =     1.22081575 f =     0.02269561
-                                ns     -0.00235770
+       valence  contribution :  s =     0.10644826 p =     0.19746232
+                                d =     1.22048184 f =     0.02267645
+                                ns     -0.00235465
      single particle energies  spin  up    
-         core   contribution :  s =  -576.62323656 p =  -160.07918720
+         core   contribution :  s =  -576.62319740 p =  -160.07916439
 
-       valence  contribution :  s =     0.11268456 p =     0.18540537
-                                d =     2.27200277 f =     0.02389509
-                                ns     -0.00141992
+       valence  contribution :  s =     0.11267809 p =     0.18538064
+                                d =     2.27222240 f =     0.02387420
+                                ns     -0.00141528
      --------------------------------------------------------------------
-     total contribution of the single particle energies :  -1468.27892185
-                                   band energy per atom :    4.1376370787
+     total contribution of the single particle energies :  -1468.27847885
+                                   band energy per atom :    4.1374542729
 
-     coulomb  contribution :   0   1067.03705529  1      0.00000000
+     coulomb  contribution :   0   1067.03845686  1      0.00000000
                                2      0.00000001  3      0.00000000
-                               4     -0.00079774  5     -0.00000000
-                               6      0.00009008
+                               4     -0.00079713  5      0.00000000
+                               6      0.00009011
      --------------------------------------------------------------------
-     tot. coulomb contribution :   1067.03634763
+     tot. coulomb contribution :   1067.03774985
 
-     ex.-cor. contribution :   0   -107.32093861  1     -0.00000000
+     ex.-cor. contribution :   0   -107.32106425  1     -0.00000000
                                2     -0.00000000  3     -0.00000000
-                               4      0.00273490  5      0.00000000
-                               6     -0.00115507
+                               4      0.00272907  5     -0.00000000
+                               6     -0.00115547
      --------------------------------------------------------------------
-     tot. ex.-cor. contribution :   -107.31935878
+     tot. ex.-cor. contribution :   -107.31949066
 
-     eff. pot. contribution     :  -2032.55184767
-     total double counting contribution                 :  -1072.83485882
+     eff. pot. contribution     :  -2032.55379724
+     total double counting contribution                 :  -1072.83553805
 
-   Total contribution of atom  2 = -2541.11378067
+   Total contribution of atom  2 = -2541.11401691
    ----------------------------------------------------------------------
-                                   sum of band energies :    8.2752741574
+                                   sum of band energies :    8.2749085459
    ----------------------------------------------------------------------
 
    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-               TOTAL ENERGY in ryd. :            -5082.22756134
-                                eV  :           -69147.77175414
+               TOTAL ENERGY in ryd. :            -5082.22803381
+                                eV  :           -69147.77818246
    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
