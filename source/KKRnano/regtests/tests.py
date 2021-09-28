@@ -46,7 +46,7 @@ def get_energy(string):
     else:
           raise ArgumentError
 
-def KKRnano(inputdir, nranks=DEFAULT_nranks, nthreads=DEFAULT_nthreads, solver=DEFAULT_solver, lmax=DEFAULT_lmax, Lly=DEFAULT_Lly):
+def KKRnano(inputdir, nranks=DEFAULT_nranks, nthreads=DEFAULT_nthreads, solver=DEFAULT_solver, lmax=DEFAULT_lmax, Lly=DEFAULT_Lly, **kwargs):
     """Run KKR-calculation with input from 'inputdir' and returns the total energy"""
     if verbose:
         print "start KKR for", inputdir, "with  lmax=",lmax, ", solver=",solver, ", nthreads=",nthreads, "nranks=",nranks
@@ -71,6 +71,11 @@ def KKRnano(inputdir, nranks=DEFAULT_nranks, nthreads=DEFAULT_nthreads, solver=D
     if Lly != DEFAULT_Lly:
         with open("input.conf", "a") as myfile: ## append to file
             myfile.write("LLY = {0}\n".format(int(Lly)))
+
+    # add other inputs
+    for key, val in kwargs.items():
+        with open("input.conf", "a") as myfile: ## append to file
+            myfile.write("{0} = {1}\n".format(key, val))
 
     mpirun = ''
     if MPIEXEC=='srun':
@@ -156,9 +161,11 @@ class Test_semiconductors(unittest.TestCase):
             self.assertAlmostEqual(KKRnano("ZnO", solver=direct, nranks=2**r), Etot, DECIMALS)
         ### Lloyd formula
         # broken because of error message "Lloyd's formula and num_local_atoms > 1 not supported."
-#         Etot = -7405.74826372
-#         self.assertAlmostEqual(KKRnano("ZnO", solver=direct, nranks=8, Lly=1), Etot, DECIMALS)
-#         self.assertAlmostEqual(KKRnano("ZnO",                nranks=8, Lly=1), Etot, DECIMALS)
+        # this seems to work only if we have one MPI rank per atom
+        # i.e. put "num_atom_procs = 8" into the input.conf
+        Etot = -7405.75215722
+        self.assertAlmostEqual(KKRnano("ZnO", solver=direct, nranks=8, Lly=1, num_atom_procs=8), Etot, DECIMALS)
+        self.assertAlmostEqual(KKRnano("ZnO",                nranks=8, Lly=1, num_atom_procs=8), Etot, DECIMALS)
         # total time ~1.5min
 
 class Test_nocosocmaterials(unittest.TestCase):
