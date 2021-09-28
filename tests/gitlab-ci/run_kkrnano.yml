@@ -1,0 +1,127 @@
+run_kkrnano:intel:Cu1:
+  stage: run_kkrnano
+  tags:
+    - docker-executor
+  script:
+    - cd source/KKRnano/regtests
+    - mkdir -p test_Cu1; cd test_Cu1; ln -s ../* .
+    - ls -la
+    - ls -la ..
+    - python2.7 ./tests.py Test_copper.test_Cu1_lmax
+  artifacts:
+    paths:
+      - source/KKRnano/regtests/test_Cu1
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - kkrnano-activate-tests
+    - kkrnano-chebyshev-tfQMRgpu
+
+run_kkrnano:intel:Cu4:
+  stage: run_kkrnano
+  tags:
+    - docker-executor
+  script:
+    - cd source/KKRnano/regtests
+    - mkdir -p test_Cu4; cd test_Cu4; ln -s ../* .
+    - python2.7 ./tests.py Test_copper.test_Cu4_lmax
+  artifacts:
+    paths:
+      - source/KKRnano/regtests/test_Cu4
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - kkrnano-activate-tests
+    - kkrnano-chebyshev-tfQMRgpu
+
+run_kkrnano:intel:GaN:
+  stage: run_kkrnano
+  tags:
+    - docker-executor
+  script:
+    - cd source/KKRnano/regtests
+    - mkdir -p test_GaN; cd test_GaN; ln -s ../* .
+    - python2.7 ./tests.py Test_semiconductors.test_GaN
+  artifacts:
+    paths:
+      - source/KKRnano/regtests/test_GaN
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - kkrnano-activate-tests
+    - kkrnano-chebyshev-tfQMRgpu
+
+run_kkrnano:intel:Si:
+  stage: run_kkrnano
+  tags:
+    - docker-executor
+  script:
+    - cd source/KKRnano/regtests
+    - mkdir -p test_Si; cd test_Si; ln -s ../* .
+    - python2.7 ./tests.py Test_semiconductors.test_Si
+  artifacts:
+    paths:
+      - source/KKRnano/regtests/test_Si
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - kkrnano-activate-tests
+    - kkrnano-chebyshev-tfQMRgpu
+
+run_kkrnano:intel:ZnO:
+  stage: run_kkrnano
+  tags:
+    - docker-executor
+  script:
+    - cd source/KKRnano/regtests
+    - mkdir -p test_ZnO; cd test_ZnO; ln -s ../* .
+    - python2.7 ./tests.py Test_semiconductors.test_ZnO
+  artifacts:
+    paths:
+      - source/KKRnano/regtests/test_ZnO
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - kkrnano-activate-tests
+    - kkrnano-chebyshev-tfQMRgpu
+
+run_kkrnano:intel:MnGeB20:
+  stage: run_kkrnano
+  tags:
+    - docker-executor
+  script:
+    - cd source/KKRnano/regtests
+    - mkdir -p test_MnGeB20; cd test_MnGeB20; ln -s ../* .
+    - python2.7 ./tests.py Test_nocosocmaterials.test_MnGeB20
+  artifacts:
+    paths:
+      - source/KKRnano/regtests/test_MnGeB20
+    expire_in: 1 day
+  only: 
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - kkrnano-activate-tests
+    - kkrnano-chebyshev-tfQMRgpu
