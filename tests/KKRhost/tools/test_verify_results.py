@@ -219,6 +219,20 @@ class Test_features():
            num_ref, text_ref = read_file(path00+'/ref/'+fname)
            assert std(num-num_ref)<10**-13
 
+    def test_24_BXCSCL(self):
+        path00 = 'test_run24_hybrid_1_3'
+        standard_verify(path00+'/', rms_threshold=1*10**-7, rms_threshold_end=10**-7)
+
+    def test_25_BCONSTR(self):
+        path00 = 'test_run25_hybrid_1_8/'
+        standard_verify(path00, rms_threshold=1*10**-6, rms_threshold_end=10**-6, neutr_threshold=5*10**-6)
+        # compare the output constrining field
+        fname = 'bconstr_out.dat'
+        num, text = read_file(path00+fname)
+        num_ref, text_ref = read_file(path00+'reference/'+fname)
+        #print('std', fname, std(num-num_ref))
+        assert std(num-num_ref)<10**-15
+
 
 class Test_SOC():
     """

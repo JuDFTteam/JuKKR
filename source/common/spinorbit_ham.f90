@@ -115,11 +115,12 @@ contains
     ! contruct LS matrix (output: lsmh)
     call spin_orbit_compl(lmax, lmmaxd, lsmh)
 
-    ! roate LS matrix
-    ncoll = 1
-    if (ncoll==1) then
-      call rotatematrix(lsmh, theta, phi, lmmaxd, 1)
-    end if
+    ! rotate LS matrix
+    ! If statement not needed
+    ! ncoll = 1
+    ! if (ncoll==1) then
+    call rotatematrix(lsmh, theta, phi, lmmaxd, 1)
+    !end if
 
     if (mode=='transpose') then
       do lm1 = 1, 2*lmmaxd

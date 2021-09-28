@@ -5,7 +5,7 @@ verify_kkrhost:intel:
     - docker-executor
   script:
     # use pip to install pytest
-    - pip install pytest
+    - pip3 install pytest
     # prepare and execute verification using pytest
     - cd tests/KKRhost
     - pytest -v --ignore=tools/aiida_simple_test.py --ignore=tools/test_verify_qdos.py  --ignore=tools/test_verify_parallel.py
@@ -31,7 +31,7 @@ verify_kkrhost_parallel:intel:
   allow_failure: true
   script:
     # use pip to install pytest
-    - pip install pytest
+    - pip3 install pytest
     # prepare and execute verification using pytest
     - cd tests/KKRhost
     - pytest -v --ignore=tools/aiida_simple_test.py --ignore=tools/test_verify_qdos.py -k Test_parallel
@@ -52,7 +52,7 @@ verify_kkrhost_qdos:intel:
   allow_failure: true
   script:
     # use pip to install pytest
-    - pip install pytest
+    - pip3 install pytest
     # prepare and execute verification using pytest
     - cd tests/KKRhost
     - pytest -v --ignore=tools/aiida_simple_test.py --ignore=tools/test_verify_paralle.py -k Test_qdos

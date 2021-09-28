@@ -23,6 +23,7 @@ module mod_wunfiles
   use :: mod_profiling
   use :: mod_datatypes
   use :: mod_constants, only: nsymaxd
+  use :: mod_bfield, only: type_bfield
 
   implicit none
 
@@ -109,7 +110,7 @@ module mod_wunfiles
     integer :: naclsd   !! Maximum number of atoms in a TB-cluster
     integer :: lmaxd1
     integer :: nsheld   !! Number of blocks of the GF matrix that need to be calculated (NATYP + off-diagonals in case of impurity)
-    integer :: ncelld   !! Number of cells (shapes) in non-spherical part
+    integer :: ncelld   !! = naez in main0, could/should be replaced to make the code more understandable
     integer :: lmxspd   !! (2*LPOT+1)**2
     integer :: nsymat
     integer :: nprinc   !! Number of atoms in one principal layer
@@ -163,7 +164,6 @@ module mod_wunfiles
     real (kind=dp) :: emusemi
     real (kind=dp) :: ebotsemi
     real (kind=dp) :: fsemicore
-    real (kind=dp) :: lambda_xc    !! Scale magnetic moment (0! Lambda_XC! 1, 0=zero moment, 1= full moment)
     real (kind=dp) :: chrgsemicore
     complex (kind=dp) :: deltae    !! Energy difference for numerical derivative
     logical :: lnc                 !! Coupled equations in two spins (switches true if KREL=1 or KORBIT=1 or KNOCO=1)
@@ -196,12 +196,12 @@ module mod_wunfiles
     real (kind=dp), dimension (:), allocatable :: rmt !! Muffin-tin radius of true system
     real (kind=dp), dimension (:), allocatable :: rws !! Wigner Seitz radius
     real (kind=dp), dimension (:), allocatable :: gsh
-    real (kind=dp), dimension (:), allocatable :: phi
+    real (kind=dp), dimension (:), allocatable :: phi !! Phi angle for a non-collinear calculation
     real (kind=dp), dimension (:), allocatable :: ueff !! input U parameter for each atom
     real (kind=dp), dimension (:), allocatable :: jeff !! input J parameter for each atom
     real (kind=dp), dimension (:), allocatable :: vref
     real (kind=dp), dimension (:), allocatable :: conc !! Concentration of a given atom
-    real (kind=dp), dimension (:), allocatable :: theta
+    real (kind=dp), dimension (:), allocatable :: theta !! Theta angle for a non-collinear calculation (don't confuse with thetas!)
     real (kind=dp), dimension (:), allocatable :: volbz
     real (kind=dp), dimension (:), allocatable :: qmtet !! \(\theta\) angle of the agnetization with respect to the z-axis
     real (kind=dp), dimension (:), allocatable :: qmphi !! \(\phi\) angle of the agnetization with respect to the z-axis
@@ -210,6 +210,7 @@ module mod_wunfiles
     real (kind=dp), dimension (:), allocatable :: denefat
     real (kind=dp), dimension (:), allocatable :: erefldau !! the energies of the projector's wave functions (REAL)
     real (kind=dp), dimension (:), allocatable :: socscale !! Spin-orbit scaling
+    real (kind=dp), dimension (:), allocatable :: lambda_xc !! Scale magnetic moment (0! Lambda_XC! 1, 0=zero moment, 1= full moment)
     real (kind=dp), dimension (:, :, :), allocatable :: vins !! Non-spherical part of the potential
     real (kind=dp), dimension (:, :), allocatable :: rmesh !! Radial mesh ( in units a Bohr)
     real (kind=dp), dimension (:, :), allocatable :: rr
@@ -315,6 +316,7 @@ module mod_wunfiles
     !character (len=8), dimension (:), allocatable :: optc
     !character (len=8), dimension (:), allocatable :: testc
     character (len=124), dimension (:), allocatable :: txc
+    type (type_bfield) :: bfield
 
   end type type_params
 
@@ -350,7 +352,7 @@ contains
     mmaxd,nr,nsheld,naezdpd,natomimpd,nspind,irid,nfund,ncelld,lmxspd,ngshd,        &
     krel,ntotd,ncheb,npan_log,npan_eq,npan_log_at,npan_eq_at,r_log,npan_tot,rnew,   &
     rpan_intervall,ipan_intervall,nspindd,thetasnew,socscale,tolrdif,lly,deltae,    &
-    rclsimp,verbosity,MPI_scheme,special_straight_mixing)
+    rclsimp,verbosity,MPI_scheme,special_straight_mixing,bfield)
     ! **********************************************************************
     ! *                                                                    *
     ! *  This subroutine is part of the MAIN0 program in the tbkkr package *
@@ -477,7 +479,6 @@ contains
     real (kind=dp), intent (in) :: tolrdif !! Tolerance for r<tolrdif (a.u.) to handle vir. atoms
     real (kind=dp), intent (in) :: ebotsemi
     real (kind=dp), intent (in) :: fsemicore
-    real (kind=dp), intent (in) :: lambda_xc !! Scale magnetic moment (0! Lambda_XC! 1, 0=zero moment, 1= full moment)
     logical, intent (in) :: lrhosym
     logical, intent (in) :: linterface !! If True a matching with semi-inifinite surfaces must be performed
     character (len=10), intent (in) :: solver                           !! Type of solver
@@ -514,6 +515,7 @@ contains
     real (kind=dp), dimension (natyp), intent (in) :: rmtnew !! Adapted muffin-tin radius
     real (kind=dp), dimension (natyp), intent (in) :: erefldau !! the energies of the projector's wave functions (REAL)
     real (kind=dp), dimension (natyp), intent (in) :: socscale !! Spin-orbit scaling
+    real (kind=dp), dimension (natyp), intent (in) :: lambda_xc !! Scale magnetic moment (0! Lambda_XC! 1, 0=zero moment, 1= full moment)
     real (kind=dp), dimension (irm, natyp), intent (in) :: r !! Radial mesh ( in units a Bohr)
     real (kind=dp), dimension (3, 0:nr), intent (in) :: rr
     real (kind=dp), dimension (irm, natyp), intent (in) :: drdi !! Derivative dr/di
@@ -611,6 +613,8 @@ contains
     logical, dimension (2), intent (in) :: vacflag
     logical, dimension (nsymaxd), intent (in) :: symunitary !! unitary/antiunitary symmetry flag
     character (len=124), dimension (6), intent (in) :: txc
+    ! Non-collinear Bfield options
+    type (type_bfield), intent (in) :: bfield
     ! .. Local scalars
     integer :: i1
     integer :: ic, naclsmin, naclsmax, nqdos, irmdnew ! variables for t_inc filling
@@ -804,6 +808,13 @@ contains
       write (*, *) 'in combination with option "OPERATOR"' ! fswrt
       stop                         ! fswrt
     end if                         ! fswrt
+    
+
+    !--------------------------------------------------------------------------------
+    ! Non-collinear magnetic field and constraining fields
+    !--------------------------------------------------------------------------------
+    ! store magnetic field information
+    t_params%bfield = bfield
 
     !--------------------------------------------------------------------------------
     ! MPI communication scheme
@@ -819,7 +830,7 @@ contains
       maxmesh,nsymat,natomimp,invmod,nqcalc,intervx,intervy,intervz,lpot,nright,    &
       nleft,imix,itdbry,kpre,kshape,kte,kvmad,kxc,ishift,kforce,idoldau,itrunldau,  &
       ntldau,npolsemi,n1semi,n2semi,n3semi,iesemicore,ebotsemi,emusemi,tksemi,      &
-      fsemicore,r_log,emin,emax,tk,efermi,alat,cpatol,mixing,qbound,fcm,lambda_xc,  &
+      fsemicore,r_log,emin,emax,tk,efermi,alat,cpatol,mixing,qbound,fcm,            &
       tolrdif,linterface,lrhosym,solver,tmpdir,itmpdir,iltmp,ntotd,ncheb,deltae,    &
       special_straight_mixing,                                                      &
       t_params)
@@ -841,12 +852,13 @@ contains
       ijtabsym,ijtabsh,ish,jsh,iqcalc,icheck,atomimp,refpot,irrel,nrrel,ifunm1,     &
       ititle,lmsp1,ntcell,ixipol,irns,ifunm,llmsp,lmsp,imt,irc,irmin,irws,nfu,      &
       hostimp,ilm_map,imaxsh,npan_log,npan_eq,npan_log_at,npan_eq_at,npan_tot,      &
-      ipan_intervall,symunitary,vacflag,txc,rclsimp,krel)
+      ipan_intervall,symunitary,vacflag,txc,rclsimp,krel,lambda_xc)
 
     ! save information about the energy mesh
     call save_emesh(ielast,ez,wez,emin,emax,iesemicore,fsemicore,npol,tk,npnt1,     &
       npnt2,npnt3,ebotsemi,emusemi,tksemi,npolsemi,n1semi,n2semi,n3semi,iemxd,      &
       t_params)
+
 
   end subroutine wunfiles
 
@@ -911,6 +923,8 @@ contains
     call memocc(i_stat, product(shape(t_params%btrel))*kind(t_params%btrel), 't_params%BTREL', 'init_t_params')
     allocate (t_params%socscale(t_params%natyp), stat=i_stat)
     call memocc(i_stat, product(shape(t_params%socscale))*kind(t_params%socscale), 't_params%SOCSCALE', 'init_t_params')
+    allocate (t_params%lambda_xc(t_params%natyp), stat=i_stat)
+    call memocc(i_stat, product(shape(t_params%lambda_xc))*kind(t_params%lambda_xc), 't_params%LAMBDA_XC', 'init_t_params')
     allocate (t_params%drdirel(t_params%irm,t_params%natyp), stat=i_stat)
     call memocc(i_stat, product(shape(t_params%drdirel))*kind(t_params%drdirel), 't_params%DRDIREL', 'init_t_params')
     allocate (t_params%r2drdirel(t_params%irm,t_params%natyp), stat=i_stat)
@@ -1190,6 +1204,26 @@ contains
       call memocc(i_stat, product(shape(t_params%volbz))*kind(t_params%volbz), 't_params%VOLBZ', 'init_t_params')
       allocate (t_params%nofks(t_params%maxmesh), stat=i_stat) ! integer
       call memocc(i_stat, product(shape(t_params%nofks))*kind(t_params%nofks), 't_params%NOFKS', 'init_t_params')
+    end if
+      
+    ! -------------------------------------------------------------------------------
+    ! Non-collinear magnetic field 
+    ! -------------------------------------------------------------------------------
+    if (.not. allocated(t_params%bfield%theta)) then
+      allocate (t_params%bfield%theta(t_params%natyp), stat=i_stat)
+      call memocc(i_stat, product(shape(t_params%bfield%theta))*kind(t_params%bfield%theta), 't_params%bfield%theta', 'init_t_params')
+      allocate (t_params%bfield%phi(t_params%natyp), stat=i_stat)
+      call memocc(i_stat, product(shape(t_params%bfield%phi))*kind(t_params%bfield%phi), 't_params%bfield%phi', 'init_t_params')
+      allocate (t_params%bfield%bfield(t_params%natyp,3), stat=i_stat)
+      call memocc(i_stat, product(shape(t_params%bfield%bfield))*kind(t_params%bfield%bfield), 't_params%bfield%bfield', 'init_t_params')
+      allocate (t_params%bfield%bfield_strength(t_params%natyp), stat=i_stat)
+      call memocc(i_stat, product(shape(t_params%bfield%bfield_strength))*kind(t_params%bfield%bfield_strength), 't_params%bfield%bfield_strength', 'init_t_params')
+      allocate (t_params%bfield%bfield_constr(t_params%natyp,3), stat=i_stat)
+      call memocc(i_stat, product(shape(t_params%bfield%bfield_constr))*kind(t_params%bfield%bfield_constr), 't_params%bfield%bfield_constr', 'init_t_params')
+      allocate (t_params%bfield%mag_torque(t_params%natyp,3), stat=i_stat)
+      call memocc(i_stat, product(shape(t_params%bfield%mag_torque))*kind(t_params%bfield%mag_torque), 't_params%bfield%mag_torque', 'init_t_params')
+      allocate (t_params%bfield%thetallmat((t_params%lmax+1)**2,(t_params%lmax+1)**2,t_params%ntotd*(t_params%ncheb+1),t_params%ncelld), stat=i_stat)
+      call memocc(i_stat, product(shape(t_params%bfield%thetallmat   ))*kind(t_params%bfield%thetallmat   ), 't_params%bfield%thetallmat', 'init_t_params')
     end if
 
   end subroutine init_t_params
@@ -1503,7 +1537,6 @@ contains
     call mpi_bcast(t_params%mixing, 1, mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%qbound, 1, mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%fcm, 1, mpi_double_precision, master, mpi_comm_world, ierr)
-    call mpi_bcast(t_params%lambda_xc, 1, mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%tolrdif, 1, mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%efold, 1, mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%chrgold, 1, mpi_double_precision, master, mpi_comm_world, ierr)
@@ -1532,6 +1565,24 @@ contains
     ! integer
     call mpi_bcast(t_params%npan_log, 1, mpi_integer, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%npan_eq, 1, mpi_integer, master, mpi_comm_world, ierr)
+
+
+    ! -------------------------------------------------------------------------
+    ! Non-collinear magnetic field
+    ! -------------------------------------------------------------------------
+    ! logicals
+    call mpi_bcast(t_params%bfield%lbfield, 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%lbfield_constr, 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%lbfield_all, 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%lbfield_trans, 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%lbfield_mt, 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%ltorque, 1, mpi_logical, master, mpi_comm_world, ierr)
+
+    ! integer
+    call mpi_bcast(t_params%bfield%ibfield, 1, mpi_integer, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%ibfield_constr, 1, mpi_integer, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%itscf0, 1, mpi_integer, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%itscf1, 1, mpi_integer, master, mpi_comm_world, ierr)
 
 
   end subroutine bcast_t_params_scalars
@@ -1578,6 +1629,7 @@ contains
     call mpi_bcast(t_params%vtrel, (t_params%irm*t_params%natyp), mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%btrel, (t_params%irm*t_params%natyp), mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%socscale, (t_params%natyp), mpi_double_precision, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%lambda_xc, (t_params%natyp), mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%drdirel, (t_params%irm*t_params%natyp), mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%r2drdirel, (t_params%irm*t_params%natyp), mpi_double_precision, master, mpi_comm_world, ierr)
     call mpi_bcast(t_params%rmrel, (t_params%irm*t_params%natyp), mpi_double_precision, master, mpi_comm_world, ierr)
@@ -1718,6 +1770,20 @@ contains
     call mpi_bcast(t_params%volcub, (t_params%kpoibz*t_params%maxmesh), mpi_double_precision, master, mpi_comm_world, ierr) ! real (kind=dp)
     call mpi_bcast(t_params%volbz, (t_params%maxmesh), mpi_double_precision, master, mpi_comm_world, ierr) ! real (kind=dp)
     call mpi_bcast(t_params%nofks, (t_params%maxmesh), mpi_integer, master, mpi_comm_world, ierr) ! integer
+    
+
+    ! -------------------------------------------------------------------------
+    ! Non-collinear magnetic field
+    ! -------------------------------------------------------------------------
+    call mpi_bcast(t_params%bfield%bfield, (t_params%natyp*3), mpi_double_precision, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%bfield_constr, (t_params%natyp*3), mpi_double_precision, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%bfield_strength, (t_params%natyp), mpi_double_precision, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%theta, (t_params%natyp), mpi_double_precision, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%phi, (t_params%natyp), mpi_double_precision, master, mpi_comm_world, ierr)
+    call mpi_bcast(t_params%bfield%mag_torque, (t_params%natyp*3), mpi_double_precision, master, mpi_comm_world, ierr)
+    if(t_params%bfield%lbfield) call mpi_bcast(t_params%bfield%thetallmat, ((t_params%lmax+1)**4*t_params%ntotd*(t_params%ncheb+1)*t_params%ncelld), mpi_double_precision, master, mpi_comm_world, ierr)
+    
+    call mpi_bcast(t_params%ntcell, (t_params%natyp), mpi_integer, master, mpi_comm_world, ierr)
 
   end subroutine bcast_t_params_arrays
 #endif
@@ -1737,7 +1803,7 @@ contains
     natomimp,invmod,nqcalc,intervx,intervy,intervz,lpot,nright,nleft,imix,itdbry,   &
     kpre,kshape,kte,kvmad,kxc,ishift,kforce,idoldau,itrunldau,ntldau,npolsemi,      &
     n1semi,n2semi,n3semi,iesemicore,ebotsemi,emusemi,tksemi,fsemicore,r_log,emin,   &
-    emax,tk,efermi,alat,cpatol,mixing,qbound,fcm,lambda_xc,tolrdif,linterface,      &
+    emax,tk,efermi,alat,cpatol,mixing,qbound,fcm,tolrdif,linterface,                &
     lrhosym,solver,tmpdir,itmpdir,iltmp,ntotd,ncheb,deltae,special_straight_mixing, &
     t_params)
     ! fill scalars into t_params
@@ -1849,7 +1915,6 @@ contains
     real (kind=dp), intent (in) :: tolrdif !! Tolerance for r<tolrdif (a.u.) to handle vir. atoms
     real (kind=dp), intent (in) :: ebotsemi
     real (kind=dp), intent (in) :: fsemicore
-    real (kind=dp), intent (in) :: lambda_xc !! Scale magnetic moment (0! Lambda_XC! 1, 0=zero moment, 1= full moment)
     complex (kind=dp), intent (in) :: deltae !! Energy difference for numerical derivative
     logical, intent (in) :: lrhosym
     logical, intent (in) :: linterface !! If True a matching with semi-inifinite surfaces must be performed
@@ -1965,7 +2030,6 @@ contains
     t_params%tolrdif = tolrdif
     t_params%ebotsemi = ebotsemi
     t_params%fsemicore = fsemicore
-    t_params%lambda_xc = lambda_xc
     ! Double complex
     t_params%deltae = deltae
     ! Logical
@@ -2000,7 +2064,7 @@ contains
     ijtabsh,ish,jsh,iqcalc,icheck,atomimp,refpot,irrel,nrrel,ifunm1,ititle,lmsp1,   &
     ntcell,ixipol,irns,ifunm,llmsp,lmsp,imt,irc,irmin,irws,nfu,hostimp,ilm_map,     &
     imaxsh,npan_log,npan_eq,npan_log_at,npan_eq_at,npan_tot,ipan_intervall,         &
-    symunitary,vacflag,txc,rclsimp,krel)
+    symunitary,vacflag,txc,rclsimp,krel,lambda_xc)
     ! ..
     implicit none
 
@@ -2074,6 +2138,7 @@ contains
     real (kind=dp), dimension (natyp), intent (in) :: rmtnew !! Adapted muffin-tin radius
     real (kind=dp), dimension (natyp), intent (in) :: erefldau !! the energies of the projector's wave functions (REAL)
     real (kind=dp), dimension (natyp), intent (in) :: socscale !! Spin-orbit scaling
+    real (kind=dp), dimension (natyp), intent (in) :: lambda_xc !! Scale magnetic moment (0! Lambda_XC! 1, 0=zero moment, 1= full moment)
 
     real (kind=dp), dimension (irm, natyp), intent (in) :: r !! Radial mesh ( in units a Bohr)
     real (kind=dp), dimension (3, 0:nr), intent (in) :: rr !! Set of real space vectors (in a.u.)
@@ -2194,6 +2259,7 @@ contains
     if (t_params%krel>0) t_params%vtrel = vtrel
     if (t_params%krel>0) t_params%btrel = btrel
     t_params%socscale = socscale
+    t_params%lambda_xc = lambda_xc
     if (t_params%krel>0) t_params%drdirel = drdirel
     if (t_params%krel>0) t_params%r2drdirel = r2drdirel
     if (t_params%krel>0) t_params%rmrel = rmrel
@@ -3175,7 +3241,7 @@ contains
     real (kind=dp), intent (inout) :: chrgold
     real (kind=dp), intent (inout) :: emusemi
     real (kind=dp), intent (inout) :: ebotsemi
-    real (kind=dp), intent (inout) :: lambda_xc
+    real (kind=dp), dimension (natyp), intent (inout) :: lambda_xc
     real (kind=dp), dimension (natyp), intent (inout) :: a
     real (kind=dp), dimension (natyp), intent (inout) :: b
     real (kind=dp), dimension (2), intent (inout) :: vbc

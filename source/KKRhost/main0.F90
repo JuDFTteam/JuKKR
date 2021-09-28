@@ -72,7 +72,7 @@ module mod_main0
     iesemicore, idosemicore
   !real(kind=dp)
   public :: tk, fcm, e2in, emin, emax, alat, rmax, gmax, r_log, rcutz, rcutxy, qbound, vconst, hfield, mixing, abasis, bbasis, &
-    cbasis, efermi, eshift, tksemi, tolrdif, alatnew, volume0, emusemi, ebotsemi, fsemicore, lambda_xc
+    cbasis, efermi, eshift, tksemi, tolrdif, alatnew, volume0, emusemi, ebotsemi, fsemicore
   !character
   public :: solver, i12, i13, i19, i25, i40
   !logicals
@@ -84,10 +84,10 @@ module mod_main0
     inipol, ixipol, refpot, ntcell, iqcalc, iofgij, jofgij, atomimp, ijtabsh, ijtabsym, npan_tot, ijtabcalc, npan_eq_at, npan_log_at, &
     ijtabcalc_i, ish, jsh, ilm_map, kfg, atom, ezoa, lmsp, lcore, icleb, ircut, llmsp, lmsp1, kaoez, ifunm, ifunm1, ititle, icheck, &
     ipan_intervall, jend, kmrot, ncpa, itcpamax, noq, iqat, icpa, hostimp, zrel, jwsrel, irshift, nrrel, ntldau, idoldau, itrunldau, &
-    kreadldau, lopt, itldau, lly, irrel
+    kreadldau, lopt, itldau, lly, irrel, ibfield, ibfield_constr, ibfield_itscf0, ibfield_itscf1
   !real
   public :: vbc, zperight, zperleft, recbv, bravais, rsymat, a, b, wg, gsh, zat, rmt, rws, vref, mtfac, rmtnew, rmtref, &
-    rmtrefat, fpradius, socscale, rmesh, s, rr, drdi, dror, cleb, visp, cscl, rnew, ratom, ecore, tleft, tright, socscl, &
+    rmtrefat, fpradius, socscale, rmesh, s, rr, drdi, dror, cleb, visp, cscl, rnew, ratom, ecore, tleft, tright, socscl, lambda_xc, &
     rbasis, rclsimp, cmomhost, rpan_intervall, rs, yrg, vins, rcls, rrot, qmtet, qmphi, qmgam, qmgamtab, qmphitab, qmtettab, cpatol, &
     conc, fact, vtrel, btrel, rmrel, drdirel, r2drdirel, thesme, thetas, thetasnew, ueff, jeff, erefldau, wldau, uldau
   !complex
@@ -95,7 +95,7 @@ module mod_main0
   !character
   public :: txc
   !logical
-  public :: vacflag, para, symunitary, emeshfile
+  public :: vacflag, para, symunitary, emeshfile, lbfield, lbfield_constr, lbfield_all, lbfield_trans, lbfield_mt, ltorque
   ! ------------- < arrays < ------------- 
 
   
@@ -106,7 +106,7 @@ module mod_main0
   integer :: kxc = 2               !! Type of xc-potential 0=MJW 1=vBH 2=VWN 3=PW91 4=PBE 5=PBEsol
   integer :: igf = 0               !! Do not print or print (0/1) the KKRFLEX_* files
   integer :: icc = 0               !! Enables the calculation of off-diagonal elements of the GF.(0=SCF/DOS; 1=cluster; -1=custom)
-  integer :: ins = 2               !! 0 (MT), 1(ASA), 2(Full Potential)
+ integer :: ins = 2               !! 0 (MT), 1(ASA), 2(Full Potential)
   integer :: irm                   !! Maximum number of radial points
   integer :: ipe = 0               !! Not real used, IPFE should be 0
   integer :: ipf = 0               !! Not real used, IPFE should be 0
@@ -202,7 +202,6 @@ module mod_main0
   real (kind=dp) :: emusemi = 0.0_dp    !! Top of semicore contour in Ryd.
   real (kind=dp) :: ebotsemi = -0.50_dp !! Bottom of semicore contour in Ryd
   real (kind=dp) :: fsemicore = 0.00_dp !! Initial normalization factor for semicore states (approx. 1.)
-  real (kind=dp) :: lambda_xc = 1.0_dp !! Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
   character (len=10) :: solver = 'BS        ' !! Type of solver
   character (len=40) :: i12 = '                                        ' !! File identifiers
   character (len=40) :: i13 = 'potential                               ' !! Potential file name
@@ -286,6 +285,7 @@ module mod_main0
   real (kind=dp), dimension (:), allocatable :: rmtrefat
   real (kind=dp), dimension (:), allocatable :: fpradius !! R point at which full-potential treatment starts
   real (kind=dp), dimension (:), allocatable :: socscale !! Spin-orbit scaling
+  real (kind=dp), dimension (:), allocatable :: lambda_xc !! Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
   real (kind=dp), dimension (:, :), allocatable :: rmesh !! Radial mesh ( in units a Bohr)
   real (kind=dp), dimension (:, :), allocatable :: s
   real (kind=dp), dimension (:, :), allocatable :: rr   !! Set of real space vectors (in a.u.)
@@ -413,7 +413,22 @@ module mod_main0
   ! -------------------------------------------------------------------------
   ! LDA+U LDA+U LDA+U
   ! -------------------------------------------------------------------------
+  ! -------------------------------------------------------------------------
+  ! Non-collinear magnetic field and constraining field
+  ! -------------------------------------------------------------------------
+  logical  :: lbfield ! external magnetic field (turned on via runoption <noncobfield>) non-collinear magnetic field
+  logical  :: lbfield_constr ! constraining fields (turned on via runoption <noncobfield>) non-collinear magnetic field
+  logical  :: lbfield_all ! apply same field to all atoms (True) or individual fields to each atom
+  logical  :: lbfield_trans ! apply only transversal field
+  logical  :: lbfield_mt ! apply same field to all atoms (True) or individual fields to each atom
+  logical  :: ltorque ! apply same field to all atoms (True) or individual fields to each atom
+  integer  :: ibfield  ! spin (0), orbital (1), spin+orbial (2) fields
+  integer  :: ibfield_constr  ! type of contraint (0 = torque, 1 = magnetic moment)
+  integer  :: ibfield_itscf0  ! start magnetic field at iteration itscf0
+  integer  :: ibfield_itscf1  ! stop applying magnetic field after iteration itscf1
+  ! -------------------------------------------------------------------------
   ! Lloyds formula
+  ! -------------------------------------------------------------------------
   integer :: lly = 0              !! LLY <> 0 : apply Lloyds formula
   complex (kind=dp) :: deltae = (1.0e-5_dp, 0.0_dp) !! Energy difference for numerical derivative
 
@@ -456,7 +471,8 @@ contains
     use :: mod_version, only: version1, version2, version3, version4
     use :: mod_version_info, only: serialnr, version_print_header
     use :: mod_md5sums, only: get_md5sums, md5sum_potential, md5sum_shapefun
-    use :: mod_wunfiles, only: wunfiles
+    use :: mod_bfield, only: bfield, init_bfield
+    use :: mod_wunfiles, only: wunfiles, t_params
     use :: mod_types, only: t_imp, t_inc, init_params_t_imp, init_t_imp
     use :: memoryhandling, only: memocc, allocate_cell, allocate_cpa, allocate_soc, allocate_ldau, allocate_magnetization, allocate_potential, &
       allocate_energies, allocate_relativistic, allocate_clusters, allocate_expansion, allocate_mesh, allocate_pannels, allocate_misc, &
@@ -572,7 +588,8 @@ contains
       fpradius,tleft,tright,rbasis,socscale,cscl,socscl,solver,i12,i13,i19,i25,i40, &
       txc,drotq,ncpa,itcpamax,cpatol,noq,iqat,icpa,kaoez,conc,kmrot,qmtet,qmphi,    &
       kreadldau,lopt,ueff,jeff,erefldau,invmod,verbosity,MPI_scheme,                &
-      special_straight_mixing)
+      special_straight_mixing,lbfield,lbfield_constr,lbfield_all,lbfield_trans,     &
+      lbfield_mt,ltorque,ibfield,ibfield_constr,ibfield_itscf0,ibfield_itscf1)
 
     ! Some consistency checks
     if ((krel<0) .or. (krel>1)) stop ' set KREL=0/1 (non/fully) relativistic mode in the inputcard'
@@ -1261,6 +1278,10 @@ contains
       call create_newmesh(natyp,irmd,ipand,irid,ntotd,nfund,ncheb,ntotd*(ncheb+1),  &
         nspin,rmesh,irmin,ipan,ircut,r_log,npan_log,npan_eq,npan_log_at,npan_eq_at, &
         npan_tot,rnew,rpan_intervall,ipan_intervall,ncelld,ntcell,thetas,thetasnew)
+      ! init bfield parameters (stored in a type_bfield, which is given to wunfiles and t_params)
+      call init_bfield(bfield,natyp,lbfield,lbfield_constr,lbfield_all,lbfield_trans,lbfield_mt,ltorque, &
+                       ibfield,ibfield_constr,ibfield_itscf0,ibfield_itscf1,npan_log,npan_eq,ncheb,ntotd,nfund,ncelld,lmax, &
+                       iend,ntcell,ipan_intervall,ifunm1,icleb,cleb(:,1),thetasnew)
     end if
 
     call wunfiles(npol, npnt1, npnt2, npnt3, ielast, tk, emin, emax, ez, wez, efermi, npolsemi, n1semi, n2semi, n3semi, iesemicore, tksemi, ebotsemi, emusemi, fsemicore, vins, &
@@ -1273,7 +1294,7 @@ contains
       hostimp, gsh, ilm_map, imaxsh, idoldau, itrunldau, ntldau, lopt, itldau, ueff, jeff, erefldau, uldau, wldau, phildau, iemxd, irmind, irmd, nspotd, npotd, nembd1, lmmaxd, &
       ipand, nembd2, lmax, ncleb, naclsd, nclsd, lm2d, lmax+1, mmaxd, nrd, nsheld, naez/nprincd, natomimpd, nspind, irid, nfund, ncelld, lmxspd, ngshd, krel, ntotd, ncheb, &
       npan_log, npan_eq, npan_log_at, npan_eq_at, r_log, npan_tot, rnew, rpan_intervall, ipan_intervall, nspindd, thetasnew, socscale, tolrdif, lly, deltae, rclsimp, verbosity, MPI_scheme, &
-      special_straight_mixing )
+      special_straight_mixing,bfield )
 
     if (write_pkkr_input) then                                                          ! fswrt
       call write_tbkkr_files(lmax, nemb, ncls, natyp, naez, ielast, ins, alat, &        ! fswrt
@@ -1423,6 +1444,7 @@ contains
       imt1 = ircut(1, ih)
       irc1 = irc(ih)
       irmin1 = irmin(ih)
+      ! write(*,'("imt1, irc1, irmin1 = ",10i4)') imt1, irc1, irmin1
 
       do ispin = 1, nspin
         ! shift potential spin dependent
