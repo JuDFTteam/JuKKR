@@ -28,23 +28,29 @@ contains
   !> The XC magnetic field is extracted from the potential (convoluted with the
   !> shape function) thus rho2nsc has to be used instead of cden and cdenns!
   !-------------------------------------------------------------------------------
-  subroutine calc_torque(iatom,lmax,irmdnew,nspin,rpan_intervall,ipan_intervall,npan_tot,ncheb,theta,phi,rho2nsc,vpot,ifunm,iend,icleb,cleb,thetasnew,bconstr)
+  subroutine calc_torque(iatom, lmax, irmdnew, nspin, bfield, rpan_intervall, &
+                         ipan_intervall, npan_log, npan_eq, npan_tot, ncheb, &
+                         theta, phi, rho2nsc, vpot, ifunm, iend, icleb, cleb, &
+                         thetasnew, bconstr, fix_direction, icell)
     
     use :: global_variables, only: lmmaxd, ncleb, ntotd, nfund, korbit, lmpotd
     use :: mod_datatypes, only: dp
+    use :: mod_bfield, only: type_bfield
     use :: mod_intcheb_cell, only: intcheb_cell
     use :: mod_rotatespinframe, only: rotatematrix!, rotatevector
-    use :: mod_wunfiles, only: t_params
     use :: mod_types, only: t_inc
 
     implicit none
 
-    integer, intent (in)                                                        :: iatom
+    integer, intent (in)                                                        :: iatom  !! Currently treated atom index
     integer, intent (in)                                                        :: lmax   !! Maximum l component in wave function expansion
     integer, intent (in)                                                        :: irmdnew
     integer, intent (in)                                                        :: nspin
+    type(type_bfield), intent(inout)                                            :: bfield !! Information about the external and constraint magnetic fields
     real (kind=dp), dimension (0:ntotd), intent (in)                            :: rpan_intervall
     integer, dimension (0:ntotd), intent (in)                                   :: ipan_intervall
+    integer, intent (in)                                                        :: npan_log
+    integer, intent (in)                                                        :: npan_eq
     integer, intent (in)                                                        :: npan_tot
     integer, intent (in)                                                        :: ncheb  !! Number of Chebychev pannels for the new solver
     real (kind=dp), intent(in)                                                  :: theta ! polar angle of the local frame
@@ -57,6 +63,9 @@ contains
     real (kind=dp), dimension (ncleb), intent (in)                              :: cleb !! GAUNT coefficients (GAUNT)    ! CHECK THE DIMENSION AND HOW IT IS USED!!!
     real (kind=dp)       , dimension (irmdnew, nfund)   , intent (in)           :: thetasnew    ! shapefun on the Cheby mesh
     real (kind=dp)       , dimension (4)   , intent (out)                       :: bconstr    ! variables to be saved
+    logical, intent(in)                                                         :: fix_direction ! Constrain the direction of the magnetic moment of the current atom
+    integer, intent(in)                                                         :: icell
+    
     !------------------------------------------------------------------------------------
     ! local variables
     !------------------------------------------------------------------------------------
@@ -105,7 +114,7 @@ contains
     
     lmmax=(lmax+1)**2
     cone  = (1d0,0d0)
-    imt1 = ipan_intervall(t_params%npan_log+t_params%npan_eq) + 1
+    imt1 = ipan_intervall(npan_log + npan_eq) + 1
     
     !write(*,'(" imt1, irmdnew, lmmax",2i4)') imt1, irmdnew, lmmax
     
@@ -139,7 +148,7 @@ contains
     ! Mangetic moment in the new mesh (mainly to separate the moment in r<rmt
     ! and get acess to lm components
     mag_den_convol(:,:,:)=0.d0
-    call calc_magmom_newmesh(lmax,imt1,irmdnew,t_params%ntcell(iatom),iend,ifunm,icleb,cleb,thetasnew,mag_den_glob,mag_den_convol)
+    call calc_magmom_newmesh(lmax,imt1,irmdnew,icell,iend,ifunm,icleb,cleb,thetasnew,mag_den_glob,mag_den_convol)
     do i= 1,3
       do ilm=1,lmmax 
           integrand(:) = (0.d0,0.d0)
@@ -164,7 +173,7 @@ contains
     end if
 
     ! MdSD: muffin-tin or full cell, these will be used below
-    if (t_params%bfield%lbfield_mt) then
+    if (bfield%lbfield_mt) then
       totmag = sqrt(dot_product(mag_mt(1,:),mag_mt(1,:)))
       magdir_it = mag_mt(1,:)/totmag
     else
@@ -222,27 +231,27 @@ contains
     if (t_inc%i_write>1) write(1337,'("iatom, torque_perp, torque_mt_perp = ",i4,6es16.8)') iatom, torque(:), torque_mt(:)
 
     ! MdSD: muffin-tin or full cell
-    if (t_params%bfield%lbfield_mt) then
-      t_params%bfield%mag_torque(iatom,:) = torque_mt(:)
+    if (bfield%lbfield_mt) then
+      bfield%mag_torque(iatom,:) = torque_mt(:)
       torque(:) = torque_mt(:)  ! to use below and avoid another if-statement
     else
-      t_params%bfield%mag_torque(iatom,:) = torque(:)
+      bfield%mag_torque(iatom,:) = torque(:)
     end if
 
-    if(t_params%bfield%lbfield_constr .and. t_inc%i_iteration>=t_params%bfield%itscf0 .and. t_inc%i_iteration<=t_params%bfield%itscf1) then !constraining fields
-      if(t_params%bfield%ibfield_constr == 0 ) then ! constraining fields based on magnetic torques
+    if(bfield%lbfield_constr .and. t_inc%i_iteration>=bfield%itscf0 .and. t_inc%i_iteration<=bfield%itscf1) then !constraining fields
+      if(bfield%ibfield_constr == 0 ) then ! constraining fields based on magnetic torques
         ! sum up the torques for all iterations, which yields a scf with constraining fields
         bfac = 1.d0
-        if(t_params%fixdir(iatom)) then
-          t_params%bfield%bfield_constr(iatom,:) = t_params%bfield%bfield_constr(iatom,:) - torque(:)/totmag*bfac
+        if(fix_direction) then
+          bfield%bfield_constr(iatom,:) = bfield%bfield_constr(iatom,:) - torque(:)/totmag*bfac
         end if
         !bfield%bfield_strength_constr         = sqrt(dot_product(bfield%bfield_constr(:),bfield%bfield_constr(:))) 
         !bfield%theta_constr                   = acos(bfield%bfield_constr(3)/bfield%bfield_strength_constr)
         !bfield%phi_constr                     = datan2(bfield%bfield_constr(2),bfield%bfield_constr(1))
-        if (t_inc%i_write>1) write(1337,'(" itscf, iatom, ibfield_constr, bfield_constr= ",3i4,100f16.8)') t_params%itscf, iatom ,t_params%bfield%ibfield_constr , t_params%bfield%bfield_constr(iatom,:)
+        if (t_inc%i_write>1) write(1337,'(" itscf, iatom, ibfield_constr, bfield_constr= ",3i4,100f16.8)') t_inc%i_iteration, iatom ,bfield%ibfield_constr , bfield%bfield_constr(iatom,:)
       end if
-      if(t_params%bfield%ibfield_constr == 1) then ! constraining fields to constrain scf cycle
-        c_old                = t_params%bfield%bfield_constr(iatom,:)
+      if(bfield%ibfield_constr == 1) then ! constraining fields to constrain scf cycle
+        c_old                = bfield%bfield_constr(iatom,:)
         bfac                 = 0.030d0
         ! magdir_old(1)         = cos(t_params%phi(iatom))*sin(t_params%theta(iatom))
         ! magdir_old(2)         = sin(t_params%phi(iatom))*sin(t_params%theta(iatom))
@@ -250,13 +259,13 @@ contains
         magdir_old(1)         = cos(phi)*sin(theta)
         magdir_old(2)         = sin(phi)*sin(theta)
         magdir_old(3)         = cos(theta)
-        if (t_inc%i_write>1) write(1337,'(" itscf, iatom, magdir, magdir_old = ",2i4,100f16.8)') t_params%itscf, iatom , magdir_it(:), magdir_old(:)
-        if(t_params%fixdir(iatom)) then
-          t_params%bfield%bfield_constr(iatom,:) = c_old - dot_product(c_old,magdir_old)*magdir_old - (magdir_it - dot_product(magdir_it,magdir_old)*magdir_old)*bfac
+        if (t_inc%i_write>1) write(1337,'(" itscf, iatom, magdir, magdir_old = ",2i4,100f16.8)') t_inc%i_iteration, iatom , magdir_it(:), magdir_old(:)
+        if(fix_direction) then
+          bfield%bfield_constr(iatom,:) = c_old - dot_product(c_old,magdir_old)*magdir_old - (magdir_it - dot_product(magdir_it,magdir_old)*magdir_old)*bfac
         end if
-        if (t_inc%i_write>1) write(1337,'(" itscf, iatom, ibfield_constr, bfield_constr= ",3i4,100f16.8)') t_params%itscf, iatom ,t_params%bfield%ibfield_constr , t_params%bfield%bfield_constr(iatom,:)
+        if (t_inc%i_write>1) write(1337,'(" itscf, iatom, ibfield_constr, bfield_constr= ",3i4,100f16.8)') t_inc%i_iteration, iatom ,bfield%ibfield_constr , bfield%bfield_constr(iatom,:)
         ! MdSD: constraining fields
-        bconstr(1:3) = t_params%bfield%bfield_constr(iatom,:)
+        bconstr(1:3) = bfield%bfield_constr(iatom,:)
       end if
       !if(density%magmomentfixed == 6) then ! constraining fields
       !  temp2 = 0.d0
@@ -277,7 +286,6 @@ contains
     
     use :: global_variables, only: ncleb, nfund, lmmaxd, lmpotd
     use :: mod_datatypes, only: dp
-    use :: mod_wunfiles, only: t_params
 
     implicit none
 
