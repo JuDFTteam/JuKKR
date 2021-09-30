@@ -18,7 +18,6 @@ run_kkrnano:intel:Cu1:
     - web
     - master
     - develop
-    - kkrnano-activate-tests
     - kkrnano-chebyshev-tfQMRgpu
 
 run_kkrnano:intel:Cu4:
@@ -39,7 +38,6 @@ run_kkrnano:intel:Cu4:
     - web
     - master
     - develop
-    - kkrnano-activate-tests
     - kkrnano-chebyshev-tfQMRgpu
 
 run_kkrnano:intel:GaN:
@@ -60,7 +58,6 @@ run_kkrnano:intel:GaN:
     - web
     - master
     - develop
-    - kkrnano-activate-tests
     - kkrnano-chebyshev-tfQMRgpu
 
 run_kkrnano:intel:Si:
@@ -81,7 +78,6 @@ run_kkrnano:intel:Si:
     - web
     - master
     - develop
-    - kkrnano-activate-tests
     - kkrnano-chebyshev-tfQMRgpu
 
 run_kkrnano:intel:ZnO:
@@ -102,7 +98,6 @@ run_kkrnano:intel:ZnO:
     - web
     - master
     - develop
-    - kkrnano-activate-tests
     - kkrnano-chebyshev-tfQMRgpu
 
 run_kkrnano:intel:MnGeB20:
@@ -123,5 +118,4 @@ run_kkrnano:intel:MnGeB20:
     - web
     - master
     - develop
-    - kkrnano-activate-tests
     - kkrnano-chebyshev-tfQMRgpu
