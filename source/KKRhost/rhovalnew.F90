@@ -936,9 +936,12 @@ contains
       ! Magnetic torques
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if(t_params%bfield%ltorque) then
-        call calc_torque(i1,lmax,irmdnew,nspin,rpan_intervall,ipan_intervall,npan_tot,ncheb,theta,phi,rho2nsc,vins, &
-                         t_params%ifunm1(:,t_params%ntcell(i1)), iend, t_params%icleb,t_params%cleb(:,1),&
-                         t_params%thetasnew(1:irmdnew,:,t_params%ntcell(i1)),bconstr)
+        call calc_torque(i1, lmax, irmdnew, nspin, t_params%bfield, rpan_intervall, &
+                         ipan_intervall, t_params%npan_log, t_params%npan_eq, npan_tot, ncheb, &
+                         theta, phi, rho2nsc, vins, t_params%ifunm1(:,t_params%ntcell(i1)), &
+                         iend, t_params%icleb, t_params%cleb(:,1), &
+                         t_params%thetasnew(1:irmdnew,:,t_params%ntcell(i1)), bconstr, &
+                         t_params%fixdir(i1), t_params%ntcell(i1))
         if (t_inc%i_write>1) write (1337,'("calc_torque: myrank=",i8,"  iatom=",i8,"  bfield_constr=",3es16.8,"  mspin=",es16.8)') myrank, i1, bconstr(1:3), bconstr(4)
       end if
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
