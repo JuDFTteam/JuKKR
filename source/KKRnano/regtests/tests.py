@@ -28,18 +28,18 @@ def run_it(cmd):
     """Run cmd, suppressing output. Returns output from stdout and exit code"""
     start_time = time.time()
     if verbose:
-        print 'Run command "{0}"'.format(cmd)
+        print('Run command "{0}"'.format(cmd))
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, close_fds=True, preexec_fn=os.setsid, shell=True)
     out, err = proc.communicate()
     end_time = time.time()
     tim = end_time - start_time
-    return out, proc.returncode, tim
+    return out.decode('utf-8'), proc.returncode, tim
 
 def get_energy(string):
     try:
           match = list(re.finditer(r"^.*TOTAL ENERGY in ryd. :(.*)$", string, re.M))[-1] # get last match only
     except:
-          print string
+          print(string)
           raise ArgumentError
     if match is not None:
           return float(match.group(1))
@@ -49,14 +49,14 @@ def get_energy(string):
 def KKRnano(inputdir, nranks=DEFAULT_nranks, nthreads=DEFAULT_nthreads, solver=DEFAULT_solver, lmax=DEFAULT_lmax, Lly=DEFAULT_Lly, **kwargs):
     """Run KKR-calculation with input from 'inputdir' and returns the total energy"""
     if verbose:
-        print "start KKR for", inputdir, "with  lmax=",lmax, ", solver=",solver, ", nthreads=",nthreads, "nranks=",nranks
-        print 'test dir:', TESTDIR
+        print("start KKR for", inputdir, "with  lmax=",lmax, ", solver=",solver, ", nthreads=",nthreads, "nranks=",nranks)
+        print('test dir:', TESTDIR)
     out, err, tim = run_it("./clearfiles.sh")
 
     global ShowMD5
     if ShowMD5:
         out, err, tim = run_it("md5sum ./kkr.exe")
-        print out
+        print(out)
         ShowMD5 = False ## do not show again
     
     for file in glob.glob(os.path.join(inputdir, '*')):
@@ -87,21 +87,22 @@ def KKRnano(inputdir, nranks=DEFAULT_nranks, nthreads=DEFAULT_nthreads, solver=D
         mpirun = 'srun -n'
     out, err, tim = run_it("OMP_STACKSIZE=80M OMP_NUM_THREADS={0} ".format(int(nthreads)) + mpirun + " {0} ./kkr.exe".format(int(nranks)))
     if verbose:
-        print 'out', out
-        print 'err', err
-        print 'tim', tim
+        print('out', out)
+        print('err', err)
+        print('tim', tim)
     ### grep the result
     total_energy = get_energy(out)
-    print "KKR for",inputdir," with lmax=",lmax," gives",total_energy,"Ryd",
+    msg = f"KKR for {inputdir} with lmax= {lmax} gives {total_energy} Ryd"
     if solver != DEFAULT_solver:
-        print ", solver=",solver,
+        msg += f", solver= {solver}"
     if nthreads != DEFAULT_nthreads:
-        print ", nthreads=",nthreads,
+        msg += f", nthreads= {nthreads}"
     if nranks != DEFAULT_nranks:
-        print ", nranks=",nranks,
+        msg += f", nranks= {nranks}"
     if Lly != DEFAULT_Lly:
-        print ", Lly=",Lly,
-    print " in", tim," sec"
+        msg += f", Lly={Lly}"
+    msg += f" in {tim} sec"
+    print(msg)
     out, err, tim = run_it("./clearfiles.sh")
     return total_energy
 
