@@ -1,6 +1,8 @@
 #!/bin/sh
 ARCHIVE=loggs
 
+export LD_LIBRARY_PATH=$MKLROOT/lib/intel64:$LD_LIBRARY_PATH
+
 ## today's date, hour, minute
 day=`date "+%Y%m%d%H%M"` 
 

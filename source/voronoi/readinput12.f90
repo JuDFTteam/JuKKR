@@ -1,7 +1,7 @@
       SUBROUTINE READINPUT(BRAVAIS,LCARTESIAN,RBASIS,ABASIS,BBASIS,CBASIS, &
      &           DX,DY,DZ, &
      &           ALATC,BLATC,CLATC, &
-     &           IRNS,NAEZ,NEMB,KAOEZ,IRM,ZAT,SITEAT, &
+     &           IRNS,NAEZ,NVAC,NEMB,KAOEZ,IRM,ZAT,SITEAT, &
      &           INS,KSHAPE, &
      &           LMAX,LMMAX,LPOT,  &
      &           NATYP,NSPIN, &
@@ -57,7 +57,7 @@
      &        KVREL,KWS,KXC,LMAX,LMMAX,LMPOT,LPOT,MD, &
      &        NATYP,NPNT1,NPNT2,NPNT3,NPOL,NSPIN,INDX,IAT
       INTEGER NMIN,NSMALL,NRAD,NFACELIM,NBR
-      INTEGER NSTEPS,KMT,NAEZ,NEMB
+      INTEGER NSTEPS,KMT,NAEZ,NVAC,NEMB
       INTEGER NINEQ,NEMBZ,NZ,CENTEROFINV(3)
       REAL*8        ALATC,BLATC,CLATC
       INTEGER MMIN,MMAX,SINN,SOUT,RIN,ROUT
@@ -151,6 +151,13 @@
       WRITE(*,*) 'readinput: CARTESIAN=',LCARTESIAN
       WRITE(111,*) 'CARTESIAN= ',LCARTESIAN
 
+      CALL IoInput('NVAC            ',UIO,1,7,IER)
+      IF (IER.EQ.0) THEN
+         READ (UNIT=UIO,FMT=*) NVAC
+         WRITE(*,*) 'NVAC=', NVAC
+      ELSE
+         NVAC = 0
+      ENDIF
 
       CALL IoInput('NAEZ            ',UIO,1,7,IER)
       IF (IER.EQ.0) THEN

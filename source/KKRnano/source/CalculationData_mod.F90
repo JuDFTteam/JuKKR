@@ -612,7 +612,7 @@ module CalculationData_mod
 
       call create(self%mesh_a(ila), irmd, ipand)
 
-      a_log_local = 0.025d0
+      a_log_local = params%a_log
       b_log_local = inter_mesh%xrn(1)*params%alat / (exp(a_log_local * ((irmd-irid) - 1)) - 1.d0)
 
       call initRadialMesh(self=self%mesh_a(ila), alat=params%alat, xrn=inter_mesh%xrn, &

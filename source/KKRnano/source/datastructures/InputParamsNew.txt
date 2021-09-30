@@ -120,3 +120,5 @@ i npan_eq 30
 i ncheb 10
 ### [NOCO] size of logarithmic panel
 d r_log 0.1D0
+### parameter a for exponential radial mesh
+d a_log 0.025D0

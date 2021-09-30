@@ -91,7 +91,7 @@ use Warnings_mod, only: launch_warning
                       theta_noco,phi_noco,angle_fixed,moment_x,moment_y,moment_z,&
                       1,  &  ! ipot=1
                       den,espv,rho2ns,r2nef, gmatn(:,:,:,1), muorb,  & ! just one spin component of gmatn needed
-                      atomdata%potential%lpot,lmaxd,mesh%irmd,chebmesh%irmd_new,iemxd, params%soc)
+                      atomdata%potential%lpot,lmaxd,mesh%irmd,chebmesh%irmd_new,iemxd, params%soc,params%enable_quad_prec)
  
        ! calculate correct orbital moment
        do ispin=1,nspind

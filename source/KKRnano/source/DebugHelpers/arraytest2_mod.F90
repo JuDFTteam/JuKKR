@@ -13,10 +13,6 @@ module arraytest2_mod
     module procedure ztest2d
     module procedure ztest3d
     module procedure ztest4d
-
-    !module procedure itest1d
-
-    ! repeat until 4d
   endinterface
 
   contains
@@ -93,7 +89,7 @@ module arraytest2_mod
      double precision, intent(in) :: array(*)
      integer, intent(in) :: length
 
-     double precision, external :: DNRM2
+     double precision, external :: DNRM2 ! from LAPACK
 
      ! print norm and average
      write(unit=str, fmt='(a7,i4,x,a16,x,e16.9,x,e16.9)') &
@@ -106,12 +102,11 @@ module arraytest2_mod
      double complex, intent(in) :: array(*)
      integer, intent(in) :: length
 
-     double precision, external :: DZNRM2
+     double precision, external :: DZNRM2 ! from LAPACK
  
      ! print norm and average
      write(unit=str, fmt='(a7,i4,x,a16,x,e12.5,x,e12.5,x,e12.5)') &
        "DEBUG: ", nr, msg, DZNRM2(length, array, 1), sum(array(1:length))/length
-
    endfunction
 
 endmodule

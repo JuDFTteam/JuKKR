@@ -79,6 +79,7 @@ module KKRnano_Comm_mod
   !> Set the number of OpenMP threads to nthrds.
   subroutine setKKRnanoNumThreads(nthrds)
     integer, intent(in) :: nthrds
+!$  external :: OMP_SET_NUM_THREADS
     if (nthrds > 0) then
       !$ call OMP_SET_NUM_THREADS(NTHRDS)
     endif ! nthrds > 0
