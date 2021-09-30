@@ -43,7 +43,7 @@ contains
       write_madelung_file, write_potential_tests, write_rho2ns
     use :: global_variables, only: krel, ipand, npotd, natomimpd, lmxspd, iemxd, nspotd, irid, ngshd, linterface, &
       nfund, ncelld, irmd, nembd1, nembd, irmind, lmmaxd, wlength, natypd, naezd, lmpotd, lpotd, lmaxd, nspind, nspotd, &
-      ipand, ngshd, irid, nfund, ncelld
+      ipand, ngshd, irid, nfund, ncelld, pot_ns_cutoff, nsimplemixfirst
     use :: mod_main0, only: lcore, ncore, ircut, ipan, ntcell, lpot, nlbasis, nrbasis, nright, nleft, natomimp, atomimp, &
       natyp, naez, lly, lmpot, nsra, ins, nspin, lmax, imix, qbound, fcm, itdbry, irns, kpre, kshape, kte, kvmad, kxc, &
       icc, ishift, ixipol, kforce, ifunm, lmsp, imt, irc, irmin, irws, llmsp, ititle, nfu, hostimp, ilm_map, imaxsh, &
@@ -558,9 +558,10 @@ contains
     if (use_spherical_potential_only) vons(1:irmd, 2:lmpot, 1:npotd) = 0.0_dp
 
     ! Recalculate XC-potential with zero spin density for magn. moment scaling
+    ! MdSD: now atom-dependent
     vxcnm(:, :, :) = 0.0_dp          ! Initialize
     excnm(:, :) = 0.0_dp
-    if (abs(lambda_xc-1.0_dp)>eps .and. nspin==2) then
+    if (any(abs(lambda_xc-1.0_dp)>eps) .and. nspin==2) then
       rho2nsnm(:, :, :, 1) = rho2ns(:, :, :, 1) ! Copy charge density
       rho2nsnm(:, :, :, 2) = 0.0_dp  ! Set spin density to zero
       call vxcdrv(excnm, kte, kxc, lpot, nspin, 1, natyp, rho2nsnm, vxcnm, rmesh, drdi, &
@@ -572,12 +573,17 @@ contains
           excdiff = excdiff + exc(lm, i1) - excnm(lm, i1)
         end do
       end do
-      write (1337, *) 'LAMBDA_XC=', lambda_xc, 'EXCDIF=', excdiff
+      write (1337, *) 'LAMBDA_XC=', lambda_xc(1), 'EXCDIF=', excdiff
     end if
-
     ! Add xc-potential with magn. part weighted by lambda_xc
-    vons(:, :, :) = vons(:, :, :) + lambda_xc*vxcm(:, :, :) + (1.0_dp-lambda_xc)*vxcnm(:, :, :)
-    exc(:, :) = lambda_xc*exc(:, :) + (1.0_dp-lambda_xc)*excnm(:, :)
+    do i1 = 1, natyp
+      write (1337, *) 'ATOM=', i1, 'LAMBDA_XC=', lambda_xc(i1)
+      do i2 = 1, nspin
+        ipot = nspin*(i1-1) + i2
+        vons(:, :, ipot) = vons(:, :, ipot) + lambda_xc(i1)*vxcm(:, :, ipot) + (1.0_dp-lambda_xc(i1))*vxcnm(:, :, ipot)
+      end do
+      exc(:, i1) = lambda_xc(i1)*exc(:, i1) + (1.0_dp-lambda_xc(i1))*excnm(:, i1)
+    end do
 
 
     if (write_potential_tests) then     ! bauer
@@ -786,16 +792,17 @@ contains
 
     write (1337, fmt=140) mix
     write (1337, '(79("="),/)')
-    ! -------------------------------------------------------------------------
-    if (max(rmsavq,rmsavm)<qbound) then
-      t_inc%i_iteration = t_inc%n_iteration
-    else
+    if (max(rmsavq,rmsavm)>=qbound) then
       ! ----------------------------------------------------------------------
       ! Potential mixing procedures: Broyden or Andersen updating schemes
       ! ----------------------------------------------------------------------
       if (imix>=3) then
-        call brydbm(visp, vons, vins, vspsmdum, vspsmdum, ins, lmpot, rmesh, drdi, mix, &
-          conc, irc, irmin, nspin, 1, natyp, itdbry, imix, iobroy, ipf, lsmear)
+        if (itscf>nsimplemixfirst) then
+          call brydbm(visp, vons, vins, vspsmdum, vspsmdum, ins, lmpot, rmesh, drdi, mix, &
+            conc, irc, irmin, nspin, 1, natyp, itdbry, imix, iobroy, ipf, lsmear)
+        else
+          write(*,*) 'NSIMPLEMIXFIRST found: Do simple mixing for', nsimplemixfirst-itscf, ' further steps'
+       end if
       end if
       ! ----------------------------------------------------------------------
       ! Reset to start new iteration
@@ -807,27 +814,41 @@ contains
         irc1 = irc(it)
         call dcopy(irc1, vons(1,1,i), 1, visp(1,i), 1)
 
-        if ((ins/=0) .and. (lpot>0)) then
-          irmin1 = irmin(it)
-          do lm = 2, lmpot
-            do j = irmin1, irc1
-              vins(j, lm, i) = vons(j, lm, i)
-            end do
-            sum = 0.0_dp
-            do ir = irmin1, irc1
-              rv = vins(ir, lm, i)*rmesh(ir, it)
-              sum = sum + rv*rv*drdi(ir, it)
-            end do
-            if (sqrt(sum)<qbound) then
-              do j = irmin1, irc1
-                vins(j, lm, i) = 0.0_dp
-              end do
-            end if
-          end do
-        end if
-      end do
+      end do ! i = 1, nspin*natyp
+
       ! ----------------------------------------------------------------------
     end if
+
+    ! cut non-spherical components of the potential which are smaller than pot_ns_cutoff
+    ! Note: pot_ns_cutoff can be set in inputcard, defaults to 10% of qbound
+    do i = 1, nspin*natyp
+
+      it = i
+      if (nspin==2) it = (i+1)/2
+      irc1 = irc(it)
+
+      if ((ins/=0) .and. (lpot>0)) then
+        irmin1 = irmin(it)
+        do lm = 2, lmpot
+          do j = irmin1, irc1
+            vins(j, lm, i) = vons(j, lm, i)
+          end do
+          sum = 0.0_dp
+          do ir = irmin1, irc1
+            rv = vins(ir, lm, i)*rmesh(ir, it)
+            sum = sum + rv*rv*drdi(ir, it)
+          end do
+          if (sqrt(sum)<pot_ns_cutoff) then
+            write(1337,*) 'POT_NS_CUTOFF INFO: cutting ns component', lm
+            do j = irmin1, irc1
+              vins(j, lm, i) = 0.0_dp
+            end do
+          end if
+        end do
+      end if ! pot_ns_cutoff
+
+    end do ! i = 1, nspin*natyp
+
     ! -------------------------------------------------------------------------
     rewind 11
 
@@ -868,6 +889,7 @@ contains
     end if
     ! -------------------------------------------------------------------------
     if (max(rmsavq,rmsavm)<qbound) then
+      t_inc%i_iteration = t_inc%n_iteration ! setting this stops the calculation (exits while loop in main_all)
       write (6, '(17X,A)') '++++++ SCF ITERATION CONVERGED ++++++'
       write (6, '(79("*"))')
       icont = 0

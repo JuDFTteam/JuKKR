@@ -312,7 +312,7 @@ DO IATOM= 1, NATOM
 !       READ(UNIT=ifile_pot,FMT=*) CLINE                               ! skip line
       READ(UNIT=ifile_pot,FMT=*) CELL(IATOM)%RMT, ALAT_TEMP, CELL(IATOM)%RCORE     ! muffin tin and core radius
 !        write(*,*) alat, alat_temp
-      IF (ABS(ALAT-ALAT_TEMP)>10D-14) then
+      IF (ABS(ALAT-ALAT_TEMP)>10D-12) then
          write(*,*) alat, alat_temp
          STOP '[read_potential] error ALAT value in potential is does not match'
       end if

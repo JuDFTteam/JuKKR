@@ -52,10 +52,13 @@ class Tests_scf_SOC():
    def test_Jij(self):
       check_Jijs('test_run_Jij', refpath='host_in_host_Jijs')
 
-   def test_Jij(self):
+   def test_Jij_hybrid(self):
+      check_Jijs('test_run_Jij_hybrid', refpath='host_in_host_Jijs')
+
+   def test_Jij_savewf(self):
       check_Jijs('test_run_Jij_savewf', refpath='host_in_host_Jijs')
 
-   def test_Jij(self):
+   def test_Jij_nosratrick(self):
       check_Jijs('test_run_Jij_nosratrick', refpath='host_in_host_Jijs', sracomp=True)
 
 
@@ -92,8 +95,8 @@ def check_Jijs(path, refpath, sracomp=False):
    d0= loadtxt('test_case_kkrflex_host_in_host/imp/'+refpath+'/out_Jijmatrix')
 
    if not sracomp:
-      assert mean(abs(d-d0)) < 10**-14
-      assert std(abs(d-d0)) < 10**-14
+      assert mean(abs(d-d0)) < 1e-10
+      assert std(abs(d-d0)) < 1e-10
    else:
-      assert mean(abs(d-d0)) < 5*10**-8
-      assert std(abs(d-d0)) < 5*10**-8
+      assert mean(abs(d-d0)) < 5e-8
+      assert std(abs(d-d0)) < 5e-8

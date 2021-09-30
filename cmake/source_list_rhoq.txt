@@ -30,6 +30,6 @@ add_executable(
     source/rhoq/mod_rhoq.F90
     )
 
-if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
-    target_link_libraries(rhoq.x ${lapackblas_libraries})
+if(CMAKE_Fortran_COMPILER_ID MATCHES GNU OR USE_LIBFLAME)
+    target_link_libraries(rhoq.x ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 endif()

@@ -12,7 +12,8 @@ C*==initldau.f    processed by SPAG 6.05Rc at 15:27 on  7 Mar 2003
 
 
 
-      SUBROUTINE INITLDAU(LMAXD,NATYP,NSPIN,VPOT,ZATOM,KVREL,CELL,LDAU)
+      SUBROUTINE INITLDAU(LMAXD,NATYP,NSPIN,VPOT,ZATOM,KVREL,CELL,LDAU,
+     &                    initial_iteration)
 C
 C   *******************************************************************
 C   *  Calculates ULDAU                                               *
@@ -40,6 +41,7 @@ C
       USE MOD_PHICALC
       use mod_version_info
       use global_variables, only: ipand
+      use mod_mympi, only: myrank, master
       IMPLICIT NONE
 
       TYPE(LDAU_TYPE),ALLOCATABLE    :: LDAU(:)  ! lda+u variables, intended dimension: (natyp) ! lda+u
@@ -71,6 +73,7 @@ C
       INTEGER I1,IM1,IM2,IM3,IM4,IR,IRC1,IRS1,IRUNLDAU,KK
      &        ,L1,LF,LFMAX,LL,M1,M2,M3,M4,NSRA,IAT,ISPIN,IPOT,IPAN1
       INTEGER NINT,IERROR
+      logical :: initial_iteration
 
 
 !      EXTERNAL CGCRAC,GAUNTC1
@@ -89,7 +92,10 @@ C  U calculated anew.
 C
       IF ( IRUNLDAU.NE.0 ) THEN ! read from disk and exit
          CALL RWLDAUPOT(.FALSE.,4,NATYP,NSPIN,LMAXD,IRMD,IRUNLDAU,LDAU)
+         initial_iteration = .false.
          RETURN
+      else
+         initial_iteration = .true.
       ENDIF
 
 ! Allocate arrays
@@ -153,11 +159,13 @@ C
       DO I1 = 1,100
          FACT(I1) = FACT(I1-1)*DBLE(I1) ! factorial
       END DO
-      WRITE (6,*)
-      WRITE (6,'(79(1H=))')
-      WRITE (6,'(A)') '           LDA+U  INITIALISE Coulomb matrix U'
-      WRITE (6,*)
-      WRITE (6,'(79(1H=))')
+      if (myrank==master) then
+        WRITE (6,*)
+        WRITE (6,'(79(1H=))')
+        WRITE (6,'(A)') '           LDA+U  INITIALISE Coulomb matrix U'
+        WRITE (6,*)
+        WRITE (6,'(79(1H=))')
+      end if
 C
 C AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 C                       Loop over atoms...which need LDA+U ( LOPT >= 0 )
@@ -307,6 +315,8 @@ C
 C
 C UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU
 C
+            if (myrank==master) then
+
             WRITE (6,*)
             WRITE (6,'(A,i3)') ' ATOM ',I1
             WRITE (6,*)
@@ -332,6 +342,8 @@ C
      &                          IM3=1,2*LL+1)
             END DO
             WRITE (6,'(79(1H=))')
+
+            end if
 C
 
 

@@ -6,6 +6,7 @@ set_source_files_properties(source/common/radial_solver_Chebychev/rllsll.F90 PRO
 add_executable(
     kkrflex.exe
     source/common/rclm.f90
+    source/common/broyden.f90
     source/common/spin_orbit.f90
     source/common/spin_orbit_compl.f90
     source/common/mympi.F90 
@@ -184,6 +185,6 @@ add_executable(
     source/KKRimp/kkrflex.F90
     )
 
-if(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
-    target_link_libraries(kkrflex.exe ${lapackblas_libraries})
+if(CMAKE_Fortran_COMPILER_ID MATCHES GNU OR USE_LIBFLAME)
+    target_link_libraries(kkrflex.exe ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 endif()

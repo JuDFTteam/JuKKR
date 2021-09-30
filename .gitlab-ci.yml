@@ -3,17 +3,20 @@
 ###############################################################################
 
 # docker image containing Developlement Tools and the current Intel compilers based on CentOS 7 with cmake
-image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/extended_intel2016
+#image: iffregistry.fz-juelich.de/docker-images/centos7-intel-compilers/extended_intel2016
+image: iffregistry.fz-juelich.de/docker-images/centos8-intel-compilers:latest-ipython3
 
 before_script:
   # set +e prevents sourced scripts from aborting if single commands fail (GitLab CI sets `-e` by default)
-  - set +e && source compilervars.sh intel64 && set -e
+  - set +e && source compilervars.sh intel64
   # set environment variables to avoind stack size issue
   - export OMP_NUM_THREADS=1
   - export OMP_STACKSIZE=1g
   - ulimit -s unlimited
-  # install pip and numpy
-  - pip install numpy || curl -O https://bootstrap.pypa.io/get-pip.py && python get-pip.py && pip install numpy
+  # install numpy
+  - pip3 install numpy
+  # now reactivate `-e` setting again to stop on each error that follows
+  - set -e
 
 stages: 
   - test
@@ -56,12 +59,18 @@ test:intel:
   script:
     # test if dependencies are working
     - echo 'do some tests here'
+    - which cmake
     - which ifort
     - which mpiifort
     - which gfortran
     - which profmerge
     - which codecov || which Codecov
+    #- which python && python --version
+    - which python3 && python3 --version
+    #- which pip && pip --version
+    - which pip3 && pip3 --version
     # needs to be implemented (tests for dependencies e.g. MPI, OpenMP, LAPACK, etc.)
+    - df -h /dev/shm # check if shm is big enough (https://software.intel.com/content/www/us/en/develop/documentation/mpi-developer-guide-linux/top/troubleshooting/problem-mpi-limitation-for-docker.html)
     - cd tests/unit_tests/test_parallel && ./run_parallel_tests.sh
 
 ###############################################################################
@@ -126,6 +135,12 @@ pages:
     - cd ..
     # add code coverage
     - tar -zxvf cov.tar.gz && mv CODE_COVERAGE.HTML public/page/codecov/index.html && mv CodeCoverage public/page/codecov/CodeCoverage
+    # upload code for deploy
+    - '[ -n "${PREFIX}" ]'
+    - mkdir -p "public/${PREFIX}"
+    - git clone "${CI_REPOSITORY_URL}"
+    - tar -czf jukkr-git.tgz jukkr/
+    - mv jukkr-git.tgz "public/${PREFIX}/"
   artifacts:
     paths:
       - public

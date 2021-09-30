@@ -476,7 +476,9 @@ end function this_readline
 subroutine preconditioning_readenergy(my_rank,IELAST,NSPIN,EZ,WEZ,NATOMIMPD,NTOTATOM,lmsizehost,kgrefsoc)
   use mod_config, only: config_testflag,config_runflag
   use nrtype, only: wlength
+#ifdef CPP_MPI
   use mpi
+#endif
   use mod_types, only: t_inc
   implicit none
   integer          ::   ielast,nspin, my_rank

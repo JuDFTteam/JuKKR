@@ -274,11 +274,16 @@ contains
     real (kind=dp) :: bravais1(3,3),tol
     integer :: i,j,isym,nsym,i0,ia
     character(len=10) :: charstr(64)
-    logical :: llatbas,lbulk
+    logical :: llatbas, lbulk
+    logical, save :: writesymfile = .true.
     tol=1e-5
     !     -------------------------------------------------------------
     nsym = 0
-    call pointgrp(rotmat,rotname)
+
+    if (myrank/=master) writesymfile = .false. ! write only once on master rank
+    call pointgrp(rotmat,rotname, writesymfile)
+    if (myrank==master) writesymfile = .false. ! suppresses further sym.out creation
+
     do i=1,3
       do j=1,3
         bravais1(j,i) = bravais(j,i)

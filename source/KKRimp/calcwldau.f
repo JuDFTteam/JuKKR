@@ -15,7 +15,7 @@
 !>           
 !-------------------------------------------------------------------------------
       SUBROUTINE CALCWLDAU(
-     >     NSPIN,NATOM,LMAXD,IRMD,LMAXATOM,DENSITY,STRMIX,
+     >     NSPIN,NATOM,LMAXD,IRMD,LMAXATOM,DENSITY,STRMIX, QBOUND_LDAU, 
      X     LDAU)
 
 C **********************************************************************
@@ -72,6 +72,7 @@ C Dummy arguments
 C
       INTEGER NATOM,NSPIN
       INTEGER LMAXATOM(:)
+      REAL*8 QBOUND_LDAU
       TYPE(LDAU_TYPE),ALLOCATABLE :: LDAU(:) ! lda+u variables dimension: (NATOM)
       TYPE(DENSITY_TYPE) :: DENSITY(:)
 
@@ -289,6 +290,10 @@ C Calculate rms error for wldau
 
 C Apply damping to the interaction matrix WLDAU (mixing):
       XMIX =STRMIX
+      if (QBOUND_LDAU > DSQRT(RMSTOT)) then
+        write(*,*) 'LDAU mixing: reached QBOUND_LDAU',QBOUND_LDAU
+        xmix = 0.0d0
+      end if
       write(*,*) 'Mixing old-new wldau with xmix=',xmix
       CALL WMIX(XMIX,LDAU(IAT)%WLDAU(:,:,:),WLDAU_OLD(:,:,:),MMAX,NSPIN)
       

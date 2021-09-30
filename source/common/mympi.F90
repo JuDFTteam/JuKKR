@@ -415,7 +415,7 @@ contains
       rest = 0
 
       if (myrank==master) write (1337, *) 'create cartesian grid:', ne, nat, nranks
-      call mpi_cart_create(mpi_comm_world, 2, [ne,nat], [.false.,.false.], [.true.,.true.], mympi_comm_grid, ierr)
+      call mpi_cart_create(mpi_comm_world, 2, [ne,nat], [.false.,.false.], .true., mympi_comm_grid, ierr)
 
       if (myrank==master) write (1337, *) 'MPI_Cart_sub'
       call mpi_cart_sub(mympi_comm_grid, [.true.,.false.], mympi_comm_at, ierr) ! row communicator
@@ -854,7 +854,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine mympi_main1c_comm_newsosol2(lmaxd1,lmmaxd,ielast,nqdos,npotd,natypd,   &
     lmpotd,irmd,mmaxd,den,denlm,muorb,espv,r2nef,rho2ns,denefat,denef,denmatn,      &
-    angles_new,mympi_comm)
+    angles_new,totmoment,bconstr,mympi_comm)
 
     use :: mpi
     use :: mod_datatypes, only: dp
@@ -877,6 +877,8 @@ contains
     complex (kind=dp), dimension(mmaxd, mmaxd, 2, 2, natypd), intent (inout) :: denmatn
     real (kind=dp), dimension(natypd), intent (inout)     :: denefat
     real (kind=dp), dimension(natypd, 2), intent (inout)  :: angles_new
+    real (kind=dp), dimension(natypd), intent (inout)  :: totmoment
+    real (kind=dp), dimension(4, natypd), intent (inout)  :: bconstr ! MdSD: constraining fields
     real (kind=dp), dimension(0:lmaxd1, npotd), intent (inout) :: espv
     real (kind=dp), dimension(0:lmaxd1+1, 3, natypd), intent (inout) :: muorb !! orbital magnetic moment
     real (kind=dp), dimension(irmd, lmpotd, natypd, 2), intent (inout) :: r2nef
@@ -977,6 +979,23 @@ contains
     ! CALL MPI_ALLREDUCE(angles_new,work(:,:,1,1),IDIM,MPI_DOUBLE_PRECISION,MPI_SUM,mympi_comm,IERR)
     if (ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for angles_new'
     call dcopy(idim, work, 1, angles_new, 1)
+    deallocate (work)
+
+    idim = natypd
+    allocate (work(natypd,1,1,1))
+    work = 0.0_dp
+    call mpi_reduce(totmoment, work(:,1,1,1), idim, mpi_double_precision, mpi_sum, master, mympi_comm, ierr)
+    if (ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for totmoment'
+    call dcopy(idim, work, 1, totmoment, 1)
+    deallocate (work)
+
+    ! MdSD: constraining fields
+    idim = 4*natypd
+    allocate (work(4,natypd,1,1))
+    work = 0.0_dp
+    call mpi_reduce(bconstr, work(:,:,1,1), idim, mpi_double_precision, mpi_sum, master, mympi_comm, ierr)
+    if (ierr/=0) stop '[mympi_main1c_comm_newsosol2] Error in MPI_REDUCE for bconstr'
+    call dcopy(idim, work, 1, bconstr, 1)
     deallocate (work)
 
   end subroutine mympi_main1c_comm_newsosol2
@@ -1202,7 +1221,7 @@ contains
 #ifdef CPP_MPI
   !-------------------------------------------------------------------------------
   !> Summary: MPI Briadcast of global variables
-  !> Author: Jonathan Chico
+  !> Author: Jonathan Chico, Philipp Rüßmann
   !> Category: KKRhost, communication, initialization
   !> Deprecated: False ! This needs to be set to True for deprecated subroutines
   !>
@@ -1221,7 +1240,7 @@ contains
     integer (kind=mpi_address_kind) :: base !! base address of first entry
   
   
-    n = 59
+    n = 66
     allocate (blocklen1(n), etype1(n), disp1(n), stat=ierr)
     if (ierr/=0) stop 'error allocating arrays in bcast_global_variables'
   
@@ -1282,8 +1301,15 @@ contains
     call mpi_get_address(nchebd, disp1(55), ierr)
     call mpi_get_address(maxmshd, disp1(56), ierr)
     call mpi_get_address(kBdG, disp1(57), ierr)
-    call mpi_get_address(linterface, disp1(58), ierr)
-    call mpi_get_address(lnc, disp1(59), ierr)
+    call mpi_get_address(ninit_broydenspin, disp1(58), ierr)
+    call mpi_get_address(memlen_broydenspin, disp1(59), ierr)
+    call mpi_get_address(nsimplemixfirst, disp1(60), ierr)
+    call mpi_get_address(linterface, disp1(61), ierr)
+    call mpi_get_address(lnc, disp1(62), ierr)
+    call mpi_get_address(pot_ns_cutoff, disp1(63), ierr)
+    call mpi_get_address(mixfac_broydenspin, disp1(64), ierr)
+    call mpi_get_address(qbound_spin, disp1(65), ierr)
+    call mpi_get_address(angles_cutoff, disp1(66), ierr)
   
     ! find displacements of variables
     base = disp1(1)
@@ -1293,8 +1319,9 @@ contains
     blocklen1(1:n) = 1
   
     ! set datatype of variables
-    etype1(1:n-2) = mpi_integer
-    etype1(n-1:n) = mpi_logical
+    etype1(1:n-5) = mpi_integer
+    etype1(n-4:n-3) = mpi_logical
+    etype1(n-3:n) = mpi_double_precision
   
     ! create new Type structure for derived data type
     call mpi_type_create_struct(n, blocklen1, disp1, etype1, mympitype1, ierr)

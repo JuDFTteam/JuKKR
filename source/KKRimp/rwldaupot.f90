@@ -40,7 +40,6 @@ contains
     nspind = 2
 
     open (67,file='ldaupot',form='formatted')
-    call version_print_header(67)
     rewind (67)
 
     if (lwrite) then

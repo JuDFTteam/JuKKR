@@ -96,7 +96,8 @@ c *******************************************************************
      +     TOLAREA,                 ! Max. tolerance for area of polygon face
      +     TOLEULER,                ! Used in calculation of Euler angles, subr. EULER
      &     TOLHS,                   ! Tolerance for halfspace routine
-     +     VOLUC                    ! volume of unit cell in units of alat**3
+     +     VOLUC,                   ! volume of unit cell in units of alat**3
+     +     EFSET                    ! wished Fermi level of generated potential
 C
 C     .. REAL*8    ARRAYS ....
 C
@@ -333,7 +334,7 @@ c
      &     I13,
      &     NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,    
      &     TLEFT,TRIGHT,LINTERFACE,RCUTZ,RCUTXY,RMTCORE,
-     &     LMTREF,RMTREF,SIZEFAC,NFACELIM)
+     &     LMTREF,RMTREF,SIZEFAC,NFACELIM, EFSET, AOUT_ALL)
 
 
 
@@ -481,7 +482,10 @@ c to update the empty-cell positions
 
 c The following parameters can be made atom-dependent and e.g. read in.
       DO IAT = 1,NSITES
-         AOUT_ALL(IAT) = 0.025D0 ! Parameter A for exponential mesh of output-pot.
+         if (AOUT_ALL(IAT)<0.d0) then
+           ! set to default value if negative value is found
+           AOUT_ALL(IAT) = 0.025D0  ! Parameter A for exponential mesh of output-pot.
+         end if
          IRWS(IAT) = IRM          ! Index of outmost point.
          IMT(IAT) = NMT
       ENDDO
@@ -857,7 +861,11 @@ c
   
 c           ! Redefine
             RMTCL(ISHAPE) = XRN_ALL(1   ,ISHAPE)*ALATC
-            RWSCL(ISHAPE) = XRN_ALL(NMESH+NRAD,ISHAPE)*ALATC
+            IF (.NOT.OPT('SIMULASA')) THEN
+              RWSCL(ISHAPE) = XRN_ALL(NMESH+NRAD,ISHAPE)*ALATC
+            ELSE
+              RWSCL(ISHAPE) = XRN_ALL(MESHN_ALL(ISHAPE),ISHAPE)*ALATC
+            END IF
             WRITE(6,*) 'rmt  = ',RMTCL(ISHAPE)
             WRITE(6,*) 'rmax = ',RWSCL(ISHAPE)
             LCONSTRUCTED(ISHAPE) = .TRUE.
@@ -1074,7 +1082,7 @@ c
      &        KSHAPE,IDSHAPE,VOLUMECL,LPOT,AOUT_ALL,RWSCL,RMTCL,
      &        RMTCORE,MESHN_ALL,XRN_ALL,DRN_ALL,THETAS_ALL,LMIFUN_ALL,
      &        NFUN_ALL,IRWS,IRNS,ALATC,
-     &        QBOUND,KXC,TXC)   
+     &        QBOUND,KXC,TXC, EFSET)   
       END IF
       CLOSE(11)
 c     

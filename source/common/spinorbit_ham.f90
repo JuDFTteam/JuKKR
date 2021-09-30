@@ -33,7 +33,7 @@ contains
 
     use :: mod_datatypes, only: dp
     use :: mod_constants, only: czero
-    use :: mod_runoptions, only: set_cheby_nosoc
+    use :: mod_runoptions, only: set_cheby_nosoc, decouple_spin_cheby
     use :: mod_cheb, only: getclambdacinv
     use :: mod_spin_orbit_compl, only: spin_orbit_compl
     use :: mod_rotatespinframe, only: rotatematrix
@@ -115,11 +115,12 @@ contains
     ! contruct LS matrix (output: lsmh)
     call spin_orbit_compl(lmax, lmmaxd, lsmh)
 
-    ! roate LS matrix
-    ncoll = 1
-    if (ncoll==1) then
-      call rotatematrix(lsmh, theta, phi, lmmaxd, 1)
-    end if
+    ! rotate LS matrix
+    ! If statement not needed
+    ! ncoll = 1
+    ! if (ncoll==1) then
+    call rotatematrix(lsmh, theta, phi, lmmaxd, 1)
+    !end if
 
     if (mode=='transpose') then
       do lm1 = 1, 2*lmmaxd
@@ -136,7 +137,7 @@ contains
     ! contruct prefactor of spin-orbit hamiltonian
     hsofac = 0e0_dp
     vnspll1 = (0e0_dp, 0e0_dp)
-    if (set_cheby_nosoc .or. zat<1e-6_dp) then
+    if (set_cheby_nosoc .or. decouple_spin_cheby .or. zat<1e-6_dp) then
       vnspll1(1:2*lmmaxd, 1:2*lmmaxd, 1:irmdnew) = vnspll(1:2*lmmaxd, 1:2*lmmaxd, 1:irmdnew)
     else
       do ir = 1, irmdnew

@@ -13,6 +13,9 @@ compver
 *.pyc
 build*
 develop/
+docs/public/
+tests/
+
 
 # Mac temporary files
 .DS_Store*

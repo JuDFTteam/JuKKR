@@ -37,28 +37,30 @@ contains
     tksemi, tolrdif, emusemi, ebotsemi, fsemicore, lambda_xc, deltae, lrhosym, linipol, lcartesian, imt, cls, lmxc, irns, irws, ntcell, refpot, &
     inipol, ixipol, hostimp, kfg, vbc, zperleft, zperight, bravais, rmt, zat, rws, mtfac, rmtref, rmtnew, rmtrefat, fpradius, tleft, tright, &
     rbasis, socscale, cscl, socscl, solver, i12, i13, i19, i25, i40, txc, drotq, ncpa, itcpamax, cpatol, noq, iqat, icpa, kaoez, conc, kmrot, &
-    qmtet, qmphi, kreadldau, lopt, ueff, jeff, erefldau, invmod, verbosity, MPI_scheme, special_straight_mixing)
+    qmtet, qmphi, kreadldau, lopt, ueff, jeff, erefldau, invmod, verbosity, MPI_scheme, special_straight_mixing,lbfield,lbfield_constr, &
+    lbfield_all,lbfield_trans,lbfield_mt,ltorque,ibfield,ibfield_constr,ibfield_itscf0,ibfield_itscf1)
 
-    use :: mod_profiling, only: memocc
-    use :: mod_runoptions, only: read_runoptions, calc_DOS_Efermi, calc_GF_Efermi, calc_exchange_couplings, &
+    use mod_profiling, only: memocc
+    use mod_runoptions, only: read_runoptions, print_runoptions, calc_DOS_Efermi, calc_GF_Efermi, calc_exchange_couplings, &
       dirac_scale_SpeefOfLight, disable_charge_neutrality, disable_print_serialnumber, modify_soc_Dirac, relax_SpinAngle_Dirac, search_Efermi, &
     set_kmesh_large, stop_1b, stop_1c, use_BdG, use_Chebychev_solver, use_cond_LB, use_decimation, use_lloyd, use_qdos, &
     use_rigid_Efermi, use_semicore, use_virtual_atoms, write_green_host, write_green_imp, write_kkrimp_input, &
-    write_pkkr_input, write_pkkr_operators, use_ldau, set_cheby_nospeedup, set_cheby_nosoc, write_tb_coupling
-    use :: mod_constants, only: cvlight, ryd
-    use :: mod_wunfiles, only: t_params
-    use :: memoryhandling, only: allocate_semi_inf_host, allocate_magnetization, allocate_cell, allocate_cpa, allocate_soc, allocate_ldau
-    use :: mod_types, only: t_inc
-    use :: mod_save_wavefun, only: t_wavefunctions
-    use :: mod_version_info, only: version_print_header, serialnr
-    use :: mod_datatypes, only: dp
-    use :: godfrin, only: t_godfrin ! GODFRIN Flaviano
-    use :: mod_rcstop, only: rcstop
-    use :: mod_idreals, only: idreals
-    use :: mod_ioinput, only: ioinput
-    use :: global_variables, only: linterface, korbit, krel, irmd, irnsd, nsheld, knosph, iemxd, nrd, knoco, kpoibz, ntrefd, natomimpd, &
+    write_pkkr_input, write_pkkr_operators, use_ldau, set_cheby_nospeedup, decouple_spin_cheby, write_tb_coupling, set_cheby_nosoc
+    use mod_constants, only: cvlight, ryd
+    use mod_wunfiles, only: t_params
+    use memoryhandling, only: allocate_semi_inf_host, allocate_magnetization, allocate_cell, allocate_cpa, allocate_soc, allocate_ldau
+    use mod_types, only: t_inc
+    use mod_save_wavefun, only: t_wavefunctions
+    use mod_version_info, only: version_print_header, serialnr
+    use mod_datatypes, only: dp
+    use godfrin, only: t_godfrin ! GODFRIN Flaviano
+    use mod_rcstop, only: rcstop
+    use mod_idreals, only: idreals
+    use mod_ioinput, only: ioinput
+    use global_variables, only: linterface, korbit, krel, irmd, irnsd, nsheld, knosph, iemxd, nrd, knoco, kpoibz, ntrefd, natomimpd, &
       nprincd, ipand, nfund, irid, ngshd, nmaxd, ishld, wlength, naclsd, ntotd, ncleb, nspind, nspindd, npotd, lmmaxd, lmgf0d, &
-      lassld, nembd1, irmind, nofgij, ntperd, nsatypd, nspotd, lnc, lmxspd, lm2d, nclsd, mmaxd, ncleb, kBdG, delta_BdG
+      lassld, nembd1, irmind, nofgij, ntperd, nsatypd, nspotd, lnc, lmxspd, lm2d, nclsd, mmaxd, ncleb, kBdG, delta_BdG, pot_ns_cutoff, &
+      mixfac_broydenspin, ninit_broydenspin, memlen_broydenspin, qbound_spin, angles_cutoff, nsimplemixfirst
 
 
     implicit none
@@ -148,7 +150,6 @@ contains
     real (kind=dp), intent (inout) :: emusemi !! Top of semicore contour in Ryd.
     real (kind=dp), intent (inout) :: ebotsemi !! Bottom of semicore contour in Ryd
     real (kind=dp), intent (inout) :: fsemicore !! Initial normalization factor for semicore states (approx. 1.)
-    real (kind=dp), intent (inout) :: lambda_xc !! Scale magnetic moment (0 < Lambda_XC < 1,0=zero moment, 1= full moment)
     complex (kind=dp), intent (inout) :: deltae !! LLY Energy difference for numerical derivative
     logical, intent (inout) :: lrhosym
     logical, intent (inout) :: linipol !! True: Initial spin polarization; false: no initial spin polarization
@@ -182,6 +183,7 @@ contains
     real (kind=dp), dimension (:, :), allocatable, intent (out) :: rbasis !! Position of atoms in the unit cell in units of bravais vectors
     ! variables for spin-orbit/speed of light scaling
     real (kind=dp), dimension (:), allocatable, intent (out) :: socscale !! Spin-orbit scaling
+    real (kind=dp), dimension (:), allocatable, intent (out) :: lambda_xc !! Scale magnetic moment (0 < Lambda_XC < 1, 0=zero moment, 1= full moment)
     real (kind=dp), dimension (:, :), allocatable, intent (out) :: cscl !! Speed of light scaling
     real (kind=dp), dimension (:, :), allocatable, intent (out) :: socscl
     character (len=10), intent (inout) :: solver !! Type of solver
@@ -233,8 +235,17 @@ contains
     real (kind=dp), dimension (:), allocatable, intent (out) :: ueff !! input U parameter for each atom
     real (kind=dp), dimension (:), allocatable, intent (out) :: jeff !! input J parameter for each atom
     real (kind=dp), dimension (:), allocatable, intent (out) :: erefldau !! the energies of the projector's wave functions (REAL) LDA+U
-    ! ---------------------------------------------------------------------------
-
+    ! ----------------------------------------------------------------------------
+    logical , intent(out) :: lbfield ! external magnetic field (turned on via runoption <noncobfield>) non-collinear magnetic field
+    logical , intent(out) :: lbfield_constr ! constraining fields (turned on via runoption <noncobfield>) non-collinear magnetic field
+    logical , intent(out) :: lbfield_all ! apply same field to all atoms (True) or individual fields to each atom
+    logical , intent(out) :: lbfield_trans ! apply only transversal bfield
+    logical , intent(out) :: lbfield_mt  ! apply magnetic field only in the muffin-tin
+    logical , intent(out) :: ltorque ! calculate magnetic torque
+    integer , intent(out) :: ibfield  ! spin (0), orbital (1), spin+orbial (2) fields
+    integer , intent(out) :: ibfield_constr  ! type of contraint (0 = torque, 1 = magnetic moment)
+    integer , intent(out) :: ibfield_itscf0  ! start magnetic field at iteration itscf0
+    integer , intent(out) :: ibfield_itscf1  ! stop applying magnetic field after iteration itscf1
     ! ----------------------------------------------------------------------------
     ! Local variables
     ! ----------------------------------------------------------------------------
@@ -246,7 +257,7 @@ contains
     integer :: ndim  !! Dimension for the Bravais lattice for slab or bulk (2/3)
     integer :: nasoc
     integer :: i, il, j, ier, ier2, i1, ii, ir, idosemicore, i_stat, i_all
-    real (kind=dp) :: soscale, ctlscale
+    real (kind=dp) :: soscale, ctlscale, lambda_xc_all
     real (kind=dp) :: brymix, strmix, tx, ty, tz
     character (len=43) :: tshape
     character (len=:), allocatable :: uio  ! NCOLIO=256
@@ -309,10 +320,11 @@ contains
     write (1337, '(A)' ) '*** Inspecting run- and test-options ***'
 
     call read_old_runtestoptions(invmod,verbosity,MPI_scheme,oldstyle)
-    if(.not.oldstyle) then
-        write (1337, *) '  <<< Reading in new style of run-options. >>>'
-        call read_runoptions()
-    end if
+    write (1337, *) '  <<< Reading in new style of run-options. >>>'
+    if (oldstyle) write (1337, *) '  WARNING: this may overwrite old-style run-options'
+    call read_runoptions()
+    ! write all runoptions
+    call print_runoptions(1337)! write to output.0.txt
 
 
 
@@ -884,9 +896,9 @@ contains
 
     if (use_Chebychev_solver) korbit = 1
 
-    if (set_cheby_nosoc) then
-      write (*, '(A)') 'Warning: detected test option <set_cheby_nosoc>: use spin-decoupled radial equations with new solver'
-      write (1337, *)  'Warning: detected test option <set_cheby_nosoc>: reset KORBIT to zero but use NEWSOSOL for spin-decoupled matrices with explicit spin-loop'
+    if (use_Chebychev_solver .and. decouple_spin_cheby) then
+      write (*, '(A)') 'Warning: detected test option <decouple_spin_cheby>: use spin-decoupled radial equations with new solver'
+      write (1337, *)  'Warning: detected test option <decouple_spin_cheby>: reset KORBIT to zero but use NEWSOSOL for spin-decoupled matrices with explicit spin-loop'
       korbit = 0
     end if
 
@@ -927,7 +939,108 @@ contains
       write (1337, *) 'Use Bogoliubov-de-Gennes formalism with initial value of Delta set to ', delta_BdG, 'Ry = ', delta_BdG*ryd*1000, 'meV' 
     end if
 
+    ! ----------------------------------------------------------------------------
+    ! Reading options for non-collinear magnetic fields and constraining fields
+    ! ----------------------------------------------------------------------------
+    lbfield=.false.
+    call ioinput('<NONCOBFIELD>   ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) lbfield
+      if (ier/=0) stop 'Error reading `<NONCOBFIELD>`: check your inputcard'
+      write (111, *) '<NONCOBFIELD>= ', lbfield
+    else
+      write (111, *) 'Default <NONCOBFIELD>= ', lbfield
+    end if
+    
+    lbfield_constr=.false.
+    call ioinput('<CONSTR_FIELD>  ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) lbfield_constr
+      if (ier/=0) stop 'Error reading `<CONSTR_FIELD>`: check your inputcard'
+      write (111, *) '<CONSTR_FIELD>= ', lbfield_constr
+    else
+      write (111, *) 'Default <CONSTR_FIELD>= ', lbfield_constr
+    end if
 
+    lbfield_all=.false.
+    call ioinput('<SAME_BFIELD>   ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) lbfield_all
+      if (ier/=0) stop 'Error reading `<SAME_BFIELD>`: check your inputcard'
+      write (111, *) '<SAME_BFIELD>= ', lbfield_all
+    else
+      write (111, *) 'Default <SAME_BFIELD>= ', lbfield_all
+    end if
+    
+    lbfield_trans=.false.
+    call ioinput('<TRANS_BFIELD>   ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) lbfield_trans
+      if (ier/=0) stop 'Error reading `<TRANS_BFIELD>`: check your inputcard'
+      write (111, *) '<TRANS_BFIELD>= ', lbfield_trans
+    else
+      write (111, *) 'Default <TRANS_BFIELD>= ', lbfield_trans
+    end if
+    
+    lbfield_mt=.false.
+    call ioinput('<MT_BFIELD>   ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) lbfield_mt
+      if (ier/=0) stop 'Error reading `<MT_BFIELD>`: check your inputcard'
+      write (111, *) '<MT_BFIELD>= ', lbfield_mt
+    else
+      write (111, *) 'Default <MT_BFIELD>= ', lbfield_mt
+    end if
+    
+    ltorque=.false.
+    call ioinput('<TORQUE>   ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) ltorque
+      if (ier/=0) stop 'Error reading `<TORQUE>`: check your inputcard'
+      write (111, *) '<TORQUE>= ', ltorque
+    else
+      write (111, *) 'Default <TORQUE>= ', ltorque
+    end if
+    
+    ibfield= 0
+    call ioinput('<IBFIELD>       ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) ibfield
+      if (ier/=0) stop 'Error reading `<IBFIELD>`: check your inputcard'
+      write (111, *) '<IBFIELD>= ', ibfield
+    else
+      write (111, *) 'Default <IBFIELD>= ', ibfield
+    end if
+    
+    ibfield_constr= 0
+    call ioinput('<ICONSTR>       ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) ibfield_constr
+      if (ier/=0) stop 'Error reading `<ICONSTR>`: check your inputcard'
+      write (111, *) '<ICONSTR>= ', ibfield_constr
+    else
+      write (111, *) 'Default <ICONSTR>= ', ibfield_constr
+    end if
+    
+    ibfield_itscf0= 0
+    call ioinput('<ITBFIELD0>     ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) ibfield_itscf0
+      if (ier/=0) stop 'Error reading `<ITBFIELD0>`: check your inputcard'
+      write (111, *) '<ITBFIELD0>= ', ibfield_itscf0
+    else
+      write (111, *) 'Default <ITBFIELD0>= ', ibfield_itscf0
+    end if
+    
+    ibfield_itscf1= 10000
+    call ioinput('<ITBFIELD1>     ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) ibfield_itscf1
+      if (ier/=0) stop 'Error reading `<ITBFIELD1>`: check your inputcard'
+      write (111, *) '<ITBFIELD1>= ', ibfield_itscf1
+    else
+      write (111, *) 'Default <ITBFIELD1>= ', ibfield_itscf1
+    end if
     ! ----------------------------------------------------------------------------
     ! Start of the reading of variables that used to be in the inc.p
     !--------------------------------------------------------------------------------
@@ -1165,7 +1278,7 @@ contains
     ! End of allocation of SOC arrays
     !--------------------------------------------------------------------------------
     if (use_Chebychev_solver) then      ! Spin-orbit
-      if (use_Chebychev_solver .and. (nspin/=2) .and. .not.set_cheby_nosoc) stop ' set NSPIN = 2 for SOC solver in inputcard'
+      if (use_Chebychev_solver .and. (nspin/=2) .and. .not.decouple_spin_cheby) stop ' set NSPIN = 2 for SOC solver in inputcard'
       npan_log = 30
       npan_eq = 30
       ncheb = 10
@@ -1193,7 +1306,7 @@ contains
     end if
 
     call ioinput('<SOCSCL>        ', uio, 1, 7, ier)
-    if (ier==0) then
+    if (ier==0 .and. .not.(set_cheby_nosoc .or. decouple_spin_cheby)) then
       write (111, '(A10)') '<SOCSCL>  '
       do i = 1, natyp
         call ioinput('<SOCSCL>        ', uio, i, 7, ier)
@@ -1207,6 +1320,10 @@ contains
       ! !Bernd - old way
       ! write(111,FMT='(A10,50E10.2)') '<SOCSCL>= ',(SOCSCALE(I1),I1=1,NATYP)
       ! !Bernd - old way
+    elseif (set_cheby_nosoc .or. decouple_spin_cheby) then
+      write(*,*) 'Skipped reading <SOCSCL> because <set_cheby_nosoc>= T or <decouple_spin_cheby>= T. Automatically use <SOCSCL>=0.'
+      socscale(:) = 0.0_dp
+      write (111, fmt='(A18,50E10.2)') '<SOCSCL>= ', (socscale(i1), i1=1, natyp)
     else
       write (111, fmt='(A18,50E10.2)') 'Default <SOCSCL>= ', (socscale(i1), i1=1, natyp)
     end if
@@ -1292,14 +1409,35 @@ contains
 
     ! Scale magnetic moment (0 < Lambda_XC < 1,  0=zero moment, 1= full
     ! moment)
-    lambda_xc = 1.0_dp
+    ! MdSD: now atom dependent
+    allocate (lambda_xc(natyp), stat=i_stat)
+    call memocc(i_stat, product(shape(lambda_xc))*kind(lambda_xc), 'LAMBDA_XC', 'rinput13')
+    ! MdSD: default behavior
+    lambda_xc(1:natyp) = 1.0_dp
+    ! MdSD: check if there is atom-dependent info for xc
+    call ioinput('<BXCSCL>        ', uio, 1, 7, ier)
+    if (ier==0) then
+      write (111, '(A10)') '<BXCSCL>  '
+      do i = 1, natyp
+        call ioinput('<BXCSCL>        ', uio, i, 7, ier)
+        if (ier==0) then
+          read (unit=uio, fmt=*, iostat=ier) lambda_xc(i)
+          if (ier/=0) stop 'Error reading `<BXCSCL>`: check your inputcard'
+          write (111, fmt='(F6.3)') lambda_xc(i)
+        end if
+      end do
+    else
+      write (111, *) 'Default LAMBDA_XC= ', lambda_xc(1)
+    end if
+    ! MdSD: old option is used as override
     call ioinput('LAMBDA_XC       ', uio, 1, 7, ier)
     if (ier==0) then
-      read (unit=uio, fmt=*, iostat=ier) lambda_xc
+      read (unit=uio, fmt=*, iostat=ier) lambda_xc_all
       if (ier/=0) stop 'Error reading `LAMBDA_XC`: check your inputcard'
-      write (111, *) 'LAMBDA_XC= ', lambda_xc
+      write (111, *) 'LAMBDA_XC= ', lambda_xc_all
+      lambda_xc(1:natyp) = lambda_xc_all
     else
-      write (111, *) 'Default LAMBDA_XC= ', lambda_xc
+      write (111, *) 'Default LAMBDA_XC= ', lambda_xc(1)
     end if
 
     !--------------------------------------------------------------------------------
@@ -1525,6 +1663,15 @@ contains
       intervx = 1
       intervy = 1
       intervz = 1
+    end if
+
+    call ioinput('<set_kmesh_large>', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) set_kmesh_large
+      if (ier/=0) stop 'Error reading `set_kmesh_large`: check your inputcard'
+      write (111, fmt='(A18,L2)') '<set_kmesh_large>=', set_kmesh_large
+    else
+      write (111, fmt='(A26,L2)') 'Default <set_kmesh_large>=', set_kmesh_large
     end if
 
     ! Energy contour
@@ -1904,6 +2051,8 @@ contains
     if (calc_exchange_couplings) then
       nsteps = 1
       write (1337, *) 'RUNOPT XCPL used, setting NSTEPS to 1'
+      set_kmesh_large = .true.
+      write (1337, *) 'RUNOPT XCPL used, enabling set_kmesh_large'
     end if
     if (write_kkrimp_input) then
       nsteps = 1
@@ -1989,6 +2138,59 @@ contains
       write (111, *) 'BRYMIX= ', brymix
     else
       write (111, *) 'Default BRYMIX= ', brymix
+    end if
+
+    ! for broyden spin mixing of noncollinear directions
+    ! only used with the <use_broyden_spinmix> run option
+    call ioinput('SPINMIXALPHA    ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) mixfac_broydenspin
+      if (ier/=0) stop 'Error reading `SPINMIXALPHA`: check your inputcard'
+      write (111, *) 'SPINMIXALPHA= ', mixfac_broydenspin
+    else
+      write (111, *) 'Default SPINMIXALPHA= ', mixfac_broydenspin
+    end if
+    call ioinput('SPINMIXNSIMPLE  ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) ninit_broydenspin
+      if (ier/=0) stop 'Error reading `SPINMIXNSIMPLE`: check your inputcard'
+      write (111, *) 'SPINMIXNSIMPLE= ', ninit_broydenspin
+    else
+      write (111, *) 'Default SPINMIXNSIMPLE= ', ninit_broydenspin
+    end if
+    call ioinput('SPINMIXMEMLEN   ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) memlen_broydenspin
+      if (ier/=0) stop 'Error reading `SPINMIXMEMLEN`: check your inputcard'
+      write (111, *) 'SPINMIXMEMLEN= ', memlen_broydenspin
+    else
+      write (111, *) 'Default SPINMIXMEMLEN= ', memlen_broydenspin
+    end if
+    call ioinput('SPINMIXQBOUND   ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) qbound_spin
+      if (ier/=0) stop 'Error reading `SPINMIXQBOUND`: check your inputcard'
+      write (111, *) 'SPINMIXQBOUND= ', qbound_spin
+    else
+      write (111, *) 'Default SPINMIXQBOUND= ', qbound_spin
+    end if
+    call ioinput('ANGLES_CUTOFF   ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) angles_cutoff
+      if (ier/=0) stop 'Error reading `ANGLES_CUTOFF`: check your inputcard'
+      write (111, *) 'ANGLES_CUTOFF= ', angles_cutoff
+    else
+      write (111, *) 'Default ANGLES_CUTOFF= ', angles_cutoff
+    end if
+
+    ! do NSIMPLEMIXFIRST simple mixing iterations even for Broyden or Anderson mixing
+    call ioinput('NSIMPLEMIXFIRST ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) nsimplemixfirst
+      if (ier/=0) stop 'Error reading `NSIMPLEMIXFIRST`: check your inputcard'
+      write (111, *) 'NSIMPLEMIXFIRST= ', nsimplemixfirst
+    else
+      write (111, *) 'Default NSIMPLEMIXFIRST= ', nsimplemixfirst
     end if
 
     call ioinput('RMAX            ', uio, 1, 7, ier)
@@ -2290,6 +2492,22 @@ contains
     write (1337, 200) ncls, nref, nineq
     write (1337, 380)
     write (1337, 340)
+
+
+    ! ----------------------------------------------------------------------------
+    ! Special options
+    ! ----------------------------------------------------------------------------
+    call ioinput('POT_NS_CUTOFF   ', uio, 1, 7, ier)
+    if (ier==0) then
+      read (unit=uio, fmt=*, iostat=ier) pot_ns_cutoff
+      if (ier/=0) stop 'Error reading `POT_NS_CUTOFF`: check your inputcard'
+      write (111, *) 'POT_NS_CUTOFF= ', pot_ns_cutoff
+    else
+      ! default value is 10% of qbound value
+      pot_ns_cutoff = 0.1_dp*qbound
+      write (111, *) 'Default pot_ns_cutoff= ', pot_ns_cutoff
+    end if
+
 
     ! ----------------------------------------------------------------------------
     kmrot = 0
@@ -2811,8 +3029,10 @@ contains
 
     allocate (testc(32), stat=i_stat)
     call memocc(i_stat, product(shape(testc))*kind(testc), 'TESTC', 'read_old_runtestoptions')
+    testc(1:32) = '        '
     allocate (optc(32), stat=i_stat)
     call memocc(i_stat, product(shape(optc))*kind(optc), 'OPTC', 'read_old_runtestoptions')
+    optc(1:32) = '        '
 
     oldstyle = .false.
     first    = .true.

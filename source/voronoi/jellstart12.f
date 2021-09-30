@@ -3,7 +3,7 @@
      &                 VOLUMECL,LPOT,
      &                AOUT_ALL,RWSCL,RMTCL,RMTCORE,MESHN,XRN,DRN,THETAS,
      &                 LMIFUN,NFUN,IRWS,IRNS,
-     &                 ALATNEW,QBOUND,KXC,TXC)
+     &                 ALATNEW,QBOUND,KXC,TXC, EFSET)
 c ******************************************************
 c * This subroutine reads a jellium potential from the database
 c * file. and interpolates to the new mesh 
@@ -30,6 +30,7 @@ C     ..
 C     .. Scalar Arguments ..
       REAL*8           ALAT,C,EFERMI,HFIELD,VCONST,ALATNEW,
      &                 QBOUND
+      REAL*8           EFSET
       INTEGER IFILE,IINFO,INS,IPE,IPF,IPFE,
      +        KHFELD,KSHAPE,KVREL,KWS,
      +        LMAX,LPOT,
@@ -49,6 +50,7 @@ C     .. Local Scalars ..
      &                 VBC(2),VCON,ECORE1(20),MAXA,AOUT,BOUT,RMTOUT,
      &                 PARSUM,PARSUMDERIV,R0,DIST,DR,RMAXOUT,RMTNEW
       REAL*8           RWS0,BR,ZA,ZVALI,EINF,AR,AMSH,RFPI,ZZOR
+      REAL*8           EFSHIFT
       INTEGER I,IA,ICELL,ICORE,IFUN,IH,IMT1,INEW,IO,IPAN1,IR,IRC1,IRI,
      +        IRMINM,IRMINP,IRNS1P,IRT1P,IRWS1,ISAVE,ISPIN,ISUM,
      +        J,NATOMS,IPOT,IRNSTOT,MESHN(NSHAPED),MESHN0,ID,
@@ -147,6 +149,15 @@ c --------------------------------------------------------------------
             EFERMI = .409241D+00
             VBC(1)    = .500D0
             VBC(2)    = .500D0
+
+            ! for EFSET in input: set Fermi level to whished value
+            if (EFSET>0.0d0) then
+              EFSHIFT = EFSET - EFERMI ! calculate shift
+              EFERMI = EFERMI + EFSHIFT
+              VBC(1) = VBC(1) + EFSHIFT
+              VBC(2) = VBC(2) + EFSHIFT
+            end if
+
 c           read potential from jellium
 c%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 c
@@ -181,6 +192,14 @@ c     Calculate number of core states
             WRITE(6,161) ZA  
             WRITE (6,162) NCORE
             READ(21,133)(LCORE(NC),TXTC(NC),ECORE(NC),NC=1,NCORE)
+
+            ! shift core levels accordingly
+            if (EFSET>0.0d0) then
+              do nc=1,ncore
+                ecore(nc) = ecore(nc) + EFSHIFT
+              end do
+            end if
+
             IF (TEST('verb0   '))
      &              WRITE(6,*) ' ** Position of the Core States ** '
             DO I=1,NCORE

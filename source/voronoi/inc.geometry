@@ -6,7 +6,7 @@
       parameter (NIMPD = 500)
 ! parameter nembd for number of basis atoms in embeding positions around the real atomic pos.
       integer nembd
-      parameter (NEMBD = 50 )
+      parameter (NEMBD = 100 )
 ! parameter nlembd for number of layers for embeding positions around the real atomic pos.
       integer NLEMBD
       parameter (NLEMBD = 100)
@@ -24,7 +24,7 @@
       parameter (NFACED = 100 , NVERTD = 100)
 ! highest valence orbital quantum number     
       integer lmaxd  
-      parameter (LMAXD = 8)
+      parameter (LMAXD = 4)
 ! highest quantum number for shape functions
       integer LMAXD1
       parameter (LMAXD1 = 4*LMAXD )

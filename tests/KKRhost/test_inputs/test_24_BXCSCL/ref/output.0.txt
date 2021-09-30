@@ -1,0 +1,466 @@
+# serial: JuKKR_v3.1-1755-g2013fc87_intel_20210504115836
+     Screened Korringa-Kohn-Rostoker Electronic Structure Code
+                      for Bulk and Interfaces
+                    Juelich-Munich 2001 - 2018
+
+  Code version: v3.1-1755-g2013fc87
+  Compile options: intel mpi 
+  serial number for files: JuKKR_v3.1-1755-g2013fc87_intel_20210504115836
+ Number of MPI ranks used:   64
+
+*******************************************************************************
+
+-------------------------------------------------------------------------------
+*** Inspecting run- and test-options ***
+   <<< Reading in new style of run-options. >>>
+# List of run options:
+                  <calc_GF_Efermi>=  F   calculation of cluster Green function at E Fermi (former: 'GF-EF')
+             <set_cheby_nospeedup>=  F   always calculate irregular solution in Chebychev solver (even if not needed) (former: 'norllsll')
+                 <set_cheby_nosoc>=  F   set SOC strength to 0 for all atoms (former: 'NOSOC')
+            <decouple_spins_cheby>=  F   decouple spin matrices in Chebychev solver neglecting SOC and for collinear calculations only
+      <calc_complex_bandstructure>=  F   complex band structure (former: 'COMPLEX')
+         <calc_exchange_couplings>=  F   calculate magnetic exchange coupling parameters (former: 'XCPL')
+  <calc_exchange_couplings_energy>=  F   write energy-resolved Jij-files also if npol/=0 (former: 'Jijenerg')
+               <calc_gmat_lm_full>=  F   calculate all lm-lm components of systems greens function and store to file `gflle` (former: 'lmlm-dos')
+        <dirac_scale_SpeefOfLight>=  F   scale the speed of light for Dirac solver (former: 'CSCALE')
+       <disable_charge_neutrality>=  F   no charge neutrailty required: leaving Fermi level unaffected (former: 'no-neutr')
+      <disable_print_serialnumber>=  F   deactivate writing of serial number and version information to files (for backwards compatibility) (former: 'noserial')
+        <disable_reference_system>=  F   deactivate the tight-binding reference system (former: 'lrefsysf')
+           <disable_tmat_sratrick>=  F   deactivate SRATRICK in solver for t-matirx (former: 'nosph')
+                <fix_nonco_angles>=  F   fix direction of non-collinear magnetic moments (Chebychev solver) (former: 'FIXMOM')
+                  <formatted_file>=  F   write files ascii-format. only effective with some other write-options (former: 'fileverb')
+          <impurity_operator_only>=  F   only for `write_pkkr_operators`: disable costly recalculation of host operators (former: 'IMP_ONLY')
+                <modify_soc_Dirac>=  F   modify SOC for Dirac solver (former: 'SOC')
+                     <no_madelung>=  F   do not add some energy terms (coulomb, XC, eff. pot.) to total energy (former: 'NoMadel')
+                       <print_Gij>=  F   print cluster G_ij matrices to outfile (former: 'Gmatij')
+                      <print_gmat>=  F   print Gmat to outfile (former: 'Gmat')
+                    <print_ickeck>=  F   enable test-output of ICHECK matrix from gfmask (former: 'ICHECK')
+                     <print_kmesh>=  F   output of k-mesh (former: 'k-net')
+                   <print_kpoints>=  F   print k-points to outfile (former: 'BZKP')
+              <print_program_flow>=  F   monitor the program flow in some parts of the code (former: 'flow')
+               <print_radial_mesh>=  F   write mesh information to output (former: 'RMESH')
+                    <print_refpot>=  F   test output of refpot (former: 'REFPOT')
+             <print_tau_structure>=  F   write extensive information about k-mesh symmetrization and structure of site-diagonal tau matrices to output (former: 'TAUSTRUC')
+                      <print_tmat>=  F   print t-matrix to outfile (former: 'tmat')
+           <relax_SpinAngle_Dirac>=  F   relax the spin angle in a SCF calculation [only DIRAC mode] (former: 'ITERMDIR')
+                   <search_Efermi>=  F   modify convergence parameters to scan for fermi energy only (to reach charge neutrality). (former: 'SEARCHEF')
+                <set_gmat_to_zero>=  F   set GMAT=0 in evaluation of density (former: 'GMAT=0')
+                <set_empty_system>=  F   set potential and nuclear charge to zero (former: 'zeropot')
+                 <set_kmesh_large>=  T   set equal k-mesh (largest) for all energy points (former: 'fix mesh')
+                 <set_kmesh_small>=  F   set equal k-mesh (smallest) for all energy points (former: 'fix4mesh')
+            <set_tmat_noinversion>=  F   do not perform inversion to get msst = Delta t^-1, but msst = Delta t. (former: 'testgmat')
+                    <simulate_asa>=  F   set non-spherical potential to zero in full-potential calculation with Chebychev solver (former: 'simulasa')
+              <slow_mixing_Efermi>=  F   renormalize Fermi-energy shift by mixing factor during mixing (former: 'slow-neu')
+                         <stop_1a>=  F   stop after main1a (former: 'STOP1A')
+                         <stop_1b>=  F   stop after main1b (former: 'STOP1B')
+                         <stop_1c>=  F   stop after main1c (former: 'STOP1C')
+                 <symmetrize_gmat>=  F   use symmetrization [G(k) + G(-k)]/2 in k-point loop (former: 'symG(k)')
+      <symmetrize_potential_cubic>=  F   keep only symmetric part of potential (L=1,11,21,25,43,47). (former: 'potcubic')
+   <symmetrize_potential_madelung>=  F   symmetrize potential in consistency to madelung potential (former: 'potsymm')
+          <torque_operator_onlyMT>=  F   for torque operator: include only the part within the muffin tin (former: 'ONLYMT')
+         <torque_operator_onlySph>=  F   for torque operator: include only the spherically symmetric part (former: 'ONLYSPH')
+                         <use_BdG>=  F   use Bogoliubov-de-Gennes Formalism (former: 'useBdG')
+            <use_Chebychev_solver>=  F   use the Chebychev solver (former: 'NEWSOSOL')
+                     <use_cond_LB>=  F   perform calculation of conductance in Landauer-Büttiker formalism (former: 'CONDUCT')
+                        <use_cont>=  F   no usage of embedding points. NEMB is set to 0. (former: 'CONT')
+                <use_deci_onebulk>=  F   in case of decimation: use same bulk on right and left. Speeds up calculations. (former: 'ONEBULK')
+                  <use_decimation>=  F   use Decimation technique for semi-infinite systems (former: 'DECIMATE')
+                    <use_ewald_2d>=  F   use 2D ewald sum instead of 3D sum (Attention: does not work always!) (former: 'ewald2d')
+                     <use_full_BZ>=  F   use full Brillouin zone, i.e. switch off symmetries for k-space integration (former: 'fullBZ')
+                        <use_ldau>=  F   use LDA+U as exchange-correlation potential (former: 'LDA+U')
+                       <use_lloyd>=  F   use Lloyds formula to correct finite angular momentum cutoff (former: 'LLOYD')
+                        <use_qdos>=  F   writes out qdos files for band structure calculations. (former: 'qdos')
+                     <use_readcpa>=  F   read cpa t-matrix from file (former: 'readcpa')
+                <use_rigid_Efermi>=  F   keep the Fermi energy fixed during self-consistency (former: 'rigid-ef')
+                    <use_semicore>=  F   use semicore contour (former: 'SEMICORE')
+    <use_spherical_potential_only>=  F   keeping only spherical component of potential (former: 'Vspher')
+               <use_virtual_atoms>=  F   add virtual atoms (former: 'VIRATOMS')
+                 <write_BdG_tests>=  F   test options for Bogouliubov-deGennes (former: 'BdG_dev')
+                       <write_DOS>=  F   write out DOS files in any case (also if npol!=0) (former: 'DOS')
+                    <write_DOS_lm>=  F   write out DOS files with decomposition into l and m components (former: 'lmdos')
+                <write_gmat_plain>=  F   write out Green function as plain text file (former: 'GPLAIN')
+                <write_green_host>=  F   write green function of the host to file `green_host` (former: 'WRTGREEN')
+                 <write_green_imp>=  F   write out impurity Green function to GMATLL_GES (former: 'GREENIMP')
+              <write_complex_qdos>=  F   write complex qdos to file (former: 'compqdos')
+       <write_cpa_projection_file>=  F   write CPA projectors to file (former: 'projfile')
+                  <write_deci_pot>=  F   write decimation-potential file (former: 'deci-pot')
+                 <write_deci_tmat>=  F   write t-matrix to file 'decifile' (former: 'deci-out')
+             <write_density_ascii>=  F   write density rho2ns to file densitydn.ascii (former: 'den-asci')
+               <write_energy_mesh>=  F   write out the energy mesh to file `emesh.scf` (former: 'EMESH')
+     <write_generalized_potential>=  F   write potential in general format. Usually prepares for running the VORONOI program. (former: 'GENPOT')
+                 <write_gmat_file>=  F   write GMAT to file (former: 'gmatfile')
+                 <write_gref_file>=  F   write GREF to file (former: 'greffile')
+                <write_gmat_ascii>=  F   write GMAT to formatted file `gmat.ascii` (former: 'gmatasci')
+              <write_kkrimp_input>=  F   write out files for KKRimp-code (former: 'KKRFLEX')
+             <write_kkrsusc_input>=  F   write out files for KKRsusc-code (former: 'KKRSUSC')
+                 <write_kpts_file>=  F   write and read k-mesh to/from file `kpoints` (former: 'kptsfile')
+           <write_lloyd_cdos_file>=  F   write Lloyd array to file  (former: 'wrtcdos')
+          <write_lloyd_dgref_file>=  F   write Lloyd array to file  (former: 'wrtdgref')
+          <write_lloyd_dtmat_file>=  F   write Lloyd array to file  (former: 'wrtdtmat')
+                <write_lloyd_file>=  F   write several Lloyd-arrays to files (former: 'llyfiles')
+           <write_lloyd_g0tr_file>=  F   write Lloyd array to file  (former: 'wrtgotr')
+        <write_lloyd_tralpha_file>=  F   write Lloyd array to file  (former: 'wrttral')
+             <write_madelung_file>=  F   write madelung summation to file 'abvmad.unformatted' instead of keeping it in memory (former: 'madelfil')
+                <write_pkkr_input>=  F   write out files for Pkkprime-code (former: 'FERMIOUT')
+            <write_pkkr_operators>=  F   for Fermi-surface output: calculate various operators in KKR basis. (former: 'OPERATOR')
+           <write_potential_tests>=  F   write potential at different steps in main2 to different files (former: 'vintrasp' and 'vpotout')
+                    <write_rho2ns>=  F   write array rho2ns into file out_rhoval (from main1c) and out_rhotot (from main2) (former: 'RHOVALTW' and 'RHOVALW')
+                <write_rhoq_input>=  F   write out files needed for rhoq module (Quasiparticle interference) (former: 'rhoqtest')
+                 <write_tmat_file>=  F   write t-matix to file (former: 'tmatfile')
+               <write_tb_coupling>=  F   write couplings in tight-binging reference system to file `couplings.dat` (former: 'godfrin')
+                  <calc_wronskian>=  F   calculate the wronskian relations of first and second kind for the wavefunctions (see PhD Bauer pp 48)
+             <use_broyden_spinmix>=  F   use broyden spin mixing for noncollinear angles
+            <write_angles_alliter>=  F   write out noncollinear angles for all iterations
+         ABASIS         BBASIS         CBASIS
+     1.00000000     1.00000000     1.00000000
+--------------+--------------+--------------+----------------------------------
+          ALAT =      5.42300000
+ NSPIN 
+   2
+---+---------------------------------------------------------------------------
+ Cell information <SHAPE>:
+ INIPOL
+   0   0
+---+---+---+---+---+---+---+---+---+---+---------------------------------------
+---+---------------------------------------------------------------------------
+   INTERVX   INTERVY   INTERVZ
+        10        10        10
+---------+---------+---------+-------------------------------------------------
+ Parameters used for the cluster calculation
+ Clusters inside spheres with radius R =    2.00000000000000     
+---+---------------------------------------------------------------------------
+ RBASIS
+SITE                BASIS VECTORS                 THETA   PHI CPA OCC KAOEZ
+---+--------------+--------------+--------------+------------------------------
+   1     0.00000000     0.00000000     0.00000000   0.0   0.0   0   1  1
+   2     0.50000000     0.50000000     0.50000000   0.0   0.0   0   1  2
+ ATOMINFOC or ATOMINFO:
+ NATYP 
+   2
+   Z lmx     KFG cls pot ntc  MTFAC irns SITE  CONC
+---+---------------------------------------------------------------------------
+ 26.   0    0000   1   0   1  0.0000  -1    1  1.00000
+ 26.   0    0000   1   0   1  0.0000  -1    2  1.00000
+---+---+-------+---+---+---+-------+---+---------------------------------------
+---+---------------------------------------------------------------------------
+ NSTEPS
+   1
+---+---------------------------------------------------------------------------
+ I12="                                        "
+ I13="potential                               "
+ I40="                                        "
+ I19="shapefun                                "
+ I25="scoef                                   "
+ lmax
+   3
+---+---------------------------------------------------------------------------
+          EMIN        EMAX        TK
+   -0.300000    1.100000  502.780000
+-----------+-----------+-----------+-------------------------------------------
+   NPOL  NPNT1  NPNT2  NPNT3
+     10      4     14      4
+------+------+------+------+---------------------------------------------------
+------+------+------+----------------------------------------------------------
+  IFILE    IPE ISHIFT ESHIFT
+     13      1      0    0.000000
+------+------+------+-----------+----------------------------------------------
+ KSHAPE    IRM    INS   ICST INSREF
+      2    900      1      3      0
+------+------+------+------+------+--------------------------------------------
+   KCOR  KVREL    KWS   KHYP KHFIELD   KXC
+      2      1      2      0      0      2
+------+------+------+------+------+------+-------------------------------------
+    KTE   KPRE   KEFG  KVMAD 
+      1      1      0      0
+------+------+------+------+------+--------------------------------------------
+   IMIX    IGF    ICC
+      5      0      0
+------+------+------+------+---------------------------------------------------
+ ITDBRY
+     40
+------+------------------------------------------------------------------------
+      STRMIX        FCM       QBOUND
+    0.050000   20.000000    0.000000
+-----------+-----------+-----------+-------------------------------------------
+      BRYMIX
+    0.050000
+-----------+-------------------------------------------------------------------
+ external magnetic hfield     :         0.0000
+ VCONST                       :       0.000000
+ mixing factor used           :       0.050000
+ convergence quality required :       5.00D-08
+ make use of CPA algorithm    :             NO
+
+                                 check of dimension-data consistency
+                                 -----------------------------------
+                                        lmax   : (     3,     3)
+                                        natyp  : (     2,     2)
+                                        irm    : (   900,   900)
+                                        nspin  : (     2,     2)
+
+
+
+                    full potential calculation - cut off of non spherical potential
+ >
+
+                               representive atom no.  1 irns :   -1 irnsd :  890
+                               representive atom no.  2 irns :   -1 irnsd :  890
+
+
+                        spin polarized calculation
+                      s.r.a. calculation                        
+                      core relaxation nonsra                    
+                      exact cell treatment (shape correction)   
+                      Vosko,Wilk,Nusair      exchange-correlation potential
+                      non spherical input potential for cluster 
+                      using  3-th. born approximation 
+ *******************************************************************************
+ IXIPOL
+   0   0
+---+---+---+---+---+---+---+---+---+---+---------------------------------------
+    NAEZ    NEMB  
+       2       0
+-------+-------+-------+-------------------------------------------------------
+    NCLS    NREF   NINEQ
+       1       0       2
+-------+-------+-------+-------------------------------------------------------
+---+---+---+---+---+---+---+---+---+---+---------------------------------------
+
+-------+-------+-------+-------+-------+-------+-------+-----------------------
+ < MEMWFSAVE >, use default:           0
+ < UNITMEMWFSAVE >, use default:           2 
+ (MB) (max memory= MEMWFSAVE*1024**UNITMEMWFSAVE)
+ automatically speeding up calculation (use option <set_cheby_nospeedup> to prev
+ ent this)
+ this diables wf saving automatically
+-------------------------------------------------------------------------------
+ KMROT
+       0
+-------+-------+-------+-------------------------------------------------------
+  >>>>>>>>> RINPUT13 EXITS NOW <<<<<<<<<< 
+===============================================================================
+                         LATTIX99: bulk geometry mode
+===============================================================================
+ 
+     Lattice constants :  ALAT =  5.42300000     2*PI/ALAT =  1.15861798
+
+     Direct lattice cell vectors :
+
+         normalised (ALAT)                     a.u.
+         --------------------------------      --------------------------------
+     a_1:  1.000000  0.000000  0.000000          5.423000  0.000000  0.000000
+     a_2:  0.000000  1.000000  0.000000          0.000000  5.423000  0.000000
+     a_3:  0.000000  0.000000  1.000000          0.000000  0.000000  5.423000
+         --------------------------------      --------------------------------
+ 
+     Unit cell volume :  V =    1.00000000 (ALAT**3) =   159.48462197 (a.u.**3)
+
+     WARNING : Unit cell volume inconsistent with the average WS-radius
+               Unit cell volume        =  159.48462197
+               NAEZ * WSRav^3 * 4*PI/3 =    0.00000000
+               difference              =  159.48462197
+
+     Reciprocal lattice cell vectors :
+
+         normalised (2*PI/ALAT)                1/a.u.
+         --------------------------------      --------------------------------
+     b_1:  1.000000  0.000000  0.000000          1.158618  0.000000  0.000000
+     b_2:  0.000000  1.000000  0.000000          0.000000  1.158618  0.000000
+     b_3:  0.000000  0.000000  1.000000          0.000000  0.000000  1.158618
+         --------------------------------      --------------------------------
+ 
+     < RRGEN > : generation of real space mesh RR(NR)
+
+          Radius R        :        9.232061 (ALAT    units)
+                 R**2     :       85.230947 (ALAT**2 units)
+          mesh divisions  :     9    9    9
+          vectors created :            3287
+ 
+===============================================================================
+                       SCALEVEC: scale site coordinates
+                                 bring all to CARTESIAN system
+===============================================================================
+ 
+     Site coordinates will not be scaled
+ CARTESIAN coordinates
+                                          ---> No transformation required
+
+            ---------------------------------------------------
+                    Positions of (ALL) generated sites
+                   in CARTESIAN coordinates (ALAT units)
+            ---------------------------------------------------
+               IQ       x           y           z       IT
+            ---------------------------------------------------
+                 1    0.000000    0.000000    0.000000  1
+                 2    0.500000    0.500000    0.500000  2
+            ---------------------------------------------------
+
+ >>> CLSGEN_TB: generation of cluster coordinates
+ RCUT =    2.00000000000000       RCUTXY =    2.00000000000000     
+ Spherical Clusters are created
+ clsgen_tb: cluster size of site:           1 :          65
+ clsgen_tb: Touching RMT of site:           1 :  0.433012701892219     
+ clsgen_tb: cluster size of site:           2 :          65
+ clsgen_tb: Touching RMT of site:           2 :  0.433012701892219     
+ Clusters from clsgen_tb:
+CLSGEN_TB: Atom    1 Refpot    1 Rmtref 2.3200000 Vref 8.0000000 TB-cluster    1 Sites   65
+CLSGEN_TB: Atom    2 Refpot    1 Rmtref 2.3200000 Vref 8.0000000 TB-cluster    1 Sites   65
+ Coupling matrix:
+   1 11
+   2 11
+  Sub clsgen_tb  exiting <<<<<<<<<<<<<
+ Dimension and Input Data CHECK
+   ncell :            1           2
+   nfun  :           15         289
+ <#Fe26 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
+ <#Fe26 POTENTIAL SPIN DOWN            exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
+ <#Fe26 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
+ <#Fe26 POTENTIAL SPIN DOWN            exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
+Doing calculation with potential: 7504efadbf9df9420a81d98a5af3fe19  potential
+Doing calculation with shapefun: 4572b6645510774b66317ed3941e4b3d  shapefun
+ 
+===============================================================================
+                    EPATHTB: generates a complex E contour
+===============================================================================
+ 
+     E min =    -0.300000 (Ry)        Fermi energy =     0.679270 (Ry)
+     E max =     0.679270 (Ry)        Temperature  =   502.780000 (K )
+     --------------------------------------------------------------
+     GF integration rectangular contour ( ImE > 0 )
+     Number of energy points :  32             poles =10
+                       contour: N1 = 4, N2 =  14, N3 = 4
+ 
+ >>> SHAPE : IMAXSH(      878),NGSHD :    60000
+===============================================================================
+                  MADELUNG3D: setting bulk Madelung coefficients
+===============================================================================
+ 
+     < LATTICE3D > : generating direct/reciprocal lattice vectors
+
+          R max = 37.96100 (a.u.)
+          G max = 11.98599 (1/a.u.)
+
+                         vectors  shells  max. R 
+                         ------------------------------
+          Direct  lattice   1419      43   37.96100
+          Recipr. lattice   4697      92   11.98484
+                         ------------------------------
+
+     < STRMAT > : calculating lattice sums
+
+===============================================================================
+               BZKINT0: finding symmetry, setting BZ integration
+===============================================================================
+
+     < FINDGROUP > : Finding symmetry operations
+
+        ------------------------------------------------------------
+        3D symmetries:
+ found for this lattice: 48
+        ------------------------------------------------------------
+        E           C3alfa      C3beta      C3gamma     C3delta   
+        C3alfa-1    C3beta-1    C3gamma-1   C3delta-1   C2x       
+        C2y         C2z         C4x         C4y         C4z       
+        C4x-1       C4y-1       C4z-1       C2a         C2b       
+        C2c         C2d         C2e         C2f         IE        
+        IC3alfa     IC3beta     IC3gamma    IC3delta    IC3alfa-1 
+        IC3beta-1   IC3gamma-1  IC3delta-1  IC2x        IC2y      
+        IC2z        IC4x        IC4y        IC4z        IC4x-1    
+        IC4y-1      IC4z-1      IC2a        IC2b        IC2c      
+        IC2d        IC2e        IC2f      
+        ------------------------------------------------------------
+
+     < BZKMESH > : creating k-mesh, write to file kpoints
+
+        number of different k-meshes : 1
+        the direct lattice 48 symmetries will be used
+
+        -----------------------------------
+           k-mesh    NofKs N kx N ky N kz vol BZ
+        -----------------------------------
+                1       56   10   10   10  1.0000
+        -----------------------------------
+
+     <SYMTAUMAT> : rotation matrices acting on t/G/tau
+
+        ---------------------------------------------------------
+        ISYM            INV          Euler angles      Unitarity
+        ---------------------------------------------------------
+         1   E           0   0.00000   0.00000   0.00000   T
+         2   C3alfa      0 180.00000  90.00000 -90.00000   T
+         3   C3beta      0   0.00000  90.00000 -90.00000   T
+         4   C3gamma     0 180.00000  90.00000  90.00000   T
+         5   C3delta     0   0.00000  90.00000  90.00000   T
+         6   C3alfa-1    0 -90.00000  90.00000   0.00000   T
+         7   C3beta-1    0 -90.00000  90.00000 180.00000   T
+         8   C3gamma-1   0  90.00000  90.00000   0.00000   T
+         9   C3delta-1   0  90.00000  90.00000 180.00000   T
+        10   C2x         0 180.00000 180.00000   0.00000   T
+        11   C2y         0   0.00000 180.00000   0.00000   T
+        12   C2z         0 180.00000   0.00000   0.00000   T
+        13   C4x         0 -90.00000  90.00000  90.00000   T
+        14   C4y         0   0.00000  90.00000   0.00000   T
+        15   C4z         0  90.00000   0.00000   0.00000   T
+        16   C4x-1       0  90.00000  90.00000 -90.00000   T
+        17   C4y-1       0 180.00000  90.00000 180.00000   T
+        18   C4z-1       0 -90.00000   0.00000   0.00000   T
+        19   C2a         0 -90.00000 180.00000   0.00000   T
+        20   C2b         0  90.00000 180.00000   0.00000   T
+        21   C2c         0   0.00000  90.00000 180.00000   T
+        22   C2d         0 180.00000  90.00000   0.00000   T
+        23   C2e         0  90.00000  90.00000  90.00000   T
+        24   C2f         0 -90.00000  90.00000 -90.00000   T
+        25   IE          1   0.00000   0.00000   0.00000   T
+        26   IC3alfa     1 180.00000  90.00000 -90.00000   T
+        27   IC3beta     1   0.00000  90.00000 -90.00000   T
+        28   IC3gamma    1 180.00000  90.00000  90.00000   T
+        29   IC3delta    1   0.00000  90.00000  90.00000   T
+        30   IC3alfa-1   1 -90.00000  90.00000   0.00000   T
+        31   IC3beta-1   1 -90.00000  90.00000 180.00000   T
+        32   IC3gamma-1  1  90.00000  90.00000   0.00000   T
+        33   IC3delta-1  1  90.00000  90.00000 180.00000   T
+        34   IC2x        1 180.00000 180.00000   0.00000   T
+        35   IC2y        1   0.00000 180.00000   0.00000   T
+        36   IC2z        1 180.00000   0.00000   0.00000   T
+        37   IC4x        1 -90.00000  90.00000  90.00000   T
+        38   IC4y        1   0.00000  90.00000   0.00000   T
+        39   IC4z        1  90.00000   0.00000   0.00000   T
+        40   IC4x-1      1  90.00000  90.00000 -90.00000   T
+        41   IC4y-1      1 180.00000  90.00000 180.00000   T
+        42   IC4z-1      1 -90.00000   0.00000   0.00000   T
+        43   IC2a        1 -90.00000 180.00000   0.00000   T
+        44   IC2b        1  90.00000 180.00000   0.00000   T
+        45   IC2c        1   0.00000  90.00000 180.00000   T
+        46   IC2d        1 180.00000  90.00000   0.00000   T
+        47   IC2e        1  90.00000  90.00000  90.00000   T
+        48   IC2f        1 -90.00000  90.00000 -90.00000   T
+        ---------------------------------------------------------
+
+     < GFSHELLS > : setting up indices of the GF blocks
+
+        Different shells for GF calculation :   2
+
+     < GFMASK > : set KKR matrix inversion algorithm
+
+        INVERSION algorithm used : FULL MATRIX                        
+
+===============================================================================
+                               < KKR0 finished >
+===============================================================================
+
+ create_newcomms_group_ie input:          64          32           2
+ create cartesian grid:          32           2          64
+ MPI_Cart_sub
+ MPI_Comm_rank
+ MPI_Comm_size
+==================================================
+    MPI parallelization: use   64 ranks
+    create processor array of size (nat x ne)   2 x  32
+    nranks_at:    32, nranks_ie:    2
+                N_E
+         <--------------->
+       ^ ( | | | | | | | )
+       | ( | | | | | | | )
+  N_at | ( | | | | | | | )
+       | ( | | | | | | | )
+       v ( | | | | | | | )

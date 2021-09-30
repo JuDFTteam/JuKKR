@@ -85,6 +85,8 @@ contains
 
     allocate (ibk(0:maxk1,0:maxk2,0:maxk3))
 
+    ! initialization
+    cf(:) = 0.0_dp
 
     ! heck if we are in surface mode
     lsurf = .false.
