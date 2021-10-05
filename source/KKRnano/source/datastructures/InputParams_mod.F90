@@ -78,6 +78,16 @@ module InputParams_mod
     double precision :: r_log
     double precision :: a_log
     logical :: enable_quad_prec
+    logical :: noncobfield
+    logical :: constr_field
+    logical :: same_bfield
+    logical :: trans_bfield
+    logical :: mt_bfield
+    logical :: torque
+    integer :: ibfield
+    integer :: iconstr
+    integer :: itbfield0
+    integer :: itbfield1
   endtype ! InputParams
 
 
@@ -635,6 +645,96 @@ integer function getValues(filename, self) result(ierror)
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for enable_quad_prec."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "noncobfield", self%noncobfield , def=.FALSE.)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for noncobfield. Set noncobfield to .FALSE."
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for noncobfield."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "constr_field", self%constr_field , def=.FALSE.)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for constr_field. Set constr_field to .FALSE."
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for constr_field."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "same_bfield", self%same_bfield , def=.FALSE.)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for same_bfield. Set same_bfield to .FALSE."
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for same_bfield."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "trans_bfield", self%trans_bfield , def=.FALSE.)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for trans_bfield. Set trans_bfield to .FALSE."
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for trans_bfield."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "mt_bfield", self%mt_bfield , def=.FALSE.)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for mt_bfield. Set mt_bfield to .FALSE."
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for mt_bfield."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "torque", self%torque , def=.FALSE.)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for torque. Set torque to .FALSE."
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for torque."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "ibfield", self%ibfield , def=0)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for ibfield. Set ibfield to 0"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for ibfield."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "iconstr", self%iconstr , def=0)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for iconstr. Set iconstr to 0"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for iconstr."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "itbfield0", self%itbfield0 , def=0)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for itbfield0. Set itbfield0 to 0"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for itbfield0."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "itbfield1", self%itbfield1 , def=10000)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for itbfield1. Set itbfield1 to 10000"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for itbfield1."
     destroy_and_return
   endif
 
