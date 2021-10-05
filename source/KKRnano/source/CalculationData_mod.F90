@@ -33,6 +33,7 @@ module CalculationData_mod
   use LatticeVectors_mod, only: LatticeVectors, create, destroy
   use ExchangeTable_mod, only: ExchangeTable, create, destroy
   use NonCollinearMagnetismData_mod, only: NOCOData, create, load, destroy, loadascii
+  use mod_bfield, only: bfield_data, load_bfields_from_disk, init_bfield
   
   implicit none
   private
@@ -66,6 +67,7 @@ module CalculationData_mod
     type(JijData),            pointer     :: jij_data_a(:) => null()
     type(RefCluster),         allocatable :: ref_cluster_a(:)
     type(MadelungLatticeSum), allocatable :: madelung_sum_a(:)
+    type(bfield_data),        allocatable :: bfields(:)
 
     ! global data - same for each local atom
     type(LatticeVectors)                :: lattice_vectors
@@ -137,6 +139,10 @@ module CalculationData_mod
     allocate(self%jij_data_a(num_local_atoms)) 
     if(num_local_atoms > 1 .and. params%Jij) warn(6, "Jij work with max. 1 atom so far!") 
     
+    ! Allocate bfields for all atoms, makes it easier to read from disk.
+    ! The types itself are very small, the larger components will only be allocated for local atoms.
+    allocate(self%bfields(dims%naez))
+
     allocate(self%atom_ids(num_local_atoms))
 
     ! assign atom ids to processes with atom rank 'mp%myAtomRank'
@@ -219,6 +225,7 @@ module CalculationData_mod
     deallocate(self%ldau_data_a, stat=ist)
     deallocate(self%jij_data_a, stat=ist)
     deallocate(self%atom_ids, stat=ist)
+    deallocate(self%bfields, stat=ist)
     
   endsubroutine ! destroy
 
@@ -374,6 +381,19 @@ module CalculationData_mod
 
 !   write(*,*) __FILE__,__LINE__," setup_iguess deavtivated for DEBUG!"
     call setup_iguess(self, dims, arrays%nofks, kmesh) ! setup storage for iguess
+
+    ! Initialize the noncolinear magnetic field. If present, read from disk
+    call load_bfields_from_disk(self%bfields, params%noncobfield, params%constr_field)
+    ! For the local atoms, initialize some fields
+    do ila = 1, self%num_local_atoms
+      atom_id = self%atom_ids(ila)
+      call init_bfield(params%noncobfield, params%constr_field, self%bfields(atom_id), dims%lmaxd, &
+                       self%cheb_mesh_a(atom_id)%npan_tot, self%cheb_mesh_a(atom_id)%npan_lognew, &
+                       self%cheb_mesh_a(atom_id)%npan_eqnew, self%cheb_mesh_a(atom_id)%ncheb, &
+                       self%cheb_mesh_a(atom_id)%ipan_intervall, self%cheb_mesh_a(atom_id)%thetasnew, &
+                       self%gaunts%iend, self%gaunts%icleb,  self%gaunts%cleb(:,1), &
+                       self%cell_a(atom_id)%ifunm)
+    end do
 
   endsubroutine ! constructEverything
 
