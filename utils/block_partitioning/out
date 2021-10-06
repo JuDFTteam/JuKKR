@@ -1,0 +1,14 @@
+bandwidth: min, max, avg, dev=      20      41      34      10
+minsize, maxblock=      15       7
+nblocks,imax=       2       5               5
+minsum2, nblocks, blocksizes=    7796       2      20      86
+nblocks,imax=       3       5              25
+minsum2, nblocks, blocksizes=    5658       3      16      19      71
+nblocks,imax=       4       5             125
+minsum2, nblocks, blocksizes=    3750       4      16      18      19      53
+nblocks,imax=       5       5             625
+minsum2, nblocks, blocksizes=    2566       5      16      18      16      19      37
+nblocks,imax=       6       5            3125
+minsum2, nblocks, blocksizes=    1894       6      16      18      16      16      19      21
+nblocks,imax=       7       1               1
+minsum2, nblocks, blocksizes=    1894       6      16      18      16      16      19      21

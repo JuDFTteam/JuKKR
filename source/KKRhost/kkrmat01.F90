@@ -488,9 +488,9 @@ contains
         ! Actually -TAU, because TAU = (Deltat^-1 - Gref)^-1
         ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         ! $omp single
-        if (lly/=0) then           ! If LLY, full inversion is needed
+        if (lly/=0 .and. invmod/=3) then           ! If LLY, full inversion is needed
           call inversion(gllke, 0, icheck) ! LLY
-        else
+        else ! MdSD: godfrin options are set to full inversion if LLY is true
           call inversion(gllke, invmod, icheck)
         end if
         ! $omp end single

@@ -2845,7 +2845,7 @@ contains
     if (invmod==3) then
       write (111, *) 'Godfrin inversion scheme parameters'
       write (1337, *) 'Godfrin inversion scheme parameters'
-
+      ! MdSD: write couplings.dat file
       write_tb_coupling=.true.
 
       t_godfrin%na = naez
@@ -2854,13 +2854,49 @@ contains
       read (unit=uio, fmt=*, iostat=ier) t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
       if (ier/=0) stop 'Error reading `GODFRIN` (nb, ldiag, lper, lpardiso): check your inputcard'
 
+      ! MdSD: nprincd is not used by godfrin
+      if (nprincd /= 1) then
+        write (111, fmt='(A)') 'rinput13: Warning! setting nprincd=1'
+        write (1337, fmt='(A)') 'rinput13: Warning! setting nprincd=1'
+        nprincd = 1
+      end if
+
+      ! MdSD: Lloyd's formula needs the full matrix inverse
+      if (use_lloyd .and. t_godfrin%ldiag) then
+        write (111, fmt='(A)') 'rinput13: Warning! use_lloyd=T, setting ldiag=F'
+        write (1337, fmt='(A)') 'rinput13: Warning! use_lloyd=T, setting ldiag=F'
+        t_godfrin%ldiag = .false.
+      end if
+
+      ! MdSD: for Jij's or connection to KKRimp also the full matrix inverse is needed
+      if (icc/=0 .and. t_godfrin%ldiag) then
+        write (111, fmt='(A)') 'rinput13: Warning! ICC/=0, setting ldiag=F'
+        write (1337, fmt='(A)') 'rinput13: Warning! ICC/=0, setting ldiag=F'
+        t_godfrin%ldiag = .false.
+      end if
+
+      ! MdSD: in 3D mode the sparse matrix has additional corner blocks
+      if (linterface) then ! 2D
+        if (t_godfrin%lper) then
+          write (111, fmt='(A)') 'rinput13: Warning! linterface=T, setting lper=F'
+          write (1337, fmt='(A)') 'rinput13: Warning! linterface=T, setting lper=F'
+          t_godfrin%lper = .false.
+        end if
+      else ! 3D
+        if (.not.t_godfrin%lper) then
+          write (111, fmt='(A)') 'rinput13: Warning! linterface=F, setting lper=T'
+          write (1337, fmt='(A)') 'rinput13: Warning! linterface=F, setting lper=T'
+          t_godfrin%lper = .true.
+        end if
+      end if
+
       call ioinput('GODFRIN         ', uio, 4, 7, ier)
       allocate (t_godfrin%bdims(t_godfrin%nb))
       read (unit=uio, fmt=*, iostat=ier) t_godfrin%bdims(:)
-      if (ier/=0) stop 'Error reading `GIDFRIN (bdims)`: check your inputcard'
+      if (ier/=0) stop 'Error reading `GODFRIN (bdims)`: check your inputcard'
 
       ! Inconsistency check
-      if (t_godfrin%na/=sum(t_godfrin%bdims)) stop 'godfrin: na /= sum(bdims)'
+      if (t_godfrin%na/=sum(t_godfrin%bdims)) stop 'godfrin: na/=sum(bdims)'
 
 #ifndef __INTEL_COMPILER
       ! can only use pardiso solver with intel mkl at the moment, probably only
@@ -2868,21 +2904,23 @@ contains
       if (t_godfrin%lpardiso) stop 'No pardiso library available. Try the intel compiler or fix the linking issues'
 #endif
 
-      write (111, fmt='(A100)') 'na, nb, ldiag, lper, lpardiso; then bdims(1:nb)'
-      write (1337, fmt='(A100)') 'na, nb, ldiag, lper, lpardiso; then bdims(1:nb)'
-      write (111, *) t_godfrin%na, t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
-      write (1337, *) t_godfrin%na, t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
-      write (111, fmt='(50(I0," "))') t_godfrin%bdims(:)
-      write (1337, fmt='(50(I0," "))') t_godfrin%bdims(:)
+      write (111, '("na=",i8,"  nb=",i8,"  ldiag=",l2,"  lper=",l2,"  lpardiso=",l2)') t_godfrin%na, t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
+      write (1337, '("na=",i8,"  nb=",i8,"  ldiag=",l2,"  lper=",l2,"  lpardiso=",l2)') t_godfrin%na, t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
+      write (111, '("bdims(1:nb)=",100i8)') t_godfrin%bdims(:)
+      write (1337, '("bdims(1:nb)=",100i8)') t_godfrin%bdims(:)
 
       ! multiply blocks by angular momentum dimension
-      t_godfrin%na = t_godfrin%na*lmmaxd
-      t_godfrin%bdims = t_godfrin%bdims*lmmaxd
-
-      if (icc/=0 .and. t_godfrin%ldiag) then
-        t_godfrin%ldiag = .false.
-        write (111, fmt='(A100)') 'rinput13: Warning! ICC/=0. Setting ldiag = T'
-        write (1337, fmt='(A100)') 'rinput13: Warning! ICC/=0. Setting ldiag = T'
+      ! MdSD: this has to happen after checking the correctness of the blocking
+      ! t_godfrin%na = t_godfrin%na*lmmaxd
+      ! t_godfrin%bdims = t_godfrin%bdims*lmmaxd
+      if (t_godfrin%nb == 1) then
+        write (111, fmt='(A)') 'rinput13: Warning! nb=1, setting invmod=0'
+        write (1337, fmt='(A)') 'rinput13: Warning! nb=1, setting invmod=0'
+        invmod = 0
+      else if (t_godfrin%nb == 2) then
+        write (111, fmt='(A)') 'rinput13: Warning! nb=2, setting lper=F'
+        write (1337, fmt='(A)') 'rinput13: Warning! nb=2, setting lper=F'
+        t_godfrin%lper = .false.
       end if
 
     end if
