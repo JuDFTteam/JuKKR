@@ -150,6 +150,9 @@ allocate(ull(nsra*lmmaxso,lmmaxso,irmdnew))
       eryd,zat,cvlight,socscale,nspin,lmpotd,  &
       theta,phi,ipan_intervall,rpan_intervall, npan_tot,ncheb,irmdnew,nrmaxd,  &
       vnspll0,vnspll1,'1',soc)
+
+  ! add bfield
+
 !c extend matrix for the SRA treatment
   vnspll=czero
   IF (nsra == 2) THEN
@@ -522,6 +525,8 @@ DO ie=1,ielast
       theta,phi,ipan_intervall,rpan_intervall, npan_tot,ncheb,irmdnew,nrmaxd,  &
       vnspll0,vnspll1,'1',soc)
   
+! Add bfield
+
 !c extend matrix for the SRA treatment
   vnspll=czero
   IF (nsra == 2) THEN
@@ -581,6 +586,8 @@ DO ie=1,ielast
       ipan_intervall,rpan_intervall,npan_tot,ncheb,  &
       irmdnew,nrmaxd,vnspll0,vnspll1, 'transpose',soc)
   
+! Add bfield
+
 !c extend matrix for the SRA treatment
   vnspll=czero
   IF (nsra == 2) THEN

@@ -12,8 +12,7 @@
 !------------------------------------------------------------------------------------
 module mod_bfield
   
-  ! use :: NonCollinearMagnetism_mod, only : rotatematrix
-  ! use :: mod_mympi, only: myrank, master
+  use :: NonCollinearMagnetism_mod, only : rotatematrix
 
   implicit none
 
@@ -146,7 +145,7 @@ contains
   !> Read as 'theta  phi  bfield_strength' with the angles in degrees and the
   !> strength in Ry ( ! might get changed to Tesla ! )
   !> Lines can be commented out with a # as first character.
-  !-------------------------------------------------------------------------------
+  !>------------------------------------------------------------------------------
   subroutine read_bfield(bfields,number_of_atoms)
     type(bfield_data), dimension(:), intent(inout) :: bfields
     integer                        , intent(in)   :: number_of_atoms
@@ -193,9 +192,86 @@ contains
       write(*,'(2X,I4,3(E16.8))') iatom, bfields(iatom)%theta, bfields(iatom)%phi, bfields(iatom)%bfield_strength
    end do
   end subroutine read_bfield
-  
-  !TODO add_bfield()
-  
+
+  !>------------------------------------------------------------------------------
+  !> Summary: Adds the magnetic field to the potential
+  !> Author: Sascha Brinker, Nicolas Essing
+  !> 
+  !> The field is added to the potential in LL' expansion. Both the external and
+  !> the constraint field are added, if they are activated.
+  !> The potential is updated as H = H - sigma * B with sigma the vector of
+  !> pauli matrices and B the combined bfield.
+  !>------------------------------------------------------------------------------
+  subroutine add_bfield(bfield, vnspll, theta, phi, imt, iteration_number, &
+                        itscf0, itscf1, lbfield, lbfield_constr, lbfield_trans, &
+                        lbfield_mt, transpose_bfield)
+    type(bfield_data), intent(in) :: bfield
+    double complex, dimension(:,:,:), intent(inout) :: vnspll ! The potential to add to
+    double precision,  intent(in) :: theta, phi ! angles or the magnetic moments, not to be confused with theta and phi in bfield
+    integer, intent(in) :: imt ! MT radius (index in cheb mesh)
+    integer, intent(in) :: iteration_number !TODO this, or just a logical and do the check outside?
+    integer, intent(in) :: itscf0, itscf1   !TODO ^
+    logical, intent(in) :: lbfield, lbfield_constr !! Wheter to apply the fields
+    logical, intent(in) :: lbfield_trans ! Apply only transveral
+    logical, intent(in) :: lbfield_mt ! Apply only up do MT radius
+    logical, intent(in) :: transpose_bfield ! Transpose the bfield (for left solutions)
+
+    double complex, parameter :: cplx_i = (0.d0, 1.d0)
+    integer :: lmmax, irmd, iend, ir ! loop boundaries and indices
+    double complex, dimension(3) :: combined_bfields, dir ! vector of combined bfields and unit vector of magnetic moment direction
+    double complex, dimension(2,2) :: bfield_mat ! bfield times pauli matrices
+    double complex :: temp ! used to transpose the matrix
+
+    lmmax = size(bfield%thetallmat, 1) ! size(vnspll, 1) is 2*lmmax
+    irmd = size(vnspll, 3)
+
+    combined_bfields(:) = bfield%bfield(:) ! start with external, is zero if unused
+    if (lbfield_constr .and. itscf0 <= iteration_number .and. iteration_number <= itscf1) then
+      ! Add constraint field
+      combined_bfields(:) = combined_bfields(:) + bfield%bfield_constr(:)
+    end if
+
+    if (lbfield_trans) then
+      dir(1) = sin(theta) * cos(phi)
+      dir(3) = sin(theta) * sin(phi)
+      dir(2) = cos(theta)
+      combined_bfields = combined_bfields - dir * dot_product(dir, combined_bfields)
+    end if
+
+    ! Fill potential matrix from bfield vector
+    bfield_mat(1,1) = - combined_bfields(3)
+    bfield_mat(1,2) = combined_bfields(1) + cplx_i * combined_bfields(2)
+    bfield_mat(2,1) = combined_bfields(1) - cplx_i * combined_bfields(2)
+    bfield_mat(2,2) = combined_bfields(3)
+
+    ! Rotate to local frame
+    call rotatematrix(bfield_mat, theta, phi, 1, 1)
+
+    ! For the left solutions, transpose the bfield
+    if (transpose_bfield) then
+      temp = bfield_mat(1,2)
+      bfield_mat(1,2) = bfield_mat(2,1)
+      bfield_mat(2,1) = temp
+    end if
+
+    ! Define the loop boundary for the next loop. If the fields are only applied
+    ! in the muffin tin region, integrate to that index, otherwise all the way out
+    if (lbfield_mt) then
+      iend = imt
+    else
+      iend = irmd
+    end if
+
+    ! Add the bfield to the potential
+    do ir = 1, iend
+      vnspll(1:lmmax,1:lmmax,ir) = vnspll(1:lmmax,1:lmmax,ir) - bfield_mat(1,1) * bfield%thetallmat(:,:,ir)
+      vnspll(1:lmmax,lmmax+1:2*lmmax,ir) = vnspll(1:lmmax,lmmax+1:2*lmmax,ir) - bfield_mat(1,2) * bfield%thetallmat(:,:,ir)
+      vnspll(lmmax+1:2*lmmax,1:lmmax,ir) = vnspll(lmmax+1:2*lmmax,1:lmmax,ir) - bfield_mat(2,1) * bfield%thetallmat(:,:,ir)
+      vnspll(lmmax+1:2*lmmax,lmmax+1:2*lmmax,ir) = vnspll(lmmax+1:2*lmmax,lmmax+1:2*lmmax,ir) - bfield_mat(2,2) * bfield%thetallmat(:,:,ir)
+    end do
+
+  end subroutine
+
   !------------------------------------------------------------------------------------
   !> Summary: Shape function LL' expansion
   !> Author: Sascha Brinker
