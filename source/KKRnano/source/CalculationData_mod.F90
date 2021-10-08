@@ -387,12 +387,12 @@ module CalculationData_mod
     ! For the local atoms, initialize some fields
     do ila = 1, self%num_local_atoms
       atom_id = self%atom_ids(ila)
+      ! Beware: self%bfields is allocated and saved for all atoms
       call init_bfield(params%noncobfield, params%constr_field, self%bfields(atom_id), dims%lmaxd, &
-                       self%cheb_mesh_a(atom_id)%npan_tot, self%cheb_mesh_a(atom_id)%npan_lognew, &
-                       self%cheb_mesh_a(atom_id)%npan_eqnew, self%cheb_mesh_a(atom_id)%ncheb, &
-                       self%cheb_mesh_a(atom_id)%ipan_intervall, self%cheb_mesh_a(atom_id)%thetasnew, &
+                       self%cheb_mesh_a(ila)%npan_lognew, self%cheb_mesh_a(ila)%npan_eqnew, &
+                       self%cheb_mesh_a(ila)%ipan_intervall, self%cheb_mesh_a(ila)%thetasnew, &
                        self%gaunts%iend, self%gaunts%icleb,  self%gaunts%cleb(:,1), &
-                       self%cell_a(atom_id)%ifunm)
+                       self%cell_a(ila)%ifunm)
     end do
 
   endsubroutine ! constructEverything

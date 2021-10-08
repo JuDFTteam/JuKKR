@@ -7,9 +7,8 @@
 !------------------------------------------------------------------------------------
 !> Summary: Module storing the run options and the paramters for bfields and constraining fields
 !> 
-!> Written by Sascha Brinker, ported from KKRhost to KKRnano by the other two.
-!> 
 !> Author: Sascha Brinker, Eduardo Mendive, Nicolas Essing
+!>   Written by Sascha Brinker, ported from KKRhost to KKRnano by the other two.
 !------------------------------------------------------------------------------------
 module mod_bfield
   
@@ -58,16 +57,14 @@ contains
   end subroutine
 
   subroutine init_bfield(lbfield, lbfield_constr, bfield, lmax, &
-                         npan_tot, npan_log, npan_eq, ncheb, ipan_intervall, thetasnew, &
+                         npan_log, npan_eq, ipan_intervall, thetasnew, &
                          iend, icleb, cleb, ifunm)
     logical, intent(in) :: lbfield        !! Whether to use external nonco bfields
     logical, intent(in) :: lbfield_constr !! Whether to use constraint bfields
     type(bfield_data), intent(inout) :: bfield !! The bfield data
     integer, intent(in) :: lmax     !! Angular momentum cutoff
-    integer, intent(in) :: npan_tot !! Chebyshev mesh resolution
     integer, intent(in) :: npan_log !! Chebyshev mesh resolution
     integer, intent(in) :: npan_eq  !! Chebyshev mesh resolution
-    integer, intent(in) :: ncheb    !! Chebyshev mesh resolution
     integer, dimension(:), intent(in) :: ipan_intervall !! Indices for important radial points in the mesh
     double precision, dimension(:,:), intent(in)  :: thetasnew !! Interpolated shape function in Chebychev mesh
     integer,                          intent (in) :: iend      !! Number of nonzero gaunt coefficients
@@ -79,9 +76,7 @@ contains
     integer :: i_stat
 
     ncleb = size(cleb)
-    irmdnew = npan_tot*(ncheb+1)
-
-    !TODO? assert size(theasnew) == irmdnew
+    irmdnew = size(thetasnew, 1) ! npan_tot*(ncheb+1)
 
     ! Calculate the LL' expansion of the shape function in the new mesh which
     ! is needed to convolute the magnetic field (only done once and stored to
@@ -90,7 +85,7 @@ contains
     if(lbfield .or. lbfield_constr) then
       allocate (bfield%thetallmat((lmax+1)**2,(lmax+1)**2,irmdnew), stat=i_stat)
       call calc_thetallmat(bfield%thetallmat, lmax, ipan_intervall(npan_log+npan_eq) + 1, &
-                            iend, irmdnew, thetasnew, ifunm, icleb, cleb)
+                           iend, irmdnew, thetasnew, ifunm, icleb, cleb)
     end if
 
   end subroutine init_bfield
@@ -99,11 +94,11 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Reads the atom-wise constraining field from bconstr.dat
-  !> Author: MdSD
-  !> Category: KKRhost, bfield
-  !> Deprecated: False
-  !> the file has the format:
-  !> bz  by  bz (in Ry), mspin (in muB)
+  !> Author: MdSD, Nicolas Essing
+  !>
+  !> The file should contain three floating point values in each line and a line
+  !> for each atom. The first line is treated as a header and skipped.
+  !> Intepreted as initial constraining bfield in cartesian coordinates, in Ry.
   !-------------------------------------------------------------------------------
   subroutine read_bconstr(bfields, number_of_atoms)
     type(bfield_data), dimension(:), intent(inout) :: bfields
@@ -111,24 +106,23 @@ contains
     
     integer :: iatom
     integer :: iostat
-   
-    open(unit=57493215, file='bconstr_in.dat', iostat=iostat)
-    if (iostat == 0) then 
-      read(57493215,*)  ! skip header
+    logical :: file_exists
+
+    inquire(file='bconstr_in.dat', exist=file_exists)
+
+    if (file_exists) then
+      open(unit=57493215, file='bconstr_in.dat', iostat=iostat)
+      read(57493215, *)  ! skip header
       do iatom = 1, number_of_atoms
-        read(57493215,*,iostat=iostat) bfields(iatom)%bfield_constr(:)
-        if (iostat > 0) then
-          ! iostat should be zero normally and negative in last line, positive is error
+        read(57493215, *, iostat=iostat) bfields(iatom)%bfield_constr(:)
+        if (iostat /= 0) then
           write(*,*) "Error reading bconstr_in.dat"
           stop
         end if
       end do
-      if (iostat >= 0) then
-        ! still zero means there are more lines
-        write(*,*) "Error reading bconstr_in.dat or file too long"
-      end if
       close(57493215)
     else
+      ! No 'bconstr_in.dat' given, use default 0
       do iatom = 1, number_of_atoms
         bfields(iatom)%bfield_constr(:) = 0.
       end do
@@ -146,11 +140,12 @@ contains
 
   !-------------------------------------------------------------------------------
   !> Summary: Reads the atom-wise magnetic field from bfield.dat
-  !> Author: Sascha Brinker
-  !> Category: KKRhost, bfield
-  !> Deprecated: False
-  !> the file has the format:
-  !> theta  phi  bfield_strength (in Tesla)
+  !> Author: Nicolas Essing
+  !> 
+  !> The file should contain three numbers per line and one line per atom.
+  !> Read as 'theta  phi  bfield_strength' with the angles in degrees and the
+  !> strength in Ry ( ! might get changed to Tesla ! )
+  !> Lines can be commented out with a # as first character.
   !-------------------------------------------------------------------------------
   subroutine read_bfield(bfields,number_of_atoms)
     type(bfield_data), dimension(:), intent(inout) :: bfields
@@ -166,22 +161,23 @@ contains
       stop
     end if
 
+    ! manual loop over iatom because comments are allowed
     iatom = 1
-    do while ((iostat == 0) .and. (iatom <= number_of_atoms))
-      read(57493215, *, iostat=iostat) linebuffer
-      if (linebuffer(1:1) == '#') continue ! input line commented out, get next line
+    do while (iatom <= number_of_atoms)
+      read(57493215, '(A)', iostat=iostat) linebuffer
+      if (iostat /= 0) then
+        write(*,*) "I/O Error while reading bfield.dat"
+        stop
+      end if
+      if (linebuffer(1:1) == '#') cycle ! input line commented out
       read(linebuffer, *, iostat=iostat) bfields(iatom)%theta, bfields(iatom)%phi, bfields(iatom)%bfield_strength
       if (iostat /= 0) then
-        write(*,*) "Malformatted line in bfield.dat."
+        write(*,*) "Error parsing a line in bfield.dat"
         stop
       end if
       iatom = iatom + 1
     end do
     close(57493215)
-    if (iatom <= number_of_atoms + 1) then
-      write(*,*) "Error reading bfield.dat or file too short"
-      stop
-    end if
 
     write(*,*) '  ###############################################'
     write(*,*) '  external non-collinear magnetic fields'
@@ -194,7 +190,7 @@ contains
       bfields(iatom)%bfield(1)       = bfields(iatom)%bfield_strength*cos(bfields(iatom)%phi)*sin(bfields(iatom)%theta)
       bfields(iatom)%bfield(2)       = bfields(iatom)%bfield_strength*sin(bfields(iatom)%phi)*sin(bfields(iatom)%theta)
       bfields(iatom)%bfield(3)       = bfields(iatom)%bfield_strength*cos(bfields(iatom)%theta)
-      write(*,'("  ",i4,3es16.8)') iatom, bfields(iatom)%theta, bfields(iatom)%phi, bfields(iatom)%bfield_strength
+      write(*,'(2X,I4,3(E16.8))') iatom, bfields(iatom)%theta, bfields(iatom)%phi, bfields(iatom)%bfield_strength
    end do
   end subroutine read_bfield
   
@@ -211,99 +207,76 @@ contains
   !> @endnote
   !------------------------------------------------------------------------------------
   subroutine calc_thetallmat(thetansll, lmax, imt1, iend, irmdnew, thetasnew, ifunm, icleb, cleb)
-    integer                     , intent (in) :: lmax    !! Angular momentum cut-off
-    integer                     , intent (in) :: imt1    !! index muffin-tin radius
-    integer                     , intent (in) :: iend    !! Number of nonzero gaunt coefficients
-    integer                     , intent (in) :: irmdnew !! number of radials point on the Cheby mesh
-    integer, dimension(:,:), intent (in) :: icleb   !! Pointer array
-    double precision, dimension(:),    intent (in)  :: cleb    !! GAUNT coefficients (GAUNT)
-    double precision, dimension(:, :), intent (in)  :: thetasnew !! shapefun on the Cheby mesh
-    integer, dimension(1:(2*lmax+1)**2)                , intent (in)  :: ifunm     !! pointer array for shapefun     ! Check index and dimensions!!!!!
-    double precision, dimension((lmax+1)**2,(lmax+1)**2,irmdnew), intent (out) :: thetansll !! LL' expansion of the shapefunction 
-    !------------------------------------------------------------------------------------
-    double precision,parameter                                  :: rfpi=3.5449077018110318
-    double precision,dimension(1:irmdnew,1:(2*lmax+1)**2)       :: shapefun_mod  
-    double precision                                            :: c0ll
-    integer                                                     :: lmmax
-    integer                                                     :: lmmax2
-    integer                                                     :: ilm
-    integer                                                     :: ifun
-    integer                                                     :: ir
-    integer                                                     :: lm1
-    integer                                                     :: lm2
-    integer                                                     :: lm3
-    integer                                                     :: j
-            
-    c0ll                                                    = 1d0/rfpi
-    lmmax                                                   = (lmax+1)**2
-    lmmax2                                                  = (2*lmax+1)**2
-    shapefun_mod(:,:)                                       = 0.d0
-    shapefun_mod(1:imt1,1)                                  = rfpi ! is multipled by C_LL^0
-    shapefun_mod(imt1+1:irmdnew,1)                          = thetasnew(imt1+1:irmdnew,1)
-    ! convert from pointer to real ilmdo ilm=2,lmmax2
-    do ilm=2,lmmax2
-      ifun = ifunm(ilm)
-      if(.not. ifun == 0) then !shapefun%lmused(ilm)==1) then
-        !if(myrank==master .and. debug) write(17*iatom**2,'(" converted ifun= ",i4," to ilm= ",i4)') ifun, ilm
-        shapefun_mod(imt1+1:irmdnew,ilm)           = thetasnew(imt1+1:irmdnew,ifun)
+    double precision, dimension(:,:,:), intent (out) :: thetansll !! LL' expansion of the shapefunction
+    integer,                            intent (in)  :: lmax      !! Angular momentum cut-off
+    integer,                            intent (in)  :: imt1      !! index muffin-tin radius
+    integer,                            intent (in)  :: iend      !! Number of nonzero gaunt coefficients
+    integer,          dimension(:,:),   intent (in)  :: icleb     !! l and m values for the Gaunt coefficients
+    double precision, dimension(:),     intent (in)  :: cleb      !! Gaunt coefficients
+    double precision, dimension(:, :),  intent (in)  :: thetasnew !! shapefun on the Cheby mesh
+    integer         , dimension(:),     intent (in)  :: ifunm     !! pointer array for shapefun
+
+    double precision, parameter :: rfpi = 3.5449077018110318
+    double precision, parameter :: c0ll = 1.d0 / rfpi
+    integer :: irmdnew       ! number of radials point on the Chebyshev mesh
+    integer :: lmmax         ! number of angular momentum entries
+    integer :: lmmax2
+    integer :: ifun
+    integer :: lm1, lm2, lm3 ! angular momentum indices
+    integer :: ir            ! radial index
+    integer :: j             ! index for loop over Gaunt coeffs
+    double precision, dimension(:,:), allocatable :: shapefun_mod
+
+    lmmax   = (lmax+1)**2
+    lmmax2  = (2*lmax+1)**2
+    irmdnew = size(thetasnew, 1) ! npan_tot*(ncheb+1)
+
+    allocate(shapefun_mod(irmdnew, lmmax2))
+
+    shapefun_mod(:,:)        = 0.d0
+    shapefun_mod(1:imt1,1)   = rfpi ! is multipled by C_LL^0
+    shapefun_mod(imt1+1:, 1) = thetasnew(imt1+1:irmdnew,1)
+
+    ! convert from pointer to real l,m
+    do lm1 = 2, lmmax2
+      ifun = ifunm(lm1)
+      if(.not. ifun == 0) then !shapefun%lmused(lm1)==1) then
+        shapefun_mod(imt1+1:, lm1) = thetasnew(imt1+1:, ifun)
       end if
     end do
-    !if(myrank==master .and. debug) write(17*iatom**2,'("  cellnew%shapefun = ")')
-    !do ilm= 1,lmmax2
-    !  if(sum(abs(thetasnew(:,ilm)))>1e-8) then
-    !    if(myrank==master .and. debug) write(17*iatom**2,'(i4,1000es16.8)') ilm, thetasnew(:,ilm)
-    !  end if
-    !end do
-    !if(myrank==master .and. debug) write(17*iatom**2,'("  shapefun_mod = ")')
-    !do ilm= 1,lmmax2
-    !  if(sum(abs(shapefun_mod(:,ilm)))>1e-8) then
-    !    if(myrank==master .and. debug) write(17*iatom**2,'(i4,1000es16.8)') ilm, shapefun_mod(:,ilm)
-    !  end if
-    !end do
     
-    thetansll(:,:,:)=0.d0
+    thetansll(:,:,:) = 0.d0
+
     ! diagonal part (not contained in gaunt-coeff)
-    do ilm = 1,lmmax
-      thetansll(ilm,ilm,:) = shapefun_mod(:,1)*c0ll
+    do lm1 = 1, lmmax
+      thetansll(lm1,lm1,:) = shapefun_mod(:,1) * c0ll
     end do
-    !write(*,'("ifunm=",1000i4)') ifunm(:)
-    do j = 1,iend !gauntcoeff%iend
-      lm1 = icleb(j, 1)! gauntcoeff%icleb(j,1) ! lmax
-      lm2 = icleb(j, 2)! gauntcoeff%icleb(j,2) ! lmax
-      lm3 = icleb(j, 3)! gauntcoeff%icleb(j,3) ! 2*lmax
-      !write(17*iatom**2,'("lm1,lm2,lm3 =",3i4,2es16.8)') lm1,lm2,lm3,cleb(j)
-      if(lm1<= lmmax .and. lm2 <= lmmax .and. lm3<= lmmax2) then
-        ifun = ifunm(lm3)
-        if(.not. ifun == 0) then !shapefun%lmused(ilm)==1) then
-          !write(*,'("lm1,lm2,lm3,cleb",3i4,10e16.8)') lm1,lm2,lm3,cleb(j)
-          do ir = 1,irmdnew!cellnew%nrmaxnew
-            thetansll(lm1,lm2,ir) = thetansll(lm1,lm2,ir)+cleb(j)*shapefun_mod(ir,lm3)
-            thetansll(lm2,lm1,ir) = thetansll(lm2,lm1,ir)+cleb(j)*shapefun_mod(ir,lm3)
-          end do
-        end if
+
+    ! This is effectivly a summation over one angular momentum index lm3 for each
+    ! combination of lm1, lm2. Iterate instead over the flattened array cleb
+    ! containing the Gaunt coefficients and extract the angular momentum
+    ! indices for each j.
+    do j = 1, iend
+      lm1 = icleb(j, 1)
+      lm2 = icleb(j, 2)
+      lm3 = icleb(j, 3)
+      if (lm1 > lmmax .or. lm2 > lmmax .or. lm3 > lmmax2) then
+        ! I think this should not happen, as icleb should only map to valid values
+        ! for lm1,lm2,lm3.
+        !TODO check that and remove this warning
+        write(*,*) "Warning from calc_thetallmat in bfield.F90: Maybe invalid values in icleb:"
+        write(*,*) j, lm1, lm2, lm3, lmmax, lmmax2
+        cycle ! Gaunt coeffs zero
       end if
+      if (ifunm(lm3) == 0) then
+        cycle ! Some symmetry related to shapefunction, I think
+      end if
+      do ir = 1, irmdnew
+        thetansll(lm1,lm2,ir) = thetansll(lm1,lm2,ir) + cleb(j) * shapefun_mod(ir,lm3)
+        thetansll(lm2,lm1,ir) = thetansll(lm2,lm1,ir) + cleb(j) * shapefun_mod(ir,lm3)
+      end do
     end do
-    !do lm1 = 1,lmmax
-    !  do lm2 = 1,lm1-1
-    !    do ir = 1, irmdnew
-    !      thetansll(ir,lm2,lm1) = thetansll(ir,lm1,lm2)
-    !    end do
-    !  end do
-    !end do
-    !if(myrank==master .and. debug) write(17*iatom**2,'("  thetansll = ")')
-    !do lm1=1,lmmax
-    !  do lm2=1,lmmax
-    !    if(sum(abs(thetansll(:,lm1,lm2)))>1e-8) then
-    !      if(myrank==master .and. debug) write(17*iatom**2,'(2i4,1000es16.8)') lm1, lm2, thetansll(:,lm1,lm2)
-    !    end if
-    !  end do
-    !end do
-              
+
   end subroutine calc_thetallmat
 
 end module mod_bfield
-
-
-
-
-
