@@ -12,7 +12,7 @@
 !------------------------------------------------------------------------------------
 module mod_bfield
   
-  use :: NonCollinearMagnetism_mod, only : rotatematrix
+  use :: NonCollinearMagnetism_Helpers_mod, only : rotatematrix
 
   implicit none
 

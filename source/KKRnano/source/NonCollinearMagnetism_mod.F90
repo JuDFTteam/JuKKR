@@ -13,6 +13,9 @@ module NonCollinearMagnetism_mod
 !-------------------------------------------------------------------------------
 use RadialMeshData_mod!, only:
 use ChebMeshData_mod!, only
+use NonCollinearMagnetism_Helpers_mod, only: rotatematrix, create_Umatrix
+use mod_bfield, only: bfield_data, add_bfield
+
 implicit none
 private
 
@@ -27,7 +30,9 @@ SUBROUTINE tmat_newsolver(ie,nspin,lmax,zat,socscale,  &
         rpan_intervall,ipan_intervall,  &
         rnew,vinsnew,theta,phi,ipot,  &
        ! lly,        &
-        lmpotd,irmd_new,TmatN,soc,enable_quad_prec) ! new input parameters
+        lmpotd,irmd_new,TmatN,soc,enable_quad_prec, &
+        bfield, imt, iteration_number, itscf0, itscf1, &
+        lbfield, lbfield_constr, lbfield_trans, lbfield_mt) 
  
 ! Code converted using TO_F90 by Alan Miller
 ! Date: 2016-04-18  Time: 14:58:02
@@ -58,6 +63,13 @@ INTEGER, INTENT(IN)                      :: irmd_new
 DOUBLE COMPLEX, INTENT(OUT)              :: TmatN(:,:)
 LOGICAL, INTENT(IN)                      :: soc
 LOGICAL, INTENT(IN)                      :: enable_quad_prec
+type(bfield_data), intent(in)            :: bfield !! Information on the noncollinear magnetic fields
+integer, intent(in)                      :: imt !! MT radius (index in cheb mesh)
+integer, intent(in)                      :: iteration_number !! Current iteration number
+integer, intent(in)                      :: itscf0, itscf1 !! Window of iterations when to apply fields
+logical, intent(in)                      :: lbfield, lbfield_constr !! Wheter to apply the fields
+logical, intent(in)                      :: lbfield_trans ! Apply only transveral
+logical, intent(in)                      :: lbfield_mt ! Apply only up do MT radius
 
 INTEGER :: lmmaxd
 INTEGER :: lmmaxso
@@ -152,6 +164,11 @@ allocate(ull(nsra*lmmaxso,lmmaxso,irmdnew))
       vnspll0,vnspll1,'1',soc)
 
   ! add bfield
+  if (lbfield) then
+    call add_bfield(bfield, vnspll1, theta, phi, imt, iteration_number, &
+                    itscf0, itscf1, lbfield_constr, lbfield_trans, &
+                    lbfield_mt, .false.)
+  end if
 
 !c extend matrix for the SRA treatment
   vnspll=czero
@@ -309,6 +326,8 @@ deallocate(rll)
 deallocate(ull)
 
 END SUBROUTINE tmat_newsolver
+
+
 SUBROUTINE rhovalnew(ldorhoef,ielast,nsra,nspin,lmax,ez,wez,zat,  &
         socscale,cleb,icleb,iend,ifunm,lmsp,ncheb,  &
         npan_tot,npan_log,npan_eq,rmesh,irws,  &
@@ -317,7 +336,9 @@ SUBROUTINE rhovalnew(ldorhoef,ielast,nsra,nspin,lmax,ez,wez,zat,  &
         moment_x,moment_y,moment_z, &
         ipot,  &
         den_out,espv,rho2ns,r2nef,gmatn, muorb,  &
-        lpotd,lmaxd,irmd,irmd_new,iemxd,soc,enable_quad_prec) ! new parameters
+        lpotd,lmaxd,irmd,irmd_new,iemxd,soc,enable_quad_prec, &
+        bfield, imt, iteration_number, itscf0, itscf1, &
+        lbfield, lbfield_constr, lbfield_trans, lbfield_mt)
  
 ! Code converted using TO_F90 by Alan Miller
 ! Date: 2016-04-21  Time: 11:39:57
@@ -369,6 +390,14 @@ INTEGER, INTENT(IN)                      :: irmd_new
 INTEGER, INTENT(IN)                      :: iemxd
 LOGICAL, INTENT(IN)                      :: soc
 LOGICAL, INTENT(IN)                      :: enable_quad_prec
+type(bfield_data), intent(in)            :: bfield !! Information on the noncollinear magnetic fields
+integer, intent(in)                      :: imt !! MT radius (index in cheb mesh)
+integer, intent(in)                      :: iteration_number !! Current iteration number
+integer, intent(in)                      :: itscf0, itscf1 !! Window of iterations when to apply fields
+logical, intent(in)                      :: lbfield, lbfield_constr !! Wheter to apply the fields
+logical, intent(in)                      :: lbfield_trans ! Apply only transveral
+logical, intent(in)                      :: lbfield_mt ! Apply only up do MT radius
+
 
 DOUBLE PRECISION, PARAMETER :: cvlight=274.0720442D0
 DOUBLE COMPLEX, PARAMETER :: czero=(0D0,0D0)
@@ -525,7 +554,12 @@ DO ie=1,ielast
       theta,phi,ipan_intervall,rpan_intervall, npan_tot,ncheb,irmdnew,nrmaxd,  &
       vnspll0,vnspll1,'1',soc)
   
-! Add bfield
+  ! Add bfield
+  if (lbfield) then
+    call add_bfield(bfield, vnspll1, theta, phi, imt, iteration_number, &
+                    itscf0, itscf1, lbfield_constr, lbfield_trans, &
+                    lbfield_mt, .false.)
+  end if
 
 !c extend matrix for the SRA treatment
   vnspll=czero
@@ -586,7 +620,12 @@ DO ie=1,ielast
       ipan_intervall,rpan_intervall,npan_tot,ncheb,  &
       irmdnew,nrmaxd,vnspll0,vnspll1, 'transpose',soc)
   
-! Add bfield
+  ! Add bfield
+  if (lbfield) then
+    call add_bfield(bfield, vnspll1, theta, phi, imt, iteration_number, &
+                    itscf0, itscf1, lbfield_constr, lbfield_trans, &
+                    lbfield_mt, .true.)
+  end if
 
 !c extend matrix for the SRA treatment
   vnspll=czero
@@ -4118,54 +4157,6 @@ n=Ncheb+1
 
 end subroutine
 
-subroutine rotatematrix(mat,theta,phi,lmmax,mode)
-! rotates a matrix in the local frame pointing in
-! the direction of phi and theta to the global frame
-implicit none
-!interface
-double complex,intent(inout)    ::  mat(2*lmmax,2*lmmax)
-double precision,intent(in)     :: phi
-double precision,intent(in)     :: theta
-integer                         :: lmmax
-integer                         :: mode
-!local
-double complex   :: Umat(2*lmmax,2*lmmax)
-double complex   :: Udeggamat(2*lmmax,2*lmmax)
-double complex   :: mattemp(2*lmmax,2*lmmax)
-!double precision :: matmat_zmzm
-
-!***********************************************************************
-! create the rotation matrix:
-!     | cos(theta/2) exp(-i/2 phi)   -sin(theta/2) exp(-i/2 phi) |
-!  U= |                                                          |
-!     | sin(theta/2) exp( i/2 phi)    cos(theta/2) exp( i/2 phi) |
-!
-!  Udegga = transpose(complex conjug ( U ) )
-!***********************************************************************
-
-
-call create_Umatrix(theta,phi,lmmax,Umat,Udeggamat)
-!***********************************************************************
-! calculate matrix in the global frame:
-!
-!  t_glob = U * t_loc * Udegga
-!***********************************************************************
-
-
-if (mode==0) then ! 'loc->glob'
-  call zgemm('N','N',2*lmmax,2*lmmax,2*lmmax,(1d0,0d0),mat,2*lmmax,Udeggamat,2*lmmax,(0d0,0d0),mattemp,2*lmmax)
-  call zgemm('N','N',2*lmmax,2*lmmax,2*lmmax,(1d0,0d0),Umat,2*lmmax,mattemp,2*lmmax,(0d0,0d0),mat,2*lmmax)
-elseif (mode==1) then !'glob->loc'
-  call zgemm('N','N',2*lmmax,2*lmmax,2*lmmax,(1d0,0d0),mat,2*lmmax,Umat,2*lmmax,(0d0,0d0),mattemp,2*lmmax)
-  call zgemm('N','N',2*lmmax,2*lmmax,2*lmmax,(1d0,0d0),Udeggamat,2*lmmax,mattemp,2*lmmax,(0d0,0d0),mat,2*lmmax)
-else
-  stop '[rotatematrix] mode not known'
-end if
-!  writE(324,'(5000F)') tmat
-! stop
-
-end subroutine rotatematrix
-
 
 SUBROUTINE spin_orbit_compl(lmax,lmmaxd,l_s)
 
@@ -4519,80 +4510,6 @@ do icheb1=0,ncheb
 end do
 end subroutine getCmatrix
 
-
-
-subroutine create_Umatrix(theta,phi,lmmax,Umat,Udeggamat)
-implicit none
-!***********************************************************************
-! create the rotation matrix:
-!     | cos(theta/2) exp(-i/2 phi)   -sin(theta/2) exp(-i/2 phi) |
-!  U= |                                                          |
-!     | sin(theta/2) exp( i/2 phi)    cos(theta/2) exp( i/2 phi) |
-!
-!  Udegga = transpose(complex conjug ( U ) )
-!***********************************************************************double
-!precision :: phi
-!interface
-double precision,intent(in)     :: phi 
-double precision,intent(in)     :: theta
-integer,intent(in)              :: lmmax
-double complex,intent(out)      :: Umat(2*lmmax,2*lmmax)
-double complex,intent(out)      :: Udeggamat(2*lmmax,2*lmmax)
-!local
-double complex                  :: Umat11,Umat12,Umat21,Umat22
-double complex                  :: Udeggamat11,Udeggamat12,Udeggamat21,Udeggamat22
-integer                         :: ival
-double complex,parameter        :: ci=(0.0D0,1.0D0)
-character*25               :: spinmode
-
-spinmode='kkr'
-if (spinmode=='regular') then
-  Umat11      =  cos(theta/2.0D0)*exp(-ci/2.0D0*phi)
-  Umat12      = -sin(theta/2.0D0)*exp(-ci/2.0D0*phi)
-  Umat21      =  sin(theta/2.0D0)*exp( ci/2.0D0*phi)
-  Umat22      =  cos(theta/2.0D0)*exp( ci/2.0D0*phi)
-else if (spinmode=='kkr') then
-  Umat11      =  cos(theta/2.0D0)*exp( ci/2.0D0*phi)
-  Umat12      =  sin(theta/2.0D0)*exp( ci/2.0D0*phi)
-  Umat21      = -sin(theta/2.0D0)*exp(-ci/2.0D0*phi)
-  Umat22      =  cos(theta/2.0D0)*exp(-ci/2.0D0*phi)
-else 
-  stop '[create_Umatrix] mode not known'
-end if
-
-Umat=(0.0D0,0.0D0)
-do ival=1,lmmax
-  Umat(      ival,      ival) = Umat11
-  Umat(      ival,lmmax+ival) = Umat12
-  Umat(lmmax+ival,ival)       = Umat21
-  Umat(lmmax+ival,lmmax+ival) = Umat22
-end do
-
-if (spinmode=='regular') then
-Udeggamat11 =  cos(theta/2.0D0)*exp( ci/2.0D0*phi)
-Udeggamat12 =  sin(theta/2.0D0)*exp(-ci/2.0D0*phi)
-Udeggamat21 = -sin(theta/2.0D0)*exp( ci/2.0D0*phi)
-Udeggamat22 =  cos(theta/2.0D0)*exp(-ci/2.0D0*phi)
-else if (spinmode=='kkr') then
-Udeggamat11 =  cos(theta/2.0D0)*exp(-ci/2.0D0*phi)
-Udeggamat12 = -sin(theta/2.0D0)*exp( ci/2.0D0*phi)
-Udeggamat21 =  sin(theta/2.0D0)*exp(-ci/2.0D0*phi)
-Udeggamat22 =  cos(theta/2.0D0)*exp( ci/2.0D0*phi)
-else 
-  stop '[create_Umatrix] mode not known'
-end if
-
-
-
-Udeggamat=(0.0D0,0.0D0)
-do ival=1,lmmax
-  Udeggamat(      ival,      ival) = Udeggamat11
-  Udeggamat(      ival,lmmax+ival) = Udeggamat12
-  Udeggamat(lmmax+ival,ival)       = Udeggamat21
-  Udeggamat(lmmax+ival,lmmax+ival) = Udeggamat22
-end do
-
-end subroutine create_Umatrix
 
 SUBROUTINE spin_orbit_one_l(lmax,l_s)
 

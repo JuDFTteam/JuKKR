@@ -6,7 +6,10 @@
 !> @todo check intents
 module wrappers_mod
 #include "macros.h"
-use Warnings_mod, only: launch_warning
+  
+  use Warnings_mod, only: launch_warning
+  use mod_bfield, only: bfield_data
+  
   implicit none
   private
   
@@ -27,7 +30,7 @@ use Warnings_mod, only: launch_warning
                             korbit, theta_noco, phi_noco, theta_noco_old, &                          
                             phi_noco_old, angle_fixed, &
                             moment_x, moment_y, moment_z, &
-                            muorb, iemxd, params) ! NOCO/SOC
+                            muorb, iemxd, params, bfield, imt, iteration_number) ! NOCO/SOC
     use BasisAtom_mod, only: BasisAtom
     use GauntCoefficients_mod, only: GauntCoefficients
     use EnergyMesh_mod, only: EnergyMesh
@@ -64,6 +67,9 @@ use Warnings_mod, only: launch_warning
     double precision, intent(out)   :: muorb(0:,:)     ! NOCO
     integer, intent(in)             :: iemxd           ! NOCO
     type(InputParams), intent(in)   :: params          ! NOCO
+    type(bfield_data), intent(in)   :: bfield
+    integer, intent(in)             :: imt
+    integer, intent(in)             :: iteration_number
     
     integer :: ispin, nspind, irmind, irnsd, lmaxd, l
 
@@ -91,7 +97,9 @@ use Warnings_mod, only: launch_warning
                       theta_noco,phi_noco,angle_fixed,moment_x,moment_y,moment_z,&
                       1,  &  ! ipot=1
                       den,espv,rho2ns,r2nef, gmatn(:,:,:,1), muorb,  & ! just one spin component of gmatn needed
-                      atomdata%potential%lpot,lmaxd,mesh%irmd,chebmesh%irmd_new,iemxd, params%soc,params%enable_quad_prec)
+                      atomdata%potential%lpot,lmaxd,mesh%irmd,chebmesh%irmd_new,iemxd, params%soc,params%enable_quad_prec, &
+                      bfield, imt, iteration_number, params%itbfield0, params%itbfield1, &
+                      params%noncobfield, params%constr_field, params%trans_bfield, params%mt_bfield)
  
        ! calculate correct orbital moment
        do ispin=1,nspind

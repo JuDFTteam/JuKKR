@@ -75,7 +75,8 @@ implicit none
     use two_sided_commD_mod, only: distribute
     
     use ChebMeshData_mod, only: interpolate_poten  ! NOCO
-    use NonCollinearMagnetism_mod, only: tmat_newsolver, rotatematrix  ! NOCO
+    use NonCollinearMagnetism_mod, only: tmat_newsolver  ! NOCO
+    use NonCollinearMagnetism_Helpers_mod, only: rotatematrix  ! NOCO
 
     integer, intent(in) :: iter
     type(CalculationData), intent(inout) :: calc
@@ -270,7 +271,9 @@ implicit none
                                     noco%theta_noco(i1),noco%phi_noco(i1),1,  & !ipot=1 because potential has only one or two entries (spin polarized case)
                                     !dims%lly,        &    
                                     atomdata%potential%lmpot,atomdata%chebmesh_ptr%irmd_new, &
-                                    kkr(ila)%TmatN(:,:,ispin),params%soc,params%enable_quad_prec)
+                                    kkr(ila)%TmatN(:,:,ispin),params%soc,params%enable_quad_prec, &
+                                    calc%bfields(i1), calc%mesh_a(ila)%imt, iter, params%itbfield0, params%itbfield1, &
+                                    params%noncobfield, params%constr_field, params%trans_bfield, params%mt_bfield)
                
                 call rotatematrix(kkr(ila)%TmatN(:,:,ispin),noco%theta_noco(i1),noco%phi_noco(i1),lmmaxd,0)
               else
