@@ -124,7 +124,7 @@ d r_log 0.1D0
 d a_log 0.025D0
 ### unknown
 l enable_quad_prec .FALSE.
-### [bfields] external magnetic field, non-collinear magnetic field (called lbfield in KKRhost code)
+### [bfields] turn on or off everything concerning non-collinear magnetic fields (called lbfield in KKRhost code)
 l noncobfield .FALSE.
 ### [bfields] constraining fields, non-collinear magnetic field (called lbfield_constr in KKRhost code)
 l constr_field .FALSE.

@@ -141,7 +141,9 @@ module CalculationData_mod
     
     ! Allocate bfields for all atoms, makes it easier to read from disk.
     ! The types itself are very small, the larger components will only be allocated for local atoms.
-    allocate(self%bfields(dims%naez))
+    if (params%noncobfield) then
+      allocate(self%bfields(dims%naez))
+    end if
 
     allocate(self%atom_ids(num_local_atoms))
 
@@ -225,7 +227,9 @@ module CalculationData_mod
     deallocate(self%ldau_data_a, stat=ist)
     deallocate(self%jij_data_a, stat=ist)
     deallocate(self%atom_ids, stat=ist)
-    deallocate(self%bfields, stat=ist)
+    if (allocated(self%bfields)) then
+      deallocate(self%bfields, stat=ist)
+    end if
     
   endsubroutine ! destroy
 
@@ -382,18 +386,20 @@ module CalculationData_mod
 !   write(*,*) __FILE__,__LINE__," setup_iguess deavtivated for DEBUG!"
     call setup_iguess(self, dims, arrays%nofks, kmesh) ! setup storage for iguess
 
-    ! Initialize the noncolinear magnetic field. If present, read from disk
-    call load_bfields_from_disk(self%bfields, params%noncobfield, params%constr_field)
-    ! For the local atoms, initialize some fields
-    do ila = 1, self%num_local_atoms
-      atom_id = self%atom_ids(ila)
-      ! Beware: self%bfields is allocated and saved for all atoms
-      call init_bfield(params%noncobfield, params%constr_field, self%bfields(atom_id), dims%lmaxd, &
-                       self%cheb_mesh_a(ila)%npan_lognew, self%cheb_mesh_a(ila)%npan_eqnew, &
-                       self%cheb_mesh_a(ila)%ipan_intervall, self%cheb_mesh_a(ila)%thetasnew, &
-                       self%gaunts%iend, self%gaunts%icleb,  self%gaunts%cleb(:,1), &
-                       self%cell_a(ila)%ifunm)
-    end do
+    if (params%noncobfield) then
+      ! Initialize the noncolinear magnetic field. If present, read from disk
+      call load_bfields_from_disk(self%bfields, params%constr_field)
+      ! For the local atoms, initialize some fields
+      do ila = 1, self%num_local_atoms
+        atom_id = self%atom_ids(ila)
+        ! Beware: self%bfields is allocated and saved for all atoms
+        call init_bfield(params%constr_field, self%bfields(atom_id), dims%lmaxd, &
+                         self%cheb_mesh_a(ila)%npan_lognew, self%cheb_mesh_a(ila)%npan_eqnew, &
+                         self%cheb_mesh_a(ila)%ipan_intervall, self%cheb_mesh_a(ila)%thetasnew, &
+                         self%gaunts%iend, self%gaunts%icleb,  self%gaunts%cleb(:,1), &
+                         self%cell_a(ila)%ifunm)
+      end do
+    end if
 
   endsubroutine ! constructEverything
 

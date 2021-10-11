@@ -37,28 +37,24 @@ module mod_bfield
 
 contains
 
-  subroutine load_bfields_from_disk(bfields, lbfield, lbfield_constr)
+  subroutine load_bfields_from_disk(bfields, lbfield_constr)
     type(bfield_data), allocatable :: bfields(:)
-    logical, intent(in) :: lbfield
     logical, intent(in) :: lbfield_constr
     
     integer :: number_of_atoms
 
     number_of_atoms = size(bfields)
     
-    if (lbfield) then
-      call read_bfield(bfields, number_of_atoms)
-    end if
+    call read_bfield(bfields, number_of_atoms)
     if (lbfield_constr) then
       call read_bconstr(bfields, number_of_atoms)
     end if
     
   end subroutine
 
-  subroutine init_bfield(lbfield, lbfield_constr, bfield, lmax, &
+  subroutine init_bfield(lbfield_constr, bfield, lmax, &
                          npan_log, npan_eq, ipan_intervall, thetasnew, &
                          iend, icleb, cleb, ifunm)
-    logical, intent(in) :: lbfield        !! Whether to use external nonco bfields
     logical, intent(in) :: lbfield_constr !! Whether to use constraint bfields
     type(bfield_data), intent(inout) :: bfield !! The bfield data
     integer, intent(in) :: lmax     !! Angular momentum cutoff
@@ -80,12 +76,9 @@ contains
     ! Calculate the LL' expansion of the shape function in the new mesh which
     ! is needed to convolute the magnetic field (only done once and stored to
     ! safe computing time)
-    ! TODO: the ".or. lbfield_constr" is not present in host. Is it only needed for externals?
-    if(lbfield .or. lbfield_constr) then
-      allocate (bfield%thetallmat((lmax+1)**2,(lmax+1)**2,irmdnew), stat=i_stat)
-      call calc_thetallmat(bfield%thetallmat, lmax, ipan_intervall(npan_log+npan_eq) + 1, &
-                           iend, irmdnew, thetasnew, ifunm, icleb, cleb)
-    end if
+    allocate (bfield%thetallmat((lmax+1)**2,(lmax+1)**2,irmdnew), stat=i_stat)
+    call calc_thetallmat(bfield%thetallmat, lmax, ipan_intervall(npan_log+npan_eq) + 1, &
+                          iend, irmdnew, thetasnew, ifunm, icleb, cleb)
 
   end subroutine init_bfield
 
@@ -152,31 +145,38 @@ contains
     
     integer        :: iatom, iostat
     character(256) :: linebuffer
-   
-    open(unit=57493215, file='bfield.dat', iostat=iostat)
-    if (iostat /= 0) then
-      write(*,*) "Error reading bfield.dat."
-      write(*,*) "Provide correct file or turn off magnetic fields."
-      stop
-    end if
+    logical        :: file_exists
 
-    ! manual loop over iatom because comments are allowed
-    iatom = 1
-    do while (iatom <= number_of_atoms)
-      read(57493215, '(A)', iostat=iostat) linebuffer
-      if (iostat /= 0) then
-        write(*,*) "I/O Error while reading bfield.dat"
-        stop
-      end if
-      if (linebuffer(1:1) == '#') cycle ! input line commented out
-      read(linebuffer, *, iostat=iostat) bfields(iatom)%theta, bfields(iatom)%phi, bfields(iatom)%bfield_strength
-      if (iostat /= 0) then
-        write(*,*) "Error parsing a line in bfield.dat"
-        stop
-      end if
-      iatom = iatom + 1
-    end do
-    close(57493215)
+    inquire(file='bfield.dat', exist=file_exists)
+   
+    if (file_exists) then
+      open(unit=57493215, file='bfield.dat', iostat=iostat)
+      
+      ! manual loop over iatom because comments are allowed
+      iatom = 1
+      do while (iatom <= number_of_atoms)
+        read(57493215, '(A)', iostat=iostat) linebuffer
+        if (iostat /= 0) then
+          write(*,*) "I/O Error while reading bfield.dat"
+          stop
+        end if
+        if (linebuffer(1:1) == '#') cycle ! input line commented out
+        read(linebuffer, *, iostat=iostat) bfields(iatom)%theta, bfields(iatom)%phi, bfields(iatom)%bfield_strength
+        if (iostat /= 0) then
+          write(*,*) "Error parsing a line in bfield.dat"
+          stop
+        end if
+        iatom = iatom + 1
+      end do
+      close(57493215)
+    else
+      ! No 'bfield.dat' given, use default 0
+      do iatom = 1, number_of_atoms
+        bfields(iatom)%theta = 0.
+        bfields(iatom)%phi = 0.
+        bfields(iatom)%bfield_strength = 0.
+      end do
+    end if
 
     write(*,*) '  ###############################################'
     write(*,*) '  external non-collinear magnetic fields'
@@ -203,7 +203,7 @@ contains
   !> pauli matrices and B the combined bfield.
   !>------------------------------------------------------------------------------
   subroutine add_bfield(bfield, vnspll, theta, phi, imt, iteration_number, &
-                        itscf0, itscf1, lbfield, lbfield_constr, lbfield_trans, &
+                        itscf0, itscf1, lbfield_constr, lbfield_trans, &
                         lbfield_mt, transpose_bfield)
     type(bfield_data), intent(in) :: bfield
     double complex, dimension(:,:,:), intent(inout) :: vnspll ! The potential to add to
@@ -211,7 +211,7 @@ contains
     integer, intent(in) :: imt ! MT radius (index in cheb mesh)
     integer, intent(in) :: iteration_number !TODO this, or just a logical and do the check outside?
     integer, intent(in) :: itscf0, itscf1   !TODO ^
-    logical, intent(in) :: lbfield, lbfield_constr !! Wheter to apply the fields
+    logical, intent(in) :: lbfield_constr !! Wheter to use constraint fields
     logical, intent(in) :: lbfield_trans ! Apply only transveral
     logical, intent(in) :: lbfield_mt ! Apply only up do MT radius
     logical, intent(in) :: transpose_bfield ! Transpose the bfield (for left solutions)
@@ -222,11 +222,17 @@ contains
     double complex, dimension(2,2) :: bfield_mat ! bfield times pauli matrices
     double complex :: temp ! used to transpose the matrix
 
+    ! If the current iteration is not in the window the magneti fields should be
+    ! applied, return without changing the potential
+    if (iteration_number < itscf0 .or. iteration_number > itscf1) then
+      return
+    end if
+
     lmmax = size(bfield%thetallmat, 1) ! size(vnspll, 1) is 2*lmmax
     irmd = size(vnspll, 3)
 
     combined_bfields(:) = bfield%bfield(:) ! start with external, is zero if unused
-    if (lbfield_constr .and. itscf0 <= iteration_number .and. iteration_number <= itscf1) then
+    if (lbfield_constr) then
       ! Add constraint field
       combined_bfields(:) = combined_bfields(:) + bfield%bfield_constr(:)
     end if
