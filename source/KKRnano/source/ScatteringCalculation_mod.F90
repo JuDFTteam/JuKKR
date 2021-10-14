@@ -74,7 +74,7 @@ implicit none
     
     use two_sided_commD_mod, only: distribute
     
-    use ChebMeshData_mod, only: interpolate_poten  ! NOCO
+    use ChebMeshData_mod, only: interpolate_poten, get_muffin_tin_index  ! NOCO
     use NonCollinearMagnetism_mod, only: tmat_newsolver  ! NOCO
     use NonCollinearMagnetism_Helpers_mod, only: rotatematrix  ! NOCO
 
@@ -272,7 +272,8 @@ implicit none
                                     !dims%lly,        &    
                                     atomdata%potential%lmpot,atomdata%chebmesh_ptr%irmd_new, &
                                     kkr(ila)%TmatN(:,:,ispin),params%soc,params%enable_quad_prec, &
-                                    calc%bfields(i1), calc%mesh_a(ila)%imt, iter, params%itbfield0, params%itbfield1, &
+                                    calc%bfields(i1), get_muffin_tin_index(atomdata%chebmesh_ptr), &
+                                    iter, params%itbfield0, params%itbfield1, &
                                     params%noncobfield, params%constr_field, params%trans_bfield, params%mt_bfield)
                
                 call rotatematrix(kkr(ila)%TmatN(:,:,ispin),noco%theta_noco(i1),noco%phi_noco(i1),lmmaxd,0)

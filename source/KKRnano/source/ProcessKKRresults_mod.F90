@@ -420,6 +420,7 @@ module ProcessKKRresults_mod
     use KKRresults_mod, only: KKRresults
     use DensityResults_mod, only: DensityResults
     use EnergyResults_mod, only: EnergyResults
+    use ChebMeshData_mod, only: get_muffin_tin_index
     
     use lloyd0_new_mod, only: lloyd0_wrapper_com
     use wrappers_mod, only: rhoval_wrapper, RHOTOTB_wrapper, RHOMOM_NEW_wrapper
@@ -519,9 +520,10 @@ module ProcessKKRresults_mod
                           calc%gaunts, emesh, ldau_data, params%Volterra, &
                           dims%korbit, calc%noco_data%theta_noco(atom_id), calc%noco_data%phi_noco(atom_id), &
                           calc%noco_data%theta_noco_old(atom_id), calc%noco_data%phi_noco_old(atom_id), &
-                          calc%noco_data%angle_fixed(atom_id), & 
-                          calc%noco_data%moment_x(atom_id),calc%noco_data%moment_y(atom_id), calc%noco_data%moment_z(atom_id), &
-                          densities%muorb, densities%iemxd, params, calc%bfields(atom_id), calc%mesh_a(ila)%imt, iter)
+                          calc%noco_data%angle_fixed(atom_id), calc%noco_data%moment_x(atom_id), &
+                          calc%noco_data%moment_y(atom_id), calc%noco_data%moment_z(atom_id), &
+                          densities%muorb, densities%iemxd, params, calc%bfields(atom_id), &
+                          get_muffin_tin_index(atomdata%chebmesh_ptr), iter)
 
       ! LDAU
       if (ldau_data%LDAU .and. ldau_data%NLDAU >= 1) then
