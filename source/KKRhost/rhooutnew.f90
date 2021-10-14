@@ -19,7 +19,7 @@ contains
   !> Deprecated: False 
   !> Calculation of the density for the new solver
   subroutine rhooutnew(nsra, lmax, gmatll, ek, lmpot, df, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, &
-     rll, ull, rllleft, sllleft, cden, cdenlm, cdenns, rho2nsc, corbital, gflle_part, rpan_intervall, ipan_intervall, nspin)
+     rll, sll, ull, rllleft, sllleft, ullleft, cden, cdenlm, cdenns, rho2nsc, corbital, gflle_part, rpan_intervall, ipan_intervall, nspin)
 
     use :: mod_constants, only: cone,czero,pi
     use :: mod_runoptions, only: calc_gmat_lm_full, use_ldau, decouple_spin_cheby
@@ -51,10 +51,12 @@ contains
     real (kind=dp), dimension (0:ntotd), intent (in) :: rpan_intervall
     real (kind=dp), dimension (ntotd*(ncheb+1), nfund), intent (in) :: thetasnew
     complex (kind=dp), dimension (lmmaxd, lmmaxd), intent (in) :: gmatll !! GMATLL=diagonal elements of the G matrix (system) Note that SLL is not needed for calculation of density, only needed for calculation of Green function
-    complex (kind=dp), dimension (nsra*lmmaxd, lmmaxd, irmdnew), intent (in) :: ull
     complex (kind=dp), dimension (nsra*lmmaxd, lmmaxd, irmdnew), intent (in) :: rll
+    complex (kind=dp), dimension (nsra*lmmaxd, lmmaxd, irmdnew), intent (in) :: sll
+    complex (kind=dp), dimension (nsra*lmmaxd, lmmaxd, irmdnew), intent (in) :: ull
     complex (kind=dp), dimension (nsra*lmmaxd, lmmaxd, irmdnew), intent (in) :: rllleft
     complex (kind=dp), dimension (nsra*lmmaxd, lmmaxd, irmdnew), intent (in) :: sllleft
+    complex (kind=dp), dimension (nsra*lmmaxd, lmmaxd, irmdnew), intent (in) :: ullleft
 
     ! .. Output variables
     complex (kind=dp), dimension (irmdnew, nspin*(1+korbit)), intent (out) :: cdenns

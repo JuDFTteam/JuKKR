@@ -486,6 +486,19 @@ contains
           lmmaxd,irmdnew,ith,nth,rll_was_read_in,sll_was_read_in,                  &
           rllleft_was_read_in,sllleft_was_read_in)
       end if
+      ! MdSD: TEST
+      ! if (myrank == 0) then
+      !   write(*,'("In rhovalnew:")')
+      !   write(*,'("nwfsavemax=",i4)') t_wavefunctions%nwfsavemax
+      !   write(*,'("save_rll=",l4)') t_wavefunctions%save_rll
+      !   write(*,'("save_sll=",l4)') t_wavefunctions%save_sll
+      !   write(*,'("save_rllleft=",l4)') t_wavefunctions%save_rllleft
+      !   write(*,'("save_sllleft=",l4)') t_wavefunctions%save_sllleft
+      !   write(*,'("rll_was_read_in=",l4)') rll_was_read_in
+      !   write(*,'("sll_was_read_in=",l4)') sll_was_read_in
+      !   write(*,'("rllleft_was_read_in=",l4)') rllleft_was_read_in
+      !   write(*,'("sllleft_was_read_in=",l4)') sllleft_was_read_in
+      ! end if
 
       ! recalculate wavefuntions, also include left solution
       ! contruct the spin-orbit coupling hamiltonian and add to potential
@@ -497,7 +510,7 @@ contains
       end if
   
       ! Add magnetic field
-      if ( t_params%bfield%lbfield .or. t_params%bfield%lbfield_constr ) then
+      if (t_params%bfield%lbfield) then
         imt1 = ipan_intervall(t_params%npan_log+t_params%npan_eq) + 1
         call add_bfield(t_params%bfield,i1,lmax,nspin,irmdnew,imt1,iend,ncheb,theta,phi,t_params%ifunm1(:,t_params%ntcell(i1)),&
                         t_params%icleb,t_params%cleb(:,1),t_params%thetasnew(1:irmdnew,:,t_params%ntcell(i1)),'1',vnspll2(:,:,:), &
@@ -554,15 +567,19 @@ contains
         ! faster calculation of RLL.
         ! no irregular solutions SLL are needed in self-consistent iterations
         ! because the density depends only on RLL, RLLLEFT and SLLLEFT
-        if (.not.set_cheby_nospeedup .and. .not. (calc_exchange_couplings .or. write_pkkr_operators)) then
-          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), ull(:,:,:,ith), rll(:,:,:,ith), tmatll, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, &
-            hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
-!         call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), tmatll, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, &
-!           hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
-        else
-          call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), sll(:,:,:,ith), tmatll, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, &
-            hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alphall)
-        end if
+        call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), ull(:,:,:,ith), rll(:,:,:,ith), tmatll, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, &
+          nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
+        ! MdSD: right now it seems that sll is not used for anything
+        ! if (set_cheby_nospeedup .or. calc_exchange_couplings .or. write_pkkr_operators) then
+        !   call sll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), sll(:,:,:,ith), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, &
+        !     nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick)
+          ! MdSD: this is the old interface
+          ! call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), sll(:,:,:,ith), tmatll, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, &
+          !  hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alphall)
+          ! MdSD: if using the old rllsll this is needed for rhooutnew
+          ! ull(:,:,:,ith) = rll(:,:,:,ith)
+        ! end if
+        ! MdSD: if using the old rllsll check if this is needed
         if (nsra==2) then
           ull(lmmaxd+1:nvec*lmmaxd, :, :, ith) = ull(lmmaxd+1:nvec*lmmaxd, :, :, ith)/cvlight
           rll(lmmaxd+1:nvec*lmmaxd, :, :, ith) = rll(lmmaxd+1:nvec*lmmaxd, :, :, ith)/cvlight
@@ -584,7 +601,7 @@ contains
         end if
         
         ! Add magnetic field 
-        if ( t_params%bfield%lbfield .or. t_params%bfield%lbfield_constr ) then
+        if (t_params%bfield%lbfield) then
           call add_bfield(t_params%bfield,i1,lmax,nspin,irmdnew,imt1,iend,ncheb,theta,phi,t_params%ifunm1(:,t_params%ntcell(i1)),&
                           t_params%icleb,t_params%cleb(:,1),t_params%thetasnew(1:irmdnew,:,t_params%ntcell(i1)),'transpose',vnspll2(:,:,:), &
                           vnspll1(:,:,:,ith),t_params%bfield%thetallmat(:,:,1:irmdnew,t_params%ntcell(i1)))
@@ -632,15 +649,14 @@ contains
         tmattemp = czero
         alphall = czero
         ! faster calculation of RLLLEFT and SLLLEFT.
-        if (.not.set_cheby_nospeedup .and. .not. (calc_exchange_couplings .or. write_pkkr_operators)) then
-          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), ullleft(:,:,:,ith), rllleft(:,:,:,ith), tmattemp, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
-            jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
-          call sll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), sllleft(:,:,:,ith), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, &
-            hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick)
-        else
-          call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), tmattemp, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
-            jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alphall)
-        end if
+        call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), ullleft(:,:,:,ith), rllleft(:,:,:,ith), tmattemp, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, &
+          nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
+        call sll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), sllleft(:,:,:,ith), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, & 
+          nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick)
+        ! MdSD: this is the old interface
+        ! call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), tmattemp, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
+        !   jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alphall)
+        ! MdSD: if using the old rllsll check if this is needed
         if (nsra==2) then
           ullleft(lmmaxd+1:nvec*lmmaxd, :, :, ith) = ullleft(lmmaxd+1:nvec*lmmaxd, :, :, ith)/cvlight
           rllleft(lmmaxd+1:nvec*lmmaxd, :, :, ith) = rllleft(lmmaxd+1:nvec*lmmaxd, :, :, ith)/cvlight
@@ -680,9 +696,10 @@ contains
         end do
 
         ! calculate density
-
-        call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, df, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll(:,:,:,ith), & ! SLL(:,:,:,ith), commented out since sll is not used in rhooutnew
-         ull(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), rho2nsc_loop(:,:,:,ie), 0, gflle(:,:,ie,iq), rpan_intervall, ipan_intervall, nspin/(nspin-korbit))
+        ! MdSD: modified the interface to allow for all types of scattering solutions; some can be dummy arguments
+        call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, df, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, &
+          rll(:,:,:,ith), sll(:,:,:,ith), ull(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), ullleft(:,:,:,ith), &
+          cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), rho2nsc_loop(:,:,:,ie), 0, gflle(:,:,ie,iq), rpan_intervall, ipan_intervall, nspin/(nspin-korbit))
 
 
         do jspin = 1, nspin/(nspin-korbit)*(1+korbit)
@@ -730,9 +747,10 @@ contains
       ! Get charge at the Fermi energy (IELAST)
       !------------------------------------------------------------------------------
       if (ie==ielast .and. ldorhoef) then
-        call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, cone, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll(:,:,:,ith), & ! SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
-         ull(:,:,:,ith),  rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), r2nefc_loop(:,:,:,ith), 0, gflle_part(:,:,ith), rpan_intervall, &
-          ipan_intervall, nspin/(nspin-korbit))
+        ! MdSD: modified the interface to allow for all types of scattering solutions; some can be dummy arguments
+        call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, cone, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, &
+          rll(:,:,:,ith), sll(:,:,:,ith), ull(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), ullleft(:,:,:,ith), &
+          cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), r2nefc_loop(:,:,:,ith), 0, gflle_part(:,:,ith), rpan_intervall, ipan_intervall, nspin/(nspin-korbit))
       end if
 
       !------------------------------------------------------------------------------
@@ -744,8 +762,10 @@ contains
         proj(2) = sin(phi)*sin(theta)
         proj(3) = cos(theta)
         do iorb = 1, 3
-          call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, cone, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll(:,:,:,ith), & ! SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
-            ull(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), r2orbc(:,:,:,ith), iorb, gflle_part(:,:,ith), rpan_intervall, ipan_intervall, nspin)
+          ! MdSD: modified the interface to allow for all types of scattering solutions; some can be dummy arguments
+          call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, cone, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, &
+            rll(:,:,:,ith), sll(:,:,:,ith), ull(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), ullleft(:,:,:,ith), & 
+            cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), r2orbc(:,:,:,ith), iorb, gflle_part(:,:,ith), rpan_intervall, ipan_intervall, nspin)
           do jspin = 1, nspin*(1+korbit)
             if (jspin<=2) then
               do lm1 = 0, lmax
