@@ -393,7 +393,7 @@ module CalculationData_mod
       do ila = 1, self%num_local_atoms
         atom_id = self%atom_ids(ila)
         ! Beware: self%bfields is allocated and saved for all atoms
-        call init_bfield(params%constr_field, self%bfields(atom_id), dims%lmaxd, &
+        call init_bfield(self%bfields(atom_id), dims%lmaxd, &
                          self%cheb_mesh_a(ila)%npan_lognew, self%cheb_mesh_a(ila)%npan_eqnew, &
                          self%cheb_mesh_a(ila)%ipan_intervall, self%cheb_mesh_a(ila)%thetasnew, &
                          self%gaunts%iend, self%gaunts%icleb,  self%gaunts%cleb(:,1), &

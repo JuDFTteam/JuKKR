@@ -16,6 +16,9 @@ module mod_bfield
 
   implicit none
 
+  private
+  public :: bfield_data, load_bfields_from_disk, init_bfield, add_bfield
+
   ! In KKRhost, there is a type named 'type_bfield',
   ! which contains the input parameters and the information from 'bfield_data'.
   ! Here, one instance of 'bfield_data' is stored for each atom, while
@@ -27,7 +30,7 @@ module mod_bfield
   !-------------------------------------------------------------------------------
   type :: bfield_data
     double precision, dimension(3) :: bfield !! external magnetic field in cartesian coordinates
-    double precision               :: bfield_strength !! absolute value of the external magnetic field, dimensions 
+    double precision               :: bfield_strength !! absolute value of the external magnetic field
     double precision, dimension(3) :: bfield_constr !! constraining field in cartesian coordinates
     double precision               :: theta !! polar angle of the magnetic field
     double precision               :: phi   !! azimuthal angle of the magnetic field
@@ -37,9 +40,13 @@ module mod_bfield
 
 contains
 
+  !> Load the external noncollinear magnetic field (if a file is present) and
+  !> the initial guess for the constraining fields (if constraint magnetism is
+  !> used and a file is present) from disk.
+  !> This subroutine loads information for all atoms into an array of structs.
   subroutine load_bfields_from_disk(bfields, lbfield_constr)
-    type(bfield_data), allocatable :: bfields(:)
-    logical, intent(in) :: lbfield_constr
+    type(bfield_data), intent(inout) :: bfields(:)
+    logical,           intent(in)    :: lbfield_constr
     
     integer :: number_of_atoms
 
@@ -52,10 +59,10 @@ contains
     
   end subroutine
 
-  subroutine init_bfield(lbfield_constr, bfield, lmax, &
-                         npan_log, npan_eq, ipan_intervall, thetasnew, &
-                         iend, icleb, cleb, ifunm)
-    logical, intent(in) :: lbfield_constr !! Whether to use constraint bfields
+  !> Initialize a bfield_data struct. Allocates and calculates the shapefunction
+  !> used in other subroutines.
+  subroutine init_bfield(bfield, lmax, npan_log, npan_eq, ipan_intervall, &
+                         thetasnew, iend, icleb, cleb, ifunm)
     type(bfield_data), intent(inout) :: bfield !! The bfield data
     integer, intent(in) :: lmax     !! Angular momentum cutoff
     integer, intent(in) :: npan_log !! Chebyshev mesh resolution
@@ -207,7 +214,7 @@ contains
                         lbfield_mt, transpose_bfield)
     type(bfield_data), intent(in) :: bfield
     double complex, dimension(:,:,:), intent(inout) :: vnspll ! The potential to add to
-    double precision,  intent(in) :: theta, phi ! angles or the magnetic moments, not to be confused with theta and phi in bfield
+    double precision,  intent(in) :: theta, phi ! angles of the magnetic moment, not to be confused with theta and phi in bfield
     integer, intent(in) :: imt ! MT radius (index in cheb mesh)
     integer, intent(in) :: iteration_number !TODO this, or just a logical and do the check outside?
     integer, intent(in) :: itscf0, itscf1   !TODO ^
@@ -298,7 +305,7 @@ contains
     double precision, dimension(:, :),  intent (in)  :: thetasnew !! shapefun on the Cheby mesh
     integer         , dimension(:),     intent (in)  :: ifunm     !! pointer array for shapefun
 
-    double precision, parameter :: rfpi = 3.5449077018110318
+    double precision, parameter :: rfpi = 3.5449077018110318 ! sqrt(4*pi)
     double precision, parameter :: c0ll = 1.d0 / rfpi
     integer :: irmdnew       ! number of radials point on the Chebyshev mesh
     integer :: lmmax         ! number of angular momentum entries
@@ -315,27 +322,32 @@ contains
 
     allocate(shapefun_mod(irmdnew, lmmax2))
 
+    ! Build the shapefun array. Start with all zero. Inside muffin tin only l=0
+    ! component is /= 0 (and constant), copy l=0 component for r outside of mt
+    ! from thetasnew.
     shapefun_mod(:,:)        = 0.d0
     shapefun_mod(1:imt1,1)   = rfpi ! is multipled by C_LL^0
     shapefun_mod(imt1+1:, 1) = thetasnew(imt1+1:irmdnew,1)
 
-    ! convert from pointer to real l,m
+    ! Copy other components from thetasnew. Convert from pointer indices to
+    ! normal (l,m)-index
     do lm1 = 2, lmmax2
       ifun = ifunm(lm1)
-      if(.not. ifun == 0) then !shapefun%lmused(lm1)==1) then
+      if(ifun /= 0) then !shapefun%lmused(lm1)==1) then
         shapefun_mod(imt1+1:, lm1) = thetasnew(imt1+1:, ifun)
       end if
     end do
-    
+
+    ! Initialize result
     thetansll(:,:,:) = 0.d0
 
-    ! diagonal part (not contained in gaunt-coeff)
+    ! Diagonal part (not contained in gaunt-coeff)
     do lm1 = 1, lmmax
       thetansll(lm1,lm1,:) = shapefun_mod(:,1) * c0ll
     end do
 
-    ! This is effectivly a summation over one angular momentum index lm3 for each
-    ! combination of lm1, lm2. Iterate instead over the flattened array cleb
+    ! Offdiagonal part. This is effectively a loop over angular momentum indices
+    ! lm1,lm2,lm3.  Iterate instead over the flattened array cleb
     ! containing the Gaunt coefficients and extract the angular momentum
     ! indices for each j.
     do j = 1, iend
