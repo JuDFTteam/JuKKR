@@ -561,9 +561,10 @@ bsrmm_mod.o: CacheOverlap_mod.o
 CacheOverlap_mod.o:
 ChebMeshData_mod.o: InputParams_mod.o RadialMeshData_mod.o
 Truncation_mod.o: Logging_mod.o Exceptions_mod.o TruncationZone_mod.o
-NonCollinearMagnetism_mod.o: RadialMeshData_mod.o ChebMeshData_mod.o read_formatted_shapefun_mod.o NonCollinearMagnetism_Helpers_mod.o bfield.o
+NonCollinearMagnetism_mod.o: RadialMeshData_mod.o ChebMeshData_mod.o read_formatted_shapefun_mod.o NonCollinearMagnetism_Helpers_mod.o bfield.o torque.o
 NonCollinearMagnetismData_mod.o: Exceptions_mod.o
 vintras_new.o: SingleSiteHelpers_mod.o
 bfield.o: NonCollinearMagnetism_Helpers_mod.o
+torque.o: NonCollinearMagnetism_Helpers_mod.o bfield.o
 
 # DO NOT DELETE

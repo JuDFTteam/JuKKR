@@ -13,8 +13,9 @@ module NonCollinearMagnetism_mod
 !-------------------------------------------------------------------------------
 use RadialMeshData_mod!, only:
 use ChebMeshData_mod!, only
-use NonCollinearMagnetism_Helpers_mod, only: rotatematrix, create_Umatrix
+use NonCollinearMagnetism_Helpers_mod, only: rotatematrix, create_Umatrix, intcheb_cell
 use mod_bfield, only: bfield_data, add_bfield
+use mod_torque, only: calc_torque
 
 implicit none
 private
@@ -338,7 +339,7 @@ SUBROUTINE rhovalnew(ldorhoef,ielast,nsra,nspin,lmax,ez,wez,zat,  &
         den_out,espv,rho2ns,r2nef,gmatn, muorb,  &
         lpotd,lmaxd,irmd,irmd_new,iemxd,soc,enable_quad_prec, &
         bfield, imt, iteration_number, itscf0, itscf1, &
-        lbfield, lbfield_constr, lbfield_trans, lbfield_mt)
+        lbfield, lbfield_constr, ltorque, lbfield_trans, lbfield_mt)
  
 ! Code converted using TO_F90 by Alan Miller
 ! Date: 2016-04-21  Time: 11:39:57
@@ -390,11 +391,12 @@ INTEGER, INTENT(IN)                      :: irmd_new
 INTEGER, INTENT(IN)                      :: iemxd
 LOGICAL, INTENT(IN)                      :: soc
 LOGICAL, INTENT(IN)                      :: enable_quad_prec
-type(bfield_data), intent(in)            :: bfield !! Information on the noncollinear magnetic fields
+type(bfield_data), intent(inout)         :: bfield !! Information on the noncollinear magnetic fields
 integer, intent(in)                      :: imt !! MT radius (index in cheb mesh)
 integer, intent(in)                      :: iteration_number !! Current iteration number
 integer, intent(in)                      :: itscf0, itscf1 !! Window of iterations when to apply fields
 logical, intent(in)                      :: lbfield, lbfield_constr !! Wheter to apply the fields
+logical, intent(in)                      :: ltorque !! Whether to calculate torques
 logical, intent(in)                      :: lbfield_trans ! Apply only transveral
 logical, intent(in)                      :: lbfield_mt ! Apply only up do MT radius
 
@@ -819,6 +821,14 @@ DO ir=1,irmdnew
 END DO
   r2nefc(:,:,:) = r2nefc(:,:,:) + r2nefc_loop(:,:,:)
 
+! Calculate torque
+! Compare this position to KKhost: calling after the rho2nsc_loop, before cheb2oldgrid
+if (ltorque) then
+  call calc_torque(bfield, vins, rho2nsc, theta, phi, lmax, rpan_intervall, ipan_intervall, &
+                   npan_tot, ncheb, imt1, iend, icleb, cleb, ifunm, thetasnew, &
+                   lbfield_constr, lbfield_mt, itscf0, itscf1, iteration_number, angle_fixed)
+end if
+
 allocate(rhotemp(irmdnew,lmpotd))
 allocate(rhonewtemp(irws,lmpotd))
 DO jspin=1,4
@@ -856,7 +866,8 @@ deallocate(rhotemp)
 deallocate(rhonewtemp)
 ! calculate new THETA and PHI for non-colinear
 !IF (.NOT.test('FIXMOM  ')) THEN
-if (angle_fixed == 0) then ! angle not fixed
+if (angle_fixed == 0 .or. &                       ! angle not fixed
+    angle_fixed == 4 .or. angle_fixed == 5 ) then ! use constraining fiels without fixing here
   rho2ns_temp(1,1)=rho2int(1)
   rho2ns_temp(2,2)=rho2int(2)
   rho2ns_temp(1,2)=rho2int(3)
@@ -963,7 +974,8 @@ DO lm1=0,lmaxd1
 END DO
 
 ! UPDATE ANGLES
-if (angle_fixed == 0) then
+if (angle_fixed == 0 .or. &                       ! angle not fixed
+    angle_fixed == 4 .or. angle_fixed == 5 ) then ! use constraining fiels without fixing here
 phi   = phinew
 theta = thetanew        
 endif
@@ -4667,61 +4679,6 @@ deallocate(l_up)
 
 END SUBROUTINE spin_orbit_one_l
 
-
-subroutine intcheb_cell(cden,den,rpan_intervall,ipan_intervall, &
-                        npan_tot,ncheb,irmdnew)
-!***********************************************************************
-! integrate the complex density of states for LM=1 
-! gives the total complex charge which is then
-! transformed to the xyz component of the magnetic 
-! moment
-!***********************************************************************
-implicit none
-
-integer           :: ncheb,npan_tot,irmdnew
-integer           :: ipan_intervall(0:npan_tot)
-double precision  :: rpan_intervall(0:npan_tot)
-double complex    :: cden(irmdnew),den
-integer           :: irstart,irstop,ipan
-double precision  :: widthfac
-double complex    :: int1
-
-den=(0.0D0,0.0D0)
-
-  do ipan=1,npan_tot
-    irstart=ipan_intervall(ipan-1)+1
-    irstop = ipan_intervall(ipan)
-    widthfac = 0.5D0*(rpan_intervall(ipan)-rpan_intervall(ipan-1))
-    call intcheb_complex(ncheb,cden(irstart:irstop),int1)
-    den=den+int1*widthfac
-    end do
-
-end subroutine intcheb_cell 
-
-subroutine intcheb_complex(ncheb,arr1,result1)
-implicit none
-integer, intent(in)         :: ncheb
-double complex, intent(in)  :: arr1(0:ncheb)
-double complex, intent(out) :: result1
-double precision            :: pi
-double precision  :: intweight(0:ncheb)
-integer :: icheb1,icheb2
-
-pi=4d0*datan(1d0)
-intweight=1.0D0
-  do icheb1=0,ncheb
-    do icheb2=2,ncheb,2
-      intweight(icheb1)=intweight(icheb1)+(-2.0D0/(icheb2**2-1.0D0))*dcos(icheb2*pi*(icheb1+0.5D0)/(Ncheb+1))
-    end do
-    intweight(icheb1)=intweight(icheb1)*2.0D0/(Ncheb+1)
-  end do
-
-result1=(0.0D0,0.0D0)
-do icheb1=0,ncheb
-  result1=result1+intweight(icheb1)*arr1(icheb1)
-end do
-
-end subroutine
 
 subroutine cheb2oldgrid(nrmax,nrmaxnew,lmmaxpot,rmesh,ncheb, &
                         npan_tot,rpan_intervall,ipan_intervall, &
