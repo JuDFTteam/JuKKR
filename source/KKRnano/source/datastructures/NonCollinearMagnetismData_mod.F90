@@ -20,7 +20,8 @@ module NonCollinearMagnetismData_mod
     double precision, allocatable :: phi_noco(:)         !< non-collinear magnetism angle, WARNING: not synchronized between MPI threads
     double precision, allocatable :: theta_noco_old(:)   !< non-collinear magnetism angle from iteration before, WARNING: not synchronized between MPI threads
     double precision, allocatable :: phi_noco_old(:)     !< non-collinear magnetism angle from iteration before, WARNING: not synchronized between MPI threads
-    integer (kind=1), allocatable :: angle_fixed(:)      !< keep angles fixed (1) or not (0), WARNING: not synchronized between MPI threads
+    integer (kind=1), allocatable :: angle_fix_mode(:)   !< keep angles fixed (1,2,3) or not (0), using constraint magnetic fields (2,3) with a
+                                                         !< selfconsistency cycle (2) or to cancel the torque (3) WARNING: not synchronized between MPI threads
     double precision, allocatable :: moment_x(:)         !< non-collinear magnetism moment in x-direction, WARNING: not synchronized between MPI threads
     double precision, allocatable :: moment_y(:)         !< non-collinear magnetism moment in x-direction, WARNING: not synchronized between MPI threads
     double precision, allocatable :: moment_z(:)         !< non-collinear magnetism moment in x-direction, WARNING: not synchronized between MPI threads
@@ -63,7 +64,7 @@ module NonCollinearMagnetismData_mod
     ALLOCATECHECK(self%phi_noco(naez))
     ALLOCATECHECK(self%theta_noco_old(naez))
     ALLOCATECHECK(self%phi_noco_old(naez))
-    ALLOCATECHECK(self%angle_fixed(naez))
+    ALLOCATECHECK(self%angle_fix_mode(naez))
     ALLOCATECHECK(self%moment_x(naez))
     ALLOCATECHECK(self%moment_y(naez))
     ALLOCATECHECK(self%moment_z(naez))
@@ -83,7 +84,7 @@ module NonCollinearMagnetismData_mod
     DEALLOCATECHECK(self%phi_noco)
     DEALLOCATECHECK(self%theta_noco_old)
     DEALLOCATECHECK(self%phi_noco_old)
-    DEALLOCATECHECK(self%angle_fixed)
+    DEALLOCATECHECK(self%angle_fix_mode)
     DEALLOCATECHECK(self%moment_x)
     DEALLOCATECHECK(self%moment_y)
     DEALLOCATECHECK(self%moment_z)
@@ -103,7 +104,7 @@ module NonCollinearMagnetismData_mod
               self%phi_noco, &
               self%theta_noco_old, &
               self%phi_noco_old, &
-              self%angle_fixed, &
+              self%angle_fix_mode, &
               self%moment_x, &
               self%moment_y, &
               self%moment_z
@@ -126,7 +127,7 @@ module NonCollinearMagnetismData_mod
               self%phi_noco, &
               self%theta_noco_old, &
               self%phi_noco_old, &
-              self%angle_fixed, &
+              self%angle_fix_mode, &
               self%moment_x, &
               self%moment_y, &
               self%moment_z
@@ -136,11 +137,11 @@ module NonCollinearMagnetismData_mod
 
   !-----------------------------------------------------------------------------
   !>    Reads nonco_angle.dat file.
-  subroutine readNOCODataascii(theta, phi, angle_fixed, naez)
+  subroutine readNOCODataascii(theta, phi, angle_fix_mode, naez)
    
     double precision,  intent(out) :: theta (naez)
     double precision,  intent(out) :: phi (naez)
-    integer (kind=1),  intent(out) :: angle_fixed (naez) ! (1): keep angle fixed, (0): relax angle
+    integer (kind=1),  intent(out) :: angle_fix_mode (naez) ! (1): keep angle fixed, (0): relax angle
     integer, intent(in)            :: naez
   
     logical :: lread, lcheckangles
@@ -156,7 +157,7 @@ module NonCollinearMagnetismData_mod
     if (lread) then
             open(UNIT=10,FILE='nonco_angle.dat',FORM='FORMATTED')
             do I1 = 1,naez
-               read(10,*) theta(I1),phi(I1),angle_fixed(I1)
+               read(10,*) theta(I1),phi(I1),angle_fix_mode(I1)
               ! if((abs(theta(I1)).lt.(pi+eps)   .and. abs(theta(I1)).gt.eps) .or. &
               ! (abs(phi(I1)).lt.(2*pi+eps) .and. abs(phi(I1)).gt.eps)) then
               !   LCHECKANGLES = .true.

@@ -364,7 +364,7 @@ module CalculationData_mod
 !   in case of a NOCO calculation - read file 'nonco_angle.dat'
     if (dims%korbit == 1) then
        if(dims%nspind .NE. 2) die_here('NSPIND=2 in global.conf is mandatory for SOC calculations')
-       call loadascii(self%noco_data%theta_noco, self%noco_data%phi_noco, self%noco_data%angle_fixed, dims%naez)
+       call loadascii(self%noco_data%theta_noco, self%noco_data%phi_noco, self%noco_data%angle_fix_mode, dims%naez)
        !call store(noco, 'bin.noco.0')
     else
        if(dims%korbit .NE. 0) die_here('When not using NOCO: KORBIT in global.conf should be zero')    

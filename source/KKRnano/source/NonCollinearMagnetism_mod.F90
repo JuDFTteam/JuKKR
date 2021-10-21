@@ -333,7 +333,7 @@ SUBROUTINE rhovalnew(ldorhoef,ielast,nsra,nspin,lmax,ez,wez,zat,  &
         socscale,cleb,icleb,iend,ifunm,lmsp,ncheb,  &
         npan_tot,npan_log,npan_eq,rmesh,irws,  &
         rpan_intervall,ipan_intervall,  &
-        rnew,vinsnew,thetasnew,theta,phi,angle_fixed, &
+        rnew,vinsnew,thetasnew,theta,phi,angle_fix_mode, &
         moment_x,moment_y,moment_z, &
         ipot,  &
         den_out,espv,rho2ns,r2nef,gmatn, muorb,  &
@@ -373,7 +373,7 @@ DOUBLE PRECISION, INTENT(IN)             :: vinsnew(:,:,:)
 DOUBLE PRECISION, INTENT(IN)             :: thetasnew(:,:)
 DOUBLE PRECISION, INTENT(INOUT)          :: theta
 DOUBLE PRECISION, INTENT(INOUT)          :: phi
-INTEGER (kind=1), INTENT(IN)             :: angle_fixed
+INTEGER (kind=1), INTENT(IN)             :: angle_fix_mode
 DOUBLE PRECISION, INTENT(OUT)            :: moment_x
 DOUBLE PRECISION, INTENT(OUT)            :: moment_y
 DOUBLE PRECISION, INTENT(OUT)            :: moment_z
@@ -826,7 +826,7 @@ END DO
 if (ltorque) then
   call calc_torque(bfield, vins, rho2nsc, theta, phi, lmax, rpan_intervall, ipan_intervall, &
                    npan_tot, ncheb, imt1, iend, icleb, cleb, ifunm, thetasnew, &
-                   lbfield_constr, lbfield_mt, itscf0, itscf1, iteration_number, angle_fixed)
+                   lbfield_constr, lbfield_mt, itscf0, itscf1, iteration_number, angle_fix_mode)
 end if
 
 allocate(rhotemp(irmdnew,lmpotd))
@@ -866,7 +866,7 @@ deallocate(rhotemp)
 deallocate(rhonewtemp)
 ! calculate new THETA and PHI for non-colinear
 !IF (.NOT.test('FIXMOM  ')) THEN
-if (angle_fixed == 0) then ! angle not fixed
+if (angle_fix_mode == 0) then ! angle not fixed
   rho2ns_temp(1,1)=rho2int(1)
   rho2ns_temp(2,2)=rho2int(2)
   rho2ns_temp(1,2)=rho2int(3)
@@ -917,7 +917,7 @@ if (angle_fixed == 0) then ! angle not fixed
 !  WRITE(12,*) thetanew,phinew
 
 ! Use old angles for rotation
-!if (angle_fixed == 1) then
+!if (angle_fix_mode == 1) then
 !  thetanew = theta
 !  phinew   = phi
 !endif 
@@ -973,7 +973,7 @@ DO lm1=0,lmaxd1
 END DO
 
 ! UPDATE ANGLES
-if (angle_fixed == 0) then
+if (angle_fix_mode == 0) then
 phi   = phinew
 theta = thetanew        
 endif
