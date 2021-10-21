@@ -866,8 +866,7 @@ deallocate(rhotemp)
 deallocate(rhonewtemp)
 ! calculate new THETA and PHI for non-colinear
 !IF (.NOT.test('FIXMOM  ')) THEN
-if (angle_fixed == 0 .or. &                       ! angle not fixed
-    angle_fixed == 4 .or. angle_fixed == 5 ) then ! use constraining fiels without fixing here
+if (angle_fixed == 0) then ! angle not fixed
   rho2ns_temp(1,1)=rho2int(1)
   rho2ns_temp(2,2)=rho2int(2)
   rho2ns_temp(1,2)=rho2int(3)
@@ -974,8 +973,7 @@ DO lm1=0,lmaxd1
 END DO
 
 ! UPDATE ANGLES
-if (angle_fixed == 0 .or. &                       ! angle not fixed
-    angle_fixed == 4 .or. angle_fixed == 5 ) then ! use constraining fiels without fixing here
+if (angle_fixed == 0) then
 phi   = phinew
 theta = thetanew        
 endif

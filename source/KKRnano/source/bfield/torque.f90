@@ -160,9 +160,9 @@ contains
     
     ! Scf-cycle for constraint fields, based either on torque or on fields alone
     if (lbfield_constr .and. itscf0 <= iteration .and. iteration <= itscf1) then
-      if (constr_mode == 3 .or. constr_mode == 5) then
+      if (constr_mode == 3) then
         bfield%bfield_constr(:) = bfield%bfield_constr(:) - torque(:) / mag_mom_len
-      else if (constr_mode == 2 .or. constr_mode == 4) then
+      else if (constr_mode == 2) then
         old_b_constr = bfield%bfield_constr(:)
         bfield%bfield_constr(:) = old_b_constr - dot_product(old_b_constr,dir)*dir - &
                 (mag_mom_dir - dot_product(mag_mom_dir,dir)*dir)*constraint_bfields_mixing_parameter
