@@ -522,7 +522,7 @@ module ProcessKKRresults_mod
                           calc%noco_data%theta_noco_old(atom_id), calc%noco_data%phi_noco_old(atom_id), &
                           calc%noco_data%angle_fixed(atom_id), calc%noco_data%moment_x(atom_id), &
                           calc%noco_data%moment_y(atom_id), calc%noco_data%moment_z(atom_id), &
-                          densities%muorb, densities%iemxd, params, calc%bfields(atom_id), &
+                          densities%muorb, densities%iemxd, params, calc%bfields(ila), &
                           get_muffin_tin_index(atomdata%chebmesh_ptr), iter)
 
       ! LDAU

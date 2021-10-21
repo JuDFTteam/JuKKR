@@ -43,20 +43,38 @@ contains
   !> Load the external noncollinear magnetic field (if a file is present) and
   !> the initial guess for the constraining fields (if constraint magnetism is
   !> used and a file is present) from disk.
-  !> This subroutine loads information for all atoms into an array of structs.
-  subroutine load_bfields_from_disk(bfields, lbfield_constr)
-    type(bfield_data), intent(inout) :: bfields(:)
-    logical,           intent(in)    :: lbfield_constr
+  !> This subroutine loads information for the locally treated atoms into an
+  !> array of structs.
+  subroutine load_bfields_from_disk(bfields, lbfield_constr, naez, atom_ids)
+    type(bfield_data), intent(inout) :: bfields(:)        !! Array for the read fields
+    logical,           intent(in)    :: lbfield_constr    !! Wheter constraint magnetism is used
+    integer,                       intent(in) :: naez     !! Number of atoms in the unit cell
+    integer(kind=4), dimension(:), intent(in) :: atom_ids !! Locally treated atoms
     
-    integer :: number_of_atoms
+    integer :: num_local_atoms ! number of atoms treated in this MPI rank
+    integer :: ila             ! atom index
+    type(bfield_data), dimension(:), allocatable :: all_bfields ! array of all bfields to read
 
-    number_of_atoms = size(bfields)
-    
-    call read_bfield(bfields, number_of_atoms)
+    ! Get the number of locally treated atoms form the size of the output array
+    num_local_atoms = size(bfields)
+
+    ! Allocate an array for all atoms in the unit cell to read the files (which of course
+    ! contain the fields of every atom)
+    allocate(all_bfields(naez))
+
+    ! Read the files
+    call read_bfield(all_bfields)
     if (lbfield_constr) then
-      call read_bconstr(bfields, number_of_atoms)
+      call read_bconstr(all_bfields)
     end if
-    
+
+    ! Copy the locally treated atoms to the output
+    do ila = 1, num_local_atoms
+      bfields(ila) = all_bfields(atom_ids(ila))
+    end do
+
+    ! Forget the other atoms
+    deallocate(all_bfields)
   end subroutine
 
   !> Initialize a bfield_data struct. Allocates and calculates the shapefunction
@@ -99,13 +117,15 @@ contains
   !> for each atom. The first line is treated as a header and skipped.
   !> Intepreted as initial constraining bfield in cartesian coordinates, in Ry.
   !-------------------------------------------------------------------------------
-  subroutine read_bconstr(bfields, number_of_atoms)
+  subroutine read_bconstr(bfields)
     type(bfield_data), dimension(:), intent(inout) :: bfields
-    integer                        , intent(in)  :: number_of_atoms
     
+    integer :: number_of_atoms
     integer :: iatom
     integer :: iostat
     logical :: file_exists
+
+    number_of_atoms = size(bfields)
 
     inquire(file='bconstr_in.dat', exist=file_exists)
 
@@ -146,13 +166,15 @@ contains
   !> strength in Ry ( ! might get changed to Tesla ! )
   !> Lines can be commented out with a # as first character.
   !>------------------------------------------------------------------------------
-  subroutine read_bfield(bfields,number_of_atoms)
+  subroutine read_bfield(bfields)
     type(bfield_data), dimension(:), intent(inout) :: bfields
-    integer                        , intent(in)   :: number_of_atoms
-    
+
+    integer        :: number_of_atoms
     integer        :: iatom, iostat
     character(256) :: linebuffer
     logical        :: file_exists
+
+    number_of_atoms = size(bfields)
 
     inquire(file='bfield.dat', exist=file_exists)
    
@@ -199,6 +221,7 @@ contains
       write(*,'(2X,I4,3(E16.8))') iatom, bfields(iatom)%theta, bfields(iatom)%phi, bfields(iatom)%bfield_strength
    end do
   end subroutine read_bfield
+
 
   !>------------------------------------------------------------------------------
   !> Summary: Adds the magnetic field to the potential

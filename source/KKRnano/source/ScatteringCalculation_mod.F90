@@ -272,7 +272,7 @@ implicit none
                                     !dims%lly,        &    
                                     atomdata%potential%lmpot,atomdata%chebmesh_ptr%irmd_new, &
                                     kkr(ila)%TmatN(:,:,ispin),params%soc,params%enable_quad_prec, &
-                                    calc%bfields(i1), get_muffin_tin_index(atomdata%chebmesh_ptr), &
+                                    calc%bfields(ila), get_muffin_tin_index(atomdata%chebmesh_ptr), &
                                     iter, params%itbfield0, params%itbfield1, &
                                     params%noncobfield, params%constr_field, params%trans_bfield, params%mt_bfield)
                

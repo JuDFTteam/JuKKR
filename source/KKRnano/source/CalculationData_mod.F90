@@ -139,10 +139,9 @@ module CalculationData_mod
     allocate(self%jij_data_a(num_local_atoms)) 
     if(num_local_atoms > 1 .and. params%Jij) warn(6, "Jij work with max. 1 atom so far!") 
     
-    ! Allocate bfields for all atoms, makes it easier to read from disk.
-    ! The types itself are very small, the larger components will only be allocated for local atoms.
+    ! Allocate bfields only if used
     if (params%noncobfield) then
-      allocate(self%bfields(dims%naez))
+      allocate(self%bfields(num_local_atoms))
     end if
 
     allocate(self%atom_ids(num_local_atoms))
@@ -388,12 +387,10 @@ module CalculationData_mod
 
     if (params%noncobfield) then
       ! Initialize the noncolinear magnetic field. If present, read from disk
-      call load_bfields_from_disk(self%bfields, params%constr_field)
-      ! For the local atoms, initialize some fields
+      call load_bfields_from_disk(self%bfields, params%constr_field, dims%naez, self%atom_ids)
+      ! Initialize the fields
       do ila = 1, self%num_local_atoms
-        atom_id = self%atom_ids(ila)
-        ! Beware: self%bfields is allocated and saved for all atoms
-        call init_bfield(self%bfields(atom_id), dims%lmaxd, &
+        call init_bfield(self%bfields(ila), dims%lmaxd, &
                          self%cheb_mesh_a(ila)%npan_lognew, self%cheb_mesh_a(ila)%npan_eqnew, &
                          self%cheb_mesh_a(ila)%ipan_intervall, self%cheb_mesh_a(ila)%thetasnew, &
                          self%gaunts%iend, self%gaunts%icleb,  self%gaunts%cleb(:,1), &
