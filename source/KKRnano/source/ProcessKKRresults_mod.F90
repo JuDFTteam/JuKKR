@@ -64,7 +64,7 @@ module ProcessKKRresults_mod
     type(EnergyResults), pointer                        :: energies
 
     type(RadialMeshData), pointer :: mesh
-    integer :: atom_id, ila, num_local_atoms, ierr, r1fu
+    integer :: atom_id, ila, num_local_atoms, ierr
 
     processKKRresults = 0
     num_local_atoms = calc%num_local_atoms
@@ -78,26 +78,7 @@ module ProcessKKRresults_mod
     ! write to 'results1' - only to be read in in results.f
     ! necessary for density of states calculation, otherwise
     ! only for informative reasons
-    if (params%KTE >= 0) then
-      r1fu = openResults1File(dims%IEMXD, dims%LMAXD, emesh%NPOL)
-
-      do ila = 1, num_local_atoms
-        atomdata  => getAtomData(calc, ila)
-        densities => getDensities(calc, ila)
-        atom_id = calc%atom_ids(ila) ! get global atom_id from local index
-
-        call writeResults1File(r1fu, densities%CATOM, densities%CHARGE, densities%DEN, &
-                              atomdata%core%ECORE, atom_id, emesh%NPOL, &
-                              atomdata%core%QC_corecharge, densities%MUORB, &
-                              calc%noco_data%phi_noco(atom_id), calc%noco_data%theta_noco(atom_id), &
-                              calc%noco_data%phi_noco_old(atom_id), calc%noco_data%theta_noco_old(atom_id), &
-                              calc%noco_data%angle_fix_mode(atom_id), &
-                              calc%noco_data%moment_x(atom_id),calc%noco_data%moment_y(atom_id), &
-                              calc%noco_data%moment_z(atom_id))
-      enddo
-
-      close(r1fu)
-    endif
+    call writeResults1File(num_local_atoms, params, dims, calc, emesh)
 
     ! |
     ! v
@@ -182,6 +163,9 @@ module ProcessKKRresults_mod
   ! BEGIN: only MASTERRANK is working here
   ! -----------------------------------------------------------------
     if (mp%isMasterRank) then
+
+      ! Just use any one
+      densities => getDensities(calc, 1)
 
       ! DOS was written to file 'results1' and read out here just
       ! to be written in routine wrldos (new: file complex.dos only)
@@ -1077,35 +1061,64 @@ module ProcessKKRresults_mod
 
   !----------------------------------------------------------------------------
   !> Write some stuff to the 'results1' file
-  subroutine writeResults1File(fu, catom, charge, den, ecore, i1, npol, qc, &
-                               muorb, phi_soc, theta_soc, phi_soc_old, &
-                               theta_soc_old, angle_fix_mode, &
-                               moment_x, moment_y, moment_z)
-                           
-    integer, intent(in) :: fu !< file unit
-    double precision, intent(in) :: catom(:), charge(:,:)
-    double complex, intent(in) :: den(:,:,:)
-    double precision, intent(in) :: ecore(20,2)
-    integer, intent(in) :: i1, npol
-    double precision, intent(in) :: qc
-    double precision, intent(in) :: muorb(:,:)     ! NOCO
-    double precision, intent(in) :: phi_soc        ! NOCO
-    double precision, intent(in) :: theta_soc      ! NOCO
-    double precision, intent(in) :: phi_soc_old    ! NOCO
-    double precision, intent(in) :: theta_soc_old  ! NOCO
-    integer (kind=1), intent(in) :: angle_fix_mode ! NOCO
-    double precision, intent(in) :: moment_x       ! NOCO
-    double precision, intent(in) :: moment_y       ! NOCO
-    double precision, intent(in) :: moment_z       ! NOCO
+  subroutine writeResults1File(num_local_atoms, params, dims, calc, emesh)
+    use InputParams_mod, only: InputParams
+    use DimParams_mod, only: DimParams
+    use CalculationData_mod, only: CalculationData, getAtomData, getDensities
+    use EnergyMesh_mod, only: EnergyMesh
+    use BasisAtom_mod, only: BasisAtom
+    use DensityResults_mod, only: DensityResults
 
-    if (npol == 0) then
-      write(unit=fu, rec=i1) qc,catom,charge,ecore,muorb,phi_soc,theta_soc,phi_soc_old,theta_soc_old,angle_fix_mode, &
-              moment_x,moment_y,moment_z,den  ! write density of states (den) only when certain options set
-    else
-      write(unit=fu, rec=i1) qc,catom,charge,ecore,muorb,phi_soc,theta_soc,phi_soc_old,theta_soc_old,angle_fix_mode, &
-              moment_x,moment_y,moment_z
-    endif
-  endsubroutine ! write
+    integer,               intent(in) :: num_local_atoms
+    type(InputParams),     intent(in) :: params
+    type(DimParams),       intent(in) :: dims
+    type(CalculationData), intent(in) :: calc
+    type(EnergyMesh),      intent(in) :: emesh
+
+    integer :: r1fu, atom_id, ila
+    type(BasisAtom),      pointer :: atomdata
+    type(DensityResults), pointer :: densities
+
+    if (params%kte >= 0) then
+
+      r1fu = openResults1File(dims%IEMXD, dims%LMAXD, emesh%NPOL)
+
+      do ila = 1, num_local_atoms
+        atomdata  => getAtomData(calc, ila)
+        densities => getDensities(calc, ila)
+        atom_id = calc%atom_ids(ila) ! get global atom_id from local index
+
+        if (emesh%NPOL == 0) then
+          write(unit=r1fu, rec=atom_id) atomdata%core%QC_corecharge, &
+              densities%CATOM, densities%CHARGE, atomdata%core%ECORE, &
+              densities%MUORB, calc%noco_data%phi_noco(atom_id), &
+              calc%noco_data%theta_noco(atom_id), &
+              calc%noco_data%phi_noco_old(atom_id), &
+              calc%noco_data%theta_noco_old(atom_id), &
+              calc%noco_data%angle_fix_mode(atom_id), &
+              calc%noco_data%moment_x(atom_id), &
+              calc%noco_data%moment_y(atom_id), &
+              calc%noco_data%moment_z(atom_id), &
+              densities%DEN  ! write density of states (den) only when certain options set
+        else
+          write(unit=r1fu, rec=atom_id) atomdata%core%QC_corecharge, &
+              densities%CATOM, densities%CHARGE, atomdata%core%ECORE, &
+              densities%MUORB, calc%noco_data%phi_noco(atom_id), &
+              calc%noco_data%theta_noco(atom_id), &
+              calc%noco_data%phi_noco_old(atom_id), &
+              calc%noco_data%theta_noco_old(atom_id), &
+              calc%noco_data%angle_fix_mode(atom_id), &
+              calc%noco_data%moment_x(atom_id), &
+              calc%noco_data%moment_y(atom_id), &
+              calc%noco_data%moment_z(atom_id)
+        endif
+      end do
+
+      close(r1fu)
+
+    end if
+  end subroutine
+
 
   !----------------------------------------------------------------------------
   !> Communicate and sum up contributions for charge neutrality and
