@@ -64,19 +64,40 @@ module ProcessKKRresults_mod
     type(EnergyResults), pointer                        :: energies
 
     type(RadialMeshData), pointer :: mesh
-    integer :: atom_id, ila, num_local_atoms, ierr
+    integer :: atom_id, ila, num_local_atoms, ierr, r1fu
 
     processKKRresults = 0
     num_local_atoms = calc%num_local_atoms
-
-    densities => getDensities(calc, 1)
-    energies  => getEnergies(calc, 1)
 
     ! kkr
     !  |
     !  v
 
     call calculateDensities(iter, calc, mp, dims, params, program_timer, arrays, emesh)
+
+    ! write to 'results1' - only to be read in in results.f
+    ! necessary for density of states calculation, otherwise
+    ! only for informative reasons
+    if (params%KTE >= 0) then
+      r1fu = openResults1File(dims%IEMXD, dims%LMAXD, emesh%NPOL)
+
+      do ila = 1, num_local_atoms
+        atomdata  => getAtomData(calc, ila)
+        densities => getDensities(calc, ila)
+        atom_id = calc%atom_ids(ila) ! get global atom_id from local index
+
+        call writeResults1File(r1fu, densities%CATOM, densities%CHARGE, densities%DEN, &
+                              atomdata%core%ECORE, atom_id, emesh%NPOL, &
+                              atomdata%core%QC_corecharge, densities%MUORB, &
+                              calc%noco_data%phi_noco(atom_id), calc%noco_data%theta_noco(atom_id), &
+                              calc%noco_data%phi_noco_old(atom_id), calc%noco_data%theta_noco_old(atom_id), &
+                              calc%noco_data%angle_fix_mode(atom_id), &
+                              calc%noco_data%moment_x(atom_id),calc%noco_data%moment_y(atom_id), &
+                              calc%noco_data%moment_z(atom_id))
+      enddo
+
+      close(r1fu)
+    endif
 
     ! |
     ! v
@@ -453,7 +474,7 @@ module ProcessKKRresults_mod
     double precision :: new_fermi
     double precision :: CHRGSEMICORE !< total semicore charge over all atoms
     double precision :: fsemicore_in
-    integer :: ila, r1fu
+    integer :: ila
     integer :: num_local_atoms
 
     double complex, allocatable :: prefactors(:)  ! for Morgan charge test only
@@ -586,30 +607,6 @@ module ProcessKKRresults_mod
 
     call outTime(mp%isMasterRank, 'valence charge density .........', getTime(program_timer), ITER)
     call sumNeutralityDOSFermi_com(CHRGNT, DENEF, mp%mySEComm)
-
-    ! write to 'results1' - only to be read in in results.f
-    ! necessary for density of states calculation, otherwise
-    ! only for informative reasons
-    if (params%KTE >= 0) then
-      r1fu = openResults1File(dims%IEMXD, dims%LMAXD, emesh%NPOL)
-
-      do ila = 1, num_local_atoms
-        atomdata  => getAtomData(calc, ila)
-        densities => getDensities(calc, ila)
-        atom_id = calc%atom_ids(ila) ! get global atom_id from local index
-
-        call writeResults1File(r1fu, densities%CATOM, densities%CHARGE, densities%DEN, &
-                              atomdata%core%ECORE, atom_id, emesh%NPOL, &
-                              atomdata%core%QC_corecharge, densities%MUORB, &
-                              calc%noco_data%phi_noco(atom_id), calc%noco_data%theta_noco(atom_id), &
-                              calc%noco_data%phi_noco_old(atom_id), calc%noco_data%theta_noco_old(atom_id), &
-                              calc%noco_data%angle_fix_mode(atom_id), &
-                              calc%noco_data%moment_x(atom_id),calc%noco_data%moment_y(atom_id), &
-                              calc%noco_data%moment_z(atom_id))
-      enddo
-
-      close(r1fu)
-    endif
 
     call outTime(mp%isMasterRank, 'density calculated .............', getTime(program_timer), ITER)
 
