@@ -1043,21 +1043,21 @@ module ProcessKKRresults_mod
     write(unit=fu, rec=i1) catom,vmad,ecou,epotin,espc,espv,exc,lcoremax,euldau,edcldau
   endsubroutine ! write
 
-  !----------------------------------------------------------------------------
-  !> Open the file 'results1'
-  integer function openResults1File(iemxd, lmaxd, npol) result(fu)
+
+  !> Calculate size of data written per atom in the bin.results1 file
+  integer function calculateResults1FileRecordLength(iemxd, lmaxd, npol) result(reclen)
     integer, intent(in) :: iemxd, lmaxd, npol
 
-    integer :: lrecres1
+    ! Original output
+    reclen = 8*43 + 16*(lmaxd+2)
+    ! Add noco contributions (densities%muorb and some calc%noco_data%...)
+    reclen = reclen + 8*(lmaxd+3)*3 + 8*4 + 1*1 + 8*3
+    if (npol == 0) then
+      ! Add the size needed for the density of states
+      reclen = reclen + 32*(lmaxd+2)*iemxd
+    end if
 
-    !lrecres1 = 8*43 + 16*(lmaxd+2)
-    !lrecres1 = 8*43 + 16*(lmaxd+2) + 8*(lmaxd+3)*3 + 8*2 + 1*1 ! NOCO with nonco angles and angle_fix_mode
-    lrecres1 = 8*43 + 16*(lmaxd+2) + 8*(lmaxd+3)*3 + 8*4 + 1*1 + 8*3 ! NOCO with old and new nonco angles, angle_fix_mode and moments
-    if (npol == 0) lrecres1 = lrecres1 + 32*(lmaxd+2)*iemxd
-
-    fu = 71
-    open(unit=fu, access='direct', recl=lrecres1, file='bin.results1', form='unformatted', action='write')
-  endfunction ! open
+  end function
 
   !----------------------------------------------------------------------------
   !> Write some stuff to the 'results1' file
@@ -1076,12 +1076,15 @@ module ProcessKKRresults_mod
     type(EnergyMesh),      intent(in) :: emesh
 
     integer :: r1fu, atom_id, ila
+    integer :: reclen
     type(BasisAtom),      pointer :: atomdata
     type(DensityResults), pointer :: densities
 
     if (params%kte >= 0) then
 
-      r1fu = openResults1File(dims%IEMXD, dims%LMAXD, emesh%NPOL)
+      r1fu = 71
+      reclen = calculateResults1FileRecordLength(dims%iemxd, dims%lmaxd, emesh%npol)
+      open(unit=r1fu, access='direct', recl=reclen, file='bin.results1', form='unformatted', action='write')
 
       do ila = 1, num_local_atoms
         atomdata  => getAtomData(calc, ila)
@@ -1580,11 +1583,8 @@ module ProcessKKRresults_mod
     max_delta_angle = 0.d0 !NOCO
     max_delta_atom = 1     !NOCO
 
-    !lrecres1 = 8*43 + 16*(lmax+2) ! w/o NOCO
-    !lrecres1 = 8*43 + 16*(lmax+2) + 8*(lmax+3)*3 + 8*2 + 1*1 ! NOCO with noco angles and angle_fix_mode
-    lrecres1 = 8*43 + 16*(lmax+2) + 8*(lmax+3)*3 + 8*4 + 1*1 + 8*3 ! NOCO with old and new noco angles, angle_fix_mode and moments
-    
-    if (npol == 0) lrecres1 = lrecres1 + 32*(lmax+2)*iemxd ! dos calc.
+    ! Calculate size of data written per atom
+    lrecres1 = calculateResults1FileRecordLength(iemxd, lmax, npol)
 
     if (compute_total_energy >= 0) then
       open(71, access='direct', recl=lrecres1, file='bin.results1', form='unformatted', action='read', status='old')
