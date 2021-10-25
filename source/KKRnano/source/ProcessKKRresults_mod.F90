@@ -1068,12 +1068,13 @@ module ProcessKKRresults_mod
     recnum = 0
     reclen = 0
     if (kte >= 0) then
-      ! Original output, two records
+      ! Original output, three records
       ! First one contains atomdata%core%QC_corecharge (double), densities%CATOM (dobule(2)),
       ! and atomdata%core%ECORE (double(20,2))
       ! Second one contains densities%CHARGE (double(lmaxd+2,2)
-      recnum = recnum + 2
-      reclen = max(reclen, (1+2+2*20)*8, 2*(lmaxd+2)*8)
+      ! Third one densities%muorb (double(lmaxd+3,3))
+      recnum = recnum + 3
+      reclen = max(reclen, (1+2+2*20)*8, 2*(lmaxd+2)*8, 3*(lmaxd+3)*8)
       if (npol == 0) then
         ! Add the size needed for the density of states
         recnum = recnum + iemxd
@@ -1081,9 +1082,9 @@ module ProcessKKRresults_mod
       end if
     end if
     if (korbit > 0) then
-      ! Add noco contributions (densities%muorb and some calc%noco_data%...)
-      recnum = recnum + 2
-      reclen = max(reclen, 3*(lmaxd+3)*8, 4*8 + 1*1 + 3*8)
+      ! Add noco contributions (some calc%noco_data%...)
+      recnum = recnum + 1
+      reclen = max(reclen, 4*8 + 1*1 + 3*8)
     end if
 
   end subroutine
@@ -1131,7 +1132,8 @@ module ProcessKKRresults_mod
       if (params%kte >= 0) then
         write(unit=r1fu, rec=irec+0) atomdata%core%QC_corecharge, densities%CATOM, atomdata%core%ECORE
         write(unit=r1fu, rec=irec+1) densities%CHARGE
-        irec = irec + 2
+        write(unit=r1fu, rec=irec+2) densities%MUORB
+        irec = irec + 3
 
         if (emesh%npol == 0) then
             ! write density of states (den) only when certain options set
@@ -1142,8 +1144,7 @@ module ProcessKKRresults_mod
         end if
       end if
       if (dims%korbit > 0) then
-        write(unit=r1fu, rec=irec+0) densities%MUORB
-        write(unit=r1fu, rec=irec+1) &
+        write(unit=r1fu, rec=irec) &
             calc%noco_data%phi_noco(atom_id), &
             calc%noco_data%theta_noco(atom_id), &
             calc%noco_data%phi_noco_old(atom_id), &
@@ -1152,7 +1153,7 @@ module ProcessKKRresults_mod
             calc%noco_data%moment_x(atom_id), &
             calc%noco_data%moment_y(atom_id), &
             calc%noco_data%moment_z(atom_id)
-        irec = irec + 2
+        irec = irec + 1
       endif
     end do
 
@@ -1649,7 +1650,8 @@ module ProcessKKRresults_mod
         if (compute_total_energy >= 0) then
           read(71, rec=irec)   qc, catom, ecore
           read(71, rec=irec+1) charge
-          irec = irec + 2
+          read(71, rec=irec+2) muorb
+          irec = irec + 3
 
           if (npol == 0) then
             do ie = 1, iemxd
@@ -1673,16 +1675,14 @@ module ProcessKKRresults_mod
 
         end if
 
-        if (korbit > 0) then
-          read(71, rec=irec)   muorb
-          read(71, rec=irec+1) phi_noco, theta_noco, phi_noco_old, theta_noco_old, &
-                               angle_fix_mode, moment_x, moment_y, moment_z
-          irec = irec + 2
+        if (compute_total_energy >= 0) then
+          call wrmoms(nspin, charge, muorb, i1, lmax, lmax+1, i1 == 1, i1 == natoms)! first=(i1 == 1), last=(i1 == natoms))
+        end if
 
-          ! needs charge, so only valid for compute_total_energy >= 0 and noco
-          if (compute_total_energy >= 0) then
-            call wrmoms(nspin, charge, muorb, i1, lmax, lmax+1, i1 == 1, i1 == natoms)! first=(i1 == 1), last=(i1 == natoms))
-          end if
+        if (korbit > 0) then
+          read(71, rec=irec) phi_noco, theta_noco, phi_noco_old, theta_noco_old, &
+                             angle_fix_mode, moment_x, moment_y, moment_z
+          irec = irec + 1
 
           delta_angle = acos(sin(theta_noco)*sin(theta_noco_old)*cos(phi_noco-phi_noco_old)+ &
                         cos(theta_noco)*cos(theta_noco_old))
