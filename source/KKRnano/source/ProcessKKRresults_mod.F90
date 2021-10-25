@@ -1045,19 +1045,48 @@ module ProcessKKRresults_mod
 
 
   !> Calculate size of data written per atom in the bin.results1 file
-  integer function calculateResults1FileRecordLength(iemxd, lmaxd, npol) result(reclen)
-    integer, intent(in) :: iemxd, lmaxd, npol
+  !> The first two arguments, reclen and recnum, will be set to the
+  !> size of records used in the file resp. the number of records used
+  !> per atom.
+  subroutine calculateResults1FileShapes(reclen, recnum, kte, korbit, &
+                                         iemxd, lmaxd, npol)
+    integer, intent(out) :: reclen, recnum
+    integer, intent(in)  :: kte, korbit
+    integer, intent(in)  :: iemxd, lmaxd, npol
 
-    ! Original output
-    reclen = 8*43 + 16*(lmaxd+2)
-    ! Add noco contributions (densities%muorb and some calc%noco_data%...)
-    reclen = reclen + 8*(lmaxd+3)*3 + 8*4 + 1*1 + 8*3
-    if (npol == 0) then
-      ! Add the size needed for the density of states
-      reclen = reclen + 32*(lmaxd+2)*iemxd
+    ! To use the file for different information depending on what is calculated
+    ! and what should be written, the record length and the number of records
+    ! per atom are determined dynamically. This might not use every record
+    ! completely, but it does not waste too much space and does not need a
+    ! different write method for every possible combination of used outputs.
+    ! Does of course not scale well, but using the file system for this
+    ! communication is a strange decision anyway and will probably replaced by
+    ! MPI communication at some point.
+
+    ! A double is stored in 8 bytes, an integer in 4
+
+    recnum = 0
+    reclen = 0
+    if (kte >= 0) then
+      ! Original output, two records
+      ! First one contains atomdata%core%QC_corecharge (double), densities%CATOM (dobule(2)),
+      ! and atomdata%core%ECORE (double(20,2))
+      ! Second one contains densities%CHARGE (double(lmaxd+2,2)
+      recnum = recnum + 2
+      reclen = max(reclen, (1+2+2*20)*8, 2*(lmaxd+2)*8)
+      if (npol == 0) then
+        ! Add the size needed for the density of states
+        recnum = recnum + iemxd
+        reclen = max(reclen, 4*(lmaxd+2)*8)
+      end if
+    end if
+    if (korbit > 0) then
+      ! Add noco contributions (densities%muorb and some calc%noco_data%...)
+      recnum = recnum + 2
+      reclen = max(reclen, 3*(lmaxd+3)*8, 4*8 + 1*1 + 3*8)
     end if
 
-  end function
+  end subroutine
 
   !----------------------------------------------------------------------------
   !> Write some stuff to the 'results1' file
@@ -1076,50 +1105,59 @@ module ProcessKKRresults_mod
     type(EnergyMesh),      intent(in) :: emesh
 
     integer :: r1fu, atom_id, ila
-    integer :: reclen
+    integer :: reclen, recnum, irec, ie
     type(BasisAtom),      pointer :: atomdata
     type(DensityResults), pointer :: densities
 
-    if (params%kte >= 0) then
 
-      r1fu = 71
-      reclen = calculateResults1FileRecordLength(dims%iemxd, dims%lmaxd, emesh%npol)
-      open(unit=r1fu, access='direct', recl=reclen, file='bin.results1', form='unformatted', action='write')
+    r1fu = 71
+    call calculateResults1FileShapes(reclen, recnum, params%kte, dims%korbit, &
+                                     dims%iemxd, dims%lmaxd, emesh%npol)
 
-      do ila = 1, num_local_atoms
-        atomdata  => getAtomData(calc, ila)
-        densities => getDensities(calc, ila)
-        atom_id = calc%atom_ids(ila) ! get global atom_id from local index
+    if (recnum <= 0) return ! if nothing is written anyway, end here
 
-        if (emesh%NPOL == 0) then
-          write(unit=r1fu, rec=atom_id) atomdata%core%QC_corecharge, &
-              densities%CATOM, densities%CHARGE, atomdata%core%ECORE, &
-              densities%MUORB, calc%noco_data%phi_noco(atom_id), &
-              calc%noco_data%theta_noco(atom_id), &
-              calc%noco_data%phi_noco_old(atom_id), &
-              calc%noco_data%theta_noco_old(atom_id), &
-              calc%noco_data%angle_fix_mode(atom_id), &
-              calc%noco_data%moment_x(atom_id), &
-              calc%noco_data%moment_y(atom_id), &
-              calc%noco_data%moment_z(atom_id), &
-              densities%DEN  ! write density of states (den) only when certain options set
-        else
-          write(unit=r1fu, rec=atom_id) atomdata%core%QC_corecharge, &
-              densities%CATOM, densities%CHARGE, atomdata%core%ECORE, &
-              densities%MUORB, calc%noco_data%phi_noco(atom_id), &
-              calc%noco_data%theta_noco(atom_id), &
-              calc%noco_data%phi_noco_old(atom_id), &
-              calc%noco_data%theta_noco_old(atom_id), &
-              calc%noco_data%angle_fix_mode(atom_id), &
-              calc%noco_data%moment_x(atom_id), &
-              calc%noco_data%moment_y(atom_id), &
-              calc%noco_data%moment_z(atom_id)
-        endif
-      end do
+    open(unit=r1fu, access='direct', recl=reclen, file='bin.results1', form='unformatted', action='write')
 
-      close(r1fu)
+    ! irec is used here as a pointer to the right file position. The information
+    ! for each atom start at the atom id times the number of records used per
+    ! atom. Depending on what information is written, it is incremented.
 
-    end if
+    do ila = 1, num_local_atoms
+      atomdata  => getAtomData(calc, ila)
+      densities => getDensities(calc, ila)
+      atom_id = calc%atom_ids(ila) ! get global atom_id from local index
+      irec = 1 + (atom_id - 1) * recnum
+
+      if (params%kte >= 0) then
+        write(unit=r1fu, rec=irec+0) atomdata%core%QC_corecharge, densities%CATOM, atomdata%core%ECORE
+        write(unit=r1fu, rec=irec+1) densities%CHARGE
+        irec = irec + 2
+
+        if (emesh%npol == 0) then
+            ! write density of states (den) only when certain options set
+          do ie = 1, dims%iemxd
+            write(unit=r1fu, rec=irec) densities%DEN(:,ie,:)
+            irec = irec + 1
+          end do
+        end if
+      end if
+      if (dims%korbit > 0) then
+        write(unit=r1fu, rec=irec+0) densities%MUORB
+        write(unit=r1fu, rec=irec+1) &
+            calc%noco_data%phi_noco(atom_id), &
+            calc%noco_data%theta_noco(atom_id), &
+            calc%noco_data%phi_noco_old(atom_id), &
+            calc%noco_data%theta_noco_old(atom_id), &
+            calc%noco_data%angle_fix_mode(atom_id), &
+            calc%noco_data%moment_x(atom_id), &
+            calc%noco_data%moment_y(atom_id), &
+            calc%noco_data%moment_z(atom_id)
+        irec = irec + 2
+      endif
+    end do
+
+    close(r1fu)
+
   end subroutine
 
 
@@ -1561,7 +1599,7 @@ module ProcessKKRresults_mod
     double precision max_delta_angle !NOCO
     double precision delta_angle !NOCO
     integer :: max_delta_atom !NOCO
-    integer :: lrecres1, lrecres2
+    integer :: reclen, recnum, irec, ie, lrecres2
     integer :: lcoremax, i1, ispin, lpot
     character(len=*), parameter :: &
     F90="('  Atom ',I4,' charge in Wigner Seitz cell =',f10.6)", &
@@ -1584,52 +1622,83 @@ module ProcessKKRresults_mod
     max_delta_atom = 1     !NOCO
 
     ! Calculate size of data written per atom
-    lrecres1 = calculateResults1FileRecordLength(iemxd, lmax, npol)
+    call calculateResults1FileShapes(reclen, recnum, compute_total_energy, &
+                                     korbit, iemxd, lmax, npol)
 
-    if (compute_total_energy >= 0) then
-      open(71, access='direct', recl=lrecres1, file='bin.results1', form='unformatted', action='read', status='old')
+    if (recnum > 0) then
+      !TODO I think there are some things that should be written anyway,
+      ! e.g. the line with format F92. Check and move that up
+
+      open(71, access='direct', recl=reclen, file='bin.results1', form='unformatted', action='read', status='old')
+
       ! Write out updated non-collinear angles and magnetic moments
-      if (korbit == 1) open(13,file='nonco_angle_out.dat',form='formatted') ! NOCO
-      if (korbit == 1) open(14,file='nonco_moment_out.txt',form='formatted') ! NOCO
-    
+      if (korbit == 1) then
+        open(13,file='nonco_angle_out.dat',form='formatted')
+        open(14,file='nonco_moment_out.txt',form='formatted')
+      end if
+ 
       ! moments output
-        sum_moment_x = 0.0d0
-        sum_moment_y = 0.0d0
-        sum_moment_z = 0.0d0
+      sum_moment_x = 0.0d0
+      sum_moment_y = 0.0d0
+      sum_moment_z = 0.0d0
+      totsmom = 0.d0
+
       do i1 = 1, natoms
-        if (npol == 0) then 
-          read(71, rec=i1) qc,catom,charge,ecore,muorb,phi_noco,theta_noco,phi_noco_old,theta_noco_old,angle_fix_mode, &
-                  moment_x,moment_y,moment_z,den
-        else
-          read(71, rec=i1) qc,catom,charge,ecore,muorb,phi_noco,theta_noco,phi_noco_old,theta_noco_old,angle_fix_mode, &
-                  moment_x,moment_y,moment_z
-        endif
-       
-        call wrmoms(nspin, charge, muorb, i1, lmax, lmax+1, i1 == 1, i1 == natoms)! first=(i1 == 1), last=(i1 == natoms))
+        irec = 1 + (i1 - 1) * recnum
 
-      ! Write out updated non-collinear angles and magnetic moments
-        if (korbit == 1) then ! NOCO
+        if (compute_total_energy >= 0) then
+          read(71, rec=irec)   qc, catom, ecore
+          read(71, rec=irec+1) charge
+          irec = irec + 2
 
-           delta_angle = acos(sin(theta_noco)*sin(theta_noco_old)*cos(phi_noco-phi_noco_old)+ &
-                         cos(theta_noco)*cos(theta_noco_old))
-           if (abs(delta_angle) >= max_delta_angle) then
-             max_delta_atom = i1
-!             write(*,*) 'max_delta_atom= ', i1
-             max_delta_angle = abs(delta_angle)
-             max_delta_theta = abs(theta_noco_old-theta_noco)
-             max_delta_phi = abs(phi_noco_old-phi_noco)
-           endif
-!           max_delta_angle = max(max_delta_angle,abs(delta_angle)) 
-!           max_delta_theta = max(max_delta_theta,abs(theta_noco-theta_noco_old)) 
-!           max_delta_phi   = max(max_delta_phi,abs(phi_noco-phi_noco_old))
+          if (npol == 0) then
+            do ie = 1, iemxd
+              read(71, rec=irec) den(:,ie,:)
+              irec = irec + 1
+            end do
 
-          ! save to 'nonco_angle_out.dat' in converted units (degrees)
+  !         call wrldos(den, ez, wez, lmax+1, iemxd, npotd, ititle, efermi, e1, e2, alat, tk, nspin, natoms, ielast, i1, dostot)
+            call wrldos(den, ez, lmax+1, iemxd, ititle, efermi, e1, e2, alat, tk, nspin, natoms, ielast, i1, dostot)
+          endif
+
+          do ispin = 1, nspin
+            if (ispin /= 1) then
+              write(6, fmt=F91) catom(ispin)                  ! spin moments
+            else
+              write(6, fmt=F90) i1, catom(ispin)              ! atom charge
+            endif
+          enddo ! ispin
+          write(6, fmt=F94) zat(i1), qc                        ! nuclear charge, total charge
+          if (nspin == 2) totsmom = totsmom + catom(nspin)
+
+        end if
+
+        if (korbit > 0) then
+          read(71, rec=irec)   muorb
+          read(71, rec=irec+1) phi_noco, theta_noco, phi_noco_old, theta_noco_old, &
+                               angle_fix_mode, moment_x, moment_y, moment_z
+          irec = irec + 2
+
+          ! needs charge, so only valid for compute_total_energy >= 0 and noco
+          if (compute_total_energy >= 0) then
+            call wrmoms(nspin, charge, muorb, i1, lmax, lmax+1, i1 == 1, i1 == natoms)! first=(i1 == 1), last=(i1 == natoms))
+          end if
+
+          delta_angle = acos(sin(theta_noco)*sin(theta_noco_old)*cos(phi_noco-phi_noco_old)+ &
+                        cos(theta_noco)*cos(theta_noco_old))
+          if (abs(delta_angle) >= max_delta_angle) then
+            max_delta_atom = i1
+            max_delta_angle = abs(delta_angle)
+            max_delta_theta = abs(theta_noco_old-theta_noco)
+            max_delta_phi = abs(phi_noco_old-phi_noco)
+          endif
+
+          ! Save angles to nonco_angle_out
           write(13,*) theta_noco/(2.0D0*PI)*360.0D0, &
                       phi_noco/(2.0D0*PI)*360.0D0, &
                       angle_fix_mode
 
-          ! save extended information to 'nonco_moment_out.txt', e.g. for
-          ! visualization
+          ! Save moments to nonco_moment_out
           write(14,"(6f12.5,1i5)") moment_x, &
                       moment_y, &
                       moment_z, &
@@ -1637,56 +1706,33 @@ module ProcessKKRresults_mod
                       theta_noco/(2.0D0*PI)*360.0D0, &
                       phi_noco/(2.0D0*PI)*360.0D0, &
                       angle_fix_mode
-        sum_moment_x = sum_moment_x + moment_x
-        sum_moment_y = sum_moment_y + moment_y
-        sum_moment_z = sum_moment_z + moment_z
-        endif
-      enddo ! i1
-        if (korbit == 1) then ! NOCO
-          write(14,"(3f12.5)") sum_moment_x, sum_moment_y, sum_moment_z
-         endif
+          sum_moment_x = sum_moment_x + moment_x
+          sum_moment_y = sum_moment_y + moment_y
+          sum_moment_z = sum_moment_z + moment_z
+        end if
 
-      if (korbit == 1)  close(13)
-      if (korbit == 1)  close(14)
+      end do
 
-      ! density of states output
-      if (npol == 0) then
-        do i1 = 1, natoms
-          read(71, rec=i1) qc, catom, charge, ecore, den
-!         call wrldos(den, ez, wez, lmax+1, iemxd, npotd, ititle, efermi, e1, e2, alat, tk, nspin, natoms, ielast, i1, dostot)
-          call wrldos(den, ez, lmax+1, iemxd, ititle, efermi, e1, e2, alat, tk, nspin, natoms, ielast, i1, dostot)
-        enddo ! i1
-      endif
+      if (korbit == 1) then
+        write(14,"(3f12.5)") sum_moment_x, sum_moment_y, sum_moment_z
+        close(13)
+        close(14)
+      end if
 
-
-      totsmom = 0.d0
-      do i1 = 1, natoms
-        if (npol == 0) then
-          read(71, rec=i1) qc, catom, charge, ecore, den
-        else
-          read(71, rec=i1) qc, catom, charge, ecore
-        endif
-        do ispin = 1, nspin
-          if (ispin /= 1) then
-            write(6, fmt=F91) catom(ispin)                  ! spin moments
-          else
-            write(6, fmt=F90) i1, catom(ispin)              ! atom charge
-          endif
-        enddo ! ispin
-        write(6, fmt=F94) zat(i1), qc                        ! nuclear charge, total charge
-        if (nspin == 2) totsmom = totsmom + catom(nspin)
-      enddo ! i1
       write(6, '(79(1h+))')
       write(6, fmt=F92) itscf,chrgnt                        ! charge neutrality
       if (nspin == 2) write(6, fmt=F93) totsmom             ! total mag. moment
-      if (korbit == 1) write(6, fmt=F86) max_delta_atom               ! atom with largest spin moment direction change, NOCO
-      if (korbit == 1) write(6, fmt=F87) 180.0/PI*max_delta_angle     ! largest spin moment direction change, NOCO
-      if (korbit == 1) write(6, fmt=F88) 180.0/PI*max_delta_theta     ! Corresponding theta angle change, NOCO
-      if (korbit == 1) write(6, fmt=F89) 180.0/PI*max_delta_phi       ! Corresponding phi angle change, NOCO
+      if (korbit == 1) then
+        write(6, fmt=F86) max_delta_atom               ! atom with largest spin moment direction change, NOCO
+        write(6, fmt=F87) 180.0/PI*max_delta_angle     ! largest spin moment direction change, NOCO
+        write(6, fmt=F88) 180.0/PI*max_delta_theta     ! Corresponding theta angle change, NOCO
+        write(6, fmt=F89) 180.0/PI*max_delta_phi       ! Corresponding phi angle change, NOCO
+      end if
       write(6, '(79(1h+))')
 
       close(71)
-    endif
+
+    end if
 
     if (compute_total_energy == 1) then
       open(72, access='direct', recl=lrecres2, file='bin.results2', form='unformatted', action='read', status='old')
