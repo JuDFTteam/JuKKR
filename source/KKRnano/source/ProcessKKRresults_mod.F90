@@ -1631,12 +1631,6 @@ module ProcessKKRresults_mod
       ! e.g. the line with format F92. Check and move that up
 
       open(71, access='direct', recl=reclen, file='bin.results1', form='unformatted', action='read', status='old')
-
-      ! Write out updated non-collinear angles and magnetic moments
-      if (korbit == 1) then
-        open(13,file='nonco_angle_out.dat',form='formatted')
-        open(14,file='nonco_moment_out.txt',form='formatted')
-      end if
  
       ! moments output
       sum_moment_x = 0.0d0
@@ -1644,45 +1638,61 @@ module ProcessKKRresults_mod
       sum_moment_z = 0.0d0
       totsmom = 0.d0
 
-      do i1 = 1, natoms
-        irec = 1 + (i1 - 1) * recnum
+      ! See the subroutine calculateResults1FileShapes for the standard on what
+      ! data is where in the file and how that depends on the parameters
 
-        if (compute_total_energy >= 0) then
+      ! First loop: Call wrmoms
+      if (compute_total_energy >= 0) then
+        do i1 = 1, natoms
+          irec = 1 + (i1 - 1) * recnum
+
           read(71, rec=irec)   qc, catom, ecore
           read(71, rec=irec+1) charge
           read(71, rec=irec+2) muorb
+
+          call wrmoms(nspin, charge, muorb, i1, lmax, lmax+1, i1 == 1, i1 == natoms)! first=(i1 == 1), last=(i1 == natoms))
+        end do
+      end if
+
+      ! Second loop: wrldos
+      if (compute_total_energy >= 0 .and. npol == 0) then
+        do i1 = 1, natoms
+          irec = 1 + (i1 - 1) * recnum
+
+          ! Skip some entries
           irec = irec + 3
 
-          if (npol == 0) then
-            do ie = 1, iemxd
-              read(71, rec=irec) den(:,ie,:)
-              irec = irec + 1
-            end do
+          ! Read den
+          do ie = 1, iemxd
+            read(71, rec=irec) den(:,ie,:)
+            irec = irec + 1
+          end do
 
-  !         call wrldos(den, ez, wez, lmax+1, iemxd, npotd, ititle, efermi, e1, e2, alat, tk, nspin, natoms, ielast, i1, dostot)
-            call wrldos(den, ez, lmax+1, iemxd, ititle, efermi, e1, e2, alat, tk, nspin, natoms, ielast, i1, dostot)
-          endif
+!         call wrldos(den, ez, wez, lmax+1, iemxd, npotd, ititle, efermi, e1, e2, alat, tk, nspin, natoms, ielast, i1, dostot)
+          call wrldos(den, ez, lmax+1, iemxd, ititle, efermi, e1, e2, alat, tk, nspin, natoms, ielast, i1, dostot)
+        end do
+      end if
 
-          do ispin = 1, nspin
-            if (ispin /= 1) then
-              write(6, fmt=F91) catom(ispin)                  ! spin moments
-            else
-              write(6, fmt=F90) i1, catom(ispin)              ! atom charge
-            endif
-          enddo ! ispin
-          write(6, fmt=F94) zat(i1), qc                        ! nuclear charge, total charge
-          if (nspin == 2) totsmom = totsmom + catom(nspin)
+      ! Third loop: Nonco stuff
+      if (korbit > 0) then
+        open(13,file='nonco_angle_out.dat',form='formatted')
+        open(14,file='nonco_moment_out.txt',form='formatted')
 
-        end if
+        do i1 = 1, natoms
+          irec = 1 + (i1 - 1) * recnum
 
-        if (compute_total_energy >= 0) then
-          call wrmoms(nspin, charge, muorb, i1, lmax, lmax+1, i1 == 1, i1 == natoms)! first=(i1 == 1), last=(i1 == natoms))
-        end if
+          if (compute_total_energy >= 0) then
+            ! Skip some elements
+            irec = irec + 3
 
-        if (korbit > 0) then
+            if (npol == 0) then
+              ! Skip den
+              irec = irec + iemxd
+            end if
+          end if
+
           read(71, rec=irec) phi_noco, theta_noco, phi_noco_old, theta_noco_old, &
                              angle_fix_mode, moment_x, moment_y, moment_z
-          irec = irec + 1
 
           delta_angle = acos(sin(theta_noco)*sin(theta_noco_old)*cos(phi_noco-phi_noco_old)+ &
                         cos(theta_noco)*cos(theta_noco_old))
@@ -1691,7 +1701,7 @@ module ProcessKKRresults_mod
             max_delta_angle = abs(delta_angle)
             max_delta_theta = abs(theta_noco_old-theta_noco)
             max_delta_phi = abs(phi_noco_old-phi_noco)
-          endif
+          end if
 
           ! Save angles to nonco_angle_out
           write(13,*) theta_noco/(2.0D0*PI)*360.0D0, &
@@ -1709,26 +1719,40 @@ module ProcessKKRresults_mod
           sum_moment_x = sum_moment_x + moment_x
           sum_moment_y = sum_moment_y + moment_y
           sum_moment_z = sum_moment_z + moment_z
-        end if
+        end do
 
-      end do
-
-      if (korbit == 1) then
-        write(14,"(3f12.5)") sum_moment_x, sum_moment_y, sum_moment_z
         close(13)
         close(14)
       end if
 
-      write(6, '(79(1h+))')
-      write(6, fmt=F92) itscf,chrgnt                        ! charge neutrality
-      if (nspin == 2) write(6, fmt=F93) totsmom             ! total mag. moment
-      if (korbit == 1) then
-        write(6, fmt=F86) max_delta_atom               ! atom with largest spin moment direction change, NOCO
-        write(6, fmt=F87) 180.0/PI*max_delta_angle     ! largest spin moment direction change, NOCO
-        write(6, fmt=F88) 180.0/PI*max_delta_theta     ! Corresponding theta angle change, NOCO
-        write(6, fmt=F89) 180.0/PI*max_delta_phi       ! Corresponding phi angle change, NOCO
+      if (compute_total_energy >= 0) then
+        do i1 = 1, natoms
+          irec = 1 + (i1 - 1) * recnum
+
+          read(71, rec=irec) qc, catom, ecore
+
+          do ispin = 1, nspin
+            if (ispin /= 1) then
+              write(6, fmt=F91) catom(ispin)                  ! spin moments
+            else
+              write(6, fmt=F90) i1, catom(ispin)              ! atom charge
+            endif
+          enddo ! ispin
+          write(6, fmt=F94) zat(i1), qc                        ! nuclear charge, total charge
+          if (nspin == 2) totsmom = totsmom + catom(nspin)
+        end do
+
+        write(6, '(79(1h+))')
+        write(6, fmt=F92) itscf,chrgnt                        ! charge neutrality
+        if (nspin == 2) write(6, fmt=F93) totsmom             ! total mag. moment
+        if (korbit == 1) then
+          write(6, fmt=F86) max_delta_atom               ! atom with largest spin moment direction change, NOCO
+          write(6, fmt=F87) 180.0/PI*max_delta_angle     ! largest spin moment direction change, NOCO
+          write(6, fmt=F88) 180.0/PI*max_delta_theta     ! Corresponding theta angle change, NOCO
+          write(6, fmt=F89) 180.0/PI*max_delta_phi       ! Corresponding phi angle change, NOCO
+        end if
+        write(6, '(79(1h+))')
       end if
-      write(6, '(79(1h+))')
 
       close(71)
 
