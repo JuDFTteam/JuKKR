@@ -459,6 +459,7 @@ module ProcessKKRresults_mod
     double precision :: CHRGSEMICORE !< total semicore charge over all atoms
     double precision :: fsemicore_in
     integer :: ila
+    integer :: imt             ! muffin tin index
     integer :: num_local_atoms
 
     double complex, allocatable :: prefactors(:)  ! for Morgan charge test only
@@ -511,6 +512,16 @@ module ProcessKKRresults_mod
       energies  => getEnergies(calc, ila)
       ldau_data => getLDAUData(calc, ila)
       atom_id = calc%atom_ids(ila) ! get global atom_id from local index
+
+      if (dims%korbit == 1) then
+        imt = get_muffin_tin_index(atomdata%chebmesh_ptr)
+      else
+        ! At the moment, the muffin tin index is used in RHOVAL_wrapper only for
+        ! noncollinear magnetic fields, so only for korbit==1. Thus, the value
+        ! assigned here is not used. However, if that changes at some point,
+        ! I think this value is what you'd expect
+        imt = calc%mesh_a(ila)%imt
+      end if
   !------------------------------------------------------------------------------
 
       ! has to be done after Lloyd
@@ -528,7 +539,7 @@ module ProcessKKRresults_mod
                           calc%noco_data%angle_fix_mode(atom_id), calc%noco_data%moment_x(atom_id), &
                           calc%noco_data%moment_y(atom_id), calc%noco_data%moment_z(atom_id), &
                           densities%muorb, densities%iemxd, params, calc%bfields(ila), &
-                          get_muffin_tin_index(atomdata%chebmesh_ptr), iter)
+                          imt, iter)
 
       ! LDAU
       if (ldau_data%LDAU .and. ldau_data%NLDAU >= 1) then
