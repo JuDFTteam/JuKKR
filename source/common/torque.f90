@@ -264,9 +264,9 @@ contains
           bfield%bfield_constr(iatom,:) = c_old - dot_product(c_old,magdir_old)*magdir_old - (magdir_it - dot_product(magdir_it,magdir_old)*magdir_old)*bfac
         end if
         if (t_inc%i_write>1) write(1337,'(" itscf, iatom, ibfield_constr, bfield_constr= ",3i4,100f16.8)') t_inc%i_iteration, iatom ,bfield%ibfield_constr , bfield%bfield_constr(iatom,:)
-        ! MdSD: constraining fields
-        bconstr(1:3) = bfield%bfield_constr(iatom,:)
       end if
+      ! MdSD: constraining fields
+      bconstr(1:3) = bfield%bfield_constr(iatom,:)
       !if(density%magmomentfixed == 6) then ! constraining fields
       !  temp2 = 0.d0
       !  do ilm=1,lmmax
