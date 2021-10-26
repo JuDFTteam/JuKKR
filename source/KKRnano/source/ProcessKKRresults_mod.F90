@@ -183,7 +183,7 @@ module ProcessKKRresults_mod
       arrays%ZAT, emesh%EZ,&
 !       emesh%WEZ,&
       params%LDAU, dims%iemxd, &
-      dims%korbit)
+      dims%korbit, params%noncobfield)
 
       call outTime(mp%isMasterRank, 'results ........................', getTime(program_timer), iter)
 
@@ -1049,9 +1049,10 @@ module ProcessKKRresults_mod
   !> size of records used in the file resp. the number of records used
   !> per atom.
   subroutine calculateResults1FileShapes(reclen, recnum, kte, korbit, &
-                                         iemxd, lmaxd, npol)
+                                         noncobfield, iemxd, lmaxd, npol)
     integer, intent(out) :: reclen, recnum
     integer, intent(in)  :: kte, korbit
+    logical, intent(in)  :: noncobfield
     integer, intent(in)  :: iemxd, lmaxd, npol
 
     ! To use the file for different information depending on what is calculated
@@ -1086,6 +1087,11 @@ module ProcessKKRresults_mod
       recnum = recnum + 1
       reclen = max(reclen, 4*8 + 1*1 + 3*8)
     end if
+    if (noncobfield) then
+      ! The constraint bfields (double(3))
+      recnum = recnum + 1
+      reclen = max(reclen, 3*8)
+    end if
 
   end subroutine
 
@@ -1113,7 +1119,7 @@ module ProcessKKRresults_mod
 
     r1fu = 71
     call calculateResults1FileShapes(reclen, recnum, params%kte, dims%korbit, &
-                                     dims%iemxd, dims%lmaxd, emesh%npol)
+                                     params%noncobfield, dims%iemxd, dims%lmaxd, emesh%npol)
 
     if (recnum <= 0) return ! if nothing is written anyway, end here
 
@@ -1156,6 +1162,10 @@ module ProcessKKRresults_mod
         irec = irec + 1
       endif
     end do
+    if (params%noncobfield) then
+      write(unit=r1fu, rec=irec) calc%bfields(ila)%bfield_constr
+      irec = irec + 1
+    end if
 
     close(r1fu)
 
@@ -1558,7 +1568,7 @@ module ProcessKKRresults_mod
   subroutine results(lrecres2, ielast, itscf, lmax, natoms, npol, nspin, kpre, compute_total_energy, lpot, e1, e2, tk, efermi, alat, ititle, chrgnt, zat, ez, &
 !     wez, &
     ldau, iemxd, &
-    korbit)
+    korbit, noncobfield)
   use Constants_mod, only: pi
     integer, intent(in) :: iemxd
     integer, intent(in) :: ielast, itscf, lmax, natoms, npol, nspin
@@ -1571,6 +1581,7 @@ module ProcessKKRresults_mod
     double precision, intent(in) :: zat(natoms)
     integer, intent(in) :: ititle(20,*)
     integer, intent(in) :: korbit ! NOCO
+    logical, intent(in) :: noncobfield
     
 !   logical, external :: TEST
 #define TEST(STRING) .false.
@@ -1600,6 +1611,7 @@ module ProcessKKRresults_mod
     double precision max_delta_angle !NOCO
     double precision delta_angle !NOCO
     integer :: max_delta_atom !NOCO
+    double precision, dimension(3) :: constr_field
     integer :: reclen, recnum, irec, ie, lrecres2
     integer :: lcoremax, i1, ispin, lpot
     character(len=*), parameter :: &
@@ -1624,7 +1636,7 @@ module ProcessKKRresults_mod
 
     ! Calculate size of data written per atom
     call calculateResults1FileShapes(reclen, recnum, compute_total_energy, &
-                                     korbit, iemxd, lmax, npol)
+                                     korbit, noncobfield, iemxd, lmax, npol)
 
     if (recnum > 0) then
       !TODO I think there are some things that should be written anyway,
@@ -1673,10 +1685,14 @@ module ProcessKKRresults_mod
         end do
       end if
 
-      ! Third loop: Nonco stuff
+      ! Third loop: Nonco and constraint bfields stuff
       if (korbit > 0) then
         open(13,file='nonco_angle_out.dat',form='formatted')
         open(14,file='nonco_moment_out.txt',form='formatted')
+        if (noncobfield) then
+          open(15, file='bconstr_out.dat', form='formatted')
+          write(15, '(A)') '# bconstr_x [Ry], bconstr_x [Ry], bconstr_x [Ry]'
+        end if
 
         do i1 = 1, natoms
           irec = 1 + (i1 - 1) * recnum
@@ -1693,6 +1709,12 @@ module ProcessKKRresults_mod
 
           read(71, rec=irec) phi_noco, theta_noco, phi_noco_old, theta_noco_old, &
                              angle_fix_mode, moment_x, moment_y, moment_z
+          irec = irec + 1
+
+          if (noncobfield) then
+            read(71, rec=irec) constr_field
+            irec = irec + 1
+          end if
 
           delta_angle = acos(sin(theta_noco)*sin(theta_noco_old)*cos(phi_noco-phi_noco_old)+ &
                         cos(theta_noco)*cos(theta_noco_old))
@@ -1716,6 +1738,11 @@ module ProcessKKRresults_mod
                       theta_noco/(2.0D0*PI)*360.0D0, &
                       phi_noco/(2.0D0*PI)*360.0D0, &
                       angle_fix_mode
+
+          if (noncobfield) then
+            write(15,*) constr_field(:)
+          end if
+
           sum_moment_x = sum_moment_x + moment_x
           sum_moment_y = sum_moment_y + moment_y
           sum_moment_z = sum_moment_z + moment_z
@@ -1723,6 +1750,9 @@ module ProcessKKRresults_mod
 
         close(13)
         close(14)
+        if (noncobfield) then
+          close(15)
+        end if
       end if
 
       if (compute_total_energy >= 0) then
