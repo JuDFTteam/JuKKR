@@ -274,7 +274,7 @@ c
 c     -----------------------------------------------------------------------
       DATA BBOX/2.0d0,2.0d0,3.0d0/
       DATA DLT/0.05d0/  ! Parameter for theta-integration (Gauss-Legendre rule). Usually 0.05
-      DATA NPOI/555/    ! Total number of shapefunction points
+      DATA NPOI/125/    ! Total number of shapefunction points
       DATA NRAD/10/     ! Muffintinization points
       DATA NMIN/7/      ! Minimum number of points in panel
       DATA NSMALL/10000/ ! A large number to start (See subr. divpanels)
@@ -334,7 +334,7 @@ c
      &     I13,
      &     NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,    
      &     TLEFT,TRIGHT,LINTERFACE,RCUTZ,RCUTXY,RMTCORE,
-     &     LMTREF,RMTREF,SIZEFAC,NFACELIM, EFSET, AOUT_ALL)
+     &     LMTREF,RMTREF,SIZEFAC,NFACELIM, EFSET, AOUT_ALL, NPOI)
 
 
 
