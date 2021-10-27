@@ -1235,6 +1235,14 @@ c unshifted in sub. readinput).
          WRITE(69,FMT='(2I6)')  
      &        (SITEAT(IAT),IDSHAPE(SITEAT(IAT)),IAT=1,NATYP) ! CPA, NATYP>NAEZ
       ENDIF
+      
+      ! MdSD: some parameters for the radial mesh and related arrays
+      WRITE(69,*)
+      WRITE(69,'("IRMD=",I8)') MAXVAL(IRWS(1:NATYP),DIM=1)
+      WRITE(69,'("IRNSD=",I8)') MAXVAL(IRNS(1:NATYP),DIM=1)
+      WRITE(69,'("IRID=",I8)') MAXVAL(MESHN_ALL(1:NUMSHAPE),DIM=1)+NRAD
+      WRITE(69,'("IPAND=",I8)') MAXVAL(NPAN_ALL(1:NUMSHAPE),DIM=1)+1
+      WRITE(69,'("NFUND=",I8)') MAXVAL(NFUN_ALL(1:NUMSHAPE),DIM=1)
          
 
       CLOSE(69)
