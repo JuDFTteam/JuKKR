@@ -1172,11 +1172,11 @@ module ProcessKKRresults_mod
             calc%noco_data%moment_z(atom_id)
         irec = irec + 1
       endif
+      if (params%noncobfield) then
+        write(unit=r1fu, rec=irec) calc%bfields(ila)%bfield_constr
+        irec = irec + 1
+      end if
     end do
-    if (params%noncobfield) then
-      write(unit=r1fu, rec=irec) calc%bfields(ila)%bfield_constr
-      irec = irec + 1
-    end if
 
     close(r1fu)
 
