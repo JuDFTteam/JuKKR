@@ -248,11 +248,11 @@ contains
 
     double complex, parameter :: cplx_i = (0.d0, 1.d0)
     integer :: lmmax, irmd, iend, ir ! loop boundaries and indices
-    double complex, dimension(3) :: combined_bfields, dir ! vector of combined bfields and unit vector of magnetic moment direction
+    double precision, dimension(3) :: combined_bfields, dir ! vector of combined bfields and unit vector of magnetic moment direction
     double complex, dimension(2,2) :: bfield_mat ! bfield times pauli matrices
     double complex :: temp ! used to transpose the matrix
 
-    ! If the current iteration is not in the window the magneti fields should be
+    ! If the current iteration is not in the window the magnetic fields should be
     ! applied, return without changing the potential
     if (iteration_number < itscf0 .or. iteration_number > itscf1) then
       return
