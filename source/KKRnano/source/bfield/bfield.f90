@@ -243,22 +243,15 @@ contains
       strength(:) = 0.
     end if
 
-    theta(:) = theta(:) / 360.0d0 * 8.d0 * datan(1.d0)
-    phi(:)   = phi(:)   / 360.0d0 * 8.d0 * datan(1.d0)
-    do iatom = 1, number_of_atoms
-      bfields(iatom)%bfield_ext(1) = strength(iatom) * sin(theta(iatom)) * cos(phi(iatom))
-      bfields(iatom)%bfield_ext(2) = strength(iatom) * sin(theta(iatom)) * sin(phi(iatom))
-      bfields(iatom)%bfield_ext(3) = strength(iatom) * cos(theta(iatom))
-    end do
-
+    ! Output before converting to radians and to carthesian coordinates.
     if (verbosity >= 3) then
       ! Write detailed information
       write(*,'(79("#"))')
       write(*,'(16X,A)') 'external non-collinear magnetic fields'
       write(*,'(79("#"))')
-      write(*,'(2X,A4,3(5X,A11,1X))') 'atom', '   theta   ', '    phi    ', 'bfield [Ry]'
+      write(*,'(2X,A4,4X,A10,6X,A8,6X,A11)') 'atom', 'theta [°]', 'phi [°]', 'bfield [Ry]'
       do iatom = 1, number_of_atoms
-        write(*,'(2X,I4,3(2X,E15.8))') iatom, theta(iatom), phi(iatom), strength(iatom)
+        write(*,'(2X,I4,2(2X,F12.8),2X,E15.8)') iatom, theta(iatom), phi(iatom), strength(iatom)
       end do
       write(*,'(79("#"))')
     else if (verbosity >= 2) then
@@ -272,6 +265,14 @@ contains
     else
       ! No output
     end if
+
+    theta(:) = theta(:) / 360.0d0 * 8.d0 * datan(1.d0)
+    phi(:)   = phi(:)   / 360.0d0 * 8.d0 * datan(1.d0)
+    do iatom = 1, number_of_atoms
+      bfields(iatom)%bfield_ext(1) = strength(iatom) * sin(theta(iatom)) * cos(phi(iatom))
+      bfields(iatom)%bfield_ext(2) = strength(iatom) * sin(theta(iatom)) * sin(phi(iatom))
+      bfields(iatom)%bfield_ext(3) = strength(iatom) * cos(theta(iatom))
+    end do
   end subroutine
 
 
