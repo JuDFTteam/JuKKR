@@ -295,6 +295,7 @@ module CalculationData_mod
     integer, intent(in) :: voronano
 
     integer :: atom_id, ila, irmd
+    integer :: verbosity
 
     call create(self%lattice_vectors, arrays%bravais) ! createLatticeVectors
 
@@ -385,8 +386,14 @@ module CalculationData_mod
     call setup_iguess(self, dims, arrays%nofks, kmesh) ! setup storage for iguess
 
     if (params%noncobfield) then
+      ! Output only as master, in that case copy the input parameter
+      verbosity = -1
+      if (mp%isMasterRank) verbosity = params%bfield_verbosity
+
       ! Initialize the noncolinear magnetic field. If present, read from disk
-      call load_bfields_from_disk(self%bfields, params%constr_field, dims%naez, self%atom_ids)
+      call load_bfields_from_disk(self%bfields, params%external_bfield, &
+                                  verbosity, dims%naez, self%atom_ids, &
+                                  self%noco_data%angle_fix_mode)
       ! Initialize the fields
       do ila = 1, self%num_local_atoms
         call init_bfield(self%bfields(ila), dims%lmaxd, &

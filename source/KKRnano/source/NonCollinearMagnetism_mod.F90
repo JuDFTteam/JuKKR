@@ -33,7 +33,7 @@ SUBROUTINE tmat_newsolver(ie,nspin,lmax,zat,socscale,  &
        ! lly,        &
         lmpotd,irmd_new,TmatN,soc,enable_quad_prec, &
         bfield, imt, iteration_number, itscf0, itscf1, &
-        lbfield, lbfield_constr, lbfield_trans, lbfield_mt) 
+        lbfield, lbfield_trans, lbfield_mt)
  
 ! Code converted using TO_F90 by Alan Miller
 ! Date: 2016-04-18  Time: 14:58:02
@@ -68,7 +68,7 @@ type(bfield_data), intent(in)            :: bfield !! Information on the noncoll
 integer, intent(in)                      :: imt !! MT radius (index in cheb mesh)
 integer, intent(in)                      :: iteration_number !! Current iteration number
 integer, intent(in)                      :: itscf0, itscf1 !! Window of iterations when to apply fields
-logical, intent(in)                      :: lbfield, lbfield_constr !! Wheter to apply the fields
+logical, intent(in)                      :: lbfield !! Wheter to apply nonco bfields
 logical, intent(in)                      :: lbfield_trans ! Apply only transveral
 logical, intent(in)                      :: lbfield_mt ! Apply only up do MT radius
 
@@ -167,8 +167,7 @@ allocate(ull(nsra*lmmaxso,lmmaxso,irmdnew))
   ! add bfield
   if (lbfield) then
     call add_bfield(bfield, vnspll1, theta, phi, imt, iteration_number, &
-                    itscf0, itscf1, lbfield_constr, lbfield_trans, &
-                    lbfield_mt, .false.)
+                    itscf0, itscf1, lbfield_trans, lbfield_mt, .false.)
   end if
 
 !c extend matrix for the SRA treatment
@@ -339,7 +338,7 @@ SUBROUTINE rhovalnew(ldorhoef,ielast,nsra,nspin,lmax,ez,wez,zat,  &
         den_out,espv,rho2ns,r2nef,gmatn, muorb,  &
         lpotd,lmaxd,irmd,irmd_new,iemxd,soc,enable_quad_prec, &
         bfield, imt, iteration_number, itscf0, itscf1, &
-        lbfield, lbfield_constr, ltorque, lbfield_trans, lbfield_mt)
+        lbfield, lbfield_trans, lbfield_mt)
  
 ! Code converted using TO_F90 by Alan Miller
 ! Date: 2016-04-21  Time: 11:39:57
@@ -395,8 +394,7 @@ type(bfield_data), intent(inout)         :: bfield !! Information on the noncoll
 integer, intent(in)                      :: imt !! MT radius (index in cheb mesh)
 integer, intent(in)                      :: iteration_number !! Current iteration number
 integer, intent(in)                      :: itscf0, itscf1 !! Window of iterations when to apply fields
-logical, intent(in)                      :: lbfield, lbfield_constr !! Wheter to apply the fields
-logical, intent(in)                      :: ltorque !! Whether to calculate torques
+logical, intent(in)                      :: lbfield !! Wheter to apply nonco bfields
 logical, intent(in)                      :: lbfield_trans ! Apply only transveral
 logical, intent(in)                      :: lbfield_mt ! Apply only up do MT radius
 
@@ -559,8 +557,7 @@ DO ie=1,ielast
   ! Add bfield
   if (lbfield) then
     call add_bfield(bfield, vnspll1, theta, phi, imt, iteration_number, &
-                    itscf0, itscf1, lbfield_constr, lbfield_trans, &
-                    lbfield_mt, .false.)
+                    itscf0, itscf1, lbfield_trans, lbfield_mt, .false.)
   end if
 
 !c extend matrix for the SRA treatment
@@ -625,8 +622,7 @@ DO ie=1,ielast
   ! Add bfield
   if (lbfield) then
     call add_bfield(bfield, vnspll1, theta, phi, imt, iteration_number, &
-                    itscf0, itscf1, lbfield_constr, lbfield_trans, &
-                    lbfield_mt, .true.)
+                    itscf0, itscf1, lbfield_trans, lbfield_mt, .true.)
   end if
 
 !c extend matrix for the SRA treatment
@@ -823,10 +819,10 @@ END DO
 
 ! Calculate torque
 ! Compare this position to KKhost: calling after the rho2nsc_loop, before cheb2oldgrid
-if (ltorque) then
+if (lbfield) then
   call calc_torque(bfield, vins, rho2nsc, theta, phi, lmax, rpan_intervall, ipan_intervall, &
                    npan_tot, ncheb, imt1, iend, icleb, cleb, ifunm, thetasnew, &
-                   lbfield_constr, lbfield_mt, itscf0, itscf1, iteration_number, angle_fix_mode)
+                   lbfield_mt, itscf0, itscf1, iteration_number, angle_fix_mode)
 end if
 
 allocate(rhotemp(irmdnew,lmpotd))

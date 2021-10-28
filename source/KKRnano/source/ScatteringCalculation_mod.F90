@@ -274,7 +274,7 @@ implicit none
                                     kkr(ila)%TmatN(:,:,ispin),params%soc,params%enable_quad_prec, &
                                     calc%bfields(ila), get_muffin_tin_index(atomdata%chebmesh_ptr), &
                                     iter, params%itbfield0, params%itbfield1, &
-                                    params%noncobfield, params%constr_field, params%trans_bfield, params%mt_bfield)
+                                    params%noncobfield, params%trans_bfield, params%mt_bfield)
                
                 call rotatematrix(kkr(ila)%TmatN(:,:,ispin),noco%theta_noco(i1),noco%phi_noco(i1),lmmaxd,0)
               else

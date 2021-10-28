@@ -23,7 +23,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine calc_torque(bfield, vpot, rho2nsc, theta, phi, lmax, rpan_intervall, ipan_intervall, &
                          npan_tot, ncheb, imt, iend, icleb, cleb, ifunm, thetasnew, &
-                         lbfield_constr, lbfield_mt, itscf0, itscf1, iteration, constr_mode)
+                         lbfield_mt, itscf0, itscf1, iteration, constr_mode)
     type(bfield_data), intent(inout) :: bfield !! Information on the magnetic field
     double precision, dimension(:,:,:), intent(in) :: vpot    !! The potential
     double complex,   dimension(:,:,:), intent(in) :: rho2nsc !! complex density matrix
@@ -39,7 +39,6 @@ contains
     double precision, dimension(:),    intent(in) :: cleb      !! Gaunt coefficients
     integer         , dimension(:),    intent(in) :: ifunm     !! pointer array for shapefun
     double precision, dimension(:, :), intent(in) :: thetasnew !! shapefun on the Cheby mesh
-    logical, intent(in) :: lbfield_constr  !! Use constraint fields
     logical, intent(in) :: lbfield_mt      !! Use magnetic fields only inside the muffin tin
     integer, intent(in) :: itscf0, itscf1  !! Apply magnetic fields between these iterations
     integer, intent(in) :: iteration       !! Current iteration
@@ -159,7 +158,7 @@ contains
     end if
     
     ! Scf-cycle for constraint fields, based either on torque or on fields alone
-    if (lbfield_constr .and. itscf0 <= iteration .and. iteration <= itscf1) then
+    if (itscf0 <= iteration .and. iteration <= itscf1) then
       if (constr_mode == 3) then
         bfield%bfield_constr(:) = bfield%bfield_constr(:) - bfield%mag_torque(:) / mag_mom_len
       else if (constr_mode == 2) then

@@ -79,15 +79,12 @@ module InputParams_mod
     double precision :: a_log
     logical :: enable_quad_prec
     logical :: noncobfield
-    logical :: constr_field
-    logical :: same_bfield
+    logical :: external_bfield
     logical :: trans_bfield
     logical :: mt_bfield
-    logical :: torque
-    integer :: ibfield
-    integer :: iconstr
     integer :: itbfield0
     integer :: itbfield1
+    integer :: bfield_verbosity
   endtype ! InputParams
 
 
@@ -657,21 +654,12 @@ integer function getValues(filename, self) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "constr_field", self%constr_field , def=.FALSE.)
+  ierror = getValue(cr, "external_bfield", self%external_bfield , def=.FALSE.)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for constr_field. Set constr_field to .FALSE."
+    write(*,*) "WARNING: Bad/no value given for external_bfield. Set external_bfield to .FALSE."
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
-    write(*,*) "Bad/no value given for constr_field."
-    destroy_and_return
-  endif
-
-  ierror = getValue(cr, "same_bfield", self%same_bfield , def=.FALSE.)
-  if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for same_bfield. Set same_bfield to .FALSE."
-    ierror = 0 ! ok, no error
-  elseif (ierror /= 0) then
-    write(*,*) "Bad/no value given for same_bfield."
+    write(*,*) "Bad/no value given for external_bfield."
     destroy_and_return
   endif
 
@@ -693,33 +681,6 @@ integer function getValues(filename, self) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "torque", self%torque , def=.FALSE.)
-  if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for torque. Set torque to .FALSE."
-    ierror = 0 ! ok, no error
-  elseif (ierror /= 0) then
-    write(*,*) "Bad/no value given for torque."
-    destroy_and_return
-  endif
-
-  ierror = getValue(cr, "ibfield", self%ibfield , def=0)
-  if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for ibfield. Set ibfield to 0"
-    ierror = 0 ! ok, no error
-  elseif (ierror /= 0) then
-    write(*,*) "Bad/no value given for ibfield."
-    destroy_and_return
-  endif
-
-  ierror = getValue(cr, "iconstr", self%iconstr , def=0)
-  if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for iconstr. Set iconstr to 0"
-    ierror = 0 ! ok, no error
-  elseif (ierror /= 0) then
-    write(*,*) "Bad/no value given for iconstr."
-    destroy_and_return
-  endif
-
   ierror = getValue(cr, "itbfield0", self%itbfield0 , def=0)
   if (ierror == use_default) then
     write(*,*) "WARNING: Bad/no value given for itbfield0. Set itbfield0 to 0"
@@ -735,6 +696,15 @@ integer function getValues(filename, self) result(ierror)
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for itbfield1."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "bfield_verbosity", self%bfield_verbosity , def=2)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for bfield_verbosity. Set bfield_verbosity to 2"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for bfield_verbosity."
     destroy_and_return
   endif
 

@@ -38,16 +38,18 @@ module mod_bfield
 
 contains
 
-  !> Load the external noncollinear magnetic field (if a file is present) and
-  !> the initial guess for the constraining fields (if constraint magnetism is
-  !> used and a file is present) from disk.
-  !> This subroutine loads information for the locally treated atoms into an
-  !> array of structs.
-  subroutine load_bfields_from_disk(bfields, lbfield_constr, naez, atom_ids)
+  !> Load the external noncollinear magnetic field (if used) and the initial
+  !> guess for the constraining fields from disk.
+  !> This subroutine loads information for the locally treated atoms into a
+  !> given array of structs of the right size.
+  subroutine load_bfields_from_disk(bfields, external_bfield, verbosity, naez, &
+                                    atom_ids, fix_angle_modes)
     type(bfield_data), intent(inout) :: bfields(:)        !! Array for the read fields
-    logical,           intent(in)    :: lbfield_constr    !! Wheter constraint magnetism is used
+    logical,           intent(in)    :: external_bfield   !! Whether to apply external nonco fields
+    integer,           intent(in)    :: verbosity         !! Output verbosity
     integer,                       intent(in) :: naez     !! Number of atoms in the unit cell
     integer(kind=4), dimension(:), intent(in) :: atom_ids !! Locally treated atoms
+    integer(kind=1), dimension(:), intent(in) :: fix_angle_modes
     
     integer :: num_local_atoms ! number of atoms treated in this MPI rank
     integer :: ila             ! atom index
@@ -61,10 +63,8 @@ contains
     allocate(all_bfields(naez))
 
     ! Read the files
-    call read_bfield(all_bfields)
-    if (lbfield_constr) then
-      call read_bconstr(all_bfields)
-    end if
+    call read_external_bfield(all_bfields, external_bfield, verbosity)
+    call read_constr_bfield_initial_guess(all_bfields, verbosity, fix_angle_modes)
 
     ! Copy the locally treated atoms to the output
     do ila = 1, num_local_atoms
@@ -105,18 +105,19 @@ contains
 
   end subroutine init_bfield
 
-  !TODO save_bconst()
-
   !-------------------------------------------------------------------------------
-  !> Summary: Reads the atom-wise constraining field from bconstr.dat
+  !> Summary: Reads the atom-wise initial guess for the constraining magnetic
+  !> field from bconstr.dat
   !> Author: MdSD, Nicolas Essing
   !>
   !> The file should contain three floating point values in each line and a line
   !> for each atom. The first line is treated as a header and skipped.
   !> Intepreted as initial constraining bfield in cartesian coordinates, in Ry.
   !-------------------------------------------------------------------------------
-  subroutine read_bconstr(bfields)
+  subroutine read_constr_bfield_initial_guess(bfields, verbosity, fix_angle_modes)
     type(bfield_data), dimension(:), intent(inout) :: bfields
+    integer, intent(in) :: verbosity
+    integer(kind=1), dimension(:), intent(in) :: fix_angle_modes
     
     integer :: number_of_atoms
     integer :: iatom
@@ -136,6 +137,19 @@ contains
           write(*,*) "Error reading bconstr_in.dat"
           stop
         end if
+
+        ! In case constraint magnetism is not used for this atom, set the initial
+        ! guess to zero. Will not be updated in that case and can be added to the
+        ! potential without further checking on input parameters.
+        ! If an initial guess was provided that is not zero, give a warning.
+        if (.not. (fix_angle_modes(iatom) == 2 .or. fix_angle_modes(iatom) == 3)) then
+          if (any(bfields(iatom)%bfield_constr /= 0) .and. verbosity >= 0) then
+            write(*,'(2A,I3,2A)') 'Warning: Initial guess for constraint magnetic field ', &
+                    'for atom ', iatom, ' was not zero, but no constraint magnetism is ', &
+                    'used for this atom. Will be set to zero.'
+          end if
+          bfields(iatom)%bfield_constr(:) = 0
+        end if
       end do
       close(57493215)
     else
@@ -145,43 +159,65 @@ contains
       end do
     end if
 
-    write(*,*) '  ############################################################'
-    write(*,*) '  input constraining fields'
-    write(*,*) '  ############################################################'
-    write(*,*) '  iatom      Bx              By              Bz        (in Ry)'
-    do iatom = 1, number_of_atoms
-      write(*,'(2X,I4,3(E16.8))') iatom, bfields(iatom)%bfield_constr(:)
-    end do
-  end subroutine read_bconstr
+    if (verbosity >= 3) then
+      ! Write detailed information
+      write(*,'(79("#"))')
+      write(*,'(2X,A)') 'Initial guess for constraining fields'
+      write(*,'(79("#"))')
+      write(*,'(2X,A4,3(7X,A7,3X))') 'atom','Bx [Ry]','By [Ry]','Bz [Ry]'
+      do iatom = 1, number_of_atoms
+        write(*,'(2X,I4,3(2X,E15.8))') iatom, bfields(iatom)%bfield_constr(:)
+      end do
+      write(*,'(79("#"))')
+    else if (verbosity >= 2) then
+      ! Give an overview
+      if (file_exists) then
+        write(*,'(A)') 'Initial constraining magnetic fields read from file.'
+      else
+        write(*,'(A)') 'Initial constraining magnetic fields set to zero.'
+      end if
+    else
+      ! No output
+    end if
+  end subroutine
 
 
   !-------------------------------------------------------------------------------
-  !> Summary: Reads the atom-wise magnetic field from bfield.dat
+  !> Summary: Reads the atom-wise external magnetic field from bfield.dat,
+  !> if it should be used according to the input parameters.
   !> Author: Nicolas Essing
   !> 
+  !> If external fields shall not be used, the external field is set to zero and
+  !> an eventually present file is ignored.
+  !> If external fields shall be used and no file is present, the program stops
+  !> with an error.
   !> The file should contain three numbers per line and one line per atom.
   !> Read as 'theta  phi  bfield_strength' with the angles in degrees and the
-  !> strength in Ry ( ! might get changed to Tesla ! )
+  !> strength in Ry.
   !> Lines can be commented out with a # as first character.
   !>------------------------------------------------------------------------------
-  subroutine read_bfield(bfields)
+  subroutine read_external_bfield(bfields, external_bfield, verbosity)
     type(bfield_data), dimension(:), intent(inout) :: bfields
+    logical, intent(in) :: external_bfield
+    integer, intent(in) :: verbosity
 
     integer        :: number_of_atoms
     integer        :: iatom, iostat
     character(256) :: linebuffer
-    logical        :: file_exists
     double precision, dimension(:), allocatable :: phi, theta, strength
 
     number_of_atoms = size(bfields)
 
-    inquire(file='bfield.dat', exist=file_exists)
-
     allocate(phi(number_of_atoms), theta(number_of_atoms), strength(number_of_atoms))
 
-    if (file_exists) then
+    if (external_bfield) then
       open(unit=57493215, file='bfield.dat', iostat=iostat)
-      
+      if (iostat /= 0) then
+        write(*,*) "I/O Error opening bfield.dat"
+        write(*,*) "If you do not want external nonco bfields, turn it of in the input.conf"
+        stop
+      end if
+
       ! manual loop over iatom because comments are allowed
       iatom = 1
       do while (iatom <= number_of_atoms)
@@ -214,14 +250,28 @@ contains
       bfields(iatom)%bfield_ext(3) = strength(iatom) * cos(theta(iatom))
     end do
 
-    write(*,*) '  ###############################################'
-    write(*,*) '  external non-collinear magnetic fields'
-    write(*,*) '  ###############################################'
-    write(*,*) '  iatom      theta       phi         bfield (in Ry)'
-    do iatom = 1, number_of_atoms
-      write(*,'(2X,I4,3(E16.8))') iatom, theta(iatom), phi(iatom), strength(iatom)
-   end do
-  end subroutine read_bfield
+    if (verbosity >= 3) then
+      ! Write detailed information
+      write(*,'(79("#"))')
+      write(*,'(16X,A)') 'external non-collinear magnetic fields'
+      write(*,'(79("#"))')
+      write(*,'(2X,A4,3(5X,A11,1X))') 'atom', '   theta   ', '    phi    ', 'bfield [Ry]'
+      do iatom = 1, number_of_atoms
+        write(*,'(2X,I4,3(2X,E15.8))') iatom, theta(iatom), phi(iatom), strength(iatom)
+      end do
+      write(*,'(79("#"))')
+    else if (verbosity >= 2) then
+      ! Give an overview
+      if (external_bfield) then
+        write(*,'(A)') 'External non-collinear magnetic fields loaded from file.'
+        write(*,'(2X,A,E16.8)') 'Mean magnitude [Ry]:', sum(abs(strength)) / number_of_atoms
+      else
+        write(*,'(A)') 'Not applying external non-collinear magnetic fields.'
+      end if
+    else
+      ! No output
+    end if
+  end subroutine
 
 
   !>------------------------------------------------------------------------------
@@ -234,7 +284,7 @@ contains
   !> pauli matrices and B the combined bfield.
   !>------------------------------------------------------------------------------
   subroutine add_bfield(bfield, vnspll, theta, phi, imt, iteration_number, &
-                        itscf0, itscf1, lbfield_constr, lbfield_trans, &
+                        itscf0, itscf1, lbfield_trans, &
                         lbfield_mt, transpose_bfield)
     type(bfield_data), intent(in) :: bfield
     double complex, dimension(:,:,:), intent(inout) :: vnspll ! The potential to add to
@@ -242,7 +292,6 @@ contains
     integer, intent(in) :: imt ! MT radius (index in cheb mesh)
     integer, intent(in) :: iteration_number !TODO this, or just a logical and do the check outside?
     integer, intent(in) :: itscf0, itscf1   !TODO ^
-    logical, intent(in) :: lbfield_constr !! Wheter to use constraint fields
     logical, intent(in) :: lbfield_trans ! Apply only transveral
     logical, intent(in) :: lbfield_mt ! Apply only up do MT radius
     logical, intent(in) :: transpose_bfield ! Transpose the bfield (for left solutions)
@@ -262,11 +311,10 @@ contains
     lmmax = size(bfield%thetallmat, 1) ! size(vnspll, 1) is 2*lmmax
     irmd = size(vnspll, 3)
 
-    combined_bfields(:) = bfield%bfield_ext(:) ! start with external, is zero if unused
-    if (lbfield_constr) then
-      ! Add constraint field
-      combined_bfields(:) = combined_bfields(:) + bfield%bfield_constr(:)
-    end if
+    ! Add external and constraint field. If one of them is tured off by input
+    ! parameters or mode, it is zero, so this distinction does not have to be
+    ! done here.
+    combined_bfields(:) = bfield%bfield_ext(:) + bfield%bfield_constr(:)
 
     if (lbfield_trans) then
       dir(1) = sin(theta) * cos(phi)
@@ -312,8 +360,6 @@ contains
   !------------------------------------------------------------------------------------
   !> Summary: Shape function LL' expansion
   !> Author: Sascha Brinker
-  !> Category: KKRhost, geometry, new-mesh, shapefun
-  !> Deprecated: False 
   !> Calculates the LL' expansion of the shape function similarly to vllmat_new.f90
   !> @note The input shapefunction (single L) uses pointer arrays for the lm index.
   !> The output does not need pointers!

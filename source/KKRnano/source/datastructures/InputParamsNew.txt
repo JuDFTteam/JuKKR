@@ -126,21 +126,15 @@ d a_log 0.025D0
 l enable_quad_prec .FALSE.
 ### [bfields] turn on or off everything concerning non-collinear magnetic fields (called lbfield in KKRhost code)
 l noncobfield .FALSE.
-### [bfields] constraining fields, non-collinear magnetic field (called lbfield_constr in KKRhost code)
-l constr_field .FALSE.
-### [bfields] apply same field to all atoms (True) or individual fields to each atom (called lbfield_all in KKRhost code)
-l same_bfield .FALSE.
+### [bfields] turn on or off external non-collinear magnetic fields
+l external_bfield .FALSE.
 ### [bfields] apply only transversal bfield (called lbfield_trans in KKRhost code)
 l trans_bfield .FALSE.
 ### [bfields] apply magnetic field only in the muffin-tin (called lbfield_mt in KKRhost code)
 l mt_bfield .FALSE.
-### [bfields] calculate magnetic torque (called ltorque in KKRhost code)
-l torque .FALSE.
-### [bfields] spin (0), orbital (1), spin+orbial (2) fields (called ibfield in KKRhost code)
-i ibfield 0
-### [bfields] type of contraint (0 = torque, 1 = magnetic moment) (called ibfield_constr in KKRhost code)
-i iconstr 0
-### [bfields] start magnetic field at iteration itscf0 (called ibfield_itscf0 in KKRhost code)
+### [bfields] start applying magnetic field at iteration (called ibfield_itscf0 in KKRhost code)
 i itbfield0 0
 ### [bfields] stop applying magnetic field after iteration itscf1 (called ibfield_itscf1 in KKRhost code)
 i itbfield1 10000
+### [bfields] control verbosity concerning non-collinear magnetic fields
+i bfield_verbosity 2

@@ -99,7 +99,7 @@ module wrappers_mod
                       den,espv,rho2ns,r2nef, gmatn(:,:,:,1), muorb,  & ! just one spin component of gmatn needed
                       atomdata%potential%lpot,lmaxd,mesh%irmd,chebmesh%irmd_new,iemxd, params%soc,params%enable_quad_prec, &
                       bfield, imt, iteration_number, params%itbfield0, params%itbfield1, &
-                      params%noncobfield, params%constr_field, params%torque, params%trans_bfield, params%mt_bfield)
+                      params%noncobfield, params%trans_bfield, params%mt_bfield)
  
        ! calculate correct orbital moment
        do ispin=1,nspind
