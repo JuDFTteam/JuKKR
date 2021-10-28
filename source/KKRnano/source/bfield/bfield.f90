@@ -29,13 +29,11 @@ module mod_bfield
   !> Summary: A type storing information on magnetic fields for a single atom
   !-------------------------------------------------------------------------------
   type :: bfield_data
-    double precision, dimension(3) :: bfield !! external magnetic field in cartesian coordinates
-    double precision               :: bfield_strength !! absolute value of the external magnetic field
+    double precision, dimension(3) :: bfield_ext    !! external magnetic field in cartesian coordinates
     double precision, dimension(3) :: bfield_constr !! constraining field in cartesian coordinates
-    double precision               :: theta !! polar angle of the magnetic field
-    double precision               :: phi   !! azimuthal angle of the magnetic field
+    double precision, dimension(3) :: mag_torque    !! Magnetic torque
+
     double precision, dimension(:,:,:), allocatable :: thetallmat !! shapefun in the ll' expansion
-    double precision, dimension(3) :: mag_torque !! Magnetic torque 
   end type
 
 contains
@@ -173,11 +171,14 @@ contains
     integer        :: iatom, iostat
     character(256) :: linebuffer
     logical        :: file_exists
+    double precision, dimension(:), allocatable :: phi, theta, strength
 
     number_of_atoms = size(bfields)
 
     inquire(file='bfield.dat', exist=file_exists)
-   
+
+    allocate(phi(number_of_atoms), theta(number_of_atoms), strength(number_of_atoms))
+
     if (file_exists) then
       open(unit=57493215, file='bfield.dat', iostat=iostat)
       
@@ -190,7 +191,7 @@ contains
           stop
         end if
         if (linebuffer(1:1) == '#') cycle ! input line commented out
-        read(linebuffer, *, iostat=iostat) bfields(iatom)%theta, bfields(iatom)%phi, bfields(iatom)%bfield_strength
+        read(linebuffer, *, iostat=iostat) theta(iatom), phi(iatom), strength(iatom)
         if (iostat /= 0) then
           write(*,*) "Error parsing a line in bfield.dat"
           stop
@@ -200,25 +201,25 @@ contains
       close(57493215)
     else
       ! No 'bfield.dat' given, use default 0
-      do iatom = 1, number_of_atoms
-        bfields(iatom)%theta = 0.
-        bfields(iatom)%phi = 0.
-        bfields(iatom)%bfield_strength = 0.
-      end do
+      theta(:)    = 0.
+      phi(:)      = 0.
+      strength(:) = 0.
     end if
+
+    theta(:) = theta(:) / 360.0d0 * 8.d0 * datan(1.d0)
+    phi(:)   = phi(:)   / 360.0d0 * 8.d0 * datan(1.d0)
+    do iatom = 1, number_of_atoms
+      bfields(iatom)%bfield_ext(1) = strength(iatom) * sin(theta(iatom)) * cos(phi(iatom))
+      bfields(iatom)%bfield_ext(2) = strength(iatom) * sin(theta(iatom)) * sin(phi(iatom))
+      bfields(iatom)%bfield_ext(3) = strength(iatom) * cos(theta(iatom))
+    end do
 
     write(*,*) '  ###############################################'
     write(*,*) '  external non-collinear magnetic fields'
     write(*,*) '  ###############################################'
     write(*,*) '  iatom      theta       phi         bfield (in Ry)'
     do iatom = 1, number_of_atoms
-      bfields(iatom)%theta           = bfields(iatom)%theta / 360.0d0 * 8.d0 * datan(1.d0)
-      bfields(iatom)%phi             = bfields(iatom)%phi   / 360.0d0 * 8.d0 * datan(1.d0)
-      bfields(iatom)%bfield_strength = bfields(iatom)%bfield_strength ! / 235051.787 ! conversion from Tesla to Ry
-      bfields(iatom)%bfield(1)       = bfields(iatom)%bfield_strength*cos(bfields(iatom)%phi)*sin(bfields(iatom)%theta)
-      bfields(iatom)%bfield(2)       = bfields(iatom)%bfield_strength*sin(bfields(iatom)%phi)*sin(bfields(iatom)%theta)
-      bfields(iatom)%bfield(3)       = bfields(iatom)%bfield_strength*cos(bfields(iatom)%theta)
-      write(*,'(2X,I4,3(E16.8))') iatom, bfields(iatom)%theta, bfields(iatom)%phi, bfields(iatom)%bfield_strength
+      write(*,'(2X,I4,3(E16.8))') iatom, theta(iatom), phi(iatom), strength(iatom)
    end do
   end subroutine read_bfield
 
@@ -261,7 +262,7 @@ contains
     lmmax = size(bfield%thetallmat, 1) ! size(vnspll, 1) is 2*lmmax
     irmd = size(vnspll, 3)
 
-    combined_bfields(:) = bfield%bfield(:) ! start with external, is zero if unused
+    combined_bfields(:) = bfield%bfield_ext(:) ! start with external, is zero if unused
     if (lbfield_constr) then
       ! Add constraint field
       combined_bfields(:) = combined_bfields(:) + bfield%bfield_constr(:)
