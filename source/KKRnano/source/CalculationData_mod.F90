@@ -138,11 +138,10 @@ module CalculationData_mod
     allocate(self%madelung_sum_a(num_local_atoms)) ! only visible to this module and MadelungPotential_mod.F90
     allocate(self%jij_data_a(num_local_atoms)) 
     if(num_local_atoms > 1 .and. params%Jij) warn(6, "Jij work with max. 1 atom so far!") 
-    
-    ! Allocate bfields only if used
-    if (params%noncobfield) then
-      allocate(self%bfields(num_local_atoms))
-    end if
+
+    ! Always allocate bfields, they are small objects and are passed around to
+    ! some subroutines even if they are not used.
+    allocate(self%bfields(num_local_atoms))
 
     allocate(self%atom_ids(num_local_atoms))
 
