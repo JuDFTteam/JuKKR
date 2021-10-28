@@ -108,7 +108,7 @@ contains
           call intcheb_cell(integrand,integrate_result,rpan_intervall,ipan_intervall,npan_tot,ncheb,irmd)
           mag(ilm,i) = real(integrate_result * rfpi)    
           ! Same for only the muffin tin: Set to zero outside, integrate again
-          integrand(imt:) = (0., 0.)
+          integrand(imt+1:) = (0., 0.)
           call intcheb_cell(integrand(:),integrate_result,rpan_intervall,ipan_intervall,npan_tot,ncheb,irmd)
           mag_mt(ilm,i) = real(integrate_result * rfpi)    
       end do
@@ -135,7 +135,7 @@ contains
         call intcheb_cell(integrand(:),integrate_result,rpan_intervall,ipan_intervall,npan_tot,ncheb,irmd)
         torque(i) = torque(i) + real(integrate_result * rfpi) ! rfpi only contained in convoluted quantities
         ! Same for mt
-        integrand(imt:) = 0.
+        integrand(imt+1:) = 0.
         call intcheb_cell(integrand(:),integrate_result,rpan_intervall,ipan_intervall,npan_tot,ncheb,irmd)
         torque_mt(i) = torque_mt(i) + real(integrate_result * rfpi)
       end do
