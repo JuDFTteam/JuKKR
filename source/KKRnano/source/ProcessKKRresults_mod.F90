@@ -187,7 +187,7 @@ module ProcessKKRresults_mod
       arrays%ZAT, emesh%EZ,&
 !       emesh%WEZ,&
       params%LDAU, dims%iemxd, &
-      dims%korbit, params%noncobfield)
+      dims%korbit, params%noncobfield, params%bfield_verbosity)
 
       call outTime(mp%isMasterRank, 'results ........................', getTime(program_timer), iter)
 
@@ -1131,9 +1131,9 @@ module ProcessKKRresults_mod
       reclen = max(reclen, 4*8 + 1*1 + 3*8)
     end if
     if (noncobfield) then
-      ! The constraint bfields (double(3))
+      ! The constraint bfields (double(3)) and torques (double(3))
       recnum = recnum + 1
-      reclen = max(reclen, 3*8)
+      reclen = max(reclen, (3+3)*8)
     end if
 
   end subroutine
@@ -1205,7 +1205,8 @@ module ProcessKKRresults_mod
         irec = irec + 1
       endif
       if (params%noncobfield) then
-        write(unit=r1fu, rec=irec) calc%bfields(ila)%bfield_constr
+        write(unit=r1fu, rec=irec) calc%bfields(ila)%bfield_constr, &
+          calc%bfields(ila)%mag_torque
         irec = irec + 1
       end if
     end do
@@ -1611,7 +1612,7 @@ module ProcessKKRresults_mod
   subroutine results(lrecres2, ielast, itscf, lmax, natoms, npol, nspin, kpre, compute_total_energy, lpot, e1, e2, tk, efermi, alat, ititle, chrgnt, zat, ez, &
 !     wez, &
     ldau, iemxd, &
-    korbit, noncobfield)
+    korbit, noncobfield, bfield_verbosity)
   use Constants_mod, only: pi
     integer, intent(in) :: iemxd
     integer, intent(in) :: ielast, itscf, lmax, natoms, npol, nspin
@@ -1625,6 +1626,7 @@ module ProcessKKRresults_mod
     integer, intent(in) :: ititle(20,*)
     integer, intent(in) :: korbit ! NOCO
     logical, intent(in) :: noncobfield
+    integer, intent(in) :: bfield_verbosity
     
 !   logical, external :: TEST
 #define TEST(STRING) .false.
@@ -1655,6 +1657,9 @@ module ProcessKKRresults_mod
     double precision delta_angle !NOCO
     integer :: max_delta_atom !NOCO
     double precision, dimension(3) :: constr_field
+    double precision, dimension(3) :: torque ! torque of the current atom
+    double precision :: max_torque_sqrd      ! squared magnitude of largest torque so far
+    integer :: max_torque_atom               ! atom with largest torque so far
     integer :: reclen, recnum, irec, ie, lrecres2
     integer :: lcoremax, i1, ispin, lpot
     character(len=*), parameter :: &
@@ -1666,6 +1671,8 @@ module ProcessKKRresults_mod
     F87="('                    Angle between old and new moment (deg)  = ',f12.6)", &
     F88="('                    Change of angle theta (deg)  = ',f12.6)", &
     F89="('                    Change of angle phi (deg)  = ',f12.6)", &
+    F81="('                    Largest torque for atom = ',i5.1)", &
+    F82="('                    Largest torque magnitude [Ry] = ',E12.6)", &
     F94="(4X,'nuclear charge  ',F10.6,9X,'core charge =   ',F10.6)"
     
     integer :: npotd
@@ -1676,6 +1683,8 @@ module ProcessKKRresults_mod
     max_delta_phi = 0.d0   !NOCO
     max_delta_angle = 0.d0 !NOCO
     max_delta_atom = 1     !NOCO
+    max_torque_sqrd = 0.
+    max_torque_atom = 0
 
     ! Calculate size of data written per atom
     call calculateResults1FileShapes(reclen, recnum, compute_total_energy, &
@@ -1732,9 +1741,11 @@ module ProcessKKRresults_mod
       if (korbit > 0) then
         open(13,file='nonco_angle_out.dat',form='formatted')
         open(14,file='nonco_moment_out.txt',form='formatted')
-        if (noncobfield) then
+        if (noncobfield .and. bfield_verbosity >= 1) then
           open(15, file='bconstr_out.dat', form='formatted')
-          write(15, '(A)') '# bconstr_x [Ry], bconstr_x [Ry], bconstr_x [Ry]'
+          write(15, '(A)') '# bconstr_x [Ry], bconstr_y [Ry], bconstr_z [Ry]'
+          open(16, file='torque_out.dat', form='formatted')
+          write(16, '(A)') '# torque_x [Ry], torque_y [Ry], torque_z [Ry]'
         end if
 
         do i1 = 1, natoms
@@ -1755,7 +1766,7 @@ module ProcessKKRresults_mod
           irec = irec + 1
 
           if (noncobfield) then
-            read(71, rec=irec) constr_field
+            read(71, rec=irec) constr_field, torque
             irec = irec + 1
           end if
 
@@ -1782,8 +1793,14 @@ module ProcessKKRresults_mod
                       phi_noco/(2.0D0*PI)*360.0D0, &
                       angle_fix_mode
 
-          if (noncobfield) then
+          if (noncobfield .and. bfield_verbosity >= 1) then
             write(15,*) constr_field(:)
+            write(16,*) torque(:)
+
+            if (dot_product(torque(:), torque(:)) > max_torque_sqrd) then
+              max_torque_sqrd = dot_product(torque(:), torque(:))
+              max_torque_atom = i1
+            end if
           end if
 
           sum_moment_x = sum_moment_x + moment_x
@@ -1793,8 +1810,9 @@ module ProcessKKRresults_mod
 
         close(13)
         close(14)
-        if (noncobfield) then
+        if (noncobfield .and. bfield_verbosity >= 1) then
           close(15)
+          close(16)
         end if
       end if
 
@@ -1823,6 +1841,10 @@ module ProcessKKRresults_mod
           write(6, fmt=F87) 180.0/PI*max_delta_angle     ! largest spin moment direction change, NOCO
           write(6, fmt=F88) 180.0/PI*max_delta_theta     ! Corresponding theta angle change, NOCO
           write(6, fmt=F89) 180.0/PI*max_delta_phi       ! Corresponding phi angle change, NOCO
+        end if
+        if (noncobfield .and. bfield_verbosity >= 2) then
+          write(6, fmt=F81) max_torque_atom
+          write(6, fmt=F82) sqrt(max_torque_sqrd)
         end if
         write(6, '(79(1h+))')
       end if
