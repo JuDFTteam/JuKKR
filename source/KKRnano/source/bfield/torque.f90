@@ -15,15 +15,17 @@ module mod_torque
 
   implicit none
 
+  private
+  public :: calc_torque, constraining_fields_scf_cycle
+
 contains
 
   !-------------------------------------------------------------------------------
-  !> Summary: Calculation of the density for the new solver
+  !> Summary: Calculation of torque and magnetic moments
   !> Author: Sascha Brinker, Nicolas Essing
   !-------------------------------------------------------------------------------
   subroutine calc_torque(bfield, vpot, rho2nsc, theta, phi, lmax, rpan_intervall, ipan_intervall, &
-                         npan_tot, ncheb, imt, iend, icleb, cleb, ifunm, thetasnew, &
-                         lbfield_mt, itscf0, itscf1, iteration, constr_mode)
+                         npan_tot, ncheb, imt, iend, icleb, cleb, ifunm, thetasnew, lbfield_mt)
     type(bfield_data), intent(inout) :: bfield !! Information on the magnetic field
     double precision, dimension(:,:,:), intent(in) :: vpot    !! The potential
     double complex,   dimension(:,:,:), intent(in) :: rho2nsc !! complex density matrix
@@ -40,22 +42,15 @@ contains
     integer         , dimension(:),    intent(in) :: ifunm     !! pointer array for shapefun
     double precision, dimension(:, :), intent(in) :: thetasnew !! shapefun on the Cheby mesh
     logical, intent(in) :: lbfield_mt      !! Use magnetic fields only inside the muffin tin
-    integer, intent(in) :: itscf0, itscf1  !! Apply magnetic fields between these iterations
-    integer, intent(in) :: iteration       !! Current iteration
-    integer, intent(in) :: constr_mode     !! Mode of the constraining field self-consistency
 
     double complex, parameter :: cone = (1., 0.)             ! complex one
     double precision, parameter :: rfpi = 3.5449077018110318 ! sqrt(4*pi)
 
-    double precision, parameter :: constraint_bfields_mixing_parameter = 0.03
-
     integer :: irmd, lmmax, lmpotd     ! radial and angular momentum sizes
     integer :: i, ir, ilm              ! generic, radial and angular momentum loop indices
     double complex :: integrate_result ! to output the result of some integrations
-    double precision :: mag_mom_len    ! absolute value of magnetic moment
-    double precision, dimension(3) :: dir, mag_mom_dir  ! unit vectors of old and new magnetic moment
+    double precision, dimension(3) :: dir  ! unit vectors of old magnetic moment
     double precision, dimension(3) :: torque, torque_mt ! torque calculated over whole cell or mt only
-    double precision, dimension(3) :: old_b_constr      ! temporary storage for the old constraint field
     double complex,   dimension(2,2) :: rho2ns_temp     ! temporary matrix to rotate rho2nsc
     double complex,   dimension(:),     allocatable :: integrand    ! temporary array to integrate stuff
     double precision, dimension(:,:),   allocatable :: bxc          ! xc magnetic field in collinear form
@@ -99,7 +94,7 @@ contains
       end do
     end do
     
-    ! Integrate magnetization density (to mt or end depending on parameter)
+    ! Integrate magnetization density (to mt and to end)
     ! to get magnetic moment. First convolute with the shapefun.
     call calc_mag_mom(lmax, imt, iend, icleb, cleb, ifunm, thetasnew, mag_den, mag_den_conv)
     do i = 1, 3
@@ -114,18 +109,7 @@ contains
       end do
     end do
     
-    !TODO Output magnetic moments
-
-    ! Calculate direction and absolute value of the magnetic moment
-    if (lbfield_mt) then
-      mag_mom_len = sqrt(dot_product(mag_mt(1,:), mag_mt(1,:)))
-      mag_mom_dir = mag_mt(1,:) / mag_mom_len
-    else
-      mag_mom_len = sqrt(dot_product(mag(1,:), mag(1,:)))
-      mag_mom_dir = mag(1,:) / mag_mom_len
-    end if
-
-    ! Calculate the torque (also mt or end)
+    ! Calculate the torque (also mt and end)
     ! Integrate the xc bfield times the magnetization density.
     torque(:) = 0.
     torque_mt(:) = 0.
@@ -148,32 +132,64 @@ contains
     torque(:)    = torque(:)    - dir(:) * dot_product(dir(:), torque(:))
     torque_mt(:) = torque_mt(:) - dir(:) * dot_product(dir(:), torque_mt(:))
 
-    !TODO Output torque
-
-    ! Save torque in bfield_data
+    ! Save torque and magnetic moment in bfield_data
     if (lbfield_mt) then
       bfield%mag_torque(:) = torque_mt
+      bfield%mag_mom(:)    = mag_mt(1,:)
     else
       bfield%mag_torque(:) = torque
-    end if
-    
-    ! Scf-cycle for constraint fields, based either on torque or on fields alone
-    if (itscf0 <= iteration .and. iteration <= itscf1) then
-      if (constr_mode == 3) then
-        bfield%bfield_constr(:) = bfield%bfield_constr(:) - bfield%mag_torque(:) / mag_mom_len
-      else if (constr_mode == 2) then
-        old_b_constr = bfield%bfield_constr(:)
-        bfield%bfield_constr(:) = old_b_constr - dot_product(old_b_constr,dir)*dir - &
-                (mag_mom_dir - dot_product(mag_mom_dir,dir)*dir)*constraint_bfields_mixing_parameter
-      else
-        ! There might be other modes that are calculated somewhere else. Do nothing.
-      end if
+      bfield%mag_mom(:)    = mag(1,:)
     end if
 
     ! Deallocate
     deallocate(bxc, integrand, mag_den, mag_den_conv, mag, mag_mt)
-
   end subroutine calc_torque
+
+
+  !> Iterate the constraint magnetic fields for one atom.
+  !> Based on the torque and magnetic moment calculated together with the
+  !> densities and saved in the bfield_data type.
+  subroutine constraining_fields_scf_cycle(bfield, constr_mode, theta, phi, &
+                                           itscf0, itscf1, iteration)
+    type(bfield_data), intent(inout) :: bfield !! Information on the magnetic field
+    integer, intent(in) :: constr_mode     !! Mode of the constraining field self-consistency
+    double precision, intent(in) :: theta, phi !! Angles of the (old) magnetic moment
+    integer, intent(in) :: itscf0, itscf1  !! Apply magnetic fields between these iterations
+    integer, intent(in) :: iteration       !! Current iteration
+
+    double precision, parameter :: constraint_bfields_mixing_parameter = 0.03
+
+    double precision, dimension(3) :: dir, mag_mom_dir
+    double precision, dimension(3) :: old_b_constr
+    double precision :: mag_mom_len
+
+    ! If the current iteration is not in the window the magnetic fields should be
+    ! applied, return without changing the potential
+    if (iteration < itscf0 .or. iteration > itscf1) then
+      return
+    end if
+
+    ! Calculate direction of the local frame
+    dir(1) = sin(theta) * cos(phi)
+    dir(2) = sin(theta) * sin(phi)
+    dir(3) = cos(theta)
+
+    ! Calculate direction and absolute value of the magnetic moment
+    mag_mom_len = sqrt(dot_product(bfield%mag_mom(:), bfield%mag_mom(:)))
+    mag_mom_dir = bfield%mag_mom(:) / mag_mom_len
+
+    if (constr_mode == 3) then
+      bfield%bfield_constr(:) = bfield%bfield_constr(:) - bfield%mag_torque(:) / mag_mom_len
+    else if (constr_mode == 2) then
+      old_b_constr = bfield%bfield_constr(:)
+      bfield%bfield_constr(:) = old_b_constr - dot_product(old_b_constr,dir)*dir - &
+              (mag_mom_dir - dot_product(mag_mom_dir,dir)*dir)*constraint_bfields_mixing_parameter
+    else
+      ! There might be other modes that are calculated somewhere else
+      ! (e.g. mode 1, which only fixes the direction by not changing the local
+      ! frame). Do nothing.
+    end if
+  end subroutine
 
   !------------------------------------------------------------------------------------
   !> Summary: Convolute the magnetic moments with the shapefunction.

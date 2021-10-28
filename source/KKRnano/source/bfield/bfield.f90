@@ -32,6 +32,7 @@ module mod_bfield
     double precision, dimension(3) :: bfield_ext    !! external magnetic field in cartesian coordinates
     double precision, dimension(3) :: bfield_constr !! constraining field in cartesian coordinates
     double precision, dimension(3) :: mag_torque    !! Magnetic torque
+    double precision, dimension(3) :: mag_mom       !! Magnetic moment
 
     double precision, dimension(:,:,:), allocatable :: thetallmat !! shapefun in the ll' expansion
   end type

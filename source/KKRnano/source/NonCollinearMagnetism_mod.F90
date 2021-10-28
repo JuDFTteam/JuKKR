@@ -821,8 +821,7 @@ END DO
 ! Compare this position to KKhost: calling after the rho2nsc_loop, before cheb2oldgrid
 if (lbfield) then
   call calc_torque(bfield, vins, rho2nsc, theta, phi, lmax, rpan_intervall, ipan_intervall, &
-                   npan_tot, ncheb, imt1, iend, icleb, cleb, ifunm, thetasnew, &
-                   lbfield_mt, itscf0, itscf1, iteration_number, angle_fix_mode)
+                   npan_tot, ncheb, imt1, iend, icleb, cleb, ifunm, thetasnew, lbfield_mt)
 end if
 
 allocate(rhotemp(irmdnew,lmpotd))

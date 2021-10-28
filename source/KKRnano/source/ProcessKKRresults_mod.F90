@@ -75,6 +75,10 @@ module ProcessKKRresults_mod
 
     call calculateDensities(iter, calc, mp, dims, params, program_timer, arrays, emesh)
 
+    if (params%noncobfield) then
+      call update_constraint_fields(iter, calc, params)
+    end if
+
     ! write to 'results1' - only to be read in in results.f
     ! necessary for density of states calculation, otherwise
     ! only for informative reasons
@@ -82,7 +86,7 @@ module ProcessKKRresults_mod
 
     ! |
     ! v
-    ! modified: densities, emesh, energies (ESPV only)
+    ! modified: densities, emesh, energies (ESPV only), constraining bfields
     ! |
     ! v
     call calculatePotentials(iter, calc, mp, dims, params, program_timer, arrays)
@@ -1015,6 +1019,34 @@ module ProcessKKRresults_mod
     endsubroutine ! calculatePotentials_energies
 
   endsubroutine ! calculatePotentials
+
+
+  !> Iterate the selfconsistency cycle of the constraint magnetic fields.
+  subroutine update_constraint_fields(iter, calc, params)
+
+    use CalculationData_mod, only: CalculationData
+    use InputParams_mod, only: InputParams
+    use mod_torque, only: constraining_fields_scf_cycle
+
+    integer,               intent(in)    :: iter
+    type(CalculationData), intent(inout) :: calc
+    type(InputParams),     intent(in)    :: params
+
+    integer :: ila, atom_id
+    integer(kind=1) :: fix_angle_mode
+    double precision :: theta, phi
+
+    do ila = 1, calc%num_local_atoms
+      atom_id = calc%atom_ids(ila)
+      fix_angle_mode = calc%noco_data%angle_fix_mode(atom_id)
+      theta = calc%noco_data%theta_noco(atom_id)
+      phi = calc%noco_data%phi_noco(atom_id)
+      call constraining_fields_scf_cycle(calc%bfields(ila), fix_angle_mode, &
+                                         theta, phi, params%itbfield0, params%itbfield1, &
+                                         iter)
+    end do
+  end subroutine
+
 
   !------------------------------------------------------------------------------
   integer function openForceFile() result(fu)
