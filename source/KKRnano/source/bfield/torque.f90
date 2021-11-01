@@ -150,14 +150,14 @@ contains
   !> Based on the torque and magnetic moment calculated together with the
   !> densities and saved in the bfield_data type.
   subroutine constraining_fields_scf_cycle(bfield, constr_mode, theta, phi, &
-                                           itscf0, itscf1, iteration)
+                                           constr_bfield_mixing, itscf0, itscf1, &
+                                           iteration)
     type(bfield_data), intent(inout) :: bfield !! Information on the magnetic field
     integer, intent(in) :: constr_mode     !! Mode of the constraining field self-consistency
     double precision, intent(in) :: theta, phi !! Angles of the (old) magnetic moment
+    double precision, intent(in) :: constr_bfield_mixing !! Mixing param for the constr bfields
     integer, intent(in) :: itscf0, itscf1  !! Apply magnetic fields between these iterations
     integer, intent(in) :: iteration       !! Current iteration
-
-    double precision, parameter :: constraint_bfields_mixing_parameter = 0.03
 
     double precision, dimension(3) :: dir, mag_mom_dir
     double precision, dimension(3) :: old_b_constr
@@ -179,11 +179,12 @@ contains
     mag_mom_dir = bfield%mag_mom(:) / mag_mom_len
 
     if (constr_mode == 3) then
-      bfield%bfield_constr(:) = bfield%bfield_constr(:) - bfield%mag_torque(:) / mag_mom_len
+      bfield%bfield_constr(:) = bfield%bfield_constr(:) - &
+                    (bfield%mag_torque(:) / mag_mom_len) * constr_bfield_mixing
     else if (constr_mode == 2) then
       old_b_constr = bfield%bfield_constr(:)
       bfield%bfield_constr(:) = old_b_constr - dot_product(old_b_constr,dir)*dir - &
-              (mag_mom_dir - dot_product(mag_mom_dir,dir)*dir)*constraint_bfields_mixing_parameter
+              (mag_mom_dir - dot_product(mag_mom_dir,dir)*dir)*constr_bfield_mixing
     else
       ! There might be other modes that are calculated somewhere else
       ! (e.g. mode 1, which only fixes the direction by not changing the local

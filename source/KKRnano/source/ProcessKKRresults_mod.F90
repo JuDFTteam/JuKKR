@@ -1042,8 +1042,8 @@ module ProcessKKRresults_mod
       theta = calc%noco_data%theta_noco(atom_id)
       phi = calc%noco_data%phi_noco(atom_id)
       call constraining_fields_scf_cycle(calc%bfields(ila), fix_angle_mode, &
-                                         theta, phi, params%itbfield0, params%itbfield1, &
-                                         iter)
+                                         theta, phi, params%constr_bfield_mixing, &
+                                         params%itbfield0, params%itbfield1, iter)
     end do
   end subroutine
 

@@ -82,6 +82,7 @@ module InputParams_mod
     logical :: external_bfield
     logical :: trans_bfield
     logical :: mt_bfield
+    double precision :: constr_bfield_mixing
     integer :: itbfield0
     integer :: itbfield1
     integer :: bfield_verbosity
@@ -678,6 +679,15 @@ integer function getValues(filename, self) result(ierror)
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for mt_bfield."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "constr_bfield_mixing", self%constr_bfield_mixing , def=0.03)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for constr_bfield_mixing. Set constr_bfield_mixing to 0.03"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for constr_bfield_mixing."
     destroy_and_return
   endif
 
