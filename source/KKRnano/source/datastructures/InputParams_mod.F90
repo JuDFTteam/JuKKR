@@ -682,9 +682,9 @@ integer function getValues(filename, self) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "constr_bfield_mixing", self%constr_bfield_mixing , def=0.03)
+  ierror = getValue(cr, "constr_bfield_mixing", self%constr_bfield_mixing , def=0.9)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for constr_bfield_mixing. Set constr_bfield_mixing to 0.03"
+    write(*,*) "WARNING: Bad/no value given for constr_bfield_mixing. Set constr_bfield_mixing to 0.9"
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for constr_bfield_mixing."

@@ -29,11 +29,16 @@ module mod_bfield
   !> Summary: A type storing information on magnetic fields for a single atom
   !-------------------------------------------------------------------------------
   type :: bfield_data
+    ! Noncollinear magnetic fields
     double precision, dimension(3) :: bfield_ext    !! external magnetic field in cartesian coordinates
     double precision, dimension(3) :: bfield_constr !! constraining field in cartesian coordinates
-    double precision, dimension(3) :: mag_torque    !! Magnetic torque
-    double precision, dimension(3) :: mag_mom       !! Magnetic moment
 
+    ! Torque and other information used to update the constraints fields
+    double precision, dimension(3) :: mag_torque     !! Magnetic torque
+    double precision, dimension(3) :: mag_mom        !! Magnetic moment
+    double precision               :: mean_xc_bfield !! Mean magnitude of xc bfield
+
+    ! Precalculated intermediate results
     double precision, dimension(:,:,:), allocatable :: thetallmat !! shapefun in the ll' expansion
   end type
 

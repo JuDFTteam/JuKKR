@@ -77,6 +77,9 @@ contains
     ! potential.
     bxc(:,:) = (vpot(:,:,1) - vpot(:,:,2)) / 2.
 
+    ! Calculate and save mean xc bfield strength
+    bfield%mean_xc_bfield = sum(abs(bxc(:,1))) / irmd
+
     ! Get magnetization density (in the global frame). For each angular momentum
     ! and radial index, rotate to the global frame.
     do ilm = 1, lmpotd
@@ -184,7 +187,8 @@ contains
     else if (constr_mode == 2) then
       old_b_constr = bfield%bfield_constr(:)
       bfield%bfield_constr(:) = old_b_constr - dot_product(old_b_constr,dir)*dir - &
-              (mag_mom_dir - dot_product(mag_mom_dir,dir)*dir)*constr_bfield_mixing
+              ( (mag_mom_dir - dot_product(mag_mom_dir,dir)*dir) * &
+                bfield%mean_xc_bfield * constr_bfield_mixing )
     else
       ! There might be other modes that are calculated somewhere else
       ! (e.g. mode 1, which only fixes the direction by not changing the local
