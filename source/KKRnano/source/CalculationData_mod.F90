@@ -386,6 +386,12 @@ module CalculationData_mod
     call setup_iguess(self, dims, arrays%nofks, kmesh) ! setup storage for iguess
 
     if (params%noncobfield) then
+
+      ! Check that noncollinear magnetism is enabled
+      if (dims%korbit < 1) then
+        die_here("Noncollinear magnetic fields (noncobfield=t) need noncollinear magnetism. Set korbit=1.")
+      end if
+
       ! Output only as master, in that case copy the input parameter
       verbosity = -1
       if (mp%isMasterRank) verbosity = params%bfield_verbosity
