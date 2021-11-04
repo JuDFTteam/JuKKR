@@ -254,9 +254,9 @@ contains
       write(*,'(79("#"))')
       write(*,'(16X,A)') 'external non-collinear magnetic fields'
       write(*,'(79("#"))')
-      write(*,'(2X,A4,4X,A10,6X,A8,6X,A11)') 'atom', 'theta [°]', 'phi [°]', 'bfield [Ry]'
+      write(*,'(2X,A4,2X,A15,2X,A13,4X,A11)') 'atom', 'theta [degrees]', 'phi [degrees]', 'bfield [Ry]'
       do iatom = 1, number_of_atoms
-        write(*,'(2X,I4,2(2X,F12.8),2X,E15.8)') iatom, theta(iatom), phi(iatom), strength(iatom)
+        write(*,'(2X,I4,2X,2(3X,F12.8),2X,E15.8)') iatom, theta(iatom), phi(iatom), strength(iatom)
       end do
       write(*,'(79("#"))')
     else if (verbosity >= 2) then
