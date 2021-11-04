@@ -164,7 +164,7 @@ contains
 
     double precision, dimension(3) :: dir, mag_mom_dir
     double precision, dimension(3) :: old_b_constr
-    double precision :: mag_mom_len
+    double precision :: mag_mom_len, mag_mom_sign
 
     ! If the current iteration is not in the window the magnetic fields should be
     ! applied, return without changing the potential
@@ -177,13 +177,16 @@ contains
     dir(2) = sin(theta) * sin(phi)
     dir(3) = cos(theta)
 
-    ! Calculate direction and absolute value of the magnetic moment
+    ! Calculate direction and absolute value of the magnetic moment and the
+    ! sign the magnetic moment has in the local frame of reference
     mag_mom_len = sqrt(dot_product(bfield%mag_mom(:), bfield%mag_mom(:)))
     mag_mom_dir = bfield%mag_mom(:) / mag_mom_len
+    mag_mom_sign = sign(1., dot_product(mag_mom_dir, dir))
 
     if (constr_mode == 3) then
       bfield%bfield_constr(:) = bfield%bfield_constr(:) - &
-                    (bfield%mag_torque(:) / mag_mom_len) * constr_bfield_mixing
+              ( mag_mom_sign * (bfield%mag_torque(:) / mag_mom_len) * &
+                constr_bfield_mixing )
     else if (constr_mode == 2) then
       old_b_constr = bfield%bfield_constr(:)
       bfield%bfield_constr(:) = old_b_constr - dot_product(old_b_constr,dir)*dir - &
