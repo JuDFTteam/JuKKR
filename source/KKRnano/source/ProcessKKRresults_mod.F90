@@ -1131,9 +1131,10 @@ module ProcessKKRresults_mod
       reclen = max(reclen, 4*8 + 1*1 + 3*8)
     end if
     if (noncobfield) then
-      ! The constraint bfields (double(3)) and torques (double(3))
+      ! The constraint bfields, torques, and moments before fixing directions
+      ! (each double(3))
       recnum = recnum + 1
-      reclen = max(reclen, (3+3)*8)
+      reclen = max(reclen, (3+3+3)*8)
     end if
 
   end subroutine
@@ -1206,7 +1207,7 @@ module ProcessKKRresults_mod
       endif
       if (params%noncobfield) then
         write(unit=r1fu, rec=irec) calc%bfields(ila)%bfield_constr, &
-          calc%bfields(ila)%mag_torque
+          calc%bfields(ila)%mag_torque, calc%bfields(ila)%mag_mom
         irec = irec + 1
       end if
     end do
@@ -1656,10 +1657,14 @@ module ProcessKKRresults_mod
     double precision max_delta_angle !NOCO
     double precision delta_angle !NOCO
     integer :: max_delta_atom !NOCO
+    double precision, dimension(3) :: dir ! NOCO, direction of local frame of reference
     double precision, dimension(3) :: constr_field
     double precision, dimension(3) :: torque ! torque of the current atom
+    double precision, dimension(3) :: newmoment ! magnetic moment before angle constraint
     double precision :: max_torque_sqrd      ! squared magnitude of largest torque so far
     integer :: max_torque_atom               ! atom with largest torque so far
+    double precision :: constr_angle_change, max_constr_angle_change
+    integer :: max_constr_angle_change_atom
     integer :: reclen, recnum, irec, ie, lrecres2
     integer :: lcoremax, i1, ispin, lpot
     character(len=*), parameter :: &
@@ -1673,6 +1678,8 @@ module ProcessKKRresults_mod
     F89="('                    Change of angle phi (deg)  = ',f12.6)", &
     F81="('                    Largest torque for atom = ',i5.1)", &
     F82="('                    Largest torque magnitude [Ry] = ',E12.6)", &
+    F83="('                    Largest change of angle for constraint moment at atom = ', i5)", &
+    F84="('                    Largest change of angle for constraint moment (deg) = ', f10.6)", &
     F94="(4X,'nuclear charge  ',F10.6,9X,'core charge =   ',F10.6)"
     
     integer :: npotd
@@ -1685,6 +1692,8 @@ module ProcessKKRresults_mod
     max_delta_atom = 1     !NOCO
     max_torque_sqrd = 0.
     max_torque_atom = 0
+    max_constr_angle_change = 0.
+    max_constr_angle_change_atom = 0
 
     ! Calculate size of data written per atom
     call calculateResults1FileShapes(reclen, recnum, compute_total_energy, &
@@ -1737,7 +1746,8 @@ module ProcessKKRresults_mod
         end do
       end if
 
-      ! Third loop: Nonco and constraint bfields stuff
+      ! Third loop: Calculate nonco and constraint bfields stuff, write files
+      ! (no output to stdout)
       if (korbit > 0) then
         open(13,file='nonco_angle_out.dat',form='formatted')
         open(14,file='nonco_moment_out.txt',form='formatted')
@@ -1766,7 +1776,7 @@ module ProcessKKRresults_mod
           irec = irec + 1
 
           if (noncobfield) then
-            read(71, rec=irec) constr_field, torque
+            read(71, rec=irec) constr_field, torque, newmoment
             irec = irec + 1
           end if
 
@@ -1797,9 +1807,25 @@ module ProcessKKRresults_mod
             write(15,*) constr_field(:)
             write(16,*) torque(:)
 
+            ! Look for largest torque
             if (dot_product(torque(:), torque(:)) > max_torque_sqrd) then
               max_torque_sqrd = dot_product(torque(:), torque(:))
               max_torque_atom = i1
+            end if
+
+            ! Look for largest angle change of constraint atom
+            !  Normalize moment to get direction before fixing
+            newmoment = newmoment / sqrt(dot_product(newmoment, newmoment))
+            !  Calculate local frame of reference direction
+            dir(1) = sin(theta_noco)*cos(phi_noco)
+            dir(2) = sin(theta_noco)*sin(phi_noco)
+            dir(3) = cos(theta_noco)
+            !  Calculate change in angle
+            constr_angle_change = acos(dot_product(newmoment, dir))
+            if (constr_angle_change > max_constr_angle_change) then
+              ! Update max change in angle
+              max_constr_angle_change = constr_angle_change
+              max_constr_angle_change_atom = i1
             end if
           end if
 
@@ -1816,6 +1842,8 @@ module ProcessKKRresults_mod
         end if
       end if
 
+      ! Last loop: Charge and spin in WS-cell
+      ! After loop some summary over all atoms
       if (compute_total_energy >= 0) then
         do i1 = 1, natoms
           irec = 1 + (i1 - 1) * recnum
@@ -1845,6 +1873,8 @@ module ProcessKKRresults_mod
         if (noncobfield .and. bfield_verbosity >= 2) then
           write(6, fmt=F81) max_torque_atom
           write(6, fmt=F82) sqrt(max_torque_sqrd)
+          write(6, fmt=F83) max_constr_angle_change_atom
+          write(6, fmt=F84) 180.0/PI*max_constr_angle_change
         end if
         write(6, '(79(1h+))')
       end if
