@@ -1814,12 +1814,14 @@ module ProcessKKRresults_mod
             end if
 
             ! Look for largest angle change of constraint atom
-            !  Normalize moment to get direction before fixing
-            newmoment = newmoment / sqrt(dot_product(newmoment, newmoment))
             !  Calculate local frame of reference direction
             dir(1) = sin(theta_noco)*cos(phi_noco)
             dir(2) = sin(theta_noco)*sin(phi_noco)
             dir(3) = cos(theta_noco)
+            !  Normalize moment to get direction before fixing
+            newmoment = newmoment / sqrt(dot_product(newmoment, newmoment))
+            !  For negative moments, correct sign
+            newmoment = newmoment * sign(1., dot_product(newmoment, dir))
             !  Calculate change in angle
             constr_angle_change = acos(dot_product(newmoment, dir))
             if (constr_angle_change > max_constr_angle_change) then
