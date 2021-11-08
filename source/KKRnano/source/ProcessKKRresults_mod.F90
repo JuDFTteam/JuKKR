@@ -1693,7 +1693,7 @@ module ProcessKKRresults_mod
     max_torque_sqrd = 0.
     max_torque_atom = 0
     max_constr_angle_change = 0.
-    max_constr_angle_change_atom = 0
+    max_constr_angle_change_atom = -1 ! Initially a flag that means "feature not used (yet)"
 
     ! Calculate size of data written per atom
     call calculateResults1FileShapes(reclen, recnum, compute_total_energy, &
@@ -1813,21 +1813,24 @@ module ProcessKKRresults_mod
               max_torque_atom = i1
             end if
 
-            ! Look for largest angle change of constraint atom
-            !  Calculate local frame of reference direction
-            dir(1) = sin(theta_noco)*cos(phi_noco)
-            dir(2) = sin(theta_noco)*sin(phi_noco)
-            dir(3) = cos(theta_noco)
-            !  Normalize moment to get direction before fixing
-            newmoment = newmoment / sqrt(dot_product(newmoment, newmoment))
-            !  For negative moments, correct sign
-            newmoment = newmoment * sign(1., dot_product(newmoment, dir))
-            !  Calculate change in angle
-            constr_angle_change = acos(dot_product(newmoment, dir))
-            if (constr_angle_change > max_constr_angle_change) then
-              ! Update max change in angle
-              max_constr_angle_change = constr_angle_change
-              max_constr_angle_change_atom = i1
+            ! Only for atoms with constraining fields
+            if (angle_fix_mode >= 2) then
+              ! Look for largest angle change of constraint moment
+              !  Calculate local frame of reference direction
+              dir(1) = sin(theta_noco)*cos(phi_noco)
+              dir(2) = sin(theta_noco)*sin(phi_noco)
+              dir(3) = cos(theta_noco)
+              !  Normalize moment to get direction before fixing
+              newmoment = newmoment / sqrt(dot_product(newmoment, newmoment))
+              !  For negative moments, correct sign
+              newmoment = newmoment * sign(1., dot_product(newmoment, dir))
+              !  Calculate change in angle
+              constr_angle_change = acos(dot_product(newmoment, dir))
+              if (constr_angle_change > max_constr_angle_change) then
+                ! Update max change in angle
+                max_constr_angle_change = constr_angle_change
+                max_constr_angle_change_atom = i1
+              end if
             end if
           end if
 
@@ -1875,8 +1878,11 @@ module ProcessKKRresults_mod
         if (noncobfield .and. bfield_verbosity >= 2) then
           write(6, fmt=F81) max_torque_atom
           write(6, fmt=F82) sqrt(max_torque_sqrd)
-          write(6, fmt=F83) max_constr_angle_change_atom
-          write(6, fmt=F84) 180.0/PI*max_constr_angle_change
+          ! Only if there were atoms with constraining fields
+          if (max_constr_angle_change_atom >= 0) then
+            write(6, fmt=F83) max_constr_angle_change_atom
+            write(6, fmt=F84) 180.0/PI*max_constr_angle_change
+          end if
         end if
         write(6, '(79(1h+))')
       end if
