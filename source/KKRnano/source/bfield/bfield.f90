@@ -32,6 +32,7 @@ module mod_bfield
     ! Noncollinear magnetic fields
     double precision, dimension(3) :: bfield_ext    !! external magnetic field in cartesian coordinates
     double precision, dimension(3) :: bfield_constr !! constraining field in cartesian coordinates
+    double precision, dimension(3) :: last_bfield_constr !! constraining field of last iteration
 
     ! Torque and other information used to update the constraints fields
     double precision, dimension(3) :: mag_torque     !! Magnetic torque

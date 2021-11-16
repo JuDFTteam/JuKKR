@@ -183,6 +183,9 @@ contains
     mag_mom_dir = bfield%mag_mom(:) / mag_mom_len
     mag_mom_sign = sign(1., dot_product(mag_mom_dir, dir))
 
+    ! Save previous iterations field
+    bfield%last_bfield_constr = bfield%bfield_constr
+
     if (constr_mode == 3) then
       bfield%bfield_constr(:) = bfield%bfield_constr(:) - &
               ( mag_mom_sign * (bfield%mag_torque(:) / mag_mom_len) * &

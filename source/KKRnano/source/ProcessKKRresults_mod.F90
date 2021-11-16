@@ -1131,10 +1131,10 @@ module ProcessKKRresults_mod
       reclen = max(reclen, 4*8 + 1*1 + 3*8)
     end if
     if (noncobfield) then
-      ! The constraint bfields, torques, and moments before fixing directions
-      ! (each double(3))
+      ! The constraint bfields (from this and from last iteration), torques,
+      ! and moments before fixing directions (each double(3))
       recnum = recnum + 1
-      reclen = max(reclen, (3+3+3)*8)
+      reclen = max(reclen, (3+3+3+3)*8)
     end if
 
   end subroutine
@@ -1206,8 +1206,11 @@ module ProcessKKRresults_mod
         irec = irec + 1
       endif
       if (params%noncobfield) then
-        write(unit=r1fu, rec=irec) calc%bfields(ila)%bfield_constr, &
-          calc%bfields(ila)%mag_torque, calc%bfields(ila)%mag_mom
+        write(unit=r1fu, rec=irec) &
+            calc%bfields(ila)%bfield_constr, &
+            calc%bfields(ila)%last_bfield_constr, &
+            calc%bfields(ila)%mag_torque, &
+            calc%bfields(ila)%mag_mom
         irec = irec + 1
       end if
     end do
@@ -1658,13 +1661,15 @@ module ProcessKKRresults_mod
     double precision delta_angle !NOCO
     integer :: max_delta_atom !NOCO
     double precision, dimension(3) :: dir ! NOCO, direction of local frame of reference
-    double precision, dimension(3) :: constr_field
+    double precision, dimension(3) :: constr_field, last_constr_field
     double precision, dimension(3) :: torque ! torque of the current atom
     double precision, dimension(3) :: newmoment ! magnetic moment before angle constraint
     double precision :: max_torque_sqrd      ! squared magnitude of largest torque so far
     integer :: max_torque_atom               ! atom with largest torque so far
     double precision :: constr_angle_change, max_constr_angle_change
     integer :: max_constr_angle_change_atom
+    double precision :: constr_field_change, max_constr_field_change
+    integer :: max_constr_field_change_atom
     integer :: reclen, recnum, irec, ie, lrecres2
     integer :: lcoremax, i1, ispin, lpot
     character(len=*), parameter :: &
@@ -1680,6 +1685,8 @@ module ProcessKKRresults_mod
     F82="('                    Largest torque magnitude [Ry] = ',E12.6)", &
     F83="('                    Largest change of angle for constraint moment at atom = ', i5)", &
     F84="('                    Largest change of angle for constraint moment (deg) = ', f10.6)", &
+    F85="('                    Largest change in constraint field at atom = ', i5)", &
+    F80="('                    Largest change in constraint field (Ry) = ', e10.4)", &
     F94="(4X,'nuclear charge  ',F10.6,9X,'core charge =   ',F10.6)"
     
     integer :: npotd
@@ -1694,6 +1701,8 @@ module ProcessKKRresults_mod
     max_torque_atom = 0
     max_constr_angle_change = 0.
     max_constr_angle_change_atom = -1 ! Initially a flag that means "feature not used (yet)"
+    max_constr_field_change = 0.
+    max_constr_field_change_atom = 0
 
     ! Calculate size of data written per atom
     call calculateResults1FileShapes(reclen, recnum, compute_total_energy, &
@@ -1776,7 +1785,7 @@ module ProcessKKRresults_mod
           irec = irec + 1
 
           if (noncobfield) then
-            read(71, rec=irec) constr_field, torque, newmoment
+            read(71, rec=irec) constr_field, last_constr_field, torque, newmoment
             irec = irec + 1
           end if
 
@@ -1831,6 +1840,17 @@ module ProcessKKRresults_mod
                 max_constr_angle_change = constr_angle_change
                 max_constr_angle_change_atom = i1
               end if
+
+              ! Look for largest change in constraining field
+              !   Reuse variable for difference
+              last_constr_field = last_constr_field - constr_field
+              !   Calculate the absolute value of the change (squared)
+              constr_field_change = dot_product(last_constr_field, last_constr_field)
+              if (constr_field_change > max_constr_field_change) then
+                ! Update
+                max_constr_field_change = constr_field_change
+                max_constr_field_change_atom = i1
+              end if
             end if
           end if
 
@@ -1882,6 +1902,8 @@ module ProcessKKRresults_mod
           if (max_constr_angle_change_atom >= 0) then
             write(6, fmt=F83) max_constr_angle_change_atom
             write(6, fmt=F84) 180.0/PI*max_constr_angle_change
+            write(6, fmt=F85) max_constr_field_change_atom
+            write(6, fmt=F80) sqrt(max_constr_field_change)
           end if
         end if
         write(6, '(79(1h+))')
