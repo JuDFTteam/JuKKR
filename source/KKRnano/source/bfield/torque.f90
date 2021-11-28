@@ -49,6 +49,8 @@ contains
     integer :: irmd, lmmax, lmpotd     ! radial and angular momentum sizes
     integer :: i, ir, ilm              ! generic, radial and angular momentum loop indices
     double complex :: integrate_result ! to output the result of some integrations
+    double precision :: mag_mom_len    ! absolute value of magnetic moment
+    double precision :: mag_mom_len_mt ! absolute value of magnetic moment over muffin tin
     double precision, dimension(3) :: dir  ! unit vectors of old magnetic moment
     double precision, dimension(3) :: torque, torque_mt ! torque calculated over whole cell or mt only
     double complex,   dimension(2,2) :: rho2ns_temp     ! temporary matrix to rotate rho2nsc
@@ -111,7 +113,10 @@ contains
           mag_mt(ilm,i) = real(integrate_result * rfpi)    
       end do
     end do
-    
+
+    mag_mom_len    = sqrt(dot_product(mag(1,:),    mag(1,:)))
+    mag_mom_len_mt = sqrt(dot_product(mag_mt(1,:), mag_mt(1,:)))
+
     ! Calculate the torque (also mt and end)
     ! Integrate the xc bfield times the magnetization density.
     torque(:) = 0.
@@ -127,7 +132,11 @@ contains
         torque_mt(i) = torque_mt(i) + real(integrate_result * rfpi)
       end do
     end do
-    
+
+    ! Divide by magnetic moment
+    torque(:)    = torque(:)    / mag_mom_len
+    torque_mt(:) = torque_mt(:) / mag_mom_len_mt
+
     ! Project torque to perpendicular of magnetic moment
     dir(1) = sin(theta) * cos(phi)
     dir(2) = sin(theta) * sin(phi)
@@ -188,8 +197,7 @@ contains
 
     if (constr_mode == 3) then
       bfield%bfield_constr(:) = bfield%bfield_constr(:) - &
-              ( mag_mom_sign * (bfield%mag_torque(:) / mag_mom_len) * &
-                constr_bfield_mixing )
+              ( mag_mom_sign * bfield%mag_torque(:) * constr_bfield_mixing )
     else if (constr_mode == 2) then
       old_b_constr = bfield%bfield_constr(:)
       bfield%bfield_constr(:) = old_b_constr - dot_product(old_b_constr,dir)*dir - &
