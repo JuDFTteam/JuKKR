@@ -37,7 +37,7 @@ contains
     use :: mod_datatypes, only: dp, sp
     use :: mod_runoptions, only: calc_exchange_couplings, formatted_file, set_gmat_to_zero, use_Chebychev_solver, &
       use_qdos, use_readcpa, write_deci_tmat, write_gmat_plain, write_green_host, write_green_imp, write_kkrimp_input, &
-      write_pkkr_input, write_pkkr_operators, write_rhoq_input, write_gmat_ascii, decouple_spin_cheby
+      write_pkkr_input, write_pkkr_operators, write_rhoq_input, write_gmat_ascii, decouple_spin_cheby, write_double_precision
     use mod_constants, only: czero, cone, pi
     use mod_operators_for_fscode, only: operators_for_fscode
     use mod_getscratch, only: opendafile
@@ -357,8 +357,13 @@ contains
       if ((write_kkrimp_input)) then
         ! ! Green functions has (lmmaxd*natomimp)**2 double complex (i.e. factor '4') values
         ! RECLENGTH = WLENGTH*4*NATOMIMP*LMMAXD*NATOMIMP*LMMAXD
-        ! at the moment kkrflex_green file is only written with single precision (factor'2')
-        reclength = wlength*2*natomimp*lmmaxd*natomimp*lmmaxd
+        if ( write_double_precision ) then
+          ! this is used to write double precision files (factor'4')
+          reclength = wlength*4*natomimp*lmmaxd*natomimp*lmmaxd
+        else
+          ! at the moment kkrflex_green file is only written with single precision (factor'2')
+          reclength = wlength*2*natomimp*lmmaxd*natomimp*lmmaxd
+        end if
         ! sometimes (lmax=2) the record length might be too small to store the parameters, then reclength needs to be bigger
         if (reclength<8*ielast+6) then
           stop '[main1b] record length for kkrflex_green is too small to store parameters, use either more atoms in the cluster, a higher lmax or less energy points'

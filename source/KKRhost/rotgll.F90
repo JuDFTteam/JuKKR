@@ -53,7 +53,7 @@ contains
 
     use :: mod_mympi, only: myrank, master
     use :: mod_datatypes, only: dp, sp
-    use :: mod_runoptions, only: print_Gij, write_gmat_plain, write_green_host, write_kkrimp_input
+    use :: mod_runoptions, only: print_Gij, write_gmat_plain, write_green_host, write_kkrimp_input, write_double_precision
     use :: mod_changerep
     use :: mod_cmatstr
     use :: mod_constants, only: czero, cone
@@ -193,7 +193,12 @@ contains
 #endif
         ! force single precision complex writeout to minimize file size etc.
         ! maybe this can be removed in the future
-        write (888, rec=irec) cmplx(gclust, kind=sp)
+        if ( write_double_precision ) then
+          write (888, rec=irec) gclust
+        else
+          write (888, rec=irec) cmplx(gclust, kind=sp)
+        end if
+
         if ((write_gmat_plain)) then
           write (8888, '(50000E25.16)') gclust
         end if
