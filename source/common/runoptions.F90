@@ -121,6 +121,7 @@ module mod_runoptions
   logical :: nosmallcomp = .false.                     !! set small component of the wavefunction to zero
   logical :: use_broyden_spinmix = .false.             !! use broyden spin mixing for noncollinear angles
   logical :: write_angles_alliter= .false.             !! write out noncollinear angles for all iterations
+  logical :: write_tmat_all= .false.                   !! write out the tmat for all atoms and energies
 
   !some old run and test options have been removed:
   !  'atptshft': replaced by presence or absence of IVSHIFT in inputcard
@@ -243,6 +244,7 @@ module mod_runoptions
     call set_runoption(calc_wronskian                , '<calc_wronskian>'                , '<wronskian>')
     call set_runoption(use_broyden_spinmix           , '<use_broyden_spinmix>'            , '<bryspinmix>')
     call set_runoption(write_angles_alliter          , '<write_angles_alliter>')
+    call set_runoption(write_tmat_all                , '<write_tmat_all>')
 
   end subroutine read_runoptions
 
@@ -786,6 +788,7 @@ module mod_runoptions
     call mpi_bcast(calc_wronskian                , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(use_broyden_spinmix           , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(write_angles_alliter          , 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(write_tmat_all                , 1, mpi_logical, master, mpi_comm_world, ierr)
 
   end subroutine bcast_runoptions
 #endif
@@ -901,6 +904,7 @@ module mod_runoptions
     write(iounit, '(A35,1x,1L,3x,A)') '<calc_wronskian>=', calc_wronskian, "calculate the wronskian relations of first and second kind for the wavefunctions (see PhD Bauer pp 48)"
     write(iounit, '(A35,1x,1L,3x,A)') '<use_broyden_spinmix>=', use_broyden_spinmix, "use broyden spin mixing for noncollinear angles"
     write(iounit, '(A35,1x,1L,3x,A)') '<write_angles_alliter>=', write_angles_alliter, "write out noncollinear angles for all iterations"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_tmat_all>=', write_tmat_all, "write out the tmat for all energies and all atoms"
 
   end subroutine print_runoptions
 

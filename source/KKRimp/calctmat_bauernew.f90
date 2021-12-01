@@ -527,6 +527,16 @@ if ( .not. config_testflag('nosph') .or. nsra==5 ) then
   end do
 end if
 
+
+
+if (config_testflag('write_tmat_all')) then
+  write (filename, '(A,I0.3,A,I0.3,A)') 'tmat_atom_', iatom, '_energ_', ie, '.dat'
+  open (888888, file=trim(filename), form='formatted')
+  write (888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: lmmaxd=', lmsize, ' lmmaxd=', lmsize, ' ; ERYD=', eryd
+  write (888888, '(2ES25.16)') tmat%tmat(:, :)
+  close (888888)
+end if
+
 !#######################################################
 ! If spin-orbit coupling is used the left solution of the
 ! Hamiltonian is non-trivial and needs to be calculated explicitly
@@ -563,8 +573,8 @@ if ((kspinorbit==1).and.calcleft) then
     ! ------------>    watch out here changed the order for left and right solution <-----------
     jlk_index, hlk2, jlk2, hlk, jlk, GMATPREFACTOR, '1', '1', '0', use_sratrick, tmattemp)
   if (nsra==2) then
-    wavefunction%RLLleft(lmsize+1:,:,:,1)=wavefunction%RLLleft(lmsize+1:,:,:,1)/(cvlight)
-    wavefunction%SLLleft(lmsize+1:,:,:,1)=wavefunction%SLLleft(lmsize+1:,:,:,1)/(cvlight)
+    wavefunction%RLLleft(lmsize+1:,:,:,1) = wavefunction%RLLleft(lmsize+1:,:,:,1)/(cvlight)
+    wavefunction%SLLleft(lmsize+1:,:,:,1) = wavefunction%SLLleft(lmsize+1:,:,:,1)/(cvlight)
   end if
 
   if ( config_testflag('tmatdebug') ) then

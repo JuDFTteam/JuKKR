@@ -45,7 +45,7 @@ contains
 #endif
     use :: mod_datatypes, only: dp
     use :: mod_runoptions, only: calc_exchange_couplings, disable_tmat_sratrick, formatted_file, stop_1b, &
-      write_BdG_tests, write_pkkr_operators, write_rhoq_input, set_cheby_nospeedup, decouple_spin_cheby, calc_wronskian
+      write_BdG_tests, write_pkkr_operators, write_rhoq_input, set_cheby_nospeedup, decouple_spin_cheby, calc_wronskian, write_tmat_all
     use :: mod_constants, only: czero, cone, cvlight
     use :: global_variables, only: ntotd, ncleb, nrmaxd, mmaxd, nspind, nspotd, iemxd, lmmaxd, korbit
     use :: mod_wunfiles, only: t_params
@@ -583,15 +583,13 @@ contains
 #ifdef CPP_OMP
         !$omp critical
 #endif
-#ifdef CPP_BdG
-        if (write_BdG_tests) then
+        if (write_tmat_all) then
           write (filename, '(A,I0.3,A,I0.3,A)') 'tmat_atom_', i1, '_energ_', ie, '.dat'
           open (888888, file=trim(filename), form='formatted')
           write (888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: lmmaxd=', lmmaxd, ' lmmaxd=', lmmaxd, ' ; ERYD=', eryd
           write (888888, '(2ES25.16)') tmatll(:, :)
           close (888888)
         end if
-#endif
 #ifdef CPP_OMP
         !$omp end critical
 #endif

@@ -1,4 +1,4 @@
-MODULE MOD_RITES
+MODULE mod_rites_kkrimp
   CONTAINS
     !---------------------------------------------------------------------
     !> Summary: Writes the potential file
@@ -250,4 +250,4 @@ MODULE MOD_RITES
  9060 FORMAT (10i5)
  9070 FORMAT (1p,4d20.13)
       END SUBROUTINE
-      END MODULE MOD_RITES
+      END MODULE mod_rites_kkrimp
