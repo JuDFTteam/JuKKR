@@ -247,6 +247,8 @@ module mod_runoptions
     call set_runoption(write_angles_alliter          , '<write_angles_alliter>')
     call set_runoption(write_tmat_all                , '<write_tmat_all>')
     call set_runoption(write_double_precision        , '<write_double_precision>')
+    call set_runoption(calc_onsite_only              , '<calc_onsite_only>')
+    call set_runoption(use_gmat_unity                , '<use_gmat_unity>')
 
   end subroutine read_runoptions
 
@@ -792,6 +794,8 @@ module mod_runoptions
     call mpi_bcast(write_angles_alliter          , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(write_tmat_all                , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(write_double_precision        , 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(calc_onsite_only              , 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(use_gmat_unity                , 1, mpi_logical, master, mpi_comm_world, ierr)
 
   end subroutine bcast_runoptions
 #endif
@@ -909,6 +913,8 @@ module mod_runoptions
     write(iounit, '(A35,1x,1L,3x,A)') '<write_angles_alliter>=', write_angles_alliter, "write out noncollinear angles for all iterations"
     write(iounit, '(A35,1x,1L,3x,A)') '<write_tmat_all>=', write_tmat_all, "write out the tmat for all energies and all atoms"
     write(iounit, '(A35,1x,1L,3x,A)') '<write_double_precision>=', write_double_precision, "write out kkrflex files in double precision"
+    write(iounit, '(A35,1x,1L,3x,A)') '<calc_onsite_only>=', calc_onsite_only, "calculate not the full Green function for the density but take the onsite part alone"
+    write(iounit, '(A35,1x,1L,3x,A)') '<use_gmat_unity>=', use_gmat_unity, "set the structural GF to the unity matrix for test purposes"
 
   end subroutine print_runoptions
 

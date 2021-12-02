@@ -37,7 +37,7 @@ contains
     use :: mod_datatypes, only: dp, sp
     use :: mod_runoptions, only: calc_exchange_couplings, formatted_file, set_gmat_to_zero, use_Chebychev_solver, &
       use_qdos, use_readcpa, write_deci_tmat, write_gmat_plain, write_green_host, write_green_imp, write_kkrimp_input, &
-      write_pkkr_input, write_pkkr_operators, write_rhoq_input, write_gmat_ascii, decouple_spin_cheby, write_double_precision
+      write_pkkr_input, write_pkkr_operators, write_rhoq_input, write_gmat_ascii, decouple_spin_cheby, write_double_precision, use_gmat_unity
     use mod_constants, only: czero, cone, pi
     use mod_operators_for_fscode, only: operators_for_fscode
     use mod_getscratch, only: opendafile
@@ -662,11 +662,19 @@ contains
 #ifdef CPP_TIMING
           call timing_start('main1b - kloopz')
 #endif
-          call kloopz1_qdos(eryd, gmatll, ins, alat, ie, igf, nshell, naez, nofks(nmesh), volbz(nmesh), bzkp(1,1,nmesh), volcub(1,nmesh), cls, nacls, naclsmax, ncls, rr, rbasis, &
-            ezoa, atom, rcls, icc, ginp, ideci, lefttinvll(1,1,1,1,ie), righttinvll(1,1,1,1,ie), vacflag, nlbasis, nrbasis, factl, natomimp, nsymat, dsymll, ratom, rrot, nsh1, &
-            nsh2, ijtabsym, ijtabsh, icheck, invmod, refpot, trefll, tsst, msst, cfctor, cfctorinv, crel, rc, rrel, srrel, irrel, nrrel, drotq, symunitary, kmrot, natyp, ncpa, &
-            icpa, itcpamax, cpatol, noq, iqat, itoq, conc, iprint, icpaflag, ispin, nspindd, tqdos, iqdosrun, & ! qdos
-            dtrefll, dtmatll, dginp, lly_grtr(ie,ispin), tracet(ie,ispin), lly) ! LLY Lloyd
+          if (.not. use_gmat_unity) then
+            call kloopz1_qdos(eryd, gmatll, ins, alat, ie, igf, nshell, naez, nofks(nmesh), volbz(nmesh), bzkp(1,1,nmesh), volcub(1,nmesh), cls, nacls, naclsmax, ncls, rr, rbasis, &
+              ezoa, atom, rcls, icc, ginp, ideci, lefttinvll(1,1,1,1,ie), righttinvll(1,1,1,1,ie), vacflag, nlbasis, nrbasis, factl, natomimp, nsymat, dsymll, ratom, rrot, nsh1, &
+              nsh2, ijtabsym, ijtabsh, icheck, invmod, refpot, trefll, tsst, msst, cfctor, cfctorinv, crel, rc, rrel, srrel, irrel, nrrel, drotq, symunitary, kmrot, natyp, ncpa, &
+              icpa, itcpamax, cpatol, noq, iqat, itoq, conc, iprint, icpaflag, ispin, nspindd, tqdos, iqdosrun, & ! qdos
+              dtrefll, dtmatll, dginp, lly_grtr(ie,ispin), tracet(ie,ispin), lly) ! LLY Lloyd
+          else
+            ! set gmatll artificially to the unity matrix
+            if (myrank==master .and. ie_num==1 .and. ispin==1) write(*,'(/A/)') ' !!! setting GMATLL to unity matrix !!!'
+            do lm1=1, lmmaxd
+              gmatll(lm1, lm1, :) = cone
+            end do
+          end if !.not. use_gmat_unity
 
 #ifdef CPP_TIMING
           call timing_pause('main1b - kloopz')

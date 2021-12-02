@@ -54,7 +54,7 @@ subroutine rhooutnew(gauntcoeff, df, gmatin, ek, cellnew, wavefunction, rho2nsc,
   complex (kind=dp) :: gflle_part(lmsize,lmsize) ! lda+u
 ! ..
 ! .. Local Scalars ..
-  complex (kind=dp) :: cltdf
+  complex (kind=dp) :: cltdf, alpha
   real (kind=dp) :: c0ll
   integer :: ifun, ir, j, l1, lm1, lm2, lm3, m1
   integer :: ispin, jspin, ierr
@@ -134,8 +134,13 @@ subroutine rhooutnew(gauntcoeff, df, gmatin, ek, cellnew, wavefunction, rho2nsc,
       rlltemp = wavefunction%rll(1:lmsize,1:lmsize,ir,1)
     end if
 
+    ! this is the prefactor for the gmatll*rllleft term in the first zgemm
+    ! if the onsite densit is calculated alone we set this to zero
+    alpha = cone
+    if (config_testflag('calc_onsite_only')) alpha = czero
+
     ! changed the second mode to transpose - bauer
-    call zgemm('n','t',lmsize,lmsize,lmsize,cone,rlltemp, lmsize,gmat,lmsize,ek,qnsi,lmsize)
+    call zgemm('n','t',lmsize,lmsize,lmsize, alpha,rlltemp, lmsize,gmat,lmsize,ek,qnsi,lmsize)
 
     rlltemp(:,:) = wavefunction%rll(1:lmsize,1:lmsize,ir,1)
 
@@ -172,7 +177,7 @@ subroutine rhooutnew(gauntcoeff, df, gmatin, ek, cellnew, wavefunction, rho2nsc,
       end if
 
       ! changed the second mode to transpose - bauer
-      call zgemm('n','t',lmsize,lmsize,lmsize,cone,rlltemp, &
+      call zgemm('n','t',lmsize,lmsize,lmsize,gmat,rlltemp, &
                  lmsize,gmat,lmsize,ek,qnsi,lmsize)
 
       rlltemp = wavefunction%rll(lmsize+1:2*lmsize,1:lmsize,ir,1)!/cvlight
