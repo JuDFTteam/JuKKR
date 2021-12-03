@@ -197,6 +197,9 @@ contains
     tmatsph = czero
 
     if (myrank==master) then
+      write(*,'("**************************************************************************************************")')
+      write(*,'("***  WARNING: tmatimp_newsolver still uses the old rllsll!                                     ***")')
+      write(*,'("**************************************************************************************************")')
       ! read angles from nonco_ange files
       open (unit=12, file='nonco_angle.dat', form='FORMATTED')
       do i1 = 1, natyp
@@ -357,7 +360,7 @@ contains
             lmmaxd,rnew(1:irmdnew(i1),i1),                                         &
             vinsnew(1:irmdnew(i1),1:lmpot,ipot:ipot+nspin-1),ncheb,npan_tot(i1),    &
             rpan_intervall(0:ntotd,i1),jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor,   &
-            tmatsph,dummy_alpha,use_sratrick)
+            tmatsph,dummy_alpha,use_sratrick,.true.)
         end if
 
         ! calculate the tmat and wavefunctions
@@ -662,7 +665,7 @@ contains
           lmmaxd,rnew(1:irmdnew(i1),i1),                                           &
           vinsnew(1:irmdnew(i1),1:lmpot,ipot:ipot+nspin-1),ncheb,npan_tot(i1),      &
           rpan_intervall(0:ntotd,i1),jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor,     &
-          tmatsph,dummy_alpha,use_sratrick)
+          tmatsph,dummy_alpha,use_sratrick,.true.)
       end if
 
       ! calculate the tmat and wavefunctions

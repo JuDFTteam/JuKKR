@@ -150,6 +150,7 @@ contains
           pnsi(lm1, lm2) = rllleft(lm1, lm2, ir)
         end do
       end do
+      ! MdSD: note that this transpose is followed by another transpose in the next zgemm
       call zgemm('N', 'T', lmmaxd, lmmaxd, lmmaxd, alpha, pnsi, lmmaxd, gmatll, lmmaxd, czero, qnsi, lmmaxd)
       do lm1 = 1, lmmaxd
         do lm2 = 1, lmmaxd
@@ -171,14 +172,14 @@ contains
         end do
         ! CALL ZGEMM('N','N',lmmaxd,lmmaxd,lmmaxd,CONE,PNSI,
         ! +             lmmaxd,GMATLL,lmmaxd,EK,QNSI,lmmaxd)
-!     call zgemm('N', 'T', lmmaxd, lmmaxd, lmmaxd, cone, pnsi, lmmaxd, gmatll, lmmaxd, ek, qnsi, lmmaxd)
-      call zgemm('N', 'T', lmmaxd, lmmaxd, lmmaxd, ek, pnsi, lmmaxd, qnsi, lmmaxd, cone, wr(1,1,ir), lmmaxd)
-      do lm1 = 1, lmmaxd
-        do lm2 = 1, lmmaxd
-            pnsi(lm1, lm2) = -rllleft(lm1+lmmaxd, lm2, ir)
+!       call zgemm('N', 'T', lmmaxd, lmmaxd, lmmaxd, cone, pnsi, lmmaxd, gmatll, lmmaxd, ek, qnsi, lmmaxd)
+        call zgemm('N', 'T', lmmaxd, lmmaxd, lmmaxd, ek, pnsi, lmmaxd, qnsi, lmmaxd, cone, wr(1,1,ir), lmmaxd)
+        do lm1 = 1, lmmaxd
+          do lm2 = 1, lmmaxd
+              pnsi(lm1, lm2) = -rllleft(lm1+lmmaxd, lm2, ir)
+          end do
         end do
-      end do
-      call zgemm('N', 'T', lmmaxd, lmmaxd, lmmaxd, alpha, pnsi, lmmaxd, gmatll, lmmaxd, czero, qnsi, lmmaxd)
+        call zgemm('N', 'T', lmmaxd, lmmaxd, lmmaxd, alpha, pnsi, lmmaxd, gmatll, lmmaxd, czero, qnsi, lmmaxd)
         do lm1 = 1, lmmaxd
           do lm2 = 1, lmmaxd
             pnsi(lm1, lm2) = rll(lm1+lmmaxd, lm2, ir)

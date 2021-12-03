@@ -45,7 +45,8 @@ contains
 #endif
     use :: mod_datatypes, only: dp
     use :: mod_runoptions, only: calc_exchange_couplings, disable_tmat_sratrick, formatted_file, stop_1b, &
-      write_BdG_tests, write_pkkr_operators, write_rhoq_input, set_cheby_nospeedup, decouple_spin_cheby, calc_wronskian, write_tmat_all
+      write_BdG_tests, write_pkkr_operators, write_rhoq_input, set_cheby_nospeedup, decouple_spin_cheby, &
+      calc_wronskian, write_tmat_all, use_rllsll
     use :: mod_constants, only: czero, cone, cvlight
     use :: global_variables, only: ntotd, ncleb, nrmaxd, mmaxd, nspind, nspotd, iemxd, lmmaxd, korbit
     use :: mod_wunfiles, only: t_params
@@ -445,7 +446,8 @@ contains
           use_fullgmat = 1
         end if
 !RZ
-        call rllsllsourceterms(nsra, nvec, eryd, rnew, irmdnew, nrmaxd, lmax, lmmaxd, use_fullgmat, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor)
+        call rllsllsourceterms(nsra, nvec, eryd, rnew, irmdnew, nrmaxd, lmax, lmmaxd, use_fullgmat, jlk_index, &
+          hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor)
 
 #ifdef CPP_OMP
         !$omp critical
@@ -482,7 +484,7 @@ contains
         if (use_sratrick==1) then
           tmatsph(:, ith) = czero
           call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin/(nspin-korbit), zat, eryd, lmpot, lmmaxd, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk(:,:,ith), jlk(:,:,ith), &
-            hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, tmatsph(:,ith), alphasph, use_sratrick)
+            hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, tmatsph(:,ith), alphasph, use_sratrick, .true.)
 #ifdef CPP_BdG
         if (write_BdG_tests) then
           write (filename, '(A,I0.3,A,I0.3,A)') 'tmatsph_atom_', i1, '_energ_', ie, '.dat'
@@ -520,19 +522,22 @@ contains
         ! Right solutions
         tmat0 = czero
         alpha0 = czero             ! LLY
+        if (use_rllsll) then
+        ! MdSD: this is the old interface
+          call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), sll(:,:,:,ith), tmat0(:,:), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
+            jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alpha0(:,:))
+        else
         ! faster calculation of RLL.
         ! no irregular solutions are needed in self-consistent iterations
         ! because the t-matrix depends only on RLL
-        call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), ull(:,:,:,ith), rll(:,:,:,ith), tmatll, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, &
-          nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
-        ! MdSD: check if these are actually needed except in rhovalnew
-        if (calc_wronskian) then
-          call sll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), sll(:,:,:,ith), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, &
-           nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick)
+          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), ull(:,:,:,ith), rll(:,:,:,ith), tmat0(:,:), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, &
+            nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alpha0(:,:))
+          ! MdSD: check if these are actually needed except in rhovalnew
+          if (calc_wronskian) then
+            call sll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), sll(:,:,:,ith), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, &
+             nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick)
+          end if
         end if
-        ! MdSD: this is the old interface
-        ! call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), sll(:,:,:,ith), tmat0(:,:), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
-        !   jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alpha0(:,:))
         ! MdSD: if using the old rllsll check if this is needed
         if (nsra==2) then
           rll(lmmaxd+1:nvec*lmmaxd, :, :, ith) = rll(lmmaxd+1:nvec*lmmaxd, :, :, ith)/cvlight
@@ -681,7 +686,7 @@ contains
         if (use_sratrick==1) then
           tmatsph(:, ith) = czero
           call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin/(nspin-korbit), zat, eryd, lmpot, lmmaxd, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), &
-            hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, alphasph, tmatsph(:,ith), use_sratrick)
+            hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, alphasph, tmatsph(:,ith), use_sratrick, .true.)
         end if
 
         ! Calculate the tmat and wavefunctions
@@ -692,16 +697,19 @@ contains
         ! notice that exchange the order of left and right hankel/bessel functions
         tmat0 = czero
         alpha0 = czero             ! LLY
-        call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), ull(:,:,:,ith), rllleft(:,:,:,ith), tmat0, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, &
-          nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick, alpha0)
-        ! MdSD: check if these are actually needed except in rhovalnew
-        if (calc_wronskian) then
-          call sll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), sllleft(:,:,:,ith), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, &
-            nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick)
-        end if
+        if (use_rllsll) then
         ! MdSD: this is the old interface
-        ! call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), tmat0, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
-        !   jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alpha0)
+          call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), tmat0, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
+            jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alpha0)
+        else
+          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), ull(:,:,:,ith), rllleft(:,:,:,ith), tmat0, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, &
+            nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick, alpha0)
+          ! MdSD: check if these are actually needed except in rhovalnew
+          if (calc_wronskian) then
+            call sll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), sllleft(:,:,:,ith), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, &
+              nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick)
+          end if
+        end if
         ! MdSD: if using the old rllsll check if this is needed
         if (nsra==2) then
           rllleft(lmmaxd+1:nvec*lmmaxd, :, :, ith) = rllleft(lmmaxd+1:nvec*lmmaxd, :, :, ith)/cvlight

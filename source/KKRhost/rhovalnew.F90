@@ -41,7 +41,7 @@ contains
     use :: mod_save_wavefun, only: t_wavefunctions, read_wavefunc
     use :: mod_runoptions, only: calc_exchange_couplings, calc_gmat_lm_full, disable_tmat_sratrick, fix_nonco_angles, &
                                  use_qdos, write_complex_qdos, write_pkkr_operators, write_DOS_lm, set_cheby_nospeedup, &
-                                 decouple_spin_cheby, disable_print_serialnumber, set_gmat_to_zero
+                                 decouple_spin_cheby, disable_print_serialnumber, set_gmat_to_zero, use_rllsll
     use :: mod_version_info, only: version_print_header
     use :: global_variables, only: lmmaxd, iemxd, ncleb, lmxspd, irmd, ntotd, nrmaxd, lmpotd, nspotd, nfund, korbit, mmaxd, nspind, angles_cutoff
     use :: mod_constants, only: czero, cvlight, cone, pi, ci
@@ -552,11 +552,12 @@ contains
         ! using spherical potential as reference
         if (use_sratrick==1) then
           call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin/(nspin-korbit), zat, eryd, lmpotd, lmmaxd, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk(:,:,ith), jlk(:,:,ith), &
-            hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, tmatsph(:,ith), alphasph, use_sratrick)
+            hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, tmatsph(:,ith), alphasph, use_sratrick, .true.)
         end if
 
         ! calculate the tmat and wavefunctions
         rll(:, :, :, ith) = czero
+        ull(:, :, :, ith) = czero
         sll(:, :, :, ith) = czero
 
         !----------------------------------------------------------------------------
@@ -564,21 +565,24 @@ contains
         !----------------------------------------------------------------------------
         tmatll = czero
         alphall = czero
-        ! faster calculation of RLL.
-        ! no irregular solutions SLL are needed in self-consistent iterations
-        ! because the density depends only on RLL, RLLLEFT and SLLLEFT
-        call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), ull(:,:,:,ith), rll(:,:,:,ith), tmatll, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, &
-          nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
-        ! MdSD: right now it seems that sll is not used for anything
-        ! if (set_cheby_nospeedup .or. calc_exchange_couplings .or. write_pkkr_operators) then
-        !   call sll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), sll(:,:,:,ith), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, &
-        !     nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick)
+        if (use_rllsll) then
           ! MdSD: this is the old interface
-          ! call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), sll(:,:,:,ith), tmatll, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, &
-          !  hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alphall)
+          call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), sll(:,:,:,ith), tmatll, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, &
+           hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alphall)
           ! MdSD: if using the old rllsll this is needed for rhooutnew
-          ! ull(:,:,:,ith) = rll(:,:,:,ith)
-        ! end if
+          ull(:,:,:,ith) = rll(:,:,:,ith)
+        else
+          ! faster calculation of RLL.
+          ! no irregular solutions SLL are needed in self-consistent iterations
+          ! because the density depends only on RLL, RLLLEFT and SLLLEFT
+          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), ull(:,:,:,ith), rll(:,:,:,ith), tmatll, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, &
+            nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
+          ! MdSD: right now it seems that sll is not used for anything
+          ! if (set_cheby_nospeedup .or. calc_exchange_couplings .or. write_pkkr_operators) then
+          !   call sll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), sll(:,:,:,ith), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, &
+          !     nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick)
+          ! end if
+        end if
         ! MdSD: if using the old rllsll check if this is needed
         if (nsra==2) then
           ull(lmmaxd+1:nvec*lmmaxd, :, :, ith) = ull(lmmaxd+1:nvec*lmmaxd, :, :, ith)/cvlight
@@ -636,7 +640,7 @@ contains
         ! notice that exchange the order of left and right hankel/bessel functions
         if (use_sratrick==1) then
           call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin/(nspin-korbit), zat, eryd, lmpotd, lmmaxd, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), &
-            hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, alphasph, tmatsph(:,ith), use_sratrick)
+            hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, alphasph, tmatsph(:,ith), use_sratrick, .true.)
         end if
 
         ! calculate the tmat and wavefunctions
@@ -648,14 +652,17 @@ contains
         ! notice that exchange the order of left and right hankel/bessel functions
         tmattemp = czero
         alphall = czero
-        ! faster calculation of RLLLEFT and SLLLEFT.
-        call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), ullleft(:,:,:,ith), rllleft(:,:,:,ith), tmattemp, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, &
-          nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
-        call sll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), sllleft(:,:,:,ith), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, & 
-          nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick)
-        ! MdSD: this is the old interface
-        ! call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), tmattemp, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
-        !   jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alphall)
+        if (use_rllsll) then
+          ! MdSD: this is the old interface
+          call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), tmattemp, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
+            jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alphall)
+        else
+          ! faster calculation of RLLLEFT and SLLLEFT.
+          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), ullleft(:,:,:,ith), rllleft(:,:,:,ith), tmattemp, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, &
+            nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
+          call sll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), sllleft(:,:,:,ith), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, & 
+            nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick)
+        end if
         ! MdSD: if using the old rllsll check if this is needed
         if (nsra==2) then
           ullleft(lmmaxd+1:nvec*lmmaxd, :, :, ith) = ullleft(lmmaxd+1:nvec*lmmaxd, :, :, ith)/cvlight
