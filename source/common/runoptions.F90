@@ -66,6 +66,7 @@ module mod_runoptions
   logical :: torque_operator_onlySph = .false.         !! for torque operator: include only the spherically symmetric part (former: 'ONLYSPH')
   logical :: use_BdG = .false.                         !! use Bogoliubov-de-Gennes Formalism (former: 'useBdG')
   logical :: use_Chebychev_solver = .false.            !! use the Chebychev solver (former: 'NEWSOSOL')
+  logical :: use_rllsll = .false.                      !! switch to previous approach to compute wavefunctions in Chebyshev solver
   logical :: use_cond_LB = .false.                     !! perform calculation of conductance in Landauer-Büttiker formalism (former: 'CONDUCT')
   logical :: use_cont = .false.                        !! no usage of embedding points. NEMB is set to 0. (former: 'CONT')
   logical :: use_deci_onebulk= .false.                 !! in case of decimation: use same bulk on right and left. Speeds up calculations. (former: 'ONEBULK')
@@ -155,6 +156,7 @@ module mod_runoptions
     call set_runoption(write_gmat_ascii              , '<write_gmat_ascii>'              , '<gmatasci>')
     call set_runoption(use_rigid_Efermi              , '<use_rigid_Efermi>'              , '<rigid-ef>')
     call set_runoption(use_Chebychev_solver          , '<use_Chebychev_solver>'          , '<NEWSOSOL>')
+    call set_runoption(use_rllsll                    , '<use_rllsll>')
     call set_runoption(write_pkkr_input              , '<write_pkkr_input>'              , '<FERMIOUT>')
     call set_runoption(calc_complex_bandstructure    , '<calc_complex_bandstructure>'    , '<COMPLEX>' )
     call set_runoption(write_pkkr_operators          , '<write_pkkr_operators>'          , '<OPERATOR>')
@@ -702,6 +704,7 @@ module mod_runoptions
     call mpi_bcast(write_gmat_ascii              , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(use_rigid_Efermi              , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(use_Chebychev_solver          , 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(use_rllsll                    , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(write_pkkr_input              , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(calc_complex_bandstructure    , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(write_pkkr_operators          , 1, mpi_logical, master, mpi_comm_world, ierr)
@@ -861,6 +864,7 @@ module mod_runoptions
     write(iounit, '(A35,1x,1L,3x,A)') '<torque_operator_onlySph>=', torque_operator_onlySph, "for torque operator: include only the spherically symmetric part (former: 'ONLYSPH')"
     write(iounit, '(A35,1x,1L,3x,A)') '<use_BdG>=', use_BdG, "use Bogoliubov-de-Gennes Formalism (former: 'useBdG')"
     write(iounit, '(A35,1x,1L,3x,A)') '<use_Chebychev_solver>=', use_Chebychev_solver, "use the Chebychev solver (former: 'NEWSOSOL')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<use_rllsll>=', use_rllsll, "switch to previous approach to compute wavefunctions in Chebyshev solver"
     write(iounit, '(A35,1x,1L,3x,A)') '<use_cond_LB>=', use_cond_LB, "perform calculation of conductance in Landauer-Büttiker formalism (former: 'CONDUCT')"
     write(iounit, '(A35,1x,1L,3x,A)') '<use_cont>=', use_cont, "no usage of embedding points. NEMB is set to 0. (former: 'CONT')"
     write(iounit, '(A35,1x,1L,3x,A)') '<use_deci_onebulk>=', use_deci_onebulk, "in case of decimation: use same bulk on right and left. Speeds up calculations. (former: 'ONEBULK')"
