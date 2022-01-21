@@ -41,6 +41,12 @@ module mod_bfield
 
     ! Precalculated intermediate results
     double precision, dimension(:,:,:), allocatable :: thetallmat !! shapefun in the ll' expansion
+
+    ! Notes on parallelization: bfield_ext is read by each rank and does not
+    ! change. bfield_constr is updated only by the master group and communicated
+    ! to all other ranks. mag_torque, mag_mom and mean_xc_bfield are calculated
+    ! by all ranks. thetallmat is calculated by all ranks before the calculation
+    ! and does not change.
   end type
 
 contains

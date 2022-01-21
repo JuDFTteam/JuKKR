@@ -470,7 +470,7 @@ ProcessKKRresults_mod.o: arraytest2_mod.o KKRnanoParallel_mod.o AtomicForce_mod.
 NearField_kkr_mod.o: Constants_mod.o
 NearField_calc_mod.o: RadialMeshData_mod.o NearField_com_mod.o BasisAtom_mod.o CalculationData_mod.o
 NearField_mod.o: Harmonics_mod.o MadelungCalculator_mod.o Constants_mod.o NearField_kkr_mod.o
-KKRnano_Comm_mod.o: KKRnanoParallel_mod.o jij_calc_mod.o comm_patterns_mod.o Exceptions_mod.o
+KKRnano_Comm_mod.o: KKRnanoParallel_mod.o jij_calc_mod.o comm_patterns_mod.o Exceptions_mod.o bfield.o
 InputParams_mod.o: ConfigReader_mod.o
 PolygonFaces_mod.o: Constants_mod.o
 ShapeGeometryHelpers_mod.o: Exceptions_mod.o Constants_mod.o
