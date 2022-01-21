@@ -132,7 +132,7 @@ l external_bfield .FALSE.
 l trans_bfield .FALSE.
 ### [bfields] apply magnetic field only in the muffin-tin (called lbfield_mt in KKRhost code)
 l mt_bfield .FALSE.
-### [bfields] mixing parameter for the selfconsistency of the constraint magnetic fields
+### [bfields] mixing parameter for the selfconsistency of the constraining magnetic fields
 d constr_bfield_mixing 0.9
 ### [bfields] start applying magnetic field at iteration (called ibfield_itscf0 in KKRhost code)
 i itbfield0 0

@@ -34,7 +34,7 @@ module mod_bfield
     double precision, dimension(3) :: bfield_constr !! constraining field in cartesian coordinates
     double precision, dimension(3) :: last_bfield_constr !! constraining field of last iteration
 
-    ! Torque and other information used to update the constraints fields
+    ! Torque and other information used to update the constraining fields
     double precision, dimension(3) :: mag_torque     !! Magnetic torque
     double precision, dimension(3) :: mag_mom        !! Magnetic moment
     double precision               :: mean_xc_bfield !! Mean magnitude of xc bfield
@@ -151,14 +151,14 @@ contains
           stop
         end if
 
-        ! In case constraint magnetism is not used for this atom, set the initial
+        ! In case constrained magnetism is not used for this atom, set the initial
         ! guess to zero. Will not be updated in that case and can be added to the
         ! potential without further checking on input parameters.
         ! If an initial guess was provided that is not zero, give a warning.
         if (.not. (fix_angle_modes(iatom) == 2 .or. fix_angle_modes(iatom) == 3)) then
           if (any(bfields(iatom)%bfield_constr /= 0) .and. verbosity >= 0) then
-            write(*,'(2A,I3,2A)') 'Warning: Initial guess for constraint magnetic field ', &
-                    'for atom ', iatom, ' was not zero, but no constraint magnetism is ', &
+            write(*,'(2A,I3,2A)') 'Warning: Initial guess for constraining magnetic field ', &
+                    'for atom ', iatom, ' was not zero, but no constrained magnetism is ', &
                     'used for this atom. Will be set to zero.'
           end if
           bfields(iatom)%bfield_constr(:) = 0
@@ -293,7 +293,7 @@ contains
   !> Author: Sascha Brinker, Nicolas Essing
   !> 
   !> The field is added to the potential in LL' expansion. Both the external and
-  !> the constraint field are added, if they are activated.
+  !> the constraining field are added, if they are activated.
   !> The potential is updated as H = H - sigma * B with sigma the vector of
   !> pauli matrices and B the combined bfield.
   !>------------------------------------------------------------------------------
@@ -325,7 +325,7 @@ contains
     lmmax = size(bfield%thetallmat, 1) ! size(vnspll, 1) is 2*lmmax
     irmd = size(vnspll, 3)
 
-    ! Add external and constraint field. If one of them is tured off by input
+    ! Add external and constraining field. If one of them is tured off by input
     ! parameters or mode, it is zero, so this distinction does not have to be
     ! done here.
     combined_bfields(:) = bfield%bfield_ext(:) + bfield%bfield_constr(:)

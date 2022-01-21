@@ -76,7 +76,7 @@ module ProcessKKRresults_mod
     call calculateDensities(iter, calc, mp, dims, params, program_timer, arrays, emesh)
 
     if (params%noncobfield) then
-      call update_constraint_fields(iter, calc, params)
+      call update_constraining_fields(iter, calc, params)
     end if
 
     ! write to 'results1' - only to be read in in results.f
@@ -1021,8 +1021,8 @@ module ProcessKKRresults_mod
   endsubroutine ! calculatePotentials
 
 
-  !> Iterate the selfconsistency cycle of the constraint magnetic fields.
-  subroutine update_constraint_fields(iter, calc, params)
+  !> Iterate the selfconsistency cycle of the constraining magnetic fields.
+  subroutine update_constraining_fields(iter, calc, params)
 
     use CalculationData_mod, only: CalculationData
     use InputParams_mod, only: InputParams
@@ -1131,7 +1131,7 @@ module ProcessKKRresults_mod
       reclen = max(reclen, 4*8 + 1*1 + 3*8)
     end if
     if (noncobfield) then
-      ! The constraint bfields (from this and from last iteration), torques,
+      ! The constraining bfields (from this and from last iteration), torques,
       ! and moments before fixing directions (each double(3))
       recnum = recnum + 1
       reclen = max(reclen, (3+3+3+3)*8)
@@ -1683,10 +1683,10 @@ module ProcessKKRresults_mod
     F89="('                    Change of angle phi (deg)  = ',f12.6)", &
     F81="('                    Largest torque for atom = ',i5.1)", &
     F82="('                    Largest torque magnitude [Ry] = ',E12.6)", &
-    F83="('                    Largest change of angle for constraint moment at atom = ', i5)", &
-    F84="('                    Largest change of angle for constraint moment (deg) = ', f10.6)", &
-    F85="('                    Largest change in constraint field at atom = ', i5)", &
-    F80="('                    Largest change in constraint field (Ry) = ', e10.4)", &
+    F83="('                    Largest change of angle for constrained moment at atom = ', i5)", &
+    F84="('                    Largest change of angle for constrained moment (deg) = ', f10.6)", &
+    F85="('                    Largest change in constraining field at atom = ', i5)", &
+    F80="('                    Largest change in constraining field (Ry) = ', e10.4)", &
     F94="(4X,'nuclear charge  ',F10.6,9X,'core charge =   ',F10.6)"
     
     integer :: npotd
@@ -1755,7 +1755,7 @@ module ProcessKKRresults_mod
         end do
       end if
 
-      ! Third loop: Calculate nonco and constraint bfields stuff, write files
+      ! Third loop: Calculate nonco and constraining bfields stuff, write files
       ! (no output to stdout)
       if (korbit > 0) then
         open(13,file='nonco_angle_out.dat',form='formatted')
@@ -1824,7 +1824,7 @@ module ProcessKKRresults_mod
 
             ! Only for atoms with constraining fields
             if (angle_fix_mode >= 2) then
-              ! Look for largest angle change of constraint moment
+              ! Look for largest angle change of constrained moment
               !  Calculate local frame of reference direction
               dir(1) = sin(theta_noco)*cos(phi_noco)
               dir(2) = sin(theta_noco)*sin(phi_noco)

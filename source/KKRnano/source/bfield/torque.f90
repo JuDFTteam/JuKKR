@@ -158,7 +158,7 @@ contains
   end subroutine calc_torque
 
 
-  !> Iterate the constraint magnetic fields for one atom.
+  !> Iterate the constraining magnetic fields for one atom.
   !> Based on the torque and magnetic moment calculated together with the
   !> densities and saved in the bfield_data type.
   subroutine constraining_fields_scf_cycle(bfield, constr_mode, theta, phi, &

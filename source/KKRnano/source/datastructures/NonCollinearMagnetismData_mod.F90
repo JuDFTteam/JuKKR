@@ -20,7 +20,7 @@ module NonCollinearMagnetismData_mod
     double precision, allocatable :: phi_noco(:)         !< non-collinear magnetism angle, WARNING: not synchronized between MPI threads
     double precision, allocatable :: theta_noco_old(:)   !< non-collinear magnetism angle from iteration before, WARNING: not synchronized between MPI threads
     double precision, allocatable :: phi_noco_old(:)     !< non-collinear magnetism angle from iteration before, WARNING: not synchronized between MPI threads
-    integer (kind=1), allocatable :: angle_fix_mode(:)   !< keep angles fixed (1,2,3) or not (0), using constraint magnetic fields (2,3) with a
+    integer (kind=1), allocatable :: angle_fix_mode(:)   !< keep angles fixed (1,2,3) or not (0), using constraining magnetic fields (2,3) with a
                                                          !< selfconsistency cycle (2) or to cancel the torque (3) WARNING: not synchronized between MPI threads
     double precision, allocatable :: moment_x(:)         !< non-collinear magnetism moment in x-direction, WARNING: not synchronized between MPI threads
     double precision, allocatable :: moment_y(:)         !< non-collinear magnetism moment in x-direction, WARNING: not synchronized between MPI threads
