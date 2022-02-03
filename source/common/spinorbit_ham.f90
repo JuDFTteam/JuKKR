@@ -33,7 +33,7 @@ contains
 
     use :: mod_datatypes, only: dp
     use :: mod_constants, only: czero
-    use :: mod_runoptions, only: set_cheby_nosoc, decouple_spin_cheby
+    use :: mod_runoptions, only: set_cheby_nosoc, decouple_spin_cheby, soc_no_spinflip
     use :: mod_cheb, only: getclambdacinv
     use :: mod_spin_orbit_compl, only: spin_orbit_compl
     use :: mod_rotatespinframe, only: rotatematrix
@@ -132,6 +132,13 @@ contains
       end do
     else if (mode=='1') then
       ! do nothing
+    end if
+
+    ! test option that deactivates the spin-flip terms of the SOC Hamiltonian
+    if (soc_no_spinflip) then
+      ! set off-diagonal lm blocks in spin space to zero
+      lsmh(1+lmmaxd:2*lmmaxd, 1:lmmaxd) = czero
+      lsmh(1:lmmaxd, 1+lmmaxd:2*lmmaxd) = czero
     end if
 
     ! contruct prefactor of spin-orbit hamiltonian
