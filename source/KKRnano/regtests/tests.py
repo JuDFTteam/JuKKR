@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import unittest
 import subprocess
@@ -40,11 +40,11 @@ def get_energy(string):
           match = list(re.finditer(r"^.*TOTAL ENERGY in ryd. :(.*)$", string, re.M))[-1] # get last match only
     except:
           print(string)
-          raise ArgumentError
+          raise ValueError("Error getting energy from output")
     if match is not None:
           return float(match.group(1))
     else:
-          raise ArgumentError
+          raise ValueError("Error getting energy from output")
 
 def KKRnano(inputdir, nranks=DEFAULT_nranks, nthreads=DEFAULT_nthreads, solver=DEFAULT_solver, lmax=DEFAULT_lmax, Lly=DEFAULT_Lly, **kwargs):
     """Run KKR-calculation with input from 'inputdir' and returns the total energy"""

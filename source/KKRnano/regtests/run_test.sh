@@ -10,7 +10,7 @@ day=`date "+%Y%m%d%H%M"`
 rm -f ./last
 
 ## run the test scripts
-nohup python2.7 ./tests.py < /dev/null > ${day}_tests.txt
+nohup python3 ./tests.py < /dev/null > ${day}_tests.txt
 
 ## clean the working directory
 ./clearfiles.sh 
