@@ -17,7 +17,7 @@ module ChebMeshData_mod
   public :: writeChebMeshDataDA           
   public :: readChebMeshDataDA, openChebMeshDataDAFile, closeChebMeshDataDAFile, writeChebMeshDataIndexDA      
   public :: readChebMeshDataIndexDA, openChebMeshDataIndexDAFile, closeChebMeshDataIndexDAFile 
-  public :: interpolate_poten  
+  public :: interpolate_poten, get_muffin_tin_index
  ! public :: readChebMeshDataHeader    
   
   type ChebMeshData
@@ -532,6 +532,13 @@ ipot=1
     end do ! lm1
   end do ! ispin
 end subroutine interpolate_poten
+
+!> Get the index of the muffin tin
+integer function get_muffin_tin_index(chebmesh) result(imt)
+  type(ChebMeshData), intent(in) :: chebmesh
+
+  imt = chebmesh%ipan_intervall(chebmesh%npan_lognew + chebmesh%npan_eqnew) + 1
+end function
 
   !----------------------------------------------------------------------------
   !> Helping routine for ConstructChebMesh 

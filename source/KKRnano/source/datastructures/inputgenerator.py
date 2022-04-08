@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python2
 
 """
 Reads file defs.txt and generates Fortran code for reading an inputfile.

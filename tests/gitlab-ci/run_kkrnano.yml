@@ -119,3 +119,23 @@ run_kkrnano:intel:MnGeB20:
     - master
     - develop
     - kkrnano-chebyshev-tfQMRgpu
+
+run_kkrnano:intel:Fe:
+  stage: run_kkrnano
+  tags:
+    - docker-executor
+  script:
+    - cd source/KKRnano/regtests
+    - mkdir -p test_bcc_Fe; cd test_bcc_Fe; ln -s ../* .
+    - python3 ./tests.py Test_constrainedmagnetism.test_bcc_Fe
+  artifacts:
+    paths:
+      - source/KKRnano/regtests/test_bcc_Fe
+    expire_in: 1 day
+  only:
+    - schedules
+    - triggers
+    - web
+    - master
+    - develop
+    - kkrnano-chebyshev-tfQMRgpu

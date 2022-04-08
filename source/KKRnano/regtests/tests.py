@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import unittest
 import subprocess
@@ -21,6 +21,7 @@ ShowMD5 = True
 AllMPIs = 1 # 1=Yes, 0=No
 HighLmax = True
 testNocoSOC = True
+testBconstr = True
 verbose = False
 MPIEXEC = 'mpirun' # 'srun'
 
@@ -40,11 +41,11 @@ def get_energy(string):
           match = list(re.finditer(r"^.*TOTAL ENERGY in ryd. :(.*)$", string, re.M))[-1] # get last match only
     except:
           print(string)
-          raise ArgumentError
+          raise ValueError("Error getting energy from output")
     if match is not None:
           return float(match.group(1))
     else:
-          raise ArgumentError
+          raise ValueError("Error getting energy from output")
 
 def KKRnano(inputdir, nranks=DEFAULT_nranks, nthreads=DEFAULT_nthreads, solver=DEFAULT_solver, lmax=DEFAULT_lmax, Lly=DEFAULT_Lly, **kwargs):
     """Run KKR-calculation with input from 'inputdir' and returns the total energy"""
@@ -177,6 +178,14 @@ class Test_nocosocmaterials(unittest.TestCase):
             self.assertAlmostEqual(KKRnano("MnGeB20", solver=direct, nranks=8), Etot, DECIMALS) # takes longer than other tests, ~3 mins
             self.assertAlmostEqual(KKRnano("MnGeB20", solver=iterative, nranks=4), Etot, DECIMALS) # takes longer than other tests
         # total time ~6min
+
+class Test_constrainedmagnetism(unittest.TestCase):
+    def test_bcc_Fe(self):
+        """Test two-atom bcc Fe unit cell constrained to a 60 degree angle"""
+        Etot = -5082.33743334
+        if testBconstr:
+            self.assertAlmostEqual(KKRnano("Fe", solver=direct, nranks=2), Etot, DECIMALS)
+        # About 6min (Needs two iterations so that updated constraining fields are used.)
 
 
 unittest.main()

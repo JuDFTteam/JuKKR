@@ -6,7 +6,10 @@
 !> @todo check intents
 module wrappers_mod
 #include "macros.h"
-use Warnings_mod, only: launch_warning
+  
+  use Warnings_mod, only: launch_warning
+  use mod_bfield, only: bfield_data
+  
   implicit none
   private
   
@@ -25,9 +28,9 @@ use Warnings_mod, only: launch_warning
   subroutine RHOVAL_wrapper(atomdata, ldorhoef, icst, nsra, rho2ns, r2nef, den, &
                             espv, gmatn, gaunts, emesh, ldau_data, method, &
                             korbit, theta_noco, phi_noco, theta_noco_old, &                          
-                            phi_noco_old, angle_fixed, &
+                            phi_noco_old, angle_fix_mode, &
                             moment_x, moment_y, moment_z, &
-                            muorb, iemxd, params) ! NOCO/SOC
+                            muorb, iemxd, params, bfield, imt, iteration_number) ! NOCO/SOC
     use BasisAtom_mod, only: BasisAtom
     use GauntCoefficients_mod, only: GauntCoefficients
     use EnergyMesh_mod, only: EnergyMesh
@@ -55,7 +58,7 @@ use Warnings_mod, only: launch_warning
     integer, intent(in)             :: korbit          ! NOCO
     double precision, intent(out)   :: theta_noco      ! NOCO
     double precision, intent(out)   :: phi_noco        ! NOCO
-    integer (kind=1), intent(in)    :: angle_fixed     ! NOCO
+    integer (kind=1), intent(in)    :: angle_fix_mode  ! NOCO
     double precision, intent(out)   :: theta_noco_old  ! NOCO
     double precision, intent(out)   :: phi_noco_old    ! NOCO
     double precision, intent(out)   :: moment_x        ! NOCO
@@ -64,6 +67,9 @@ use Warnings_mod, only: launch_warning
     double precision, intent(out)   :: muorb(0:,:)     ! NOCO
     integer, intent(in)             :: iemxd           ! NOCO
     type(InputParams), intent(in)   :: params          ! NOCO
+    type(bfield_data), intent(inout):: bfield
+    integer, intent(in)             :: imt
+    integer, intent(in)             :: iteration_number
     
     integer :: ispin, nspind, irmind, irnsd, lmaxd, l
 
@@ -88,10 +94,12 @@ use Warnings_mod, only: launch_warning
                       chebmesh%npan_tot,params%npan_log,params%npan_eq,mesh%r,mesh%irws,  &
                       chebmesh%rpan_intervall,chebmesh%ipan_intervall,  &
                       chebmesh%rnew,atomdata%potential%vinscheb,chebmesh%thetasnew, &
-                      theta_noco,phi_noco,angle_fixed,moment_x,moment_y,moment_z,&
+                      theta_noco,phi_noco,angle_fix_mode,moment_x,moment_y,moment_z,&
                       1,  &  ! ipot=1
                       den,espv,rho2ns,r2nef, gmatn(:,:,:,1), muorb,  & ! just one spin component of gmatn needed
-                      atomdata%potential%lpot,lmaxd,mesh%irmd,chebmesh%irmd_new,iemxd, params%soc,params%enable_quad_prec)
+                      atomdata%potential%lpot,lmaxd,mesh%irmd,chebmesh%irmd_new,iemxd, params%soc,params%enable_quad_prec, &
+                      bfield, imt, iteration_number, params%itbfield0, params%itbfield1, &
+                      params%noncobfield, params%trans_bfield, params%mt_bfield)
  
        ! calculate correct orbital moment
        do ispin=1,nspind

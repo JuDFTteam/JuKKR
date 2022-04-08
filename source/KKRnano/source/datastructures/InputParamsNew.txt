@@ -122,3 +122,21 @@ i ncheb 10
 d r_log 0.1D0
 ### parameter a for exponential radial mesh
 d a_log 0.025D0
+### unknown
+l enable_quad_prec .FALSE.
+### [bfields] turn on or off everything concerning non-collinear magnetic fields (called lbfield in KKRhost code)
+l noncobfield .FALSE.
+### [bfields] turn on or off external non-collinear magnetic fields
+l external_bfield .FALSE.
+### [bfields] apply only transversal bfield (called lbfield_trans in KKRhost code)
+l trans_bfield .FALSE.
+### [bfields] apply magnetic field only in the muffin-tin (called lbfield_mt in KKRhost code)
+l mt_bfield .FALSE.
+### [bfields] mixing parameter for the selfconsistency of the constraining magnetic fields
+d constr_bfield_mixing 0.9
+### [bfields] start applying magnetic field at iteration (called ibfield_itscf0 in KKRhost code)
+i itbfield0 0
+### [bfields] stop applying magnetic field after iteration itscf1 (called ibfield_itscf1 in KKRhost code)
+i itbfield1 10000
+### [bfields] control verbosity concerning non-collinear magnetic fields
+i bfield_verbosity 2

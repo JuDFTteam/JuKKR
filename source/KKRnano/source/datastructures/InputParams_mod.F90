@@ -78,6 +78,14 @@ module InputParams_mod
     double precision :: r_log
     double precision :: a_log
     logical :: enable_quad_prec
+    logical :: noncobfield
+    logical :: external_bfield
+    logical :: trans_bfield
+    logical :: mt_bfield
+    double precision :: constr_bfield_mixing
+    integer :: itbfield0
+    integer :: itbfield1
+    integer :: bfield_verbosity
   endtype ! InputParams
 
 
@@ -629,12 +637,84 @@ integer function getValues(filename, self) result(ierror)
     destroy_and_return
   endif
 
-  ierror = getValue(cr, "enable_quad_prec", self%enable_quad_prec , def=.false.)
+  ierror = getValue(cr, "enable_quad_prec", self%enable_quad_prec , def=.FALSE.)
   if (ierror == use_default) then
-    write(*,*) "WARNING: Bad/no value given for enable_quad_prec. Set enable_quad_prec to .false."
+    write(*,*) "WARNING: Bad/no value given for enable_quad_prec. Set enable_quad_prec to .FALSE."
     ierror = 0 ! ok, no error
   elseif (ierror /= 0) then
     write(*,*) "Bad/no value given for enable_quad_prec."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "noncobfield", self%noncobfield , def=.FALSE.)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for noncobfield. Set noncobfield to .FALSE."
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for noncobfield."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "external_bfield", self%external_bfield , def=.FALSE.)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for external_bfield. Set external_bfield to .FALSE."
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for external_bfield."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "trans_bfield", self%trans_bfield , def=.FALSE.)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for trans_bfield. Set trans_bfield to .FALSE."
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for trans_bfield."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "mt_bfield", self%mt_bfield , def=.FALSE.)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for mt_bfield. Set mt_bfield to .FALSE."
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for mt_bfield."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "constr_bfield_mixing", self%constr_bfield_mixing , def=0.9)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for constr_bfield_mixing. Set constr_bfield_mixing to 0.9"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for constr_bfield_mixing."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "itbfield0", self%itbfield0 , def=0)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for itbfield0. Set itbfield0 to 0"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for itbfield0."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "itbfield1", self%itbfield1 , def=10000)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for itbfield1. Set itbfield1 to 10000"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for itbfield1."
+    destroy_and_return
+  endif
+
+  ierror = getValue(cr, "bfield_verbosity", self%bfield_verbosity , def=2)
+  if (ierror == use_default) then
+    write(*,*) "WARNING: Bad/no value given for bfield_verbosity. Set bfield_verbosity to 2"
+    ierror = 0 ! ok, no error
+  elseif (ierror /= 0) then
+    write(*,*) "Bad/no value given for bfield_verbosity."
     destroy_and_return
   endif
 

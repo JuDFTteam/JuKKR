@@ -24,7 +24,7 @@ program KKRnano
 
   use KKRnanoParallel_mod, only: KKRnanoParallel, create, destroy
 
-  use KKRnano_Comm_mod, only: setKKRnanoNumThreads, printKKRnanoInfo, communicatePotential
+  use KKRnano_Comm_mod, only: setKKRnanoNumThreads, printKKRnanoInfo, communicatePotential, communicateNoncoBfields
 
   use main2_aux_mod, only: is_abort_by_rank0
   use EnergyMesh_mod, only: EnergyMesh, create, destroy, load, store, update, broadcast
@@ -266,6 +266,12 @@ program KKRnano
         atomdata => getAtomdata(calc_data, ila)
         call communicatePotential(mp, atomdata%potential%VISP, atomdata%potential%VINS, atomdata%core%ECORE)
       enddo ! ila
+      ! If noncollinear magnetic fields are used, communicate them analogously to the potentials
+      if (params%noncobfield) then
+        do ila = 1, calc_data%num_local_atoms
+          call communicateNoncoBfields(mp, calc_data%bfields(ila))
+        end do
+      end if
 
       ! Core relaxation - only mastergroup needs results
       if (mp%isInMasterGroup.and.params%npol /= 0) then

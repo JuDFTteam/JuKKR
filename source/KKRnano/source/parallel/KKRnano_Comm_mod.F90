@@ -23,7 +23,7 @@ module KKRnano_Comm_mod
   private
   public :: jijSpinCommunication_com, jijLocalEnergyIntegration, jijReduceIntResults_com
   public :: collectMSResults_com, redistributeInitialGuess
-  public :: setKKRnanoNumThreads, printKKRnanoInfo, communicatePotential
+  public :: setKKRnanoNumThreads, printKKRnanoInfo, communicatePotential, communicateNoncoBfields
 
   interface redistributeInitialGuess
     module procedure redistributeInitialGuess_c, redistributeInitialGuess_z
@@ -241,6 +241,36 @@ module KKRnano_Comm_mod
     DEALLOCATECHECK(ranks)
 
   endsubroutine ! communicate
+
+  subroutine communicateNoncoBfields(mp, bfields)
+    use KKRnanoParallel_mod, only: KKRnanoParallel, getNumSERanks, mapToWorldRankSE
+    use comm_patternsD_mod, only: comm_bcastD
+    use mod_bfield, only: bfield_data
+
+    type(KKRnanoParallel), intent(in) :: mp
+    type(bfield_data), intent(inout)  :: bfields
+
+    integer, allocatable :: ranks(:)
+    integer :: memory_stat, owner, numSERanks, ind
+
+    ! Get number of MPI ranks for this atom
+    numSERanks = getNumSERanks(mp)
+
+    ! Get owner rank for this atom
+    owner = mapToWorldRankSE(mp, mp%myAtomId, 1)
+
+    ! Get all other ranks for this atom
+    ALLOCATECHECK(ranks(numSERanks))
+    do ind = 1, numSERanks
+      ranks(ind) = mapToWorldRankSE(mp, mp%myAtomId, ind)
+    enddo
+
+    ! Brodcast data from owner of this atom to all other ranks dealing with this atom
+    call comm_bcastD(mp%myWorldRank, bfields%bfield_constr, 3, ranks, owner)
+
+    DEALLOCATECHECK(ranks)
+
+  end subroutine
 
 ! ---------------------- Jij --------------------------------------------------
 
