@@ -5,8 +5,8 @@ This program finds optimal positions for empty spheres in 3D-periodic lattices
 by means of a Monte-Carlo optimization.
 
 On input it requires the Bravais vectors, number and positions of basis sites 
-of the lattice (NFIX, RFIX), and wished number of empty spheres (NVAR) that it
-positions on output at RVAR.
+of the lattice, and wished number of empty spheres that it
+positions on output.
 
 Created by Phivos Mavropoulos, 2013-2014.
 
@@ -19,7 +19,7 @@ Compile with `make` in this folder
 
 Example Usage
 -------------
-For example input see inputcard in this folder
+For example input see inputcard in this folder.
 
 
 Developer comments
