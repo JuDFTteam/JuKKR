@@ -508,7 +508,7 @@ contains
 
       i1 = (korbit+1)*lmmax0d*(korbit+1)*lmmax0d*ihost
       ! Allocation of temp for TMATLL
-      allocate (temp(lmmaxd,lmmaxd,natomimp), stat=i_stat)
+      allocate (temp(lmmaxd,lmmaxd,ihost), stat=i_stat)
       call memocc(i_stat, product(shape(temp))*kind(temp), 'temp', 'tmatimp_newsolver')
       temp = czero
       call mpi_allreduce(tmatll,temp,i1,mpi_double_complex,mpi_sum,mpi_comm_world,ierr)
