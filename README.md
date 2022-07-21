@@ -22,9 +22,14 @@ The easiest way to set up the code is to execute the `install.py` script which w
 
 - The [source code documentation](https://kkr.iffgit.fz-juelich.de/jukkr/)
 
+## Development
+
+Code development is done on the main [gitlab server hosted at the FZ Jülich](https://iffgit.fz-juelich.de/kkr/jukkr) (and not on the [mirrored repository on github](https://github.com/JuDFTteam/JuKKR)).
+
+Creating / editing issues, branches etc. is only supported on the [gitlab version hosted at the FZ Jülich](https://iffgit.fz-juelich.de/kkr/jukkr) which requires sign in (possible with free github account).
 
 ## Found a bug?
 
-If you find any bugs, please file a new issue on the [gitlab page](https://iffgit.fz-juelich.de/kkr/jukkr/issues)
+If you find any bugs, please file a new issue on the [gitlab issues page](https://iffgit.fz-juelich.de/kkr/jukkr/issues).
 
 
