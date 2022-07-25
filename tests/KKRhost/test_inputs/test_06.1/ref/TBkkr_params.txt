@@ -1,4 +1,4 @@
-#FILEVERSION= 2   # serial: JuKKR_v3.1-1745-g790bf3ad_intel_20210928120939
+#FILEVERSION= 2   # serial: JuKKR_v3.1-1927-g9a2aa9fa_intel-debug_20220725111718
        2    lmaxd
        2    lmax
        1    korbit

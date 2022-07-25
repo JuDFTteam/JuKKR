@@ -1,24 +1,144 @@
-# serial: kkrjm_v2.3-64-g8cc70fc_mpi_20180831120926
+# serial: JuKKR_v3.1-1927-g9a2aa9fa_intel-debug_20220725113633
+     Screened Korringa-Kohn-Rostoker Electronic Structure Code
+                      for Bulk and Interfaces
+                    Juelich-Munich 2001 - 2021
 
-*******************************************************************************
-          Screened Korringa-Kohn-Rostoker Electronic Structure Code
-                           for Bulk and Interfaces
-          Juelich-Munich 2001 - 2016
-
- Code version: v2.3-64-g8cc70fc
- Compile options: mpi
--O2 -r8 -module ./OBJ -sox -traceback
--L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
-
- serial number for files: kkrjm_v2.3-64-g8cc70fc_mpi_20180831120926
-*******************************************************************************
-
+  Code version: v3.1-1927-g9a2aa9fa
+  Compile options: intel-debug mpi 
+  serial number for files: JuKKR_v3.1-1927-g9a2aa9fa_intel-debug_20220725113633
  Number of MPI ranks used:   12
 
 *******************************************************************************
 
- 3D-calculation, adding run-option "full inv" for full inversion.
- in ADDOPT: adding option full inv
+-------------------------------------------------------------------------------
+*** Inspecting run- and test-options ***
+ Old style of run- and test-options found. Testing input:
+     Setting inversion mode to Full Inversion
+     Enable runoption 'use_lloyd'
+     Enable runoption 'use_Chebychev_solver'
+     ### WARNING ###: run- or testoption '...     ' not recognized.
+                      Is there a typo?
+     ### WARNING ###: run- or testoption '...     ' not recognized.
+                      Is there a typo?
+     Setting MPI_Scheme=1 because of MPIatom
+     Enable runoption 'set_cheby_nosoc'
+-------------------------------------------------------------------------------
+ EXECUTION OPTIONS:
+ full inv//LLOYD   //NEWSOSOL//...     //...     //        //        //        
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+ TEST OPTIONS:
+ MPIatom //NOSOC   //        //        //        //        //        //        
+         //        //        //        //        //        //        //        
+
+-------------------------------------------------------------------------------
+   <<< Reading in new style of run-options. >>>
+   WARNING: this may overwrite old-style run-options
+# List of run options:
+                  <calc_GF_Efermi>=  F   calculation of cluster Green function at E Fermi (former: 'GF-EF')
+             <set_cheby_nospeedup>=  F   always calculate irregular solution in Chebychev solver (even if not needed) (former: 'norllsll')
+                 <set_cheby_nosoc>=  T   set SOC strength to 0 for all atoms (former: 'NOSOC')
+             <decouple_spin_cheby>=  F   decouple spin matrices in Chebychev solver neglecting SOC and for collinear calculations only
+      <calc_complex_bandstructure>=  F   complex band structure (former: 'COMPLEX')
+         <calc_exchange_couplings>=  F   calculate magnetic exchange coupling parameters (former: 'XCPL')
+  <calc_exchange_couplings_energy>=  F   write energy-resolved Jij-files also if npol/=0 (former: 'Jijenerg')
+               <calc_gmat_lm_full>=  F   calculate all lm-lm components of systems greens function and store to file `gflle` (former: 'lmlm-dos')
+                    <gflle_to_npy>=  F   Write G_LL'(k,E) to npy files, one file per atom and energy
+        <dirac_scale_SpeefOfLight>=  F   scale the speed of light for Dirac solver (former: 'CSCALE')
+       <disable_charge_neutrality>=  F   no charge neutrailty required: leaving Fermi level unaffected (former: 'no-neutr')
+      <disable_print_serialnumber>=  F   deactivate writing of serial number and version information to files (for backwards compatibility) (former: 'noserial')
+        <disable_reference_system>=  F   deactivate the tight-binding reference system (former: 'lrefsysf')
+           <disable_tmat_sratrick>=  F   deactivate SRATRICK in solver for t-matirx (former: 'nosph')
+                <fix_nonco_angles>=  F   fix direction of non-collinear magnetic moments (Chebychev solver) (former: 'FIXMOM')
+                  <formatted_file>=  F   write files ascii-format. only effective with some other write-options (former: 'fileverb')
+          <impurity_operator_only>=  F   only for `write_pkkr_operators`: disable costly recalculation of host operators (former: 'IMP_ONLY')
+                <modify_soc_Dirac>=  F   modify SOC for Dirac solver (former: 'SOC')
+                     <no_madelung>=  F   do not add some energy terms (coulomb, XC, eff. pot.) to total energy (former: 'NoMadel')
+                       <print_Gij>=  F   print cluster G_ij matrices to outfile (former: 'Gmatij')
+                      <print_gmat>=  F   print Gmat to outfile (former: 'Gmat')
+                    <print_ickeck>=  F   enable test-output of ICHECK matrix from gfmask (former: 'ICHECK')
+                     <print_kmesh>=  F   output of k-mesh (former: 'k-net')
+                   <print_kpoints>=  F   print k-points to outfile (former: 'BZKP')
+              <print_program_flow>=  F   monitor the program flow in some parts of the code (former: 'flow')
+               <print_radial_mesh>=  F   write mesh information to output (former: 'RMESH')
+                    <print_refpot>=  F   test output of refpot (former: 'REFPOT')
+             <print_tau_structure>=  F   write extensive information about k-mesh symmetrization and structure of site-diagonal tau matrices to output (former: 'TAUSTRUC')
+                      <print_tmat>=  F   print t-matrix to outfile (former: 'tmat')
+           <relax_SpinAngle_Dirac>=  F   relax the spin angle in a SCF calculation [only DIRAC mode] (former: 'ITERMDIR')
+                   <search_Efermi>=  F   modify convergence parameters to scan for fermi energy only (to reach charge neutrality). (former: 'SEARCHEF')
+                <set_gmat_to_zero>=  F   set GMAT=0 in evaluation of density (former: 'GMAT=0')
+                <set_empty_system>=  F   set potential and nuclear charge to zero (former: 'zeropot')
+                 <set_kmesh_large>=  F   set equal k-mesh (largest) for all energy points (former: 'fix mesh')
+                 <set_kmesh_small>=  F   set equal k-mesh (smallest) for all energy points (former: 'fix4mesh')
+            <set_tmat_noinversion>=  F   do not perform inversion to get msst = Delta t^-1, but msst = Delta t. (former: 'testgmat')
+                    <simulate_asa>=  F   set non-spherical potential to zero in full-potential calculation with Chebychev solver (former: 'simulasa')
+              <slow_mixing_Efermi>=  F   renormalize Fermi-energy shift by mixing factor during mixing (former: 'slow-neu')
+                         <stop_1a>=  F   stop after main1a (former: 'STOP1A')
+                         <stop_1b>=  F   stop after main1b (former: 'STOP1B')
+                         <stop_1c>=  F   stop after main1c (former: 'STOP1C')
+                 <symmetrize_gmat>=  F   use symmetrization [G(k) + G(-k)]/2 in k-point loop (former: 'symG(k)')
+      <symmetrize_potential_cubic>=  F   keep only symmetric part of potential (L=1,11,21,25,43,47). (former: 'potcubic')
+   <symmetrize_potential_madelung>=  F   symmetrize potential in consistency to madelung potential (former: 'potsymm')
+          <torque_operator_onlyMT>=  F   for torque operator: include only the part within the muffin tin (former: 'ONLYMT')
+         <torque_operator_onlySph>=  F   for torque operator: include only the spherically symmetric part (former: 'ONLYSPH')
+                         <use_BdG>=  F   use Bogoliubov-de-Gennes Formalism (former: 'useBdG')
+            <use_Chebychev_solver>=  T   use the Chebychev solver (former: 'NEWSOSOL')
+                      <use_rllsll>=  F   switch to previous approach to compute wavefunctions in Chebyshev solver
+                     <use_cond_LB>=  F   perform calculation of conductance in Landauer-Büttiker formalism (former: 'CONDUCT')
+                        <use_cont>=  F   no usage of embedding points. NEMB is set to 0. (former: 'CONT')
+                <use_deci_onebulk>=  F   in case of decimation: use same bulk on right and left. Speeds up calculations. (former: 'ONEBULK')
+                  <use_decimation>=  F   use Decimation technique for semi-infinite systems (former: 'DECIMATE')
+                    <use_ewald_2d>=  F   use 2D ewald sum instead of 3D sum (Attention: does not work always!) (former: 'ewald2d')
+                     <use_full_BZ>=  F   use full Brillouin zone, i.e. switch off symmetries for k-space integration (former: 'fullBZ')
+                        <use_ldau>=  F   use LDA+U as exchange-correlation potential (former: 'LDA+U')
+                       <use_lloyd>=  T   use Lloyds formula to correct finite angular momentum cutoff (former: 'LLOYD')
+                        <use_qdos>=  F   writes out qdos files for band structure calculations. (former: 'qdos')
+                     <use_readcpa>=  F   read cpa t-matrix from file (former: 'readcpa')
+                <use_rigid_Efermi>=  F   keep the Fermi energy fixed during self-consistency (former: 'rigid-ef')
+                    <use_semicore>=  F   use semicore contour (former: 'SEMICORE')
+    <use_spherical_potential_only>=  F   keeping only spherical component of potential (former: 'Vspher')
+               <use_virtual_atoms>=  F   add virtual atoms (former: 'VIRATOMS')
+                 <write_BdG_tests>=  F   test options for Bogouliubov-deGennes (former: 'BdG_dev')
+                       <write_DOS>=  F   write out DOS files in any case (also if npol!=0) (former: 'DOS')
+                    <write_DOS_lm>=  F   write out DOS files with decomposition into l and m components (former: 'lmdos')
+                <write_gmat_plain>=  F   write out Green function as plain text file (former: 'GPLAIN')
+                <write_green_host>=  F   write green function of the host to file `green_host` (former: 'WRTGREEN')
+                 <write_green_imp>=  F   write out impurity Green function to GMATLL_GES (former: 'GREENIMP')
+              <write_complex_qdos>=  F   write complex qdos to file (former: 'compqdos')
+       <write_cpa_projection_file>=  F   write CPA projectors to file (former: 'projfile')
+                  <write_deci_pot>=  F   write decimation-potential file (former: 'deci-pot')
+                 <write_deci_tmat>=  F   write t-matrix to file 'decifile' (former: 'deci-out')
+             <write_density_ascii>=  F   write density rho2ns to file densitydn.ascii (former: 'den-asci')
+               <write_energy_mesh>=  F   write out the energy mesh to file `emesh.scf` (former: 'EMESH')
+     <write_generalized_potential>=  F   write potential in general format. Usually prepares for running the VORONOI program. (former: 'GENPOT')
+                 <write_gmat_file>=  F   write GMAT to file (former: 'gmatfile')
+                 <write_gref_file>=  F   write GREF to file (former: 'greffile')
+                <write_gmat_ascii>=  F   write GMAT to formatted file `gmat.ascii` (former: 'gmatasci')
+              <write_kkrimp_input>=  F   write out files for KKRimp-code (former: 'KKRFLEX')
+             <write_kkrsusc_input>=  F   write out files for KKRsusc-code (former: 'KKRSUSC')
+                 <write_kpts_file>=  F   write and read k-mesh to/from file `kpoints` (former: 'kptsfile')
+           <write_lloyd_cdos_file>=  F   write Lloyd array to file  (former: 'wrtcdos')
+          <write_lloyd_dgref_file>=  F   write Lloyd array to file  (former: 'wrtdgref')
+          <write_lloyd_dtmat_file>=  F   write Lloyd array to file  (former: 'wrtdtmat')
+                <write_lloyd_file>=  F   write several Lloyd-arrays to files (former: 'llyfiles')
+           <write_lloyd_g0tr_file>=  F   write Lloyd array to file  (former: 'wrtgotr')
+        <write_lloyd_tralpha_file>=  F   write Lloyd array to file  (former: 'wrttral')
+             <write_madelung_file>=  F   write madelung summation to file 'abvmad.unformatted' instead of keeping it in memory (former: 'madelfil')
+                <write_pkkr_input>=  F   write out files for Pkkprime-code (former: 'FERMIOUT')
+            <write_pkkr_operators>=  F   for Fermi-surface output: calculate various operators in KKR basis. (former: 'OPERATOR')
+           <write_potential_tests>=  F   write potential at different steps in main2 to different files (former: 'vintrasp' and 'vpotout')
+                    <write_rho2ns>=  F   write array rho2ns into file out_rhoval (from main1c) and out_rhotot (from main2) (former: 'RHOVALTW' and 'RHOVALW')
+                <write_rhoq_input>=  F   write out files needed for rhoq module (Quasiparticle interference) (former: 'rhoqtest')
+                 <write_tmat_file>=  F   write t-matix to file (former: 'tmatfile')
+               <write_tb_coupling>=  F   write couplings in tight-binging reference system to file `couplings.dat` (former: 'godfrin')
+                  <calc_wronskian>=  F   calculate the wronskian relations of first and second kind for the wavefunctions (see PhD Bauer pp 48)
+             <use_broyden_spinmix>=  F   use broyden spin mixing for noncollinear angles
+            <write_angles_alliter>=  F   write out noncollinear angles for all iterations
+                  <write_tmat_all>=  F   write out the tmat for all energies and all atoms
+          <write_double_precision>=  F   write out kkrflex files in double precision
+                <calc_onsite_only>=  F   calculate not the full Green function for the density but take the onsite part alone
+                  <use_gmat_unity>=  F   set the structural GF to the unity matrix for test purposes
+                 <soc_no_spinflip>=  F   set spin-flip components of the SOC Hamiltonian to zero
          ABASIS         BBASIS         CBASIS
      1.00000000     1.00000000     1.00000000
 --------------+--------------+--------------+----------------------------------
@@ -57,7 +177,7 @@ SITE                BASIS VECTORS                 THETA   PHI CPA OCC KAOEZ
 ---+---+-------+---+---+---+-------+---+---------------------------------------
 ---+---------------------------------------------------------------------------
  NSTEPS
-   2
+ 200
 ---+---------------------------------------------------------------------------
  I12="                                        "
  I13="potential                               "
@@ -142,22 +262,12 @@ SITE                BASIS VECTORS                 THETA   PHI CPA OCC KAOEZ
 ---+---+---+---+---+---+---+---+---+---+---------------------------------------
 
 -------+-------+-------+-------+-------+-------+-------+-----------------------
--------------------------------------------------------------------------------
- EXECUTION OPTIONS:
- full inv//LLOYD   //NEWSOSOL//...     //...     //        //        //        
--------------------------------------------------------------------------------
--------------------------------------------------------------------------------
- TEST OPTIONS:
- NOSOC   //        //        //        //        //        //        //        
-         //        //        //        //        //        //        //        
-
--------------------------------------------------------------------------------
- < MEMWFSAVE >, use default:           0
- < UNITMEMWFSAVE >, use default:           2 
- (MB) (max memory= MEMWFSAVE*1024**UNITMEMWFSAVE)
-                                                     na, nb, ldiag, lper, lpardiso; then bdims(1:nb)
-           0           0 F F F
-
+ wavefunctions cannot be stored if Lloyd is used: reset automatically to 0
+ < MEMWFSAVE >           0
+ < UNITMEMWFSAVE >           2  (max memory= UNITMEMWFSAVE*1024**MEMWFSAVE)
+ automatically speeding up calculation (use option <set_cheby_nospeedup> to prev
+ ent this)
+ this diables wf saving automatically
 -------------------------------------------------------------------------------
  KMROT
        0
@@ -246,29 +356,29 @@ CLSGEN_TB: Atom    4 Refpot    1 Rmtref 2.2000000 Vref 8.0000000 TB-cluster    1
  Dimension and Input Data CHECK
    ncell :            1           4
    nfun  :           15         289
- <#Si14 POTENTIAL                      exc: Vosko,Wilk,Nusair       #serial: kkrjm_
- <#Si14 POTENTIAL                      exc: Vosko,Wilk,Nusair       #serial: kkrjm_
- <#Si14 POTENTIAL                      exc: Vosko,Wilk,Nusair       #serial: kkrjm_
- <#Si14 POTENTIAL                      exc: Vosko,Wilk,Nusair       #serial: kkrjm_
- <#Vac0 POTENTIAL                      exc: Vosko,Wilk,Nusair       #serial: kkrjm_
- <#Vac0 POTENTIAL                      exc: Vosko,Wilk,Nusair       #serial: kkrjm_
- <#Vac0 POTENTIAL                      exc: Vosko,Wilk,Nusair       #serial: kkrjm_
- <#Vac0 POTENTIAL                      exc: Vosko,Wilk,Nusair       #serial: kkrjm_
-Doing calculation with potential: MD5 (potential) = a71cc443969795d797c7f7ff73718add
+ <#Si14 POTENTIAL                      exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
+ <#Si14 POTENTIAL                      exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
+ <#Si14 POTENTIAL                      exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
+ <#Si14 POTENTIAL                      exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
+ <#Vac0 POTENTIAL                      exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
+ <#Vac0 POTENTIAL                      exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
+ <#Vac0 POTENTIAL                      exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
+ <#Vac0 POTENTIAL                      exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
+Doing calculation with potential: MD5 (potential) = a36a00bf3fd5b0003f6884062f69ed69
 Doing calculation with shapefun: MD5 (shapefun) = 435c0c91db9d41eeb0f4313fcee12283
  
 ===============================================================================
                     EPATHTB: generates a complex E contour
 ===============================================================================
  
-     E min =    -0.400000 (Ry)        Fermi energy =     0.656244 (Ry)
-     E max =     0.656244 (Ry)        Temperature  =   800.000000 (K )
+     E min =    -0.400000 (Ry)        Fermi energy =     0.926616 (Ry)
+     E max =     0.926616 (Ry)        Temperature  =   800.000000 (K )
      --------------------------------------------------------------
      GF integration rectangular contour ( ImE > 0 )
      Number of energy points :  24             poles = 5
                        contour: N1 = 3, N2 =  13, N3 = 3
  
- >>> SHAPE : IMAXSH( 165),NGSHD : 60000
+ >>> SHAPE : IMAXSH(      165),NGSHD :    60000
 ===============================================================================
                   MADELUNG3D: setting bulk Madelung coefficients
 ===============================================================================
@@ -300,7 +410,7 @@ Doing calculation with shapefun: MD5 (shapefun) = 435c0c91db9d41eeb0f4313fcee122
         IC4z-1      IC2a        IC2b      
         ------------------------------------------------------------
 
-        Test option < fullBZ > or Run option < NEWSOSOL >:  overriding NSYMAT, generate full BZ k-mesh
+        Run option <use_full_BZ> or <use_Chebychev_solver>:  overriding NSYMAT, generate full BZ k-mesh
 
      < BZKMESH > : creating k-mesh, write to file kpoints
 
@@ -308,12 +418,12 @@ Doing calculation with shapefun: MD5 (shapefun) = 435c0c91db9d41eeb0f4313fcee122
         the direct lattice  1 symmetries will be used
 
         -----------------------------------
-        k-mesh NofKs N kx N ky N kz vol BZ
+           k-mesh    NofKs N kx N ky N kz vol BZ
         -----------------------------------
-             1  1000   10   10   10  4.0000
-             2   343    7    7    7  4.0000
-             3   125    5    5    5  4.0000
-             4    27    3    3    3  4.0000
+                1     1000   10   10   10  4.0000
+                2      343    7    7    7  4.0000
+                3      125    5    5    5  4.0000
+                4       27    3    3    3  4.0000
         -----------------------------------
 
      <SYMTAUMAT> : rotation matrices acting on t/G/tau

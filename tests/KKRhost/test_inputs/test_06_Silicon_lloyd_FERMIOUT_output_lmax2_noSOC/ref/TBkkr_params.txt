@@ -1,4 +1,4 @@
-#FILEVERSION= 2   # serial: kkrjm_v2.3-61-g4b60676_mpi_20180828093815
+#FILEVERSION= 2   # serial: JuKKR_v3.1-1927-g9a2aa9fa_intel-debug_20220725105439
        2    lmaxd
        2    lmax
        0    korbit

@@ -8,7 +8,6 @@ import os, pprint
 from kkrparser_functions import parse_kkr_outputfile
 from numpy import mean, std, array, loadtxt
 
-
 class Test_serial():
     """
     check results of simple scf tests without SOC
@@ -73,9 +72,9 @@ class Test_features():
         fname = 'TBkkr_rhod.txt'
         num, text = read_file(path+fname)
         num_ref, text_ref = read_file(path0+fname)
-        assert std(abs(num-num_ref))<10**-14
-        assert mean(abs(num-num_ref))<10**-14
-        assert abs(num-num_ref).max()<5*10**-13
+        assert std(abs(num-num_ref))<1e-14
+        assert mean(abs(num-num_ref))<1e-14
+        assert abs(num-num_ref).max()<1e-12
         assert set(text)-set(text_ref)==set()
         # compare output of OPERATOR for host and for impurity wavefunctions
         for filename in 'TBkkr_rhod.txt TBkkr_torq.txt TBkkr_spinflux.txt'.split():
@@ -94,10 +93,10 @@ class Test_features():
           # flatten arrays and take diff
           d1 = d1.reshape(-1); d2 = d2.reshape(-1); d01 = d01.reshape(-1); d02 = d02.reshape(-1)
           diff1 = d01-d1; diff2 = d02-d2
-          assert mean(diff1) < 10**-15
-          assert abs(diff1).max() < 10**-15
-          assert mean(diff2) < 10**-15
-          assert abs(diff2).max() < 10**-15
+          assert mean(diff1) < 1e-14
+          assert abs(diff1).max() < 1e-12
+          assert mean(diff2) < 1e-14
+          assert abs(diff2).max() < 1e-12
 
     def test_11_DTM_GMAT(self):
         path  = 'test_run11_mpi_1_8/'
@@ -111,9 +110,9 @@ class Test_features():
            print(mean(abs(num-num_ref)))
            print(abs(num-num_ref).max())
            print(set(text)-set(text_ref)==set())
-           assert std(abs(num-num_ref))<5*10**-11
-           assert mean(abs(num-num_ref))<10**-12
-           assert abs(num-num_ref).max()<2*10**-8
+           assert std(abs(num-num_ref))<5e-10
+           assert mean(abs(num-num_ref))<5e-11
+           assert abs(num-num_ref).max()<5e-8
            assert set(text)-set(text_ref)==set()
 
     """
@@ -299,7 +298,7 @@ class Test_SOC():
            for fname in files:
               num, text = read_file(path+fname)
               num_ref, text_ref = read_file(path0+fname)
-              assert std(num-num_ref)<10**-10
+              assert std(num-num_ref)<1e-5
               assert set(text)-set(text_ref)==set()
 
     def test_14_ASA(self):
@@ -331,11 +330,15 @@ def standard_verify(path0, rms_threshold=10**-8, rms_threshold_end=10**-8, neutr
     """
     wrapper for standard tests reading output and comparins rms and charge neutrality
     """
-    # use parser function from aiida-kkr
+    # first check if the path exists
+    assert os.path.exists(path0)
+
+    # then use parser function from aiida-kkr
     success, parser_msgs, out_dict = parse_kkr_outputfile({}, path0+'out_kkr', path0+'output.0.txt', path0+'output.000.txt', path0+'out_timing.000.txt', path0+'out_potential', path0+'nonco_angle_out.dat', debug=debug)
     pprint.pprint(parser_msgs)
     pprint.pprint(out_dict)
-    # first check if parsing was successful
+
+    # check if parsing was successful
     assert success
     # check if initial iteration is still converged
     assert out_dict['convergence_group']['rms_all_iterations'][0] < rms_threshold
@@ -374,6 +377,7 @@ def cmp_modes(cmplist, path00, s_rms_bound=10**-12, max_s_charges_bound=10**-12)
         pprint.pprint('max_std_charges= {}'.format(max_s_charges))
         assert s_rms < s_rms_bound
         assert max_s_charges < max_s_charges_bound
+
 
 def read_file(path):
    """

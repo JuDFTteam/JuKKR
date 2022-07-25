@@ -633,10 +633,11 @@ contains
       !----------------------------------------------------------------------------
       ! Calculate the left-hand side solution
       !----------------------------------------------------------------------------
-      if ( t_dtmatjij_at%calculate .or. (t_wavefunctions%isave_wavefun(i1,ie)>0 .and. &
-           (t_wavefunctions%save_rllleft .or. t_wavefunctions%save_sllleft)) .or.     &
-           ((write_rhoq_input .and. ie==2) .and. (i1==mu0)) .or.                      & ! rhoqtest
-           calc_exchange_couplings .or. write_pkkr_operators .or. calc_wronskian ) then ! MdSD: seems to make more sense to check here than below
+      if ( calculate_left(i1, ie) .or. &
+           t_dtmatjij_at%calculate .or. &
+           ((write_rhoq_input .and. ie==2) .and. (i1==mu0)) & ! rhoqtest
+         ) then ! MdSD: seems to make more sense to check here than below
+            
         ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         ! Calculate the left-hand side solution this needs to be done for the
         ! calculation of t-matrices for Jij tensor or if wavefunctions should be saved
@@ -983,7 +984,7 @@ contains
       sll = czero
 
       ! Left regular and irregular wavefunctions (used here only in case of XCPL or saving of left wavefunctions)
-      if (calc_exchange_couplings .or. (t_wavefunctions%save_rllleft .or. t_wavefunctions%save_sllleft .or. write_rhoq_input) .or. calc_wronskian) then
+      if (calculate_left(-1, -1)) then
         allocate (rllleft(nsra*lmmaxd,lmmaxd,irmdnew,0:nth-1), stat=i_stat)
         call memocc(i_stat, product(shape(rllleft))*kind(rllleft), 'RLLLEFT', 'allocate_locals_tmat_newsolver')
         rllleft = czero
@@ -1065,7 +1066,7 @@ contains
       deallocate (sll, stat=i_stat)
       call memocc(i_stat, -product(shape(sll))*kind(sll), 'SLL', 'allocate_locals_tmat_newsolver')
 
-      if (calc_exchange_couplings .or. (t_wavefunctions%save_rllleft .or. t_wavefunctions%save_sllleft .or. write_rhoq_input)) then
+      if (calculate_left(-1, -1)) then
         deallocate (rllleft, stat=i_stat)
         call memocc(i_stat, -product(shape(rllleft))*kind(rllleft), 'RLLLEFT', 'allocate_locals_tmat_newsolver')
         deallocate (sllleft, stat=i_stat)
@@ -1101,5 +1102,45 @@ contains
     end if ! allocmode ==1 or /=1
 
   end subroutine allocate_locals_tmat_newsolver
+
+
+  !-------------------------------------------------------------------------------
+  !> Summary: Helper function which tells if the left wave functions are needed
+  !> calculation 
+  !> Author: Philipp Ruessmann
+  !> Category: single-site, profiling, KKRhost
+  !> Deprecated: False 
+  !> 
+  !-------------------------------------------------------------------------------
+  logical function calculate_left(i1, ie)
+    
+    use :: mod_save_wavefun, only: t_wavefunctions
+    use :: mod_runoptions, only: calc_wronskian, write_pkkr_operators, calc_exchange_couplings, write_rhoq_input
+    use :: mod_types, only: type_dtmatjijdij
+    implicit None
+    integer, intent(in) :: i1, ie
+
+    calculate_left = .false.
+    if ( calc_exchange_couplings &
+       .or. &
+         write_pkkr_operators &
+       .or. &
+         calc_wronskian &
+      ) then
+      calculate_left = .true.
+    end if
+
+    if ( (t_wavefunctions%save_rllleft .or. t_wavefunctions%save_sllleft) ) then
+      if (ie<0 .or. i1<0) then
+        ! need special case for alloc/dealloc routines
+        calculate_left = .true.
+      elseif ( t_wavefunctions%isave_wavefun(i1,ie)>0 ) then
+        calculate_left = .true.
+      end if
+    end if
+
+    return
+
+  end function calculate_left
 
 end module mod_tmatnewsolver
