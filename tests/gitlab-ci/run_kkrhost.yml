@@ -221,7 +221,7 @@ run_kkrhost:intel:MPIenerg_SOC_8_1:
 
 ## 2.3 special features beyond selfconsistency ##
 run_kkrhost:intel:Jijs_4:
-  stage: run_kkrhost_features
+  stage: run_kkrhost_features_part1
   tags:
     - docker-executor
   script:
@@ -244,7 +244,7 @@ run_kkrhost:intel:Jijs_4:
     - GROUP3
 
 run_kkrhost:intel:kkrflex_5:
-  stage: run_kkrhost_features
+  stage: run_kkrhost_features_part1
   tags:
     - docker-executor
   script:
@@ -267,7 +267,7 @@ run_kkrhost:intel:kkrflex_5:
     - GROUP3
 
 run_kkrhost:intel:FERMIOUT_6:
-  stage: run_kkrhost_features
+  stage: run_kkrhost_features_part1
   tags:
     - docker-executor
   script:
@@ -290,7 +290,7 @@ run_kkrhost:intel:FERMIOUT_6:
     - GROUP3
  
 run_kkrhost:intel:OPERATOR_10:
-  stage: run_kkrhost_features
+  stage: run_kkrhost_features_part1
   tags:
     - docker-executor
   script:
@@ -311,7 +311,7 @@ run_kkrhost:intel:OPERATOR_10:
     - GROUP3
 
 run_kkrhost:intel:DTM_GMATLL_11:
-  stage: run_kkrhost_features
+  stage: run_kkrhost_features_part1
   tags:
     - docker-executor
   script:
@@ -332,7 +332,7 @@ run_kkrhost:intel:DTM_GMATLL_11:
     - GROUP3
 
 run_kkrhost:intel:qdos_12:
-  stage: run_kkrhost_features
+  stage: run_kkrhost_features_part1
   tags:
     - docker-executor
   script:
@@ -354,7 +354,7 @@ run_kkrhost:intel:qdos_12:
     - GROUP3
 
 #run_kkrhost:intel:rhoq_13:
-#  stage: run_kkrhost_features
+#  stage: run_kkrhost_features_part1
 #  script:
 #      - cd tests/KKRhost/ && ./tools/run_test_13.sh
 #  artifacts:
@@ -364,7 +364,7 @@ run_kkrhost:intel:qdos_12:
 #    expire_in: 1 day
 
 run_kkrhost:intel:ASA_14:
-  stage: run_kkrhost_features
+  stage: run_kkrhost_features_part1
   tags:
     - docker-executor
   script:
@@ -386,7 +386,7 @@ run_kkrhost:intel:ASA_14:
     - GROUP3
 
 run_kkrhost:intel:CPA_15:
-  stage: run_kkrhost_features
+  stage: run_kkrhost_features_part1
   tags:
     - docker-executor
   script:
@@ -408,7 +408,7 @@ run_kkrhost:intel:CPA_15:
     - GROUP3
 
 run_kkrhost:intel:Dirac_16:
-  stage: run_kkrhost_features
+  stage: run_kkrhost_features_part1
   tags:
     - docker-executor
   script:
@@ -430,7 +430,7 @@ run_kkrhost:intel:Dirac_16:
     - GROUP3
 
 run_kkrhost:intel:lambda_xc_17:
-  stage: run_kkrhost_features
+  stage: run_kkrhost_features_part2
   tags:
     - docker-executor
   script:
@@ -453,7 +453,7 @@ run_kkrhost:intel:lambda_xc_17:
 
 #no working test case yet
 #run_kkrhost:intel:noco_18:
-#  stage: run_kkrhost_features
+#  stage: run_kkrhost_features_part2
 #  script:
 #    - cd tests/KKRhost
 #    - python3 ./run_parallel.py -18
@@ -464,7 +464,7 @@ run_kkrhost:intel:lambda_xc_17:
 #    expire_in: 1 day
 
 run_kkrhost:intel:decimate_19:
-  stage: run_kkrhost_features
+  stage: run_kkrhost_features_part2
   tags:
     - docker-executor
   script:
@@ -485,7 +485,7 @@ run_kkrhost:intel:decimate_19:
     - GROUP3
 
 run_kkrhost:intel:godfrin_20:
-  stage: run_kkrhost_features
+  stage: run_kkrhost_features_part2
   tags:
     - docker-executor
   script:
@@ -506,7 +506,7 @@ run_kkrhost:intel:godfrin_20:
     - GROUP3
 
 run_kkrhost:intel:XCs_21:
-  stage: run_kkrhost_features
+  stage: run_kkrhost_features_part2
   tags:
     - docker-executor
   script:
@@ -527,7 +527,7 @@ run_kkrhost:intel:XCs_21:
     - GROUP3
 
 run_kkrhost:intel:LDAU_22:
-  stage: run_kkrhost_features
+  stage: run_kkrhost_features_part2
   tags:
     - docker-executor
   script:
@@ -548,7 +548,7 @@ run_kkrhost:intel:LDAU_22:
     - GROUP3
 
 run_kkrhost:intel:DOS_23:
-  stage: run_kkrhost_features
+  stage: run_kkrhost_features_part2
   tags:
     - docker-executor
   script:
@@ -569,7 +569,7 @@ run_kkrhost:intel:DOS_23:
     - GROUP3
 
 run_kkrhost:intel:BXCSCL_24:
-  stage: run_kkrhost_features
+  stage: run_kkrhost_features_part2
   tags:
     - docker-executor
   script:
@@ -588,7 +588,7 @@ run_kkrhost:intel:BXCSCL_24:
     - develop-kkrhost
 
 run_kkrhost:intel:BCONSTR_25:
-  stage: run_kkrhost_features
+  stage: run_kkrhost_features_part2
   tags:
     - docker-executor
   script:
@@ -609,7 +609,7 @@ run_kkrhost:intel:BCONSTR_25:
 ## 2.4 integration with aiida ##
 run_kkrhost:intel:aiida-kkr:
   image: iffregistry.fz-juelich.de/docker-images/aiida-kkr:latest
-  stage: run_kkrhost_features
+  stage: run_kkrhost_features_part2
   tags:
     - docker-executor
   allow_failure: true

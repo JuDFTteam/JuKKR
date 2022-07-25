@@ -28,7 +28,8 @@ stages:
   - build_kkrhost
   - run_kkrhost_serial
   - run_kkrhost_parallel
-  - run_kkrhost_features
+  - run_kkrhost_features_part1
+  - run_kkrhost_features_part2
   - run_kkrhost_features_SOC
   - verify_kkrhost
   - deploy:codecov_kkrhost
