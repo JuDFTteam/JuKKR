@@ -109,7 +109,6 @@ add_library(lib_common STATIC
     source/common/wronskian.f90
     source/common/mathtools.f90
     source/common/bfield.f90
-    source/common/torque.f90
 )
 # disable cmake auto add of 'lib' prefix to .so file
 SET_TARGET_PROPERTIES(lib_common PROPERTIES PREFIX "")
@@ -369,6 +368,7 @@ add_library(lib_kkrhost STATIC
     source/KKRhost/testdim.f90
     source/KKRhost/tmat_newsolver.F90
     source/KKRhost/tmatimp_newsolver.F90
+    source/KKRhost/torque.f90
     source/KKRhost/vadd.f90
     source/KKRhost/veq.f90
     source/KKRhost/vinterface.f90
@@ -405,7 +405,6 @@ target_link_libraries(kkr.x lib_kkrhost)
 if(CMAKE_Fortran_COMPILER_ID MATCHES GNU OR USE_LIBFLAME)
     target_link_libraries(kkr.x ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 endif()
-target_link_libraries(kkr.x "${ompflags}")
 
 if(ENABLE_BdG)
     # for wf testing (BdG)

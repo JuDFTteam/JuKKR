@@ -47,12 +47,8 @@ add_executable(
     source/common/radial_solver_Chebychev/cheb.f90
     source/common/radial_solver_Chebychev/cheb2oldgrid.f90
     source/common/radial_solver_Chebychev/chebint.f90
-    source/common/radial_solver_Chebychev/rll_global_solutions.F90
-    source/common/radial_solver_Chebychev/rll_local_solutions.F90
     source/common/radial_solver_Chebychev/rllsll.F90
     source/common/radial_solver_Chebychev/rllsllsourceterms.f90
-    source/common/radial_solver_Chebychev/sll_global_solutions.F90
-    source/common/radial_solver_Chebychev/sll_local_solutions.F90
     source/common/radial_solver_Chebychev/create_newmesh.f90
     source/common/radial_solver_Chebychev/vllmat.f90
     source/common/radial_solver_Chebychev/vllmatsra.f90

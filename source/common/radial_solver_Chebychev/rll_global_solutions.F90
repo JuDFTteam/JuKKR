@@ -20,7 +20,7 @@ contains
   !> Deprecated: False 
   !> Wrapper for the calculation of the regular solutions for the impurity code `KKRimp`
   !-------------------------------------------------------------------------------
-  subroutine rll_global_solutions(rpanbound,rmesh,vll,ull,rll,tllp,ncheb,npan,lmsize,   &
+  subroutine rll_global_solutions(rpanbound,rmesh,vll,rll,tllp,ncheb,npan,lmsize,   &
     lmsize2,lbessel,nrmax,nvec,jlk_index,hlk,jlk,hlk2,jlk2,gmatprefactor,cmoderll,  &
     use_sratrick1,alphaget)     ! LLY
     ! ************************************************************************
@@ -61,12 +61,12 @@ contains
 
     ! cmoderll ="1" : op( )=identity
     ! cmoderll ="T" : op( )=transpose in L
- 
-    complex (kind=dp) :: ull(lmsize2, lmsize, nrmax)
+
     complex (kind=dp) :: rll(lmsize2, lmsize, nrmax), & ! reg. fredholm sol.
       tllp(lmsize, lmsize), &    ! t-matrix
       vll(lmsize*nvec, lmsize*nvec, nrmax) ! potential term in 5.7
     ! bauer, phd
+    complex (kind=dp), allocatable :: ull(:, :, :) ! reg. volterra sol.
 
     complex (kind=dp), allocatable :: work(:, :), allp(:, :, :), bllp(:, :, :), & ! eq. 5.9, 5.10 for reg. sol
       mrnvy(:, :, :), mrnvz(:, :, :), & ! ***************
@@ -139,6 +139,8 @@ contains
 
     allocate (work(lmsize,lmsize))
     allocate (allp(lmsize,lmsize,0:npan), bllp(lmsize,lmsize,0:npan))
+
+    allocate (ull(lmsize2,lmsize,nrmax))
 
     if (idotime==1) call timing_start('local')
 
@@ -238,7 +240,6 @@ contains
         alphaget(lm1, lm2) = allp(lm1, lm2, npan) ! LLY
       end do                     ! LLY
     end do                       ! LLY
-
     ! calculation of the t-matrix ! calc t-matrix tll = bll*alpha^-1
     call zgemm('n','n',lmsize,lmsize,lmsize,cone/gmatprefactor,bllp(1,1,npan),      & 
       lmsize,allp(1,1,npan),lmsize,czero,tllp,lmsize)

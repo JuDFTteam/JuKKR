@@ -48,13 +48,13 @@ subroutine rhooutnew(gauntcoeff, df, gmatin, ek, cellnew, wavefunction, rho2nsc,
   complex (kind=dp) :: cdenns(irmd,nspinden)
   complex (kind=dp) :: gmat(lmsize,lmsize)
   complex (kind=dp) :: gmatin(lmsize,lmsize)
-  complex (kind=dp) :: pnsi(lmsize,lmsize), qnsi(lmsize,lmsize)
+  complex (kind=dp) :: qnsi(lmsize,lmsize), rlltemp(lmsize,lmsize)
   complex (kind=dp) :: cdenlm(irmd,lmmaxatom,nspinden) ! lm-dos
   complex (kind=dp) :: rho2nsc(irmd,lmpotd,nspinden)
   complex (kind=dp) :: gflle_part(lmsize,lmsize) ! lda+u
 ! ..
 ! .. Local Scalars ..
-  complex (kind=dp) :: cltdf, alpha
+  complex (kind=dp) :: cltdf
   real (kind=dp) :: c0ll
   integer :: ifun, ir, j, l1, lm1, lm2, lm3, m1
   integer :: ispin, jspin, ierr
@@ -122,132 +122,70 @@ subroutine rhooutnew(gauntcoeff, df, gmatin, ek, cellnew, wavefunction, rho2nsc,
     ! WATCH OUT CHECK IF A FACTOR OF M_0 needs to be added into the Greensfunction
     !
     ! #########################################################3
-    ! if (allocated(wavefunction%sllleft)) then
-    !   qnsi(:,:) = wavefunction%sllleft(1:lmsize,1:lmsize,ir,1)
-    ! else
-    !   qnsi(:,:) = wavefunction%sll(1:lmsize,1:lmsize,ir,1)
-    ! end if
-
-    ! if (allocated(wavefunction%sllleft)) then
-    !   pnsi = wavefunction%rllleft(1:lmsize,1:lmsize,ir,1)
-    ! else
-    !   pnsi = wavefunction%rll(1:lmsize,1:lmsize,ir,1)
-    ! end if
-
-    ! this is the prefactor for the gmatll*rllleft term in the first zgemm
-    ! if the onsite densit is calculated alone we set this to zero
-    alpha = cone
-    if (config_testflag('calc_onsite_only')) alpha = czero
-
-    ! ! changed the second mode to transpose - bauer
-    ! call zgemm('n','t',lmsize,lmsize,lmsize, alpha,pnsi, lmsize,gmat,lmsize,ek,qnsi,lmsize)
-
-    ! pnsi(:,:) = wavefunction%rll(1:lmsize,1:lmsize,ir,1)
-
-    ! call zgemm('n','t',lmsize,lmsize,lmsize,cone,pnsi, lmsize,qnsi,lmsize,czero,wr(1,1,ir),lmsize)
-
-
-    ! ------------------------------------------------------------------
-    ! MdSD: now coded like in KKRhost
-    ! ------------------------------------------------------------------
-    ! S' irregular left wfn
     if (allocated(wavefunction%sllleft)) then
-      qnsi(1:lmsize,1:lmsize) = wavefunction%sllleft(1:lmsize,1:lmsize,ir,1)
+      qnsi(:,:) = wavefunction%sllleft(1:lmsize,1:lmsize,ir,1)
     else
       qnsi(:,:) = wavefunction%sll(1:lmsize,1:lmsize,ir,1)
     end if
-    ! R regular right wfn (redefined to U)
-    pnsi(1:lmsize,1:lmsize) = wavefunction%ull(1:lmsize,1:lmsize,ir,1)
-    ! onsite contribution sqrt(E)*R*S'
-    call zgemm('N','T',lmsize,lmsize,lmsize,ek,pnsi,lmsize,qnsi,lmsize,czero,wr(:,:,ir),lmsize)
-    ! ------------------------------------------------------------------
-    ! R' regular left wfn
+
     if (allocated(wavefunction%sllleft)) then
-      pnsi(1:lmsize,1:lmsize) = wavefunction%rllleft(1:lmsize,1:lmsize,ir,1)
+      rlltemp = wavefunction%rllleft(1:lmsize,1:lmsize,ir,1)
     else
-      pnsi(1:lmsize,1:lmsize) = wavefunction%rll(1:lmsize,1:lmsize,ir,1)
+      rlltemp = wavefunction%rll(1:lmsize,1:lmsize,ir,1)
     end if
-    ! MdSD: note that this transpose is followed by another transpose in the next zgemm
-    call zgemm('N','T',lmsize,lmsize,lmsize,alpha,pnsi,lmsize,gmat,lmsize,czero,qnsi,lmsize)
-    ! R regular right wfn (not redefined)
-    pnsi(1:lmsize,1:lmsize) = wavefunction%rll(1:lmsize,1:lmsize,ir,1)
-    ! backscattering contribution R*G*R' is added to onsite contribution
-    call zgemm('N','T',lmsize,lmsize,lmsize,cone,pnsi,lmsize,qnsi,lmsize,cone,wr(:,:,ir),lmsize)
-    ! ------------------------------------------------------------------
+
+    ! changed the second mode to transpose - bauer
+    call zgemm('n','t',lmsize,lmsize,lmsize,cone,rlltemp, lmsize,gmat,lmsize,ek,qnsi,lmsize)
+
+    rlltemp(:,:) = wavefunction%rll(1:lmsize,1:lmsize,ir,1)
+
+    call zgemm('n','t',lmsize,lmsize,lmsize,cone,rlltemp, lmsize,qnsi,lmsize,czero,wr(1,1,ir),lmsize)
 
 
     if (nsra.eq.2 .and. (.not. config_testflag('nosmallcomp')) ) then
 
-      ! if (allocated(wavefunction%sllleft)) then
-      !    qnsi(:,:) = -wavefunction%sllleft(lmsize+1:2*lmsize,1:lmsize,ir,1) ! attention to the
-      !                                                                       ! additional minus sign
-      !    ! ##########################################################################################
-      !    ! Drittler assumes that for the left solution, is given by the right solution with an
-      !    ! additional minus sign. This minus sign is contained inside the equations to calculate
-      !    ! the electronic density. While calculating the left solution, the minus sign is already 
-      !    ! included in the left solution. To make calculations consistant a factor of -1 is included
-      !    ! which cancels out by the routines of Drittler
-      !    ! ##########################################################################################
-      ! else
-      !    qnsi(:,:) = wavefunction%sll(lmsize+1:2*lmsize,1:lmsize,ir,1)
-      ! end if
-      ! if (allocated(wavefunction%rllleft)) then
-      !    pnsi = -wavefunction%rllleft(lmsize+1:2*lmsize,1:lmsize,ir,1) ! attention to the
-      !                                                                     ! additional minus sign
-      !    ! ##########################################################################################
-      !    ! Drittler assumes that for the left solution, is given by the right solution with an
-      !    ! additional minus sign. This minus sign is contained inside the equations to calculate
-      !    ! the electronic density. While calculating the left solution, the minus sign is already 
-      !    ! included in the left solution. To make calculations consistant a factor of -1 is included
-      !    ! which cancels out by the routines of Drittler
-      !    ! ##########################################################################################
-      ! else
-      !    pnsi = wavefunction%rll(lmsize+1:2*lmsize,1:lmsize,ir,1)
-      ! end if
-
-      ! ! changed the second mode to transpose - bauer
-      ! call zgemm('n','t',lmsize,lmsize,lmsize,gmat,pnsi, &
-      !            lmsize,gmat,lmsize,ek,qnsi,lmsize)
-
-      ! pnsi = wavefunction%rll(lmsize+1:2*lmsize,1:lmsize,ir,1)!/cvlight
-
-      ! call zgemm('n','t',lmsize,lmsize,lmsize,cone,pnsi, &
-      !             lmsize,qnsi,lmsize,cone,wr(1,1,ir),lmsize)
-
-
-      ! ------------------------------------------------------------------
-      ! MdSD: now coded like in KKRhost
-      ! ------------------------------------------------------------------
-      ! S' irregular left wfn 
-      if (allocated(wavefunction%sllleft)) then  ! this minus sign is explained above
-        qnsi(1:lmsize,1:lmsize) = -wavefunction%sllleft(lmsize+1:2*lmsize,1:lmsize,ir,1)
+      if (allocated(wavefunction%sllleft)) then
+         qnsi(:,:) = -wavefunction%sllleft(lmsize+1:2*lmsize,1:lmsize,ir,1) ! attention to the
+                                                                            ! additional minus sign
+         ! ##########################################################################################
+         ! Drittler assumes that for the left solution, is given by the right solution with an
+         ! additional minus sign. This minus sign is contained inside the equations to calculate
+         ! the electronic density. While calculating the left solution, the minus sign is already 
+         ! included in the left solution. To make calculations consistant a factor of -1 is included
+         ! which cancels out by the routines of Drittler
+         ! ##########################################################################################
       else
-        qnsi(1:lmsize,1:lmsize) = wavefunction%sll(lmsize+1:2*lmsize,1:lmsize,ir,1)
+         qnsi(:,:) = wavefunction%sll(lmsize+1:2*lmsize,1:lmsize,ir,1)
       end if
-      ! R regular right wfn (redefined to U)
-      pnsi(1:lmsize,1:lmsize) = wavefunction%ull(lmsize+1:2*lmsize,1:lmsize,ir,1)
-      ! onsite contribution sqrt(E)*R*S'
-      call zgemm('N','T',lmsize,lmsize,lmsize,ek,pnsi,lmsize,qnsi,lmsize,cone,wr(:,:,ir),lmsize)
-      ! ------------------------------------------------------------------
-      ! R' regular left wfn
-      if (allocated(wavefunction%sllleft)) then  ! this minus sign is explained above
-        pnsi(1:lmsize,1:lmsize) = -wavefunction%rllleft(lmsize+1:2*lmsize,1:lmsize,ir,1)
+      if (allocated(wavefunction%rllleft)) then
+         rlltemp = -wavefunction%rllleft(lmsize+1:2*lmsize,1:lmsize,ir,1) ! attention to the
+                                                                          ! additional minus sign
+         ! ##########################################################################################
+         ! Drittler assumes that for the left solution, is given by the right solution with an
+         ! additional minus sign. This minus sign is contained inside the equations to calculate
+         ! the electronic density. While calculating the left solution, the minus sign is already 
+         ! included in the left solution. To make calculations consistant a factor of -1 is included
+         ! which cancels out by the routines of Drittler
+         ! ##########################################################################################
       else
-        pnsi(1:lmsize,1:lmsize) = wavefunction%rll(lmsize+1:2*lmsize,1:lmsize,ir,1)
+         rlltemp = wavefunction%rll(lmsize+1:2*lmsize,1:lmsize,ir,1)
       end if
-      ! MdSD: note that this transpose is followed by another transpose in the next zgemm
-      call zgemm('N','T',lmsize,lmsize,lmsize,alpha,pnsi,lmsize,gmat,lmsize,czero,qnsi,lmsize)
-      ! R regular right wfn (not redefined)
-      pnsi(1:lmsize,1:lmsize) = wavefunction%rll(lmsize+1:2*lmsize,1:lmsize, ir,1)
-      ! backscattering contribution R*G*R' is added to onsite contribution
-      call zgemm('N','T',lmsize,lmsize,lmsize,cone,pnsi,lmsize,qnsi,lmsize,cone,wr(:,:,ir),lmsize)
-      ! ------------------------------------------------------------------
+
+      ! changed the second mode to transpose - bauer
+      call zgemm('n','t',lmsize,lmsize,lmsize,cone,rlltemp, &
+                 lmsize,gmat,lmsize,ek,qnsi,lmsize)
+
+      rlltemp = wavefunction%rll(lmsize+1:2*lmsize,1:lmsize,ir,1)!/cvlight
+
+      call zgemm('n','t',lmsize,lmsize,lmsize,cone,rlltemp, &
+                  lmsize,qnsi,lmsize,cone,wr(1,1,ir),lmsize)
+
     end if
 
     if (corbital/=0) then
       call zgemm('n','n',lmsize,lmsize,lmsize,cone,loperator(:,:,corbital), &
-                 lmsize,wr(:,:,ir),lmsize,czero,pnsi,lmsize)
-      wr(1:lmsize,1:lmsize,ir) = pnsi(1:lmsize,1:lmsize)
+                 lmsize,wr(:,:,ir),lmsize,czero,rlltemp,lmsize)
+      wr(:,:,ir) = rlltemp
     end if
 
   end do !ir

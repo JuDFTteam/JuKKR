@@ -2088,33 +2088,28 @@
       VRTY=V(2,IVERT)
       VRTZ=V(3,IVERT)
       INEW=1                          ! Save all different vertices
-      DO IVRT=1,NVRT
-        T=(VRTX-VRT(1,IVRT))**2+(VRTY-VRT(2,IVRT))**2&
-     &   +(VRTZ-VRT(3,IVRT))**2
-        IF(T.LT.TOLVDIST) INEW=0
-      END DO
-   
-
-      IF(INEW.EQ.1) THEN
-        NVRT=NVRT+1
-        IF(NVRT.GT.NVRTD) STOP 'INCREASE NVRTD'
-        VRT(1,NVRT)=V(1,IVERT)
-        VRT(2,NVRT)=V(2,IVERT)
-        VRT(3,NVRT)=V(3,IVERT)
-      END IF
-
+      DO 13 IVRT=1,NVRT
+      T=(VRTX-VRT(1,IVRT))**2+(VRTY-VRT(2,IVRT))**2&
+     & +(VRTZ-VRT(3,IVRT))**2
+      IF(T.LT.TOLVDIST) INEW=0
+   13 CONTINUE
+      IF(INEW.EQ.1)                  THEN
+      NVRT=NVRT+1
+      IF(NVRT.GT.NVRTD) STOP 'INCREASE NVRTD'
+      VRT(1,NVRT)=V(1,IVERT)
+      VRT(2,NVRT)=V(2,IVERT)
+      VRT(3,NVRT)=V(3,IVERT)
+                                     END   IF
       IVERTP=IVERT+1                  
       IF(IVERT.EQ.NVERT) IVERTP=1
       VRTPX=V(1,IVERTP)
       VRTPY=V(2,IVERTP)
       VRTPZ=V(3,IVERTP)
-
       IVERTM=IVERT-1
       IF(IVERT.EQ.1) IVERTM=NVERT
       VRTMX=V(1,IVERTM)
       VRTMY=V(2,IVERTM)               ! Check IF the  consecutive
       VRTMZ=V(3,IVERTM)               ! vertices define a polygon
-
       A1=SQRT((VRTPX-VRTX)**2+(VRTPY-VRTY)**2+(VRTPZ-VRTZ)**2)
       A2=SQRT((VRTMX-VRTX)**2+(VRTMY-VRTY)**2+(VRTMZ-VRTZ)**2)
       DOWN=A1*A2
@@ -2125,19 +2120,14 @@
       ! write(6,*) VRTMX,VRTMY,VRTMZ
       ! write(6,*) VRTPX,VRTPY,VRTPZ
       ! write(6,*) 'fisum ',ivert,a1,a2,up,arg,ACOS(ARG)
-      IF(DOWN.GE.TOLVDIST) THEN
-        ARG=UP/DOWN
-        IF(ABS(ARG).GE.1.D0) ARG=SIGN(1.D0,ARG)
-        FISUM=FISUM-ACOS(ARG)
-      ELSE
-        write(*,*) 'ivert:', IVERT, IVERTP, IVERTM, NVERT
-        write(*,*) 'a1', VRTPX, VRTX, VRTPY, VRTY, VRTPZ, VRTZ
-        write(*,*) 'diffs:', VRTPX-VRTX, VRTPY-VRTY, VRTPZ-VRTZ
-        write(*,*) 'a2', VRTMX, VRTX, VRTMY, VRTY, VRTMZ, VRTZ
-        write(*,*) 'diffs:', VRTMX-VRTX, VRTMY-VRTY, VRTMZ-VRTZ
-        write(*,*) DOWN, TOLVDIST
-        stop 'IDENTICAL CONSECUTIVE VERTICES'
-      END IF
+      IF(DOWN.GE.TOLVDIST)   THEN
+      ARG=UP/DOWN
+      IF(ABS(ARG).GE.1.D0) ARG=SIGN(1.D0,ARG)
+      FISUM=FISUM-ACOS(ARG)
+      
+                             ELSE
+      STOP 'IDENTICAL CONSECUTIVE VERTICES'
+                             END    IF
 !
 !------> T R E A T M E N T   O F   E D G E S 
 !

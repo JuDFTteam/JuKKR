@@ -252,10 +252,8 @@ contains
       if (ierror/=0) then
         write(*,*) '[read_bfield] bfield file does not exist'
         write(*,*) '              setting all bfields to zero'
-        if (.not.bfield%lbfield_constr) then
-          write(*,*) '              disabling magnetic field lbfield = F'
-          bfield%lbfield        = .false.
-        end if
+        write(*,*) '              disabling magnetic field lbfield = F'
+        bfield%lbfield        = .false.
         do iatom=1,natyp
           bfield%theta(iatom)            = 0.0D0
           bfield%phi(iatom)              = 0.0D0

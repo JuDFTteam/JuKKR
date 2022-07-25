@@ -225,7 +225,7 @@ class Test_features():
 
     def test_25_BCONSTR(self):
         path00 = 'test_run25_hybrid_1_8/'
-        standard_verify(path00, rms_threshold=1*10**-6, rms_threshold_end=10**-6, neutr_threshold=5*10**-6)
+        standard_verify(path00, rms_threshold=1*10**-7, rms_threshold_end=10**-7)
         # compare the output constrining field
         fname = 'bconstr_out.dat'
         num, text = read_file(path00+fname)
@@ -255,7 +255,7 @@ class Test_SOC():
         # check convergence of both runs
         standard_verify(path0+'NEWSOSOL_NOSOC/', rms_threshold=1.5*10**-6, rms_threshold_end=1.5*10**-6, neutr_threshold=8*10**-5)
         standard_verify(path0+'NEWSOSOL_SOCSCL0/', rms_threshold=1.5*10**-6, rms_threshold_end=1.5*10**-6, neutr_threshold=8*10**-5)
-        standard_verify(path0+'NEWSOSOL_DECOUPLED_SPINS/', rms_threshold=1.5*10**-6, rms_threshold_end=1.5*10**-6, neutr_threshold=8*10**-5)
+        standard_verify(path0+'NEWSOSOL_DECOUPLED_SPINS//', rms_threshold=1.5*10**-6, rms_threshold_end=1.5*10**-6, neutr_threshold=8*10**-5)
         # cross check both runs against each other (comparing output writte to 'out_last.txt')
         num, text = read_file(path0+'NEWSOSOL_NOSOC/out_last.txt')
         num_ref, text_ref = read_file(path0+'NEWSOSOL_SOCSCL0/out_last.txt')
@@ -304,7 +304,7 @@ class Test_SOC():
 
     def test_14_ASA(self):
         path0 = 'test_run14.1_hybrid_1_3/'
-        standard_verify(path0, rms_threshold=5*10**-8, rms_threshold_end=5*10**-8, neutr_threshold=1.5*10**-5)
+        standard_verify(path0, rms_threshold=3*10**-8, rms_threshold_end=3*10**-8, neutr_threshold=1.5*10**-5)
 
     def test_15_CPA(self):
         path0 = 'test_run15.1_hybrid_1_3/'

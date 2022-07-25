@@ -886,7 +886,7 @@ module MadelungCalculator_mod
     det = determinant3x3_r(a)
     if(det == 0.) then
 #ifdef DEBUG
-      write(*,'(9A)') ' invert3x3: determinant = 0.'
+      if(o>0) write(o,'(9A)') sym,' invert3x3: determinant = 0.'
 #endif
       inverse = 0.
       return

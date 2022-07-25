@@ -25,7 +25,7 @@ contains
     nsheld, nembd, iemxd)
 
     use :: mod_constants, only: nsymaxd
-    use :: mod_runoptions, only: print_tau_structure, use_Chebychev_solver, use_full_BZ, decouple_spin_cheby, force_BZ_symm
+    use :: mod_runoptions, only: print_tau_structure, use_Chebychev_solver, use_full_BZ
     use :: mod_datatypes, only: dp
     use :: mod_gfshells, only: gfshells
     use :: mod_crtstar, only: crtstar
@@ -77,15 +77,10 @@ contains
     if (print_tau_structure) iprint = 2
 
     ! --> test: full BZ integration
-    if (use_full_BZ .or. (use_Chebychev_solver .and. .not.decouple_spin_cheby) &
-        .or.(use_Chebychev_solver .and. .not.force_BZ_symm)) then
+    if (use_full_BZ .or. use_Chebychev_solver) then
       nsymat = 1
       lirr = .false.
       write (1337, '(8X,2A,/)') 'Run option <use_full_BZ> or <use_Chebychev_solver>: ', ' overriding NSYMAT, generate full BZ k-mesh'
-    elseif (use_Chebychev_solver .and. force_BZ_symm) then
-      write (1337, '(8X,2A,/)') 'Run option <use_Chebychev_solver> and <force_BZ_symm>: ', ' use symmetries for k-mesh (can be deactivated with <use_full_BZ>)'
-    elseif (use_Chebychev_solver .and. decouple_spin_cheby) then
-      write (1337, '(8X,2A,/)') 'Run option <use_Chebychev_solver> and <decouple_spin_cheby>: ', ' use symmetries for k-mesh (can be deactivated with <use_full_BZ>)'
     end if
 
     ! --> generate BZ k-mesh

@@ -4,7 +4,7 @@
 !> 
 !> Calculate convolution of potential with shapefunction.
 !-------------------------------------------------------------------------------
-      MODULE mod_convol_kkrimp
+      MODULE MOD_CONVOL
       CONTAINS
 !-------------------------------------------------------------------------------
 !> Summary: Driver routine for the convolution module
@@ -191,4 +191,4 @@ C     COPY THE PART INSIDE THE MT SPHERE
       RETURN
 
       END SUBROUTINE
-      END MODULE mod_convol_kkrimp
+      END MODULE MOD_CONVOL

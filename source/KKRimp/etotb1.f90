@@ -4,7 +4,7 @@
 !>
 !> Calculate the total energy of the cluster.
 !-------------------------------------------------------------------------------
-MODULE mod_etotb1_kkrimp
+MODULE MOD_ETOTB1
   CONTAINS
   !-------------------------------------------------------------------------------
   !> Summary: Collects total energy of cluster
@@ -186,4 +186,4 @@ MODULE mod_etotb1_kkrimp
     99021 FORMAT (3X,'   including LDA+U correction :',F15.8)
     99022 FORMAT (3X,70('-'))
   END SUBROUTINE
-END MODULE mod_etotb1_kkrimp
+END MODULE MOD_ETOTB1

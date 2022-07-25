@@ -53,7 +53,7 @@ module read_formatted_shapefun_mod
     integer :: icell
     double precision :: dummy
 
-    read(unit, fmt=*) sfile%ncell
+    read(unit, fmt="(16i5)") sfile%ncell
 
     read(unit, fmt="(4d20.12)") (dummy, icell=1,sfile%ncell)
 
@@ -93,7 +93,7 @@ module read_formatted_shapefun_mod
 
     integer :: ifun, lm
 
-    read(unit, fmt=*) shapef%nfu
+    read(unit, fmt="(16i5)") shapef%nfu
 
     allocate(shapef%llmsp(shapef%nfu), shapef%thetas(inter%meshn,shapef%nfu))
 

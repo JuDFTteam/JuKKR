@@ -6,7 +6,7 @@
 !> appropriate subroutines depending on the type of exchange correlation potential
 !> indicated in the `inputcard`
 !------------------------------------------------------------------------------------
-      MODULE mod_vxcdrv_kkrimp
+      MODULE MOD_VXCDRV
       CONTAINS
 !   call vxcdrv(energyparts%exc,config%kte,config%kxc,nspin,natom,density, & 
 !               vpot_out, cell,config%kshape,gauntshape, shapefun,lmaxd, & 
@@ -165,4 +165,4 @@
 
 
       END SUBROUTINE VXCDRV
-      END MODULE mod_vxcdrv_kkrimp
+      END MODULE MOD_VXCDRV

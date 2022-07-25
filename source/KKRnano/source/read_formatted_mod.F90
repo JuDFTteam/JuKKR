@@ -179,7 +179,7 @@ module read_formatted_mod
     blocks%vins = 0.d0
 
     lm1 = 2
-    do lm = 2, sb%lmpot + 1
+    do lm = 2, sb%lmpot
       if (lm1 /= 1) then
 
         if (sb%isave == 1) then
@@ -192,7 +192,7 @@ module read_formatted_mod
         if (lm1 > 1) then
 
           if (lm1 < 1)        die_here("potential file is not formatted correctly, lm ="+lm1+"out of range! Atom#"-atom_id)
-!         if (lm1 > sb%lmpot) die_here("potential file is not formatted correctly, lm ="+lm1-", but lmpot ="+sb%lmpot+" for Atom#"-atom_id)
+          if (lm1 > sb%lmpot) die_here("potential file is not formatted correctly, lm ="+lm1-", but lmpot ="+sb%lmpot+" for Atom#"-atom_id)
 
           read(unit, fmt="(1p,4d20.13)", iostat=ios) blocks%vins(irmin:sb%irt1p,lm1)
           if (ios /= 0) die_here("failed to read non-spherical potential array vins(:,"-lm1-")! Atom#"-atom_id)

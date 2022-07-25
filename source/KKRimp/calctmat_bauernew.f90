@@ -35,8 +35,6 @@ use mod_interpolpot, only: interpolpot
 use mod_vllmat, only: vllmat
 use mod_vllmatsra, only: vllmatsra
 use mod_rllsll, only: rllsll
-use mod_rll_global_solutions, only: rll_global_solutions
-use mod_sll_global_solutions, only: sll_global_solutions ! MdSD: TEST
 use mod_calccouplingconstants, only: calccouplingdeltat
 use mod_config, only: config_testflag
 use mod_spinorbit_ham, only: spinorbit_ham
@@ -401,12 +399,12 @@ end if
 !#######################################################
 
 if ( .not. config_testflag('nosph') .and. nsra/=5 ) then
-  allocate(tmatsph(nspin*(lmaxatom+1)), stat=istat)
-  if(istat/=0) stop 'Error allocating tmatsph in calctmat_bauernew'
-  tmatsph = czero
-  call calcsph(nsra, cellnew%nrmaxnew, cellnew%nrmaxnew, lmaxatom, nspin/(2-kspinorbit), zatom, eryd, &
-    lmpot, lmsize, cellnew%rmeshnew, vins, cellnew%ncheb, cellnew%npan_tot, cellnew%rpan_intervall, jlk_index, &
-    hlk, jlk, hlk2, jlk2, gmatprefactor, tmatsph, tmattemp, use_sratrick, .true.)
+      allocate(tmatsph(nspin*(lmaxatom+1)), stat=istat)
+      tmatsph = czero
+      if(istat/=0) stop 'Error allocating tmatsph in calctmat_bauernew'
+      call calcsph(nsra, cellnew%nrmaxnew, cellnew%nrmaxnew, lmaxatom, nspin/(2-kspinorbit), zatom, eryd, &
+        lmpot, lmsize, cellnew%rmeshnew, vins, cellnew%ncheb, cellnew%npan_tot, cellnew%rpan_intervall, jlk_index, &
+        hlk, jlk, hlk2, jlk2, gmatprefactor, tmatsph, tmattemp, use_sratrick)
 end if
 
 if ( config_testflag('writesourceterms')) then
@@ -447,15 +445,12 @@ end if
 
 if (.not. allocated(wavefunction%SLL)) then
   allocate (wavefunction%SLL(lmsize2,lmsize,cellnew%nrmaxnew,1),&
-            wavefunction%ULL(lmsize2,lmsize,cellnew%nrmaxnew,1),&
             wavefunction%RLL(lmsize2,lmsize,cellnew%nrmaxnew,1))
-! MdSD: redundant
-!  wavefunction%SLL = czero
-!  wavefunction%RLL = czero
+  wavefunction%SLL = czero
+  wavefunction%RLL = czero
 end if
 
 wavefunction%rll=(0.0D0,0.0D0)
-wavefunction%ull=(0.0D0,0.0D0)
 wavefunction%sll=(0.0D0,0.0D0)
 
 ! might be deleted in the future
@@ -477,28 +472,18 @@ if (nsra==4) then
   jlk2= jlk2 / sqrt( (1.0D0,0.0D0)+(eryd)/cvlight**2)
 end if
 
+
 !#######################################################! 
 ! calculate the right-hand side solution of the single-site wave functions
 !#######################################################! 
 tmat%tmat = czero
-if ( config_testflag('use_rllsll') ) then
-  call rllsll(cellnew%rpan_intervall, cellnew%rmeshnew, Vpotll, wavefunction%RLL(:,:,:,1), wavefunction%SLL(:,:,:,1), &
-    tmat%tmat, cellnew%ncheb, cellnew%npan_tot, lmsize, lmsize2, nsra*(1+kspinorbit)*(lmaxatom+1), cellnew%nrmaxnew, nsra, &
-    jlk_index, hlk, jlk, hlk2, jlk2, GMATPREFACTOR, '1', '1', '0', use_sratrick, tmattemp)
-  ! MdSD: if using the old rllsll this is needed for rhooutnew
-  wavefunction%ULL(:,:,:,1)=wavefunction%RLL(:,:,:,1)
-else
-  call rll_global_solutions(cellnew%rpan_intervall, cellnew%rmeshnew, Vpotll, wavefunction%ULL(:,:,:,1), wavefunction%RLL(:,:,:,1), &
-    tmat%tmat, cellnew%ncheb, cellnew%npan_tot, lmsize, lmsize2, nsra*(1+kspinorbit)*(lmaxatom+1), cellnew%nrmaxnew, nsra, &
-    jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, '1', use_sratrick, tmattemp)
-  call sll_global_solutions(cellnew%rpan_intervall, cellnew%rmeshnew, Vpotll, wavefunction%SLL(:,:,:,1), &
-    cellnew%ncheb, cellnew%npan_tot, lmsize, lmsize2, nsra*(1+kspinorbit)*(lmaxatom+1), cellnew%nrmaxnew, nsra, &
-    jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, '1', use_sratrick)
-end if
+call rllsll(cellnew%rpan_intervall, cellnew%rmeshnew, Vpotll, wavefunction%RLL(:,:,:,1), wavefunction%SLL(:,:,:,1), &
+  tmat%tmat, cellnew%ncheb, cellnew%npan_tot, lmsize, lmsize2, nsra*(1+kspinorbit)*(lmaxatom+1), cellnew%nrmaxnew, nsra, &
+  jlk_index, hlk, jlk, hlk2, jlk2, GMATPREFACTOR, '1', '1', '0', use_sratrick, tmattemp)
+
 if (nsra==2) then ! for nummerical reasons a factor of cvlight has been added to the equations
                   ! which needs to be removed now
   wavefunction%RLL(lmsize+1:,:,:,1)=wavefunction%RLL(lmsize+1:,:,:,1)/cvlight
-  wavefunction%ULL(lmsize+1:,:,:,1)=wavefunction%ULL(lmsize+1:,:,:,1)/cvlight
   wavefunction%SLL(lmsize+1:,:,:,1)=wavefunction%SLL(lmsize+1:,:,:,1)/cvlight
 end if
 
@@ -511,8 +496,6 @@ if (nsra==3) then
   do ir=1,cellnew%nrmaxnew
       call SINGLE_TRANSFORM(lmaxatom,(lmaxatom+1)**2,wavefunction%RLL(1:lmsize,1:lmsize,ir,1),'REL>RLM')
       call SINGLE_TRANSFORM(lmaxatom,(lmaxatom+1)**2,wavefunction%RLL(lmsize+1:2*lmsize,1:lmsize,ir,1),'REL>RLM')
-      call SINGLE_TRANSFORM(lmaxatom,(lmaxatom+1)**2,wavefunction%ULL(1:lmsize,1:lmsize,ir,1),'REL>RLM')
-      call SINGLE_TRANSFORM(lmaxatom,(lmaxatom+1)**2,wavefunction%ULL(lmsize+1:2*lmsize,1:lmsize,ir,1),'REL>RLM')
       call SINGLE_TRANSFORM(lmaxatom,(lmaxatom+1)**2,wavefunction%SLL(1:lmsize,1:lmsize,ir,1),'REL>RLM')
       call SINGLE_TRANSFORM(lmaxatom,(lmaxatom+1)**2,wavefunction%SLL(lmsize+1:2*lmsize,1:lmsize,ir,1),'REL>RLM')
   end do
@@ -522,7 +505,6 @@ end if
 
 if ( config_testflag('conjgtest')) then
   call  conjugate4(wavefunction%RLL)
-  call  conjugate4(wavefunction%ULL)
   call  conjugate4(wavefunction%SLL)
 end if
 
@@ -530,9 +512,9 @@ call timing_stop('---rll call---')
 
 if ( config_testflag('kappamutest')) then
   call RLL_TRANSFORM(wavefunction%RLL(:,:,:,1),lmaxatom,'REL>RLM')
-  call RLL_TRANSFORM(wavefunction%ULL(:,:,:,1),lmaxatom,'REL>RLM')
   call RLL_TRANSFORM(wavefunction%SLL(:,:,:,1),lmaxatom,'REL>RLM')
 end if
+
 
 !#######################################################
 ! In case the option 'nosph' is not set. The output t-matrix
@@ -545,33 +527,6 @@ if ( .not. config_testflag('nosph') .or. nsra==5 ) then
   end do
 end if
 
-if (config_testflag('write_tmat_all')) then
-  write (filename, '(A,I0.3,A,I0.3,A)') 'tmat_atom_', iatom, '_energ_', ie, '.dat'
-  open (888888, file=trim(filename), form='formatted')
-  write (888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: lmmaxd=', lmsize, ' lmmaxd=', lmsize, ' ; ERYD=', eryd
-  write (888888, '(2ES25.16)') tmat%tmat(:, :)
-  close (888888)
-end if
-if ( config_testflag('tmatdebug') ) then
-  do lm1=1,lmsize
-    do lm2=1,lmsize
-      write(4000,'(50000E25.14)') wavefunction%RLL(lm2,lm1,:,1)
-      write(4001,'(50000E25.14)') wavefunction%SLL(lm2,lm1,:,1)
-    end do
-  end do
-end if
-
-if (wavefunction%nvec==2) then
-  if ( config_testflag('tmatdebug') ) then
-    do lm1=1,lmsize
-      do lm2=lmsize+1,2*lmsize
-        write(4010,'(50000E25.14)') wavefunction%SLL(lm2,lm1,:,1)
-        write(4011,'(50000E25.14)') wavefunction%RLL(lm2,lm1,:,1)
-      end do
-    end do
-  end if
-end if
-
 !#######################################################
 ! If spin-orbit coupling is used the left solution of the
 ! Hamiltonian is non-trivial and needs to be calculated explicitly
@@ -581,9 +536,8 @@ if ((kspinorbit==1).and.calcleft) then
   if (.not. allocated(wavefunction%SLLleft)) then
     allocate (wavefunction%SLLleft(lmsize2,lmsize,cellnew%nrmaxnew,1),&
               wavefunction%RLLleft(lmsize2,lmsize,cellnew%nrmaxnew,1))
-  ! MdSD: redundant
-  !  wavefunction%SLLleft = czero
-  !  wavefunction%RLLleft = czero
+    wavefunction%SLLleft = czero
+    wavefunction%RLLleft = czero
   end if
 
   wavefunction%SLLleft=(0.0D0,0.0D0)
@@ -596,46 +550,28 @@ if ((kspinorbit==1).and.calcleft) then
   hlk2 = czero
   call rllsllsourceterms(nsra, wavefunction%nvec, eryd, cellnew%rmeshnew, cellnew%nrmaxnew, cellnew%nrmaxnew, &
     lmaxatom, lmsize, use_fullgmat, jlk_index, hlk, jlk, hlk2, jlk2, GMATPREFACTOR)
-
-  ! MdSD: I put this here just in case it's needed
-  ! if (nsra==4) then
-  !   hlk = hlk  / sqrt( (1.0D0,0.0D0)+(eryd)/cvlight**2)
-  !   jlk = jlk  / sqrt( (1.0D0,0.0D0)+(eryd)/cvlight**2)
-  !   hlk2= hlk2 / sqrt( (1.0D0,0.0D0)+(eryd)/cvlight**2)
-  !   jlk2= jlk2 / sqrt( (1.0D0,0.0D0)+(eryd)/cvlight**2)
-  ! end if
+   
   
   if ( .not. config_testflag('nosph') .and. nsra/=5 ) then
-    call calcsph(nsra, cellnew%nrmaxnew, cellnew%nrmaxnew, lmaxatom, nspin/(2-kspinorbit), zatom, eryd, &
-      lmpot, lmsize, cellnew%rmeshnew, vins, cellnew%ncheb, cellnew%npan_tot, cellnew%rpan_intervall, jlk_index, &
-      hlk2, jlk2, hlk, jlk, gmatprefactor, tmatsph, tmattemp, use_sratrick, .true.)
+      call calcsph(nsra, cellnew%nrmaxnew, cellnew%nrmaxnew, lmaxatom, nspin/(2-kspinorbit), zatom, eryd, &
+        lmpot, lmsize, cellnew%rmeshnew, vins, cellnew%ncheb, cellnew%npan_tot, cellnew%rpan_intervall, jlk_index, &
+        hlk2, jlk2, hlk, jlk, gmatprefactor, tmatsph, tmattemp, use_sratrick)
   end if
 
-  if ( config_testflag('use_rllsll') ) then
-    call rllsll(cellnew%rpan_intervall, cellnew%rmeshnew, Vpotll2, wavefunction%RLLleft(:,:,:,1), wavefunction%SLLleft(:,:,:,1), &
-      tmattemp, cellnew%ncheb, cellnew%npan_tot, lmsize, lmsize2, nsra*(1+kspinorbit)*(lmaxatom+1), cellnew%nrmaxnew, nsra, &
-      ! ------------>    watch out here changed the order for left and right solution <-----------
-      jlk_index, hlk2, jlk2, hlk, jlk, GMATPREFACTOR, '1', '1', '0', use_sratrick, tmattemp)
-  else
-    ! MdSD: here SLLleft is being used to save memory, as ULLleft is never needed
-    call rll_global_solutions(cellnew%rpan_intervall, cellnew%rmeshnew, Vpotll2, wavefunction%SLLleft(:,:,:,1), wavefunction%RLLleft(:,:,:,1), &
-      tmattemp, cellnew%ncheb, cellnew%npan_tot, lmsize, lmsize2, nsra*(1+kspinorbit)*(lmaxatom+1), cellnew%nrmaxnew, nsra, &
-      jlk_index, hlk2, jlk2, hlk, jlk, gmatprefactor, '1', use_sratrick, tmattemp)
-    wavefunction%SLLleft=(0.0D0,0.0D0)
-    call sll_global_solutions(cellnew%rpan_intervall, cellnew%rmeshnew, Vpotll2, wavefunction%SLLleft(:,:,:,1), &
-      cellnew%ncheb, cellnew%npan_tot, lmsize, lmsize2, nsra*(1+kspinorbit)*(lmaxatom+1), cellnew%nrmaxnew, nsra, &
-      jlk_index, hlk2, jlk2, hlk, jlk, gmatprefactor, '1', use_sratrick)
-  end if
+  call rllsll(cellnew%rpan_intervall, cellnew%rmeshnew, Vpotll2, wavefunction%RLLleft(:,:,:,1), wavefunction%SLLleft(:,:,:,1), &
+    tmattemp, cellnew%ncheb, cellnew%npan_tot, lmsize, lmsize2, nsra*(1+kspinorbit)*(lmaxatom+1), cellnew%nrmaxnew, nsra, &
+    ! ------------>    watch out here changed the order for left and right solution <-----------
+    jlk_index, hlk2, jlk2, hlk, jlk, GMATPREFACTOR, '1', '1', '0', use_sratrick, tmattemp)
   if (nsra==2) then
-    wavefunction%RLLleft(lmsize+1:,:,:,1) = wavefunction%RLLleft(lmsize+1:,:,:,1)/cvlight
-    wavefunction%SLLleft(lmsize+1:,:,:,1) = wavefunction%SLLleft(lmsize+1:,:,:,1)/cvlight
+    wavefunction%RLLleft(lmsize+1:,:,:,1)=wavefunction%RLLleft(lmsize+1:,:,:,1)/(cvlight)
+    wavefunction%SLLleft(lmsize+1:,:,:,1)=wavefunction%SLLleft(lmsize+1:,:,:,1)/(cvlight)
   end if
 
   if ( config_testflag('tmatdebug') ) then
     do lm1=1,lmsize
       do lm2=1,lmsize
-        write(4100,'(50000E25.14)') wavefunction%RLLleft(lm2,lm1,:,1)
-        write(4101,'(50000E25.14)') wavefunction%SLLleft(lm2,lm1,:,1)
+        write(4100,'(50000E25.14)') wavefunction%rllleft(lm2,lm1,:,1)
+        write(4101,'(50000E25.14)') wavefunction%sllleft(lm2,lm1,:,1)
       end do
     end do
   end if
@@ -644,8 +580,8 @@ if ((kspinorbit==1).and.calcleft) then
     if ( config_testflag('tmatdebug') ) then
       do lm1=1,lmsize
         do lm2=lmsize+1,2*lmsize
-          write(4110,'(50000E25.14)') wavefunction%RLLleft(lm2,lm1,:,1)
-          write(4111,'(50000E25.14)') wavefunction%SLLleft(lm2,lm1,:,1)
+          write(4110,'(50000E25.14)') wavefunction%rllleft(lm2,lm1,:,1)
+          write(4111,'(50000E25.14)') wavefunction%sllleft(lm2,lm1,:,1)
         end do
       end do
     end if
@@ -653,6 +589,25 @@ if ((kspinorbit==1).and.calcleft) then
 
 end if !(kspinorbit==1)
 
+if ( config_testflag('tmatdebug') ) then
+  do lm1=1,lmsize
+    do lm2=1,lmsize
+      write(4000,'(50000E25.14)') wavefunction%rll(lm2,lm1,:,1)
+      write(4001,'(50000E25.14)') wavefunction%sll(lm2,lm1,:,1)
+    end do
+  end do
+end if
+
+if (wavefunction%nvec==2) then
+  if ( config_testflag('tmatdebug') ) then
+    do lm1=1,lmsize
+      do lm2=lmsize+1,2*lmsize
+        write(4010,'(50000E25.14)') wavefunction%rll(lm2,lm1,:,1)
+        write(4011,'(50000E25.14)') wavefunction%sll(lm2,lm1,:,1)
+      end do
+    end do
+  end if
+end if
 
 !#######################################################
 ! calculation of Jij's by a Lichtenstein-like approach
@@ -664,7 +619,7 @@ if (.not. allocated (tmat%deltaT_Jij)) then
 end if
 
 if (config%calcJijmat==1) then
-  call calccouplingdeltat(wavefunction,tmat%deltaT_Jij,cellnew,gauntcoeff(lmaxatom),theta,phi,lmmax,lmsize,lmaxatom,lmpot,cellnew%nrmaxnew)
+call  calccouplingdeltat(wavefunction,tmat%deltaT_Jij,cellnew,gauntcoeff(lmaxatom),theta,phi,lmmax,lmsize,lmaxatom,lmpot,cellnew%nrmaxnew)
 end if
 
 !#######################################################
@@ -703,7 +658,7 @@ if ( .not. config_testflag('nosph') .and. nsra/=5 ) then
 end if
   
 
-end subroutine calctmat_bauernew
 
+end subroutine calctmat_bauernew
 
 end module mod_calctmat_bauernew

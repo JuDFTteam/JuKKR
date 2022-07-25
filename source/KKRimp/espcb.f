@@ -5,7 +5,7 @@
   !> Calculate the core contribution of the single particle energies
   !> l and spin dependent.
   !-------------------------------------------------------------------------------
-      MODULE mod_espcb_kkrimp
+      MODULE MOD_ESPCB
         CONTAINS
   !-------------------------------------------------------------------------------
   !> Summary: Collects single-particle core energy
@@ -95,4 +95,4 @@ c
    30   CONTINUE
    40 CONTINUE
       END SUBROUTINE
-      END MODULE mod_espcb_kkrimp
+      END MODULE MOD_ESPCB

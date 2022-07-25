@@ -45,7 +45,7 @@ contains
       dirac_scale_SpeefOfLight, disable_charge_neutrality, disable_print_serialnumber, modify_soc_Dirac, relax_SpinAngle_Dirac, search_Efermi, &
     set_kmesh_large, stop_1b, stop_1c, use_BdG, use_Chebychev_solver, use_cond_LB, use_decimation, use_lloyd, use_qdos, &
     use_rigid_Efermi, use_semicore, use_virtual_atoms, write_green_host, write_green_imp, write_kkrimp_input, &
-    write_pkkr_input, write_pkkr_operators, use_ldau, set_cheby_nospeedup, decouple_spin_cheby, write_tb_coupling, set_cheby_nosoc
+    write_pkkr_input, write_pkkr_operators, use_ldau, set_cheby_nospeedup, decouple_spins_cheby, write_tb_coupling, set_cheby_nosoc
     use mod_constants, only: cvlight, ryd
     use mod_wunfiles, only: t_params
     use memoryhandling, only: allocate_semi_inf_host, allocate_magnetization, allocate_cell, allocate_cpa, allocate_soc, allocate_ldau
@@ -896,9 +896,9 @@ contains
 
     if (use_Chebychev_solver) korbit = 1
 
-    if (use_Chebychev_solver .and. decouple_spin_cheby) then
-      write (*, '(A)') 'Warning: detected test option <decouple_spin_cheby>: use spin-decoupled radial equations with new solver'
-      write (1337, *)  'Warning: detected test option <decouple_spin_cheby>: reset KORBIT to zero but use NEWSOSOL for spin-decoupled matrices with explicit spin-loop'
+    if (decouple_spins_cheby) then
+      write (*, '(A)') 'Warning: detected test option <decouple_spins_cheby>: use spin-decoupled radial equations with new solver'
+      write (1337, *)  'Warning: detected test option <decouple_spins_cheby>: reset KORBIT to zero but use NEWSOSOL for spin-decoupled matrices with explicit spin-loop'
       korbit = 0
     end if
 
@@ -1278,7 +1278,7 @@ contains
     ! End of allocation of SOC arrays
     !--------------------------------------------------------------------------------
     if (use_Chebychev_solver) then      ! Spin-orbit
-      if (use_Chebychev_solver .and. (nspin/=2) .and. .not.decouple_spin_cheby) stop ' set NSPIN = 2 for SOC solver in inputcard'
+      if (use_Chebychev_solver .and. (nspin/=2) .and. .not.decouple_spins_cheby) stop ' set NSPIN = 2 for SOC solver in inputcard'
       npan_log = 30
       npan_eq = 30
       ncheb = 10
@@ -1306,7 +1306,7 @@ contains
     end if
 
     call ioinput('<SOCSCL>        ', uio, 1, 7, ier)
-    if (ier==0 .and. .not.(set_cheby_nosoc .or. decouple_spin_cheby)) then
+    if (ier==0 .and. .not.(set_cheby_nosoc .or. decouple_spins_cheby)) then
       write (111, '(A10)') '<SOCSCL>  '
       do i = 1, natyp
         call ioinput('<SOCSCL>        ', uio, i, 7, ier)
@@ -1320,8 +1320,8 @@ contains
       ! !Bernd - old way
       ! write(111,FMT='(A10,50E10.2)') '<SOCSCL>= ',(SOCSCALE(I1),I1=1,NATYP)
       ! !Bernd - old way
-    elseif (set_cheby_nosoc .or. decouple_spin_cheby) then
-      write(*,*) 'Skipped reading <SOCSCL> because <set_cheby_nosoc>= T or <decouple_spin_cheby>= T. Automatically use <SOCSCL>=0.'
+    elseif (set_cheby_nosoc .or. decouple_spins_cheby) then
+      write(*,*) 'Skipped reading <SOCSCL> because <set_cheby_nosoc>= T or <decouple_spins_cheby>= T. Automatically use <SOCSCL>=0.'
       socscale(:) = 0.0_dp
       write (111, fmt='(A18,50E10.2)') '<SOCSCL>= ', (socscale(i1), i1=1, natyp)
     else
@@ -2845,7 +2845,7 @@ contains
     if (invmod==3) then
       write (111, *) 'Godfrin inversion scheme parameters'
       write (1337, *) 'Godfrin inversion scheme parameters'
-      ! MdSD: write couplings.dat file
+
       write_tb_coupling=.true.
 
       t_godfrin%na = naez
@@ -2854,49 +2854,13 @@ contains
       read (unit=uio, fmt=*, iostat=ier) t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
       if (ier/=0) stop 'Error reading `GODFRIN` (nb, ldiag, lper, lpardiso): check your inputcard'
 
-      ! MdSD: nprincd is not used by godfrin
-      if (nprincd /= 1) then
-        write (111, fmt='(A)') 'rinput13: Warning! setting nprincd=1'
-        write (1337, fmt='(A)') 'rinput13: Warning! setting nprincd=1'
-        nprincd = 1
-      end if
-
-      ! MdSD: Lloyd's formula needs the full matrix inverse
-      if (use_lloyd .and. t_godfrin%ldiag) then
-        write (111, fmt='(A)') 'rinput13: Warning! use_lloyd=T, setting ldiag=F'
-        write (1337, fmt='(A)') 'rinput13: Warning! use_lloyd=T, setting ldiag=F'
-        t_godfrin%ldiag = .false.
-      end if
-
-      ! MdSD: for Jij's or connection to KKRimp also the full matrix inverse is needed
-      if (icc/=0 .and. t_godfrin%ldiag) then
-        write (111, fmt='(A)') 'rinput13: Warning! ICC/=0, setting ldiag=F'
-        write (1337, fmt='(A)') 'rinput13: Warning! ICC/=0, setting ldiag=F'
-        t_godfrin%ldiag = .false.
-      end if
-
-      ! MdSD: in 3D mode the sparse matrix has additional corner blocks
-      if (linterface) then ! 2D
-        if (t_godfrin%lper) then
-          write (111, fmt='(A)') 'rinput13: Warning! linterface=T, setting lper=F'
-          write (1337, fmt='(A)') 'rinput13: Warning! linterface=T, setting lper=F'
-          t_godfrin%lper = .false.
-        end if
-      else ! 3D
-        if (.not.t_godfrin%lper) then
-          write (111, fmt='(A)') 'rinput13: Warning! linterface=F, setting lper=T'
-          write (1337, fmt='(A)') 'rinput13: Warning! linterface=F, setting lper=T'
-          t_godfrin%lper = .true.
-        end if
-      end if
-
       call ioinput('GODFRIN         ', uio, 4, 7, ier)
       allocate (t_godfrin%bdims(t_godfrin%nb))
       read (unit=uio, fmt=*, iostat=ier) t_godfrin%bdims(:)
-      if (ier/=0) stop 'Error reading `GODFRIN (bdims)`: check your inputcard'
+      if (ier/=0) stop 'Error reading `GIDFRIN (bdims)`: check your inputcard'
 
       ! Inconsistency check
-      if (t_godfrin%na/=sum(t_godfrin%bdims)) stop 'godfrin: na/=sum(bdims)'
+      if (t_godfrin%na/=sum(t_godfrin%bdims)) stop 'godfrin: na /= sum(bdims)'
 
 #ifndef __INTEL_COMPILER
       ! can only use pardiso solver with intel mkl at the moment, probably only
@@ -2904,23 +2868,21 @@ contains
       if (t_godfrin%lpardiso) stop 'No pardiso library available. Try the intel compiler or fix the linking issues'
 #endif
 
-      write (111, '("na=",i8,"  nb=",i8,"  ldiag=",l2,"  lper=",l2,"  lpardiso=",l2)') t_godfrin%na, t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
-      write (1337, '("na=",i8,"  nb=",i8,"  ldiag=",l2,"  lper=",l2,"  lpardiso=",l2)') t_godfrin%na, t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
-      write (111, '("bdims(1:nb)=",100i8)') t_godfrin%bdims(:)
-      write (1337, '("bdims(1:nb)=",100i8)') t_godfrin%bdims(:)
+      write (111, fmt='(A100)') 'na, nb, ldiag, lper, lpardiso; then bdims(1:nb)'
+      write (1337, fmt='(A100)') 'na, nb, ldiag, lper, lpardiso; then bdims(1:nb)'
+      write (111, *) t_godfrin%na, t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
+      write (1337, *) t_godfrin%na, t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
+      write (111, fmt='(50(I0," "))') t_godfrin%bdims(:)
+      write (1337, fmt='(50(I0," "))') t_godfrin%bdims(:)
 
       ! multiply blocks by angular momentum dimension
-      ! MdSD: this has to happen after checking the correctness of the blocking
-      ! t_godfrin%na = t_godfrin%na*lmmaxd
-      ! t_godfrin%bdims = t_godfrin%bdims*lmmaxd
-      if (t_godfrin%nb == 1) then
-        write (111, fmt='(A)') 'rinput13: Warning! nb=1, setting invmod=0'
-        write (1337, fmt='(A)') 'rinput13: Warning! nb=1, setting invmod=0'
-        invmod = 0
-      else if (t_godfrin%nb == 2) then
-        write (111, fmt='(A)') 'rinput13: Warning! nb=2, setting lper=F'
-        write (1337, fmt='(A)') 'rinput13: Warning! nb=2, setting lper=F'
-        t_godfrin%lper = .false.
+      t_godfrin%na = t_godfrin%na*lmmaxd
+      t_godfrin%bdims = t_godfrin%bdims*lmmaxd
+
+      if (icc/=0 .and. t_godfrin%ldiag) then
+        t_godfrin%ldiag = .false.
+        write (111, fmt='(A100)') 'rinput13: Warning! ICC/=0. Setting ldiag = T'
+        write (1337, fmt='(A100)') 'rinput13: Warning! ICC/=0. Setting ldiag = T'
       end if
 
     end if

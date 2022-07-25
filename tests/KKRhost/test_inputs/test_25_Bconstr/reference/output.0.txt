@@ -1,12 +1,12 @@
-# serial: JuKKR_v3.1-1746-g74fd0769_intel_20210928150011
+# serial: JuKKR_v3.1-1785-g693046e_intel_20210809231657
      Screened Korringa-Kohn-Rostoker Electronic Structure Code
                       for Bulk and Interfaces
                     Juelich-Munich 2001 - 2021
 
-  Code version: v3.1-1746-g74fd0769
+  Code version: v3.1-1785-g693046e
   Compile options: intel mpi 
-  serial number for files: JuKKR_v3.1-1746-g74fd0769_intel_20210928150011
- Number of MPI ranks used:    8
+  serial number for files: JuKKR_v3.1-1785-g693046e_intel_20210809231657
+ Number of MPI ranks used:   16
 
 *******************************************************************************
 
@@ -17,7 +17,7 @@
                   <calc_GF_Efermi>=  F   calculation of cluster Green function at E Fermi (former: 'GF-EF')
              <set_cheby_nospeedup>=  F   always calculate irregular solution in Chebychev solver (even if not needed) (former: 'norllsll')
                  <set_cheby_nosoc>=  F   set SOC strength to 0 for all atoms (former: 'NOSOC')
-             <decouple_spin_cheby>=  F   decouple spin matrices in Chebychev solver neglecting SOC and for collinear calculations only
+            <decouple_spins_cheby>=  F   decouple spin matrices in Chebychev solver neglecting SOC and for collinear calculations only
       <calc_complex_bandstructure>=  F   complex band structure (former: 'COMPLEX')
          <calc_exchange_couplings>=  F   calculate magnetic exchange coupling parameters (former: 'XCPL')
   <calc_exchange_couplings_energy>=  F   write energy-resolved Jij-files also if npol/=0 (former: 'Jijenerg')
@@ -180,7 +180,7 @@ SITE                BASIS VECTORS                 THETA   PHI CPA OCC KAOEZ
      20
 ------+------------------------------------------------------------------------
       STRMIX        FCM       QBOUND
-    0.050000   20.000000    0.000001
+    0.050000   20.000000    0.000000
 -----------+-----------+-----------+-------------------------------------------
       BRYMIX
     0.050000
@@ -188,7 +188,7 @@ SITE                BASIS VECTORS                 THETA   PHI CPA OCC KAOEZ
  external magnetic hfield     :         0.0000
  VCONST                       :       0.000000
  mixing factor used           :       0.050000
- convergence quality required :       1.00D-06
+ convergence quality required :       5.00D-08
  make use of CPA algorithm    :             NO
 
                                  check of dimension-data consistency
@@ -315,15 +315,15 @@ CLSGEN_TB: Atom    2 Refpot    1 Rmtref 2.3200000 Vref 8.0000000 TB-cluster    1
  <#Fe26 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
  <#Fe26 POTENTIAL SPIN DOWN            exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
  <#Fe26 POTENTIAL SPIN UP              exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
-Doing calculation with potential: MD5 (potential) = 0b31da52f00651aea44f1d4df0587d1d
+Doing calculation with potential: MD5 (potential) = 8550c22e5ff21ddd64e6e91faf087b93
 Doing calculation with shapefun: MD5 (shapefun) = ce34783ef30065813552ba8e55df7018
  
 ===============================================================================
                     EPATHTB: generates a complex E contour
 ===============================================================================
  
-     E min =    -0.500000 (Ry)        Fermi energy =     0.701949 (Ry)
-     E max =     0.701949 (Ry)        Temperature  =   502.780000 (K )
+     E min =    -0.500000 (Ry)        Fermi energy =     0.701985 (Ry)
+     E max =     0.701985 (Ry)        Temperature  =   502.780000 (K )
      --------------------------------------------------------------
      GF integration rectangular contour ( ImE > 0 )
      Number of energy points :  32             poles =10
@@ -402,8 +402,8 @@ Doing calculation with shapefun: MD5 (shapefun) = ce34783ef30065813552ba8e55df70
    input constraining fields
    ############################################################
    iatom      Bx              By              Bz        (in Ry)
-     1  7.76193569E-03 -3.92546321E-09 -7.76193569E-03
-     2 -7.76193569E-03  3.92546324E-09 -7.76193569E-03
+     1  7.77326263E-03  7.38931126E-13 -7.77326263E-03
+     2 -7.77326263E-03 -7.38929243E-13 -7.77326263E-03
       I1  THETA[deg]   PHI[deg]    FIXDIR[boolean]
        1   45.000000    0.000000      T
        2   45.000000  180.000000      T
@@ -411,11 +411,11 @@ Doing calculation with shapefun: MD5 (shapefun) = ce34783ef30065813552ba8e55df70
                                < KKR0 finished >
 ===============================================================================
 
- create_newcomms_group_ie input:           8           8           1
+ create_newcomms_group_ie input:          16          16           1
 ==================================================
-    MPI parallelization: use    8 ranks
-    create processor array of size (nat x ne)   1 x   8
-    nranks_at:     8, nranks_ie:    1
+    MPI parallelization: use   16 ranks
+    create processor array of size (nat x ne)   1 x  16
+    nranks_at:    16, nranks_ie:    1
                 N_E
          <--------------->
        ^ ( | | | | | | | )

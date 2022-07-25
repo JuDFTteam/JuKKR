@@ -32,7 +32,7 @@ module fillKKRMatrix_mod
     type(SparseMatrixDescription), intent(out) :: bsr_X
     integer(kind=1), intent(in) :: lmax_a(:,:) !< lmax of each interaction dim(naez_trc,num_local_atoms), -1: truncated
 
-    integer, parameter :: GROUPING = -1 ! -1:never, 0:auto, 1:always
+    integer, parameter :: GROUPING = 0 ! -1:never, 0:auto, 1:always
     integer :: iRow, jCol, Xind, nnzb, group
  
     nnzb = count(lmax_a >= 0) ! number of non-zero blocks in X
@@ -46,7 +46,7 @@ module fillKKRMatrix_mod
     endif
 
     if (group > 0) then
-      !write(*,*) "we are in group > 0"
+
       call create(bsr_X, nRows=size(lmax_a, 1), nnzb=size(lmax_a, 1), nCols=1)
 
       ! generate BSR descriptor of a flat structure, fuse RHS atoms into rectangular blocks

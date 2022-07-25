@@ -2,51 +2,51 @@ module mod_preconditioning
   contains
    subroutine preconditioning_start(my_rank,mpi_size,ez, wez, ielast, intercell_ach, alat,vmtzero,lattice_relax,gmatbulk) 
 #ifdef CPP_MPI
-    use mpi
+  use mpi
 #endif
-    use nrtype
-    use mod_dysonvirtatom, only: dysonvirtatom
-    use mod_read_atominfo
-    use mod_config, only: config_testflag,config_runflag
-    use mod_log, only: log_write
-    use mod_mpienergy, only: mpienergy_distribute
-    use type_gmatbulk
-    use mod_types, only: t_inc
+     use nrtype
+     use mod_dysonvirtatom, only: dysonvirtatom
+     use mod_read_atominfo
+     use mod_config, only: config_testflag,config_runflag
+     use mod_log, only: log_write
+     use mod_mpienergy, only: mpienergy_distribute
+     use type_gmatbulk
+     use mod_types, only: t_inc
 
-    implicit none
+     implicit none
 !interface
-    double complex,allocatable,intent(out)  :: ez(:)
-    double complex,allocatable,intent(out)  :: wez(:)
-    integer,intent(out)                     :: ielast
-    real(kind=DP),allocatable,intent(out)   :: intercell_ach(:,:)   ! intercell potential
-    real(kind=DP),intent(out)               :: alat
-    real(kind=dp)                           :: vmtzero(2)  
-    integer                                 :: lattice_relax
-    type(gmatbulk_type)                     :: gmatbulk
+     double complex,allocatable,intent(out)  :: ez(:)
+     double complex,allocatable,intent(out)  :: wez(:)
+     integer,intent(out)                     :: ielast
+     real(kind=DP),allocatable,intent(out)   :: intercell_ach(:,:)   ! intercell potential
+                                               !(lmpotd,ntotatom),achnew(lmpotd,ntotatom)
+     real(kind=DP),intent(out)               :: alat
+     real(kind=dp)                           :: vmtzero(2)  
+     integer                                 :: lattice_relax
+     type(gmatbulk_type)                     :: gmatbulk
 !local
-    integer                     :: natom                ! number of impurity atoms
-    integer                     :: ntotatom             ! number of imp atoms+killatoms
-    integer,allocatable         :: lmaxatom(:)          ! lmax for all atoms
-    integer,allocatable         :: isvatom(:)           ! 1=vatom (delta t=0), 0=no vatom
-    integer,allocatable         :: killatom(:)          ! 1=atom will be removed in a dyson step
-    integer                     :: KGREFSOC             ! =1 if SOC for the GREF 
-    integer                     :: NSOC                 ! =2 if SOC for the GREF else: =1 
 
-    integer                     :: ie
-    integer                     :: natomimpd,lmsizehost
-    double complex,allocatable  :: gmathost(:,:)
-    double complex,allocatable  :: gmathostnew(:,:)
-    integer                     :: recl1,recl2,nspin,ispin,iatom
-    double complex,allocatable  ::  tmat(:,:,:,:,:)
-    integer                     :: nlmhostnew
-    real(kind=dp),allocatable   :: RIMPATOM(:,:),zatom(:)
-    integer                     :: lmaxd
-    character (len=15)          :: precision_mode
+     integer                     :: natom                ! number of impurity atoms
+     integer                     :: ntotatom             ! number of imp atoms+killatoms
+     integer,allocatable         :: lmaxatom(:)          ! lmax for all atoms
+     integer,allocatable         :: isvatom(:)           ! 1=vatom (delta t=0), 0=no vatom
+     integer,allocatable         :: killatom(:)          ! 1=atom will be removed in a dyson step
+     integer                     :: KGREFSOC             ! =1 if SOC for the GREF 
+     integer                     :: NSOC                 ! =2 if SOC for the GREF else: =1 
+
+     integer                     :: ie
+     integer                     :: natomimpd,lmsizehost
+     double complex,allocatable  :: gmathost(:,:)
+     double complex,allocatable  :: gmathostnew(:,:)
+     integer                     :: recl1,recl2,nspin,ispin,iatom
+     double complex,allocatable  ::  tmat(:,:,:,:,:)
+     integer                     :: nlmhostnew
+     real(kind=dp),allocatable   :: RIMPATOM(:,:),zatom(:)
+     integer                      :: lmaxd
 !mpi
-    integer, allocatable        :: mpi_iebounds(:,:)
-    integer                     :: my_rank
-    integer                     :: mpi_size,ierror
-
+      integer,allocatable                      :: mpi_iebounds(:,:)
+      integer                                  :: my_rank
+      integer                                  :: mpi_size,ierror
 
 call log_write('>>>>>>>>>>>> preconditioning read_atominfo >>>>>>>>>>>>>>>>>>>>>')
 call read_atominfo('total','kkrflex_atominfo',natom,ntotatom,RIMPATOM,&
@@ -170,7 +170,6 @@ allocate(gmathostnew(nlmhostnew,nlmhostnew))
 ! ###########################################
 
 recl1=wlength*2*natomimpd*lmsizehost*natomimpd*lmsizehost
-if (config_testflag('read_doubleprecision')) recl1 = recl1 * 2
 recl2=wlength*4*nlmhostnew*nlmhostnew
 open (88,access='direct',recl=recl1,file='kkrflex_green',form='unformatted')
 if (lattice_relax==0) then
@@ -208,14 +207,7 @@ do ie=mpi_iebounds(1,my_rank),mpi_iebounds(2,my_rank)
   do ispin=1,nspin-KGREFSOC
     if (t_inc%i_write>0) write(1337,*) 'proc = ',my_rank,' IE = ',ie,' ispin= ',ispin
 
-    if ( config_testflag('read_doubleprecision') ) then
-      if (t_inc%i_write>0) write(*,*) 'ATTENTION: read kkrflex_green in double precision'
-      precision_mode = 'doubleprecision'
-    else
-      precision_mode = 'singleprecision'
-    end if
-
-    call preconditioning_readgreenfn(ie,ispin,ielast,lmsizehost,ntotatom,gmathost,precision_mode)
+    call preconditioning_readgreenfn(ie,ispin,ielast,lmsizehost,ntotatom,gmathost,'singleprecision')
 !                                      in    in         in        in     out
     if(config_testflag('gtest')) write(10000+my_rank,'(832E25.14)') gmathost
 
@@ -500,11 +492,7 @@ subroutine preconditioning_readenergy(my_rank,IELAST,NSPIN,EZ,WEZ,NATOMIMPD,NTOT
   ! *******************************************************************
   if (my_rank==0) then 
     write(*,*) 'my_rank=1 reads kkrflex_green and communicates to other processes'
-    if (config_testflag('read_doubleprecision')) then
-      OPEN (88,ACCESS='direct',RECL=wlength*4*16,FILE='kkrflex_green',FORM='unformatted')
-    else
-      OPEN (88,ACCESS='direct',RECL=wlength*2*16,FILE='kkrflex_green',FORM='unformatted')
-    end if
+    OPEN (88,ACCESS='direct',RECL=wlength*2*16,FILE='kkrflex_green',FORM='unformatted')
       read(88,rec=1) ielasttemp,nspintemp,natomimpd,natomimp,lmsizehosttemp,kgrefsoctemp
     
        if (kgrefsoctemp/=kgrefsoc) then
@@ -552,7 +540,6 @@ subroutine preconditioning_readenergy(my_rank,IELAST,NSPIN,EZ,WEZ,NATOMIMPD,NTOT
 !   *******************************************************************
     allocate( ez(ielast), wez(ielast) )
     RECL1=wlength*2*NATOMIMPD*lmsizehost*NATOMIMPD*lmsizehost
-    if (config_testflag('read_doubleprecision')) RECL1 = 2 * RECL1
     OPEN (88,ACCESS='direct',RECL=RECL1,FILE='kkrflex_green',FORM='unformatted')
     if ( .not. config_runflag('oldJMcode') ) then
       read(88,rec=1) ielasttemp,nspintemp,natomimpd,NATOMIMP,lmsizehosttemp,kgrefsoctemp,(ez(ie),ie=1,ielast),(wez(ie),ie=1,ielast)

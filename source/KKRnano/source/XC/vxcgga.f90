@@ -42,7 +42,7 @@ subroutine vxcgga(exc,kte,lpot,nspin,rho2ns,v,r,drdi,a, &
 
 implicit none
 
-double precision, intent(out)            :: exc(0:lpot)
+double precision, intent(out)            :: exc(0:(lpot+1)**2)
 integer, intent(in)                      :: kte
 integer, intent(in)                      :: lpot
 integer, intent(in)                      :: nspin

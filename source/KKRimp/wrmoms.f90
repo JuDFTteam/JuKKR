@@ -3,7 +3,7 @@
 !> Author: 
 !> Write charges and magnetic and orbital moments to file. The output is l-decomposed
 !------------------------------------------------------------------------------------
-      MODULE mod_wrmoms_kkrimp
+      MODULE MOD_WRMOMS
 
       CONTAINS
   !-------------------------------------------------------------------------------
@@ -154,4 +154,4 @@
 99006 FORMAT ('    m_orb   spin dn  spin up')
       END SUBROUTINE WRMOMS
 
-      END MODULE mod_wrmoms_kkrimp
+      END MODULE MOD_WRMOMS

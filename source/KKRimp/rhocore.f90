@@ -1,4 +1,4 @@
-MODULE mod_rhocore_kkrimp
+MODULE MOD_RHOCORE
 
   CONTAINS
   !------------------------------------------------------------------------------------
@@ -157,4 +157,4 @@ MODULE mod_rhocore_kkrimp
 
   END SUBROUTINE RHOCORE
 
-END MODULE mod_rhocore_kkrimp
+END MODULE MOD_RHOCORE

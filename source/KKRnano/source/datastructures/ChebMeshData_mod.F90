@@ -17,7 +17,7 @@ module ChebMeshData_mod
   public :: writeChebMeshDataDA           
   public :: readChebMeshDataDA, openChebMeshDataDAFile, closeChebMeshDataDAFile, writeChebMeshDataIndexDA      
   public :: readChebMeshDataIndexDA, openChebMeshDataIndexDAFile, closeChebMeshDataIndexDAFile 
-  public :: interpolate_poten, get_muffin_tin_index
+  public :: interpolate_poten  
  ! public :: readChebMeshDataHeader    
   
   type ChebMeshData
@@ -335,7 +335,6 @@ subroutine ConstructChebMesh(r_log,npan_log,npan_eq,ncheb,  &
 !use read_formatted_shapefun_mod, only: shapefunfile
 use RadialMeshData_mod, only: RadialMeshData
 
-double precision             :: r_fac 
 double precision, intent(in)             :: r_log 
 integer, intent(in)                      :: npan_log
 integer, intent(in)                      :: npan_eq
@@ -351,6 +350,7 @@ double precision, intent(in)             :: thetas(:,:)
 integer, intent(in)                      :: nfu
 type(RadialMeshData), intent(in)         :: radial_mesh
 
+double precision, parameter :: fac=2d0
 integer :: ipotm,ir2,ip,  &
     ishift,ilogpanshift,ilinpanshift,npan_logtemp,npan_inst,imin,imax,iminnew,imaxnew,lm1
 double precision :: rmin,rmax,rval
@@ -378,9 +378,9 @@ ipotm=0
   if (ilinpanshift == 1) then
     stop 'non-spherical part of the potential needs to be inside the log panel'
   end if
-  r_fac = (rmax/rmin)**(1.d0/npan_log)
+  
   do ip=0,npan_log-ilogpanshift
-    rval=(r_fac**ip-1d0)/(r_fac**(npan_log-ilogpanshift)-1d0)
+    rval=(fac**ip-1d0)/(fac**(npan_log-ilogpanshift)-1d0)
     rpan_intervall(ip+ishift)= rmin+rval*(rmax-rmin)
     ipan_intervall(ip+ishift)= (ip+ishift)*(ncheb+1)
     if (ishift == 0.and. rpan_intervall(ip) > radial_mesh%r(radial_mesh%irmin)) then
@@ -533,13 +533,6 @@ ipot=1
   end do ! ispin
 end subroutine interpolate_poten
 
-!> Get the index of the muffin tin
-integer function get_muffin_tin_index(chebmesh) result(imt)
-  type(ChebMeshData), intent(in) :: chebmesh
-
-  imt = chebmesh%ipan_intervall(chebmesh%npan_lognew + chebmesh%npan_eqnew) + 1
-end function
-
   !----------------------------------------------------------------------------
   !> Helping routine for ConstructChebMesh 
 subroutine chebmesh(npan,ncheb,ri,ro)
@@ -681,7 +674,7 @@ end if
 ! klo and khi now bracket the input value of x.
 h=xa(khi)-xa(klo)
 ! the xa's must be distinct.
-if (h == 0.d0) STOP 'bad xa input in splint' !! used to be PAUSE
+if (h == 0.d0) pause 'bad xa input in splint'
 ! cubic spline polynomial is now evaluated.
 a = (xa(khi)-x)/h
 b = (x-xa(klo))/h

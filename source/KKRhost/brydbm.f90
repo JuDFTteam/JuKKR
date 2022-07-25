@@ -92,11 +92,7 @@ contains
 
     data mit/1/, zero, one/0.0_dp, 1.0_dp/
 
-    ! write(*,'("irmd=",i8,"  ntperd=",i8,"  irnsd=",i8,"  lmpotd=",i8,"  natypd=",i8,"  nspindd=",i8)') irmd, ntperd, irnsd, lmpotd, natypd, nspindd
-    ! MdSD: old one, works if the radial mesh dimensions are large enough
-    ! ntird = (irmd*ntperd+(irnsd+1)*(lmpotd-1)*natypd)*nspindd
-    ! MdSD: new one
-    ntird = (irmd*ntperd+(irnsd+1)*(lmpotd-1)*natypd)*nspin
+    ntird = (irmd*ntperd+(irnsd+1)*(lmpotd-1)*natypd)*nspindd
 
     allocate (am(2:itdthd-1), bm(2:itdthd-1), fm(ntird), fm1(ntird), g(ntird), sm(ntird), sm1(ntird), vi3(ntird), wit(2:200), ui2(ntird), ui3(ntird), vi2(ntird))
 

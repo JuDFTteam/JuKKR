@@ -45,8 +45,7 @@ contains
 #endif
     use :: mod_datatypes, only: dp
     use :: mod_runoptions, only: calc_exchange_couplings, disable_tmat_sratrick, formatted_file, stop_1b, &
-      write_BdG_tests, write_pkkr_operators, write_rhoq_input, set_cheby_nospeedup, decouple_spin_cheby, &
-      calc_wronskian, write_tmat_all, use_rllsll
+      write_BdG_tests, write_pkkr_operators, write_rhoq_input, set_cheby_nospeedup, decouple_spins_cheby, calc_wronskian
     use :: mod_constants, only: czero, cone, cvlight
     use :: global_variables, only: ntotd, ncleb, nrmaxd, mmaxd, nspind, nspotd, iemxd, lmmaxd, korbit
     use :: mod_wunfiles, only: t_params
@@ -57,7 +56,6 @@ contains
     use :: mod_jijhelp, only: calc_dtmatjij
     use :: mod_calcsph, only: calcsph
     use :: mod_rll_global_solutions, only: rll_global_solutions
-    use :: mod_sll_global_solutions, only: sll_global_solutions ! MdSD: TEST
     use :: mod_rllsllsourceterms, only: rllsllsourceterms
     use :: mod_rllsll, only: rllsll
     use :: mod_spinorbit_ham, only: spinorbit_ham
@@ -125,7 +123,6 @@ contains
     complex (kind=dp), dimension (:, :, :), allocatable :: hlk2
     complex (kind=dp), dimension (:, :, :), allocatable :: jlk2
     complex (kind=dp), dimension (:, :, :), allocatable :: vnspll0
-    complex (kind=dp), dimension (:, :, :, :), allocatable :: ull !! regular solution of radial equation
     complex (kind=dp), dimension (:, :, :, :), allocatable :: rll !! regular solution of radial equation
     complex (kind=dp), dimension (:, :, :, :), allocatable :: sll !! irregular solution of radial equation
     complex (kind=dp), dimension (:, :, :, :), allocatable :: vnspll
@@ -192,10 +189,10 @@ contains
 
     ! .. allocate and initialize arrays
     call allocate_locals_tmat_newsolver(1, irmdnew, lmpot, nspin/(nspin-korbit), vins, aux, ipiv, tmat0, tmatll, alpha0, dtmatll, alphall, dalphall, jlk_index, nsra, lmmaxd, nth, lmax, vnspll, &
-      vnspll0, vnspll1, vnspll2, hlk, jlk, hlk2, jlk2, tmatsph, ull, rll, sll, rllleft, sllleft)
+      vnspll0, vnspll1, vnspll2, hlk, jlk, hlk2, jlk2, tmatsph, rll, sll, rllleft, sllleft)
 
     vins(1:irmdnew, 1:lmpot, 1) = vinsnew(1:irmdnew, 1:lmpot, ipot)
-    if (.not.decouple_spin_cheby) vins(1:irmdnew, 1:lmpot, nspin) = vinsnew(1:irmdnew, 1:lmpot, ipot+nspin-1)
+    if (.not.decouple_spins_cheby) vins(1:irmdnew, 1:lmpot, nspin) = vinsnew(1:irmdnew, 1:lmpot, ipot+nspin-1)
 
     KBdG = 0
 #ifdef CPP_BdG
@@ -219,14 +216,15 @@ contains
 
     ! set up the non-spherical ll' matrix for potential VLL' (done in VLLMAT)
     call vllmat(1, nrmaxd, irmdnew, lmmax0d, lmmaxd, vnspll0, vins, lmpot, cleb, icleb, iend, nspin/(nspin-korbit), zat, rnew, use_sratrick, ncleb)
+#ifdef CPP_BdG
     ! test writeout of VNSPLL1
     if (write_BdG_tests) then
-      write (filename, '(A,I0.3,A)') 'vnspll_', i1, '.txt'
-      open (7352834, file=trim(filename), form='formatted')
+      open (7352834, file='vnspll.txt', form='formatted')
       write (7352834, '(A,3I9)') '# lmmaxd,lmmaxd,IRMDNEW=', lmmaxd, lmmaxd, irmdnew
-      write (7352834, '(2ES25.9)') vnspll0(:, :, :)
+      write (7352834, '(2ES25.16)') vnspll0(:, :, :)
       close (7352834)
     end if
+#endif
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! LDAU
     ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -280,15 +278,6 @@ contains
       if (stop_1b .and. .not. write_pkkr_operators) then
         t_wavefunctions%nwfsavemax = 0
       end if
-      ! MdSD: TEST
-      ! if (myrank == 0) then
-      !   write(*,'("In tmat_newsolver:")')
-      !   write(*,'("nwfsavemax=",i4)') t_wavefunctions%nwfsavemax
-      !   write(*,'("save_rll=",l4)') t_wavefunctions%save_rll
-      !   write(*,'("save_sll=",l4)') t_wavefunctions%save_sll
-      !   write(*,'("save_rllleft=",l4)') t_wavefunctions%save_rllleft
-      !   write(*,'("save_sllleft=",l4)') t_wavefunctions%save_sllleft
-      ! end if
     end if
 
 #ifdef CPP_OMP
@@ -358,7 +347,7 @@ contains
         !$omp end critical
 #endif
 
-        if ( .not. decouple_spin_cheby) then
+        if ( .not. decouple_spins_cheby) then
           ! Contruct the spin-orbit coupling hamiltonian and add to potential
           call spinorbit_ham(lmax, lmmax0d, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpot, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
             vnspll0(:,:,:), vnspll2(:,:,:), '1')
@@ -367,7 +356,7 @@ contains
         end if
   
         ! Add magnetic field
-        if (t_params%bfield%lbfield) then
+        if ( t_params%bfield%lbfield .or. t_params%bfield%lbfield_constr ) then
           ! MdSD: constraining fields
           if (t_inc%i_write>1) then
             write (1337,'("tmat_newsolver: myrank=",i8,"  iatom=",i8)') myrank, i1
@@ -386,14 +375,15 @@ contains
 #ifdef CPP_OMP
         !$omp critical
 #endif
+#ifdef CPP_BdG
         ! test writeout of VNSPLL1
         if (write_BdG_tests) then
-          write (filename, '(A,I0.3,A,I0.3,A)') 'vnspll_SOC_', i1, '_energ_', ie, '.txt'
-          open (7352834, file=trim(filename), form='formatted')
+          open (7352834, file='vnspll_SOC.txt', form='formatted')
           write (7352834, '(A,3I9)') '# lmmaxd,lmmaxd,IRMDNEW=', lmmaxd, lmmaxd, irmdnew
-          write (7352834, '(2ES25.9)') vnspll1(:, :, :, ith)
+          write (7352834, '(2ES25.16)') vnspll1(:, :, :, ith)
           close (7352834)
         end if
+#endif
 #ifdef CPP_OMP
         !$omp end critical
 #endif
@@ -416,18 +406,19 @@ contains
 #ifdef CPP_OMP
         !$omp critical
 #endif
+#ifdef CPP_BdG
         ! test writeout of VNPSLL
         if (write_BdG_tests) then
-          write (filename, '(A,I0.3,A,I0.3,A)') 'vnspll_sra_', i1, '_energ_', ie, '.txt'
-          open (7352834, file=trim(filename), form='formatted')
+          open (7352834, file='vnspll_sra.txt', form='formatted')
           if (nsra==2) then
             write (7352834, '(A,3I9)') '# 2*lmmaxd,2*lmmaxd,IRMDNEW=', 2*lmmaxd, 2*lmmaxd, irmdnew
           else
             write (7352834, '(A,3I9)') '# lmmaxd,lmmaxd,IRMDNEW=', lmmaxd, lmmaxd, irmdnew
           end if
-          write (7352834, '(2ES25.9)') vnspll(:, :, :, ith)
+          write (7352834, '(2ES25.16)') vnspll(:, :, :, ith)
           close (7352834)
         end if
+#endif
 #ifdef CPP_OMP
         !$omp end critical
 #endif
@@ -440,14 +431,12 @@ contains
         hlk2(:, :, ith) = czero
         jlk2(:, :, ith) = czero
         gmatprefactor = czero
-        if (decouple_spin_cheby) then
+        if (decouple_spins_cheby) then
           use_fullgmat = 0
         else
           use_fullgmat = 1
         end if
-!RZ
-        call rllsllsourceterms(nsra, nvec, eryd, rnew, irmdnew, nrmaxd, lmax, lmmaxd, use_fullgmat, jlk_index, &
-          hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor)
+        call rllsllsourceterms(nsra, nvec, eryd, rnew, irmdnew, nrmaxd, lmax, lmmaxd, use_fullgmat, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor)
 
 #ifdef CPP_OMP
         !$omp critical
@@ -484,7 +473,7 @@ contains
         if (use_sratrick==1) then
           tmatsph(:, ith) = czero
           call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin/(nspin-korbit), zat, eryd, lmpot, lmmaxd, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk(:,:,ith), jlk(:,:,ith), &
-            hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, tmatsph(:,ith), alphasph, use_sratrick, .true.)
+            hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, tmatsph(:,ith), alphasph, use_sratrick)
 #ifdef CPP_BdG
         if (write_BdG_tests) then
           write (filename, '(A,I0.3,A,I0.3,A)') 'tmatsph_atom_', i1, '_energ_', ie, '.dat'
@@ -522,23 +511,17 @@ contains
         ! Right solutions
         tmat0 = czero
         alpha0 = czero             ! LLY
-        if (use_rllsll) then
-        ! MdSD: this is the old interface
-          call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), sll(:,:,:,ith), tmat0(:,:), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
-            jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alpha0(:,:))
-        else
         ! faster calculation of RLL.
         ! no irregular solutions are needed in self-consistent iterations
         ! because the t-matrix depends only on RLL
-          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), ull(:,:,:,ith), rll(:,:,:,ith), tmat0(:,:), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, &
-            nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alpha0(:,:))
-          ! MdSD: check if these are actually needed except in rhovalnew
-          if (calc_wronskian) then
-            call sll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), sll(:,:,:,ith), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, &
-             nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick)
-          end if
+        if (.not. set_cheby_nospeedup .and. .not. (calc_exchange_couplings .or. write_pkkr_operators) .and. .not.calc_wronskian) then
+          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), tmat0(:,:), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
+            jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alpha0(:,:))
+        else
+          call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), sll(:,:,:,ith), tmat0(:,:), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
+            jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alpha0(:,:))
         end if
-        ! MdSD: if using the old rllsll check if this is needed
+
         if (nsra==2) then
           rll(lmmaxd+1:nvec*lmmaxd, :, :, ith) = rll(lmmaxd+1:nvec*lmmaxd, :, :, ith)/cvlight
           sll(lmmaxd+1:nvec*lmmaxd, :, :, ith) = sll(lmmaxd+1:nvec*lmmaxd, :, :, ith)/cvlight
@@ -588,13 +571,15 @@ contains
 #ifdef CPP_OMP
         !$omp critical
 #endif
-        if (write_tmat_all) then
+#ifdef CPP_BdG
+        if (write_BdG_tests) then
           write (filename, '(A,I0.3,A,I0.3,A)') 'tmat_atom_', i1, '_energ_', ie, '.dat'
           open (888888, file=trim(filename), form='formatted')
           write (888888, '(A,I9,A,I9,A,2ES15.7)') '# dimension: lmmaxd=', lmmaxd, ' lmmaxd=', lmmaxd, ' ; ERYD=', eryd
           write (888888, '(2ES25.16)') tmatll(:, :)
           close (888888)
         end if
+#endif
 #ifdef CPP_OMP
         !$omp end critical
 #endif
@@ -636,7 +621,7 @@ contains
       if ( t_dtmatjij_at%calculate .or. (t_wavefunctions%isave_wavefun(i1,ie)>0 .and. &
            (t_wavefunctions%save_rllleft .or. t_wavefunctions%save_sllleft)) .or.     &
            ((write_rhoq_input .and. ie==2) .and. (i1==mu0)) .or.                      & ! rhoqtest
-           calc_exchange_couplings .or. write_pkkr_operators .or. calc_wronskian ) then ! MdSD: seems to make more sense to check here than below
+           calc_wronskian ) then
         ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         ! Calculate the left-hand side solution this needs to be done for the
         ! calculation of t-matrices for Jij tensor or if wavefunctions should be saved
@@ -648,7 +633,7 @@ contains
           nrmaxd,vnspll0(:,:,:),vnspll2(:,:,:),'transpose')
         
         ! Add magnetic field 
-        if (t_params%bfield%lbfield) then
+        if ( t_params%bfield%lbfield .or. t_params%bfield%lbfield_constr ) then
           call add_bfield(t_params%bfield,i1,lmax,nspin,irmdnew,imt1,iend,ncheb,theta,phi,t_params%ifunm1(:,t_params%ntcell(i1)),&
                           t_params%icleb,t_params%cleb(:,1),t_params%thetasnew(1:irmdnew,:,t_params%ntcell(i1)),'transpose',vnspll2(:,:,:), &
                           vnspll1(:,:,:,ith),t_params%bfield%thetallmat(:,:,1:irmdnew,t_params%ntcell(i1)))
@@ -686,7 +671,7 @@ contains
         if (use_sratrick==1) then
           tmatsph(:, ith) = czero
           call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin/(nspin-korbit), zat, eryd, lmpot, lmmaxd, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), &
-            hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, alphasph, tmatsph(:,ith), use_sratrick, .true.)
+            hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, alphasph, tmatsph(:,ith), use_sratrick)
         end if
 
         ! Calculate the tmat and wavefunctions
@@ -697,20 +682,15 @@ contains
         ! notice that exchange the order of left and right hankel/bessel functions
         tmat0 = czero
         alpha0 = czero             ! LLY
-        if (use_rllsll) then
-        ! MdSD: this is the old interface
+        ! faster calculation of RLL.
+        ! no left solutions are needed in self-consistent iterations
+        ! because the t-matrix depends only on RLL
+        if (.not. set_cheby_nospeedup .and. .not. ( calc_exchange_couplings .or. write_pkkr_operators) .and. .not.calc_wronskian) then
+          ! do nothing
+        else
           call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), tmat0, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
             jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alpha0)
-        else
-          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), ull(:,:,:,ith), rllleft(:,:,:,ith), tmat0, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, &
-            nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick, alpha0)
-          ! MdSD: check if these are actually needed except in rhovalnew
-          if (calc_wronskian) then
-            call sll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), sllleft(:,:,:,ith), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, &
-              nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick)
-          end if
         end if
-        ! MdSD: if using the old rllsll check if this is needed
         if (nsra==2) then
           rllleft(lmmaxd+1:nvec*lmmaxd, :, :, ith) = rllleft(lmmaxd+1:nvec*lmmaxd, :, :, ith)/cvlight
           sllleft(lmmaxd+1:nvec*lmmaxd, :, :, ith) = sllleft(lmmaxd+1:nvec*lmmaxd, :, :, ith)/cvlight
@@ -877,7 +857,7 @@ contains
     ! deallocate arrays
     call allocate_locals_tmat_newsolver(-1,irmdnew,lmpot,nspin,vins,aux,ipiv,tmat0, &
       tmatll,alpha0,dtmatll,alphall,dalphall,jlk_index,nsra,lmmaxd,nth,lmax,vnspll,&
-      vnspll0,vnspll1,vnspll2,hlk,jlk,hlk2,jlk2,tmatsph,ull,rll,sll,rllleft,sllleft)
+      vnspll0,vnspll1,vnspll2,hlk,jlk,hlk2,jlk2,tmatsph,rll,sll,rllleft,sllleft)
 
   end subroutine tmat_newsolver
 
@@ -893,7 +873,7 @@ contains
   !-------------------------------------------------------------------------------
   subroutine allocate_locals_tmat_newsolver(allocmode,irmdnew,lmpot,nspin,vins,aux, &
     ipiv,tmat0,tmatll,alpha0,dtmatll,alphall,dalphall,jlk_index,nsra,lmmaxd,nth,   &
-    lmax,vnspll,vnspll0,vnspll1,vnspll2,hlk,jlk,hlk2,jlk2,tmatsph,ull,rll,sll,rllleft,sllleft)
+    lmax,vnspll,vnspll0,vnspll1,vnspll2,hlk,jlk,hlk2,jlk2,tmatsph,rll,sll,rllleft,sllleft)
     use :: mod_datatypes, only: dp
     use :: mod_runoptions, only: calc_exchange_couplings, write_rhoq_input, calc_wronskian
     use :: mod_constants, only: czero
@@ -925,7 +905,6 @@ contains
     complex (kind=dp), allocatable, dimension (:, :, :), intent (inout) :: jlk2
     complex (kind=dp), allocatable, dimension (:, :, :), intent (inout) :: hlk2
     complex (kind=dp), allocatable, dimension (:, :), intent (inout) :: tmatsph
-    complex (kind=dp), allocatable, dimension (:, :, :, :), intent (inout) :: ull
     complex (kind=dp), allocatable, dimension (:, :, :, :), intent (inout) :: rll
     complex (kind=dp), allocatable, dimension (:, :, :, :), intent (inout) :: sll
     complex (kind=dp), allocatable, dimension (:, :, :, :), intent (inout) :: rllleft
@@ -949,7 +928,7 @@ contains
       call memocc(i_stat, product(shape(vnspll1))*kind(vnspll1), 'VNSPLL1', 'allocate_locals_tmat_newsolver')
       vnspll1 = czero
       allocate (vnspll2(lmmaxd,lmmaxd,irmdnew), stat=i_stat)
-      call memocc(i_stat, product(shape(vnspll2))*kind(vnspll2), 'VNSPLL2', 'allocate_locals_tmat_newsolver')
+      call memocc(i_stat, product(shape(vnspll2))*kind(vnspll2), 'VNSPLL1', 'allocate_locals_tmat_newsolver')
       vnspll2 = czero
 
       ! source terms (bessel and hankel functions)
@@ -972,9 +951,6 @@ contains
       tmatsph = czero
 
       ! Regular and irregular wavefunctions
-      allocate (ull(nsra*lmmaxd,lmmaxd,irmdnew,0:nth-1), stat=i_stat)
-      call memocc(i_stat, product(shape(ull))*kind(ull), 'ULL', 'allocate_locals_tmat_newsolver')
-      ull = czero
       allocate (rll(nsra*lmmaxd,lmmaxd,irmdnew,0:nth-1), stat=i_stat)
       call memocc(i_stat, product(shape(rll))*kind(rll), 'RLL', 'allocate_locals_tmat_newsolver')
       rll = czero
@@ -1058,8 +1034,6 @@ contains
       deallocate (tmatsph, stat=i_stat)
       call memocc(i_stat, -product(shape(tmatsph))*kind(tmatsph), 'TMATSPH', 'allocate_locals_tmat_newsolver')
 
-      deallocate (ull, stat=i_stat)
-      call memocc(i_stat, -product(shape(ull))*kind(ull), 'ULL', 'allocate_locals_tmat_newsolver')
       deallocate (rll, stat=i_stat)
       call memocc(i_stat, -product(shape(rll))*kind(rll), 'RLL', 'allocate_locals_tmat_newsolver')
       deallocate (sll, stat=i_stat)

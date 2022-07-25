@@ -74,9 +74,8 @@ implicit none
     
     use two_sided_commD_mod, only: distribute
     
-    use ChebMeshData_mod, only: interpolate_poten, get_muffin_tin_index  ! NOCO
-    use NonCollinearMagnetism_mod, only: tmat_newsolver  ! NOCO
-    use NonCollinearMagnetism_Helpers_mod, only: rotatematrix  ! NOCO
+    use ChebMeshData_mod, only: interpolate_poten  ! NOCO
+    use NonCollinearMagnetism_mod, only: tmat_newsolver, rotatematrix  ! NOCO
 
     integer, intent(in) :: iter
     type(CalculationData), intent(inout) :: calc
@@ -108,7 +107,7 @@ implicit none
     integer :: omp_threads !DEBUGGING
     logical :: xccpl
     double precision :: rMTref
-    double precision, allocatable :: rMTs(:,:), rMTrefs(:,:)
+    double precision, allocatable :: rMTs(:)
     
     double complex, allocatable :: tmatLL(:,:,:,:) !< all t-matrices inside the truncation zone
     double complex, allocatable :: GmatN_buffer(:,:,:) !< GmatN for all local atoms
@@ -188,12 +187,9 @@ implicit none
         enddo
      endif
 !---------------------------------------------------------
-    allocate(rMTs(1,calc%trunc_zone%naez_trc), rMTrefs(1,num_local_atoms))
-    rMTrefs(1,:) = calc%atomdata_a(:)%rMTref
-    ! communicate the Muffin-Tin radii within the truncation zone
-    call distribute(calc%xTable, 1, rMTrefs, rMTs)
-    deallocate(rMTrefs, stat=ist) ! ignore status
-
+    allocate(rMTs(calc%trunc_zone%naez_trc))
+    call distribute(calc%xTable, 1, calc%atomdata_a(:)%rMTref, rMTs) ! communicate the Muffin-Tin radii within the truncation zone
+    
   ! IE ====================================================================
   !     BEGIN do loop over energies (EMPID-parallel)
   ! IE ====================================================================
@@ -216,7 +212,7 @@ implicit none
           do iacls = 1, calc%ref_cluster_a(ila)%nacls
             ! this calls tref several times with the same parameters if the local atoms are close to each other
 !           rMTref = kkr(ila)%rMTref(iacls) ! possible if it has been communicated earlier
-            rMTref = rMTs(1,calc%trunc_zone%trunc_atom_idx(calc%ref_cluster_a(ila)%atom(iacls)))
+            rMTref = rMTs(calc%trunc_zone%trunc_atom_idx(calc%ref_cluster_a(ila)%atom(iacls)))
             call tref(emesh%EZ(IE), params%vref, dims%lmaxd, rMTref, &
                       kkr(ila)%Tref_ell(:,iacls), kkr(ila)%dTref_ell(:,iacls), derive=(dims%Lly > 0))
             !if (dims%korbit == 1) then ! NOCO
@@ -271,10 +267,7 @@ implicit none
                                     noco%theta_noco(i1),noco%phi_noco(i1),1,  & !ipot=1 because potential has only one or two entries (spin polarized case)
                                     !dims%lly,        &    
                                     atomdata%potential%lmpot,atomdata%chebmesh_ptr%irmd_new, &
-                                    kkr(ila)%TmatN(:,:,ispin),params%soc,params%enable_quad_prec, &
-                                    calc%bfields(ila), get_muffin_tin_index(atomdata%chebmesh_ptr), &
-                                    iter, params%itbfield0, params%itbfield1, &
-                                    params%noncobfield, params%trans_bfield, params%mt_bfield)
+                                    kkr(ila)%TmatN(:,:,ispin),params%soc)
                
                 call rotatematrix(kkr(ila)%TmatN(:,:,ispin),noco%theta_noco(i1),noco%phi_noco(i1),lmmaxd,0)
               else
@@ -544,7 +537,7 @@ implicit none
     enddo ! iorbit
 
     allocate(uTu_sum(lmmaxd_noco,lmmaxd_noco), uT(lmmaxd_noco,lmmaxd_noco))
-    ! No symmetrization is performed in case of a NOCO calculation
+    ! No symmtetrization is performed in case of a NOCO calculation
     if (korbit == 0) then ! NOCO
       !------------------------------------------------- SYMMETRISE TmatN
       uTu_sum(:,:) = TmatN(:,:) ! copy, since the 1st entry is the unity operation, start loop from 2

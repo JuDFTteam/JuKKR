@@ -33,7 +33,6 @@ module CalculationData_mod
   use LatticeVectors_mod, only: LatticeVectors, create, destroy
   use ExchangeTable_mod, only: ExchangeTable, create, destroy
   use NonCollinearMagnetismData_mod, only: NOCOData, create, load, destroy, loadascii
-  use mod_bfield, only: bfield_data, load_bfields_from_disk, init_bfield
   
   implicit none
   private
@@ -67,7 +66,6 @@ module CalculationData_mod
     type(JijData),            pointer     :: jij_data_a(:) => null()
     type(RefCluster),         allocatable :: ref_cluster_a(:)
     type(MadelungLatticeSum), allocatable :: madelung_sum_a(:)
-    type(bfield_data),        allocatable :: bfields(:)
 
     ! global data - same for each local atom
     type(LatticeVectors)                :: lattice_vectors
@@ -138,11 +136,7 @@ module CalculationData_mod
     allocate(self%madelung_sum_a(num_local_atoms)) ! only visible to this module and MadelungPotential_mod.F90
     allocate(self%jij_data_a(num_local_atoms)) 
     if(num_local_atoms > 1 .and. params%Jij) warn(6, "Jij work with max. 1 atom so far!") 
-
-    ! Always allocate bfields, they are small objects and are passed around to
-    ! some subroutines even if they are not used.
-    allocate(self%bfields(num_local_atoms))
-
+    
     allocate(self%atom_ids(num_local_atoms))
 
     ! assign atom ids to processes with atom rank 'mp%myAtomRank'
@@ -225,9 +219,6 @@ module CalculationData_mod
     deallocate(self%ldau_data_a, stat=ist)
     deallocate(self%jij_data_a, stat=ist)
     deallocate(self%atom_ids, stat=ist)
-    if (allocated(self%bfields)) then
-      deallocate(self%bfields, stat=ist)
-    end if
     
   endsubroutine ! destroy
 
@@ -295,7 +286,6 @@ module CalculationData_mod
     integer, intent(in) :: voronano
 
     integer :: atom_id, ila, irmd
-    integer :: verbosity
 
     call create(self%lattice_vectors, arrays%bravais) ! createLatticeVectors
 
@@ -364,7 +354,7 @@ module CalculationData_mod
 !   in case of a NOCO calculation - read file 'nonco_angle.dat'
     if (dims%korbit == 1) then
        if(dims%nspind .NE. 2) die_here('NSPIND=2 in global.conf is mandatory for SOC calculations')
-       call loadascii(self%noco_data%theta_noco, self%noco_data%phi_noco, self%noco_data%angle_fix_mode, dims%naez)
+       call loadascii(self%noco_data%theta_noco, self%noco_data%phi_noco, self%noco_data%angle_fixed, dims%naez)
        !call store(noco, 'bin.noco.0')
     else
        if(dims%korbit .NE. 0) die_here('When not using NOCO: KORBIT in global.conf should be zero')    
@@ -384,31 +374,6 @@ module CalculationData_mod
 
 !   write(*,*) __FILE__,__LINE__," setup_iguess deavtivated for DEBUG!"
     call setup_iguess(self, dims, arrays%nofks, kmesh) ! setup storage for iguess
-
-    if (params%noncobfield) then
-
-      ! Check that noncollinear magnetism is enabled
-      if (dims%korbit < 1) then
-        die_here("Noncollinear magnetic fields (noncobfield=t) need noncollinear magnetism. Set korbit=1.")
-      end if
-
-      ! Output only as master, in that case copy the input parameter
-      verbosity = -1
-      if (mp%isMasterRank) verbosity = params%bfield_verbosity
-
-      ! Initialize the noncolinear magnetic field. If present, read from disk
-      call load_bfields_from_disk(self%bfields, params%external_bfield, &
-                                  verbosity, dims%naez, self%atom_ids, &
-                                  self%noco_data%angle_fix_mode)
-      ! Initialize the fields
-      do ila = 1, self%num_local_atoms
-        call init_bfield(self%bfields(ila), dims%lmaxd, &
-                         self%cheb_mesh_a(ila)%npan_lognew, self%cheb_mesh_a(ila)%npan_eqnew, &
-                         self%cheb_mesh_a(ila)%ipan_intervall, self%cheb_mesh_a(ila)%thetasnew, &
-                         self%gaunts%iend, self%gaunts%icleb,  self%gaunts%cleb(:,1), &
-                         self%cell_a(ila)%ifunm)
-      end do
-    end if
 
   endsubroutine ! constructEverything
 
@@ -647,7 +612,7 @@ module CalculationData_mod
 
       call create(self%mesh_a(ila), irmd, ipand)
 
-      a_log_local = params%a_log
+      a_log_local = 0.025d0
       b_log_local = inter_mesh%xrn(1)*params%alat / (exp(a_log_local * ((irmd-irid) - 1)) - 1.d0)
 
       call initRadialMesh(self=self%mesh_a(ila), alat=params%alat, xrn=inter_mesh%xrn, &

@@ -14,7 +14,7 @@ NOSOC
   -0.30     1.10       502.569d0    5         2       5        3    <-- for scf
 ================================================================================
   NSTEPS     IMIX      STRMIX       FCM       QBOUND    BRYMIX      ITDBRY
-  1           5         0.05         1.0      1.D-7     0.050       20
+  1           5         0.05         1.0      1.D-7     0.005       20
 ================================================================================
   ALATBASIS= 7.713 1.0   1.0        lattice constants a (in a.u.), b/a, c/a
 --------------------------------------------------------------------------------
@@ -48,9 +48,9 @@ NOSOC
   KSHAPE= 2     (0/2 for asa/full-pot)
   ICST= 2       (Born steps for full-pot, 2 is ok, 3 is very good)
 
-  NPAN_LOG= 12
-  NPAN_EQ= 5
-  NCHEB= 8
+  NPAN_LOG= 5
+  NPAN_EQ= 3
+  NCHEB= 6
   R_LOG= 0.6
 --------------------------------------------------------------------------------
   Parameters for ewald sums
