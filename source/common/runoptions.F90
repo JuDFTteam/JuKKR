@@ -34,6 +34,7 @@ module mod_runoptions
   logical :: fix_nonco_angles = .false.                !! fix direction of non-collinear magnetic moments (Chebychev solver) (former: 'FIXMOM')
   logical :: formatted_file = .false.                  !! write files ascii-format. only effective with some other write-options (former: 'fileverb')
   logical :: write_npy = .false.                       !! write files in npy format (python readable) (former: 'writenpy')
+  logical :: gflle_to_npy = .false.                    !! write gflle file to npy instead of to gflle file (contains G(k,e)LL'
   logical :: impurity_operator_only = .false.          !! only for `write_pkkr_operators`: disable costly recalculation of host operators (former: 'IMP_ONLY')
   logical :: modify_soc_Dirac = .false.                !! modify SOC for Dirac solver (former: 'SOC')
   logical :: no_madelung = .false.                     !! do not add some energy terms (coulomb, XC, eff. pot.) to total energy (former: 'NoMadel')
@@ -167,6 +168,7 @@ module mod_runoptions
     call set_runoption(write_lloyd_tralpha_file      , '<write_lloyd_tralpha_file>'      , '<wrttral>' )
     call set_runoption(write_lloyd_cdos_file         , '<write_lloyd_cdos_file>'         , '<wrtcdos>' )
     call set_runoption(calc_gmat_lm_full             , '<calc_gmat_lm_full>'             , '<lmlm-dos>')
+    call set_runoption(gflle_to_npy                  , '<gflle_to_npy>')
     call set_runoption(simulate_asa                  , '<simulate_asa>'                  , '<simulasa>')
     call set_runoption(use_readcpa                   , '<use_readcpa>'                   , '<readcpa>' )
     call set_runoption(print_kpoints                 , '<print_kpoints>'                 , '<BZKP>'    )
@@ -716,6 +718,7 @@ module mod_runoptions
     call mpi_bcast(write_lloyd_tralpha_file      , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(write_lloyd_cdos_file         , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(calc_gmat_lm_full             , 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(gflle_to_npy                  , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(simulate_asa                  , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(use_readcpa                   , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(print_kpoints                 , 1, mpi_logical, master, mpi_comm_world, ierr)
@@ -828,6 +831,7 @@ module mod_runoptions
     write(iounit, '(A35,1x,1L,3x,A)') '<calc_exchange_couplings>=', calc_exchange_couplings, "calculate magnetic exchange coupling parameters (former: 'XCPL')"
     write(iounit, '(A35,1x,1L,3x,A)') '<calc_exchange_couplings_energy>=', calc_exchange_couplings_energy, "write energy-resolved Jij-files also if npol/=0 (former: 'Jijenerg')"
     write(iounit, '(A35,1x,1L,3x,A)') '<calc_gmat_lm_full>=', calc_gmat_lm_full, "calculate all lm-lm components of systems greens function and store to file `gflle` (former: 'lmlm-dos')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<gflle_to_npy>=', gflle_to_npy, "Write G_LL'(k,E) to npy files, one file per atom and energy"
     write(iounit, '(A35,1x,1L,3x,A)') '<dirac_scale_SpeefOfLight>=', dirac_scale_SpeefOfLight, "scale the speed of light for Dirac solver (former: 'CSCALE')"
     write(iounit, '(A35,1x,1L,3x,A)') '<disable_charge_neutrality>=', disable_charge_neutrality, "no charge neutrailty required: leaving Fermi level unaffected (former: 'no-neutr')"
     write(iounit, '(A35,1x,1L,3x,A)') '<disable_print_serialnumber>=', disable_print_serialnumber, "deactivate writing of serial number and version information to files (for backwards compatibility) (former: 'noserial')"
