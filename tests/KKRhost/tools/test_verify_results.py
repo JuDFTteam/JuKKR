@@ -72,9 +72,9 @@ class Test_features():
         fname = 'TBkkr_rhod.txt'
         num, text = read_file(path+fname)
         num_ref, text_ref = read_file(path0+fname)
-        assert std(abs(num-num_ref))<10**-14
-        assert mean(abs(num-num_ref))<10**-14
-        assert abs(num-num_ref).max()<5*10**-13
+        assert std(abs(num-num_ref))<1e-14
+        assert mean(abs(num-num_ref))<1e-14
+        assert abs(num-num_ref).max()<1e-12
         assert set(text)-set(text_ref)==set()
         # compare output of OPERATOR for host and for impurity wavefunctions
         for filename in 'TBkkr_rhod.txt TBkkr_torq.txt TBkkr_spinflux.txt'.split():
@@ -93,10 +93,10 @@ class Test_features():
           # flatten arrays and take diff
           d1 = d1.reshape(-1); d2 = d2.reshape(-1); d01 = d01.reshape(-1); d02 = d02.reshape(-1)
           diff1 = d01-d1; diff2 = d02-d2
-          assert mean(diff1) < 10**-15
-          assert abs(diff1).max() < 10**-15
-          assert mean(diff2) < 10**-15
-          assert abs(diff2).max() < 10**-15
+          assert mean(diff1) < 1e-14
+          assert abs(diff1).max() < 1e-12
+          assert mean(diff2) < 1e-14
+          assert abs(diff2).max() < 1e-12
 
     def test_11_DTM_GMAT(self):
         path  = 'test_run11_mpi_1_8/'
