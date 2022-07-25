@@ -1,24 +1,144 @@
-# serial: kkrjm_v2.3-64-g8cc70fc_mpi_20180831103131
+# serial: JuKKR_v3.1-1927-g9a2aa9fa_intel-debug_20220725130525
+     Screened Korringa-Kohn-Rostoker Electronic Structure Code
+                      for Bulk and Interfaces
+                    Juelich-Munich 2001 - 2021
 
-*******************************************************************************
-          Screened Korringa-Kohn-Rostoker Electronic Structure Code
-                           for Bulk and Interfaces
-          Juelich-Munich 2001 - 2016
-
- Code version: v2.3-64-g8cc70fc
- Compile options: mpi
--O2 -r8 -module ./OBJ -sox -traceback
--L/usr/local/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
-
- serial number for files: kkrjm_v2.3-64-g8cc70fc_mpi_20180831103131
-*******************************************************************************
-
- Number of MPI ranks used:   12
+  Code version: v3.1-1927-g9a2aa9fa
+  Compile options: intel-debug mpi 
+  serial number for files: JuKKR_v3.1-1927-g9a2aa9fa_intel-debug_20220725130525
+ Number of MPI ranks used:    3
 
 *******************************************************************************
 
- 3D-calculation, adding run-option "full inv" for full inversion.
- in ADDOPT: adding option full inv
+-------------------------------------------------------------------------------
+*** Inspecting run- and test-options ***
+ Old style of run- and test-options found. Testing input:
+     Enable runoption 'use_Chebychev_solver'
+     Enable runoption 'write_kkrimp_input'
+     Enable runoption 'use_lloyd'
+     ### WARNING ###: run- or testoption '...     ' not recognized.
+                      Is there a typo?
+     ### WARNING ###: run- or testoption '...     ' not recognized.
+                      Is there a typo?
+     ### WARNING ###: run- or testoption '...     ' not recognized.
+                      Is there a typo?
+-------------------------------------------------------------------------------
+ EXECUTION OPTIONS:
+ NEWSOSOL//KKRFLEX //LLOYD   //...     //...     //...     //        //        
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+ TEST OPTIONS:
+         //        //        //        //        //        //        //        
+         //        //        //        //        //        //        //        
+
+-------------------------------------------------------------------------------
+   <<< Reading in new style of run-options. >>>
+   WARNING: this may overwrite old-style run-options
+# List of run options:
+                  <calc_GF_Efermi>=  F   calculation of cluster Green function at E Fermi (former: 'GF-EF')
+             <set_cheby_nospeedup>=  F   always calculate irregular solution in Chebychev solver (even if not needed) (former: 'norllsll')
+                 <set_cheby_nosoc>=  F   set SOC strength to 0 for all atoms (former: 'NOSOC')
+             <decouple_spin_cheby>=  F   decouple spin matrices in Chebychev solver neglecting SOC and for collinear calculations only
+      <calc_complex_bandstructure>=  F   complex band structure (former: 'COMPLEX')
+         <calc_exchange_couplings>=  F   calculate magnetic exchange coupling parameters (former: 'XCPL')
+  <calc_exchange_couplings_energy>=  F   write energy-resolved Jij-files also if npol/=0 (former: 'Jijenerg')
+               <calc_gmat_lm_full>=  F   calculate all lm-lm components of systems greens function and store to file `gflle` (former: 'lmlm-dos')
+                    <gflle_to_npy>=  F   Write G_LL'(k,E) to npy files, one file per atom and energy
+        <dirac_scale_SpeefOfLight>=  F   scale the speed of light for Dirac solver (former: 'CSCALE')
+       <disable_charge_neutrality>=  F   no charge neutrailty required: leaving Fermi level unaffected (former: 'no-neutr')
+      <disable_print_serialnumber>=  F   deactivate writing of serial number and version information to files (for backwards compatibility) (former: 'noserial')
+        <disable_reference_system>=  F   deactivate the tight-binding reference system (former: 'lrefsysf')
+           <disable_tmat_sratrick>=  F   deactivate SRATRICK in solver for t-matirx (former: 'nosph')
+                <fix_nonco_angles>=  F   fix direction of non-collinear magnetic moments (Chebychev solver) (former: 'FIXMOM')
+                  <formatted_file>=  F   write files ascii-format. only effective with some other write-options (former: 'fileverb')
+          <impurity_operator_only>=  F   only for `write_pkkr_operators`: disable costly recalculation of host operators (former: 'IMP_ONLY')
+                <modify_soc_Dirac>=  F   modify SOC for Dirac solver (former: 'SOC')
+                     <no_madelung>=  F   do not add some energy terms (coulomb, XC, eff. pot.) to total energy (former: 'NoMadel')
+                       <print_Gij>=  F   print cluster G_ij matrices to outfile (former: 'Gmatij')
+                      <print_gmat>=  F   print Gmat to outfile (former: 'Gmat')
+                    <print_ickeck>=  F   enable test-output of ICHECK matrix from gfmask (former: 'ICHECK')
+                     <print_kmesh>=  F   output of k-mesh (former: 'k-net')
+                   <print_kpoints>=  F   print k-points to outfile (former: 'BZKP')
+              <print_program_flow>=  F   monitor the program flow in some parts of the code (former: 'flow')
+               <print_radial_mesh>=  F   write mesh information to output (former: 'RMESH')
+                    <print_refpot>=  F   test output of refpot (former: 'REFPOT')
+             <print_tau_structure>=  F   write extensive information about k-mesh symmetrization and structure of site-diagonal tau matrices to output (former: 'TAUSTRUC')
+                      <print_tmat>=  F   print t-matrix to outfile (former: 'tmat')
+           <relax_SpinAngle_Dirac>=  F   relax the spin angle in a SCF calculation [only DIRAC mode] (former: 'ITERMDIR')
+                   <search_Efermi>=  F   modify convergence parameters to scan for fermi energy only (to reach charge neutrality). (former: 'SEARCHEF')
+                <set_gmat_to_zero>=  F   set GMAT=0 in evaluation of density (former: 'GMAT=0')
+                <set_empty_system>=  F   set potential and nuclear charge to zero (former: 'zeropot')
+                 <set_kmesh_large>=  F   set equal k-mesh (largest) for all energy points (former: 'fix mesh')
+                 <set_kmesh_small>=  F   set equal k-mesh (smallest) for all energy points (former: 'fix4mesh')
+            <set_tmat_noinversion>=  F   do not perform inversion to get msst = Delta t^-1, but msst = Delta t. (former: 'testgmat')
+                    <simulate_asa>=  F   set non-spherical potential to zero in full-potential calculation with Chebychev solver (former: 'simulasa')
+              <slow_mixing_Efermi>=  F   renormalize Fermi-energy shift by mixing factor during mixing (former: 'slow-neu')
+                         <stop_1a>=  F   stop after main1a (former: 'STOP1A')
+                         <stop_1b>=  F   stop after main1b (former: 'STOP1B')
+                         <stop_1c>=  F   stop after main1c (former: 'STOP1C')
+                 <symmetrize_gmat>=  F   use symmetrization [G(k) + G(-k)]/2 in k-point loop (former: 'symG(k)')
+      <symmetrize_potential_cubic>=  F   keep only symmetric part of potential (L=1,11,21,25,43,47). (former: 'potcubic')
+   <symmetrize_potential_madelung>=  F   symmetrize potential in consistency to madelung potential (former: 'potsymm')
+          <torque_operator_onlyMT>=  F   for torque operator: include only the part within the muffin tin (former: 'ONLYMT')
+         <torque_operator_onlySph>=  F   for torque operator: include only the spherically symmetric part (former: 'ONLYSPH')
+                         <use_BdG>=  F   use Bogoliubov-de-Gennes Formalism (former: 'useBdG')
+            <use_Chebychev_solver>=  T   use the Chebychev solver (former: 'NEWSOSOL')
+                      <use_rllsll>=  F   switch to previous approach to compute wavefunctions in Chebyshev solver
+                     <use_cond_LB>=  F   perform calculation of conductance in Landauer-Büttiker formalism (former: 'CONDUCT')
+                        <use_cont>=  F   no usage of embedding points. NEMB is set to 0. (former: 'CONT')
+                <use_deci_onebulk>=  F   in case of decimation: use same bulk on right and left. Speeds up calculations. (former: 'ONEBULK')
+                  <use_decimation>=  F   use Decimation technique for semi-infinite systems (former: 'DECIMATE')
+                    <use_ewald_2d>=  F   use 2D ewald sum instead of 3D sum (Attention: does not work always!) (former: 'ewald2d')
+                     <use_full_BZ>=  F   use full Brillouin zone, i.e. switch off symmetries for k-space integration (former: 'fullBZ')
+                        <use_ldau>=  F   use LDA+U as exchange-correlation potential (former: 'LDA+U')
+                       <use_lloyd>=  T   use Lloyds formula to correct finite angular momentum cutoff (former: 'LLOYD')
+                        <use_qdos>=  F   writes out qdos files for band structure calculations. (former: 'qdos')
+                     <use_readcpa>=  F   read cpa t-matrix from file (former: 'readcpa')
+                <use_rigid_Efermi>=  F   keep the Fermi energy fixed during self-consistency (former: 'rigid-ef')
+                    <use_semicore>=  F   use semicore contour (former: 'SEMICORE')
+    <use_spherical_potential_only>=  F   keeping only spherical component of potential (former: 'Vspher')
+               <use_virtual_atoms>=  F   add virtual atoms (former: 'VIRATOMS')
+                 <write_BdG_tests>=  F   test options for Bogouliubov-deGennes (former: 'BdG_dev')
+                       <write_DOS>=  F   write out DOS files in any case (also if npol!=0) (former: 'DOS')
+                    <write_DOS_lm>=  F   write out DOS files with decomposition into l and m components (former: 'lmdos')
+                <write_gmat_plain>=  F   write out Green function as plain text file (former: 'GPLAIN')
+                <write_green_host>=  F   write green function of the host to file `green_host` (former: 'WRTGREEN')
+                 <write_green_imp>=  F   write out impurity Green function to GMATLL_GES (former: 'GREENIMP')
+              <write_complex_qdos>=  F   write complex qdos to file (former: 'compqdos')
+       <write_cpa_projection_file>=  F   write CPA projectors to file (former: 'projfile')
+                  <write_deci_pot>=  F   write decimation-potential file (former: 'deci-pot')
+                 <write_deci_tmat>=  F   write t-matrix to file 'decifile' (former: 'deci-out')
+             <write_density_ascii>=  F   write density rho2ns to file densitydn.ascii (former: 'den-asci')
+               <write_energy_mesh>=  F   write out the energy mesh to file `emesh.scf` (former: 'EMESH')
+     <write_generalized_potential>=  F   write potential in general format. Usually prepares for running the VORONOI program. (former: 'GENPOT')
+                 <write_gmat_file>=  F   write GMAT to file (former: 'gmatfile')
+                 <write_gref_file>=  F   write GREF to file (former: 'greffile')
+                <write_gmat_ascii>=  F   write GMAT to formatted file `gmat.ascii` (former: 'gmatasci')
+              <write_kkrimp_input>=  T   write out files for KKRimp-code (former: 'KKRFLEX')
+             <write_kkrsusc_input>=  F   write out files for KKRsusc-code (former: 'KKRSUSC')
+                 <write_kpts_file>=  F   write and read k-mesh to/from file `kpoints` (former: 'kptsfile')
+           <write_lloyd_cdos_file>=  F   write Lloyd array to file  (former: 'wrtcdos')
+          <write_lloyd_dgref_file>=  F   write Lloyd array to file  (former: 'wrtdgref')
+          <write_lloyd_dtmat_file>=  F   write Lloyd array to file  (former: 'wrtdtmat')
+                <write_lloyd_file>=  F   write several Lloyd-arrays to files (former: 'llyfiles')
+           <write_lloyd_g0tr_file>=  F   write Lloyd array to file  (former: 'wrtgotr')
+        <write_lloyd_tralpha_file>=  F   write Lloyd array to file  (former: 'wrttral')
+             <write_madelung_file>=  F   write madelung summation to file 'abvmad.unformatted' instead of keeping it in memory (former: 'madelfil')
+                <write_pkkr_input>=  F   write out files for Pkkprime-code (former: 'FERMIOUT')
+            <write_pkkr_operators>=  F   for Fermi-surface output: calculate various operators in KKR basis. (former: 'OPERATOR')
+           <write_potential_tests>=  F   write potential at different steps in main2 to different files (former: 'vintrasp' and 'vpotout')
+                    <write_rho2ns>=  F   write array rho2ns into file out_rhoval (from main1c) and out_rhotot (from main2) (former: 'RHOVALTW' and 'RHOVALW')
+                <write_rhoq_input>=  F   write out files needed for rhoq module (Quasiparticle interference) (former: 'rhoqtest')
+                 <write_tmat_file>=  F   write t-matix to file (former: 'tmatfile')
+               <write_tb_coupling>=  F   write couplings in tight-binging reference system to file `couplings.dat` (former: 'godfrin')
+                  <calc_wronskian>=  F   calculate the wronskian relations of first and second kind for the wavefunctions (see PhD Bauer pp 48)
+             <use_broyden_spinmix>=  F   use broyden spin mixing for noncollinear angles
+            <write_angles_alliter>=  F   write out noncollinear angles for all iterations
+                  <write_tmat_all>=  F   write out the tmat for all energies and all atoms
+          <write_double_precision>=  F   write out kkrflex files in double precision
+                <calc_onsite_only>=  F   calculate not the full Green function for the density but take the onsite part alone
+                  <use_gmat_unity>=  F   set the structural GF to the unity matrix for test purposes
+                 <soc_no_spinflip>=  F   set spin-flip components of the SOC Hamiltonian to zero
          ABASIS         BBASIS         CBASIS
      1.00000000     1.00000000     1.00000000
 --------------+--------------+--------------+----------------------------------
@@ -73,10 +193,10 @@ SITE                BASIS VECTORS                 THETA   PHI CPA OCC KAOEZ
    2
 ---+---------------------------------------------------------------------------
           EMIN        EMAX        TK
-   -0.400000    1.200000  473.000000
+   -0.400000    1.200000  800.000000
 -----------+-----------+-----------+-------------------------------------------
    NPOL  NPNT1  NPNT2  NPNT3
-      5      3     10      3
+      5      3     13      3
 ------+------+------+------+---------------------------------------------------
 ------+------+------+----------------------------------------------------------
   IFILE    IPE ISHIFT ESHIFT
@@ -147,22 +267,12 @@ SITE                BASIS VECTORS                 THETA   PHI CPA OCC KAOEZ
 ---+---+---+---+---+---+---+---+---+---+---------------------------------------
 
 -------+-------+-------+-------+-------+-------+-------+-----------------------
--------------------------------------------------------------------------------
- EXECUTION OPTIONS:
- NEWSOSOL//KKRFLEX //LLOYD   //...     //...     //...     //full inv//        
--------------------------------------------------------------------------------
--------------------------------------------------------------------------------
- TEST OPTIONS:
-         //        //        //        //        //        //        //        
-         //        //        //        //        //        //        //        
-
--------------------------------------------------------------------------------
  < MEMWFSAVE >, use default:           0
  < UNITMEMWFSAVE >, use default:           2 
  (MB) (max memory= MEMWFSAVE*1024**UNITMEMWFSAVE)
-                                                     na, nb, ldiag, lper, lpardiso; then bdims(1:nb)
-           0           0 F F F
-
+ automatically speeding up calculation (use option <set_cheby_nospeedup> to prev
+ ent this)
+ this diables wf saving automatically
 -------------------------------------------------------------------------------
  KMROT
        0
@@ -251,29 +361,29 @@ CLSGEN_TB: Atom    4 Refpot    1 Rmtref 2.2000000 Vref 8.0000000 TB-cluster    1
  Dimension and Input Data CHECK
    ncell :            1           4
    nfun  :           15         289
- <#Si14 POTENTIAL                      exc: Vosko,Wilk,Nusair       #serial: kkrjm_
- <#Si14 POTENTIAL                      exc: Vosko,Wilk,Nusair       #serial: kkrjm_
- <#Si14 POTENTIAL                      exc: Vosko,Wilk,Nusair       #serial: kkrjm_
- <#Si14 POTENTIAL                      exc: Vosko,Wilk,Nusair       #serial: kkrjm_
- <#Vac0 POTENTIAL                      exc: Vosko,Wilk,Nusair       #serial: kkrjm_
- <#Vac0 POTENTIAL                      exc: Vosko,Wilk,Nusair       #serial: kkrjm_
- <#Vac0 POTENTIAL                      exc: Vosko,Wilk,Nusair       #serial: kkrjm_
- <#Vac0 POTENTIAL                      exc: Vosko,Wilk,Nusair       #serial: kkrjm_
-Doing calculation with potential: MD5 (potential) = 230666442204bee643ef39a7eadccd62
+ <#Si14 POTENTIAL                      exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
+ <#Si14 POTENTIAL                      exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
+ <#Si14 POTENTIAL                      exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
+ <#Si14 POTENTIAL                      exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
+ <#Vac0 POTENTIAL                      exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
+ <#Vac0 POTENTIAL                      exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
+ <#Vac0 POTENTIAL                      exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
+ <#Vac0 POTENTIAL                      exc: Vosko,Wilk,Nusair      #serial: JuKKR_v
+Doing calculation with potential: MD5 (potential) = 6cd12c7c5404e53c7eb0496d6accd7e0
 Doing calculation with shapefun: MD5 (shapefun) = 435c0c91db9d41eeb0f4313fcee12283
  
 ===============================================================================
                     EPATHTB: generates a complex E contour
 ===============================================================================
  
-     E min =    -0.400000 (Ry)        Fermi energy =     0.642638 (Ry)
-     E max =     0.642638 (Ry)        Temperature  =   473.000000 (K )
+     E min =    -0.400000 (Ry)        Fermi energy =     0.656244 (Ry)
+     E max =     0.656244 (Ry)        Temperature  =   800.000000 (K )
      --------------------------------------------------------------
      GF integration rectangular contour ( ImE > 0 )
-     Number of energy points :  21             poles = 5
-                       contour: N1 = 3, N2 =  10, N3 = 3
+     Number of energy points :  24             poles = 5
+                       contour: N1 = 3, N2 =  13, N3 = 3
  
- >>> SHAPE : IMAXSH( 165),NGSHD : 60000
+ >>> SHAPE : IMAXSH(      165),NGSHD :    60000
 ===============================================================================
                   MADELUNG3D: setting bulk Madelung coefficients
 ===============================================================================
@@ -299,16 +409,13 @@ Doing calculation with shapefun: MD5 (shapefun) = 435c0c91db9d41eeb0f4313fcee122
 
         ------------------------------------------------------------
         3D symmetries:
- found for this lattice: 24
+ found for this lattice:  8
         ------------------------------------------------------------
-        E           C3alfa      C3beta      C3gamma     C3delta   
-        C3alfa-1    C3beta-1    C3gamma-1   C3delta-1   C2x       
-        C2y         C2z         IC4x        IC4y        IC4z      
-        IC4x-1      IC4y-1      IC4z-1      IC2a        IC2b      
-        IC2c        IC2d        IC2e        IC2f      
+        E           C2x         C2y         C2z         IC4z      
+        IC4z-1      IC2a        IC2b      
         ------------------------------------------------------------
 
-        Test option < fullBZ > or Run option < NEWSOSOL >:  overriding NSYMAT, generate full BZ k-mesh
+        Run option <use_full_BZ> or <use_Chebychev_solver>:  overriding NSYMAT, generate full BZ k-mesh
 
      < BZKMESH > : creating k-mesh, write to file kpoints
 
@@ -316,12 +423,12 @@ Doing calculation with shapefun: MD5 (shapefun) = 435c0c91db9d41eeb0f4313fcee122
         the direct lattice  1 symmetries will be used
 
         -----------------------------------
-        k-mesh NofKs N kx N ky N kz vol BZ
+           k-mesh    NofKs N kx N ky N kz vol BZ
         -----------------------------------
-             1  1000   10   10   10  4.0000
-             2   343    7    7    7  4.0000
-             3   125    5    5    5  4.0000
-             4    27    3    3    3  4.0000
+                1     1000   10   10   10  4.0000
+                2      343    7    7    7  4.0000
+                3      125    5    5    5  4.0000
+                4       27    3    3    3  4.0000
         -----------------------------------
 
      <SYMTAUMAT> : rotation matrices acting on t/G/tau
@@ -384,16 +491,16 @@ Doing calculation with shapefun: MD5 (shapefun) = 435c0c91db9d41eeb0f4313fcee122
              -----------------------------------------------------------------
                 J |
              I    | 1..NATCLUS
-             ------------------ 
-                1 | 011111111 
-                2 | 101111111 
-                3 | 110111111 
-                4 | 111011111 
-                5 | 111101111 
-                6 | 111110111 
-                7 | 111111011 
-                8 | 111111101 
-                9 | 111111110 
+             ------------------
+                1 | 011111111
+                2 | 101111111
+                3 | 110111111
+                4 | 111011111
+                5 | 111101111
+                6 | 111110111
+                7 | 111111011
+                8 | 111111101
+                9 | 111111110
              ------------------
 
              ------------------------------
@@ -401,69 +508,78 @@ Doing calculation with shapefun: MD5 (shapefun) = 435c0c91db9d41eeb0f4313fcee122
              ------------------------------
               I   J  | shell    isym
              ------------------------------
-               1   2 |    32     1  E         
-               1   3 |    24     1  E         
-               1   4 |    16     1  E         
-               1   5 |    26     1  E         
-               1   6 |    18     1  E         
-               1   7 |    19     1  E         
-               1   8 |    20     1  E         
-               1   9 |    21     1  E         
-               2   1 |    39     1  E         
-               2   3 |    23     1  E         
-               2   4 |    24     1  E         
-               2   5 |    25     1  E         
-               2   6 |    26     1  E         
-               2   7 |    27     1  E         
-               2   8 |    28     1  E         
-               2   9 |    29     1  E         
-               3   1 |    38     1  E         
-               3   2 |    31     1  E         
-               3   4 |    32     1  E         
-               3   5 |    33     1  E         
-               3   6 |    34     1  E         
+               1   2 |     5     1  E         
+               1   3 |     6     1  E         
+               1   4 |     7     1  E         
+               1   5 |     8     1  E         
+               1   6 |     9     1  E         
+               1   7 |    10     1  E         
+               1   8 |    11     1  E         
+               1   9 |    12     1  E         
+               2   1 |    13     1  E         
+               2   3 |    14     1  E         
+               2   4 |    15     1  E         
+               2   5 |    16     1  E         
+               2   6 |    17     1  E         
+               2   7 |    18     1  E         
+               2   8 |    19     1  E         
+               2   9 |    20     1  E         
+               3   1 |    21     1  E         
+               3   2 |    22     1  E         
+               3   4 |    23     1  E         
+               3   5 |    24     1  E         
+               3   6 |    25     1  E         
                3   7 |    26     1  E         
-               3   8 |    35     1  E         
-               3   9 |    36     1  E         
-               4   1 |    37     1  E         
-               4   2 |    38     1  E         
-               4   3 |    39     1  E         
-               4   5 |    40     1  E         
-               4   6 |    41     1  E         
-               4   7 |    42     1  E         
+               3   8 |    27     1  E         
+               3   9 |    28     1  E         
+               4   1 |    29     1  E         
+               4   2 |    30     1  E         
+               4   3 |    31     1  E         
+               4   5 |    32     1  E         
+               4   6 |    33     1  E         
+               4   7 |    34     1  E         
                4   8 |    26     1  E         
-               4   9 |    43     1  E         
-               5   1 |    51     1  E         
-               5   2 |    45     1  E         
-               5   3 |    46     1  E         
-               5   4 |    47     1  E         
-               5   6 |    32     1  E         
-               5   7 |    24     1  E         
-               5   8 |    48     1  E         
-               5   9 |    49     1  E         
-               6   1 |    50     1  E         
-               6   2 |    51     1  E         
-               6   3 |    52     1  E         
-               6   4 |    53     1  E         
-               6   5 |    39     1  E         
-               6   7 |    54     1  E         
+               4   9 |    35     1  E         
+               5   1 |    36     1  E         
+               5   2 |    37     1  E         
+               5   3 |    38     1  E         
+               5   4 |    39     1  E         
+               5   6 |    40     1  E         
+               5   7 |    41     1  E         
+               5   8 |    42     1  E         
+               5   9 |    17     1  E         
+               6   1 |    43     1  E         
+               6   2 |    44     1  E         
+               6   3 |    45     1  E         
+               6   4 |    46     1  E         
+               6   5 |    47     1  E         
+               6   7 |    32     1  E         
                6   8 |    24     1  E         
-               6   9 |    55     1  E         
-               7   1 |    56     1  E         
-               7   2 |    57     1  E         
+               6   9 |    48     1  E         
+               7   1 |    49     1  E         
+               7   2 |    50     1  E         
                7   3 |    51     1  E         
-               7   4 |    58     1  E         
-               7   5 |    38     1  E         
-               7   6 |    59     1  E         
-               7   8 |    32     1  E         
-               7   9 |    60     1  E         
-               8   1 |    61     1  E         
-               8   2 |    62     1  E         
-               8   3 |    63     1  E         
+               7   4 |    52     1  E         
+               7   5 |    53     1  E         
+               7   6 |    39     1  E         
+               7   8 |    54     1  E         
+               7   9 |    15     1  E         
+               8   1 |    55     1  E         
+               8   2 |    56     1  E         
+               8   3 |    57     1  E         
                8   4 |    51     1  E         
-               8   5 |    64     1  E         
+               8   5 |    58     1  E         
                8   6 |    38     1  E         
-               8   7 |    39     1  E         
+               8   7 |    59     1  E         
+               8   9 |    14     1  E         
+               9   1 |    60     1  E         
+               9   2 |    61     1  E         
+               9   3 |    62     1  E         
+               9   4 |    63     1  E         
+               9   5 |    44     1  E         
+               9   6 |    64     1  E         
+               9   7 |    30     1  E         
+               9   8 |    22     1  E         
              ------------------------------
 
         Different shells for GF calculation :  64
@@ -478,68 +594,68 @@ Doing calculation with shapefun: MD5 (shapefun) = 435c0c91db9d41eeb0f4313fcee122
       ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
                       (impurity) cluster related data/indexing
       ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-         5 |  2   1 |   -0.2500  -0.2500  -0.2500  0.43301 |    (1,2) 
-         6 |  2   3 |    0.2500  -0.2500  -0.2500  0.43301 |    (1,3) 
-         7 |  2   3 |   -0.2500   0.2500  -0.2500  0.43301 |    (1,4) 
-         8 |  2   1 |    0.2500   0.2500  -0.2500  0.43301 |    (1,5) 
-         9 |  2   3 |   -0.2500  -0.2500   0.2500  0.43301 |    (1,6) 
-        10 |  2   1 |    0.2500  -0.2500   0.2500  0.43301 |    (1,7) 
-        11 |  2   1 |   -0.2500   0.2500   0.2500  0.43301 |    (1,8) 
-        12 |  2   3 |    0.2500   0.2500   0.2500  0.43301 |    (1,9) 
-        13 |  1   2 |    0.2500   0.2500   0.2500  0.43301 |    (2,1) 
-        14 |  1   3 |    0.5000   0.0000   0.0000  0.50000 |    (2,3)    (8,9) 
-        15 |  1   3 |    0.0000   0.5000   0.0000  0.50000 |    (2,4)    (7,9) 
-        16 |  1   1 |    0.5000   0.5000   0.0000  0.70711 |    (2,5) 
-        17 |  1   3 |    0.0000   0.0000   0.5000  0.50000 |    (2,6)    (5,9) 
-        18 |  1   1 |    0.5000   0.0000   0.5000  0.70711 |    (2,7) 
-        19 |  1   1 |    0.0000   0.5000   0.5000  0.70711 |    (2,8) 
-        20 |  1   3 |    0.5000   0.5000   0.5000  0.86603 |    (2,9) 
-        21 |  3   2 |   -0.2500   0.2500   0.2500  0.43301 |    (3,1) 
-        22 |  3   1 |   -0.5000   0.0000   0.0000  0.50000 |    (3,2)    (9,8) 
-        23 |  3   3 |   -0.5000   0.5000   0.0000  0.70711 |    (3,4) 
-        24 |  3   1 |    0.0000   0.5000   0.0000  0.50000 |    (3,5)    (6,8) 
-        25 |  3   3 |   -0.5000   0.0000   0.5000  0.70711 |    (3,6) 
-        26 |  3   1 |    0.0000   0.0000   0.5000  0.50000 |    (3,7)    (4,8) 
-        27 |  3   1 |   -0.5000   0.5000   0.5000  0.86603 |    (3,8) 
-        28 |  3   3 |    0.0000   0.5000   0.5000  0.70711 |    (3,9) 
-        29 |  3   2 |    0.2500  -0.2500   0.2500  0.43301 |    (4,1) 
-        30 |  3   1 |    0.0000  -0.5000   0.0000  0.50000 |    (4,2)    (9,7) 
-        31 |  3   3 |    0.5000  -0.5000   0.0000  0.70711 |    (4,3) 
-        32 |  3   1 |    0.5000   0.0000   0.0000  0.50000 |    (4,5)    (6,7) 
-        33 |  3   3 |    0.0000  -0.5000   0.5000  0.70711 |    (4,6) 
-        34 |  3   1 |    0.5000  -0.5000   0.5000  0.86603 |    (4,7) 
-        35 |  3   3 |    0.5000   0.0000   0.5000  0.70711 |    (4,9) 
-        36 |  1   2 |   -0.2500  -0.2500   0.2500  0.43301 |    (5,1) 
-        37 |  1   1 |   -0.5000  -0.5000   0.0000  0.70711 |    (5,2) 
-        38 |  1   3 |    0.0000  -0.5000   0.0000  0.50000 |    (5,3)    (8,6) 
-        39 |  1   3 |   -0.5000   0.0000   0.0000  0.50000 |    (5,4)    (7,6) 
-        40 |  1   3 |   -0.5000  -0.5000   0.5000  0.86603 |    (5,6) 
-        41 |  1   1 |    0.0000  -0.5000   0.5000  0.70711 |    (5,7) 
-        42 |  1   1 |   -0.5000   0.0000   0.5000  0.70711 |    (5,8) 
-        43 |  3   2 |    0.2500   0.2500  -0.2500  0.43301 |    (6,1) 
-        44 |  3   1 |    0.0000   0.0000  -0.5000  0.50000 |    (6,2)    (9,5) 
-        45 |  3   3 |    0.5000   0.0000  -0.5000  0.70711 |    (6,3) 
-        46 |  3   3 |    0.0000   0.5000  -0.5000  0.70711 |    (6,4) 
-        47 |  3   1 |    0.5000   0.5000  -0.5000  0.86603 |    (6,5) 
-        48 |  3   3 |    0.5000   0.5000   0.0000  0.70711 |    (6,9) 
-        49 |  1   2 |   -0.2500   0.2500  -0.2500  0.43301 |    (7,1) 
-        50 |  1   1 |   -0.5000   0.0000  -0.5000  0.70711 |    (7,2) 
-        51 |  1   3 |    0.0000   0.0000  -0.5000  0.50000 |    (7,3)    (8,4) 
-        52 |  1   3 |   -0.5000   0.5000  -0.5000  0.86603 |    (7,4) 
-        53 |  1   1 |    0.0000   0.5000  -0.5000  0.70711 |    (7,5) 
-        54 |  1   1 |   -0.5000   0.5000   0.0000  0.70711 |    (7,8) 
-        55 |  1   2 |    0.2500  -0.2500  -0.2500  0.43301 |    (8,1) 
-        56 |  1   1 |    0.0000  -0.5000  -0.5000  0.70711 |    (8,2) 
-        57 |  1   3 |    0.5000  -0.5000  -0.5000  0.86603 |    (8,3) 
-        58 |  1   1 |    0.5000   0.0000  -0.5000  0.70711 |    (8,5) 
-        59 |  1   1 |    0.5000  -0.5000   0.0000  0.70711 |    (8,7) 
-        60 |  3   2 |   -0.2500  -0.2500  -0.2500  0.43301 |    (9,1) 
-        61 |  3   1 |   -0.5000  -0.5000  -0.5000  0.86603 |    (9,2) 
-        62 |  3   3 |    0.0000  -0.5000  -0.5000  0.70711 |    (9,3) 
-        63 |  3   3 |   -0.5000   0.0000  -0.5000  0.70711 |    (9,4) 
-        64 |  3   3 |   -0.5000  -0.5000   0.0000  0.70711 |    (9,6) 
+         5 |  2   1 |   -0.2500  -0.2500  -0.2500  0.43301 |    (0,0)
+         6 |  2   3 |    0.2500  -0.2500  -0.2500  0.43301 |    (0,0)
+         7 |  2   3 |   -0.2500   0.2500  -0.2500  0.43301 |    (0,0)
+         8 |  2   1 |    0.2500   0.2500  -0.2500  0.43301 |    (0,0)
+         9 |  2   3 |   -0.2500  -0.2500   0.2500  0.43301 |    (0,0)
+        10 |  2   1 |    0.2500  -0.2500   0.2500  0.43301 |    (0,0)
+        11 |  2   1 |   -0.2500   0.2500   0.2500  0.43301 |    (0,0)
+        12 |  2   3 |    0.2500   0.2500   0.2500  0.43301 |    (0,0)
+        13 |  1   2 |    0.2500   0.2500   0.2500  0.43301 |    (0,0)
+        14 |  1   3 |    0.5000   0.0000   0.0000  0.50000 |    (0,0)    (0,0)
+        15 |  1   3 |    0.0000   0.5000   0.0000  0.50000 |    (0,0)    (0,0)
+        16 |  1   1 |    0.5000   0.5000   0.0000  0.70711 |    (0,0)
+        17 |  1   3 |    0.0000   0.0000   0.5000  0.50000 |    (0,0)    (0,0)
+        18 |  1   1 |    0.5000   0.0000   0.5000  0.70711 |    (0,0)
+        19 |  1   1 |    0.0000   0.5000   0.5000  0.70711 |    (0,0)
+        20 |  1   3 |    0.5000   0.5000   0.5000  0.86603 |    (0,0)
+        21 |  3   2 |   -0.2500   0.2500   0.2500  0.43301 |    (0,0)
+        22 |  3   1 |   -0.5000   0.0000   0.0000  0.50000 |    (0,0)    (0,0)
+        23 |  3   3 |   -0.5000   0.5000   0.0000  0.70711 |    (0,0)
+        24 |  3   1 |    0.0000   0.5000   0.0000  0.50000 |    (0,0)    (0,0)
+        25 |  3   3 |   -0.5000   0.0000   0.5000  0.70711 |    (0,0)
+        26 |  3   1 |    0.0000   0.0000   0.5000  0.50000 |    (0,0)    (0,0)
+        27 |  3   1 |   -0.5000   0.5000   0.5000  0.86603 |    (0,0)
+        28 |  3   3 |    0.0000   0.5000   0.5000  0.70711 |    (0,0)
+        29 |  3   2 |    0.2500  -0.2500   0.2500  0.43301 |    (0,0)
+        30 |  3   1 |    0.0000  -0.5000   0.0000  0.50000 |    (0,0)    (0,0)
+        31 |  3   3 |    0.5000  -0.5000   0.0000  0.70711 |    (0,0)
+        32 |  3   1 |    0.5000   0.0000   0.0000  0.50000 |    (0,0)    (0,0)
+        33 |  3   3 |    0.0000  -0.5000   0.5000  0.70711 |    (0,0)
+        34 |  3   1 |    0.5000  -0.5000   0.5000  0.86603 |    (0,0)
+        35 |  3   3 |    0.5000   0.0000   0.5000  0.70711 |    (0,0)
+        36 |  1   2 |   -0.2500  -0.2500   0.2500  0.43301 |    (0,0)
+        37 |  1   1 |   -0.5000  -0.5000   0.0000  0.70711 |    (0,0)
+        38 |  1   3 |    0.0000  -0.5000   0.0000  0.50000 |    (0,0)    (0,0)
+        39 |  1   3 |   -0.5000   0.0000   0.0000  0.50000 |    (0,0)    (0,0)
+        40 |  1   3 |   -0.5000  -0.5000   0.5000  0.86603 |    (0,0)
+        41 |  1   1 |    0.0000  -0.5000   0.5000  0.70711 |    (0,0)
+        42 |  1   1 |   -0.5000   0.0000   0.5000  0.70711 |    (0,0)
+        43 |  3   2 |    0.2500   0.2500  -0.2500  0.43301 |    (0,0)
+        44 |  3   1 |    0.0000   0.0000  -0.5000  0.50000 |    (0,0)    (0,0)
+        45 |  3   3 |    0.5000   0.0000  -0.5000  0.70711 |    (0,0)
+        46 |  3   3 |    0.0000   0.5000  -0.5000  0.70711 |    (0,0)
+        47 |  3   1 |    0.5000   0.5000  -0.5000  0.86603 |    (0,0)
+        48 |  3   3 |    0.5000   0.5000   0.0000  0.70711 |    (0,0)
+        49 |  1   2 |   -0.2500   0.2500  -0.2500  0.43301 |    (0,0)
+        50 |  1   1 |   -0.5000   0.0000  -0.5000  0.70711 |    (0,0)
+        51 |  1   3 |    0.0000   0.0000  -0.5000  0.50000 |    (0,0)    (0,0)
+        52 |  1   3 |   -0.5000   0.5000  -0.5000  0.86603 |    (0,0)
+        53 |  1   1 |    0.0000   0.5000  -0.5000  0.70711 |    (0,0)
+        54 |  1   1 |   -0.5000   0.5000   0.0000  0.70711 |    (0,0)
+        55 |  1   2 |    0.2500  -0.2500  -0.2500  0.43301 |    (0,0)
+        56 |  1   1 |    0.0000  -0.5000  -0.5000  0.70711 |    (0,0)
+        57 |  1   3 |    0.5000  -0.5000  -0.5000  0.86603 |    (0,0)
+        58 |  1   1 |    0.5000   0.0000  -0.5000  0.70711 |    (0,0)
+        59 |  1   1 |    0.5000  -0.5000   0.0000  0.70711 |    (0,0)
+        60 |  3   2 |   -0.2500  -0.2500  -0.2500  0.43301 |    (0,0)
+        61 |  3   1 |   -0.5000  -0.5000  -0.5000  0.86603 |    (0,0)
+        62 |  3   3 |    0.0000  -0.5000  -0.5000  0.70711 |    (0,0)
+        63 |  3   3 |   -0.5000   0.0000  -0.5000  0.70711 |    (0,0)
+        64 |  3   3 |   -0.5000  -0.5000   0.0000  0.70711 |    (0,0)
       ------------------------------------------------------------------------
-        Number of block elements to be calculated :  76
+        Number of block elements to be calculated :        76
 
      < GFMASK > : set KKR matrix inversion algorithm
 
@@ -549,15 +665,11 @@ Doing calculation with shapefun: MD5 (shapefun) = 435c0c91db9d41eeb0f4313fcee122
                                < KKR0 finished >
 ===============================================================================
 
- create_newcomms_group_ie input:          12           3           4
- create cartesian grid:           3           4          12
- MPI_Cart_sub
- MPI_Comm_rank
- MPI_Comm_size
+ create_newcomms_group_ie input:           3           3           1
 ==================================================
-    MPI parallelization: use   12 ranks
-    create processor array of size (nat x ne)   4 x   3
-    nranks_at:     3, nranks_ie:    4
+    MPI parallelization: use    3 ranks
+    create processor array of size (nat x ne)   1 x   3
+    nranks_at:     3, nranks_ie:    1
                 N_E
          <--------------->
        ^ ( | | | | | | | )
