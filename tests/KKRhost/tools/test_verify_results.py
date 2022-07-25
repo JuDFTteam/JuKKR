@@ -8,7 +8,6 @@ import os, pprint
 from kkrparser_functions import parse_kkr_outputfile
 from numpy import mean, std, array, loadtxt
 
-
 class Test_serial():
     """
     check results of simple scf tests without SOC
@@ -299,7 +298,7 @@ class Test_SOC():
            for fname in files:
               num, text = read_file(path+fname)
               num_ref, text_ref = read_file(path0+fname)
-              assert std(num-num_ref)<10**-10
+              assert std(num-num_ref)<1e-5
               assert set(text)-set(text_ref)==set()
 
     def test_14_ASA(self):
@@ -331,11 +330,15 @@ def standard_verify(path0, rms_threshold=10**-8, rms_threshold_end=10**-8, neutr
     """
     wrapper for standard tests reading output and comparins rms and charge neutrality
     """
-    # use parser function from aiida-kkr
+    # first check if the path exists
+    assert os.path.exists(path0)
+
+    # then use parser function from aiida-kkr
     success, parser_msgs, out_dict = parse_kkr_outputfile({}, path0+'out_kkr', path0+'output.0.txt', path0+'output.000.txt', path0+'out_timing.000.txt', path0+'out_potential', path0+'nonco_angle_out.dat', debug=debug)
     pprint.pprint(parser_msgs)
     pprint.pprint(out_dict)
-    # first check if parsing was successful
+
+    # check if parsing was successful
     assert success
     # check if initial iteration is still converged
     assert out_dict['convergence_group']['rms_all_iterations'][0] < rms_threshold
@@ -374,6 +377,7 @@ def cmp_modes(cmplist, path00, s_rms_bound=10**-12, max_s_charges_bound=10**-12)
         pprint.pprint('max_std_charges= {}'.format(max_s_charges))
         assert s_rms < s_rms_bound
         assert max_s_charges < max_s_charges_bound
+
 
 def read_file(path):
    """

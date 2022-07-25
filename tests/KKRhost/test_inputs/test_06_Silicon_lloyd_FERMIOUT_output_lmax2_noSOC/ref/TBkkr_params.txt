@@ -1,9 +1,9 @@
-#FILEVERSION= 2   # serial: kkrjm_v2.3-61-g4b60676_mpi_20180828093815
+#FILEVERSION= 2   # serial: JuKKR_v3.1-2090-g70a77d11_intel-debug_20220704151244
        2    lmaxd
        2    lmax
        0    korbit
        1    nspin, used as nspind
-    9700    nrd
+   12010    nrd
        0    nembd
        0    nemb
        1    ncls once again, used as nclsd
