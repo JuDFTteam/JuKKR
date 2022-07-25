@@ -79,7 +79,7 @@ EMIN      EMAX       TEMPR      NPOL      NPT1    NPT2     NPT3
 0.6305445 0.6305445    00.d0     0          0       1        0             # E_F
 0.6285445 0.6325445   100.d0     0          0       3        0             # E_F
 ----------------------------------------------------------------------
- NPAN_LOG= 5  NPAN_EQ= 3      NCHEB= 6   R_LOG= 1.0d0
+ NPAN_LOG= 12 NPAN_EQ= 5      NCHEB= 8   R_LOG= 1.0d0
  IMPLAYER= 7   ILAYERS= 60
             
 BZDIVIDE= 1 1 1

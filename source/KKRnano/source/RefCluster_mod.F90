@@ -166,7 +166,7 @@ module RefCluster_mod
 
 #ifdef DEBUG  
     write(*,'(a,2(i0,a),9999(" ",i0))') 'for atom #',source_atom_index,'  indn0(1:',self%numn0,') =',self%indn0(:)
-    write(*,'(a,3F16.12)') 'rcls(:,1) = ',rcls(1:3,1)
+    write(*,'(a,3F16.12)') 'rcls(:,1) = ',self%rcls(1:3,1)
 #endif
     ! todo: display some statistics
 #ifdef DEBUG

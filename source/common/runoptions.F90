@@ -16,105 +16,116 @@ module mod_runoptions
   public
   save
 
-  logical :: calc_DOS_Efermi = .false.                 !!calculate DOS at Fermi energy only (former: 'DOS-EF')
-  logical :: calc_GF_Efermi = .false.                  !!calculation of cluster Green function at E Fermi (former: 'GF-EF')
-  logical :: set_cheby_nospeedup = .false.             !!always calculate irregular solution in Chebychev solver (even if not needed) (former: 'norllsll')
-  logical :: decouple_spins_cheby = .false.            !!decouple spin matrices in Chebychev solver neglecting SOC and for collinear calculations only
-  logical :: set_cheby_nosoc     = .false.             !!set SOC strength to 0 for all atoms (former: 'NOSOC')
-  logical :: calc_complex_bandstructure = .false.      !!complex band structure (former: 'COMPLEX')
-  logical :: calc_exchange_couplings = .false.         !!calculate magnetic exchange coupling parameters (former: 'XCPL')
-  logical :: calc_exchange_couplings_energy = .false.  !!write energy-resolved Jij-files also if npol/=0 (former: 'Jijenerg')
-  logical :: calc_gmat_lm_full = .false.               !!calculate all lm-lm components of systems greens function and store to file `gflle` (former: 'lmlm-dos')
-  logical :: gflle_to_npy = .false.                    !!write gflle file to npy instead of to gflle file (contains G(k,e)LL'
-  logical :: dirac_scale_SpeefOfLight = .false.        !!scale the speed of light for Dirac solver (former: 'CSCALE')
-  logical :: disable_charge_neutrality = .false.       !!no charge neutrailty required: leaving Fermi level unaffected (former: 'no-neutr')
-  logical :: disable_print_serialnumber = .false.      !!deactivate writing of serial number and version information to files (for backwards compatibility) (former: 'noserial')
-  logical :: disable_reference_system = .false.        !!deactivate the tight-binding reference system (former: 'lrefsysf')
-  logical :: disable_tmat_sratrick = .false.           !!deactivate SRATRICK in solver for t-matirx (former: 'nosph')
-  logical :: fix_nonco_angles = .false.                !!fix direction of non-collinear magnetic moments (Chebychev solver) (former: 'FIXMOM')
-  logical :: formatted_file = .false.                  !!write files ascii-format. only effective with some other write-options (former: 'fileverb')
-  logical :: impurity_operator_only = .false.          !!only for `write_pkkr_operators`: disable costly recalculation of host operators (former: 'IMP_ONLY')
-  logical :: modify_soc_Dirac = .false.                !!modify SOC for Dirac solver (former: 'SOC')
-  logical :: no_madelung = .false.                     !!do not add some energy terms (coulomb, XC, eff. pot.) to total energy (former: 'NoMadel')
-  logical :: print_Gij = .false.                       !!print cluster G_ij matrices to outfile (former: 'Gmatij')
-  logical :: print_gmat = .false.                      !!print Gmat to outfile (former: 'Gmat')
-  logical :: print_ickeck = .false.                    !!enable test-output of ICHECK matrix from gfmask (former: 'ICHECK')
-  logical :: print_kmesh = .false.                     !!output of k-mesh (former: 'k-net')
-  logical :: print_kpoints = .false.                   !!print k-points to outfile (former: 'BZKP')
-  logical :: print_program_flow = .false.              !!monitor the program flow in some parts of the code (former: 'flow')
-  logical :: print_radial_mesh = .false.               !!write mesh information to output (former: 'RMESH')
-  logical :: print_refpot = .false.                    !!test output of refpot (former: 'REFPOT')
-  logical :: print_tau_structure = .false.             !!write extensive information about k-mesh symmetrization and structure of site-diagonal tau matrices to output (former: 'TAUSTRUC')
-  logical :: print_tmat = .false.                      !!print t-matrix to outfile (former: 'tmat')
-  logical :: relax_SpinAngle_Dirac = .false.           !!relax the spin angle in a SCF calculation [only DIRAC mode] (former: 'ITERMDIR')
-  logical :: search_Efermi = .false.                   !!modify convergence parameters to scan for fermi energy only (to reach charge neutrality). (former: 'SEARCHEF')
-  logical :: set_gmat_to_zero = .false.                !!set GMAT=0 in evaluation of density (former: 'GMAT=0')
-  logical :: set_empty_system = .false.                !!set potential and nuclear charge to zero (former: 'zeropot')
-  logical :: set_kmesh_large = .false.                 !!set equal k-mesh (largest) for all energy points (former: 'fix mesh')
-  logical :: set_kmesh_small = .false.                 !!set equal k-mesh (smallest) for all energy points (former: 'fix4mesh')
-  logical :: set_tmat_noinversion = .false.            !!do not perform inversion to get msst = Delta t^-1, but msst = Delta t. (former: 'testgmat')
-  logical :: simulate_asa = .false.                    !!set non-spherical potential to zero in full-potential calculation with Chebychev solver (former: 'simulasa')
-  logical :: slow_mixing_Efermi = .false.              !!renormalize Fermi-energy shift by mixing factor during mixing (former: 'slow-neu')
-  logical :: stop_1a = .false.                         !!stop after main1a (former: 'STOP1A')
-  logical :: stop_1b = .false.                         !!stop after main1b (former: 'STOP1B')
-  logical :: stop_1c = .false.                         !!stop after main1c (former: 'STOP1C')
-  logical :: symmetrize_gmat = .false.                 !!use symmetrization [G(k) + G(-k)]/2 in k-point loop (former: 'symG(k)')
-  logical :: symmetrize_potential_cubic= .false.       !!keep only symmetric part of potential (L=1,11,21,25,43,47). (former: 'potcubic')
-  logical :: symmetrize_potential_madelung = .false.   !!symmetrize potential in consistency to madelung potential (former: 'potsymm')
-  logical :: torque_operator_onlyMT = .false.          !!for torque operator: include only the part within the muffin tin (former: 'ONLYMT')
-  logical :: torque_operator_onlySph = .false.         !!for torque operator: include only the spherically symmetric part (former: 'ONLYSPH')
-  logical :: use_BdG = .false.                         !!use Bogoliubov-de-Gennes Formalism (former: 'useBdG')
-  logical :: use_Chebychev_solver = .false.            !!use the Chebychev solver (former: 'NEWSOSOL')
-  logical :: use_cond_LB = .false.                     !!perform calculation of conductance in Landauer-Büttiker formalism (former: 'CONDUCT')
-  logical :: use_cont = .false.                        !!no usage of embedding points. NEMB is set to 0. (former: 'CONT')
-  logical :: use_deci_onebulk= .false.                 !!in case of decimation: use same bulk on right and left. Speeds up calculations. (former: 'ONEBULK')
-  logical :: use_decimation = .false.                  !!use Decimation technique for semi-infinite systems (former: 'DECIMATE')
-  logical :: use_ewald_2d = .false.                    !!use 2D ewald sum instead of 3D sum (Attention: does not work always!) (former: 'ewald2d')
-  logical :: use_full_BZ = .false.                     !!use full Brillouin zone, i.e. switch off symmetries for k-space integration (former: 'fullBZ')
-  logical :: use_ldau = .false.                        !!use LDA+U as exchange-correlation potential (former: 'LDA+U')
-  logical :: use_lloyd = .false.                       !!use Lloyds formula to correct finite angular momentum cutoff (former: 'LLOYD')
-  logical :: use_qdos = .false.                        !!writes out qdos files for band structure calculations. (former: 'qdos')
-  logical :: use_readcpa = .false.                     !!read cpa t-matrix from file (former: 'readcpa')
-  logical :: use_rigid_Efermi = .false.                !!keep the Fermi energy fixed during self-consistency (former: 'rigid-ef')
-  logical :: use_semicore = .false.                    !!use semicore contour (former: 'SEMICORE')
-  logical :: use_spherical_potential_only = .false.    !!keeping only spherical component of potential (former: 'Vspher')
-  logical :: use_virtual_atoms = .false.               !!add virtual atoms (former: 'VIRATOMS')
-  logical :: write_BdG_tests = .false.                 !!test options for Bogouliubov-deGennes (former: 'BdG_dev')
-  logical :: write_DOS = .false.                       !!write out DOS files in any case (also if npol!=0) (former: 'DOS')
-  logical :: write_DOS_lm = .false.                    !!write out DOS files with decomposition into l and m components (former: 'lmdos')
-  logical :: write_gmat_plain = .false.                !!write out Green function as plain text file (former: 'GPLAIN')
-  logical :: write_green_host = .false.                !!write green function of the host to file `green_host` (former: 'WRTGREEN')
-  logical :: write_green_imp = .false.                 !!write out impurity Green function to GMATLL_GES (former: 'GREENIMP')
-  logical :: write_complex_qdos = .false.              !!write complex qdos to file (former: 'compqdos')
-  logical :: write_cpa_projection_file = .false.       !!write CPA projectors to file (former: 'projfile')
-  logical :: write_deci_pot = .false.                  !!write decimation-potential file (former: 'deci-pot')
-  logical :: write_deci_tmat = .false.                 !!write t-matrix to file 'decifile' (former: 'deci-out')
-  logical :: write_density_ascii = .false.             !!write density rho2ns to file densitydn.ascii (former: 'den-asci')
-  logical :: write_energy_mesh = .false.               !!write out the energy mesh to file `emesh.scf` (former: 'EMESH')
-  logical :: write_generalized_potential = .false.     !!write potential in general format. Usually prepares for running the VORONOI program. (former: 'GENPOT')
-  logical :: write_gmat_file = .false.                 !!write GMAT to file (former: 'gmatfile')
-  logical :: write_gref_file = .false.                 !!write GREF to file (former: 'greffile')
-  logical :: write_gmat_ascii = .false.                !!write GMAT to formatted file `gmat.ascii` (former: 'gmatasci')
-  logical :: write_kkrimp_input = .false.              !!write out files for KKRimp-code (former: 'KKRFLEX')
-  logical :: write_kkrsusc_input = .false.             !!write out files for KKRsusc-code (former: 'KKRSUSC')
-  logical :: write_kpts_file = .false.                 !!write and read k-mesh to/from file `kpoints` (former: 'kptsfile')
-  logical :: write_lloyd_cdos_file = .false.           !!write Lloyd array to file  (former: 'wrtcdos')
-  logical :: write_lloyd_dgref_file= .false.           !!write Lloyd array to file  (former: 'wrtdgref')
-  logical :: write_lloyd_dtmat_file= .false.           !!write Lloyd array to file  (former: 'wrtdtmat')
-  logical :: write_lloyd_file = .false.                !!write several Lloyd-arrays to files (former: 'llyfiles')
-  logical :: write_lloyd_g0tr_file = .false.           !!write Lloyd array to file  (former: 'wrtgotr')
-  logical :: write_lloyd_tralpha_file= .false.         !!write Lloyd array to file  (former: 'wrttral')
-  logical :: write_madelung_file = .false.             !!write madelung summation to file 'abvmad.unformatted' instead of keeping it in memory (former: 'madelfil')
-  logical :: write_pkkr_input = .false.                !!write out files for Pkkprime-code (former: 'FERMIOUT')
-  logical :: write_pkkr_operators = .false.            !!for Fermi-surface output: calculate various operators in KKR basis. (former: 'OPERATOR')
-  logical :: write_potential_tests = .false.           !!write potential at different steps in main2 to different files (former: 'vintrasp' and 'vpotout')
-  logical :: write_rho2ns = .false.                    !!write array rho2ns into file out_rhoval (from main1c) and out_rhotot (from main2) (former: 'RHOVALTW' and 'RHOVALW')
-  logical :: write_rhoq_input = .false.                !!write out files needed for rhoq module (Quasiparticle interference) (former: 'rhoqtest')
-  logical :: write_tmat_file = .false.                 !!write t-matix to file (former: 'tmatfile')
-  logical :: write_tb_coupling = .false.               !!write couplings in tight-binging reference system to file `couplings.dat` (former: 'godfrin')
-  logical :: calc_wronskian = .false.                  !!calculate the wronskian relations of first and second kind for the wavefunctions (see PhD Bauer pp 48)
+  logical :: calc_DOS_Efermi = .false.                 !! calculate DOS at Fermi energy only (former: 'DOS-EF')
+  logical :: calc_GF_Efermi = .false.                  !! calculation of cluster Green function at E Fermi (former: 'GF-EF')
+  logical :: set_cheby_nosoc = .false.                 !! set SOC strength to 0 for all atoms (former: 'NOSOC')
+  logical :: set_cheby_nospeedup = .false.             !! always calculate irregular solution in Chebychev solver (even if not needed) (former: 'norllsll')
+  logical :: decouple_spin_cheby = .false.             !! decouple spin matrices in Chebychev solver neglecting SOC and for collinear calculations only
+  logical :: use_cheby_quadprec  = .false.             !! use quadruple precision in Chebychev solver for irregular solution (former: 'quadprec')
+  logical :: calc_complex_bandstructure = .false.      !! complex band structure (former: 'COMPLEX')
+  logical :: calc_exchange_couplings = .false.         !! calculate magnetic exchange coupling parameters (former: 'XCPL')
+  logical :: calc_exchange_couplings_energy = .false.  !! write energy-resolved Jij-files also if npol/=0 (former: 'Jijenerg')
+  logical :: calc_gmat_lm_full = .false.               !! calculate all lm-lm components of systems greens function and store to file `gflle` (former: 'lmlm-dos')
+  logical :: dirac_scale_SpeefOfLight = .false.        !! scale the speed of light for Dirac solver (former: 'CSCALE')
+  logical :: disable_charge_neutrality = .false.       !! no charge neutrailty required: leaving Fermi level unaffected (former: 'no-neutr')
+  logical :: disable_print_serialnumber = .false.      !! deactivate writing of serial number and version information to files (for backwards compatibility) (former: 'noserial')
+  logical :: disable_reference_system = .false.        !! deactivate the tight-binding reference system (former: 'lrefsysf')
+  logical :: disable_tmat_sratrick = .false.           !! deactivate SRATRICK in solver for t-matirx (former: 'nosph')
+  logical :: fix_nonco_angles = .false.                !! fix direction of non-collinear magnetic moments (Chebychev solver) (former: 'FIXMOM')
+  logical :: formatted_file = .false.                  !! write files ascii-format. only effective with some other write-options (former: 'fileverb')
+  logical :: write_npy = .false.                       !! write files in npy format (python readable) (former: 'writenpy')
+  logical :: gflle_to_npy = .false.                    !! write gflle file to npy instead of to gflle file (contains G(k,e)LL'
+  logical :: impurity_operator_only = .false.          !! only for `write_pkkr_operators`: disable costly recalculation of host operators (former: 'IMP_ONLY')
+  logical :: modify_soc_Dirac = .false.                !! modify SOC for Dirac solver (former: 'SOC')
+  logical :: no_madelung = .false.                     !! do not add some energy terms (coulomb, XC, eff. pot.) to total energy (former: 'NoMadel')
+  logical :: print_Gij = .false.                       !! print cluster G_ij matrices to outfile (former: 'Gmatij')
+  logical :: print_gmat = .false.                      !! print Gmat to outfile (former: 'Gmat')
+  logical :: print_ickeck = .false.                    !! enable test-output of ICHECK matrix from gfmask (former: 'ICHECK')
+  logical :: print_kmesh = .false.                     !! output of k-mesh (former: 'k-net')
+  logical :: print_kpoints = .false.                   !! print k-points to outfile (former: 'BZKP')
+  logical :: print_program_flow = .false.              !! monitor the program flow in some parts of the code (former: 'flow')
+  logical :: print_radial_mesh = .false.               !! write mesh information to output (former: 'RMESH')
+  logical :: print_refpot = .false.                    !! test output of refpot (former: 'REFPOT')
+  logical :: print_tau_structure = .false.             !! write extensive information about k-mesh symmetrization and structure of site-diagonal tau matrices to output (former: 'TAUSTRUC')
+  logical :: print_tmat = .false.                      !! print t-matrix to outfile (former: 'tmat')
+  logical :: relax_SpinAngle_Dirac = .false.           !! relax the spin angle in a SCF calculation [only DIRAC mode] (former: 'ITERMDIR')
+  logical :: search_Efermi = .false.                   !! modify convergence parameters to scan for fermi energy only (to reach charge neutrality). (former: 'SEARCHEF')
+  logical :: set_gmat_to_zero = .false.                !! set GMAT=0 in evaluation of density (former: 'GMAT=0')
+  logical :: set_empty_system = .false.                !! set potential and nuclear charge to zero (former: 'zeropot')
+  logical :: set_kmesh_large = .false.                 !! set equal k-mesh (largest) for all energy points (former: 'fix mesh')
+  logical :: set_kmesh_small = .false.                 !! set equal k-mesh (smallest) for all energy points (former: 'fix4mesh')
+  logical :: set_tmat_noinversion = .false.            !! do not perform inversion to get msst = Delta t^-1, but msst = Delta t. (former: 'testgmat')
+  logical :: simulate_asa = .false.                    !! set non-spherical potential to zero in full-potential calculation with Chebychev solver (former: 'simulasa')
+  logical :: slow_mixing_Efermi = .false.              !! renormalize Fermi-energy shift by mixing factor during mixing (former: 'slow-neu')
+  logical :: stop_1a = .false.                         !! stop after main1a (former: 'STOP1A')
+  logical :: stop_1b = .false.                         !! stop after main1b (former: 'STOP1B')
+  logical :: stop_1c = .false.                         !! stop after main1c (former: 'STOP1C')
+  logical :: symmetrize_gmat = .false.                 !! use symmetrization [G(k) + G(-k)]/2 in k-point loop (former: 'symG(k)')
+  logical :: symmetrize_potential_cubic= .false.       !! keep only symmetric part of potential (L=1,11,21,25,43,47). (former: 'potcubic')
+  logical :: symmetrize_potential_madelung = .false.   !! symmetrize potential in consistency to madelung potential (former: 'potsymm')
+  logical :: torque_operator_onlyMT = .false.          !! for torque operator: include only the part within the muffin tin (former: 'ONLYMT')
+  logical :: torque_operator_onlySph = .false.         !! for torque operator: include only the spherically symmetric part (former: 'ONLYSPH')
+  logical :: use_BdG = .false.                         !! use Bogoliubov-de-Gennes Formalism (former: 'useBdG')
+  logical :: use_Chebychev_solver = .false.            !! use the Chebychev solver (former: 'NEWSOSOL')
+  logical :: use_rllsll = .false.                      !! switch to previous approach to compute wavefunctions in Chebyshev solver
+  logical :: use_cond_LB = .false.                     !! perform calculation of conductance in Landauer-Büttiker formalism (former: 'CONDUCT')
+  logical :: use_cont = .false.                        !! no usage of embedding points. NEMB is set to 0. (former: 'CONT')
+  logical :: use_deci_onebulk= .false.                 !! in case of decimation: use same bulk on right and left. Speeds up calculations. (former: 'ONEBULK')
+  logical :: use_decimation = .false.                  !! use Decimation technique for semi-infinite systems (former: 'DECIMATE')
+  logical :: use_ewald_2d = .false.                    !! use 2D ewald sum instead of 3D sum (Attention: does not work always!) (former: 'ewald2d')
+  logical :: force_BZ_symm = .false.                   !! force the use of BZ symmetries for k-integration even with SOC (only overwritten by use_full_BZ option)
+  logical :: use_full_BZ = .false.                     !! use full Brillouin zone, i.e. switch off symmetries for k-space integration (former: 'fullBZ')
+  logical :: use_ldau = .false.                        !! use LDA+U as exchange-correlation potential (former: 'LDA+U')
+  logical :: use_lloyd = .false.                       !! use Lloyds formula to correct finite angular momentum cutoff (former: 'LLOYD')
+  logical :: use_qdos = .false.                        !! writes out qdos files for band structure calculations. (former: 'qdos')
+  logical :: use_readcpa = .false.                     !! read cpa t-matrix from file (former: 'readcpa')
+  logical :: use_rigid_Efermi = .false.                !! keep the Fermi energy fixed during self-consistency (former: 'rigid-ef')
+  logical :: use_semicore = .false.                    !! use semicore contour (former: 'SEMICORE')
+  logical :: use_spherical_potential_only = .false.    !! keeping only spherical component of potential (former: 'Vspher')
+  logical :: use_virtual_atoms = .false.               !! add virtual atoms (former: 'VIRATOMS')
+  logical :: write_BdG_tests = .false.                 !! test options for Bogouliubov-deGennes (former: 'BdG_dev')
+  logical :: write_DOS = .false.                       !! write out DOS files in any case (also if npol!=0) (former: 'DOS')
+  logical :: write_DOS_lm = .false.                    !! write out DOS files with decomposition into l and m components (former: 'lmdos')
+  logical :: write_gmat_plain = .false.                !! write out Green function as plain text file (former: 'GPLAIN')
+  logical :: write_green_host = .false.                !! write green function of the host to file `green_host` (former: 'WRTGREEN')
+  logical :: write_green_imp = .false.                 !! write out impurity Green function to GMATLL_GES (former: 'GREENIMP')
+  logical :: write_complex_qdos = .false.              !! write complex qdos to file (former: 'compqdos')
+  logical :: write_complex_lmdos = .false.             !! write complex lmdos to file
+  logical :: write_cpa_projection_file = .false.       !! write CPA projectors to file (former: 'projfile')
+  logical :: write_deci_pot = .false.                  !! write decimation-potential file (former: 'deci-pot')
+  logical :: write_deci_tmat = .false.                 !! write t-matrix to file 'decifile' (former: 'deci-out')
+  logical :: write_density_ascii = .false.             !! write density rho2ns to file densitydn.ascii (former: 'den-asci')
+  logical :: write_energy_mesh = .false.               !! write out the energy mesh to file `emesh.scf` (former: 'EMESH')
+  logical :: write_generalized_potential = .false.     !! write potential in general format. Usually prepares for running the VORONOI program. (former: 'GENPOT')
+  logical :: write_gmat_file = .false.                 !! write GMAT to file (former: 'gmatfile')
+  logical :: write_gref_file = .false.                 !! write GREF to file (former: 'greffile')
+  logical :: write_gmat_ascii = .false.                !! write GMAT to formatted file `gmat.ascii` (former: 'gmatasci')
+  logical :: write_kkrimp_input = .false.              !! write out files for KKRimp-code (former: 'KKRFLEX')
+  logical :: write_kkrsusc_input = .false.             !! write out files for KKRsusc-code (former: 'KKRSUSC')
+  logical :: write_kpts_file = .false.                 !! write and read k-mesh to/from file `kpoints` (former: 'kptsfile')
+  logical :: write_lloyd_cdos_file = .false.           !! write Lloyd array to file  (former: 'wrtcdos')
+  logical :: write_lloyd_dgref_file= .false.           !! write Lloyd array to file  (former: 'wrtdgref')
+  logical :: write_lloyd_dtmat_file= .false.           !! write Lloyd array to file  (former: 'wrtdtmat')
+  logical :: write_lloyd_file = .false.                !! write several Lloyd-arrays to files (former: 'llyfiles')
+  logical :: write_lloyd_g0tr_file = .false.           !! write Lloyd array to file  (former: 'wrtgotr')
+  logical :: write_lloyd_tralpha_file= .false.         !! write Lloyd array to file  (former: 'wrttral')
+  logical :: write_madelung_file = .false.             !! write madelung summation to file 'abvmad.unformatted' instead of keeping it in memory (former: 'madelfil')
+  logical :: write_pkkr_input = .false.                !! write out files for Pkkprime-code (former: 'FERMIOUT')
+  logical :: write_pkkr_operators = .false.            !! for Fermi-surface output: calculate various operators in KKR basis. (former: 'OPERATOR')
+  logical :: write_potential_tests = .false.           !! write potential at different steps in main2 to different files (former: 'vintrasp' and 'vpotout')
+  logical :: write_rho2ns = .false.                    !! write array rho2ns into file out_rhoval (from main1c) and out_rhotot (from main2) (former: 'RHOVALTW' and 'RHOVALW')
+  logical :: write_rhoq_input = .false.                !! write out files needed for rhoq module (Quasiparticle interference) (former: 'rhoqtest')
+  logical :: write_tmat_file = .false.                 !! write t-matix to file (former: 'tmatfile')
+  logical :: write_tb_coupling = .false.               !! write couplings in tight-binging reference system to file `couplings.dat` (former: 'godfrin')
+  logical :: calc_wronskian = .false.                  !! calculate the wronskian relations of first and second kind for the wavefunctions (see PhD Bauer pp 48)
+  logical :: calc_onsite_only = .false.                !! calculate not the full Green function for the density but take the onsite part alone
+  logical :: use_gmat_unity = .false.                  !! set the structural GF to the unity matrix for test purposes
+  logical :: nosmallcomp = .false.                     !! set small component of the wavefunction to zero
   logical :: use_broyden_spinmix = .false.             !! use broyden spin mixing for noncollinear angles
   logical :: write_angles_alliter= .false.             !! write out noncollinear angles for all iterations
+  logical :: write_tmat_all= .false.                   !! write out the tmat for all atoms and energies
+  logical :: write_double_precision= .false.           !! write out kkrflex files in double precision
+  logical :: soc_no_spinflip= .false.                  !! set spin-flip components of the SOC Hamiltonian to zero
 
   !some old run and test options have been removed:
   !  'atptshft': replaced by presence or absence of IVSHIFT in inputcard
@@ -147,6 +158,7 @@ module mod_runoptions
     call set_runoption(write_gmat_ascii              , '<write_gmat_ascii>'              , '<gmatasci>')
     call set_runoption(use_rigid_Efermi              , '<use_rigid_Efermi>'              , '<rigid-ef>')
     call set_runoption(use_Chebychev_solver          , '<use_Chebychev_solver>'          , '<NEWSOSOL>')
+    call set_runoption(use_rllsll                    , '<use_rllsll>')
     call set_runoption(write_pkkr_input              , '<write_pkkr_input>'              , '<FERMIOUT>')
     call set_runoption(calc_complex_bandstructure    , '<calc_complex_bandstructure>'    , '<COMPLEX>' )
     call set_runoption(write_pkkr_operators          , '<write_pkkr_operators>'          , '<OPERATOR>')
@@ -204,8 +216,9 @@ module mod_runoptions
     call set_runoption(print_refpot                  , '<print_refpot>'                  , '<REFPOT>'  )
     call set_runoption(write_lloyd_file              , '<write_lloyd_file>'             , '<llyfile>')
     call set_runoption(symmetrize_potential_madelung , '<symmetrize_potential_madelung>' , '<potsymm>' )
+    call set_runoption(use_cheby_quadprec            , '<use_cheby_quadprec>'            , '<quadprec>')
     call set_runoption(set_cheby_nosoc               , '<set_cheby_nosoc>'               , '<NOSOC>'   )
-    call set_runoption(decouple_spins_cheby          , '<decouple_spins_cheby>')
+    call set_runoption(decouple_spin_cheby          , '<decouple_spin_cheby>')
     call set_runoption(set_empty_system              , '<set_empty_system>'              , '<zeropot>' )
     call set_runoption(write_tmat_file               , '<write_tmat_file>'               , '<tmatfile>')
     call set_runoption(write_tb_coupling             , '<write_tb_coupling>'             , '<godfrin>' )
@@ -237,6 +250,11 @@ module mod_runoptions
     call set_runoption(calc_wronskian                , '<calc_wronskian>'                , '<wronskian>')
     call set_runoption(use_broyden_spinmix           , '<use_broyden_spinmix>'            , '<bryspinmix>')
     call set_runoption(write_angles_alliter          , '<write_angles_alliter>')
+    call set_runoption(write_tmat_all                , '<write_tmat_all>')
+    call set_runoption(write_double_precision        , '<write_double_precision>')
+    call set_runoption(calc_onsite_only              , '<calc_onsite_only>')
+    call set_runoption(use_gmat_unity                , '<use_gmat_unity>')
+    call set_runoption(soc_no_spinflip               , '<soc_no_spinflip>')
 
   end subroutine read_runoptions
 
@@ -521,6 +539,9 @@ module mod_runoptions
     else if (keyword == 'POTSYMM ') then
       symmetrize_potential_madelung = .true.
       write (1337, *) "    Enable runoption 'symmetrize_potential_madelung'"
+    else if (keyword == 'QUADPREC') then
+      use_cheby_quadprec = .true.
+      write (1337, *) "    Enable runoption 'use_cheby_quadprec'"
     else if (keyword == 'NOSOC   ') then
       set_cheby_nosoc = .true.
       write (1337, *) "    Enable runoption 'set_cheby_nosoc'"
@@ -687,6 +708,7 @@ module mod_runoptions
     call mpi_bcast(write_gmat_ascii              , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(use_rigid_Efermi              , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(use_Chebychev_solver          , 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(use_rllsll                    , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(write_pkkr_input              , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(calc_complex_bandstructure    , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(write_pkkr_operators          , 1, mpi_logical, master, mpi_comm_world, ierr)
@@ -744,8 +766,9 @@ module mod_runoptions
     call mpi_bcast(print_refpot                  , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(write_lloyd_file              , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(symmetrize_potential_madelung , 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(use_cheby_quadprec            , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(set_cheby_nosoc               , 1, mpi_logical, master, mpi_comm_world, ierr)
-    call mpi_bcast(decouple_spins_cheby          , 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(decouple_spin_cheby          , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(set_empty_system              , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(write_tmat_file               , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(write_tb_coupling             , 1, mpi_logical, master, mpi_comm_world, ierr)
@@ -775,8 +798,13 @@ module mod_runoptions
     call mpi_bcast(use_lloyd                     , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(write_gmat_file               , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(calc_wronskian                , 1, mpi_logical, master, mpi_comm_world, ierr)
-    call mpi_bcast(use_broyden_spinmix            , 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(use_broyden_spinmix           , 1, mpi_logical, master, mpi_comm_world, ierr)
     call mpi_bcast(write_angles_alliter          , 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(write_tmat_all                , 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(write_double_precision        , 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(calc_onsite_only              , 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(use_gmat_unity                , 1, mpi_logical, master, mpi_comm_world, ierr)
+    call mpi_bcast(soc_no_spinflip               , 1, mpi_logical, master, mpi_comm_world, ierr)
 
   end subroutine bcast_runoptions
 #endif
@@ -798,7 +826,7 @@ module mod_runoptions
     write(iounit, '(A35,1x,1L,3x,A)') '<calc_GF_Efermi>=', calc_GF_Efermi, "calculation of cluster Green function at E Fermi (former: 'GF-EF')"
     write(iounit, '(A35,1x,1L,3x,A)') '<set_cheby_nospeedup>=', set_cheby_nospeedup, "always calculate irregular solution in Chebychev solver (even if not needed) (former: 'norllsll')"
     write(iounit, '(A35,1x,1L,3x,A)') '<set_cheby_nosoc>=', set_cheby_nosoc, "set SOC strength to 0 for all atoms (former: 'NOSOC')"
-    write(iounit, '(A35,1x,1L,3x,A)') '<decouple_spins_cheby>=', decouple_spins_cheby, "decouple spin matrices in Chebychev solver neglecting SOC and for collinear calculations only"
+    write(iounit, '(A35,1x,1L,3x,A)') '<decouple_spin_cheby>=', decouple_spin_cheby, "decouple spin matrices in Chebychev solver neglecting SOC and for collinear calculations only"
     write(iounit, '(A35,1x,1L,3x,A)') '<calc_complex_bandstructure>=', calc_complex_bandstructure, "complex band structure (former: 'COMPLEX')"
     write(iounit, '(A35,1x,1L,3x,A)') '<calc_exchange_couplings>=', calc_exchange_couplings, "calculate magnetic exchange coupling parameters (former: 'XCPL')"
     write(iounit, '(A35,1x,1L,3x,A)') '<calc_exchange_couplings_energy>=', calc_exchange_couplings_energy, "write energy-resolved Jij-files also if npol/=0 (former: 'Jijenerg')"
@@ -843,6 +871,7 @@ module mod_runoptions
     write(iounit, '(A35,1x,1L,3x,A)') '<torque_operator_onlySph>=', torque_operator_onlySph, "for torque operator: include only the spherically symmetric part (former: 'ONLYSPH')"
     write(iounit, '(A35,1x,1L,3x,A)') '<use_BdG>=', use_BdG, "use Bogoliubov-de-Gennes Formalism (former: 'useBdG')"
     write(iounit, '(A35,1x,1L,3x,A)') '<use_Chebychev_solver>=', use_Chebychev_solver, "use the Chebychev solver (former: 'NEWSOSOL')"
+    write(iounit, '(A35,1x,1L,3x,A)') '<use_rllsll>=', use_rllsll, "switch to previous approach to compute wavefunctions in Chebyshev solver"
     write(iounit, '(A35,1x,1L,3x,A)') '<use_cond_LB>=', use_cond_LB, "perform calculation of conductance in Landauer-Büttiker formalism (former: 'CONDUCT')"
     write(iounit, '(A35,1x,1L,3x,A)') '<use_cont>=', use_cont, "no usage of embedding points. NEMB is set to 0. (former: 'CONT')"
     write(iounit, '(A35,1x,1L,3x,A)') '<use_deci_onebulk>=', use_deci_onebulk, "in case of decimation: use same bulk on right and left. Speeds up calculations. (former: 'ONEBULK')"
@@ -893,6 +922,11 @@ module mod_runoptions
     write(iounit, '(A35,1x,1L,3x,A)') '<calc_wronskian>=', calc_wronskian, "calculate the wronskian relations of first and second kind for the wavefunctions (see PhD Bauer pp 48)"
     write(iounit, '(A35,1x,1L,3x,A)') '<use_broyden_spinmix>=', use_broyden_spinmix, "use broyden spin mixing for noncollinear angles"
     write(iounit, '(A35,1x,1L,3x,A)') '<write_angles_alliter>=', write_angles_alliter, "write out noncollinear angles for all iterations"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_tmat_all>=', write_tmat_all, "write out the tmat for all energies and all atoms"
+    write(iounit, '(A35,1x,1L,3x,A)') '<write_double_precision>=', write_double_precision, "write out kkrflex files in double precision"
+    write(iounit, '(A35,1x,1L,3x,A)') '<calc_onsite_only>=', calc_onsite_only, "calculate not the full Green function for the density but take the onsite part alone"
+    write(iounit, '(A35,1x,1L,3x,A)') '<use_gmat_unity>=', use_gmat_unity, "set the structural GF to the unity matrix for test purposes"
+    write(iounit, '(A35,1x,1L,3x,A)') '<soc_no_spinflip>=', soc_no_spinflip, "set spin-flip components of the SOC Hamiltonian to zero"
 
   end subroutine print_runoptions
 

@@ -1,4 +1,4 @@
-module mod_vintras
+module mod_vintras_kkrimp
 
 contains
 
@@ -201,4 +201,4 @@ contains
 
   end subroutine vintras
 
-end module mod_vintras
+end module mod_vintras_kkrimp

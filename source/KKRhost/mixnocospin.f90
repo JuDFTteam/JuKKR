@@ -23,7 +23,7 @@ contains
   subroutine spinmix_noco(iter, natyp, theta, phi, fixdir, angles_new, totmoment, iounit)
     use mod_datatypes, only: dp
     use mod_constants, only: pi
-    use mod_runoptions, only: use_broyden_spinmix, write_angles_alliter, disable_print_serialnumber, fix_nonco_angles, decouple_spins_cheby
+    use mod_runoptions, only: use_broyden_spinmix, write_angles_alliter, disable_print_serialnumber, fix_nonco_angles, decouple_spin_cheby
     use global_variables, only: qbound_spin, angles_cutoff  !! MdSD: criterion to fix angles (see also rhovalnew)
     use mod_version_info, only: version_print_header
     use mod_wunfiles, only: t_params
@@ -45,7 +45,7 @@ contains
 
 
     ! MdSD,PR: write information on new angles to output file
-    if (.not.decouple_spins_cheby) then
+    if (.not.decouple_spin_cheby) then
 
       write (1337,*)
       write (1337, '("      I1    In/Out THETA[deg]       In/Out PHI[deg]        FIXDIR[boolean]   RMS(angles)[deg]")')
@@ -77,7 +77,7 @@ contains
         end do
       end if
 
-    end if ! .not.decouple_spins_cheby
+    end if ! .not.decouple_spin_cheby
   
     ! rewrite new theta and phi to nonco_angle_out.dat, nonco_angle.dat is the input
     if (.not. fix_nonco_angles) then

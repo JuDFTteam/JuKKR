@@ -1,5 +1,5 @@
 C*==initldau.f    processed by SPAG 6.05Rc at 15:27 on  7 Mar 2003
-      MODULE mod_initldau
+      MODULE mod_initldau_kkrimp
       CONTAINS
 
 !-------------------------------------------------------------------------------
@@ -497,4 +497,4 @@ C
       END FUNCTION GAUNTC1
 
 
-      END MODULE mod_initldau 
+      END MODULE mod_initldau_kkrimp 

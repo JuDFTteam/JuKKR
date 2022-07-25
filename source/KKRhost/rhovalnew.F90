@@ -41,7 +41,7 @@ contains
     use :: mod_save_wavefun, only: t_wavefunctions, read_wavefunc
     use :: mod_runoptions, only: calc_exchange_couplings, calc_gmat_lm_full, disable_tmat_sratrick, fix_nonco_angles, &
                                  use_qdos, write_complex_qdos, write_pkkr_operators, write_DOS_lm, set_cheby_nospeedup, &
-                                 decouple_spins_cheby, disable_print_serialnumber, gflle_to_npy
+                                 decouple_spin_cheby, disable_print_serialnumber, gflle_to_npy, set_gmat_to_zero, use_rllsll
     use :: mod_version_info, only: version_print_header
     use :: global_variables, only: lmmaxd, iemxd, ncleb, lmxspd, irmd, ntotd, nrmaxd, lmpotd, nspotd, nfund, korbit, mmaxd, nspind, angles_cutoff
     use :: mod_constants, only: czero, cvlight, cone, pi, ci
@@ -125,7 +125,7 @@ contains
     integer :: ix, m1              ! qdos ruess
 
     real (kind=dp) :: thetanew, phinew
-    real (kind=dp) :: totxymoment
+    real (kind=dp) :: totxymoment, rsum
     complex (kind=dp) :: ek
     complex (kind=dp) :: df
     complex (kind=dp) :: eryd
@@ -179,8 +179,11 @@ contains
     complex (kind=dp), dimension (:, :, :, :), allocatable :: vnspll
     complex (kind=dp), dimension (:, :, :, :), allocatable :: r2orbc
     complex (kind=dp), dimension (:, :, :, :), allocatable :: vnspll1
+    complex (kind=dp), dimension (:, :, :, :), allocatable :: ull
+    complex (kind=dp), dimension (:, :, :, :), allocatable :: ullleft
     complex (kind=dp), dimension (:, :, :), allocatable :: vnspll2
     complex (kind=dp), dimension (:, :, :, :), allocatable :: rllleft
+
     complex (kind=dp), dimension (:, :, :, :), allocatable :: sllleft
     complex (kind=dp), dimension (:, :, :, :), allocatable :: r2nefc_loop
     complex (kind=dp), dimension (:, :, :, :), allocatable :: rho2nsc_loop
@@ -231,7 +234,7 @@ contains
     call memocc(i_stat, product(shape(vins))*kind(vins), 'VINS', 'RHOVALNEW')
     vins = 0.0_dp
     vins(1:irmdnew, 1:lmpotd, 1) = vinsnew(1:irmdnew, 1:lmpotd, ipot)
-    if (.not.decouple_spins_cheby)  vins(1:irmdnew, 1:lmpotd, nspin) = vinsnew(1:irmdnew, 1:lmpotd, ipot+nspin-1)
+    if (.not.decouple_spin_cheby)  vins(1:irmdnew, 1:lmpotd, nspin) = vinsnew(1:irmdnew, 1:lmpotd, ipot+nspin-1)
 
     ! set up the non-spherical ll' matrix for potential VLL'
     allocate (vnspll0(lmmaxd,lmmaxd,irmdnew), stat=i_stat)
@@ -295,6 +298,12 @@ contains
     allocate (sll(nsra*lmmaxd,lmmaxd,irmdnew,0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(sll))*kind(sll), 'SLL', 'RHOVALNEW')
     sll(:,:,:,:) = czero
+    allocate (ull(nsra*lmmaxd,lmmaxd,irmdnew,0:nth-1), stat=i_stat)
+    call memocc(i_stat, product(shape(ull))*kind(ull), 'ULL', 'RHOVALNEW')
+    ull(:,:,:,:) = czero
+    allocate (ullleft(nsra*lmmaxd,lmmaxd,irmdnew,0:nth-1), stat=i_stat)
+    call memocc(i_stat, product(shape(ullleft))*kind(ullleft), 'ULLLEFT', 'RHOVALNEW')
+    ullleft(:,:,:,:) = czero
     allocate (rllleft(nsra*lmmaxd,lmmaxd,irmdnew,0:nth-1), stat=i_stat)
     call memocc(i_stat, product(shape(rllleft))*kind(rllleft), 'RLLLEFT', 'RHOVALNEW')
     rllleft(:,:,:,:) = czero
@@ -478,10 +487,23 @@ contains
           lmmaxd,irmdnew,ith,nth,rll_was_read_in,sll_was_read_in,                  &
           rllleft_was_read_in,sllleft_was_read_in)
       end if
+      ! MdSD: TEST
+      ! if (myrank == 0) then
+      !   write(*,'("In rhovalnew:")')
+      !   write(*,'("nwfsavemax=",i4)') t_wavefunctions%nwfsavemax
+      !   write(*,'("save_rll=",l4)') t_wavefunctions%save_rll
+      !   write(*,'("save_sll=",l4)') t_wavefunctions%save_sll
+      !   write(*,'("save_rllleft=",l4)') t_wavefunctions%save_rllleft
+      !   write(*,'("save_sllleft=",l4)') t_wavefunctions%save_sllleft
+      !   write(*,'("rll_was_read_in=",l4)') rll_was_read_in
+      !   write(*,'("sll_was_read_in=",l4)') sll_was_read_in
+      !   write(*,'("rllleft_was_read_in=",l4)') rllleft_was_read_in
+      !   write(*,'("sllleft_was_read_in=",l4)') sllleft_was_read_in
+      ! end if
 
       ! recalculate wavefuntions, also include left solution
       ! contruct the spin-orbit coupling hamiltonian and add to potential
-      if ( .not. decouple_spins_cheby) then
+      if ( .not. decouple_spin_cheby) then
         call spinorbit_ham(lmax, lmmax0d, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpotd, theta, phi, ipan_intervall, &
           rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, vnspll0, vnspll2(:,:,:), '1')
       else
@@ -489,7 +511,7 @@ contains
       end if
   
       ! Add magnetic field
-      if ( t_params%bfield%lbfield .or. t_params%bfield%lbfield_constr ) then
+      if (t_params%bfield%lbfield) then
         imt1 = ipan_intervall(t_params%npan_log+t_params%npan_eq) + 1
         call add_bfield(t_params%bfield,i1,lmax,nspin,irmdnew,imt1,iend,ncheb,theta,phi,t_params%ifunm1(:,t_params%ntcell(i1)),&
                         t_params%icleb,t_params%cleb(:,1),t_params%thetasnew(1:irmdnew,:,t_params%ntcell(i1)),'1',vnspll2(:,:,:), &
@@ -522,7 +544,7 @@ contains
         jlk2(:, :, ith) = czero
         gmatprefactor = czero
         jlk_index = 0
-        if (decouple_spins_cheby) then
+        if (decouple_spin_cheby) then
           use_fullgmat = 0
         else
           use_fullgmat = 1
@@ -531,11 +553,12 @@ contains
         ! using spherical potential as reference
         if (use_sratrick==1) then
           call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin/(nspin-korbit), zat, eryd, lmpotd, lmmaxd, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk(:,:,ith), jlk(:,:,ith), &
-            hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, tmatsph(:,ith), alphasph, use_sratrick)
+            hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, tmatsph(:,ith), alphasph, use_sratrick, .true.)
         end if
 
         ! calculate the tmat and wavefunctions
         rll(:, :, :, ith) = czero
+        ull(:, :, :, ith) = czero
         sll(:, :, :, ith) = czero
 
         !----------------------------------------------------------------------------
@@ -543,17 +566,27 @@ contains
         !----------------------------------------------------------------------------
         tmatll = czero
         alphall = czero
-        ! faster calculation of RLL.
-        ! no irregular solutions SLL are needed in self-consistent iterations
-        ! because the density depends only on RLL, RLLLEFT and SLLLEFT
-        if (.not.set_cheby_nospeedup .and. .not. (calc_exchange_couplings .or. write_pkkr_operators)) then
-          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), tmatll, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, &
-            hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
-        else
+        if (use_rllsll) then
+          ! MdSD: this is the old interface
           call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rll(:,:,:,ith), sll(:,:,:,ith), tmatll, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, &
-            hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alphall)
+           hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alphall)
+          ! MdSD: if using the old rllsll this is needed for rhooutnew
+          ull(:,:,:,ith) = rll(:,:,:,ith)
+        else
+          ! faster calculation of RLL.
+          ! no irregular solutions SLL are needed in self-consistent iterations
+          ! because the density depends only on RLL, RLLLEFT and SLLLEFT
+          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), ull(:,:,:,ith), rll(:,:,:,ith), tmatll, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, &
+            nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
+          ! MdSD: right now it seems that sll is not used for anything
+          ! if (set_cheby_nospeedup .or. calc_exchange_couplings .or. write_pkkr_operators) then
+          !   call sll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), sll(:,:,:,ith), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, &
+          !     nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk(:,:,ith), jlk(:,:,ith), hlk2(:,:,ith), jlk2(:,:,ith), gmatprefactor, '1', use_sratrick)
+          ! end if
         end if
+        ! MdSD: if using the old rllsll check if this is needed
         if (nsra==2) then
+          ull(lmmaxd+1:nvec*lmmaxd, :, :, ith) = ull(lmmaxd+1:nvec*lmmaxd, :, :, ith)/cvlight
           rll(lmmaxd+1:nvec*lmmaxd, :, :, ith) = rll(lmmaxd+1:nvec*lmmaxd, :, :, ith)/cvlight
           sll(lmmaxd+1:nvec*lmmaxd, :, :, ith) = sll(lmmaxd+1:nvec*lmmaxd, :, :, ith)/cvlight
         end if
@@ -565,7 +598,7 @@ contains
       !------------------------------------------------------------------------------
       if ((t_wavefunctions%nwfsavemax>0 .and. (.not. (rllleft_was_read_in .and. sllleft_was_read_in))) .or. (t_wavefunctions%nwfsavemax==0)) then
         ! read/recalc wavefunctions left contruct the TRANSPOSE spin-orbit coupling hamiltonian and add to potential
-        if ( .not. decouple_spins_cheby) then
+        if ( .not. decouple_spin_cheby) then
           call spinorbit_ham(lmax, lmmax0d, vins, rnew, eryd, zat, cvlight, socscale, nspin, lmpotd, theta, phi, ipan_intervall, rpan_intervall, npan_tot, ncheb, irmdnew, nrmaxd, &
             vnspll0, vnspll2(:,:,:), 'transpose')
         else
@@ -573,7 +606,7 @@ contains
         end if
         
         ! Add magnetic field 
-        if ( t_params%bfield%lbfield .or. t_params%bfield%lbfield_constr ) then
+        if (t_params%bfield%lbfield) then
           call add_bfield(t_params%bfield,i1,lmax,nspin,irmdnew,imt1,iend,ncheb,theta,phi,t_params%ifunm1(:,t_params%ntcell(i1)),&
                           t_params%icleb,t_params%cleb(:,1),t_params%thetasnew(1:irmdnew,:,t_params%ntcell(i1)),'transpose',vnspll2(:,:,:), &
                           vnspll1(:,:,:,ith),t_params%bfield%thetallmat(:,:,1:irmdnew,t_params%ntcell(i1)))
@@ -608,10 +641,11 @@ contains
         ! notice that exchange the order of left and right hankel/bessel functions
         if (use_sratrick==1) then
           call calcsph(nsra, irmdnew, nrmaxd, lmax, nspin/(nspin-korbit), zat, eryd, lmpotd, lmmaxd, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), &
-            hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, alphasph, tmatsph(:,ith), use_sratrick)
+            hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, alphasph, tmatsph(:,ith), use_sratrick, .true.)
         end if
 
         ! calculate the tmat and wavefunctions
+        ullleft(:, :, :, ith) = czero
         rllleft(:, :, :, ith) = czero
         sllleft(:, :, :, ith) = czero
 
@@ -619,17 +653,20 @@ contains
         ! notice that exchange the order of left and right hankel/bessel functions
         tmattemp = czero
         alphall = czero
-        ! faster calculation of RLLLEFT and SLLLEFT.
-        if (.not.set_cheby_nospeedup .and. .not. (calc_exchange_couplings .or. write_pkkr_operators)) then
-          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), tmattemp, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
-            jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
-          call sll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), sllleft(:,:,:,ith), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, &
-            hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick)
-        else
+        if (use_rllsll) then
+          ! MdSD: this is the old interface
           call rllsll(rpan_intervall, rnew, vnspll(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), tmattemp, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, nsra*(1+korbit)*(lmax+1), irmdnew, nsra, &
             jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', '1', '0', use_sratrick, alphall)
+        else
+          ! faster calculation of RLLLEFT and SLLLEFT.
+          call rll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), ullleft(:,:,:,ith), rllleft(:,:,:,ith), tmattemp, ncheb, npan_tot, lmmaxd, nvec*lmmaxd, &
+            nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick, alphall)
+          call sll_global_solutions(rpan_intervall, rnew, vnspll(:,:,:,ith), sllleft(:,:,:,ith), ncheb, npan_tot, lmmaxd, nvec*lmmaxd, & 
+            nsra*(1+korbit)*(lmax+1), irmdnew, nsra, jlk_index, hlk2(:,:,ith), jlk2(:,:,ith), hlk(:,:,ith), jlk(:,:,ith), gmatprefactor, '1', use_sratrick)
         end if
+        ! MdSD: if using the old rllsll check if this is needed
         if (nsra==2) then
+          ullleft(lmmaxd+1:nvec*lmmaxd, :, :, ith) = ullleft(lmmaxd+1:nvec*lmmaxd, :, :, ith)/cvlight
           rllleft(lmmaxd+1:nvec*lmmaxd, :, :, ith) = rllleft(lmmaxd+1:nvec*lmmaxd, :, :, ith)/cvlight
           sllleft(lmmaxd+1:nvec*lmmaxd, :, :, ith) = sllleft(lmmaxd+1:nvec*lmmaxd, :, :, ith)/cvlight
         end if
@@ -647,11 +684,15 @@ contains
           irec = iq + nqdos*(ie_num-1) + nqdos*ie_end*(ispin-1) + nqdos*ie_end*nspin/(1+korbit)*(i1-1)
           gmat0(:, :) = t_tgmat%gmat(:, :, irec)
         end if
+        if (set_gmat_to_zero) then
+          write(*,*) 'WARNING: setting GMAT to zero! Output density is onsite part only.'
+          gmat0(:, :) = czero
+        end if
 #ifdef CPP_OMP
         ! $omp end critical
 #endif
 
-        if ( .not. decouple_spins_cheby) then
+        if ( .not. decouple_spin_cheby) then
           ! rotate gmat from global frame to local frame
           call rotatematrix(gmat0, theta, phi, lmmax0d, 1)
         end if
@@ -661,9 +702,13 @@ contains
             gmatll(lm1, lm2, ie) = gmat0(lm1, lm2)
           end do
         end do
+
         ! calculate density
-        call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, df, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll(:,:,:,ith), & ! SLL(:,:,:,ith), commented out since sll is not used in rhooutnew
-          rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), rho2nsc_loop(:,:,:,ie), 0, gflle(:,:,ie,iq), rpan_intervall, ipan_intervall, nspin/(nspin-korbit))
+        ! MdSD: modified the interface to allow for all types of scattering solutions; some can be dummy arguments
+        call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, df, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, &
+          rll(:,:,:,ith), sll(:,:,:,ith), ull(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), ullleft(:,:,:,ith), &
+          cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), rho2nsc_loop(:,:,:,ie), 0, gflle(:,:,ie,iq), rpan_intervall, ipan_intervall, nspin/(nspin-korbit))
+
 
         do jspin = 1, nspin/(nspin-korbit)*(1+korbit)
           do lm1 = 0, lmax
@@ -710,22 +755,25 @@ contains
       ! Get charge at the Fermi energy (IELAST)
       !------------------------------------------------------------------------------
       if (ie==ielast .and. ldorhoef) then
-        call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, cone, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll(:,:,:,ith), & ! SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
-          rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), r2nefc_loop(:,:,:,ith), 0, gflle_part(:,:,ith), rpan_intervall, &
-          ipan_intervall, nspin/(nspin-korbit))
+        ! MdSD: modified the interface to allow for all types of scattering solutions; some can be dummy arguments
+        call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, cone, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, &
+          rll(:,:,:,ith), sll(:,:,:,ith), ull(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), ullleft(:,:,:,ith), &
+          cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), r2nefc_loop(:,:,:,ith), 0, gflle_part(:,:,ith), rpan_intervall, ipan_intervall, nspin/(nspin-korbit))
       end if
 
       !------------------------------------------------------------------------------
       ! Get orbital moment
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      if (.not. decouple_spins_cheby) then
+      if (.not. decouple_spin_cheby) then
         ! MdSD: test projection of orbital moment
         proj(1) = cos(phi)*sin(theta)
         proj(2) = sin(phi)*sin(theta)
         proj(3) = cos(theta)
         do iorb = 1, 3
-          call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, cone, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, rll(:,:,:,ith), & ! SLL(:,:,:,ith), ! commented out since sll is not used in rhooutnew
-            rllleft(:,:,:,ith), sllleft(:,:,:,ith), cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), r2orbc(:,:,:,ith), iorb, gflle_part(:,:,ith), rpan_intervall, ipan_intervall, nspin)
+          ! MdSD: modified the interface to allow for all types of scattering solutions; some can be dummy arguments
+          call rhooutnew(nsra, lmax, gmatll(1,1,ie), ek, lmpotd, cone, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, &
+            rll(:,:,:,ith), sll(:,:,:,ith), ull(:,:,:,ith), rllleft(:,:,:,ith), sllleft(:,:,:,ith), ullleft(:,:,:,ith), & 
+            cden(:,:,:,ith), cdenlm(:,:,:,ith), cdenns(:,:,ith), r2orbc(:,:,:,ith), iorb, gflle_part(:,:,ith), rpan_intervall, ipan_intervall, nspin)
           do jspin = 1, nspin*(1+korbit)
             if (jspin<=2) then
               do lm1 = 0, lmax
@@ -757,7 +805,7 @@ contains
 
         end do ! IORB
 
-      end if ! .not. decouple_spins_cheby
+      end if ! .not. decouple_spin_cheby
 
     end do                         ! IE loop
 #ifdef CPP_OMP
@@ -916,9 +964,12 @@ contains
       ! Magnetic torques
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       if(t_params%bfield%ltorque) then
-        call calc_torque(i1,lmax,irmdnew,nspin,rpan_intervall,ipan_intervall,npan_tot,ncheb,theta,phi,rho2nsc,vins, &
-                         t_params%ifunm1(:,t_params%ntcell(i1)), iend, t_params%icleb,t_params%cleb(:,1),&
-                         t_params%thetasnew(1:irmdnew,:,t_params%ntcell(i1)),bconstr)
+        call calc_torque(i1, lmax, irmdnew, nspin, t_params%bfield, rpan_intervall, &
+                         ipan_intervall, t_params%npan_log, t_params%npan_eq, npan_tot, ncheb, &
+                         theta, phi, rho2nsc, vins, t_params%ifunm1(:,t_params%ntcell(i1)), &
+                         iend, t_params%icleb, t_params%cleb(:,1), &
+                         t_params%thetasnew(1:irmdnew,:,t_params%ntcell(i1)), bconstr, &
+                         t_params%fixdir(i1), t_params%ntcell(i1))
         if (t_inc%i_write>1) write (1337,'("calc_torque: myrank=",i8,"  iatom=",i8,"  bfield_constr=",3es16.8,"  mspin=",es16.8)') myrank, i1, bconstr(1:3), bconstr(4)
       end if
       ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -997,6 +1048,30 @@ contains
       allocate (rhonewtemp(irws,lmpotd), stat=i_stat)
       call memocc(i_stat, product(shape(rhonewtemp))*kind(rhonewtemp), 'RHONEWTEMP', 'RHOVALNEW')
 
+      !open (131,file='rho2',form='formatted')
+      !write(131,fmt='(A,I8)') '# ',irmdnew
+      !do jspin = 1, nspin/(nspin-korbit)*(1+korbit)
+      !  do lm1 = 1, lmpotd
+      !    rsum = 0.0d0
+      !    do ir = 1, irmdnew
+      !      rsum = rsum + abs(aimag(rho2nsc(ir, lm1, jspin)))
+      !    end do
+      !    if(rsum.gt.1.d-10) then
+      !    write(131,fmt='(A,I8)') '# ',lm1
+      !    do ir = 1, irmdnew
+      !      if(abs(thetasnew(ir,1)).gt.1.d-6) then
+      !      write(131,*) rnew(ir),aimag(rho2nsc(ir, lm1, jspin))/rnew(ir)**2,aimag(rho2nsc(ir, lm1, jspin))/rnew(ir)**2*thetasnew(ir,1)
+      !      else
+      !      write(131,*) rnew(ir),aimag(rho2nsc(ir, lm1, jspin))/rnew(ir)**2,aimag(rho2nsc(ir, lm1, jspin))/rnew(ir)**2*3.544907701811032d0
+      !      end if
+      !    end do
+      !    end if
+      !  end do
+      !end do
+      !lm1 =999999
+      !write(131,fmt='(A,I8)') '# ',lm1
+      !close (131)
+
       do jspin = 1, nspin/(nspin-korbit)*(1+korbit)
         rhotemp = czero
         rhonewtemp = czero
@@ -1031,9 +1106,9 @@ contains
       ! MdSD: Should this also be corrected if the angles change?
       den_out(0:lmaxd1, 1:ielast, 1:nspin/(nspin-korbit)) = den(0:lmaxd1, 1:ielast, 1, 1:nspin/(nspin-korbit))
       ! calculate new THETA and PHI for non-colinear
-      ! if (.not. fix_nonco_angles .and. .not.decouple_spins_cheby) then
+      ! if (.not. fix_nonco_angles .and. .not.decouple_spin_cheby) then
       ! MdSD: now the new directions are always calculated, which can be useful for information purposes
-      if (.not.decouple_spins_cheby) then
+      if (.not.decouple_spin_cheby) then
         rho2ns_temp(1, 1) = rho2int(1)
         rho2ns_temp(2, 2) = rho2int(2)
         rho2ns_temp(1, 2) = rho2int(3)
@@ -1131,12 +1206,18 @@ contains
     i_all = -product(shape(rll))*kind(rll)
     deallocate (rll, stat=i_stat)
     call memocc(i_stat, i_all, 'RLL', 'RHOVALNEW')
+    i_all = -product(shape(ull))*kind(ull)
+    deallocate (ull, stat=i_stat)
+    call memocc(i_stat, i_all, 'ULL', 'RHOVALNEW')
     i_all = -product(shape(sll))*kind(sll)
     deallocate (sll, stat=i_stat)
     call memocc(i_stat, i_all, 'SLL', 'RHOVALNEW')
     i_all = -product(shape(rllleft))*kind(rllleft)
     deallocate (rllleft, stat=i_stat)
     call memocc(i_stat, i_all, 'RLLLEFT', 'RHOVALNEW')
+    i_all = -product(shape(ullleft))*kind(ullleft)
+    deallocate (ullleft, stat=i_stat)
+    call memocc(i_stat, i_all, 'ULLLEFT', 'RHOVALNEW')
     i_all = -product(shape(sllleft))*kind(sllleft)
     deallocate (sllleft, stat=i_stat)
     call memocc(i_stat, i_all, 'SLLLEFT', 'RHOVALNEW')

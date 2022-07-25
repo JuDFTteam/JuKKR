@@ -52,7 +52,7 @@ contains
 #endif
     use :: mod_types, only: t_inc
     use :: mod_runoptions, only: print_program_flow, use_Chebychev_solver, use_qdos, use_virtual_atoms, &
-      write_green_imp, write_rhoq_input, decouple_spins_cheby
+      write_green_imp, write_rhoq_input, decouple_spin_cheby
     use :: mod_rhoqtools, only: rhoq_find_kmask, rhoq_saveg, rhoq_write_tau0, rhoq_read_mu0_scoef
     use :: global_variables, only: nembd1, nembd2, nsheld, nclsd, naclsd, lmmaxd, nprincd, nrd, nrefd, lmgf0d, krel, ndim_slabinv, alm, almgf0 
     use :: mod_constants, only: czero, cone, nsymaxd, ci,pi
@@ -343,7 +343,7 @@ contains
         ! ----------------------------------------------------------------------
         ! LLY Lloyd
         ! --------------------------------------------------------------------
-        if (.not. use_Chebychev_solver .or. decouple_spins_cheby) then
+        if (.not. use_Chebychev_solver .or. decouple_spin_cheby) then
           ! $omp single
           do i2 = 1, alm
             do i1 = 1, alm
@@ -488,9 +488,9 @@ contains
         ! Actually -TAU, because TAU = (Deltat^-1 - Gref)^-1
         ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         ! $omp single
-        if (lly/=0) then           ! If LLY, full inversion is needed
+        if (lly/=0 .and. invmod/=3) then           ! If LLY, full inversion is needed
           call inversion(gllke, 0, icheck) ! LLY
-        else
+        else ! MdSD: godfrin options are set to full inversion if LLY is true
           call inversion(gllke, invmod, icheck)
         end if
         ! $omp end single
@@ -635,7 +635,16 @@ contains
         if ((((k_end-k_start)/50)==0 .or. mod(kpt-k_start,(k_end-k_start)/50)==0) .and. t_inc%i_write>0) write (1337, fmt=110, advance='no')
         ! $omp end critical
 #else
-        if (((nofks/50)==0 .or. mod(kpt,nofks/50)==0) .and. t_inc%i_write>0) write (1337, fmt=110, advance='no')
+        !if (((nofks/50)==0 .or. mod(kpt,nofks/50)==0) .and. t_inc%i_write>0) write (1337, fmt=110, advance='no')
+        if (t_inc%i_write>0) then
+          if (nofks/50==0) then
+            write (1337, fmt=110, advance='no')
+          else
+            if (mod(kpt,nofks/50)==0) then
+              write (1337, fmt=110, advance='no')
+            end if
+          end if
+        end if
 #endif
       end if                       ! mythread==0
 

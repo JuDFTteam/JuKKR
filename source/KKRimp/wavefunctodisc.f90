@@ -45,14 +45,17 @@ contains
            recl=wlength*4*wavefunction%lmsize2*wavefunction%lmsize*cellnew%nrmaxnew,form='unformatted')
       open(unit=2343366,file='temp_sllleft_'//trim(ctemp)//'.txt',access='direct',&
            recl=wlength*4*wavefunction%lmsize2*wavefunction%lmsize*cellnew%nrmaxnew,form='unformatted')
+      open(unit=2343367,file='temp_ull_'    //trim(ctemp)//'.txt',access='direct',&
+           recl=wlength*4*wavefunction%lmsize2*wavefunction%lmsize*cellnew%nrmaxnew,form='unformatted')
     end if
   
     call setlabel(iatom,ispin,ilabel)
   
     if ( allocated(wavefunction%rll) ) then
       write(2343363,rec=ilabel) wavefunction%rll
+      write(2343367,rec=ilabel) wavefunction%ull
       wavefunction%rll_saved=1
-      deallocate(wavefunction%rll)
+      deallocate(wavefunction%rll,wavefunction%ull)
     end if
   
     if ( allocated(wavefunction%sll) ) then
@@ -100,7 +103,9 @@ contains
   
     if ( .not. allocated(wavefunction%rll) .and. wavefunction%rll_saved==1) then
       allocate(wavefunction%rll(wavefunction%lmsize2,wavefunction%lmsize,cellnew%nrmaxnew,1))
+      allocate(wavefunction%ull(wavefunction%lmsize2,wavefunction%lmsize,cellnew%nrmaxnew,1))
       read(2343363,rec=ilabel) wavefunction%rll
+      read(2343367,rec=ilabel) wavefunction%ull
     end if
     if ( .not. allocated(wavefunction%sll) .and. wavefunction%sll_saved==1) then
       allocate(wavefunction%sll(wavefunction%lmsize2,wavefunction%lmsize,cellnew%nrmaxnew,1))

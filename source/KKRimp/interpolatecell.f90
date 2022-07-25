@@ -111,9 +111,16 @@ if ( config%rmin< -1.0D-10 ) then
   rmin=cell%rmesh(2) ! because cell%rmesh(1) is always 0!
 end if
 
-rval=0
-fac=config%npan_logfac !4.0D0/3.0D0
-ishift=0
+rval = 0
+if (config%npan_logfac<0) then
+  ! this is the same behavior as in the host code
+  ! this is also the (new) default bahavior
+  fac = (rmax/rmin)**(1.d0/config%npan_log)
+else
+  ! old behavior: read npan_logfac from config.cfg (old default was 2)
+  fac = config%npan_logfac !4.0D0/3.0D0
+end if
+ishift = 0
 
 
 ! the old mesh has a discontinuity where the non-spherical mesh is set to

@@ -151,6 +151,8 @@ contains
       ! godfrin module
       ! -----------------------------------------------------------------
     else if (invmod==3) then
+      ! write (*, '("na=",i8,"  nb=",i8,"  ldiag=",l2,"  lper=",l2,"  lpardiso=",l2)') t_godfrin%na, t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
+      ! write (*, '("bdims(1:nb)=",100i8)') t_godfrin%bdims(:)
       call sparse_inverse(gllke, t_godfrin%na, t_godfrin%nb, t_godfrin%bdims, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso) ! GODFRIN Flaviano
       ! ------------------------------------------------------------------
     else

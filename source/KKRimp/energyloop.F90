@@ -554,7 +554,7 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
                  if ( config_testflag('rlltodisc') ) then
                     call wavefunctodisc_write(wavefunction(iatom,ispin),cellnew(iatom),iatom,ispin,my_rank)
                  else
-                    deallocate(wavefunction(iatom,ispin)%rll,     wavefunction(iatom,ispin)%sll)
+                    deallocate(wavefunction(iatom,ispin)%rll, wavefunction(iatom,ispin)%ull, wavefunction(iatom,ispin)%sll)
                     if ((config%kspinorbit==1).and.calcleft) then
                        deallocate(wavefunction(iatom,ispin)%rllleft, wavefunction(iatom,ispin)%sllleft)
                     end if
@@ -695,7 +695,7 @@ do ie=mpi_iebounds(1,my_rank),   mpi_iebounds(2,my_rank)
 
 
           if ( wavefunction(iatom,ispin)%deallocate==1 ) then 
-             deallocate(wavefunction(iatom,ispin)%rll,     wavefunction(iatom,ispin)%sll)
+             deallocate(wavefunction(iatom,ispin)%rll, wavefunction(iatom,ispin)%ull, wavefunction(iatom,ispin)%sll)
              if (config%kspinorbit==1) then
                 deallocate(wavefunction(iatom,ispin)%rllleft, wavefunction(iatom,ispin)%sllleft)
              end if
