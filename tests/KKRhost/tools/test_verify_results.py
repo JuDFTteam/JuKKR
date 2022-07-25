@@ -110,9 +110,9 @@ class Test_features():
            print(mean(abs(num-num_ref)))
            print(abs(num-num_ref).max())
            print(set(text)-set(text_ref)==set())
-           assert std(abs(num-num_ref))<5*10**-11
-           assert mean(abs(num-num_ref))<10**-12
-           assert abs(num-num_ref).max()<2*10**-8
+           assert std(abs(num-num_ref))<5e-10
+           assert mean(abs(num-num_ref))<5e-11
+           assert abs(num-num_ref).max()<5e-8
            assert set(text)-set(text_ref)==set()
 
     """

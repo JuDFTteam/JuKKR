@@ -15,7 +15,7 @@
 
 ----
 
-## *UNRELEASED* (last updated: 2021-01-18)
+## *UNRELEASED* (last updated: 2022-07-25)
 
 **Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release.**
 
