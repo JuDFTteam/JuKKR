@@ -39,13 +39,14 @@ contains
   !> atom.
   !-------------------------------------------------------------------------------
   subroutine clsgen_tb(naez, nemb, nvirt, rr, rbasis, kaoez, zat, cls, ncls, nacls, atom, ezoa, nlbasis, nrbasis, nleft, nright, zperleft, zperight, tleft, tright, rmtref, &
-    rmtrefat, vref, irefpot, nrefpot, rcls, rcut, rcutxy, alat, natyp, nclsd, nrd, naclsd, nrefd, nembd, linterface, nprincd, nprinc)
+    rmtrefat, vref, irefpot, nrefpot, rcls, rcut, rcutxy, alat, natyp, nclsd, nrd, naclsd, nrefd, nembd, linterface, nprincd, nprinc, invmod)
     ! ************************************************************************
     ! 
     use :: mod_datatypes, only: dp
     use :: mod_runoptions, only: write_tb_coupling, disable_print_serialnumber
     use :: mod_version_info, only: version_print_header
     use :: mod_dsort, only: dsort
+    use :: godfrin, only: t_godfrin ! GODFRIN MdSD
     implicit none
     ! .. arguments
     integer :: naez                !! number of atoms in EZ
@@ -59,6 +60,7 @@ contains
     integer :: nrefd
     integer, intent(in) :: nprincd !! user-supplied number of layers in a principal layer
     integer :: nprinc              !! Calculated number of layers in a principal layer
+    integer, intent(in) :: invmod  !! MdSD: to check if generalized block tridiagonal inversion is used
     integer :: natyp
     integer :: nembd
     real (kind=dp) :: alat         !! lattice constant A
@@ -456,7 +458,8 @@ contains
 
     ! Calculate number of layers in principal layer
     nprinc = 1
-    if (linterface) then
+    ! MdSD: except if using godfrin
+    if (linterface .and. invmod/=3) then
       do jatom = 1, naez           ! loop over rows
         do iat = 1, jatom - 1      ! loop over columns before the diagonal
           if (icouplmat(jatom,iat)==1) nprinc = max(nprinc, jatom-iat)
@@ -470,19 +473,40 @@ contains
 
     ! Check if the user-specified blocking is correct
     if (mod(naez,nprincd) == 0) then
-      nb = naez/nprincd
-      do ib=1,nb-1
-!       diagonal blocks
-        icouplmat(1+(ib-1)*nprincd:ib*nprincd,1+(ib-1)*nprincd:ib*nprincd) = 0
-!       subdiagonal blocks
-        icouplmat(1+ib*nprincd:(ib+1)*nprincd,1+(ib-1)*nprincd:ib*nprincd) = 0
-!       superdiagonal blocks
-        icouplmat(1+(ib-1)*nprincd:ib*nprincd,1+ib*nprincd:(ib+1)*nprincd) = 0
-      end do
-!     last diagonal blocks
-      icouplmat(1+(nb-1)*nprincd:nb*nprincd,1+(nb-1)*nprincd:nb*nprincd) = 0
+      ! MdSD: generalized blocking
+      if (invmod == 3) then
+        nb = t_godfrin%nb
+        do ib=1,nb-1
+!         diagonal blocks
+          icouplmat(1+sum(t_godfrin%bdims(1:ib-1)):sum(t_godfrin%bdims(1:ib)),1+sum(t_godfrin%bdims(1:ib-1)):sum(t_godfrin%bdims(1:ib))) = 0
+!         subdiagonal blocks
+          icouplmat(1+sum(t_godfrin%bdims(1:ib)):sum(t_godfrin%bdims(1:ib+1)),1+sum(t_godfrin%bdims(1:ib-1)):sum(t_godfrin%bdims(1:ib))) = 0
+!         superdiagonal blocks
+          icouplmat(1+sum(t_godfrin%bdims(1:ib-1)):sum(t_godfrin%bdims(1:ib)),1+sum(t_godfrin%bdims(1:ib)):sum(t_godfrin%bdims(1:ib+1))) = 0
+        end do
+!       last diagonal blocks
+        icouplmat(1+sum(t_godfrin%bdims(1:nb-1)):sum(t_godfrin%bdims(1:nb)),1+sum(t_godfrin%bdims(1:nb-1)):sum(t_godfrin%bdims(1:nb))) = 0
+!       additional blocks from periodic boundary conditions
+        if (t_godfrin%lper) then
+          icouplmat(1+sum(t_godfrin%bdims(1:0)):sum(t_godfrin%bdims(1:1)),1+sum(t_godfrin%bdims(1:nb-1)):sum(t_godfrin%bdims(1:nb))) = 0
+          icouplmat(1+sum(t_godfrin%bdims(1:nb-1)):sum(t_godfrin%bdims(1:nb)),1+sum(t_godfrin%bdims(1:0)):sum(t_godfrin%bdims(1:1))) = 0
+        end if
+      ! MdSD: standard blocking
+      else
+        nb = naez/nprincd
+        do ib=1,nb-1
+!         diagonal blocks
+          icouplmat(1+(ib-1)*nprincd:ib*nprincd,1+(ib-1)*nprincd:ib*nprincd) = 0
+!         subdiagonal blocks
+          icouplmat(1+ib*nprincd:(ib+1)*nprincd,1+(ib-1)*nprincd:ib*nprincd) = 0
+!         superdiagonal blocks
+          icouplmat(1+(ib-1)*nprincd:ib*nprincd,1+ib*nprincd:(ib+1)*nprincd) = 0
+        end do
+!       last diagonal blocks
+        icouplmat(1+(nb-1)*nprincd:nb*nprincd,1+(nb-1)*nprincd:nb*nprincd) = 0
+      end if
 !     mistakes were made?
-      if (any(icouplmat /= 0)) then
+      if (any(icouplmat /= 0) .and. invmod /= 0) then
         write (1337, *) 'CLSGEN_TB: WARNING --- User-supplied NPRINCD=', nprincd, ' is INCORRECT!'
         ! Write out the coupling matrix
         write (1337, *) 'Truncated coupling matrix:'
@@ -492,6 +516,8 @@ contains
       else
         nprinc = nprincd
       end if
+    else
+    ! MdSD: error message here?
     end if
 
     ! close clusters file

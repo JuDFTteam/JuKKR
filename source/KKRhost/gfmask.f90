@@ -87,7 +87,7 @@ contains
     ! (atomic sites) that are needed
 
     ! ======================================================================
-    if ((icc/=0) .and. (invmod==1)) then
+    if ((icc/=0) .and. invmod==1) then
       do i = 1, naez
         do j = 1, naez
           icouple(i, j) = 0

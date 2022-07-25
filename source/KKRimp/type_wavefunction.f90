@@ -11,7 +11,8 @@ module type_wavefunction
 
     integer                     :: lmsize,lmsize2,nrmaxnew
     integer                     :: nvec
-    double complex,allocatable  :: sll(:,:,:,:), rll(:,:,:,:)
+    ! MdSD: sll never seems to be used, better skip their allocation
+    double complex,allocatable  :: sll(:,:,:,:), rll(:,:,:,:), ull(:,:,:,:)
     double complex,allocatable  :: sllleft(:,:,:,:), rllleft(:,:,:,:)
 
     integer                     :: deallocate = 0

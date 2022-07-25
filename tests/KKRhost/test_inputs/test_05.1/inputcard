@@ -42,7 +42,7 @@ Parameters for ewald sums
 RMAX=7.0d0     GMAX=65.0d0     (fcc 7  65)
 ----------------------------------------------------------------------
 
-NPAN_LOG=   5
-NPAN_EQ=    3
-NCHEB=      6
+NPAN_LOG=  12
+NPAN_EQ=    5
+NCHEB=      8
 R_LOG=   0.600000000000000     

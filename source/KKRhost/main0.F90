@@ -509,6 +509,7 @@ contains
     use :: mod_testdim, only: testdim
     use :: mod_write_tbkkr_files, only: write_tbkkr_files
     use :: mod_writehoststructure, only: writehoststructure
+    use :: godfrin, only: t_godfrin ! GODFRIN MdSD
     ! array dimensions
     use :: global_variables, only: krel, nspind, nrefd, irmd, ntotd, ipand, ncelld, nrmaxd, nchebd, natypd, naezd, lmaxd, alm, lmmaxd, &
       almgf0, lmgf0d, ndim_slabinv, nprincd, nembd, nembd1, nembd2, irmind, irnsd, nofgij, natomimpd, lpotd, lmpotd, npotd, nfund, &
@@ -703,7 +704,7 @@ contains
     call clsgen_tb(naez,nemb,nvirt,rr,rbasis,kaoez,zat,cls,ncls,nacls,atom,ezoa,    &
       nlbasis,nrbasis,nleft,nright,zperleft,zperight,tleft,tright,rmtref,rmtrefat,  &
       vref,refpot,nref,rcls,rcutz,rcutxy,alat,natyp,nclsd,nrd,naclsd,nrefd,nembd,   &
-      linterface,nprincd,nprinc)
+      linterface,nprincd,nprinc,invmod)
 
     ! change nrefd to nref and reduce size of rmtre, vref accordingly
     ! do the same for ncls(d) with nacls and rcls arrays
@@ -712,7 +713,8 @@ contains
 
     nlayer = naez/nprinc
     ! overwrite nprincd if chosen too small (also updates array `icheck`)
-    if (nprincd<nprinc) then
+    ! MdSD: except if using godfrin
+    if (nprincd<nprinc .and. invmod/=3) then
       ! find nprincd such that it is as big as it needs to be while being as
       ! small as commensurability with the number of layers etc. allows
       ! for this we loop over all layers and look for the divisors of naez
@@ -753,6 +755,14 @@ contains
       call memocc(i_stat, product(shape(icheck))*kind(icheck), 'ICHECK', 'main0')
       icheck = 0
     end if ! nprincd<nprinc
+
+    ! MdSD: actual block sizes for godfrin matrix inversion
+    if (invmod == 3) then
+      t_godfrin%na = naez*lmmaxd
+      t_godfrin%bdims(:) = t_godfrin%bdims(:)*lmmaxd
+    end if
+    ! write (*, '("na=",i8,"  nb=",i8,"  ldiag=",l2,"  lper=",l2,"  lpardiso=",l2)') t_godfrin%na, t_godfrin%nb, t_godfrin%ldiag, t_godfrin%lper, t_godfrin%lpardiso
+    ! write (*, '("bdims(1:nb)=",100i8)') t_godfrin%bdims(:)
 
     ! store nlayerd for later use
     nlayerd = nlayer
@@ -1444,7 +1454,7 @@ contains
       imt1 = ircut(1, ih)
       irc1 = irc(ih)
       irmin1 = irmin(ih)
-      write(*,'("imt1, irc1, irmin1 = ",10i4)') imt1, irc1, irmin1
+      ! write(*,'("imt1, irc1, irmin1 = ",10i4)') imt1, irc1, irmin1
 
       do ispin = 1, nspin
         ! shift potential spin dependent

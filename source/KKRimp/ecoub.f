@@ -4,7 +4,7 @@
       !> Calculate the electrostatic potential-energies without the
       !> electron-nuclear interaction in the cell itself.
       !-------------------------------------------------------------------------------
-      MODULE MOD_ECOUB
+      MODULE mod_ecoub_kkrimp
         CONTAINS
   !-------------------------------------------------------------------------------
   !> Summary: Coulomb hartree energy
@@ -250,4 +250,4 @@ c
  9010 FORMAT (10x,'     generalized madelung pot. for atom',1x,i3,1x,
      +       ': ',1p,d14.6)
       END SUBROUTINE
-      END MODULE MOD_ECOUB
+      END MODULE mod_ecoub_kkrimp

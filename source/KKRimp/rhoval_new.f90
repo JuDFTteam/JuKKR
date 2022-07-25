@@ -120,14 +120,7 @@ if ( .not. allocated(wavefunction%rll)) then
   stop '[rhoval_new] rll not allocated'
 end if
 
-
-
-
-
-    imt1=cellnew%ipan_intervall(cellnew%npan_log+cellnew%npan_eq)+1
-
-
-
+imt1=cellnew%ipan_intervall(cellnew%npan_log+cellnew%npan_eq)+1
 
 call rhooutnew(gauntcoeff,df,gmatll,ek,cellnew,wavefunction,rho2ns_complex(:,:,:), &
                config%nsra, &

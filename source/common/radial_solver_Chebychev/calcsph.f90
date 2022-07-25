@@ -21,12 +21,14 @@ contains
   !> starting from spherical Bessel and Hankel functions (see PhD D. Bauer)
   !-------------------------------------------------------------------------------
   subroutine calcsph(nsra, irmdnew, nrmaxd, lmax, nspin, zat, eryd, lmpotd, lmmaxd, rnew, vins, ncheb, npan_tot, rpan_intervall, jlk_index, hlk, jlk, hlk2, jlk2, gmatprefactor, &
-    tmat, alpha, use_sratrick)
+    tmat, alpha, use_sratrick, use_rllsll)
 
     use :: global_variables, only: korbit
     use :: mod_constants, only: czero
     use :: mod_datatypes, only: dp
     use :: mod_rllsll, only: rllsll
+    use mod_rll_global_solutions, only: rll_global_solutions
+    use mod_sll_global_solutions, only: sll_global_solutions ! MdSD: TEST
     use :: mod_vllmatsra, only: vllmatsra
 
     implicit none
@@ -43,6 +45,7 @@ contains
     complex (kind=dp) :: hlk2(1:nsra*(1+korbit)*(lmax+1), irmdnew)
     complex (kind=dp) :: jlk2(1:nsra*(1+korbit)*(lmax+1), irmdnew)
     integer :: jlk_index(2*lmmaxd)
+    logical, intent(in) :: use_rllsll
 
     ! local
     integer :: lmsize, lmsize2, nvec, nspintemp
@@ -128,8 +131,19 @@ contains
         end if
         tmattemp = (0e0_dp, 0e0_dp)
         alphatemp = (0e0_dp, 0e0_dp)
-        call rllsll(rpan_intervall, rnew, vll, rlltemp, slltemp, tmattemp, ncheb, npan_tot, lmsize, lmsize2, nvec, irmdnew, nvec, jlk_indextemp, hlktemp, jlktemp, hlk2temp, &
-          jlk2temp, gmatprefactor, '1', '1', '0', use_sratrick, alphatemp) ! LLY
+        ! MdSD: TEST
+        if (use_rllsll) then
+          call rllsll(rpan_intervall, rnew, vll, rlltemp, slltemp, &
+            tmattemp, ncheb, npan_tot, lmsize, lmsize2, nvec, irmdnew, nvec, &
+            jlk_indextemp, hlktemp, jlktemp, hlk2temp, jlk2temp, gmatprefactor, '1', '1', '0', use_sratrick, alphatemp) ! LLY
+        else
+          call rll_global_solutions(rpan_intervall, rnew, vll, slltemp, rlltemp, &
+            tmattemp, ncheb, npan_tot, lmsize, lmsize2, nvec, irmdnew, nvec, &
+            jlk_indextemp, hlktemp, jlktemp, hlk2temp, jlk2temp, gmatprefactor, '1', use_sratrick, alphatemp)
+          call sll_global_solutions(rpan_intervall, rnew, vll, slltemp, &
+            ncheb, npan_tot, lmsize, lmsize2, nvec, irmdnew, nvec, &
+            jlk_indextemp, hlktemp, jlktemp, hlk2temp, jlk2temp, gmatprefactor, '1', use_sratrick)
+        end if
 
         do ir = 1, irmdnew
           hlknew(lspin+lval+1, ir) = slltemp(1, 1, ir)/rnew(ir)

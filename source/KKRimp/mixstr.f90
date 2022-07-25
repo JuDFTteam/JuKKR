@@ -1,4 +1,4 @@
-      MODULE MOD_MIXSTR
+      MODULE mod_mixstr_kkrimp
       CONTAINS
 ! c 13.10.95 ***************************************************************
    !-------------------------------------------------------------------------------
@@ -187,4 +187,4 @@
  9050 FORMAT ('      ITERATION',I4,' average rms-error : v+ + v- = ', &
             1p,d11.4)
       END SUBROUTINE
-      END MODULE 
+      END MODULE mod_mixstr_kkrimp

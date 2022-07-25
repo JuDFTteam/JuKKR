@@ -673,10 +673,10 @@ contains
     call zgemm('N', 'N', m, n, m, cone, delta, mb, aji(:,:,nb), mb, czero, tmp, mb)
     call zgemm('N', 'N', n, n, m, cone, aij(:,:,nb), mb, tmp, mb, czero, delta, mb)
     ! Delta = Delta + A(1,N) * B(N,1)
-    tmp = a(j0+1:j0+m, i0+1:i0+n)
+    tmp(1:m, 1:n) = a(j0+1:j0+m, i0+1:i0+n)
     call zgemm('N', 'N', n, n, m, cone, aij(:,:,nb), mb, tmp, mb, cone, delta, mb)
     ! Delta = Delta + B(1,N) * A(N,1)
-    tmp = a(i0+1:i0+n, j0+1:j0+m)
+    tmp(1:n, 1:m) = a(i0+1:i0+n, j0+1:j0+m)
     call zgemm('N', 'N', n, n, m, cone, tmp, mb, aji(:,:,nb), mb, cone, delta, mb)
     ! Delta = Delta + B(1,1) + 1
     delta(1:n, 1:n) = delta(1:n, 1:n) + a(i0+1:i0+n, i0+1:i0+n)
