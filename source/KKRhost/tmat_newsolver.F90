@@ -984,7 +984,7 @@ contains
       sll = czero
 
       ! Left regular and irregular wavefunctions (used here only in case of XCPL or saving of left wavefunctions)
-      if (calculate_left(1,1)) then
+      if (calculate_left(-1, -1)) then
         allocate (rllleft(nsra*lmmaxd,lmmaxd,irmdnew,0:nth-1), stat=i_stat)
         call memocc(i_stat, product(shape(rllleft))*kind(rllleft), 'RLLLEFT', 'allocate_locals_tmat_newsolver')
         rllleft = czero
@@ -1066,7 +1066,7 @@ contains
       deallocate (sll, stat=i_stat)
       call memocc(i_stat, -product(shape(sll))*kind(sll), 'SLL', 'allocate_locals_tmat_newsolver')
 
-      if (calculate_left(1,1)) then
+      if (calculate_left(-1, -1)) then
         deallocate (rllleft, stat=i_stat)
         call memocc(i_stat, -product(shape(rllleft))*kind(rllleft), 'RLLLEFT', 'allocate_locals_tmat_newsolver')
         deallocate (sllleft, stat=i_stat)
@@ -1131,7 +1131,12 @@ contains
     end if
 
     if ( (t_wavefunctions%save_rllleft .or. t_wavefunctions%save_sllleft) ) then
-      if ( t_wavefunctions%isave_wavefun(i1,ie)>0 ) calculate_left = .true.
+      if (ie<0 .or. i1<0) then
+        ! need special case for alloc/dealloc routines
+        calculate_left = .true.
+      elseif ( t_wavefunctions%isave_wavefun(i1,ie)>0 ) then
+        calculate_left = .true.
+      end if
     end if
 
     return
