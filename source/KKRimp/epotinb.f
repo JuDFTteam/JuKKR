@@ -4,7 +4,7 @@
   !>
   !> Calculate the energy of the input potential: Int V(r) rho(r) d^3r
   !> ---------------------------------------------------
-      MODULE MOD_EPOTINB
+      MODULE mod_epotinb_kkrimp
         CONTAINS
   !-------------------------------------------------------------------------------
   !> Summary: Calculates energy of the input potential
@@ -226,4 +226,4 @@ c
    90 CONTINUE                      ! IATOM = 1,NATYP
 
       END SUBROUTINE
-      END MODULE MOD_EPOTINB
+      END MODULE mod_epotinb_kkrimp

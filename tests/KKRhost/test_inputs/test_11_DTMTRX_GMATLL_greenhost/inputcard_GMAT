@@ -38,9 +38,9 @@ BZDIVIDE= 1 1 1
 ICST= 2
 
 # WARNING: for this test the radial mesh points are decreased 
-NPAN_LOG=   5
-NPAN_EQ=    3
-NCHEB=      6
+NPAN_LOG=  12
+NPAN_EQ=    5
+NCHEB=      8
 R_LOG=   0.600000000000000     
 
 MEMWFSAVE=       1000

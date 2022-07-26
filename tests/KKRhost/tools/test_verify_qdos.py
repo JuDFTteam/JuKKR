@@ -16,13 +16,12 @@ class Test_qdos():
     def test_12_qdos(self):
         path  = 'test_run12_mpi_1_6/'
         path0 = 'test_run12_mpi_1_6/ref/'
-        for f in 'qdos.01.1.dat qdos.01.2.dat qdos.02.1.dat qdos.02.2.dat qdos.03.1.dat qdos.03.2.dat qdos.04.1.dat qdos.04.2.dat'.split():
-           fname = f
+        for fname in 'qdos.001.1.dat qdos.001.2.dat qdos.002.1.dat qdos.002.2.dat qdos.003.1.dat qdos.003.2.dat qdos.004.1.dat qdos.004.2.dat'.split():
            num, text = read_file(path+fname)
            num_ref, text_ref = read_file(path0+fname)
            # remove line with serial number
-           text = text[1:]
-           text_ref = text_ref[1:]
+           text = text[3:]
+           text_ref = text_ref[3:]
            # now compare
            print(fname)
            print(std(abs(num-num_ref)))
@@ -37,8 +36,7 @@ class Test_qdos():
     def test_12_qdos_SOC(self):
         path  = 'test_run12.1_mpi_1_6/'
         path0 = 'test_run12.1_mpi_1_6/ref/'
-        for f in 'qdos.01.1.dat qdos.01.2.dat qdos.02.1.dat qdos.02.2.dat qdos.03.1.dat qdos.03.2.dat qdos.04.1.dat qdos.04.2.dat'.split():
-           fname = f
+        for fname in 'qdos.001.1.dat qdos.001.2.dat qdos.002.1.dat qdos.002.2.dat qdos.003.1.dat qdos.003.2.dat qdos.004.1.dat qdos.004.2.dat'.split():
            num, text = read_file(path+fname)
            num_ref, text_ref = read_file(path0+fname)
            # remove line with serial number

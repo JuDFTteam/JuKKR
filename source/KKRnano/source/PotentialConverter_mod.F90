@@ -1,8 +1,3 @@
-!--------------------------------------------------------------------------------
-! Copyright (c) 2018 Forschungszentrum Juelich GmbH, Juelich, Germany
-! This file is part of KKRnano and available as free software under the conditions
-! of the MIT license as expressed in the LICENSE file in more detail.
-!--------------------------------------------------------------------------------
 module PotentialConverter_mod
 !-------------------------------------------------------------------------------
 !> Summary: Converts unformatted potential file to the KKRhost formatted potential file format
@@ -52,10 +47,10 @@ module PotentialConverter_mod
       call associateBasisAtomMesh(atomdata, mesh)
 
       ! show data on stdout
-      call represent(mesh, str)
-      write(*, '(A)') str
-      call represent(atomdata%potential, str)
-      write(*, '(A)') str
+!     call represent(mesh, str)
+!     write(*, '(A)') str
+!     call represent(atomdata%potential, str)
+!     write(*, '(A)') str
 
       call writeFormattedPotential(Efermi, ALAT, VBC, KXC, atomdata)
 
@@ -190,7 +185,7 @@ module PotentialConverter_mod
 
     double precision :: rv, sm
     integer :: ic, ir, irmin, is, lm, lmnr, lmpot, nr
-    integer, parameter :: isave = 1, inew = 1
+    integer, parameter :: isave = 1, inew = 2
     double precision, parameter :: qbound = 1.d-10
     character(len=24), parameter :: txc(0:3) = [' Morruzi,Janak,Williams', ' von Barth,Hedin       ', ' Vosko,Wilk,Nusair     ', ' GGA PW91              ']
     character(len=*), parameter :: F9000 = "(7a4,6x,'  exc:',a24,3x,a10)", &
@@ -236,7 +231,8 @@ module PotentialConverter_mod
         enddo ! lm
 
 !--->     write a one to mark the end
-        if (lmnr < lmpot) write(ifile, fmt=F9060) isave
+!       if (lmnr < lmpot) write(ifile, fmt=F9060) isave
+        write(ifile, fmt=F9060) isave
       endif
     enddo ! is
 

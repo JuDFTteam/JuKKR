@@ -160,17 +160,18 @@ module RadialMeshData_mod
     double precision, intent(in) :: radius_mt
     double precision, intent(in) :: a_log
     double precision, intent(in) :: b_log
+    double precision :: b_log_local
 
     !double precision, parameter :: A = 0.025d0
     integer :: ii
 
     self%A = a_log
-    self%B = b_log
-    !self%B = radius_mt / (exp(a_log * (imt - 1)) - 1.d0)
+    b_log_local = radius_mt / (exp(a_log * (imt - 1)) - 1.d0)
+    self%B = b_log_local
 
     do ii = 1, imt
-      self%r(ii)    = b_log * (exp(a_log * (ii - 1)) - 1.d0)
-      self%drdi(ii) = a_log * b_log * exp(a_log * (ii - 1))
+      self%r(ii)    = b_log_local * (exp(a_log * (ii - 1)) - 1.d0)
+      self%drdi(ii) = a_log * b_log_local * exp(a_log * (ii - 1))
     enddo ! ii
 
     self%rmt = radius_MT

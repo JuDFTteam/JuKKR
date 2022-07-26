@@ -207,6 +207,13 @@ contains
         write (1337, '(12X,A,2F8.4,A,/)') 'Ueff and Jeff = ', ueff(i1), jeff(i1), ' Ry'
         write (1337, '(12X,"Scaling factor for F^n :",F10.6,/)') scl
         write (1337, '(12X,"  n   F^n calculated   F^n scaled ")')
+        
+        if (scl==0) then
+          ! to prevent division by zero
+          ! we can do this here because scl is not use anymore in the remainder
+          scl = 1.0
+        end if
+
         do lf = 2, lfmax, 2
           write (1337, '(12X,I3,2(2X,F12.8," Ry"))') lf, fclmb(lf)/scl, fclmb(lf)
         end do

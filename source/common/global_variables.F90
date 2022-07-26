@@ -91,6 +91,7 @@ module global_variables
   real (kind=dp) :: pot_ns_cutoff = -1 !! threshold below which non-spherical part of the potential is cut off (done in main2)
   real (kind=dp) :: mixfac_broydenspin = 0.01 !! broyden spin mixing factor
   real (kind=dp) :: qbound_spin = -1 !! spin mixing qbound in degrees (if rms of spin directions is < qbound all angles are fixed, defaut negative value means no automatic fixing)
+  real (kind=dp) :: angles_cutoff = -1._dp !! MdSD: threshold for the magnitude of the spin moment below which the angles stop being updated in linear mixing
 
 end module global_variables
 

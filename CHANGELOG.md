@@ -15,12 +15,13 @@
 
 ----
 
-## *UNRELEASED* (last updated: 2021-01-18)
+## *UNRELEASED* (last updated: 2022-07-25)
 
 **Here we collect the list of *added*, *changed*, *deprecated*, *removed* and *fixed* features in preparation for the next release.**
 
 ### Added
 - None
+
 
 ### Changed
 - None
@@ -33,6 +34,48 @@
 
 ### Fixed
 - None
+
+----
+
+## v3.6 (2022-07-25)
+
+### Added
+- List of new run options:
+    * `write_npy` (write files in npy format)
+    * `gflle_to_npy` (write gflle file to npy instead of to gflle file)
+    * `decouple_spin_cheby` (decouple spin matrices in Chebychev solver neglecting SOC and for collinear calculations only)
+    * `force_BZ_symm` (force the use of BZ symmetries for k-integration even with SOC)
+    * `calc_onsite_only` (calculate not the full Green function for the density but take the onsite part alone)
+    * `set_gmat_to_zero` (set GMAT=0 in evaluation of density)
+    * `use_gmat_unity` (set the structural GF to the unity matrix for test purposes)
+    * `write_double_precision` (write out kkrflex files in double precision)
+    * `use_cheby_quadprec` (use quadruple precision in Chebychev solver for irregular solution)
+    * `soc_no_spinflip` (set spin-flip components of the SOC Hamiltonian to zero)
+    * `use_rllsll` (switch to previous approach to compute wavefunctions in Chebyshev solver)
+- integrate NPY-for-Fortran for .npy file writeout (https://github.com/MRedies/NPY-for-Fortran)
+- godfrin inversion mode and block-partitioning utility (d2212b65f68848319aae6066a86f18c450b4b977)
+- Constraining and non-collinear external fields and torques
+- Add `angles_cutoff` parameter (threshold for the magnitude of the spin moment below which the angles stop being updated in linear mixing)
+- Allow to read `npan_logfac` from `config.cfg` input file of KKRimp (default was hard-coded value of 2, now changed to better default value)
+- Test options for KKRimp
+    * `read_double_precision` test option for KKRimp (see corresponding writeout option of KKRhost)
+    * `calc_onsite_only` test option for KKRimp
+- Run KKRnano reg tests
+- KKRnano tfqmr solver with GPU support
+- added Empty sphere program
+
+### Changed
+- renamed `decouple_spins_cheby` -> `decouple_spin_cheby` (could lead to mis-reading with `INS` keyword)
+- Improved version of Chebychev solver
+- lambda_xc atom dependent
+- renamed some module names for KKRimp code (e.g. `mod_etotb1` -> `mod_etotb1_kkrimp`) to facilitate simultaneous compilation of KKRhost and KKRimp
+- Allow to control number of shapefunction radial points with `NPOI` input parameter (default is old value of 125)
+- allow Voronoi to optimize positions of `NVAC` vacuum positions
+- use python3 instead of 2.7 for CI tests
+
+### Fixed
+- Bugfix orbital moment collection at the end of the iteration
+- various minor fixes
 
 ----
 

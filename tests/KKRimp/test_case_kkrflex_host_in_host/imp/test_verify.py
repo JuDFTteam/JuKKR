@@ -30,6 +30,11 @@ class Tests_scf_noSOC():
       standard_scf_test('test_run_hybrid_4_2')
 
 
+
+# comparison values for SOC run (differs from converged values because we reuse
+# the noSOC potential and then just run a single iteration)
+CMP_SOC = [25.496446, 1.4556e-03, 3.181208, -12729.33372233]
+
 class Tests_scf_SOC():
    """
    Check SOC scf run with different features:
@@ -38,16 +43,16 @@ class Tests_scf_SOC():
     - storing wavefunctions
    """
    def test_SOC_mpi(self):
-      standard_scf_test('test_run_tmatnew_mpi_8', cmpvals=[25.494781, 1.1302e-03, 3.181288, -12729.32115292])
+      standard_scf_test('test_run_tmatnew_mpi_8', cmpvals=CMP_SOC)
 
    def test_SOC_hybrid(self):
-      standard_scf_test('test_run_tmatnew_hybrid_2_4', cmpvals=[25.494781, 1.1302e-03, 3.181288, -12729.32115292])
+      standard_scf_test('test_run_tmatnew_hybrid_2_4', cmpvals=CMP_SOC)
 
    def test_SOC_nosavewf(self):
-      standard_scf_test('test_run_nosavewf', cmpvals=[25.494781, 1.1302e-03, 3.181288, -12729.32115292])
+      standard_scf_test('test_run_nosavewf', cmpvals=CMP_SOC)
 
    def test_SOC_nosratrick(self):
-      standard_scf_test('test_run_nosratrick', cmpvals=[25.494780, 1.1313e-03, 3.181288, -12729.32114985])
+      standard_scf_test('test_run_nosratrick', cmpvals=[25.494780, 1.1313e-03, 3.181288, -12729.32114978])
 
    def test_Jij(self):
       check_Jijs('test_run_Jij', refpath='host_in_host_Jijs')
@@ -95,8 +100,8 @@ def check_Jijs(path, refpath, sracomp=False):
    d0= loadtxt('test_case_kkrflex_host_in_host/imp/'+refpath+'/out_Jijmatrix')
 
    if not sracomp:
-      assert mean(abs(d-d0)) < 10**-14
-      assert std(abs(d-d0)) < 10**-14
+      assert mean(abs(d-d0)) < 2e-10
+      assert std(abs(d-d0)) < 2e-10
    else:
-      assert mean(abs(d-d0)) < 5*10**-8
-      assert std(abs(d-d0)) < 5*10**-8
+      assert mean(abs(d-d0)) < 5e-8
+      assert std(abs(d-d0)) < 5e-8

@@ -108,6 +108,10 @@ add_library(lib_common STATIC
     source/common/beshank.f90
     source/common/wronskian.f90
     source/common/mathtools.f90
+    source/common/bfield.f90
+    source/common/torque.f90
+    source/external/NPY-for-Fortran/src/npy.F90
+    source/external/NPY-for-Fortran/src/endian_swap.f90
 )
 # disable cmake auto add of 'lib' prefix to .so file
 SET_TARGET_PROPERTIES(lib_common PROPERTIES PREFIX "")
@@ -387,6 +391,7 @@ add_library(lib_kkrhost STATIC
     source/KKRhost/wrmoms.f90
     source/KKRhost/wunfiles.F90
     source/KKRhost/ylag.f90
+    source/KKRhost/write_gflle_npy.f90
 )
 # disable cmake auto add of 'lib' prefix to .so file
 SET_TARGET_PROPERTIES(lib_kkrhost PROPERTIES PREFIX "")
@@ -402,6 +407,7 @@ target_link_libraries(kkr.x lib_kkrhost)
 if(CMAKE_Fortran_COMPILER_ID MATCHES GNU OR USE_LIBFLAME)
     target_link_libraries(kkr.x ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 endif()
+target_link_libraries(kkr.x "${ompflags}")
 
 if(ENABLE_BdG)
     # for wf testing (BdG)

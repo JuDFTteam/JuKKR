@@ -1,4 +1,4 @@
-# serial: kkrjm_v2.3-64-g8cc70fc_mpi_20180831103131; MD5 (potential) = 230666442204bee643ef39a7eadccd62; MD5 (shapefun) = 435c0c91db9d41eeb0f4313fcee12283
+# serial: JuKKR_v3.1-1927-g9a2aa9fa_intel-debug_20220725130525; MD5 (potential) = 6cd12c7c5404e53c7eb0496d6accd7e0; MD5 (shapefun) = 435c0c91db9d41eeb0f4313fcee12283
 [bravais]
 #   x   y   z - component
    0.0000000000000000   0.5000000000000000   0.5000000000000000

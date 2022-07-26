@@ -71,7 +71,8 @@ contains
     real (kind=dp), dimension (ntotd*(ncheb+1), nfund, ncelld), intent (inout), optional :: thetasnew !! interpolated shape function in Chebychev radial mesh
 
     ! .. Local variables
-    real (kind=dp), parameter :: fac=2e0_dp
+!   real (kind=dp), parameter :: fac=2e0_dp
+    real (kind=dp) :: fac
     integer :: npan_inst, i_stat, i_all
     integer :: i1, ir2, ip, icell
     integer :: imin, imax, iminnew, imaxnew, lm1
@@ -104,6 +105,7 @@ contains
       ! log panel
       rmin = rmesh(2, i1)
       rmax = r_log
+      fac = (rmax/rmin)**(1.d0/npan_log)
       rval = 0e0_dp
       ishift = 0
       if (r_log>rmesh(irmin(i1),i1)) then
@@ -161,6 +163,10 @@ contains
 
       call chebmesh(npan_tot(i1), ncheb, rpan_intervall(0:,i1), rnew(1,i1))
 
+!     do ir2 = 1,50
+!     write(6,*) ir2, rnew(ir2,i1)
+!     end do
+
       ! do interpolation only when optional arguments are given
       if (present(ntcell)) then
         ! interpolate shape function THETAS to new shape function THETASNEW
@@ -178,7 +184,10 @@ contains
             call interpolspline(rmesh(imin:imax,i1), rnew(iminnew:imaxnew,i1), thetasin(imin-ircut(1,i1):imax-ircut(1,i1),lm1,icell), thetasnew(iminnew:imaxnew,lm1,icell), imax-imin+1, &
               imaxnew-iminnew+1)
           end do
+
         end do
+
+
       end if ! present(ntcell)
 
     end do ! i1

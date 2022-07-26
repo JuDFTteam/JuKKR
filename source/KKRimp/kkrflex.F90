@@ -28,28 +28,28 @@ program kkrflex
   use mod_gauntharmonics, only: gauntharmonics_set
 !   use mod_gauntharmonics_test, only: gauntharmonics_set_test
   use mod_calctmat
-  use mod_rhocore
+  use mod_rhocore_kkrimp
   use mod_gauntshape, only: gen_gauntshape
   use arrayparams, only: arrayparams_set
   use mod_energyloop
-  use mod_rhototb
+  use mod_rhototb_kkrimp
   use mod_preconditioning
   use mod_mpienergy, only: mpienergy_distribute
   use mod_vinters2010
-  use mod_vintras
-  use mod_convol
-  use MOD_MIXSTR
+  use mod_vintras_kkrimp
+  use mod_convol_kkrimp
+  use mod_mixstr_kkrimp
   use mod_mixbroyden
-  use mod_vxcdrv, only: vxcdrv
-  use mod_rites
-  use mod_epotinb
-  use mod_ESPCB
-  use mod_ECOUB
-  use mod_etotb1
-  use mod_wrmoms
+  use mod_vxcdrv_kkrimp, only: vxcdrv
+  use mod_rites_kkrimp
+  use mod_epotinb_kkrimp
+  use mod_espcb_kkrimp
+  use mod_ecoub_kkrimp
+  use mod_etotb1_kkrimp
+  use mod_wrmoms_kkrimp
   use mod_calcforce
   use mod_utrafo
-  use mod_initldau     ! lda+u
+  use mod_initldau_kkrimp ! lda+u
   use mod_calcwldau    ! lda+u
   use mod_averagewldau ! lda+u
 

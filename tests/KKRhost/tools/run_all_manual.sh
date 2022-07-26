@@ -168,6 +168,20 @@ if [[ ! -d test_run23_hybrid_1_3 ]]; then
   ./tools/run_test_23.sh
 fi
 
+echo "###########################################"
+echo "run:intel:BXCSCL_24:"
+echo ""
+if [[ ! -d test_run24_hybrid_1_3 ]]; then
+  ./tools/run_test_24.sh
+fi
+
+echo "###########################################"
+echo "run:intel:BCONSTR_25:"
+echo ""
+if [[ ! -d test_run25_hybrid_1_8 ]]; then
+  ./tools/run_test_25.sh
+fi
+
 
 #SOC tests
 

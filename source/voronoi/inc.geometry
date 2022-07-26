@@ -6,7 +6,7 @@
       parameter (NIMPD = 500)
 ! parameter nembd for number of basis atoms in embeding positions around the real atomic pos.
       integer nembd
-      parameter (NEMBD = 50 )
+      parameter (NEMBD = 100 )
 ! parameter nlembd for number of layers for embeding positions around the real atomic pos.
       integer NLEMBD
       parameter (NLEMBD = 100)

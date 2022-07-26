@@ -23,8 +23,8 @@ contains
   subroutine spinmix_noco(iter, natyp, theta, phi, fixdir, angles_new, totmoment, iounit)
     use mod_datatypes, only: dp
     use mod_constants, only: pi
-    use mod_runoptions, only: use_broyden_spinmix, write_angles_alliter, disable_print_serialnumber, fix_nonco_angles, decouple_spins_cheby
-    use global_variables, only: qbound_spin
+    use mod_runoptions, only: use_broyden_spinmix, write_angles_alliter, disable_print_serialnumber, fix_nonco_angles, decouple_spin_cheby
+    use global_variables, only: qbound_spin, angles_cutoff  !! MdSD: criterion to fix angles (see also rhovalnew)
     use mod_version_info, only: version_print_header
     use mod_wunfiles, only: t_params
     implicit none
@@ -45,7 +45,7 @@ contains
 
 
     ! MdSD,PR: write information on new angles to output file
-    if (.not.decouple_spins_cheby) then
+    if (.not.decouple_spin_cheby) then
 
       write (1337,*)
       write (1337, '("      I1    In/Out THETA[deg]       In/Out PHI[deg]        FIXDIR[boolean]   RMS(angles)[deg]")')
@@ -77,7 +77,7 @@ contains
         end do
       end if
 
-    end if ! .not.decouple_spins_cheby
+    end if ! .not.decouple_spin_cheby
   
     ! rewrite new theta and phi to nonco_angle_out.dat, nonco_angle.dat is the input
     if (.not. fix_nonco_angles) then
@@ -96,11 +96,16 @@ contains
             ! keep the old angles
             write (iounit, *) t_params%theta(i1)/pi*180.0_dp, t_params%phi(i1)/pi*180.0_dp, t_params%fixdir(i1)
           else
-            ! update angles
-            write (iounit, *) angles_new(1, i1)/pi*180.0_dp, angles_new(2, i1)/pi*180.0_dp, t_params%fixdir(i1)
-            ! use internal units here
-            t_params%theta(i1) = angles_new(1, i1)
-            t_params%phi(i1) = angles_new(2, i1)
+            ! MdSD: don't change the angles if the spin moment is too small
+            if (totmoment(i1) > angles_cutoff) then
+              ! update angles
+              write (iounit, *) angles_new(1, i1)/pi*180.0_dp, angles_new(2, i1)/pi*180.0_dp, t_params%fixdir(i1)
+              ! use internal units here
+              t_params%theta(i1) = angles_new(1, i1)
+              t_params%phi(i1) = angles_new(2, i1)
+            else
+              write (iounit, *) t_params%theta(i1)/pi*180.0_dp, t_params%phi(i1)/pi*180.0_dp, t_params%fixdir(i1)
+            end if
           end if
           if (write_angles_alliter) write (iounit+1, *) t_params%theta(i1)/pi*180.0_dp, t_params%phi(i1)/pi*180.0_dp, t_params%fixdir(i1)
         end do
@@ -134,7 +139,7 @@ contains
     use mod_datatypes, only: dp
     use mod_constants, only: pi
     use mod_wunfiles, only: t_params
-    use global_variables, only: mixfac_broydenspin, ninit_broydenspin, memlen_broydenspin
+    use global_variables, only: mixfac_broydenspin, ninit_broydenspin, memlen_broydenspin, angles_cutoff  !! MdSD: criterion to fix angles (see also rhovalnew)
     use mod_runoptions, only: write_angles_alliter
     use mod_broyden, only: broyden
     implicit none
@@ -145,6 +150,7 @@ contains
     real (kind=dp), intent(in) :: totmoment_atoms(natyp) !! length of the magentization vectors
     integer, intent(in) :: iounit !! output unit where the nonco_angles output file is written
     ! local
+    real (kind=dp), parameter :: tol = 1.0e-12_dp !! MdSD: shifting problems with Broyden to the future
     integer :: nfixed !! number of fixed angles
     integer :: ipos !! for loop indices etc.
     integer :: vlen !! length of vector
@@ -155,7 +161,7 @@ contains
     ! get number of fixed angles (we need to use the rest only for the mixing)
     nfixed = 0
     do i1 = 1, natyp
-        if (t_params%fixdir(i1)) nfixed = nfixed + 1
+        if (t_params%fixdir(i1) .or. totmoment_atoms(i1) < angles_cutoff) nfixed = nfixed + 1
     end do
 
     ! allocate working arrays
@@ -167,7 +173,7 @@ contains
     ! convert angles to magnetization direction vectors 
     ipos = 0
     do i1 = 1, natyp
-      if (.not. t_params%fixdir(i1)) then
+      if (.not. (t_params%fixdir(i1) .or. totmoment_atoms(i1) < angles_cutoff)) then
         ! we use the same vector length (i.e. the output length since we can assume that it will not change much)
         ! set old vector
         theta = t_params%theta(i1)
@@ -192,10 +198,16 @@ contains
       rms = rms + (vector(ipos,2) - vector(ipos,1))**2
     end do
     rms = sqrt(rms)
+    write (1337,'("spinmix_broyden: iter=",i8,"  ninit=",i8,"  rms=",es16.8)') iter, ninit_broydenspin, rms
 
     ! different alpha for simple mixing and broyden mixing steps
     alpha = mixfac_broydenspin
     if (iter<=ninit_broydenspin) alpha = 1.0_dp ! always use alpha=1 for simple mixing steps
+
+    ! MdSD: there are special high-symmetry situations where the rms for the angles is zero
+    ! MdSD: linear mixing is fine with that, but if broyden is called it will cause a NaN
+    ! MdSD: this line delays using Broyden
+    if (rms < tol .and. iter == ninit_broydenspin) ninit_broydenspin = ninit_broydenspin + 1
 
     ! now do Broyden mixing
     call broyden (vector, vlen, alpha, rms, iter, &
@@ -204,7 +216,7 @@ contains
     ! output 
     ipos = 0
     do i1 = 1, natyp
-      if (.not. t_params%fixdir(i1)) then
+      if (.not. (t_params%fixdir(i1) .or. totmoment_atoms(i1) < angles_cutoff)) then
         ! transform back to angles (vector(:,2) now is the output direction vector)
         moment(1) = vector(1+3*ipos, 2)
         moment(2) = vector(2+3*ipos, 2)

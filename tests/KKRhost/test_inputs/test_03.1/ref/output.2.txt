@@ -1,15 +1,15 @@
-# serial: kkrjm_v2.3-64-g8cc70fc_mpi_20180830212138
+# serial: JuKKR_v3.1-1927-g9a2aa9fa_intel-debug_20220725113633
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 1, #of points= 1
-Task 1 treats points 2 to 2, #of points= 1
-Task 2 treats points 3 to 3, #of points= 1
-Task 3 treats points 4 to 4, #of points= 1
+Task 0 treats points 1 to 1,#of points= 1
+Task 1 treats points 2 to 2,#of points= 1
+Task 2 treats points 3 to 3,#of points= 1
+Task 3 treats points 4 to 4,#of points= 1
  ==========================================
  atom:            1  NSRA:           2
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 8, #of points= 8
-Task 1 treats points 9 to 16, #of points= 8
-Task 2 treats points 17 to 24, #of points= 8
+Task 0 treats points 1 to 8,#of points= 8
+Task 1 treats points 9 to 16,#of points= 8
+Task 2 treats points 17 to 24,#of points= 8
  ==========================================
  energy:           1  (-0.400005000000000,1.794010046755946E-002)
  energy:           1  (-0.399995000000000,1.794010046755946E-002)
@@ -17,240 +17,232 @@ Task 2 treats points 17 to 24, #of points= 8
  energy:           2  (-0.399995000000000,7.959110633897150E-002)
  energy:           3  (-0.400005000000000,0.141242112210384)
  energy:           3  (-0.399995000000000,0.141242112210384)
- energy:           4  (-0.392853873991522,0.159182212677943)
- energy:           4  (-0.392843873991522,0.159182212677943)
- energy:           5  (-0.362749751279547,0.159182212677943)
- energy:           5  (-0.362739751279547,0.159182212677943)
- energy:           6  (-0.310294878939112,0.159182212677943)
- energy:           6  (-0.310284878939112,0.159182212677943)
- energy:           7  (-0.238304690921783,0.159182212677943)
- energy:           7  (-0.238294690921783,0.159182212677943)
- energy:           8  (-0.150658633697378,0.159182212677943)
- energy:           8  (-0.150648633697378,0.159182212677943)
+ energy:           4  (-0.392853874875687,0.159182212677943)
+ energy:           4  (-0.392843874875688,0.159182212677943)
+ energy:           5  (-0.362749755885788,0.159182212677943)
+ energy:           5  (-0.362739755885788,0.159182212677943)
+ energy:           6  (-0.310294890030875,0.159182212677943)
+ energy:           6  (-0.310284890030875,0.159182212677943)
+ energy:           7  (-0.238304710914416,0.159182212677943)
+ energy:           7  (-0.238294710914416,0.159182212677943)
+ energy:           8  (-0.150658664526573,0.159182212677943)
+ energy:           8  (-0.150648664526573,0.159182212677943)
            0 start tbref e-loop
- ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 8, #of points= 8
-Task 1 treats points 9 to 16, #of points= 8
-Task 2 treats points 17 to 24, #of points= 8
- ==========================================
 TBREF: GREF for energy:    1   -0.40000000    0.01794010
- tbref NCLS loop:           1           4
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 1, #of points= 1
-Task 1 treats points 2 to 1, #of points= 0
-Task 2 treats points 2 to 1, #of points= 0
-Task 3 treats points 2 to 1, #of points= 0
+Task 0 treats points 1 to 1,#of points= 1
+Task 1 treats points 2 to 1,#of points= 0
+Task 2 treats points 2 to 1,#of points= 0
+Task 3 treats points 2 to 1,#of points= 0
  ==========================================
 TBREF: GREF for energy:    2   -0.40000000    0.07959111
- tbref NCLS loop:           1           4
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 1, #of points= 1
-Task 1 treats points 2 to 1, #of points= 0
-Task 2 treats points 2 to 1, #of points= 0
-Task 3 treats points 2 to 1, #of points= 0
+Task 0 treats points 1 to 1,#of points= 1
+Task 1 treats points 2 to 1,#of points= 0
+Task 2 treats points 2 to 1,#of points= 0
+Task 3 treats points 2 to 1,#of points= 0
  ==========================================
 TBREF: GREF for energy:    3   -0.40000000    0.14124211
- tbref NCLS loop:           1           4
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 1, #of points= 1
-Task 1 treats points 2 to 1, #of points= 0
-Task 2 treats points 2 to 1, #of points= 0
-Task 3 treats points 2 to 1, #of points= 0
+Task 0 treats points 1 to 1,#of points= 1
+Task 1 treats points 2 to 1,#of points= 0
+Task 2 treats points 2 to 1,#of points= 0
+Task 3 treats points 2 to 1,#of points= 0
  ==========================================
 TBREF: GREF for energy:    4   -0.39284887    0.15918221
- tbref NCLS loop:           1           4
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 1, #of points= 1
-Task 1 treats points 2 to 1, #of points= 0
-Task 2 treats points 2 to 1, #of points= 0
-Task 3 treats points 2 to 1, #of points= 0
+Task 0 treats points 1 to 1,#of points= 1
+Task 1 treats points 2 to 1,#of points= 0
+Task 2 treats points 2 to 1,#of points= 0
+Task 3 treats points 2 to 1,#of points= 0
  ==========================================
-TBREF: GREF for energy:    5   -0.36274475    0.15918221
- tbref NCLS loop:           1           4
+TBREF: GREF for energy:    5   -0.36274476    0.15918221
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 1, #of points= 1
-Task 1 treats points 2 to 1, #of points= 0
-Task 2 treats points 2 to 1, #of points= 0
-Task 3 treats points 2 to 1, #of points= 0
+Task 0 treats points 1 to 1,#of points= 1
+Task 1 treats points 2 to 1,#of points= 0
+Task 2 treats points 2 to 1,#of points= 0
+Task 3 treats points 2 to 1,#of points= 0
  ==========================================
-TBREF: GREF for energy:    6   -0.31028988    0.15918221
- tbref NCLS loop:           1           4
+TBREF: GREF for energy:    6   -0.31028989    0.15918221
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 1, #of points= 1
-Task 1 treats points 2 to 1, #of points= 0
-Task 2 treats points 2 to 1, #of points= 0
-Task 3 treats points 2 to 1, #of points= 0
+Task 0 treats points 1 to 1,#of points= 1
+Task 1 treats points 2 to 1,#of points= 0
+Task 2 treats points 2 to 1,#of points= 0
+Task 3 treats points 2 to 1,#of points= 0
  ==========================================
-TBREF: GREF for energy:    7   -0.23829969    0.15918221
- tbref NCLS loop:           1           4
+TBREF: GREF for energy:    7   -0.23829971    0.15918221
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 1, #of points= 1
-Task 1 treats points 2 to 1, #of points= 0
-Task 2 treats points 2 to 1, #of points= 0
-Task 3 treats points 2 to 1, #of points= 0
+Task 0 treats points 1 to 1,#of points= 1
+Task 1 treats points 2 to 1,#of points= 0
+Task 2 treats points 2 to 1,#of points= 0
+Task 3 treats points 2 to 1,#of points= 0
  ==========================================
-TBREF: GREF for energy:    8   -0.15065363    0.15918221
- tbref NCLS loop:           1           4
+TBREF: GREF for energy:    8   -0.15065366    0.15918221
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 1, #of points= 1
-Task 1 treats points 2 to 1, #of points= 0
-Task 2 treats points 2 to 1, #of points= 0
-Task 3 treats points 2 to 1, #of points= 0
+Task 0 treats points 1 to 1,#of points= 1
+Task 1 treats points 2 to 1,#of points= 0
+Task 2 treats points 2 to 1,#of points= 0
+Task 3 treats points 2 to 1,#of points= 0
  ==========================================
 ===============================================================================
                               < KKR1a finished >
 ===============================================================================
 
-
 ===============================================================================
       Inversion algorithm used : FULL MATRIX                        
 ===============================================================================
-
  ************ IE =   1 ENERGY =  -0.400000   0.017940 KMESH =   4
  kkrmat k loop:          27           4
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 7, #of points= 7
-Task 1 treats points 8 to 14, #of points= 7
-Task 2 treats points 15 to 21, #of points= 7
-Task 3 treats points 22 to 27, #of points= 6
+Task 0 treats points 1 to 7,#of points= 7
+Task 1 treats points 8 to 14,#of points= 7
+Task 2 treats points 15 to 21,#of points= 7
+Task 3 treats points 22 to 27,#of points= 6
  ==========================================
 Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
-                 |||||||| 
+                 ||||||||
  ************ IE =   2 ENERGY =  -0.400000   0.079591 KMESH =   3
  kkrmat k loop:         125           4
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 32, #of points= 32
-Task 1 treats points 33 to 63, #of points= 31
-Task 2 treats points 64 to 94, #of points= 31
-Task 3 treats points 95 to 125, #of points= 31
+Task 0 treats points 1 to 32,#of points= 32
+Task 1 treats points 33 to 63,#of points= 31
+Task 2 treats points 64 to 94,#of points= 31
+Task 3 treats points 95 to 125,#of points= 31
  ==========================================
 Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
-                 ||||||||||||||||||||||||||||||||| 
+                 |||||||||||||||||||||||||||||||||
  ************ IE =   3 ENERGY =  -0.400000   0.141242 KMESH =   4
  kkrmat k loop:          27           4
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 7, #of points= 7
-Task 1 treats points 8 to 14, #of points= 7
-Task 2 treats points 15 to 21, #of points= 7
-Task 3 treats points 22 to 27, #of points= 6
+Task 0 treats points 1 to 7,#of points= 7
+Task 1 treats points 8 to 14,#of points= 7
+Task 2 treats points 15 to 21,#of points= 7
+Task 3 treats points 22 to 27,#of points= 6
  ==========================================
 Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
-                 |||||||| 
+                 ||||||||
  ************ IE =   4 ENERGY =  -0.392849   0.159182 KMESH =   4
  kkrmat k loop:          27           4
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 7, #of points= 7
-Task 1 treats points 8 to 14, #of points= 7
-Task 2 treats points 15 to 21, #of points= 7
-Task 3 treats points 22 to 27, #of points= 6
+Task 0 treats points 1 to 7,#of points= 7
+Task 1 treats points 8 to 14,#of points= 7
+Task 2 treats points 15 to 21,#of points= 7
+Task 3 treats points 22 to 27,#of points= 6
  ==========================================
 Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
-                 |||||||| 
+                 ||||||||
  ************ IE =   5 ENERGY =  -0.362745   0.159182 KMESH =   4
  kkrmat k loop:          27           4
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 7, #of points= 7
-Task 1 treats points 8 to 14, #of points= 7
-Task 2 treats points 15 to 21, #of points= 7
-Task 3 treats points 22 to 27, #of points= 6
+Task 0 treats points 1 to 7,#of points= 7
+Task 1 treats points 8 to 14,#of points= 7
+Task 2 treats points 15 to 21,#of points= 7
+Task 3 treats points 22 to 27,#of points= 6
  ==========================================
 Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
-                 |||||||| 
+                 ||||||||
  ************ IE =   6 ENERGY =  -0.310290   0.159182 KMESH =   4
  kkrmat k loop:          27           4
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 7, #of points= 7
-Task 1 treats points 8 to 14, #of points= 7
-Task 2 treats points 15 to 21, #of points= 7
-Task 3 treats points 22 to 27, #of points= 6
+Task 0 treats points 1 to 7,#of points= 7
+Task 1 treats points 8 to 14,#of points= 7
+Task 2 treats points 15 to 21,#of points= 7
+Task 3 treats points 22 to 27,#of points= 6
  ==========================================
 Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
-                 |||||||| 
+                 ||||||||
  ************ IE =   7 ENERGY =  -0.238300   0.159182 KMESH =   4
  kkrmat k loop:          27           4
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 7, #of points= 7
-Task 1 treats points 8 to 14, #of points= 7
-Task 2 treats points 15 to 21, #of points= 7
-Task 3 treats points 22 to 27, #of points= 6
+Task 0 treats points 1 to 7,#of points= 7
+Task 1 treats points 8 to 14,#of points= 7
+Task 2 treats points 15 to 21,#of points= 7
+Task 3 treats points 22 to 27,#of points= 6
  ==========================================
 Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
-                 |||||||| 
+                 ||||||||
  ************ IE =   8 ENERGY =  -0.150654   0.159182 KMESH =   4
  kkrmat k loop:          27           4
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 7, #of points= 7
-Task 1 treats points 8 to 14, #of points= 7
-Task 2 treats points 15 to 21, #of points= 7
-Task 3 treats points 22 to 27, #of points= 6
+Task 0 treats points 1 to 7,#of points= 7
+Task 1 treats points 8 to 14,#of points= 7
+Task 2 treats points 15 to 21,#of points= 7
+Task 3 treats points 22 to 27,#of points= 6
  ==========================================
 Loop over points:|  0%     | 20%     | 40%     | 60%     | 80%     | 100%
-                 |||||||| 
+                 ||||||||
 ===============================================================================
                               < KKR1b finished >
 ===============================================================================
 
- Valence charge from Lloyds formula:   16.0000064610478     
+ valence charge from Lloyds formula:   16.0000057270037     
+  0.000000000000000E+000
  ==== DISTRIBUTION OF POINTS ON TASKS: ====
-Task 0 treats points 1 to 1, #of points= 1
-Task 1 treats points 2 to 2, #of points= 1
-Task 2 treats points 3 to 3, #of points= 1
-Task 3 treats points 4 to 4, #of points= 1
+Task 0 treats points 1 to 1,#of points= 1
+Task 1 treats points 2 to 2,#of points= 1
+Task 2 treats points 3 to 3,#of points= 1
+Task 3 treats points 4 to 4,#of points= 1
  ==========================================
  atom:            1
  energy:           1  (-0.400000000000000,1.794010046755946E-002)
  energy:           2  (-0.400000000000000,7.959110633897150E-002)
  energy:           3  (-0.400000000000000,0.141242112210384)
- energy:           4  (-0.392848873991522,0.159182212677943)
- energy:           5  (-0.362744751279547,0.159182212677943)
- energy:           6  (-0.310289878939112,0.159182212677943)
- energy:           7  (-0.238299690921783,0.159182212677943)
- energy:           8  (-0.150653633697378,0.159182212677943)
- moment           0  0.000000000000000E+000  0.000000000000000E+000
- -2.220446049250313E-016
-  0.000000000000000E+000  0.000000000000000E+000
+ energy:           4  (-0.392848874875687,0.159182212677943)
+ energy:           5  (-0.362744755885788,0.159182212677943)
+ energy:           6  (-0.310289890030875,0.159182212677943)
+ energy:           7  (-0.238299710914416,0.159182212677943)
+ energy:           8  (-0.150653664526573,0.159182212677943)
+moment    0   0.0000000E+00   0.0000000E+00   0.0000000E+00
+   0.0000000E+00   0.0000000E+00
+ 
+      I1    In/Out THETA[deg]       In/Out PHI[deg]        FIXDIR[boolean]   RMS(angles)[deg]
+       1    0.000000    0.000000    0.000000    0.000000    F                     0.000000
+       2    0.000000    0.000000    0.000000    0.000000    F                     0.000000
+       3    0.000000    0.000000    0.000000    0.000000    F                     0.000000
+       4    0.000000    0.000000    0.000000    0.000000    F                     0.000000
+Total RMS(angles) [deg]:    0.000000
  Information on renormalization by Lloyds formula
  RENORM_LLY: Complex renormalization factor per energy:
    IE        Spin 1 (down)                     Spin 2 (up)           
-    1  1.006045500382  1.006045500382
-    2  1.006168352091  1.006168352091
-    3  1.006406554340  1.006406554340
-    4  0.997529191880  0.997529191880
-    5  0.997305035445  0.997305035445
-    6  0.996873815483  0.996873815483
-    7  0.996225531114  0.996225531114
-    8  0.995484282354  0.995484282354
-    9  0.995127549641  0.995127549641
-   10  0.995921224414  0.995921224414
-   11  0.998144594323  0.998144594323
-   12  1.001111599756  1.001111599756
-   13  1.003768770250  1.003768770250
-   14  1.005740564514  1.005740564514
-   15  1.006510910921  1.006510910921
-   16  1.006590759348  1.006590759348
-   17  1.006528313666  1.006528313666
-   18  1.006462287721  1.006462287721
-   19  1.007218874216  1.007218874216
-   20  1.012290536785  1.012290536785
-   21  1.014407287343  1.014407287343
-   22  1.015277236505  1.015277236505
-   23  1.015599585031  1.015599585031
-   24  1.013963369239  1.013963369239
+    1  0.999592194717  0.999592194717
+    2  0.999643507917  0.999643507917
+    3  0.999741144318  0.999741144318
+    4  0.997529319343  0.997529319343
+    5  0.997304831615  0.997304831615
+    6  0.996874069480  0.996874069480
+    7  0.996225813356  0.996225813356
+    8  0.995484412727  0.995484412727
+    9  0.995127612549  0.995127612549
+   10  0.995921268772  0.995921268772
+   11  0.998144591237  0.998144591237
+   12  1.001111572382  1.001111572382
+   13  1.003768794222  1.003768794222
+   14  1.005740606672  1.005740606672
+   15  1.006510966492  1.006510966492
+   16  1.006590756105  1.006590756105
+   17  1.006528365811  1.006528365811
+   18  1.006462409168  1.006462409168
+   19  1.007218907155  1.007218907155
+   20  1.003986562754  1.003986562754
+   21  1.005985998777  1.005985998777
+   22  1.006500745826  1.006500745826
+   23  1.006219295139  1.006219295139
+   24  1.003378412399  1.003378412399
  RENORM_LLY: renormalization factor per atom:
   IAT       Spin down         Spin up
-    1  0.100015000E+01  0.100015000E+01
-    2  0.100015000E+01  0.100015000E+01
+    1  0.100014997E+01  0.100014997E+01
+    2  0.100014997E+01  0.100014997E+01
     3  0.100000000E+01  0.100000000E+01
     4  0.100000000E+01  0.100000000E+01
  RENORM_LLY: Renormalized charge per atom:
   IAT       Spin down         Spin up
-    1  1.594536444715  1.594536444715
-    2  1.594536444716  1.594536444716
-    3  0.405464362916  0.405464362916
-    4  0.405464362915  0.405464362915
-RENORM_LLY: Locally summed charge and moment: -0.399952333E+01  0.399952333E+01
-RENORM_LLY: Renormalized charge and moment:   -0.400000162E+01  0.400000162E+01
-RENORM_LLY: Renormalization factor of total charge  0.100011959E+01
+    1  1.594536384861  1.594536384861
+    2  1.594536384861  1.594536384861
+    3  0.405464331014  0.405464331014
+    4  0.405464331014  0.405464331014
+RENORM_LLY: Locally summed charge and moment: -0.399952325E+01  0.399952325E+01
+RENORM_LLY: Renormalized charge and moment:   -0.400000143E+01  0.400000143E+01
+RENORM_LLY: Renormalization factor of total charge  0.100011956E+01
  
 ##############################################################################
                l-decomposed valence charges and magnetic moments
@@ -258,41 +250,41 @@ RENORM_LLY: Renormalization factor of total charge  0.100011959E+01
  
    ATOM        Ne spin dn  Ne spin up    m_spin    m_orb   spin dn  spin up
    ========================================================================
-      1   s =  0.59202259  0.59202259    0.0000    0.0000  0.0000  0.0000
-          p =  0.91512472  0.91512472    0.0000    0.0000  0.0000  0.0000
-          d =  0.09214555  0.09214555    0.0000    0.0000  0.0000  0.0000
+      1   s =  0.59202262  0.59202262    0.0000    0.0000  0.0000  0.0000
+          p =  0.91512470  0.91512470   -0.0000   -0.0000 -0.0000 -0.0000
+          d =  0.09214554  0.09214554   -0.0000   -0.0000 -0.0000 -0.0000
           ns  -0.00499556 -0.00499556    0.0000    0.0000  0.0000  0.0000
           ---------------------------------------------------------------
-          TOT  1.59429730  1.59429730    0.0000    0.0000  0.0000  0.0000
-                           3.18859461              0.0000
+          TOT  1.59429730  1.59429730   -0.0000   -0.0000 -0.0000 -0.0000
+                           3.18859459             -0.0000
    ==================================================================
-      2   s =  0.59202259  0.59202259    0.0000    0.0000  0.0000  0.0000
-          p =  0.91512472  0.91512472    0.0000    0.0000  0.0000  0.0000
-          d =  0.09214555  0.09214555    0.0000    0.0000  0.0000  0.0000
-          ns  -0.00499556 -0.00499556    0.0000    0.0000  0.0000  0.0000
+      2   s =  0.59202262  0.59202262    0.0000    0.0000  0.0000  0.0000
+          p =  0.91512470  0.91512470   -0.0000   -0.0000 -0.0000 -0.0000
+          d =  0.09214554  0.09214554   -0.0000    0.0000  0.0000 -0.0000
+          ns  -0.00499556 -0.00499556   -0.0000    0.0000  0.0000  0.0000
           ---------------------------------------------------------------
-          TOT  1.59429730  1.59429730    0.0000    0.0000  0.0000  0.0000
-                           3.18859461              0.0000
+          TOT  1.59429730  1.59429730   -0.0000   -0.0000 -0.0000 -0.0000
+                           3.18859459             -0.0000
    ==================================================================
-      3   s =  0.14812228  0.14812228    0.0000    0.0000  0.0000  0.0000
-          p =  0.17882077  0.17882077    0.0000    0.0000  0.0000  0.0000
-          d =  0.07641642  0.07641642    0.0000    0.0000  0.0000  0.0000
+      3   s =  0.14812226  0.14812226    0.0000    0.0000  0.0000  0.0000
+          p =  0.17882076  0.17882076   -0.0000   -0.0000  0.0000 -0.0000
+          d =  0.07641641  0.07641641    0.0000    0.0000  0.0000  0.0000
           ns   0.00210489  0.00210489    0.0000    0.0000  0.0000  0.0000
           ---------------------------------------------------------------
-          TOT  0.40546436  0.40546436    0.0000    0.0000  0.0000  0.0000
-                           0.81092873              0.0000
+          TOT  0.40546433  0.40546433    0.0000    0.0000  0.0000 -0.0000
+                           0.81092866              0.0000
    ==================================================================
-      4   s =  0.14812228  0.14812228    0.0000    0.0000  0.0000  0.0000
-          p =  0.17882077  0.17882077    0.0000    0.0000  0.0000  0.0000
-          d =  0.07641642  0.07641642    0.0000    0.0000  0.0000  0.0000
-          ns   0.00210489  0.00210489    0.0000    0.0000  0.0000  0.0000
+      4   s =  0.14812226  0.14812226    0.0000    0.0000  0.0000  0.0000
+          p =  0.17882076  0.17882076    0.0000    0.0000 -0.0000  0.0000
+          d =  0.07641641  0.07641641    0.0000    0.0000 -0.0000  0.0000
+          ns   0.00210489  0.00210489   -0.0000    0.0000  0.0000  0.0000
           ---------------------------------------------------------------
-          TOT  0.40546436  0.40546436    0.0000    0.0000  0.0000  0.0000
-                           0.81092873              0.0000
+          TOT  0.40546433  0.40546433    0.0000    0.0000 -0.0000  0.0000
+                           0.81092866              0.0000
  
 ##############################################################################
  
- Sum of valence charges of atoms (local summation)   7.99904666394381     
+ Sum of valence charges of atoms (local summation)   7.99904650451576     
  
 ##############################################################################
                                  CORE  STATES
@@ -310,14 +302,14 @@ RENORM_LLY: Renormalization factor of total charge  0.100011959E+01
 
 
 *******************************************************************************
-                   ****** ITERATION :  12 OUT OF 200 ******
+                   ****** ITERATION :  66 OUT OF 200 ******
 *******************************************************************************
 
   Atom    1 charge in wigner seitz cell = 13.189072
        spin moment in wigner seitz cell =  0.000000
   =============================================================================
   Atom    2 charge in wigner seitz cell = 13.189072
-       spin moment in wigner seitz cell =  0.000000
+       spin moment in wigner seitz cell = -0.000000
   =============================================================================
   Atom    3 charge in wigner seitz cell =  0.810928
        spin moment in wigner seitz cell =  0.000000
@@ -326,11 +318,11 @@ RENORM_LLY: Renormalization factor of total charge  0.100011959E+01
        spin moment in wigner seitz cell =  0.000000
  
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      ITERATION  12 charge neutrality in unit cell =     0.000000
+      ITERATION  66 charge neutrality in unit cell =    -0.000000
                     TOTAL mag. moment in unit cell =     0.000000
  
-                old E Fermi   0.6562438592 Delta E_F =   0.12013507E-06
-                new E FERMI   0.6562437391  DOS(E_F) =     0.667049
+                old E Fermi   0.6562437474 Delta E_F =  -0.17247542E-07
+                new E FERMI   0.6562437647  DOS(E_F) =     0.661778
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ===============================================================================
@@ -363,175 +355,347 @@ RENORM_LLY: Renormalization factor of total charge  0.100011959E+01
  Including cutoff of vxc for small density
  Including cutoff of vxc for small density
  Including cutoff of vxc for small density
-  VOL INT.    91.839426898  VAV INT.   -63.618693127  VMT ZERO     0.692716574
+ ATOM=           1 LAMBDA_XC=   1.00000000000000     
+ ATOM=           2 LAMBDA_XC=   1.00000000000000     
+ ATOM=           3 LAMBDA_XC=   1.00000000000000     
+ ATOM=           4 LAMBDA_XC=   1.00000000000000     
+  VOL INT.    91.839426898  VAV INT.   -63.618692415  VMT ZERO     0.692716566
 ===============================================================================
 
  MIXSTR  2.000000000000000E-002
-      rms-error for atom  1 :v+ + v- =  2.1899D-08  ,  v+ - v- =  4.7194D-20
-      rms-error non spherical contribution for atom   1 :v+ + v- =  8.0174D-09  ,  v+ - v- =  6.3214D-17
-      rms-error for atom  2 :v+ + v- =  2.1900D-08  ,  v+ - v- =  4.4929D-17
-      rms-error non spherical contribution for atom   2 :v+ + v- =  8.0172D-09  ,  v+ - v- =  6.1124D-17
-      rms-error for atom  3 :v+ + v- =  1.7886D-08  ,  v+ - v- =  9.0396D-10
-      rms-error non spherical contribution for atom   3 :v+ + v- =  4.7834D-09  ,  v+ - v- =  4.4464D-17
-      rms-error for atom  4 :v+ + v- =  1.7754D-08  ,  v+ - v- =  1.2340D-09
-      rms-error non spherical contribution for atom   4 :v+ + v- =  4.7833D-09  ,  v+ - v- =  4.8868D-17
+      rms-error for atom  1 :v+ + v- =  1.9125D-08  ,  v+ - v- =  7.4252D-17
+      rms-error non spherical contribution for atom   1 :v+ + v- =  6.0747D-09  ,  v+ - v- =  4.3820D-17
+      rms-error for atom  2 :v+ + v- =  1.9125D-08  ,  v+ - v- =  0.0000D+00
+      rms-error non spherical contribution for atom   2 :v+ + v- =  6.0747D-09  ,  v+ - v- =  3.3697D-17
+      rms-error for atom  3 :v+ + v- =  8.5862D-09  ,  v+ - v- =  3.0712D-13
+      rms-error non spherical contribution for atom   3 :v+ + v- =  1.7603D-09  ,  v+ - v- =  1.8696D-17
+      rms-error for atom  4 :v+ + v- =  8.5861D-09  ,  v+ - v- =  8.7635D-14
+      rms-error non spherical contribution for atom   4 :v+ + v- =  1.7603D-09  ,  v+ - v- =  2.5801D-17
 -------------------------------------------------------------------------------
 
-      ITERATION  12 average rms-error : v+ + v- =  2.1027D-08
-                                        v+ - v- =  7.6482D-10
+      ITERATION  66 average rms-error : v+ + v- =  1.5483D-08
+                                        v+ - v- =  1.5969D-13
 -------------------------------------------------------------------------------
                     mixing factor used :     2.00D-02
 ===============================================================================
 
- generalized anderson method used 
- Iteration index (read in):  12
-      amj , ---> j=2, 11
-           1.85D-03 -4.72D-03 -2.63D-04 -2.36D-02 -1.47D-03 -3.40D-01 -4.22D-03
-          -1.78D-01  2.33D+00  3.00D+00
+ GENERALIZED ANDERSON METHOD USED 
+ Iteration index (read in):  16
+      AMJ , ---> J=2, 15
+           1.14D-05 -2.02D-05 -4.48D-07 -3.67D-05  1.33D-06 -5.28D-04  4.07D-06
+          -1.04D-02 -1.08D-03 -2.77D-02 -1.46D-01 -1.41D-01 -1.27D-01  2.43D+00
+ POT_NS_CUTOFF INFO: cutting ns component           2
+ POT_NS_CUTOFF INFO: cutting ns component           3
+ POT_NS_CUTOFF INFO: cutting ns component           4
+ POT_NS_CUTOFF INFO: cutting ns component           5
+ POT_NS_CUTOFF INFO: cutting ns component           6
+ POT_NS_CUTOFF INFO: cutting ns component           7
+ POT_NS_CUTOFF INFO: cutting ns component           8
+ POT_NS_CUTOFF INFO: cutting ns component           9
+ POT_NS_CUTOFF INFO: cutting ns component          10
+ POT_NS_CUTOFF INFO: cutting ns component          12
+ POT_NS_CUTOFF INFO: cutting ns component          13
+ POT_NS_CUTOFF INFO: cutting ns component          14
+ POT_NS_CUTOFF INFO: cutting ns component          15
+ POT_NS_CUTOFF INFO: cutting ns component          16
+ POT_NS_CUTOFF INFO: cutting ns component          17
+ POT_NS_CUTOFF INFO: cutting ns component          18
+ POT_NS_CUTOFF INFO: cutting ns component          19
+ POT_NS_CUTOFF INFO: cutting ns component          20
+ POT_NS_CUTOFF INFO: cutting ns component          22
+ POT_NS_CUTOFF INFO: cutting ns component          23
+ POT_NS_CUTOFF INFO: cutting ns component          24
+ POT_NS_CUTOFF INFO: cutting ns component           2
+ POT_NS_CUTOFF INFO: cutting ns component           3
+ POT_NS_CUTOFF INFO: cutting ns component           4
+ POT_NS_CUTOFF INFO: cutting ns component           5
+ POT_NS_CUTOFF INFO: cutting ns component           6
+ POT_NS_CUTOFF INFO: cutting ns component           7
+ POT_NS_CUTOFF INFO: cutting ns component           8
+ POT_NS_CUTOFF INFO: cutting ns component           9
+ POT_NS_CUTOFF INFO: cutting ns component          10
+ POT_NS_CUTOFF INFO: cutting ns component          12
+ POT_NS_CUTOFF INFO: cutting ns component          13
+ POT_NS_CUTOFF INFO: cutting ns component          14
+ POT_NS_CUTOFF INFO: cutting ns component          15
+ POT_NS_CUTOFF INFO: cutting ns component          16
+ POT_NS_CUTOFF INFO: cutting ns component          17
+ POT_NS_CUTOFF INFO: cutting ns component          18
+ POT_NS_CUTOFF INFO: cutting ns component          19
+ POT_NS_CUTOFF INFO: cutting ns component          20
+ POT_NS_CUTOFF INFO: cutting ns component          22
+ POT_NS_CUTOFF INFO: cutting ns component          23
+ POT_NS_CUTOFF INFO: cutting ns component          24
+ POT_NS_CUTOFF INFO: cutting ns component           2
+ POT_NS_CUTOFF INFO: cutting ns component           3
+ POT_NS_CUTOFF INFO: cutting ns component           4
+ POT_NS_CUTOFF INFO: cutting ns component           5
+ POT_NS_CUTOFF INFO: cutting ns component           6
+ POT_NS_CUTOFF INFO: cutting ns component           7
+ POT_NS_CUTOFF INFO: cutting ns component           8
+ POT_NS_CUTOFF INFO: cutting ns component           9
+ POT_NS_CUTOFF INFO: cutting ns component          10
+ POT_NS_CUTOFF INFO: cutting ns component          12
+ POT_NS_CUTOFF INFO: cutting ns component          13
+ POT_NS_CUTOFF INFO: cutting ns component          14
+ POT_NS_CUTOFF INFO: cutting ns component          15
+ POT_NS_CUTOFF INFO: cutting ns component          16
+ POT_NS_CUTOFF INFO: cutting ns component          17
+ POT_NS_CUTOFF INFO: cutting ns component          18
+ POT_NS_CUTOFF INFO: cutting ns component          19
+ POT_NS_CUTOFF INFO: cutting ns component          20
+ POT_NS_CUTOFF INFO: cutting ns component          22
+ POT_NS_CUTOFF INFO: cutting ns component          23
+ POT_NS_CUTOFF INFO: cutting ns component          24
+ POT_NS_CUTOFF INFO: cutting ns component           2
+ POT_NS_CUTOFF INFO: cutting ns component           3
+ POT_NS_CUTOFF INFO: cutting ns component           4
+ POT_NS_CUTOFF INFO: cutting ns component           5
+ POT_NS_CUTOFF INFO: cutting ns component           6
+ POT_NS_CUTOFF INFO: cutting ns component           7
+ POT_NS_CUTOFF INFO: cutting ns component           8
+ POT_NS_CUTOFF INFO: cutting ns component           9
+ POT_NS_CUTOFF INFO: cutting ns component          10
+ POT_NS_CUTOFF INFO: cutting ns component          12
+ POT_NS_CUTOFF INFO: cutting ns component          13
+ POT_NS_CUTOFF INFO: cutting ns component          14
+ POT_NS_CUTOFF INFO: cutting ns component          15
+ POT_NS_CUTOFF INFO: cutting ns component          16
+ POT_NS_CUTOFF INFO: cutting ns component          17
+ POT_NS_CUTOFF INFO: cutting ns component          18
+ POT_NS_CUTOFF INFO: cutting ns component          19
+ POT_NS_CUTOFF INFO: cutting ns component          20
+ POT_NS_CUTOFF INFO: cutting ns component          22
+ POT_NS_CUTOFF INFO: cutting ns component          23
+ POT_NS_CUTOFF INFO: cutting ns component          24
+ POT_NS_CUTOFF INFO: cutting ns component           2
+ POT_NS_CUTOFF INFO: cutting ns component           3
+ POT_NS_CUTOFF INFO: cutting ns component           4
+ POT_NS_CUTOFF INFO: cutting ns component           5
+ POT_NS_CUTOFF INFO: cutting ns component           6
+ POT_NS_CUTOFF INFO: cutting ns component           7
+ POT_NS_CUTOFF INFO: cutting ns component           8
+ POT_NS_CUTOFF INFO: cutting ns component           9
+ POT_NS_CUTOFF INFO: cutting ns component          10
+ POT_NS_CUTOFF INFO: cutting ns component          12
+ POT_NS_CUTOFF INFO: cutting ns component          13
+ POT_NS_CUTOFF INFO: cutting ns component          14
+ POT_NS_CUTOFF INFO: cutting ns component          15
+ POT_NS_CUTOFF INFO: cutting ns component          16
+ POT_NS_CUTOFF INFO: cutting ns component          17
+ POT_NS_CUTOFF INFO: cutting ns component          18
+ POT_NS_CUTOFF INFO: cutting ns component          19
+ POT_NS_CUTOFF INFO: cutting ns component          20
+ POT_NS_CUTOFF INFO: cutting ns component          22
+ POT_NS_CUTOFF INFO: cutting ns component          23
+ POT_NS_CUTOFF INFO: cutting ns component          24
+ POT_NS_CUTOFF INFO: cutting ns component           2
+ POT_NS_CUTOFF INFO: cutting ns component           3
+ POT_NS_CUTOFF INFO: cutting ns component           4
+ POT_NS_CUTOFF INFO: cutting ns component           5
+ POT_NS_CUTOFF INFO: cutting ns component           6
+ POT_NS_CUTOFF INFO: cutting ns component           7
+ POT_NS_CUTOFF INFO: cutting ns component           8
+ POT_NS_CUTOFF INFO: cutting ns component           9
+ POT_NS_CUTOFF INFO: cutting ns component          10
+ POT_NS_CUTOFF INFO: cutting ns component          12
+ POT_NS_CUTOFF INFO: cutting ns component          13
+ POT_NS_CUTOFF INFO: cutting ns component          14
+ POT_NS_CUTOFF INFO: cutting ns component          15
+ POT_NS_CUTOFF INFO: cutting ns component          16
+ POT_NS_CUTOFF INFO: cutting ns component          17
+ POT_NS_CUTOFF INFO: cutting ns component          18
+ POT_NS_CUTOFF INFO: cutting ns component          19
+ POT_NS_CUTOFF INFO: cutting ns component          20
+ POT_NS_CUTOFF INFO: cutting ns component          22
+ POT_NS_CUTOFF INFO: cutting ns component          23
+ POT_NS_CUTOFF INFO: cutting ns component          24
+ POT_NS_CUTOFF INFO: cutting ns component           2
+ POT_NS_CUTOFF INFO: cutting ns component           3
+ POT_NS_CUTOFF INFO: cutting ns component           4
+ POT_NS_CUTOFF INFO: cutting ns component           5
+ POT_NS_CUTOFF INFO: cutting ns component           6
+ POT_NS_CUTOFF INFO: cutting ns component           7
+ POT_NS_CUTOFF INFO: cutting ns component           8
+ POT_NS_CUTOFF INFO: cutting ns component           9
+ POT_NS_CUTOFF INFO: cutting ns component          10
+ POT_NS_CUTOFF INFO: cutting ns component          12
+ POT_NS_CUTOFF INFO: cutting ns component          13
+ POT_NS_CUTOFF INFO: cutting ns component          14
+ POT_NS_CUTOFF INFO: cutting ns component          15
+ POT_NS_CUTOFF INFO: cutting ns component          16
+ POT_NS_CUTOFF INFO: cutting ns component          17
+ POT_NS_CUTOFF INFO: cutting ns component          18
+ POT_NS_CUTOFF INFO: cutting ns component          19
+ POT_NS_CUTOFF INFO: cutting ns component          20
+ POT_NS_CUTOFF INFO: cutting ns component          22
+ POT_NS_CUTOFF INFO: cutting ns component          23
+ POT_NS_CUTOFF INFO: cutting ns component          24
+ POT_NS_CUTOFF INFO: cutting ns component           2
+ POT_NS_CUTOFF INFO: cutting ns component           3
+ POT_NS_CUTOFF INFO: cutting ns component           4
+ POT_NS_CUTOFF INFO: cutting ns component           5
+ POT_NS_CUTOFF INFO: cutting ns component           6
+ POT_NS_CUTOFF INFO: cutting ns component           7
+ POT_NS_CUTOFF INFO: cutting ns component           8
+ POT_NS_CUTOFF INFO: cutting ns component           9
+ POT_NS_CUTOFF INFO: cutting ns component          10
+ POT_NS_CUTOFF INFO: cutting ns component          12
+ POT_NS_CUTOFF INFO: cutting ns component          13
+ POT_NS_CUTOFF INFO: cutting ns component          14
+ POT_NS_CUTOFF INFO: cutting ns component          15
+ POT_NS_CUTOFF INFO: cutting ns component          16
+ POT_NS_CUTOFF INFO: cutting ns component          17
+ POT_NS_CUTOFF INFO: cutting ns component          18
+ POT_NS_CUTOFF INFO: cutting ns component          19
+ POT_NS_CUTOFF INFO: cutting ns component          20
+ POT_NS_CUTOFF INFO: cutting ns component          22
+ POT_NS_CUTOFF INFO: cutting ns component          23
+ POT_NS_CUTOFF INFO: cutting ns component          24
 ================================ TOTAL ENERGIES ===============================
 
    Total energies atom   1
    -----------------------
      single particle energies  spin down   
-         core   contribution :  s =  -138.72043957 p =   -17.82597076
+         core   contribution :  s =  -138.72043951 p =   -17.82597063
 
-       valence  contribution :  s =     0.03777568 p =     0.37967858
-                                d =     0.03523379
-                                ns     -0.00184519
+       valence  contribution :  s =     0.03805342 p =     0.37990548
+                                d =     0.03757150
+                                ns     -0.00183925
      single particle energies  spin  up    
-         core   contribution :  s =  -138.72043957 p =   -17.82597076
+         core   contribution :  s =  -138.72043951 p =   -17.82597063
 
-       valence  contribution :  s =     0.03777568 p =     0.37967858
-                                d =     0.03523379
-                                ns     -0.00184519
+       valence  contribution :  s =     0.03805342 p =     0.37990548
+                                d =     0.03757150
+                                ns     -0.00183925
      --------------------------------------------------------------------
-     total contribution of the single particle energies :   -312.19113492
-                                   band energy per atom :    0.9016857416
+     total contribution of the single particle energies :   -312.18543799
+                                   band energy per atom :    0.9073823009
 
-     coulomb  contribution :   0    251.00457558  1      0.00000000
+     coulomb  contribution :   0    251.00457670  1      0.00000000
                                2      0.00000000  3     -0.00607170
                                4     -0.00034176
      --------------------------------------------------------------------
-     tot. coulomb contribution :    250.99816212
+     tot. coulomb contribution :    250.99816325
 
-     ex.-cor. contribution :   0    -39.33587679  1      0.00000000
-                               2      0.00000000  3     -0.01203402
+     ex.-cor. contribution :   0    -39.33587683  1     -0.00000000
+                               2      0.00000000  3     -0.01203401
                                4      0.00569854
      --------------------------------------------------------------------
-     tot. ex.-cor. contribution :    -39.34221227
+     tot. ex.-cor. contribution :    -39.34221230
 
-     eff. pot. contribution     :   -477.25097765
-     total double counting contribution                 :   -265.59502779
+     eff. pot. contribution     :   -477.25097917
+     total double counting contribution                 :   -265.59502822
 
-   Total contribution of atom  1 =  -577.78616271
+   Total contribution of atom  1 =  -577.78046620
    ----------------------------------------------------------------------
    Total energies atom   2
    -----------------------
      single particle energies  spin down   
-         core   contribution :  s =  -138.72043957 p =   -17.82597076
+         core   contribution :  s =  -138.72043951 p =   -17.82597063
 
-       valence  contribution :  s =     0.03777568 p =     0.37967858
-                                d =     0.03523379
-                                ns     -0.00184519
+       valence  contribution :  s =     0.03805342 p =     0.37990548
+                                d =     0.03757150
+                                ns     -0.00183925
      single particle energies  spin  up    
-         core   contribution :  s =  -138.72043957 p =   -17.82597076
+         core   contribution :  s =  -138.72043951 p =   -17.82597063
 
-       valence  contribution :  s =     0.03777568 p =     0.37967858
-                                d =     0.03523379
-                                ns     -0.00184519
+       valence  contribution :  s =     0.03805342 p =     0.37990548
+                                d =     0.03757150
+                                ns     -0.00183925
      --------------------------------------------------------------------
-     total contribution of the single particle energies :   -312.19113492
-                                   band energy per atom :    0.9016857416
+     total contribution of the single particle energies :   -312.18543799
+                                   band energy per atom :    0.9073823009
 
-     coulomb  contribution :   0    251.00457558  1      0.00000000
+     coulomb  contribution :   0    251.00457670  1      0.00000000
                                2      0.00000000  3     -0.00607170
                                4     -0.00034176
      --------------------------------------------------------------------
-     tot. coulomb contribution :    250.99816212
+     tot. coulomb contribution :    250.99816325
 
-     ex.-cor. contribution :   0    -39.33587679  1      0.00000000
-                               2      0.00000000  3     -0.01203402
+     ex.-cor. contribution :   0    -39.33587683  1     -0.00000000
+                               2      0.00000000  3     -0.01203401
                                4      0.00569854
      --------------------------------------------------------------------
-     tot. ex.-cor. contribution :    -39.34221227
+     tot. ex.-cor. contribution :    -39.34221230
 
-     eff. pot. contribution     :   -477.25097765
-     total double counting contribution                 :   -265.59502779
+     eff. pot. contribution     :   -477.25097917
+     total double counting contribution                 :   -265.59502822
 
-   Total contribution of atom  2 =  -577.78616271
+   Total contribution of atom  2 =  -577.78046620
    ----------------------------------------------------------------------
    Total energies atom   3
    -----------------------
      single particle energies  spin down   
          core   contribution :  s =     0.00000000
-       valence  contribution :  s =     0.03153600 p =     0.05276993
-                                d =     0.02868395
+       valence  contribution :  s =     0.03153602 p =     0.05276992
+                                d =     0.02868394
                                 ns      0.00102095
      single particle energies  spin  up    
          core   contribution :  s =     0.00000000
-       valence  contribution :  s =     0.03153600 p =     0.05276993
-                                d =     0.02868395
+       valence  contribution :  s =     0.03153602 p =     0.05276992
+                                d =     0.02868394
                                 ns      0.00102095
      --------------------------------------------------------------------
-     total contribution of the single particle energies :      0.22802165
-                                   band energy per atom :    0.2280216496
+     total contribution of the single particle energies :      0.22802166
+                                   band energy per atom :    0.2280216562
 
-     coulomb  contribution :   0      0.05398420  1      0.00000000
+     coulomb  contribution :   0      0.05398419  1     -0.00000000
                                2      0.00000000  3     -0.00291307
                                4      0.00025613
      --------------------------------------------------------------------
      tot. coulomb contribution :      0.05132725
 
-     ex.-cor. contribution :   0     -0.34494342  1      0.00000000
-                               2      0.00000000  3     -0.00120095
+     ex.-cor. contribution :   0     -0.34494341  1      0.00000000
+                               2     -0.00000000  3     -0.00120095
                                4     -0.00203822
      --------------------------------------------------------------------
-     tot. ex.-cor. contribution :     -0.34818258
+     tot. ex.-cor. contribution :     -0.34818257
 
-     eff. pot. contribution     :     -0.21109940
-     total double counting contribution                 :     -0.50795473
+     eff. pot. contribution     :     -0.21109939
+     total double counting contribution                 :     -0.50795471
 
-   Total contribution of atom  3 =    -0.27993308
+   Total contribution of atom  3 =    -0.27993305
    ----------------------------------------------------------------------
    Total energies atom   4
    -----------------------
      single particle energies  spin down   
          core   contribution :  s =     0.00000000
-       valence  contribution :  s =     0.03153600 p =     0.05276993
-                                d =     0.02868395
+       valence  contribution :  s =     0.03153602 p =     0.05276992
+                                d =     0.02868394
                                 ns      0.00102095
      single particle energies  spin  up    
          core   contribution :  s =     0.00000000
-       valence  contribution :  s =     0.03153600 p =     0.05276993
-                                d =     0.02868395
+       valence  contribution :  s =     0.03153602 p =     0.05276992
+                                d =     0.02868394
                                 ns      0.00102095
      --------------------------------------------------------------------
-     total contribution of the single particle energies :      0.22802165
-                                   band energy per atom :    0.2280216496
+     total contribution of the single particle energies :      0.22802166
+                                   band energy per atom :    0.2280216562
 
-     coulomb  contribution :   0      0.05398420  1      0.00000000
+     coulomb  contribution :   0      0.05398419  1      0.00000000
                                2      0.00000000  3     -0.00291307
                                4      0.00025613
      --------------------------------------------------------------------
      tot. coulomb contribution :      0.05132725
 
-     ex.-cor. contribution :   0     -0.34494342  1      0.00000000
-                               2      0.00000000  3     -0.00120095
+     ex.-cor. contribution :   0     -0.34494341  1     -0.00000000
+                               2     -0.00000000  3     -0.00120095
                                4     -0.00203822
      --------------------------------------------------------------------
-     tot. ex.-cor. contribution :     -0.34818258
+     tot. ex.-cor. contribution :     -0.34818257
 
-     eff. pot. contribution     :     -0.21109940
-     total double counting contribution                 :     -0.50795473
+     eff. pot. contribution     :     -0.21109939
+     total double counting contribution                 :     -0.50795471
 
-   Total contribution of atom  4 =    -0.27993308
+   Total contribution of atom  4 =    -0.27993305
    ----------------------------------------------------------------------
-                                   sum of band energies :    2.2594147825
+                                   sum of band energies :    2.2708079141
    ----------------------------------------------------------------------
 
    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-               TOTAL ENERGY in ryd. :            -1156.13219157
-                                eV  :           -15730.10337204
+               TOTAL ENERGY in ryd. :            -1156.12079851
+                                eV  :           -15729.94836038
    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  
 ===============================================================================

@@ -1,7 +1,8 @@
 c***********************************************************************
       SUBROUTINE VORONOI12(
      >  NVEC,RVEC,NVERTMAX,NFACED,WEIGHT0,WEIGHT,TOLVDIST,TOLAREA,TOLHS,
-     <  RMT,ROUT,VOLUME,NFACE,A3,B3,C3,D3,NVERT,XVERT,YVERT,ZVERT)
+     <  RMT,ROUT,VOLUME,NFACE,A3,B3,C3,D3,NVERT,XVERT,YVERT,ZVERT,
+     <  VCENTER)
 c Given a cluster of atomic positions at RVEC(3,NVEC), this subroutine
 c returns information about the Voronoi cell around the origin. It is
 c supposed, of course, that the origin corresponds to an atomic position
@@ -73,7 +74,7 @@ c                          !   and of all others (dimensioned as RVEC).
 c Output:
       INTEGER NFACE
       INTEGER NVERT(*)
-      REAL*8              VOLUME
+      REAL*8              VOLUME,VCENTER(3)
       REAL*8              A3(NFACED),B3(NFACED),C3(NFACED),D3(NFACED)
       REAL*8              XVERT(NVERTMAX,NFACED),YVERT(NVERTMAX,NFACED),
      &                    ZVERT(NVERTMAX,NFACED)
@@ -133,6 +134,9 @@ c origin and r1,r2,r3 the vectors of the 3 other vertices.
 c Algorithm requires that the face is a convex polygon with the 
 c vertices ordered (doesn't matter if they are clock- or anticlockwise).
       VOLUME = 0.d0
+      VCENTER(1) = 0.d0
+      VCENTER(2) = 0.d0
+      VCENTER(3) = 0.d0
       DO IFACE = 1,NFACE
          X1 = XVERT(1,IFACE)
          Y1 = YVERT(1,IFACE)
@@ -146,6 +150,9 @@ c vertices ordered (doesn't matter if they are clock- or anticlockwise).
             Y3 = YVERT(IVERT+1,IFACE)
             Z3 = ZVERT(IVERT+1,IFACE)
             TETRVOL = X1*(Y2*Z3-Y3*Z2)+X2*(Y3*Z1-Y1*Z3)+X3*(Y1*Z2-Y2*Z1)
+            VCENTER(1) = VCENTER(1) + 0.25d0*DABS(TETRVOL)*(X1+X2+X3)
+            VCENTER(2) = VCENTER(2) + 0.25d0*DABS(TETRVOL)*(Y1+Y2+Y3)
+            VCENTER(3) = VCENTER(3) + 0.25d0*DABS(TETRVOL)*(Z1+Z2+Z3)
             VOLUME = VOLUME + DABS(TETRVOL)
             TRIANGLEAREA = 0.5d0 * DSQRT(
      &           ( X1*Y2 + X2*Y3 + X3*Y1 - Y2*X3 - Y3*X1 - Y1*X2)**2
@@ -157,8 +164,12 @@ c vertices ordered (doesn't matter if they are clock- or anticlockwise).
          ENDDO
       ENDDO
       VOLUME = VOLUME/6.D0
+      VCENTER(1) = VCENTER(1)/VOLUME
+      VCENTER(2) = VCENTER(2)/VOLUME
+      VCENTER(3) = VCENTER(3)/VOLUME
 
       WRITE(6,*) ' Polyhedron properties '
+
       WRITE(6,*) ' Number of faces : ',nface
 
       IF (TEST('verb0   ')) THEN

@@ -1,7 +1,7 @@
       SUBROUTINE READINPUT(BRAVAIS,LCARTESIAN,RBASIS,ABASIS,BBASIS,CBASIS, &
      &           DX,DY,DZ, &
      &           ALATC,BLATC,CLATC, &
-     &           IRNS,NAEZ,NEMB,KAOEZ,IRM,ZAT,SITEAT, &
+     &           IRNS,NAEZ,NVAC,NEMB,KAOEZ,IRM,ZAT,SITEAT, &
      &           INS,KSHAPE, &
      &           LMAX,LMMAX,LPOT,  &
      &           NATYP,NSPIN, &
@@ -11,7 +11,7 @@
      &           I13, &
      &           NLBASIS,NRBASIS,NLEFT,NRIGHT,ZPERLEFT,ZPERIGHT,   &  
      &           TLEFT,TRIGHT,LINTERFACE,RCUTZ,RCUTXY,RMTCORE, &
-     &           LMTREF,RMTREF,SIZEFAC,NFACELIM, EFSET, AOUT_ALL)
+     &           LMTREF,RMTREF,SIZEFAC,NFACELIM, EFSET, AOUT_ALL, NPOI)
       use mod_version_info, only: serialnr
 !#@# KKRtags: VORONOI input-output
       implicit none
@@ -55,9 +55,9 @@
      &        IRM,IRNUMX,ISHIFT, &
      &        KPRE,KSCOEF,KSHAPE, &
      &        KVREL,KWS,KXC,LMAX,LMMAX,LMPOT,LPOT,MD, &
-     &        NATYP,NPNT1,NPNT2,NPNT3,NPOL,NSPIN,INDX,IAT
+     &        NATYP,NPNT1,NPNT2,NPNT3,NPOL,NSPIN,INDX,IAT, NPOI
       INTEGER NMIN,NSMALL,NRAD,NFACELIM,NBR
-      INTEGER NSTEPS,KMT,NAEZ,NEMB
+      INTEGER NSTEPS,KMT,NAEZ,NVAC,NEMB
       INTEGER NINEQ,NEMBZ,NZ,CENTEROFINV(3)
       REAL*8        ALATC,BLATC,CLATC
       INTEGER MMIN,MMAX,SINN,SOUT,RIN,ROUT
@@ -151,6 +151,13 @@
       WRITE(*,*) 'readinput: CARTESIAN=',LCARTESIAN
       WRITE(111,*) 'CARTESIAN= ',LCARTESIAN
 
+      CALL IoInput('NVAC            ',UIO,1,7,IER)
+      IF (IER.EQ.0) THEN
+         READ (UNIT=UIO,FMT=*) NVAC
+         WRITE(*,*) 'NVAC=', NVAC
+      ELSE
+         NVAC = 0
+      ENDIF
 
       CALL IoInput('NAEZ            ',UIO,1,7,IER)
       IF (IER.EQ.0) THEN
@@ -757,15 +764,15 @@
 
       KSHAPE = 2 ! Default
       CALL IoInput('KSHAPE          ',UIO,1,7,IER)
-      IF (IER.EQ.0)   READ (UNIT=UIO,FMT=*) kshape
+      IF (IER.EQ.0)   READ (UNIT=UIO,FMT=*) KSHAPE
 
       IRM = 484 ! Default
       CALL IoInput('IRM             ',UIO,1,7,IER)
-      IF (IER.EQ.0)   READ (UNIT=UIO,FMT=*) irm
+      IF (IER.EQ.0)   READ (UNIT=UIO,FMT=*) IRM
 
       INS = 1 ! Default
       CALL IoInput('INS             ',UIO,1,7,IER)
-      IF (IER.EQ.0)   READ (UNIT=UIO,FMT=*) ins
+      IF (IER.EQ.0)   READ (UNIT=UIO,FMT=*) INS
 
       CALL IoInput('NMIN            ',UIO,1,7,IER)
       IF (IER.EQ.0)   READ (UNIT=UIO,FMT=*) NMIN
@@ -775,6 +782,11 @@
       CALL IoInput('NSMALL          ',UIO,1,7,IER)
       IF (IER.EQ.0)   READ (UNIT=UIO,FMT=*) NSMALL
       NSMALL = MAX(NMIN,NSMALL)
+
+      ! read in the total number of shape function points
+      NPOI = 125 ! Default, see also maindriver.f
+      CALL IoInput('NPOI            ',UIO,1,7,IER)
+      IF (IER.EQ.0)   READ (UNIT=UIO,FMT=*) NPOI
       
       ! Tolerance for voronoi construction, defaults in maindriver data
       CALL IoInput('<TOLHS>         ',UIO,1,7,IER)

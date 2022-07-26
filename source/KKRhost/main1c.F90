@@ -41,7 +41,7 @@ contains
     use mod_datatypes, only: dp
     use mod_runoptions, only: calc_gmat_lm_full, fix_nonco_angles, relax_SpinAngle_Dirac, use_Chebychev_solver, &
       use_decimation, use_qdos, write_DOS, write_complex_qdos, write_density_ascii, write_rho2ns, write_DOS_lm, &
-      decouple_spins_cheby, disable_print_serialnumber
+      decouple_spin_cheby, disable_print_serialnumber
     use mod_constants, only: czero, pi
     use mod_profiling, only: memocc
     use mod_mympi, only: myrank, master
@@ -65,6 +65,7 @@ contains
     use mod_cinit, only: cinit
     use mod_rinit, only: rinit
     use mod_mixnocospin, only: spinmix_noco
+    use mod_bfield, only: save_bconstr ! MdSD: constraining fields
     ! array dimensions
     use global_variables, only: iemxd, mmaxd, krel, lmaxd, natypd, npotd, irmd, nrmaxd, lmpotd, nspotd, naezd, ncleb, lm2d, ipand, &
       nfund, ntotd, mmaxd, ncelld, irmind, nspind, nspotd, irid, irnsd, knosph, korbit, lmmaxd, lmxspd, lpotd, wlength
@@ -117,6 +118,7 @@ contains
     real (kind=dp), dimension (krel*20+(1-krel), npotd) :: ecorerel !! for a given (n,l) state the core energies corresponding first/second KAPPA value, AVERAGED over \mu's  These values are written out to the  potential file (routine <RITES>), but the read in (routine <STARTB1>) updates the ECORE array
     real (kind=dp), dimension (2, natypd) :: angles_new ! output directions of the nonco magnetic moments
     real (kind=dp), dimension(natypd) :: totmoment ! size of the output magnetic moments
+    real (kind=dp), dimension(4, natypd) :: bconstr ! MdSD: constraining fields
     real (kind=dp), dimension (0:lmaxd+1, natypd, 2) :: charge
     real (kind=dp), dimension (mmaxd, mmaxd, nspind, natypd) :: wldauold
     complex (kind=dp), dimension (iemxd) :: df
@@ -205,6 +207,7 @@ contains
     angles_new = 0.0_dp
     totmoment = 0.0_dp
     espv(:, :) = 0.0_dp
+    bconstr(:,:) = 0.0_dp ! MdSD: constraining fields
     call rinit(natyp, denefat)
 
     ! Consistency check
@@ -395,7 +398,7 @@ contains
 
       call interpolate_poten(lpotd, irmd, irnsd, natyp, ipand, lmpotd, nspotd, ntotd, ntotd*(ncheb+1), nspin, rmesh, irmin, irws, ircut, vins, visp, npan_log_at, npan_eq_at, &
         npan_tot, rnew, ipan_intervall, vinsnew)
-    end if !(.not. use_Chebychev_solver)
+    end if !( use_Chebychev_solver)
 
 
     ! find boundaries for atom loop (MPI parallelization level)
@@ -494,8 +497,10 @@ contains
             call rhovalnew(ldorhoef, ielast, nsra, nspin, lmax, ez, wez, zat(i1), socscale(i1), cleb(1,1), icleb, iend, &
               ifunm1(1,icell), lmsp1(1,icell), ncheb, npan_tot(i1), npan_log_at(i1), npan_eq_at(i1), rmesh(1,i1), irws(i1), &
               rpan_intervall(0,i1), ipan_intervall(0,i1), rnew(1,i1), vinsnew, thetasnew(1,1,icell), theta(i1), phi(i1), fixdir(i1), i1, &
-              ipot, den(0,1,1,ipot), espv(0,ipot), rho2n1(1,1,ispin), rho2n2(1,1,ispin), muorb(0,1,i1), angles_new(:,i1), totmoment(i1), &
+              ipot, den(0,1,1,ipot), espv(0,ipot), rho2n1(1,1,ispin), rho2n2(1,1,ispin), muorb(0,1,i1), angles_new(:,i1), totmoment(i1), bconstr(:,i1), &
               idoldau, lopt(i1), wldau(1,1,1,i1), denmatn(1,1,1,1,i1), natyp, ispin) ! LDAU
+            ! write(*,'("i1,ispin=",3i8)') i1, ispin
+            ! write(*,'("muorb=",6es16.8)') muorb(:,:,i1)
 #ifdef CPP_TIMING
             call timing_pause('main1c - rhovalnew')
 #endif
@@ -692,7 +697,7 @@ contains
         ! reset NQDOS to 1 to avoid endless communication
         nqdos = 1
         call mympi_main1c_comm_newsosol2(lmaxd1, lmmaxd, ielast, nqdos, npotd, natyp, lmpotd, irmd, mmaxd, den, denlm, muorb, espv, r2nef, rho2ns, denefat, denef, denmatn, &
-          angles_new, totmoment, t_mpi_c_grid%mympi_comm_ie)
+          angles_new, totmoment, bconstr, t_mpi_c_grid%mympi_comm_ie)
 #endif
 
 #ifdef CPP_TIMING
@@ -702,6 +707,16 @@ contains
 
         ! do mixing of nonco angles with master rank (writes nocno_angles)out.dat file)
         if (myrank==master) call spinmix_noco(t_inc%i_iteration, natyp, theta, phi, fixdir, angles_new, totmoment, 13)
+
+        ! MdSD: constraining fields
+        if (t_params%bfield%lbfield_constr) then
+          if (myrank==master) call save_bconstr(natyp,bconstr,t_params%bfield%bfield_constr)
+#ifdef CPP_MPI
+          call mpi_bcast(t_params%bfield%bfield_constr, 3*natyp, mpi_double_precision, master, mpi_comm_world, ierr)
+#endif
+        end if
+      ! ----------------------------------------------------------------------
+
 
       end if ! new spin-orbit solver
 
@@ -727,6 +742,8 @@ contains
       call timing_start('main1c - serial part')
 #endif
 
+
+
       ! In case of Lloyds formula renormalize valence charge
       if (lly>0) then
         lmaxp1 = lmax
@@ -738,7 +755,6 @@ contains
       ! NATYP loop for summed charge, spin and orbital moments
       ! ----------------------------------------------------------------------
       chrgsemicore = 0.0_dp
-      muorb(lmaxd1+1, :, :) = 0.0_dp ! sum of all l-channels (including lmaxd1 for ns contribution)
       eu(:) = 0_dp
       edc(:) = 0_dp
       do i1 = 1, natyp
@@ -760,12 +776,10 @@ contains
         !----------------------------------------------------------------------------
         ! Orbital magnetic moments
         !----------------------------------------------------------------------------
-        if (krel==1) then
-          do ispin = 1, 3
-            do l = 0, lmax + 1
-              muorb(lmaxd1+1, ispin, i1) = muorb(lmaxd1+1, ispin, i1) + muorb(l, ispin, i1)
-            end do
-          end do
+        ! MdSD: this fixed some strange serial & MPI bug
+        if ((krel+korbit)==1) then
+          muorb(0:lmaxd1, 3, i1) = sum(muorb(0:lmaxd1, 1:2, i1), dim=2)
+          muorb(lmaxd1+1, 1:3, i1) = sum(muorb(0:lmaxd1, 1:3, i1), dim=1) ! sum of all l-channels (including lmaxd1 for ns contribution)
         end if
       end do
       ! ----------------------------------------------------------------------
@@ -811,8 +825,8 @@ contains
       ! Write out lm charges and moments
       ! -------------------------------------------------------------------
       withorbmom = krel+korbit
-      if (decouple_spins_cheby) withorbmom = nspin-1 !withorbmom+1
-      call wrmoms(withorbmom, natyp, nspinpot, charge, muorb, lmax, lmaxd1)
+      if (decouple_spin_cheby) withorbmom = nspin-1
+      if (.not. use_qdos) call wrmoms(withorbmom, natyp, nspinpot, charge, muorb, lmax, lmaxd1)
 
       ! ----------------------------------------------------------------------
       ! ITERMDIR

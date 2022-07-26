@@ -25,7 +25,7 @@
 #########################################
 
 RUNFLAG= force_angles
-TESTFLAG= tmatnew nosph
+TESTFLAG= tmatnew nosph use_rllsll
 
 
 #########################################

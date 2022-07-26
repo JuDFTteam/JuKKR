@@ -19,10 +19,10 @@ contains
   !> Deprecated: False 
   !> Calculation of the density for the new solver
   subroutine rhooutnew(nsra, lmax, gmatll, ek, lmpot, df, npan_tot, ncheb, cleb, icleb, iend, irmdnew, thetasnew, ifunm, imt1, lmsp, &
-    rll, rllleft, sllleft, cden, cdenlm, cdenns, rho2nsc, corbital, gflle_part, rpan_intervall, ipan_intervall, nspin)
+     rll, sll, ull, rllleft, sllleft, ullleft, cden, cdenlm, cdenns, rho2nsc, corbital, gflle_part, rpan_intervall, ipan_intervall, nspin)
 
     use :: mod_constants, only: cone,czero,pi
-    use :: mod_runoptions, only: calc_gmat_lm_full, use_ldau, decouple_spins_cheby
+    use :: mod_runoptions, only: calc_gmat_lm_full, use_ldau, decouple_spin_cheby, calc_onsite_only
     use :: mod_profiling, only: memocc
     use :: global_variables, only: lmmaxd, ncleb, ntotd, nfund, korbit
     use :: mod_datatypes, only: dp
@@ -52,8 +52,11 @@ contains
     real (kind=dp), dimension (ntotd*(ncheb+1), nfund), intent (in) :: thetasnew
     complex (kind=dp), dimension (lmmaxd, lmmaxd), intent (in) :: gmatll !! GMATLL=diagonal elements of the G matrix (system) Note that SLL is not needed for calculation of density, only needed for calculation of Green function
     complex (kind=dp), dimension (nsra*lmmaxd, lmmaxd, irmdnew), intent (in) :: rll
+    complex (kind=dp), dimension (nsra*lmmaxd, lmmaxd, irmdnew), intent (in) :: sll
+    complex (kind=dp), dimension (nsra*lmmaxd, lmmaxd, irmdnew), intent (in) :: ull
     complex (kind=dp), dimension (nsra*lmmaxd, lmmaxd, irmdnew), intent (in) :: rllleft
     complex (kind=dp), dimension (nsra*lmmaxd, lmmaxd, irmdnew), intent (in) :: sllleft
+    complex (kind=dp), dimension (nsra*lmmaxd, lmmaxd, irmdnew), intent (in) :: ullleft
 
     ! .. Output variables
     complex (kind=dp), dimension (irmdnew, nspin*(1+korbit)), intent (out) :: cdenns
@@ -70,7 +73,7 @@ contains
     integer :: ir, jspin, lm1, lm2, lm3, m1, l1, j, ifun
     integer :: i_stat, i_all
     real (kind=dp) :: c0ll
-    complex (kind=dp) :: cltdf
+    complex (kind=dp) :: cltdf, alpha
     integer, dimension (4) :: lmshift1
     integer, dimension (4) :: lmshift2
     complex (kind=dp), dimension (lmmaxd, lmmaxd, 3) :: loperator
@@ -102,7 +105,7 @@ contains
     pnsi = czero
 
     ! set LMSHIFT value which is need to construct CDEN
-    if (decouple_spins_cheby) then
+    if (decouple_spin_cheby) then
       lmshift1(:) = 0 
       lmshift2(:) = 0 
     else
@@ -127,22 +130,35 @@ contains
 
     ! big component of Dirac spinor
     do ir = 1, irmdnew
+
+      ! this is the prefactor for the gmatll*rllleft term in the first zgemm
+      ! if the onsite densit is calculated alone we set this to zero
+      alpha = cone
+      if (calc_onsite_only) alpha = czero
+
       do lm1 = 1, lmmaxd
         do lm2 = 1, lmmaxd
           qnsi(lm1, lm2) = sllleft(lm1, lm2, ir)
           ! PNSI(LM1,LM2)=RLL(LM1,LM2,IR)
+          pnsi(lm1, lm2) = ull(lm1, lm2, ir)
+        end do
+      end do
+!     call zgemm('N', 'T', lmmaxd, lmmaxd, lmmaxd, cone, pnsi, lmmaxd, gmatll, lmmaxd, ek, qnsi, lmmaxd)
+      call zgemm('N', 'T', lmmaxd, lmmaxd, lmmaxd, ek, pnsi, lmmaxd, qnsi, lmmaxd, czero, wr(1,1,ir), lmmaxd)
+      do lm1 = 1, lmmaxd
+        do lm2 = 1, lmmaxd
           pnsi(lm1, lm2) = rllleft(lm1, lm2, ir)
         end do
       end do
-      ! CALL ZGEMM('N','N',lmmaxd,lmmaxd,lmmaxd,CONE,PNSI,
-      ! +             lmmaxd,GMATLL,lmmaxd,EK,QNSI,lmmaxd)
-      call zgemm('N', 'T', lmmaxd, lmmaxd, lmmaxd, cone, pnsi, lmmaxd, gmatll, lmmaxd, ek, qnsi, lmmaxd)
+      ! MdSD: note that this transpose is followed by another transpose in the next zgemm
+      call zgemm('N', 'T', lmmaxd, lmmaxd, lmmaxd, alpha, pnsi, lmmaxd, gmatll, lmmaxd, czero, qnsi, lmmaxd)
       do lm1 = 1, lmmaxd
         do lm2 = 1, lmmaxd
           pnsi(lm1, lm2) = rll(lm1, lm2, ir)
         end do
       end do
-      call zgemm('N', 'T', lmmaxd, lmmaxd, lmmaxd, cone, pnsi, lmmaxd, qnsi, lmmaxd, czero, wr(1,1,ir), lmmaxd)
+!     call zgemm('N', 'T', lmmaxd, lmmaxd, lmmaxd, cone, pnsi, lmmaxd, qnsi, lmmaxd, czero, wr(1,1,ir), lmmaxd)
+      call zgemm('N', 'T', lmmaxd, lmmaxd, lmmaxd, cone, pnsi, lmmaxd, qnsi, lmmaxd, cone, wr(1,1,ir), lmmaxd)
 
       ! small component of Dirac spinor
       if (nsra==2) then
@@ -151,12 +167,19 @@ contains
             ! QNSI(LM1,LM2)=SLLLEFT(LM1+lmmaxd,LM2,IR)
             qnsi(lm1, lm2) = -sllleft(lm1+lmmaxd, lm2, ir)
             ! PNSI(LM1,LM2)=RLLLEFT(LM1+lmmaxd,LM2,IR)
-            pnsi(lm1, lm2) = -rllleft(lm1+lmmaxd, lm2, ir)
+            pnsi(lm1, lm2) = ull(lm1+lmmaxd, lm2, ir)
           end do
         end do
         ! CALL ZGEMM('N','N',lmmaxd,lmmaxd,lmmaxd,CONE,PNSI,
         ! +             lmmaxd,GMATLL,lmmaxd,EK,QNSI,lmmaxd)
-        call zgemm('N', 'T', lmmaxd, lmmaxd, lmmaxd, cone, pnsi, lmmaxd, gmatll, lmmaxd, ek, qnsi, lmmaxd)
+!       call zgemm('N', 'T', lmmaxd, lmmaxd, lmmaxd, cone, pnsi, lmmaxd, gmatll, lmmaxd, ek, qnsi, lmmaxd)
+        call zgemm('N', 'T', lmmaxd, lmmaxd, lmmaxd, ek, pnsi, lmmaxd, qnsi, lmmaxd, cone, wr(1,1,ir), lmmaxd)
+        do lm1 = 1, lmmaxd
+          do lm2 = 1, lmmaxd
+              pnsi(lm1, lm2) = -rllleft(lm1+lmmaxd, lm2, ir)
+          end do
+        end do
+        call zgemm('N', 'T', lmmaxd, lmmaxd, lmmaxd, alpha, pnsi, lmmaxd, gmatll, lmmaxd, czero, qnsi, lmmaxd)
         do lm1 = 1, lmmaxd
           do lm2 = 1, lmmaxd
             pnsi(lm1, lm2) = rll(lm1+lmmaxd, lm2, ir)

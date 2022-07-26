@@ -1,4 +1,4 @@
-MODULE MOD_RHOTOTB
+MODULE mod_rhototb_kkrimp
 
   CONTAINS
     !-------------------------------------------------------------------------
@@ -224,4 +224,4 @@ MODULE MOD_RHOTOTB
 
     END SUBROUTINE RHOTOTB
 
-END MODULE MOD_RHOTOTB
+END MODULE mod_rhototb_kkrimp
