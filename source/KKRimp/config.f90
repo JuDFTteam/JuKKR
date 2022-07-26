@@ -1,8 +1,8 @@
 !-------------------------------------------------------------------------------
 !> Summary: Read the information from config file
-!> Author: 
-!> Date: 
-!> 
+!> Author:
+!> Date:
+!>
 !> Read the information from config file
 !-------------------------------------------------------------------------------
 module mod_config
@@ -12,10 +12,10 @@ module mod_config
 contains
 !-------------------------------------------------------------------------------
 !> Summary: Routine to read the information from the config file
-!> Author: 
-!> Date: 
+!> Author:
+!> Date:
 !> Category: KKRimp, input-output
-!> Deprecated: False 
+!> Deprecated: False
 !-------------------------------------------------------------------------------
 
 subroutine config_read(config)
@@ -29,21 +29,21 @@ subroutine config_read(config)
                                                                   ! keywords are stored
    integer,save               ::  first = 1                       ! make sure routine is called just once
    character(len=*),parameter ::  cfilename_config = 'config.cfg' ! name of the config file
-   integer                    ::  ifile_config                    
+   integer                    ::  ifile_config
    character(len=200)         ::  string1,string2
    character(len=200)         ::  keyword, keyword1, keyword2
    integer                    ::  ios,ios2,iline,itemp
 
-   ! ********************************************************** 
+   ! **********************************************************
    ! make sure the routine is just called once
-   ! ********************************************************** 
+   ! **********************************************************
    ifile_config     = 1000000
    if (first/=1) stop '[config_params] trying to change the config file twice is not permitted'
    first=0
 
-   ! ********************************************************** 
+   ! **********************************************************
    ! setting default values
-   ! ********************************************************** 
+   ! **********************************************************
 
 
    testflag='x'
@@ -69,7 +69,7 @@ subroutine config_read(config)
       read(string1,*) keyword2               ! detach keyword from rest of string (i.e. values and/or comments) ! Benedikt 2014/12
    !   read(string1,*) keyword2
       keyword1=trim(get_uppercase(keyword2)) ! force keyword to be uppercase and get rid of blancs (' ')        ! Benedikt 2014/12
-   !   keyword1=trim(keyword2) 
+   !   keyword1=trim(keyword2)
       select case (keyword1)
          case ('NSPIN')
             read(string1,*,iostat=ios2) keyword1, config%nspin
@@ -121,13 +121,13 @@ subroutine config_read(config)
                write(*,*) 'error in config ', keyword1
                stop
             end if
-            if (config%kvrel==0) then 
+            if (config%kvrel==0) then
                config%nsra=1
-            elseif (config%kvrel==1) then 
+            elseif (config%kvrel==1) then
                config%nsra=2
-            elseif (config%kvrel==2) then 
+            elseif (config%kvrel==2) then
                config%nsra=3
-            elseif (config%kvrel==3) then 
+            elseif (config%kvrel==3) then
                config%nsra=4
             else
                stop '[config] error KVREL=?'
@@ -293,10 +293,10 @@ subroutine config_read(config)
             end if
       end select
    end do
-   ! ********************************************************** 
+   ! **********************************************************
    ! set some default values                          --
    ! **********************************************************
-   
+
    if (pot_ns_cutoff<0) then ! this means it is unset yet
       ! default value is 10% of qbound value
       pot_ns_cutoff = 0.1_dp*config%QBOUND
@@ -315,25 +315,25 @@ subroutine config_read(config)
       stop '[config] non-collinear magnetism only works with the new solver'
    end if
 
-   if (config%kvrel==2 .and. config%nspin==1) then 
+   if (config%kvrel==2 .and. config%nspin==1) then
       stop '[config] nspin=1 and kvrel=2 conflicts'
    end if
 
-   if (config%kspinorbit==1 .and. config%ncoll==0) then 
+   if (config%kspinorbit==1 .and. config%ncoll==0) then
       stop '[config] ncoll=0 does not work if spinorbit=1'
    end if
 
-   if (config%kspinorbit==1 .and. config%NSRA==3) then 
+   if (config%kspinorbit==1 .and. config%NSRA==3) then
       stop '[config] config%kspinorbit==1 does not work if KVREL=2'
    end if
 
-   if (config%calcjijmat==1 .and. config%ncoll==0) then 
+   if (config%calcjijmat==1 .and. config%ncoll==0) then
       stop '[config] config%calcjijmat==1 does not work if NCOLL=0'
    end if
 
-
-
-   ! none jet ;-)
+   if (config_testflag('nosph') .and. .not.config_testflag('use_rllsll')) then
+      stop '[config] test option "nosph" only work if you also use test option "use_rllsll"!'
+   end if
 
    !--------------------------------------------------------
    !--  write out config                                  --
@@ -361,7 +361,7 @@ subroutine config_read(config)
    do itemp = 1,dim_flags
       if (trim(testflag(itemp))/='x') then
          if (t_inc%i_write>0) write(1337,'(A)',advance='no') testflag(itemp)
-      end if 
+      end if
    end do
 
    if (t_inc%i_write>0) write(1337,'(A)') ''
@@ -371,7 +371,7 @@ subroutine config_read(config)
    do itemp = 1,dim_flags
       if (trim(runflag(itemp))/='x') then
          if (t_inc%i_write>0) write(1337,'(A)',advance='no') runflag(itemp)
-      end if 
+      end if
    end do
    if (t_inc%i_write>0) write(1337,*) ''
    if (t_inc%i_write>0) write(1337,*) '########################################'
@@ -382,33 +382,33 @@ end subroutine config_read
 function config_testflag(ctestflag) result(istestflag)
   use type_config, only: testflag,dim_flags
   implicit none
-!interface variables
+  ! interface variables
   character(len=*),intent(in)       :: ctestflag
   logical                           :: istestflag
-!local variables
+  ! local variables
   integer                           :: itemp
 
 istestflag=.false.
 do itemp=1,dim_flags
 !    if (trim(ctestflag)==trim(testflag(itemp))) istestflag=.true.
     if (trim(get_uppercase(ctestflag))==trim(get_uppercase(testflag(itemp)))) istestflag=.true. ! now comparison is case-insensitive ! provided by Benedikt, December 2014
-end do 
+end do
 end function config_testflag
 
 function config_runflag(crunflag) result(isrunflag)
   use type_config, only: runflag,dim_flags
   implicit none
-!interface variables
+  ! interface variables
   character(len=*),intent(in)      :: crunflag
   logical                          :: isrunflag
-!local variables
+  ! local variables
   integer                :: itemp
 
 isrunflag=.false.
 do itemp=1,dim_flags
 !    if (trim(crunflag)==trim(runflag(itemp))) isrunflag=.true.
     if (trim(get_uppercase(crunflag))==trim(get_uppercase(runflag(itemp)))) isrunflag=.true. ! now comparison is case-insensitive ! provided by Benedikt, December 2014
-end do 
+end do
 end function config_runflag
 
     !******** following functions get_uppercase and eq2blanc provided by Benedikt ***********
