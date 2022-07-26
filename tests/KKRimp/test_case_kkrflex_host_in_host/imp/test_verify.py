@@ -52,7 +52,7 @@ class Tests_scf_SOC():
       standard_scf_test('test_run_nosavewf', cmpvals=CMP_SOC)
 
    def test_SOC_nosratrick(self):
-      standard_scf_test('test_run_nosratrick', cmpvals=CMP_SOC)
+      standard_scf_test('test_run_nosratrick', cmpvals=[25.494780, 1.1313e-03, 3.181288, -12729.32114978])
 
    def test_Jij(self):
       check_Jijs('test_run_Jij', refpath='host_in_host_Jijs')
