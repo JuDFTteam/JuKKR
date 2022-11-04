@@ -1,0 +1,64 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Rüßmann
+    given-names: Philipp
+    orcid: 0000-0002-6196-2700
+  - family-names: Mavropoulos
+    given-names: Phivos
+    orcid: 0000-0002-0205-8025
+  - family-names: Zeller
+    given-names: Rudolf
+    orcid: 0000-0002-9462-2649
+  - family-names: Bouaziz
+    given-names: Juba
+  - family-names: Dos Santos Dias
+    given-names: Manuel
+    orcid: 0000-0002-8835-5580
+  - family-names: Blügel
+    given-names: Stefan
+    orcid: 0000-0001-9987-4733
+  - family-names: Bauer
+    given-names: David S. G.
+  - family-names: Baumeister
+    given-names: Paul F.
+    orcid: 0000-0002-2005-4474
+  - family-names: Bornemann
+    given-names: Marcel
+    orcid: 0000-0002-0215-2193
+  - family-names: Brinker
+    given-names: Sascha
+    orcid: 0000-0002-7077-1244
+  - family-names: Dederichs
+    given-names: Peter H.
+  - family-names: Drittler
+    given-names: Bernhard H.
+  - family-names: Essing
+    given-names: Nicolas
+  - family-names: Géranton
+    given-names: Guillaume
+  - family-names: Long
+    given-names: Nguyen H.
+  - family-names: Lounis
+    given-names: Samir
+    orcid: 0000-0003-2573-2841
+  - family-names: Mendive Tapia
+    given-names: Eduardo
+    orcid: 0000-0001-8328-6945
+  - family-names: Rabel
+    given-names: Elias
+  - family-names: Dos Santos
+    given-names: Flaviano
+  - family-names: Schweflinghaus
+    given-names: Benedikt
+  - family-names: Antognini Silva
+    given-names: David
+  - family-names: Thiess
+    given-names: Alexander R.
+  - family-names: Zimmermann
+    given-names: Bernd
+    orcid: 0000-0002-5823-3208
+title: "The JuKKR code"
+version: v3.6
+doi: 10.5281/zenodo.7284738
+date-released: 2022-11-04
