@@ -18,7 +18,7 @@ The easiest way to set up the code is to execute the `install.py` script which w
 
 ## Further reading
 
-- The code's [wiki page](https://iffgit.fz-juelich.de/kkr/jukkr/wikis/home) (still under construction, [see here for the old dokuwiki page](https://iffwiki.fz-juelich.de/kkr/doku.php))
+- The code's [wiki page](https://iffgit.fz-juelich.de/kkr/jukkr/wikis/home)
 
 - The [source code documentation](https://kkr.iffgit.fz-juelich.de/jukkr/)
 
